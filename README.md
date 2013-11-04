@@ -39,6 +39,14 @@ Python package dependencies:
 
 - numpy
 - six
+- Tests require nose
+
+Testing
+-------
+
+From the repo directory:
+
+    $ nosetests rasterio/tests
 
 License
 -------
