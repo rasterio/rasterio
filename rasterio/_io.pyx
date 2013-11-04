@@ -12,22 +12,30 @@ cdef void register():
     _gdal.GDALAllRegister()
     registered = 1
 
-cdef class RasterReadSession:
+cdef class RasterReader:
     
     cdef void *_hds
     cdef int _count
     
-    cdef public object name
-    cdef public object width, height
-    cdef public object shape
+    cdef readonly object name
+    cdef readonly object width, height
+    cdef readonly object shape
+    cdef public object _closed
 
     def __cinit__(self, path):
         self.name = path
         self._hds = NULL
         self._count = 0
+        self._closed = True
     
     def __dealloc__(self):
         self.stop()
+    
+    def __repr__(self):
+        return "<%s RasterReader '%s' at %s>" % (
+            self.closed and 'closed' or 'open', 
+            self.name, 
+            hex(id(self)))
 
     def start(self):
         if not registered:
@@ -38,6 +46,7 @@ cdef class RasterReadSession:
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
+        self._closed = False
 
     def stop(self):
         if self._hds is not NULL:
@@ -46,12 +55,17 @@ cdef class RasterReadSession:
     
     def close(self):
         self.stop()
+        self._closed = True
     
     @property
     def count(self):
-        if self._count is None:
+        if self._hds is not NULL:
             self._count = _gdal.GDALGetRasterCount(self._hds)
         return self._count
+    
+    @property
+    def closed(self):
+        return self._closed
 
     def __enter__(self):
         return self

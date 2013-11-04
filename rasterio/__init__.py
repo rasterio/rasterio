@@ -4,7 +4,7 @@ import os
 
 from six import string_types
 
-from rasterio._io import RasterReadSession, RasterUpdateSession
+from rasterio._io import RasterReader, RasterUpdateSession
 
 def open(path, mode='r', driver=None):
     """."""
@@ -20,7 +20,7 @@ def open(path, mode='r', driver=None):
     if mode == 'a':
         s = RasterUpdateSession(path, mode, driver=None)
     elif mode == 'r':
-        s = RasterReadSession(path)
+        s = RasterReader(path)
     elif mode == 'w':
         s = RasterUpdateSession(path, mode, driver=driver)
     else:
