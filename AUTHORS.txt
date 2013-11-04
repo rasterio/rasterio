@@ -1,0 +1,4 @@
+Authors
+=======
+
+Sean Gillies <sean@mapbox.com>

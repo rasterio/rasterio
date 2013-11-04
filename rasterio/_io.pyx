@@ -47,6 +47,7 @@ cdef class RasterReadSession:
     def close(self):
         self.stop()
     
+    @property
     def count(self):
         if self._count is None:
             self._count = _gdal.GDALGetRasterCount(self._hds)
@@ -61,8 +62,7 @@ cdef class RasterReadSession:
     def read_band(self, i, out=None):
         """Read the ith band into an `out` array if provided, otherwise
         return a new array."""
-        cdef int bidx = i+1
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, i+1)
         if out is None:
             out = np.zeros(self.shape, np.ubyte)
         cdef np.ndarray[DTYPE_UBYTE_t, ndim=2, mode="c"] im = out
