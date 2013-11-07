@@ -1,3 +1,6 @@
 Changes
 =======
 
+0.1 (2013-11-07)
+----------------
+- Reading and writing of GeoTIFFs, with examples.
