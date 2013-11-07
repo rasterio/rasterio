@@ -86,4 +86,16 @@ class WriterContextTest(unittest.TestCase):
         info = subprocess.check_output(["gdalinfo", name])
         self.assert_('PROJCS["UTM Zone 18, Northern Hemisphere",' in info)
         self.assert_("(300.037926675094809,-300.041782729804993)" in info)
+    def test_write_meta(self):
+        name = os.path.join(self.tempdir, "test_write_meta.tif")
+        a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+        meta = dict(
+            driver='GTiff', width=100, height=100, count=1)
+        with rasterio.open(name, 'w', dtype=a.dtype, **meta) as s:
+            s.write_band(0, a)
+        info = subprocess.check_output(["gdalinfo", "-stats", name])
+        self.assert_(
+            "Minimum=127.000, Maximum=127.000, "
+            "Mean=127.000, StdDev=0.000" in info,
+            info)
 

@@ -15,7 +15,6 @@ Example
 Here's an example of the features rasterio aims to provide.
 
     import rasterio
-    import subprocess
 
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
@@ -27,15 +26,16 @@ Here's an example of the features rasterio aims to provide.
     total = (r + g + b)/3.0
     total = total.astype(rasterio.ubyte)
 
-    # Write the product as a raster band to a new file.
+    # Write the product as a raster band to a new file. For keyword arguments,
+    # we use meta attributes of the source file, but change the band count to 1.
     with rasterio.open(
             '/tmp/total.tif', 'w',
-            driver='GTiff',
-            width=src.width, height=src.height, count=1,
-            crs=src.crs, transform=src.transform,
-            dtype=total.dtype) as dst:
+            dtype=total.dtype,
+            **dict(src.meta, **{'count':1})
+            ) as dst:
         dst.write_band(0, total)
 
+    import subprocess
     info = subprocess.check_output(['gdalinfo', '-stats', '/tmp/total.tif'])
     print(info)
 

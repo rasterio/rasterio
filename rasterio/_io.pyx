@@ -244,6 +244,16 @@ cdef class RasterReader:
                 self._dtypes.append(
                     dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)])
         return self._dtypes
+    
+    @property
+    def meta(self):
+        return {
+            'driver': self.driver,
+            'width': self.width,
+            'height': self.height,
+            'count': self.count,
+            'crs': self.crs,
+            'transform': self.transform }
 
     def get_crs(self):
         if not self._crs:
