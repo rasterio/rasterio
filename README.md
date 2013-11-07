@@ -1,7 +1,7 @@
 rasterio
 ========
 
-Very easy and direct raster I/O for Python programmers.
+Fast and direct raster I/O for Python programmers who use Numpy.
 
 This package is aimed at developers who want little more than to read raster
 images into Numpy arrays or buffers, operate on them in Python (or Cython), and
@@ -12,7 +12,7 @@ Rasterio employs GDAL under the hood for file I/O and raster formatting.
 Example
 -------
 
-Here's an example of the features fasterio aims to provide.
+Here's an example of the features rasterio aims to provide.
 
     import rasterio
     import subprocess
