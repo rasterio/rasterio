@@ -303,12 +303,13 @@ cdef class RasterReader:
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
     # TODO: the r+ mode.
-    cdef readonly object _init_dtype
+    cdef readonly object _init_dtype, _options
 
     def __init__(
             self, path, mode, driver=None,
             width=None, height=None, count=None, 
-            crs=None, transform=None, dtype=None):
+            crs=None, transform=None, dtype=None,
+            **kwargs):
         self.name = path
         self.mode = mode
         self.driver = driver
@@ -322,6 +323,7 @@ cdef class RasterUpdater(RasterReader):
         self._transform = transform
         self._closed = True
         self._dtypes = []
+        self._options = kwargs.copy()
     
     def __repr__(self):
         return "<%s RasterUpdater '%s' at %s>" % (
@@ -330,11 +332,14 @@ cdef class RasterUpdater(RasterReader):
             hex(id(self)))
 
     def start(self):
-        cdef const char *drv_name
-        cdef void *drv
+        cdef const char *drv_name = NULL
+        cdef char **options = NULL
+        cdef char *key_c, *val_c = NULL
+        cdef void *drv = NULL
         if not registered:
             register()
         cdef const char *fname = self.name
+        
         if self.mode == 'w':
             # Delete existing file, create.
             if os.path.exists(self.name):
@@ -354,21 +359,37 @@ cdef class RasterUpdater(RasterReader):
                     gdal_dtype = dtypes.dtype_rev.get(tp)
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
+            
+            # Creation options
+            for k, v in self._options.items():
+                k, v = k.upper(), v.upper()
+                key_b = k.encode('utf-8')
+                val_b = v.encode('utf-8')
+                key_c = key_b
+                val_c = val_b
+                options = _gdal.CSLSetNameValue(options, key_c, val_c)
+                log.debug("Option: %r\n", (k, v))
+            
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
-                gdal_dtype,
-                NULL)
+                gdal_dtype, options)
+
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
                 self.write_crs(self._crs)
+        
         elif self.mode == 'a':
             self._hds = _gdal.GDALOpen(fname, 1)
+        
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
         self._closed = False
+
+        if options:
+            _gdal.CSLDestroy(options)
 
     def get_crs(self):
         if not self._crs:

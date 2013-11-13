@@ -1,12 +1,16 @@
+import logging
 import os.path
 import unittest
 import shutil
 import subprocess
+import sys
 import tempfile
 
 import numpy
 
 import rasterio
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class WriterContextTest(unittest.TestCase):
     def setUp(self):
@@ -98,4 +102,16 @@ class WriterContextTest(unittest.TestCase):
             "Minimum=127.000, Maximum=127.000, "
             "Mean=127.000, StdDev=0.000" in info,
             info)
+    def test_write_lzw(self):
+        name = os.path.join(self.tempdir, "test_write_lzw.tif")
+        a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+        with rasterio.open(
+                name, 'w', 
+                driver='GTiff', 
+                width=100, height=100, count=1, 
+                dtype=a.dtype,
+                compress='LZW') as s:
+            s.write_band(0, a)
+        info = subprocess.check_output(["gdalinfo", name])
+        self.assert_("LZW" in info, info)
 

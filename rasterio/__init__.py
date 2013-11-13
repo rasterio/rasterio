@@ -15,7 +15,8 @@ def open(
         width=None, height=None,
         count=None,
         dtype=None,
-        crs=None, transform=None):
+        crs=None, transform=None,
+        **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
     or "w" (write) and return a ``Reader`` or ``Updater`` object.
     
@@ -44,6 +45,9 @@ def open(
     Item 3: top left y value 
     Item 4: rotation, 0 if the image is "north up"
     Item 5: N-S pixel resolution (usually a negative number)
+
+    Finally, additional kwargs are passed to GDAL as driver-specific
+    dataset creation parameters.
     """
     if not isinstance(path, string_types):
         raise TypeError("invalid path: %r" % path)
@@ -64,7 +68,8 @@ def open(
         s = RasterUpdater(
                 path, mode, driver,
                 width, height, count, 
-                crs, transform, dtype)
+                crs, transform, dtype,
+                **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
