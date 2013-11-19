@@ -14,6 +14,8 @@ Example
 
 Here's an example of the features rasterio aims to provide.
 
+.. code-block:: python
+
     import rasterio
     import subprocess
 
@@ -63,9 +65,11 @@ Python package dependencies:
 Testing
 -------
 
-From the repo directory:
+From the repo directory, run nosetests.
 
-    $ nosetests rasterio/tests
+.. code-block:: console
+
+    $ nosetests
 
 License
 -------
