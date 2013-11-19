@@ -1,0 +1,4 @@
+Cython
+Numpy
+setuptools
+six

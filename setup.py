@@ -1,12 +1,14 @@
-import logging, subprocess, sys, os
+import logging
+import os
+import subprocess
+import sys
 from setuptools import setup, find_packages
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-# Have to do this after importing setuptools, which monkey patches distutils.
 from distutils.extension import Extension
+
+logging.basicConfig()
+log = logging.getLogger()
+
+version = '0.1'
 
 # Use Cython if available.
 try:
@@ -14,17 +16,19 @@ try:
 except ImportError:
     cythonize = None
 
-logging.basicConfig()
-log = logging.getLogger()
-
-version = '0.1'
-
 # By default we'll try to get options via gdal-config. On systems without,
 # options will need to be set in setup.cfg or on the setup command line.
 include_dirs = []
 library_dirs = []
 libraries = []
 extra_link_args = []
+
+try:
+    import numpy
+    include_dirs.append(numpy.get_include())
+except ImportError:
+    log.critical("Numpy and its headers are required to run setup(). Exiting.")
+    sys.exit(1)
 
 try:
     gdal_config = "gdal-config"
@@ -48,16 +52,11 @@ try:
 except Exception as e:
     log.warning("Failed to get options via gdal-config: %s", str(e))
 
-import numpy
-include_dirs.append(numpy.get_include())
-
 ext_options = dict(
     include_dirs=include_dirs,
     library_dirs=library_dirs,
     libraries=libraries,
     extra_link_args=extra_link_args)
-
-print(ext_options)
 
 # When building from a repo, Cython is required.
 if os.path.exists("MANIFEST.in"):
@@ -77,28 +76,41 @@ else:
         Extension(
             'rasterio._io', ['rasterio/_io.c'], **ext_options)]
 
+with open('README.md') as f:
+    readme = f.read()
 
 setup(name='rasterio',
       version=version,
-      description="Reimagining GDAL raster access",
-      long_description="""\
-""",
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      description=(
+          "Fast and direct raster I/O for Python programmers who use Numpy"),
+      long_description=readme,
+      classifiers=[
+          'Development Status :: 3 - Alpha',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Information Technology',
+          'Intended Audience :: Science/Research',
+          'License :: OSI Approved :: BSD License',
+          'Programming Language :: C',
+          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3.0',
+          'Programming Language :: Python :: 3.1',
+          'Programming Language :: Python :: 3.2',
+          'Programming Language :: Python :: 3.3',
+          'Topic :: Multimedia :: Graphics :: Graphics Conversion',
+          'Topic :: Scientific/Engineering :: GIS'
+          ],
       keywords='raster gdal',
       author='Sean Gillies',
       author_email='sean@mapbox.com',
-      url='',
+      url='https://github.com/sgillies/rasterio',
       license='BSD',
-#      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       package_dir={'': '.'},
       packages=['rasterio'],
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,
       install_requires=[
-          # -*- Extra requirements: -*-
-      ],
-      entry_points="""
-      # -*- Entry points: -*-
-      """,
-      )
+          'Numpy',
+          'setuptools'
+      ])
