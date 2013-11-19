@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 from setuptools import setup, find_packages
+
 from distutils.extension import Extension
 
 logging.basicConfig()
