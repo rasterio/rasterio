@@ -77,7 +77,7 @@ else:
         Extension(
             'rasterio._io', ['rasterio/_io.c'], **ext_options)]
 
-with open('README.md') as f:
+with open('README.rst') as f:
     readme = f.read()
 
 setup(name='rasterio',
