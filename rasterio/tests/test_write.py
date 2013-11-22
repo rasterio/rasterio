@@ -30,6 +30,7 @@ class WriterContextTest(unittest.TestCase):
             self.assertEqual(s.width, 100)
             self.assertEqual(s.height, 100)
             self.assertEqual(s.shape, (100, 100))
+            self.assertEqual(s.indexes, [1])
             self.assertEqual(
                 repr(s), 
                 "<open RasterUpdater '%s' at %s>" % (name, hex(id(s))))
@@ -54,7 +55,7 @@ class WriterContextTest(unittest.TestCase):
                 name, 'w', 
                 driver='GTiff', width=100, height=100, count=1, 
                 dtype=a.dtype) as s:
-            s.write_band(0, a)
+            s.write_band(1, a)
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(
             "Minimum=127.000, Maximum=127.000, "
@@ -68,8 +69,8 @@ class WriterContextTest(unittest.TestCase):
                 driver='GTiff', width=100, height=100, count=2,
                 dtype=rasterio.float32) as s:
             self.assertEqual(s.dtypes, [rasterio.float32]*2)
-            s.write_band(0, a)
             s.write_band(1, a)
+            s.write_band(2, a)
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(
             "Minimum=42.000, Maximum=42.000, "
@@ -86,7 +87,7 @@ class WriterContextTest(unittest.TestCase):
                 transform=[101985.0, 300.0379266750948, 0.0, 
                            2826915.0, 0.0, -300.041782729805],
                 dtype=rasterio.ubyte) as s:
-            s.write_band(0, a)
+            s.write_band(1, a)
         info = subprocess.check_output(["gdalinfo", name])
         self.assert_('PROJCS["UTM Zone 18, Northern Hemisphere",' in info)
         self.assert_("(300.037926675094809,-300.041782729804993)" in info)
@@ -96,7 +97,7 @@ class WriterContextTest(unittest.TestCase):
         meta = dict(
             driver='GTiff', width=100, height=100, count=1)
         with rasterio.open(name, 'w', dtype=a.dtype, **meta) as s:
-            s.write_band(0, a)
+            s.write_band(1, a)
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(
             "Minimum=127.000, Maximum=127.000, "
@@ -111,7 +112,7 @@ class WriterContextTest(unittest.TestCase):
                 width=100, height=100, count=1, 
                 dtype=a.dtype,
                 compress='LZW') as s:
-            s.write_band(0, a)
+            s.write_band(1, a)
         info = subprocess.check_output(["gdalinfo", name])
         self.assert_("LZW" in info, info)
 

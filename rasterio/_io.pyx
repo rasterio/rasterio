@@ -231,7 +231,11 @@ cdef class RasterReader:
                 raise ValueError("Can't read closed raster file")
             self._count = _gdal.GDALGetRasterCount(self._hds)
         return self._count
-    
+
+    @property
+    def indexes(self):
+        return list(range(1, self.count+1))
+
     @property
     def dtypes(self):
         """Returns an ordered list of all band data types."""
@@ -267,19 +271,27 @@ cdef class RasterReader:
         return self._transform
     transform = property(get_transform)
     
-    def read_band(self, i, out=None):
-        """Read the ith band into an `out` array if provided, otherwise
-        return a new array."""
+    def read_band(self, bidx, out=None):
+        """Read the `bidx` band into an `out` array if provided, otherwise
+        return a new array.
+        
+        Band indexes begin with 1: read_band(1) returns the first band.
+        """
+        if bidx not in self.indexes:
+            raise IndexError("band index out of range")
+        i = self.indexes.index(bidx)
         if not self._hds:
-            raise ValueError("Can't read closed raster file")
+            raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
-            raise ValueError("Band and output array dtypes do not match")
+            raise ValueError("band and output array dtypes do not match")
         if out is not None and out.shape != self.shape:
-            raise ValueError("Band and output shapes do not match")
+            raise ValueError("band and output shapes do not match")
         dtype = self.dtypes[i]
         if out is None:
             out = np.zeros(self.shape, dtype)
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+        if hband is NULL:
+            raise ValueError("NULL band")
         if dtype == dtypes.ubyte:
             retval = io_ubyte(hband, 0, self.width, self.height, out)
         elif dtype == dtypes.uint16:
@@ -438,16 +450,24 @@ cdef class RasterUpdater(RasterReader):
 
     transform = property(get_transform, write_transform)
 
-    def write_band(self, i, src):
-        """Write the src array into the ith band."""
+    def write_band(self, bidx, src):
+        """Write the src array into the `bidx` band.
+        
+        Band indexes begin with 1: read_band(1) returns the first band.
+        """
+        if bidx not in self.indexes:
+            raise IndexError("band index out of range")
+        i = self.indexes.index(bidx)
         if not self._hds:
-            raise ValueError("Can't read closed raster file")
+            raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
-            raise ValueError("Band and srcput array dtypes do not match")
+            raise ValueError("band and srcput array dtypes do not match")
         if src is not None and src.shape != self.shape:
-            raise ValueError("Band and srcput shapes do not match")
+            raise ValueError("band and srcput shapes do not match")
         dtype = self.dtypes[i]
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+        if hband is NULL:
+            raise ValueError("NULL band")
         if dtype == dtypes.ubyte:
             retval = io_ubyte(hband, 1, self.width, self.height, src)
         elif dtype == dtypes.uint16:
