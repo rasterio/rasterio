@@ -35,7 +35,7 @@ cdef int io_ubyte(
         np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0, 0], width, height, 1, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
 cdef int io_uint16(
         void *hband, 
@@ -45,7 +45,7 @@ cdef int io_uint16(
         np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0,0], width, height, 2, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
 
 cdef int io_int16(
         void *hband, 
@@ -55,7 +55,7 @@ cdef int io_int16(
         np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0,0], width, height, 3, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
 
 cdef int io_uint32(
         void *hband, 
@@ -65,7 +65,7 @@ cdef int io_uint32(
         np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0,0], width, height, 4, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
 
 cdef int io_int32(
         void *hband, 
@@ -75,7 +75,7 @@ cdef int io_int32(
         np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0,0], width, height, 5, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
 
 cdef int io_float32(
         void *hband, 
@@ -85,7 +85,7 @@ cdef int io_float32(
         np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0,0], width, height, 6, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
 
 cdef int io_float64(
         void *hband,
@@ -95,7 +95,7 @@ cdef int io_float64(
         np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
         hband, mode, 0, 0, width, height,
-        &buffer[0,0], width, height, 7, 0, 0)
+        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
 
 
 cdef class RasterReader:
@@ -284,8 +284,6 @@ cdef class RasterReader:
             raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
             raise ValueError("band and output array dtypes do not match")
-        if out is not None and out.shape != self.shape:
-            raise ValueError("band and output shapes do not match")
         dtype = self.dtypes[i]
         if out is None:
             out = np.zeros(self.shape, dtype)
@@ -462,8 +460,6 @@ cdef class RasterUpdater(RasterReader):
             raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
             raise ValueError("band and srcput array dtypes do not match")
-        if src is not None and src.shape != self.shape:
-            raise ValueError("band and srcput shapes do not match")
         dtype = self.dtypes[i]
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband is NULL:

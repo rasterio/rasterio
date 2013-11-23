@@ -3,7 +3,8 @@ Changes
 
 Next
 ----
-- Band indexes start at 1.
+- Band indexes start at 1 (#2).
+- Allow resampling on read and write (#3).
 
 0.1 (2013-11-07)
 ----------------
