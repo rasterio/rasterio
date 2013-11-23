@@ -351,11 +351,19 @@ cdef class RasterUpdater(RasterReader):
         cdef const char *fname = self.name
         
         if self.mode == 'w':
+            # GDAL can Create() GTiffs. Many other formats only support
+            # CreateCopy(). Rasterio lets you write GTiffs *only* for now.
+            if self.driver not in ['GTiff']:
+                raise ValueError("only GTiffs can be opened in 'w' mode")
+
             # Delete existing file, create.
             if os.path.exists(self.name):
                 os.unlink(self.name)
+            
             drv_name = self.driver
             drv = _gdal.GDALGetDriverByName(drv_name)
+            if drv is NULL:
+                raise ValueError("NULL driver for %s", self.driver)
             
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
