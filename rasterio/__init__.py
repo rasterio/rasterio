@@ -4,6 +4,7 @@ import os
 
 from six import string_types
 
+from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 import rasterio.dtypes
 from rasterio.dtypes import (
@@ -80,4 +81,7 @@ def open(
 def check_dtype(dt):
     tp = getattr(dt, 'type', dt)
     return tp in rasterio.dtypes.dtype_rev
+
+def copy(src, dst, **kw):
+    return RasterCopier()(src, dst, **kw)
 

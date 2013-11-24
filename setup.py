@@ -69,13 +69,19 @@ if os.path.exists("MANIFEST.in"):
         sys.exit(1)
     ext_modules = cythonize([
         Extension(
-            'rasterio._io', ['rasterio/_io.pyx'], **ext_options)])
+            'rasterio._io', ['rasterio/_io.pyx'], **ext_options),
+        Extension(
+            'rasterio._copy', ['rasterio/_copy.pyx'], **ext_options),
+            ])
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
     ext_modules = [
         Extension(
-            'rasterio._io', ['rasterio/_io.c'], **ext_options)]
+            'rasterio._io', ['rasterio/_io.c'], **ext_options),
+        Extension(
+            'rasterio._copy', ['rasterio/_copy.c'], **ext_options),
+            ]
 
 with open('README.rst') as f:
     readme = f.read()
