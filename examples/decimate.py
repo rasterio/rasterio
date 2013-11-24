@@ -27,7 +27,7 @@ with rasterio.open(
 
 outfilename = os.path.join(tempfile.mkdtemp(), 'decimate.jpg')
 
-rasterio.copy(tmpfilename, outfilename, driver='JPEG')
+rasterio.copy(tmpfilename, outfilename, driver='JPEG', quality='30')
 
 info = subprocess.call(['open', outfilename])
 

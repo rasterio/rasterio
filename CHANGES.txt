@@ -5,6 +5,7 @@ Next
 ----
 - Band indexes start at 1 (#2).
 - Decimation or replication of pixels on read and write (#3).
+- Add rasterio.copy() (#5).
 
 0.1 (2013-11-07)
 ----------------

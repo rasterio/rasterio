@@ -83,5 +83,15 @@ def check_dtype(dt):
     return tp in rasterio.dtypes.dtype_rev
 
 def copy(src, dst, **kw):
+    """Copy a source dataset to a new destination with driver specific
+    creation options.
+
+    ``src`` must be an existing file and ``dst`` a valid output file.
+
+    A ``driver`` keyword argument with value like 'GTiff' or 'JPEG' is
+    used to control the output format.
+    
+    This is the one way to create write-once files like JPEGs.
+    """
     return RasterCopier()(src, dst, **kw)
 
