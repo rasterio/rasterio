@@ -134,7 +134,8 @@ cdef class RasterReader:
     def start(self):
         if not registered:
             register()
-        cdef const char *fname = self.name
+        name_b = self.name.encode('utf-8')
+        cdef const char *fname = name_b
         self._hds = _gdal.GDALOpen(fname, 0)
         if not self._hds:
             raise ValueError("Null dataset")
@@ -143,7 +144,7 @@ cdef class RasterReader:
         cdef const char *drv_name
         drv = _gdal.GDALGetDatasetDriver(self._hds)
         drv_name = _gdal.GDALGetDriverShortName(drv)
-        self.driver = drv_name
+        self.driver = drv_name.decode('utf-8')
 
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
@@ -348,7 +349,8 @@ cdef class RasterUpdater(RasterReader):
         cdef void *drv = NULL
         if not registered:
             register()
-        cdef const char *fname = self.name
+        name_b = self.name.encode('utf-8')
+        cdef const char *fname = name_b
         
         if self.mode == 'w':
             # GDAL can Create() GTiffs. Many other formats only support
@@ -360,7 +362,8 @@ cdef class RasterUpdater(RasterReader):
             if os.path.exists(self.name):
                 os.unlink(self.name)
             
-            drv_name = self.driver
+            driver_b = self.driver.encode('utf-8')
+            drv_name = driver_b
             drv = _gdal.GDALGetDriverByName(drv_name)
             if drv is NULL:
                 raise ValueError("NULL driver for %s", self.driver)

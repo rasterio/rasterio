@@ -43,11 +43,11 @@ class WriterContextTest(unittest.TestCase):
             repr(s), 
             "<closed RasterUpdater '%s' at %s>" % (name, hex(id(s))))
         info = subprocess.check_output(["gdalinfo", name])
-        self.assert_("GTiff" in info)
+        self.assert_("GTiff" in info.decode('utf-8'))
         self.assert_(
-            "Size is 100, 100" in info)
+            "Size is 100, 100" in info.decode('utf-8'))
         self.assert_(
-            "Band 1 Block=100x81 Type=Byte, ColorInterp=Gray" in info)
+            "Band 1 Block=100x81 Type=Byte, ColorInterp=Gray" in info.decode('utf-8'))
     def test_write_ubyte(self):
         name = os.path.join(self.tempdir, "test_write_ubyte.tif")
         a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -59,7 +59,7 @@ class WriterContextTest(unittest.TestCase):
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(
             "Minimum=127.000, Maximum=127.000, "
-            "Mean=127.000, StdDev=0.000" in info,
+            "Mean=127.000, StdDev=0.000" in info.decode('utf-8'),
             info)
     def test_write_float(self):
         name = os.path.join(self.tempdir, "test_write_float.tif")
@@ -74,7 +74,7 @@ class WriterContextTest(unittest.TestCase):
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(
             "Minimum=42.000, Maximum=42.000, "
-            "Mean=42.000, StdDev=0.000" in info,
+            "Mean=42.000, StdDev=0.000" in info.decode('utf-8'),
             info)
     def test_write_crs_transform(self):
         name = os.path.join(self.tempdir, "test_write_crs_transform.tif")
@@ -89,8 +89,8 @@ class WriterContextTest(unittest.TestCase):
                 dtype=rasterio.ubyte) as s:
             s.write_band(1, a)
         info = subprocess.check_output(["gdalinfo", name])
-        self.assert_('PROJCS["UTM Zone 18, Northern Hemisphere",' in info)
-        self.assert_("(300.037926675094809,-300.041782729804993)" in info)
+        self.assert_('PROJCS["UTM Zone 18, Northern Hemisphere",' in info.decode('utf-8'))
+        self.assert_("(300.037926675094809,-300.041782729804993)" in info.decode('utf-8'))
     def test_write_meta(self):
         name = os.path.join(self.tempdir, "test_write_meta.tif")
         a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -101,7 +101,7 @@ class WriterContextTest(unittest.TestCase):
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(
             "Minimum=127.000, Maximum=127.000, "
-            "Mean=127.000, StdDev=0.000" in info,
+            "Mean=127.000, StdDev=0.000" in info.decode('utf-8'),
             info)
     def test_write_lzw(self):
         name = os.path.join(self.tempdir, "test_write_lzw.tif")
@@ -114,5 +114,5 @@ class WriterContextTest(unittest.TestCase):
                 compress='LZW') as s:
             s.write_band(1, a)
         info = subprocess.check_output(["gdalinfo", name])
-        self.assert_("LZW" in info, info)
+        self.assert_("LZW" in info.decode('utf-8'), info)
 
