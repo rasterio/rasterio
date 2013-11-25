@@ -102,6 +102,20 @@ Development also requires (see requirements-dev.txt)
 - Cython
 - nose
 
+Installation
+------------
+
+Rasterio is a C extension and there are not yet any binary releases. You'll
+need a working compiler (XCode on OS X, etc).
+
+.. code-block:: console
+
+    $ pip install numpy
+    $ pip install rasterio
+
+The Numpy headers are required to run the rasterio setup script. Numpy has to
+be installed first.
+
 Testing
 -------
 
