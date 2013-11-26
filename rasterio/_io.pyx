@@ -273,6 +273,15 @@ cdef class RasterReader:
         return self._dtypes
     
     @property
+    def bounds(self):
+        t = self.transform
+        return (t[0], t[3]+t[5]*self.height, t[0]+t[1]*self.width, t[3])
+
+    def ul(self, x, y):
+        t = self.transform
+        return t[0]+t[1]*x, t[3]+t[5]*y
+
+    @property
     def meta(self):
         return {
             'driver': self.driver,
