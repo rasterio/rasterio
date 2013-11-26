@@ -18,6 +18,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.indexes, [1,2,3])
             self.assertEqual(s.crs['proj'], 'utm')
             self.assertEqual(s.crs['zone'], 18)
+            self.assert_(s.crs_wkt.startswith('PROJCS'), s.crs_wkt)
             self.assertEqual(
                 s.transform, 
                 [101985.0, 300.0379266750948, 0.0, 
@@ -35,6 +36,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.dtypes, [rasterio.ubyte]*3)
         self.assertEqual(s.crs['proj'], 'utm')
         self.assertEqual(s.crs['zone'], 18)
+        self.assert_(s.crs_wkt.startswith('PROJCS'), s.crs_wkt)
         self.assertEqual(
             s.transform, 
             [101985.0, 300.0379266750948, 0.0, 

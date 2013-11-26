@@ -112,6 +112,7 @@ cdef class RasterReader:
     cdef public object _dtypes
     cdef public object _closed
     cdef public object _crs
+    cdef public object _crs_wkt
     cdef public object _transform
 
     def __init__(self, path):
@@ -153,6 +154,7 @@ cdef class RasterReader:
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
+        self._crs_wkt = self.read_crs_wkt()
         
         self._closed = False
 
@@ -195,6 +197,26 @@ cdef class RasterReader:
         else:
             log.debug("Projection not found (cogr_crs was NULL)")
         return crs
+
+    def read_crs_wkt(self):
+        cdef char *proj_c = NULL
+        if self._hds is NULL:
+            raise ValueError("Null dataset")
+        cdef void *osr = _gdal.OSRNewSpatialReference(
+            _gdal.GDALGetProjectionRef(self._hds))
+        log.debug("Got coordinate system")
+        crs = {}
+        if osr is not NULL:
+            _gdal.OSRExportToWkt(osr, &proj_c)
+            if proj_c is NULL:
+                raise ValueError("Null projection")
+            proj_b = proj_c
+            crs_wkt = proj_b.decode('utf-8')
+            _gdal.CPLFree(proj_c)
+            _gdal.OSRDestroySpatialReference(osr)
+        else:
+            log.debug("Projection not found (cogr_crs was NULL)")
+        return crs_wkt
 
     def read_transform(self):
         if self._hds is NULL:
@@ -265,6 +287,12 @@ cdef class RasterReader:
             self._crs = self.read_crs()
         return self._crs
     crs = property(get_crs)
+
+    def get_crs_wkt(self):
+        if not self._crs_wkt:
+            self._crs = self.read_crs_wkt()
+        return self._crs_wkt
+    crs_wkt = property(get_crs_wkt)
 
     def get_transform(self):
         if not self._transform:

@@ -1,6 +1,11 @@
 Changes
 =======
 
+Next
+----
+- Drop six dependency (#9)
+- Add crs_wkt attribute (#10).
+
 0.2 (2013-11-24)
 ----------------
 - Band indexes start at 1 (#2).
