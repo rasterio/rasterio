@@ -95,7 +95,6 @@ Python package dependencies (see also requirements.txt):
 
 - Numpy
 - setuptools
-- six
 
 Development also requires (see requirements-dev.txt)
 

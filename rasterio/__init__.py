@@ -2,8 +2,7 @@
 
 import os
 
-from six import string_types
-
+from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 import rasterio.dtypes

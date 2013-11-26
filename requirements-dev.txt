@@ -2,4 +2,3 @@ Cython
 Numpy
 nose
 setuptools
-six

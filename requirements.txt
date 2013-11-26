@@ -1,3 +1,2 @@
 Numpy
 setuptools
-six
