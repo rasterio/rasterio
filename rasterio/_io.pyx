@@ -276,7 +276,11 @@ cdef class RasterReader:
     
     @property
     def block_shapes(self):
-        """Returns an ordered list of block shapes for all bands."""
+        """Returns an ordered list of block shapes for all bands.
+        
+        Shapes are tuples and have the same ordering as the dataset's
+        shape: (count of image rows, count of image columns).
+        """
         cdef void *hband = NULL
         cdef int xsize, ysize
         if not self._block_shapes:
@@ -285,11 +289,22 @@ cdef class RasterReader:
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 _gdal.GDALGetBlockSize(hband, &xsize, &ysize)
-                # w, h = xsize, ysize
                 self._block_shapes.append((ysize, xsize))
         return self._block_shapes
 
-    def blocks(self, bdix):
+    def block_windows(self, bdix):
+        """Returns an iterator over a band's block windows.
+
+        The positional parameter `bidx` takes the index (starting at 1)
+        of the desired band. Block windows are tuples of four integers, 
+        (xoffset, yoffset, width, height), the first two are the offsets
+        in number of raster pixels from the upper left corner of the
+        dataset and the second two are the dimensions in number of pixels
+        of the raster block.
+
+        The primary use of this function is to obtain windows to pass to
+        read_band() for highly efficient access to raster block data.
+        """
         cdef int i, j
         h, w = self.block_shapes[bdix-1]
         d, m = divmod(self.width, w)
