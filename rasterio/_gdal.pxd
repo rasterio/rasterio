@@ -35,7 +35,8 @@ cdef extern from "gdal.h":
     void * GDALGetRasterBand(void *ds, int num)
     int GDALSetGeoTransform	(void *ds, double *transform)
     int GDALSetProjection(void *ds, const char *wkt)
-    
+
+    void GDALGetBlockSize(void *band, int *xsize, int *ysize)
     int GDALGetRasterDataType(void *band)
     int GDALRasterIO(void *band, int access, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int data_type, int poff, int loff)
 

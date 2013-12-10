@@ -114,6 +114,7 @@ cdef class RasterReader:
     cdef public object _crs
     cdef public object _crs_wkt
     cdef public object _transform
+    cdef public object _block_shapes
 
     def __init__(self, path):
         self.name = path
@@ -122,6 +123,7 @@ cdef class RasterReader:
         self._count = 0
         self._closed = True
         self._dtypes = []
+        self._block_shapes = []
     
     def __dealloc__(self):
         self.stop()
@@ -265,13 +267,43 @@ cdef class RasterReader:
         cdef void *hband = NULL
         if not self._dtypes:
             if not self._hds:
-                raise ValueError("Can't read closed raster file")
+                raise ValueError("can't read closed raster file")
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 self._dtypes.append(
                     dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)])
         return self._dtypes
     
+    @property
+    def block_shapes(self):
+        """Returns an ordered list of block shapes for all bands."""
+        cdef void *hband = NULL
+        cdef int xsize, ysize
+        if not self._block_shapes:
+            if not self._hds:
+                raise ValueError("can't read closed raster file")
+            for i in range(self._count):
+                hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                _gdal.GDALGetBlockSize(hband, &xsize, &ysize)
+                # w, h = xsize, ysize
+                self._block_shapes.append((ysize, xsize))
+        return self._block_shapes
+
+    def blocks(self, bdix):
+        cdef int i, j
+        h, w = self.block_shapes[bdix-1]
+        d, m = divmod(self.width, w)
+        ncols = d + int(m>0)
+        d, m = divmod(self.height, h)
+        nrows = d + int(m>0)
+        for i in range(ncols):
+            xoffset = i * w
+            width = min(w, self.width - xoffset)
+            for j in range(nrows):
+                yoffset = j * h
+                height = min(h, self.height - yoffset)
+                yield (xoffset, yoffset, width, height)
+
     @property
     def bounds(self):
         t = self.transform
