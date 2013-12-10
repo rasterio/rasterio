@@ -28,73 +28,87 @@ cdef void register():
     registered = 1
 
 cdef int io_ubyte(
-        void *hband, 
+        void *hband,
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
 cdef int io_uint16(
         void *hband, 
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
 
 cdef int io_int16(
         void *hband, 
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
 
 cdef int io_uint32(
         void *hband, 
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
 
 cdef int io_int32(
         void *hband, 
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
 
 cdef int io_float32(
         void *hband, 
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
 
 cdef int io_float64(
         void *hband,
         int mode,
+        int xoff,
+        int yoff,
         int width, 
         int height, 
         np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer):
     return _gdal.GDALRasterIO(
-        hband, mode, 0, 0, width, height,
+        hband, mode, xoff, yoff, width, height,
         &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
 
 
@@ -356,11 +370,14 @@ cdef class RasterReader:
         return self._transform
     transform = property(get_transform)
     
-    def read_band(self, bidx, out=None):
+    def read_band(self, bidx, out=None, window=None):
         """Read the `bidx` band into an `out` array if provided, otherwise
         return a new array.
-        
+
         Band indexes begin with 1: read_band(1) returns the first band.
+
+        The optional `window` argument takes 4 item tuples specifying
+        (xoffset, yoffset, width, height) of a raster subset.
         """
         if bidx not in self.indexes:
             raise IndexError("band index out of range")
@@ -369,26 +386,44 @@ cdef class RasterReader:
             raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
             raise ValueError("band and output array dtypes do not match")
-        dtype = self.dtypes[i]
-        if out is None:
-            out = np.zeros(self.shape, dtype)
+        if window and out is not None and out.shape[::-1] != window[2:]:
+            raise ValueError("output and window dimensions do not match")
+        
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband is NULL:
             raise ValueError("NULL band")
+        
+        dtype = self.dtypes[i]
+        if out is None:
+            out_shape = window and window[2:][::-1] or self.shape
+            out = np.zeros(out_shape, dtype)
+        if window:
+            xoff, yoff, width, height = window
+        else:
+            xoff = yoff = 0
+            width = self.width
+            height = self.height
         if dtype == dtypes.ubyte:
-            retval = io_ubyte(hband, 0, self.width, self.height, out)
+            retval = io_ubyte(
+                hband, 0, xoff, yoff, width, height, out)
         elif dtype == dtypes.uint16:
-            retval = io_uint16(hband, 0, self.width, self.height, out)
+            retval = io_uint16(
+                hband, 0, xoff, yoff, width, height, out)
         elif dtype == dtypes.int16:
-            retval = io_int16(hband, 0, self.width, self.height, out)
+            retval = io_int16(
+                hband, 0, xoff, yoff, width, height, out)
         elif dtype == dtypes.uint32:
-            retval = io_uint32(hband, 0, self.width, self.height, out)
+            retval = io_uint32(
+                hband, 0, xoff, yoff, width, height, out)
         elif dtype == dtypes.int32:
-            retval = io_int32(hband, 0, self.width, self.height, out)
+            retval = io_int32(
+                hband, 0, xoff, yoff, width, height, out)
         elif dtype == dtypes.float32:
-            retval = io_float32(hband, 0, self.width, self.height, out)
+            retval = io_float32(
+                hband, 0, xoff, yoff, width, height, out)
         elif dtype == dtypes.float64:
-            retval = io_float64(hband, 0, self.width, self.height, out)
+            retval = io_float64(
+                hband, 0, xoff, yoff, width, height, out)
         else:
             raise ValueError("Invalid dtype")
         # TODO: handle errors (by retval).
@@ -543,10 +578,13 @@ cdef class RasterUpdater(RasterReader):
 
     transform = property(get_transform, write_transform)
 
-    def write_band(self, bidx, src):
+    def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
         
         Band indexes begin with 1: read_band(1) returns the first band.
+
+        The optional `window` argument takes 4 item tuples specifying
+        (xoffset, yoffset, width, height) of a raster subset to write into.
         """
         if bidx not in self.indexes:
             raise IndexError("band index out of range")
@@ -555,24 +593,41 @@ cdef class RasterUpdater(RasterReader):
             raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
             raise ValueError("band and srcput array dtypes do not match")
-        dtype = self.dtypes[i]
+        if window and src is not None and src.shape[::-1] != window[2:]:
+            raise ValueError("source and window dimensions do not match")
+        
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband is NULL:
             raise ValueError("NULL band")
+        
+        if window:
+            xoff, yoff, width, height = window
+        else:
+            xoff = yoff = 0
+            width = self.width
+            height = self.height
+        dtype = self.dtypes[i]
         if dtype == dtypes.ubyte:
-            retval = io_ubyte(hband, 1, self.width, self.height, src)
+            retval = io_ubyte(
+                hband, 1, xoff, yoff, width, height, src)
         elif dtype == dtypes.uint16:
-            retval = io_uint16(hband, 1, self.width, self.height, src)
+            retval = io_uint16(
+                hband, 1, xoff, yoff, width, height, src)
         elif dtype == dtypes.int16:
-            retval = io_int16(hband, 1, self.width, self.height, src)
+            retval = io_int16(
+                hband, 1, xoff, yoff, width, height, src)
         elif dtype == dtypes.uint32:
-            retval = io_uint32(hband, 1, self.width, self.height, src)
+            retval = io_uint32(
+                hband, 1, xoff, yoff, width, height, src)
         elif dtype == dtypes.int32:
-            retval = io_int32(hband, 1, self.width, self.height, src)
+            retval = io_int32(
+                hband, 1, xoff, yoff, width, height, src)
         elif dtype == dtypes.float32:
-            retval = io_float32(hband, 1, self.width, self.height, src)
+            retval = io_float32(
+                hband, 1, xoff, yoff, width, height, src)
         elif dtype == dtypes.float64:
-            retval = io_float64(hband, 1, self.width, self.height, src)
+            retval = io_float64(
+                hband, 1, xoff, yoff, width, height, src)
         else:
             raise ValueError("Invalid dtype")
         # TODO: handle errors (by retval).
