@@ -18,26 +18,29 @@ class RasterBlocksTest(unittest.TestCase):
             self.assertEqual(len(s.block_shapes), 3)
             self.assertEqual(s.block_shapes, [(3, 791), (3, 791), (3, 791)])
             windows = s.block_windows(1)
-            first = next(windows)
-            self.assertEqual(first, (0, 0, 791, 3))
-            second = next(windows)
-            self.assertEqual(second, (0, 3, 791, 3))
-            last = list(windows)[~0]
-            self.assertEqual(last, (0, 717, 791, 1))
+            (j,i), first = next(windows)
+            self.assertEqual((j,i), (0, 0))
+            self.assertEqual(first, (0, 0, 3, 791))
+            (j, i), second = next(windows)
+            self.assertEqual((j,i), (1, 0))
+            self.assertEqual(second, (3, 0, 3, 791))
+            (j, i), last = list(windows)[~0]
+            self.assertEqual((j,i), (239, 0))
+            self.assertEqual(last, (717, 0, 1, 791))
     def test_block_coverage(self):
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
             self.assertEqual(
                 s.width*s.height,
-                sum(b[2]*b[3] for b in s.block_windows(1)))
+                sum(w[2]*w[3] for ji, w in s.block_windows(1)))
 
 class WindowReadTest(unittest.TestCase):
     def test_read_window(self):
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
             windows = s.block_windows(1)
-            first_window = next(windows)
+            ji, first_window = next(windows)
             first_block = s.read_band(1, window=first_window)
             self.assertEqual(first_block.dtype, rasterio.ubyte)
-            self.assertEqual(first_block.shape[::-1], first_window[2:])
+            self.assertEqual(first_block.shape, first_window[2:])
 
 class WindowWriteTest(unittest.TestCase):
     def setUp(self):

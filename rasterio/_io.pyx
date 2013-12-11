@@ -307,40 +307,55 @@ cdef class RasterReader:
         return self._block_shapes
 
     def block_windows(self, bdix):
-        """Returns an iterator over a band's block windows.
+        """Returns an iterator over a band's block windows and their
+        indexes.
 
         The positional parameter `bidx` takes the index (starting at 1)
-        of the desired band. Block windows are tuples of four integers, 
-        (xoffset, yoffset, width, height), the first two are the offsets
-        in number of raster pixels from the upper left corner of the
-        dataset and the second two are the dimensions in number of pixels
-        of the raster block.
+        of the desired band. Block windows are tuples of four integers,
+        (row_offset, col_offset, height, width), the first two are the
+        offsets in number of raster pixels from the upper left corner of
+        the dataset and the second two are the dimensions in number of
+        pixels of the raster block.
+
+        This iterator yields blocks "left to right" and "top to bottom"
+        and is similar to Python's enumerate() in that it also returns
+        indexes.
 
         The primary use of this function is to obtain windows to pass to
         read_band() for highly efficient access to raster block data.
         """
         cdef int i, j
         h, w = self.block_shapes[bdix-1]
-        d, m = divmod(self.width, w)
-        ncols = d + int(m>0)
         d, m = divmod(self.height, h)
         nrows = d + int(m>0)
-        for i in range(ncols):
-            xoffset = i * w
-            width = min(w, self.width - xoffset)
-            for j in range(nrows):
-                yoffset = j * h
-                height = min(h, self.height - yoffset)
-                yield (xoffset, yoffset, width, height)
+        d, m = divmod(self.width, w)
+        ncols = d + int(m>0)
+        for j in range(nrows):
+            row_offset = j * h
+            height = min(h, self.height - row_offset)
+            for i in range(ncols):
+                col_offset = i * w
+                width = min(w, self.width - col_offset)
+                yield (j, i), (row_offset, col_offset, height, width)
 
     @property
     def bounds(self):
+        """Returns the lower left and upper right bounds of the dataset
+        in the units of its coordinate reference system.
+        
+        The returned value is a tuple:
+        (lower left x, lower left y, upper right x, upper right y)
+        """
         t = self.transform
         return (t[0], t[3]+t[5]*self.height, t[0]+t[1]*self.width, t[3])
 
-    def ul(self, x, y):
+    def ul(self, row, col):
+        """Returns the coordinates (x, y) of the upper left corner of a 
+        pixel at `row` and `col` in the units of the dataset's
+        coordinate reference system.
+        """
         t = self.transform
-        return t[0]+t[1]*x, t[3]+t[5]*y
+        return t[0]+t[1]*col, t[3]+t[5]*row
 
     @property
     def meta(self):
@@ -377,7 +392,7 @@ cdef class RasterReader:
         Band indexes begin with 1: read_band(1) returns the first band.
 
         The optional `window` argument takes 4 item tuples specifying
-        (xoffset, yoffset, width, height) of a raster subset.
+        (row_offset, col_offset, height, width of a raster subset.
         """
         if bidx not in self.indexes:
             raise IndexError("band index out of range")
@@ -386,7 +401,7 @@ cdef class RasterReader:
             raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
             raise ValueError("band and output array dtypes do not match")
-        if window and out is not None and out.shape[::-1] != window[2:]:
+        if window and out is not None and out.shape != window[2:]:
             raise ValueError("output and window dimensions do not match")
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
@@ -395,10 +410,10 @@ cdef class RasterReader:
         
         dtype = self.dtypes[i]
         if out is None:
-            out_shape = window and window[2:][::-1] or self.shape
+            out_shape = window and window[2:] or self.shape
             out = np.zeros(out_shape, dtype)
         if window:
-            xoff, yoff, width, height = window
+            yoff, xoff, height, width = window
         else:
             xoff = yoff = 0
             width = self.width
@@ -580,11 +595,12 @@ cdef class RasterUpdater(RasterReader):
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
-        
+
         Band indexes begin with 1: read_band(1) returns the first band.
 
         The optional `window` argument takes 4 item tuples specifying
-        (xoffset, yoffset, width, height) of a raster subset to write into.
+        (row_offset, col_offset, height, width) of a raster subset to
+        write into.
         """
         if bidx not in self.indexes:
             raise IndexError("band index out of range")
@@ -593,7 +609,7 @@ cdef class RasterUpdater(RasterReader):
             raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
             raise ValueError("band and srcput array dtypes do not match")
-        if window and src is not None and src.shape[::-1] != window[2:]:
+        if window and src is not None and src.shape != window[2:]:
             raise ValueError("source and window dimensions do not match")
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
@@ -601,7 +617,7 @@ cdef class RasterUpdater(RasterReader):
             raise ValueError("NULL band")
         
         if window:
-            xoff, yoff, width, height = window
+            yoff, xoff, height, width = window
         else:
             xoff = yoff = 0
             width = self.width
