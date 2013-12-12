@@ -26,8 +26,8 @@ Here is a reading example:
     # (100, 100)
 
 Writing works similarly. The following creates a blank 100x100 GeoTIFF
-and plops 2500 pixels with value 127 into a square 30 pixels to the right
-and 10 pixels down from the upper left corner of the GeoTIFF.
+and plops 2500 pixels with value 127 into a square window 10 pixels to the
+right and 30 pixels down from the upper left corner of the GeoTIFF.
 
 .. code-block:: python
 
