@@ -54,13 +54,15 @@ class WindowTest(unittest.TestCase):
             ((0, 90), (0, 80)))
 
 def test_window_index():
-    idx = rasterio.window_index(((0,4),(1,102)))
+    idx = rasterio.window_index(((0,4),(1,12)))
     assert len(idx) == 2
     r, c = idx
     assert r.start == 0
     assert r.stop == 4
     assert c.start == 1
-    assert c.stop == 102
+    assert c.stop == 12
+    arr = numpy.ones((20,20))
+    assert arr[idx].shape == (4, 11)
 
 class RasterBlocksTest(unittest.TestCase):
     def test_blocks(self):
