@@ -5,6 +5,7 @@ import os
 from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
+from rasterio._io import eval_window, window_index, window_shape
 import rasterio.dtypes
 from rasterio.dtypes import (
     ubyte, uint8, uint16, int16, uint32, int32, float32, float64)

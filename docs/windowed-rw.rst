@@ -1,15 +1,47 @@
 Windowed reading and writing
 ============================
 
-Beginning in rasterio 0.3, you can read and write on "windows" of raster
+Beginning in rasterio 0.3, you can read and write "windows" of raster
 files.
 
-A window is described in rasterio by a 4 element tuple. The elements are:
+A window is described in rasterio by a pair of range tuples.
 
-0: offset in number of image rows from the dataset's upper left,
-1: offset in number of image columns from the dataset's upper left,
-2: the number of rows in the window,
-3: the number of columns in the window.
+.. code-block:: python
+
+    ((row_start, row_stop), (col_start, col_stop))
+
+The first pair contains the indexes of the raster rows at which the window
+starts and stops. The second contains the indexes of the raster columns at
+which the window starts and stops. For example,
+
+.. code-block:: python
+
+    ((0, 4), (0, 4))
+
+Specifies a 4 x 4 window at the upper left corner of a raster dataset and
+
+.. code-block:: python
+
+    ((10, 30), (10, 30))
+
+specifies a 20 x 20 window with origin at row 10 and column 10. Use of `None`
+for a range value indicates either 0 (for start) or the full raster height or
+width (for stop). For example,
+
+.. code-block:: python
+
+    ((None, 4), (None, 4))
+
+also specifies a 4 x 4 window at the upper left corner of the raster and
+
+.. code-block:: python
+
+    ((4, None), (4, None))
+
+specifies a rectangular subset with upper left at row 4, column 4 and
+extending to the lower right corner of the raster dataset.
+
+This window syntax mirrors that of Python's range() and slice() functions.
 
 Here is a reading example:
 
