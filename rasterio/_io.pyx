@@ -228,7 +228,6 @@ cdef class RasterReader:
         cdef char *proj_c = NULL
         if self._hds is NULL:
             raise ValueError("Null dataset")
-        #cdef const char *wkt = _gdal.GDALGetProjectionRef(self._hds)
         cdef void *osr = _gdal.OSRNewSpatialReference(
             _gdal.GDALGetProjectionRef(self._hds))
         log.debug("Got coordinate system")
@@ -456,8 +455,6 @@ cdef class RasterReader:
             raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
             raise ValueError("band and output array dtypes do not match")
-        #if window and out is not None and out.shape != window_shape(window):
-        #    raise ValueError("output and window dimensions do not match")
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband is NULL:
@@ -465,7 +462,10 @@ cdef class RasterReader:
         
         dtype = self.dtypes[i]
         if out is None:
-            out_shape = window and window_shape(window) or self.shape
+            out_shape = (
+                window 
+                and window_shape(window, self.height, self.width) 
+                or self.shape)
             out = np.zeros(out_shape, dtype)
         if window:
             window = eval_window(window, self.height, self.width)
@@ -670,8 +670,6 @@ cdef class RasterUpdater(RasterReader):
             raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
             raise ValueError("band and srcput array dtypes do not match")
-        #if window and src is not None and src.shape != window_shape(window):
-        #    raise ValueError("source and window dimensions do not match")
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband is NULL:

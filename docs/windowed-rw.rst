@@ -123,3 +123,82 @@ And the result:
    :width: 500
    :height: 300
 
+Advanced windows
+----------------
+
+Since windows are like slices, you can also use negative numbers in rasterio
+windows.
+
+.. code-block:: python
+
+    ((-4, None), (-4, None))
+
+specifies a 4 x 4 rectangular subset with upper left at 4 rows to the left of
+and 4 columns above the lower right corner of the dataset and extending to the
+lower right corner of the dataset.
+
+Below is an example of reading a raster subset and then writing it into a 
+larger subset that is defined relative to the lower right corner of the
+destination dataset.
+
+.. code-block:: python
+
+    read_window = (350, 410), (350, 450)
+    
+    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        r = src.read_band(1, window=read_window)
+        g = src.read_band(2, window=read_window)
+        b = src.read_band(3, window=read_window)
+    
+    write_window = (-240, None), (-400, None)
+    
+    with rasterio.open(
+            '/tmp/example2.tif', 'w',
+            driver='GTiff', width=500, height=300, count=3,
+            dtype=r.dtype) as dst:
+        dst.write_band(1, r, window=write_window) 
+        dst.write_band(2, g, window=write_window)
+        dst.write_band(3, b, window=write_window)
+
+This example also demonstrates decimation.
+
+.. image:: http://farm3.staticflickr.com/2827/11378772013_c8ab540f21_o_d.png
+   :width: 500
+   :height: 300
+
+Blocks
+------
+
+Raster datasets are generally composed of multiple blocks of data and
+windowed reads and writes are most efficient when the windows match the
+dataset's own block structure. When a file is opened to read, the shape
+of blocks for any band can be had from the block_shapes property.
+
+.. code-block:: pycon
+
+    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    ...     for i, shape in enumerate(src.block_shapes, 1):
+    ...         print(i, shape)
+    ...
+    (1, (3, 791))
+    (2, (3, 791))
+    (3, (3, 791))
+
+
+The block windows themselves can be had from the block_windows function.
+
+.. code-block:: pycon
+
+    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    ...     for ji, window in src.block_windows(1):
+    ...         print(ji, window)
+    ...
+    ((0, 0), ((0, 3), (0, 791)))
+    ((1, 0), ((3, 6), (0, 791)))
+    ...
+
+This function returns an iterator that yields a pair of values. The second is
+a window tuple that can be used in calls to read_band or write_band. The first
+is the pair of row and column indexes of this block within all blocks of the
+dataset.
+
