@@ -15,8 +15,8 @@ src = None
 n = 100
 
 t = timeit.timeit(s, setup='from osgeo import gdal', number=n)
-print("GDAL:\n")
-print("%f usec\n" % (t/n))
+print("GDAL:")
+print("%f msec\n" % (1000*t/n))
 
 # Rasterio
 s = """
@@ -25,8 +25,8 @@ with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
 """
 
 t = timeit.timeit(s, setup='import rasterio', number=n)
-print("Rasterio:\n")
-print("%f usec\n" % (t/n))
+print("Rasterio:")
+print("%f msec\n" % (1000*t/n))
 
 # GDAL Extras
 s = """
@@ -64,7 +64,7 @@ import pstats, cProfile
 
 s = """
 with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-    arr = src.read_band(1)
+    arr = src.read_band(1, window=(10, 10, 10, 10))
 """
 
 cProfile.runctx(s, globals(), locals(), "Profile.prof")

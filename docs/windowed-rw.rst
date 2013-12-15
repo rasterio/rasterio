@@ -1,10 +1,15 @@
 Windowed reading and writing
 ============================
 
-Beginning in rasterio 0.3, you can read and write "windows" of raster
-files.
+Beginning in rasterio 0.3, you can read and write "windows" of raster files.
+This feature allows you to operate on rasters that are larger than your
+computers RAM or process chunks of very large rasters in parallel.
 
-A window is described in rasterio by a pair of range tuples.
+Windows
+-------
+
+A window is a view onto a rectangular subset of a raster dataset and is
+described in rasterio by a pair of range tuples.
 
 .. code-block:: python
 
@@ -22,11 +27,11 @@ Specifies a 4 x 4 window at the upper left corner of a raster dataset and
 
 .. code-block:: python
 
-    ((10, 30), (10, 30))
+    ((10, 20), (10, 20))
 
-specifies a 20 x 20 window with origin at row 10 and column 10. Use of `None`
-for a range value indicates either 0 (for start) or the full raster height or
-width (for stop). For example,
+specifies a 10 x 10 window with origin at row 10 and column 10. Use of `None`
+for a range value indicates either 0 (in the start position) or the full raster
+height or width (in the stop position). The window tuple
 
 .. code-block:: python
 
@@ -41,33 +46,50 @@ also specifies a 4 x 4 window at the upper left corner of the raster and
 specifies a rectangular subset with upper left at row 4, column 4 and
 extending to the lower right corner of the raster dataset.
 
-This window syntax mirrors that of Python's range() and slice() functions.
+Using window tuples should feel like using Python's range() and slice()
+functions.
 
-Here is a reading example:
+.. code-block:: pycon
 
-.. code-block:: python
+    >>> range(10, 20)
+    [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    >>> range(10,20)[slice(4, None)]
+    [14, 15, 16, 17, 18, 19]
 
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        roff, coff = 100, 100
-        rows, cols = 100, 100
-        window = (roff, coff, rows, cols)
-        r = src.read_band(1, window=window)
+Reading
+-------
 
-    print(r.shape)
-    # output:
-    # (100, 100)
+Here is an example of reading a 100 row x 100 column subset of the rasterio
+test file.
 
-Writing works similarly. The following creates a blank 100x100 GeoTIFF and
-plops 2500 pixels with value 127 into a square window 30 pixels down from and
-10 pixels to the right of the upper left corner of the GeoTIFF.
+.. code-block:: pycon
 
-.. code-block:: python
+    >>> import rasterio
+    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    ...     w = src.read_band(1, window=((0, 100), (0, 100)))
+    ...
+    >>> print(w.shape)
+    (100, 100)
 
-    image = numpy.ones((50, 50), dtype=rasterio.ubyte) * 127
+Writing
+-------
+
+Writing works similarly. The following creates a blank 500 column x 300 row
+GeoTIFF and plops 37500 pixels with value 127 into a window 30 pixels down from
+and 50 pixels to the right of the upper left corner of the GeoTIFF.
+
+.. code-block:: pycon
+
+    >>> image = numpy.ones((150, 250), dtype=rasterio.ubyte) * 127
+    >>> with rasterio.open(
+    ...         '/tmp/example.tif', 'w',
+    ...         driver='GTiff', width=500, height=300, count=1,
+    ...         dtype=image.dtype) as dst:
+    ...     dst.write_band(1, image, window=((30, 180), (50, 300)))
     
-    with rasterio.open(
-            '/tmp/example.tif', 'w', 
-            driver='GTiff', width=100, height=100, count=1,
-            dtype=a.dtype) as dst:
-        dst.write_band(1, image, window=(30, 10, 50, 50))
+The result:
+
+.. image:: http://farm6.staticflickr.com/5503/11378078386_cbe2fde02e_o_d.png
+   :width: 500
+   :height: 300
 
