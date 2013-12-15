@@ -1,40 +1,42 @@
 rasterio
 ========
 
-Fast and direct geospatial raster I/O for Python programmers who use Numpy.
+Fast and clean geospatial raster I/O for Python programmers who use Numpy.
 
-This package is aimed at developers who want little more than to read raster
-images into Numpy arrays or buffers, operate on them in Python (or Cython), and
-write the results out to new GeoTIFF files.
+This library is designed for developers who want to read raster datasets into
+Numpy arrays or buffers, operate on them in Python (or Cython), and write the
+results out to new GeoTIFF files.
 
-Rasterio employs GDAL under the hood for file I/O and raster formatting.
+Rasterio employs GDAL under the hood for file I/O and raster formatting. It
+aims to let you get more done with less code and fewer bugs than you can with
+other GDAL interfaces.
 
 Example
 -------
 
-Here's an example of the features rasterio aims to provide. Three bands are
+Here's an example of the basic features rasterio provides. Three bands are
 read from an image and summed to produce something like a panchromatic band.
-This new band is then written to a single band TIFF.
+This new band is then written to a new single band TIFF.
 
 .. code-block:: python
 
+    import numpy
     import rasterio
     import subprocess
     
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        r = src.read_band(1)
-        g = src.read_band(2)
-        b = src.read_band(3)
-        assert [b.dtype.type for b in (r, g, b)] == src.dtypes
+        r, g, b = map(src.read_band, (1, 2, 3))
     
-    # Combine arrays using the 'add' ufunc. Expecting that the sum will
-    # exceed the 8-bit integer range, convert to 16-bit.
-    
-    r = r.astype(rasterio.uint16)
-    g = g.astype(rasterio.uint16)
-    b = b.astype(rasterio.uint16)
-    total = (r + g + b)/3
+    # Combine arrays using the 'iadd' ufunc. Expecting that the sum will
+    # exceed the 8-bit integer range, initialize it as 16-bit. Adding other
+    # arrays to it in-place converts those arrays up and preserves the type
+    # of the total array.
+    total = numpy.zeros(r.shape, dtype=rasterio.uint16)
+    for band in (r, g, b):
+        total += band
+    total /= 3
+    assert total.dtype == rasterio.uint16
     
     # Write the product as a raster band to a new 8-bit file. For keyword
     # arguments, we start with the meta attributes of the source file, but
@@ -54,6 +56,10 @@ This new band is then written to a single band TIFF.
         ['gdalinfo', '-stats', 'example-total.tif'])
     print(info)
     subprocess.call(['open', 'example-total.tif'])
+
+.. image:: http://farm6.staticflickr.com/5501/11393054644_74f54484d9_z_d.jpg
+   :width: 640
+   :height: 581
 
 Simple access is provided to properties of a geospatial raster file.
 
@@ -109,7 +115,7 @@ need a working compiler (XCode on OS X, etc).
 
 .. code-block:: console
 
-    $ pip install numpy
+    $ pip install Numpy
     $ pip install rasterio
 
 The Numpy headers are required to run the rasterio setup script. Numpy has to
