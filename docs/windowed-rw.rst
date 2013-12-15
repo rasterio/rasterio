@@ -229,7 +229,7 @@ it's a good idea to test this assumption in your code.
     ...         print(ji, r.shape, g.shape, b.shape)
     ...         break
     ...
-    ((0, 0), (3, 791), (3, 791), (3, 791))((3, 791), (3, 791), (3, 791))
+    ((0, 0), (3, 791), (3, 791), (3, 791))
 
 The block_shapes property is a band-ordered list of block shapes and
 `set(src.block_shapes)` gives you the set of unique shapes. Asserting that
