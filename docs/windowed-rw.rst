@@ -47,7 +47,8 @@ specifies a rectangular subset with upper left at row 4, column 4 and
 extending to the lower right corner of the raster dataset.
 
 Using window tuples should feel like using Python's range() and slice()
-functions. 
+functions. Range() selects a range of numbers from the sequence of all integers
+and slice() produces a object that can be used in slicing expressions.
 
 .. code-block:: pycon
 
@@ -201,4 +202,38 @@ This function returns an iterator that yields a pair of values. The second is
 a window tuple that can be used in calls to read_band or write_band. The first
 is the pair of row and column indexes of this block within all blocks of the
 dataset.
+
+You may read windows of data from a file block-by-block like this.
+
+.. code-block:: pycon
+
+    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    ...     for ji, window in src.block_windows(1):
+    ...         r = src.read_band(1, window=window)
+    ...         print(r.shape)
+    ...         break
+    ...
+    (3, 791)
+
+Well-bred files have identically blocked bands, but GDAL allows otherwise and
+it's a good idea to test this assumption in your code.
+
+.. code-block:: pycon
+
+    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    ...     assert len(set(src.block_shapes)) == 1
+    ...     for ji, rw in src.block_windows(1):
+    ...         r = src.read_band(1, window=rw)
+    ...         g = src.read_band(2, window=rw)
+    ...         b = src.read_band(3, window=rw)
+    ...         print(ji, r.shape, g.shape, b.shape)
+    ...         break
+    ...
+    ((0, 0), (3, 791), (3, 791), (3, 791))((3, 791), (3, 791), (3, 791))
+
+The block_shapes property is a band-ordered list of block shapes and
+`set(src.block_shapes)` gives you the set of unique shapes. Asserting that
+there is only one item in the set is effectively the same as asserting that all
+bands have the same block structure. If they do, you can use the same windows
+for each.
 

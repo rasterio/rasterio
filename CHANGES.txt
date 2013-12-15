@@ -9,6 +9,7 @@ Next
 - Add block_windows property (#7).
 - Enable windowed reads and writes (#6).
 - Use row,column ordering in window tuples as in Numpy (#13).
+- Add documentation on windowed reading and writing.
 
 0.2 (2013-11-24)
 ----------------
