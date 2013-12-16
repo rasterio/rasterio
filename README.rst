@@ -1,7 +1,7 @@
 rasterio
 ========
 
-Fast and clean geospatial raster I/O for Python programmers who use Numpy.
+Clean and fast and geospatial raster I/O for Python programmers who use Numpy.
 
 This library is designed for developers who want to read raster datasets into
 Numpy arrays or buffers, operate on them in Python (or Cython), and write the
