@@ -104,19 +104,16 @@ Below, the window is scaled to one third of the source image.
 .. code-block:: python
 
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        r = src.read_band(1)
-        g = src.read_band(2)
-        b = src.read_band(3)
+        b, g, r = (src.read_band(k) for k in (1, 2, 3))
     
-    window = (30, 269), (50, 313)
+    write_window = (30, 269), (50, 313)
     
     with rasterio.open(
             '/tmp/example.tif', 'w',
             driver='GTiff', width=500, height=300, count=3,
             dtype=r.dtype) as dst:
-        dst.write_band(1, r, window=window) 
-        dst.write_band(2, g, window=window)
-        dst.write_band(3, b, window=window)
+        for k, arr in [(1, b), (2, g), (3, r)]:
+            dst.write_band(k, arr, window=write_window)
 
 And the result:
 
@@ -147,9 +144,7 @@ destination dataset.
     read_window = (350, 410), (350, 450)
     
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        r = src.read_band(1, window=read_window)
-        g = src.read_band(2, window=read_window)
-        b = src.read_band(3, window=read_window)
+        b, g, r = (src.read_band(k, window=read_window) for k in (1, 2, 3))
     
     write_window = (-240, None), (-400, None)
     
@@ -157,9 +152,8 @@ destination dataset.
             '/tmp/example2.tif', 'w',
             driver='GTiff', width=500, height=300, count=3,
             dtype=r.dtype) as dst:
-        dst.write_band(1, r, window=write_window) 
-        dst.write_band(2, g, window=write_window)
-        dst.write_band(3, b, window=write_window)
+        for k, arr in [(1, b), (2, g), (3, r)]:
+            dst.write_band(k, arr, window=write_window)
 
 This example also demonstrates decimation.
 
@@ -222,10 +216,8 @@ it's a good idea to test this assumption in your code.
 
     >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
     ...     assert len(set(src.block_shapes)) == 1
-    ...     for ji, rw in src.block_windows(1):
-    ...         r = src.read_band(1, window=rw)
-    ...         g = src.read_band(2, window=rw)
-    ...         b = src.read_band(3, window=rw)
+    ...     for ji, window in src.block_windows(1):
+    ...         b, g, r = (src.read_band(k, window=window) for k in (1, 2, 3))
     ...         print(ji, r.shape, g.shape, b.shape)
     ...         break
     ...

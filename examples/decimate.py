@@ -5,9 +5,7 @@ import tempfile
 import rasterio
 
 with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-    b = src.read_band(1)
-    g = src.read_band(2)
-    r = src.read_band(3)
+    b, g, r = (src.read_band(k) for k in (1, 2, 3))
     meta = src.meta
 
 tmpfilename = os.path.join(tempfile.mkdtemp(), 'decimate.tif')
@@ -21,9 +19,8 @@ with rasterio.open(
         dtype=rasterio.uint8,
         **meta
         ) as dst:
-    dst.write_band(1, b)
-    dst.write_band(2, g)
-    dst.write_band(3, r)
+    for k, a in [(1, b), (2, g), (3, r)]:
+        dst.write_band(k, a)
 
 outfilename = os.path.join(tempfile.mkdtemp(), 'decimate.jpg')
 

@@ -26,7 +26,7 @@ This new band is then written to a new single band TIFF.
     
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        r, g, b = map(src.read_band, (1, 2, 3))
+        b, g, r = map(src.read_band, (1, 2, 3))
     
     # Combine arrays using the 'iadd' ufunc. Expecting that the sum will
     # exceed the 8-bit integer range, initialize it as 16-bit. Adding other
