@@ -15,6 +15,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.height, 718)
             self.assertEqual(s.shape, (718, 791))
             self.assertEqual(s.dtypes, [rasterio.ubyte]*3)
+            self.assertEqual(s.nodatavals, [-9999]*3)
             self.assertEqual(s.indexes, [1,2,3])
             self.assertEqual(s.crs['proj'], 'utm')
             self.assertEqual(s.crs['zone'], 18)
@@ -36,6 +37,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.height, 718)
         self.assertEqual(s.shape, (718, 791))
         self.assertEqual(s.dtypes, [rasterio.ubyte]*3)
+        self.assertEqual(s.nodatavals, [-9999]*3)
         self.assertEqual(s.crs['proj'], 'utm')
         self.assertEqual(s.crs['zone'], 18)
         self.assertEqual(

@@ -179,6 +179,7 @@ cdef class RasterReader:
     cdef public object _crs_wkt
     cdef public object _transform
     cdef public object _block_shapes
+    cdef public object _nodatavals
 
     def __init__(self, path):
         self.name = path
@@ -188,6 +189,7 @@ cdef class RasterReader:
         self._closed = True
         self._dtypes = []
         self._block_shapes = []
+        self._nodatavals = []
     
     def __dealloc__(self):
         self.stop()
@@ -354,6 +356,23 @@ cdef class RasterReader:
                 _gdal.GDALGetBlockSize(hband, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
         return self._block_shapes
+
+    @property
+    def nodatavals(self):
+        """Returns a band-ordered list of nodata values."""
+        cdef void *hband = NULL
+        cdef double val
+        cdef int success
+        if not self._nodatavals:
+            if not self._hds:
+                raise ValueError("can't read closed raster file")
+            for i in range(self._count):
+                hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                val = _gdal.GDALGetRasterNoDataValue(hband, &success)
+                if not success:
+                    val = None
+                self._nodatavals.append(val)
+        return self._nodatavals
 
     def block_windows(self, bdix):
         """Returns an iterator over a band's block windows and their

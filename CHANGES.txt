@@ -3,6 +3,10 @@ Changes
 
 Next
 ----
+- Add nodatavals property (#13).
+
+0.3 (2013-12-15)
+----------------
 - Drop six dependency (#9)
 - Add crs_wkt attribute (#10).
 - Add bounds attribute and ul() method (#11).
