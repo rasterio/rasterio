@@ -526,12 +526,13 @@ cdef class RasterReader:
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
     # TODO: the r+ mode.
-    cdef readonly object _init_dtype, _options
+    cdef readonly object _init_dtype, _init_nodata, _options
 
     def __init__(
             self, path, mode, driver=None,
             width=None, height=None, count=None, 
             crs=None, transform=None, dtype=None,
+            nodata=None,
             **kwargs):
         self.name = path
         self.mode = mode
@@ -540,6 +541,7 @@ cdef class RasterUpdater(RasterReader):
         self.height = height
         self._count = count
         self._init_dtype = dtype
+        self._init_nodata = nodata
         self._hds = NULL
         self._count = count
         self._crs = crs
@@ -559,6 +561,8 @@ cdef class RasterUpdater(RasterReader):
         cdef char **options = NULL
         cdef char *key_c, *val_c = NULL
         cdef void *drv = NULL
+        cdef void *hband = NULL
+        cdef int success
         if not registered:
             register()
         name_b = self.name.encode('utf-8')
@@ -606,6 +610,14 @@ cdef class RasterUpdater(RasterReader):
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
                 gdal_dtype, options)
+            
+            if self._init_nodata is not None:
+                if not self._hds:
+                    raise ValueError("can't read closed raster file")
+                for i in range(self._count):
+                    hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                    success = _gdal.GDALSetRasterNoDataValue(
+                                    hband, self._init_nodata)
 
             if self._transform:
                 self.write_transform(self._transform)

@@ -40,6 +40,7 @@ cdef extern from "gdal.h":
     int GDALGetRasterDataType(void *band)
     double GDALGetRasterNoDataValue(void *band, int *success)
     int GDALRasterIO(void *band, int access, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int data_type, int poff, int loff)
+    int GDALSetRasterNoDataValue(void *band, double value)
 
     void * GDALCreate(void *driver, const char *filename, int width, int height, int nbands, int dtype, const char **options)
     void * GDALCreateCopy(void *driver, const char *filename, void *ds, int strict, char **options, void *progress_func, void *progress_data)

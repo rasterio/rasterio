@@ -103,6 +103,17 @@ class WriterContextTest(unittest.TestCase):
             "Minimum=127.000, Maximum=127.000, "
             "Mean=127.000, StdDev=0.000" in info.decode('utf-8'),
             info)
+    def test_write_nodata(self):
+        name = os.path.join(self.tempdir, "test_write_nodata.tif")
+        a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+        with rasterio.open(
+                name, 'w', 
+                driver='GTiff', width=100, height=100, count=2, 
+                dtype=a.dtype, nodata=0) as s:
+            s.write_band(1, a)
+            s.write_band(2, a)
+        info = subprocess.check_output(["gdalinfo", "-stats", name])
+        self.assert_("NoData Value=0" in info.decode('utf-8'), info)
     def test_write_lzw(self):
         name = os.path.join(self.tempdir, "test_write_lzw.tif")
         a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127

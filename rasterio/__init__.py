@@ -16,6 +16,7 @@ def open(
         width=None, height=None,
         count=None,
         dtype=None,
+        nodata=None,
         crs=None, transform=None,
         **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
@@ -70,6 +71,7 @@ def open(
                 path, mode, driver,
                 width, height, count, 
                 crs, transform, dtype,
+                nodata,
                 **kwargs)
     else:
         raise ValueError(

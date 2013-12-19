@@ -4,6 +4,7 @@ Changes
 Next
 ----
 - Add nodatavals property (#13).
+- Allow nodata to be set when opening file to write (#17).
 
 0.3 (2013-12-15)
 ----------------
