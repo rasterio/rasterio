@@ -36,24 +36,25 @@ def open(
     
       {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
        'no_defs': True}
-    
+
     An affine transformation that maps pixel row/column coordinates to
-    coordinates in the specified crs can be specified using the 
-    ``transform`` argument. The affine transformation is represented by a
-    six-element sequence where the items are ordered like
+    coordinates in the specified reference system can be specified using
+    the ``transform`` argument. The affine transformation is represented
+    by a six-element sequence where th:wqe items are ordered like
 
     Item 0: X coordinate of the top left corner of the top left pixel 
-    Item 1: rotation, pixel width if the raster is "north up" 
-    Item 2: rotation, 0 if the raster is "north up" 
+    Item 1: rate of change of X with respect to increasing column, i.e.
+            pixel width
+    Item 2: rotation, 0 if the raster is oriented "north up" 
     Item 3: Y coordinate of the top left corner of the top left pixel 
-    Item 4: rotation, 0 if the raster is "north up"
-    Item 5: rotation, pixel height if the raster is "north up" (usually a 
-            negative number)
+    Item 4: rotation, 0 if the raster is oriented "north up"
+    Item 5: rate of change of Y with respect to increasing row, usually
+            a negative number i.e. -1 * pixel height
 
-    Crs coordinates can be calculated by
+    Reference system oordinates can be calculated by the formula
 
-      Xcrs = Item 0 + Column * Item 1 + Row * Item 2
-      Ycrs = Item 3 + Column * Item 4 + Row * Item 5
+      X = Item 0 + Column * Item 1 + Row * Item 2
+      Y = Item 3 + Column * Item 4 + Row * Item 5
 
     Finally, additional kwargs are passed to GDAL as driver-specific
     dataset creation parameters.
