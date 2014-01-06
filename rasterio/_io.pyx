@@ -449,6 +449,14 @@ cdef class RasterReader:
     crs_wkt = property(get_crs_wkt)
 
     def get_transform(self):
+        """Get an affine transformation that maps pixel row/column coordinates
+        to coordinates in the specified crs. The affine transformation is 
+        represented by a six-element sequence. Crs coordinates can be
+        calculated like
+
+          Xcrs = Item 0 + Column * Item 1 + Row * Item 2
+          Ycrs = Item 3 + Column * Item 4 + Row * Item 5
+        """
         if not self._transform:
             self._transform = self.read_transform()
         return self._transform

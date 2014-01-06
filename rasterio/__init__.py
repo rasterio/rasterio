@@ -37,16 +37,23 @@ def open(
       {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
        'no_defs': True}
     
-    A geo-transform matrix that maps pixel coordinates to coordinates in
-    the specified crs should be specified using the ``transform``
-    argument. This matrix is represented by a six-element sequence.
-    
-    Item 0: the top left x value 
-    Item 1: W-E pixel resolution 
-    Item 2: rotation, 0 if the image is "north up" 
-    Item 3: top left y value 
-    Item 4: rotation, 0 if the image is "north up"
-    Item 5: N-S pixel resolution (usually a negative number)
+    An affine transformation that maps pixel row/column coordinates to
+    coordinates in the specified crs can be specified using the 
+    ``transform`` argument. The affine transformation is represented by a
+    six-element sequence where the items are ordered like
+
+    Item 0: X coordinate of the top left corner of the top left pixel 
+    Item 1: rotation, pixel width if the raster is "north up" 
+    Item 2: rotation, 0 if the raster is "north up" 
+    Item 3: Y coordinate of the top left corner of the top left pixel 
+    Item 4: rotation, 0 if the raster is "north up"
+    Item 5: rotation, pixel height if the raster is "north up" (usually a 
+            negative number)
+
+    Crs coordinates can be calculated by
+
+      Xcrs = Item 0 + Column * Item 1 + Row * Item 2
+      Ycrs = Item 3 + Column * Item 4 + Row * Item 5
 
     Finally, additional kwargs are passed to GDAL as driver-specific
     dataset creation parameters.
