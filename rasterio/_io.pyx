@@ -361,7 +361,7 @@ cdef class RasterReader:
     def nodatavals(self):
         """Returns a band-ordered list of nodata values."""
         cdef void *hband = NULL
-        cdef double val
+        cdef object val
         cdef int success
         if not self._nodatavals:
             if not self._hds:
