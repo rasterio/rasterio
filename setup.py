@@ -72,6 +72,8 @@ if os.path.exists("MANIFEST.in"):
             'rasterio._io', ['rasterio/_io.pyx'], **ext_options),
         Extension(
             'rasterio._copy', ['rasterio/_copy.pyx'], **ext_options),
+        Extension(
+            'rasterio._features', ['rasterio/_features.pyx'], **ext_options),
             ])
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -81,6 +83,8 @@ else:
             'rasterio._io', ['rasterio/_io.c'], **ext_options),
         Extension(
             'rasterio._copy', ['rasterio/_copy.c'], **ext_options),
+        Extension(
+            'rasterio._features', ['rasterio/_features.c'], **ext_options),
             ]
 
 with open('README.rst') as f:

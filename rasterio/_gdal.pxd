@@ -47,3 +47,6 @@ cdef extern from "gdal.h":
     const char * GDALGetDriverShortName(void *driver)
     const char * GDALGetDriverLongName(void *driver)
 
+cdef extern from "gdal_alg.h":
+    int GDALPolygonize(void *src_band, void *mask_band, void *layer, int fidx, char **options, void *progress_func, void *progress_data)
+
