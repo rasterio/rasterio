@@ -9,7 +9,7 @@ from distutils.extension import Extension
 logging.basicConfig()
 log = logging.getLogger()
 
-version = '0.4'
+version = '0.5'
 
 # Use Cython if available.
 try:

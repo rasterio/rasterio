@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next (2014-01-30)
+-----------------
+- Access to shapes of raster features via GDALPolygonize (#20).
+
 0.4 (2013-12-19)
 ----------------
 - Add nodatavals property (#13).

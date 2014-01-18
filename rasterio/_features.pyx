@@ -59,7 +59,7 @@ def polygonize(image):
     if hlayer is NULL:
         raise ValueError("NULL layer")
 
-    fielddefn = _ogr.OGR_Fld_Create("pix_val", 0)
+    fielddefn = _ogr.OGR_Fld_Create("image_value", 0)
     if fielddefn is NULL:
         raise ValueError("NULL field definition")
     _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
@@ -69,11 +69,11 @@ def polygonize(image):
     retval = _gdal.GDALPolygonize(hband, NULL, hlayer, 0, NULL, NULL, NULL)
     
     # Yield Fiona-style features
-    cdef FeatureIterator f_iterator = FeatureIterator()
-    f_iterator.hfs = hfs
-    f_iterator.hlayer = hlayer
-    for feature in f_iterator:
-        yield feature
+    cdef ShapeIterator shape_iter = ShapeIterator()
+    shape_iter.hfs = hfs
+    shape_iter.hlayer = hlayer
+    for s, v in shape_iter:
+        yield s, v
 
     if hds is not NULL:
         _gdal.GDALClose(hds)
@@ -213,28 +213,6 @@ cdef geometry(void *geom):
 
 # Feature extension classes and functions follow.
 
-cdef class FeatureBuilder:
-    """Build Fiona features from OGR feature pointers.
-
-    No OGR objects are allocated by this function and the feature
-    argument is not destroyed.
-    """
-
-    cdef build(self, void *feature, encoding='utf-8'):
-        props = {}
-        props['pix_val'] = _ogr.OGR_F_GetFieldAsInteger(feature, 0)
-        cdef void *cogr_geometry = _ogr.OGR_F_GetGeometryRef(feature)
-        if cogr_geometry is not NULL:
-            geom = GeomBuilder().build(cogr_geometry)
-        else:
-            geom = None
-        return {
-            'type': 'Feature',
-            'id': str(_ogr.OGR_F_GetFID(feature)),
-            'geometry': geom,
-            'properties': props }
-
-
 cdef _deleteOgrFeature(void *cogr_feature):
     """Delete an OGR feature"""
     if cogr_feature is not NULL:
@@ -242,9 +220,9 @@ cdef _deleteOgrFeature(void *cogr_feature):
     cogr_feature = NULL
 
 
-cdef class FeatureIterator:
+cdef class ShapeIterator:
 
-    """Provides iterated access to feature data.
+    """Provides iterated access to feature shapes.
     """
 
     # Reference to its Collection
@@ -257,10 +235,16 @@ cdef class FeatureIterator:
     def __next__(self):
         cdef long fid
         cdef void *ftr
+        cdef void *geom
         ftr = _ogr.OGR_L_GetNextFeature(self.hlayer)
         if ftr == NULL:
             raise StopIteration
-        feature = FeatureBuilder().build(ftr, 'utf-8')
+        image_value = _ogr.OGR_F_GetFieldAsInteger(ftr, 0)
+        geom = _ogr.OGR_F_GetGeometryRef(ftr)
+        if geom is not NULL:
+            shape = GeomBuilder().build(geom)
+        else:
+            shape = None
         _deleteOgrFeature(ftr)
-        return feature
+        return shape, image_value
 
