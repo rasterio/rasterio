@@ -18,17 +18,19 @@ log.addHandler(NullHandler())
 cdef int registered = 0
 
 cdef void register():
+    _gdal.GDALAllRegister()
     _ogr.OGRRegisterAll();
     registered = 1
 
 
-def polygonize(image):
+def polygonize(image, transform=None):
     """Return an iterator over Fiona-style features extracted from the
     image.
     """
     # Write the image into an in-memory raster.
     cdef int retval, rows, cols
     cdef void *hrdriver, *hds, *hband, *hfdriver, *hfs, *hlayer, *fielddefn
+    cdef double gt[6]
 
     if not registered:
         register()
@@ -41,6 +43,12 @@ def polygonize(image):
     hds = _gdal.GDALCreate(hrdriver, "temp", cols, rows, 1, 1, NULL)
     if hds is NULL:
         raise ValueError("NULL datasource")
+    
+    if transform:
+        for i in range(6):
+            gt[i] = transform[i]
+        retval = _gdal.GDALSetGeoTransform(hds, gt)
+
     hband = _gdal.GDALGetRasterBand(hds, 1)
     if hband is NULL:
         raise ValueError("NULL band")
