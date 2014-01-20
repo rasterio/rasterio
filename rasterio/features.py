@@ -1,7 +1,7 @@
 """Functions for working with features in a raster dataset."""
 
 import rasterio
-from rasterio._features import polygonize
+from rasterio._features import _shapes, _sieve
 
 def shapes(image, transform=None):
     """Yields a (shape, image_value) pair for each feature in the image.
@@ -13,6 +13,9 @@ def shapes(image, transform=None):
     if image.dtype.type != rasterio.ubyte:
         raise ValueError("Image must be dtype uint8/ubyte")
 
-    for s, v in polygonize(image, transform):
+    for s, v in _shapes(image, transform):
         yield s, v
+
+def sieve(image, size, connectivity=4, output=None):
+    return _sieve(image, size, connectivity)
 

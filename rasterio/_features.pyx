@@ -6,7 +6,7 @@ import numpy as np
 cimport numpy as np
 
 from rasterio cimport _gdal, _ogr
-
+from rasterio.dtypes import dtype_rev
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -23,7 +23,7 @@ cdef void register():
     registered = 1
 
 
-def polygonize(image, transform=None):
+def _shapes(image, transform=None):
     """Return an iterator over Fiona-style features extracted from the
     image.
     """
@@ -87,6 +87,52 @@ def polygonize(image, transform=None):
         _gdal.GDALClose(hds)
     if hfs is not NULL:
         _ogr.OGR_DS_Destroy(hfs)
+
+
+def _sieve(image, size, connectivity=4, output=None):
+    """Return a sieved ndarray"""
+    # Only dtype uint8 is supported. TODO
+    cdef int retval, rows, cols
+    cdef void *hrdriver, *hdsin, *hdsout, *hbandin, *hbandout
+
+    if not registered:
+        register()
+
+    hrdriver = _gdal.GDALGetDriverByName("MEM")
+    if hrdriver is NULL:
+        raise ValueError("NULL driver for 'MEM'")
+
+    rows = image.shape[0]
+    cols = image.shape[1]
+    hdsin = _gdal.GDALCreate(hrdriver, "input", cols, rows, 1, 1, NULL)
+    if hdsin is NULL:
+        raise ValueError("NULL input datasource")
+    hdsout = _gdal.GDALCreate(hrdriver, "output", cols, rows, 1, 1, NULL)
+    if hdsout is NULL:
+        raise ValueError("NULL output datasource")
+
+    hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
+    if hbandin is NULL:
+        raise ValueError("NULL input band")
+    retval = io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
+
+    hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
+    if hbandout is NULL:
+        raise ValueError("NULL output band")
+
+    retval = _gdal.GDALSieveFilter(
+                hbandin, NULL, hbandout, size, connectivity,
+                NULL, NULL, NULL)
+
+    out = np.zeros(image.shape, np.uint8)
+    retval = io_ubyte(hbandout, 0, 0, 0, cols, rows, out)
+
+    if hdsin is not NULL:
+        _gdal.GDALClose(hdsin)
+    if hdsout is not NULL:
+        _gdal.GDALClose(hdsout)
+
+    return out
 
 
 ctypedef np.uint8_t DTYPE_UBYTE_t
