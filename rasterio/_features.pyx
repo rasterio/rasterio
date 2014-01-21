@@ -19,6 +19,9 @@ log.addHandler(NullHandler())
 def _shapes(image, transform=None):
     """Return an iterator over Fiona-style features extracted from the
     image.
+
+    The image must be of unsigned 8-bit integer (rasterio.byte or
+    numpy.uint8) data type.
     """
     # Write the image into an in-memory raster.
     cdef int retval, rows, cols
@@ -81,8 +84,11 @@ def _shapes(image, transform=None):
 
 
 def _sieve(image, size, connectivity=4, output=None):
-    """Return a sieved ndarray"""
-    # Only dtype uint8 is supported. TODO
+    """Return an ndarray with features of smaller than size removed.
+    
+    The image must be of unsigned 8-bit integer (rasterio.byte or
+    numpy.uint8) data type.
+    """
     cdef int retval, rows, cols
     cdef void *hrdriver, *hdsin, *hdsout, *hbandin, *hbandout
 
