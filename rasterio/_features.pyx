@@ -15,14 +15,6 @@ class NullHandler(logging.Handler):
 log.addHandler(NullHandler())
 
 
-cdef int registered = 0
-
-cdef void register():
-    _gdal.GDALAllRegister()
-    _ogr.OGRRegisterAll();
-    registered = 1
-
-
 def _shapes(image, transform=None):
     """Return an iterator over Fiona-style features extracted from the
     image.
@@ -31,9 +23,6 @@ def _shapes(image, transform=None):
     cdef int retval, rows, cols
     cdef void *hrdriver, *hds, *hband, *hfdriver, *hfs, *hlayer, *fielddefn
     cdef double gt[6]
-
-    if not registered:
-        register()
 
     hrdriver = _gdal.GDALGetDriverByName("MEM")
     if hrdriver is NULL:
@@ -95,9 +84,6 @@ def _sieve(image, size, connectivity=4, output=None):
     # Only dtype uint8 is supported. TODO
     cdef int retval, rows, cols
     cdef void *hrdriver, *hdsin, *hdsout, *hbandin, *hbandout
-
-    if not registered:
-        register()
 
     hrdriver = _gdal.GDALGetDriverByName("MEM")
     if hrdriver is NULL:

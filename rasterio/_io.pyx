@@ -3,8 +3,13 @@
 import logging
 import os
 import os.path
+
 import numpy as np
 cimport numpy as np
+
+from rasterio cimport _gdal, _ogr
+from rasterio import dtypes
+
 
 ctypedef np.uint8_t DTYPE_UBYTE_t
 ctypedef np.uint16_t DTYPE_UINT16_t
@@ -14,8 +19,6 @@ ctypedef np.int32_t DTYPE_INT32_t
 ctypedef np.float32_t DTYPE_FLOAT32_t
 ctypedef np.float64_t DTYPE_FLOAT64_t
 
-from rasterio cimport _gdal
-from rasterio import dtypes
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -23,11 +26,6 @@ class NullHandler(logging.Handler):
         pass
 log.addHandler(NullHandler())
 
-cdef int registered = 0
-
-cdef void register():
-    _gdal.GDALAllRegister()
-    registered = 1
 
 cdef int io_ubyte(
         void *hband,
@@ -201,8 +199,6 @@ cdef class RasterReader:
             hex(id(self)))
 
     def start(self):
-        if not registered:
-            register()
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
         self._hds = _gdal.GDALOpen(fname, 0)
@@ -576,8 +572,6 @@ cdef class RasterUpdater(RasterReader):
         cdef void *drv = NULL
         cdef void *hband = NULL
         cdef int success
-        if not registered:
-            register()
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
         

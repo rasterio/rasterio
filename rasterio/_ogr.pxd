@@ -94,4 +94,5 @@ cdef extern from "ogr_api.h":
     void *  OGROpenShared (char *path, int mode, void *x)
     int     OGRReleaseDataSource (void *datasource)
     void    OGRRegisterAll()
+    void    OGRCleanupAll()
 

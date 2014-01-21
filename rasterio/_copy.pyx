@@ -4,22 +4,15 @@ import os.path
 
 from rasterio cimport _gdal
 
+
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
 
-cdef int registered = 0
-
-cdef void register():
-    _gdal.GDALAllRegister()
-    registered = 1
 
 cdef class RasterCopier:
-
-    def __init__(self):
-         _gdal.GDALAllRegister()
 
     def __call__(self, src, dst, **kw):
         cdef char **options = NULL

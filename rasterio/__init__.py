@@ -6,9 +6,16 @@ from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 from rasterio._io import eval_window, window_index, window_shape
+from rasterio._drivers import DriverManager
 import rasterio.dtypes
 from rasterio.dtypes import (
     ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+
+
+def drivers(*args):
+    """Returns a context manager with registered drivers."""
+    return DriverManager()
+
 
 def open(
         path, mode='r', 
