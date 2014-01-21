@@ -430,6 +430,7 @@ cdef class RasterReader:
     def meta(self):
         return {
             'driver': self.driver,
+            'dtype': set(self.dtypes).pop(),
             'width': self.width,
             'height': self.height,
             'count': self.count,
@@ -531,6 +532,7 @@ cdef class RasterReader:
         else:
             raise ValueError("Invalid dtype")
         # TODO: handle errors (by retval).
+        
         return out
 
 

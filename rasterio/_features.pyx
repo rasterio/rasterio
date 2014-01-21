@@ -38,6 +38,7 @@ def _shapes(image, transform=None):
     hrdriver = _gdal.GDALGetDriverByName("MEM")
     if hrdriver is NULL:
         raise ValueError("NULL driver for 'MEM'")
+
     rows = image.shape[0]
     cols = image.shape[1]
     hds = _gdal.GDALCreate(hrdriver, "temp", cols, rows, 1, 1, NULL)
