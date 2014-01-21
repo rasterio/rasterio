@@ -8,6 +8,7 @@ import numpy as np
 cimport numpy as np
 
 from rasterio cimport _gdal, _ogr
+from rasterio._drivers import DriverManager, driver_count
 from rasterio import dtypes
 
 
@@ -178,6 +179,7 @@ cdef class RasterReader:
     cdef public object _transform
     cdef public object _block_shapes
     cdef public object _nodatavals
+    cdef object driver_manager
 
     def __init__(self, path):
         self.name = path
@@ -188,7 +190,8 @@ cdef class RasterReader:
         self._dtypes = []
         self._block_shapes = []
         self._nodatavals = []
-    
+        self.driver_manager = None
+
     def __dealloc__(self):
         self.stop()
     
@@ -199,6 +202,12 @@ cdef class RasterReader:
             hex(id(self)))
 
     def start(self):
+        # Is there not a driver manager already?
+        if not self.driver_manager and driver_count() == 0:
+            # create a local manager and enter
+            self.driver_manager = DriverManager()
+            self.driver_manager.__enter__()
+
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
         self._hds = _gdal.GDALOpen(fname, 0)
@@ -295,7 +304,9 @@ cdef class RasterReader:
         if self._hds is not NULL:
             _gdal.GDALClose(self._hds)
         self._hds = NULL
-    
+        if self.driver_manager:
+            self.driver_manager.__exit__()
+
     def close(self):
         self.stop()
         self._closed = True
@@ -574,7 +585,13 @@ cdef class RasterUpdater(RasterReader):
         cdef int success
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
-        
+
+        # Is there not a driver manager already?
+        if not self.driver_manager and driver_count() == 0:
+            # create a local manager and enter
+            self.driver_manager = DriverManager()
+            self.driver_manager.__enter__()
+
         if self.mode == 'w':
             # GDAL can Create() GTiffs. Many other formats only support
             # CreateCopy(). Rasterio lets you write GTiffs *only* for now.

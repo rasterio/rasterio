@@ -1,22 +1,52 @@
 # The GDAL and OGR driver registry.
+# GDAL driver management.
 
-from rasterio cimport _gdal, _ogr
+cdef extern from "gdal.h":
+    void GDALAllRegister()
+    void GDALDestroyDriverManager()
+    int GDALGetDriverCount()
 
-cdef void _registerall():
-    _gdal.GDALAllRegister()
-    _ogr.OGRRegisterAll()
+cdef extern from "ogr_api.h":
+    void OGRRegisterAll()
+    void OGRCleanupAll()
+    int OGRGetDriverCount()
 
-cdef void _unregisterall():
-    _gdal.GDALDestroyDriverManager()
-    _ogr.OGRCleanupAll()
+import logging
 
 
-class DriverManager(object):
+log = logging.getLogger('rasterio')
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+log.addHandler(NullHandler())
+
+
+def driver_count():
+    return GDALGetDriverCount() + OGRGetDriverCount()
+
+
+class DummyManager(object):
     
     def __enter__(self):
-        _registerall()
+        pass
+
+    def __exit__(self, *args):
+        pass
+
+
+cdef class DriverManager(object):
+    
+    def __enter__(self):
+        GDALAllRegister()
+        OGRRegisterAll()
+        if driver_count() == 0:
+            raise ValueError("Drivers not registered")
+        log.info("%d drivers registered", GDALGetDriverCount())
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        _unregisterall()
+        GDALDestroyDriverManager()
+        OGRCleanupAll()
+        if driver_count() != 0:
+            raise ValueError("Drivers not de-registered")
 

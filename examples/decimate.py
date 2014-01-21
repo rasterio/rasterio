@@ -4,27 +4,28 @@ import tempfile
 
 import rasterio
 
-with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-    b, g, r = (src.read_band(k) for k in (1, 2, 3))
-    meta = src.meta
+with rasterio.drivers():
 
-tmpfilename = os.path.join(tempfile.mkdtemp(), 'decimate.tif')
+    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        b, g, r = (src.read_band(k) for k in (1, 2, 3))
+        meta = src.meta
 
-meta.update(
-    width=src.width/2,
-    height=src.height/2)
+    tmpfilename = os.path.join(tempfile.mkdtemp(), 'decimate.tif')
 
-with rasterio.open(
-        tmpfilename, 'w',
-        dtype=rasterio.uint8,
-        **meta
-        ) as dst:
-    for k, a in [(1, b), (2, g), (3, r)]:
-        dst.write_band(k, a)
+    meta.update(
+        width=src.width/2,
+        height=src.height/2)
 
-outfilename = os.path.join(tempfile.mkdtemp(), 'decimate.jpg')
+    with rasterio.open(
+            tmpfilename, 'w',
+            **meta
+            ) as dst:
+        for k, a in [(1, b), (2, g), (3, r)]:
+            dst.write_band(k, a)
 
-rasterio.copy(tmpfilename, outfilename, driver='JPEG', quality='30')
+    outfilename = os.path.join(tempfile.mkdtemp(), 'decimate.jpg')
+
+    rasterio.copy(tmpfilename, outfilename, driver='JPEG', quality='30')
 
 info = subprocess.call(['open', outfilename])
 

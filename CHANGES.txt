@@ -1,9 +1,11 @@
 Changes
 =======
 
-Next (2014-01-30)
------------------
+0.5 (2014-01-21)
+----------------
 - Access to shapes of raster features via GDALPolygonize (#20).
+- Raster feature sieving (#21).
+- Registration and de-registration of drivers via context managers (#22).
 
 0.4 (2013-12-19)
 ----------------

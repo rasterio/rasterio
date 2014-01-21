@@ -8,6 +8,7 @@ cimport numpy as np
 from rasterio cimport _gdal, _ogr
 from rasterio.dtypes import dtype_rev
 
+
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
     def emit(self, record):

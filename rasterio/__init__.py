@@ -6,15 +6,10 @@ from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 from rasterio._io import eval_window, window_index, window_shape
-from rasterio._drivers import DriverManager
+from rasterio._drivers import DriverManager, DummyManager, driver_count
 import rasterio.dtypes
 from rasterio.dtypes import (
     ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
-
-
-def drivers(*args):
-    """Returns a context manager with registered drivers."""
-    return DriverManager()
 
 
 def open(
@@ -91,7 +86,7 @@ def open(
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
-    
+
     s.start()
     return s
 
@@ -110,5 +105,13 @@ def copy(src, dst, **kw):
     
     This is the one way to create write-once files like JPEGs.
     """
-    return RasterCopier()(src, dst, **kw)
+    with drivers():
+        return RasterCopier()(src, dst, **kw)
+
+def drivers(*args):
+    """Returns a context manager with registered drivers."""
+    if driver_count() == 0:
+        return DriverManager()
+    else:
+        return DummyManager()
 

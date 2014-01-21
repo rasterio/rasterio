@@ -2,7 +2,7 @@ import numpy
 import rasterio
 import subprocess
 
-with rasterio.DriverManager():
+with rasterio.drivers():
 
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:

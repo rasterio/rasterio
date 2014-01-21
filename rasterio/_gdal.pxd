@@ -21,7 +21,8 @@ cdef extern from "ogr_srs_api.h":
 
 cdef extern from "gdal.h":
     void GDALAllRegister()
-    
+    int GDALGetDriverCount()
+
     void * GDALGetDriverByName(const char *name)
     void * GDALOpen(const char *filename, int access)
     
