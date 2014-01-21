@@ -1,5 +1,6 @@
 # rasterio
 
+import logging
 import os
 
 from rasterio.five import string_types
@@ -10,6 +11,13 @@ from rasterio._drivers import DriverManager, DummyManager, driver_count
 import rasterio.dtypes
 from rasterio.dtypes import (
     ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+
+
+log = logging.getLogger('rasterio')
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+log.addHandler(NullHandler())
 
 
 def open(
@@ -111,7 +119,9 @@ def copy(src, dst, **kw):
 def drivers(*args):
     """Returns a context manager with registered drivers."""
     if driver_count() == 0:
+        log.debug("Creating a DriverManager in drivers()")
         return DriverManager()
     else:
+        log.debug("Creating a DummyManager in drivers()")
         return DummyManager()
 

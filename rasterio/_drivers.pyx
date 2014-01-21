@@ -41,7 +41,6 @@ cdef class DriverManager(object):
         OGRRegisterAll()
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
-        log.info("%d drivers registered", GDALGetDriverCount())
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
