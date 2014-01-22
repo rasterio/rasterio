@@ -230,6 +230,9 @@ cdef class RasterReader:
         self._crs_wkt = self.read_crs_wkt()
         
         self._closed = False
+        
+        # touch self.meta
+        _ = self.meta
 
     def read_crs(self):
         cdef char *proj_c = NULL
@@ -569,6 +572,7 @@ cdef class RasterUpdater(RasterReader):
         self._transform = transform
         self._closed = True
         self._dtypes = []
+        self._nodatavals = []
         self._options = kwargs.copy()
     
     def __repr__(self):
@@ -635,10 +639,10 @@ cdef class RasterUpdater(RasterReader):
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
                 gdal_dtype, options)
-            
+            if not self._hds:
+                raise ValueError("NULL dataset")
+
             if self._init_nodata is not None:
-                if not self._hds:
-                    raise ValueError("can't read closed raster file")
                 for i in range(self._count):
                     hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                     success = _gdal.GDALSetRasterNoDataValue(
@@ -660,6 +664,9 @@ cdef class RasterUpdater(RasterReader):
 
         if options:
             _gdal.CSLDestroy(options)
+        
+        # touch self.meta
+        _ = self.meta
 
     def get_crs(self):
         if not self._crs:

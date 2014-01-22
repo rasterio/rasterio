@@ -1,7 +1,7 @@
 Changes
 =======
 
-0.5 (2014-01-21)
+0.5 (2014-01-22)
 ----------------
 - Access to shapes of raster features via GDALPolygonize (#20).
 - Raster feature sieving (#21).
