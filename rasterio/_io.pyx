@@ -438,6 +438,7 @@ cdef class RasterReader:
         return {
             'driver': self.driver,
             'dtype': set(self.dtypes).pop(),
+            'nodata': set(self.nodatavals).pop(),
             'width': self.width,
             'height': self.height,
             'count': self.count,
