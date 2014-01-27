@@ -9,7 +9,17 @@ from distutils.extension import Extension
 logging.basicConfig()
 log = logging.getLogger()
 
-version = '0.5'
+# Parse the version from the fiona module.
+with open('rasterio/__init__.py') as f:
+    for line in f:
+        if line.find("__version__") >= 0:
+            version = line.split("=")[1].strip()
+            version = version.strip('"')
+            version = version.strip("'")
+            continue
+
+with open('VERSION.txt', 'w') as f:
+    f.write(version)
 
 # Use Cython if available.
 try:

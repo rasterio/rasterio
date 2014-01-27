@@ -1,3 +1,3 @@
 exclude *.rst *.txt *.py
-include CHANGES.txt AUTHORS.txt LICENSE.txt README.rst setup.py
+include CHANGES.txt AUTHORS.txt LICENSE.txt VERSION.txt README.rst setup.py
 exclude MANIFEST.in

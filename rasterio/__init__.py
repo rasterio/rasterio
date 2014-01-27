@@ -10,8 +10,11 @@ from rasterio._io import eval_window, window_index, window_shape
 from rasterio._drivers import DriverManager, DummyManager, driver_count
 import rasterio.dtypes
 from rasterio.dtypes import (
-    ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
 
+
+__all__ = ['open', 'drivers', 'copy', 'check_dtype']
+__version__ = "0.5.1"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):

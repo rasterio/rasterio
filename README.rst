@@ -26,7 +26,7 @@ This new band is then written to a new single band TIFF.
     
     # Register format drivers with a context manager
     
-    with fiona.drivers():
+    with rasterio.drivers():
         
         # Read raster bands directly to Numpy arrays.
         #
@@ -82,7 +82,7 @@ Simple access is provided to properties of a geospatial raster file.
 
 .. code-block:: python
     
-    with rasterio.open():
+    with rasterio.drivers():
 
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
             print(src.width, src.height)
@@ -102,7 +102,7 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
 
 .. code-block:: python
     
-    with rasterio.open():
+    with rasterio.drivers():
 
         rasterio.copy(
             'example-total.tif',

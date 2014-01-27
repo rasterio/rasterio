@@ -1,6 +1,7 @@
 
 import numpy
 
+bool_ = numpy.bool_
 ubyte = uint8 = numpy.uint8
 uint16 = numpy.uint16
 int16 = numpy.int16

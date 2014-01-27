@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.5.1 (?)
+----------------
+- Add mask option to shapes() function (#26).
+
 0.5 (2014-01-22)
 ----------------
 - Access to shapes of raster features via GDALPolygonize (#20).

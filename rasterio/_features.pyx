@@ -16,7 +16,7 @@ class NullHandler(logging.Handler):
 log.addHandler(NullHandler())
 
 
-def _shapes(image, transform=None):
+def _shapes(image, mask=None, connectivity=4, transform=None):
     """Return an iterator over Fiona-style features extracted from the
     image.
 
@@ -25,7 +25,15 @@ def _shapes(image, transform=None):
     """
     # Write the image into an in-memory raster.
     cdef int retval, rows, cols
-    cdef void *hrdriver, *hds, *hband, *hfdriver, *hfs, *hlayer, *fielddefn
+    cdef void *hrdriver
+    cdef void *hds
+    cdef void *hband
+    cdef void *hmask
+    cdef void *hmaskband
+    cdef void *hfdriver
+    cdef void *hfs
+    cdef void *hlayer
+    cdef void *fielddefn
     cdef double gt[6]
 
     hrdriver = _gdal.GDALGetDriverByName("MEM")
@@ -47,6 +55,22 @@ def _shapes(image, transform=None):
     if hband is NULL:
         raise ValueError("NULL band")
     retval = io_ubyte(hband, 1, 0, 0, cols, rows, image)
+    
+    # The boolean mask must be converted to 0 and 1 for GDAL.
+    if mask is not None:
+        if mask.shape != image.shape:
+            raise ValueError("Mask must have same shape as image")
+        hmask = _gdal.GDALCreate(hrdriver, "mask", cols, rows, 1, 1, NULL)
+        if hmask is NULL:
+            raise ValueError("NULL datasource")
+        hmaskband = _gdal.GDALGetRasterBand(hmask, 1)
+        if hmaskband is NULL:
+            raise ValueError("NULL band")
+        a = np.ones(mask.shape, dtype=np.uint8)
+        a[mask == True] = 0
+        retval = io_ubyte(hmaskband, 1, 0, 0, cols, rows, a)
+    else:
+        hmaskband = NULL
 
     # Create an in-memory feature store.
     hfdriver = _ogr.OGRGetDriverByName("Memory")
@@ -67,8 +91,8 @@ def _shapes(image, transform=None):
     _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
     _ogr.OGR_Fld_Destroy(fielddefn)
     
-    # TODO: masked arrays.
-    retval = _gdal.GDALPolygonize(hband, NULL, hlayer, 0, NULL, NULL, NULL)
+    # TODO: connectivity option.
+    retval = _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, NULL, NULL, NULL)
     
     # Yield Fiona-style features
     cdef ShapeIterator shape_iter = ShapeIterator()
@@ -79,6 +103,8 @@ def _shapes(image, transform=None):
 
     if hds is not NULL:
         _gdal.GDALClose(hds)
+    if hmask is not NULL:
+        _gdal.GDALClose(hmask)
     if hfs is not NULL:
         _ogr.OGR_DS_Destroy(hfs)
 
@@ -90,7 +116,11 @@ def _sieve(image, size, connectivity=4, output=None):
     numpy.uint8) data type.
     """
     cdef int retval, rows, cols
-    cdef void *hrdriver, *hdsin, *hdsout, *hbandin, *hbandout
+    cdef void *hrdriver
+    cdef void *hdsin
+    cdef void *hdsout
+    cdef void *hbandin
+    cdef void *hbandout
 
     hrdriver = _gdal.GDALGetDriverByName("MEM")
     if hrdriver is NULL:
@@ -274,7 +304,8 @@ cdef class ShapeIterator:
     """
 
     # Reference to its Collection
-    cdef void *hfs, *hlayer
+    cdef void *hfs
+    cdef void *hlayer
 
     def __iter__(self):
         _ogr.OGR_L_ResetReading(self.hlayer)
