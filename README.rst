@@ -136,11 +136,12 @@ need a working compiler (XCode on OS X, etc).
 
 .. code-block:: console
 
-    $ pip install Numpy
+    $ pip install -r https://raw.github.com/mapbox/rasterio/master/requirements.txt
     $ pip install rasterio
 
 The Numpy headers are required to run the rasterio setup script. Numpy has to
-be installed first.
+be installed (via the indicated requirements file) before rasterio can be
+installed.
 
 Testing
 -------
