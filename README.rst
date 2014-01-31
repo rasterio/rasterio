@@ -138,7 +138,8 @@ Like a gdalinfo on steroids, pass a filename to "python -m rasterio.tool".
      u'wktext': True,
      u'x_0': 0,
      u'y_0': 0}
-    >>> src.read_band(1)
+    >>> b = src.read_band(1)
+    >>> b
     array([[255, 255, 255, ...,   0,   0,   0],
            [255, 255, 255, ...,   0,   0,   0],
            [255, 255, 255, ...,   0,   0,   0],
@@ -146,7 +147,8 @@ Like a gdalinfo on steroids, pass a filename to "python -m rasterio.tool".
            [255, 255, 255, ..., 255, 255, 255],
            [255, 255, 255, ..., 255, 255, 255],
            [255, 255, 255, ..., 255, 255, 255]], dtype=uint8)
-    >>>
+    >>> b.min(), b.max(), b.mean()
+    (0, 255, 224.75362300872803)
 
 Dependencies
 ------------
