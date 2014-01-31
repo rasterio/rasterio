@@ -110,6 +110,44 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
     
     subprocess.call(['open', 'example-total.jpg'])
 
+Interactive Interpreter
+-----------------------
+
+Like a gdalinfo on steroids, pass a filename to "python -m rasterio.tool".
+
+.. code-block:: console
+
+    $ python -m rasterio.tool rasterio/tests/data/shade.tif
+    Rasterio 0.5.1 Interactive Interpreter
+    Type "src.name", "src.read_band(1)", or "help(src)" for more information.
+    >>> src.name
+    'rasterio/tests/data/shade.tif'
+    >>> src.shape
+    (1024, 1024)
+    >>> import pprint
+    >>> pprint.pprint(src.crs)
+    {u'a': 6378137,
+     u'b': 6378137,
+     u'k': 1,
+     u'lat_ts': 0,
+     u'lon_0': 0,
+     u'nadgrids': u'@null',
+     u'no_defs': True,
+     u'proj': u'merc',
+     u'units': u'm',
+     u'wktext': True,
+     u'x_0': 0,
+     u'y_0': 0}
+    >>> src.read_band(1)
+    array([[255, 255, 255, ...,   0,   0,   0],
+           [255, 255, 255, ...,   0,   0,   0],
+           [255, 255, 255, ...,   0,   0,   0],
+           ...,
+           [255, 255, 255, ..., 255, 255, 255],
+           [255, 255, 255, ..., 255, 255, 255],
+           [255, 255, 255, ..., 255, 255, 255]], dtype=uint8)
+    >>>
+
 Dependencies
 ------------
 
