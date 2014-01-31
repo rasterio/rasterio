@@ -1,15 +1,14 @@
 rasterio
 ========
 
-Clean and fast and geospatial raster I/O for Python programmers who use Numpy.
+Rasterio is GDAL and Numpy-based Python library for geospatial raster data access.
 
-This library is designed for developers who want to read raster datasets into
-Numpy arrays or buffers, operate on them in Python (or Cython), and write the
-results out to new GeoTIFF files.
+.. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
+   :target: https://travis-ci.org/mapbox/rasterio
 
-Rasterio employs GDAL under the hood for file I/O and raster formatting. It
-aims to let you get more done with less code and fewer bugs than you can with
-other GDAL interfaces.
+Rasterio employs GDAL under the hood for file I/O and raster formatting. Its
+functions typically accept and return Numpy ndarrays. Rasterio is designed to
+make working with geospatial raster data more productive and more fun.
 
 Example
 -------
@@ -132,16 +131,24 @@ Installation
 ------------
 
 Rasterio is a C extension and there are not yet any binary releases. You'll
-need a working compiler (XCode on OS X, etc).
+need a working compiler (XCode on OS X, etc). To install from the source 
+distribution on PyPI, do the following:
 
 .. code-block:: console
 
     $ pip install -r https://raw.github.com/mapbox/rasterio/master/requirements.txt
-    $ pip install rasterio
+    $ pip install rasterio>=0.5
+
+To install from a forked repo, do this (in a virtualenv, preferably):
+
+.. code-block:: console
+
+    $ pip install -r requirements-dev.txt
+    $ python setup.py install
 
 The Numpy headers are required to run the rasterio setup script. Numpy has to
 be installed (via the indicated requirements file) before rasterio can be
-installed.
+installed. See rasterio's Travis `configuration <https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more guidance.
 
 Testing
 -------
