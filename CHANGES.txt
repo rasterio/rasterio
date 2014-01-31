@@ -4,6 +4,7 @@ Changes
 0.5.1 (?)
 ----------------
 - Add mask option to shapes() function (#26).
+- Add rasterio.tool interactive interpreter.
 
 0.5 (2014-01-22)
 ----------------
