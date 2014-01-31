@@ -36,7 +36,7 @@ def open(
     or "w" (write) and return a ``Reader`` or ``Updater`` object.
     
     In write mode, a driver name such as "GTiff" or "JPEG" (see GDAL
-    docs or ``gdan_translate --help`` on the command line), ``width``
+    docs or ``gdal_translate --help`` on the command line), ``width``
     (number of pixels per line) and ``height`` (number of lines), the
     ``count`` number of bands in the new file must be specified.
     Additionally, the data type for bands such as ``rasterio.ubyte`` for
