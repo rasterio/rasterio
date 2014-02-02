@@ -110,17 +110,16 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
     
     subprocess.call(['open', 'example-total.jpg'])
 
-Interactive Interpreter
------------------------
+Rasterio.insp
+-------------
 
-Like a gdalinfo on steroids, pass a filename to "python -m rasterio.tool".
+Like a gdalinfo on steroids, pass a filename to "rasterio.insp".
 
 .. code-block:: console
 
-    $ python -m rasterio.tool rasterio/tests/data/shade.tif
-    Rasterio 0.5.1 Interactive Interpreter
+    $ rasterio.insp rasterio/tests/data/RGB.byte.tif
+    Rasterio 0.5.1 Interactive Inspector (Python 2.7.5)
     Type "src.name", "src.read_band(1)", or "help(src)" for more information.
-    >>> src.name
     'rasterio/tests/data/shade.tif'
     >>> src.shape
     (1024, 1024)

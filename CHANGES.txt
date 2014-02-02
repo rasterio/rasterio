@@ -1,10 +1,10 @@
 Changes
 =======
 
-0.5.1 (?)
-----------------
+0.5.1 (2014-02-02)
+------------------
 - Add mask option to shapes() function (#26).
-- Add rasterio.tool interactive interpreter.
+- Add rasterio.insp interactive interpreter.
 
 0.5 (2014-01-22)
 ----------------
