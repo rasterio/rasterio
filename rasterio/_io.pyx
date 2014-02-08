@@ -10,6 +10,7 @@ cimport numpy as np
 from rasterio cimport _gdal, _ogr
 from rasterio._drivers import DriverManager, driver_count
 from rasterio import dtypes
+from rasterio.five import text_type
 
 
 ctypedef np.uint8_t DTYPE_UBYTE_t
@@ -546,11 +547,18 @@ cdef class RasterReader:
         
         return out
 
-    def tags(self, bidx=0, domain=None):
-        """Get the dataset's tags.
-        
-        The optional domain and band arguments select a specific
-        GDAL metadata domain and tags for a specific band.
+    def tags(self, bidx=0, ns=None):
+        """Returns a dict containing copies of the dataset or band's
+        tags.
+
+        Tags are pairs of key and value strings. Tags belong to
+        namespaces.  The standard namespaces are: default (None) and
+        'IMAGE_STRUCTURE'.  Applications can create their own additional
+        namespaces.
+
+        The optional bidx argument can be used to select the tags of
+        a specific band. The optional ns argument can be used to select
+        a namespace other than the default.
         """
         cdef char *item_c
         cdef void *hobj
@@ -560,13 +568,15 @@ cdef class RasterReader:
         if not self._hds:
             raise ValueError("can't read closed raster file")
         if bidx > 0:
+            if bidx not in self.indexes:
+                raise ValueError("Invalid band index")
             hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
             if hobj is NULL:
                 raise ValueError("NULL band")
         else:
             hobj = self._hds
-        if domain:
-            domain_b = domain.encode('utf-8')
+        if ns:
+            domain_b = ns.encode('utf-8')
             domain_c = domain_b
         else:
             domain_c = NULL
@@ -809,14 +819,17 @@ cdef class RasterUpdater(RasterReader):
             raise ValueError("Invalid dtype")
         # TODO: handle errors (by retval).
 
-    def update_tags(self, bidx=0, domain=None, **kwargs):
-        """Update the dataset's tags from items in kwargs.
-        
-        The optional domain and band arguments select a specific
-        GDAL metadata domain and tags for a specific band.
+    def update_tags(self, bidx=0, ns=None, **kwargs):
+        """Updates the tags of a dataset or one of its bands.
 
-        Only keys and values that can be converted to strings are
-        allowed.
+        Tags are pairs of key and value strings. Tags belong to
+        namespaces.  The standard namespaces are: default (None) and
+        'IMAGE_STRUCTURE'.  Applications can create their own additional
+        namespaces.
+
+        The optional bidx argument can be used to select the dataset
+        band. The optional ns argument can be used to select a namespace
+        other than the default.
         """
         cdef char *key_c, *value_c
         cdef void *hobj
@@ -825,20 +838,22 @@ cdef class RasterUpdater(RasterReader):
         if not self._hds:
             raise ValueError("can't read closed raster file")
         if bidx > 0:
+            if bidx not in self.indexes:
+                raise ValueError("Invalid band index")
             hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
             if hobj is NULL:
                 raise ValueError("NULL band")
         else:
             hobj = self._hds
-        if domain:
-            domain_b = domain.encode('utf-8')
+        if ns:
+            domain_b = ns.encode('utf-8')
             domain_c = domain_b
         else:
             domain_c = NULL
-        cdef char **papszStrList = _gdal.GDALGetMetadata(hobj, NULL)
+        cdef char **papszStrList = _gdal.GDALGetMetadata(hobj, domain_c)
         for key, value in kwargs.items():
-            key_b = str(key).encode('utf-8')
-            value_b = str(value).encode('utf-8')
+            key_b = text_type(key).encode('utf-8')
+            value_b = text_type(value).encode('utf-8')
             key_c = key_b
             value_c = value_b
             i = _gdal.CSLFindName(papszStrList, key_c)
