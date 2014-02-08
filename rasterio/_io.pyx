@@ -546,6 +546,41 @@ cdef class RasterReader:
         
         return out
 
+    def tags(self, bidx=0, domain=None):
+        """Get the dataset's tags.
+        
+        The optional domain and band arguments select a specific
+        GDAL metadata domain and tags for a specific band.
+        """
+        cdef char *item_c
+        cdef void *hobj
+        cdef const char *domain_c
+        cdef char **papszStrList
+        
+        if not self._hds:
+            raise ValueError("can't read closed raster file")
+        if bidx > 0:
+            hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
+            if hobj is NULL:
+                raise ValueError("NULL band")
+        else:
+            hobj = self._hds
+        if domain:
+            domain_b = domain.encode('utf-8')
+            domain_c = domain_b
+        else:
+            domain_c = NULL
+        papszStrList = _gdal.GDALGetMetadata(hobj, domain_c)
+        num_items = _gdal.CSLCount(papszStrList)
+        retval = {}
+        for i in range(num_items):
+            item_c = papszStrList[i]
+            item_b = item_c
+            item = item_b.decode('utf-8')
+            key, value = item.split('=')
+            retval[key] = value
+        return retval
+
 
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
@@ -773,4 +808,43 @@ cdef class RasterUpdater(RasterReader):
         else:
             raise ValueError("Invalid dtype")
         # TODO: handle errors (by retval).
+
+    def update_tags(self, bidx=0, domain=None, **kwargs):
+        """Update the dataset's tags from items in kwargs.
+        
+        The optional domain and band arguments select a specific
+        GDAL metadata domain and tags for a specific band.
+
+        Only keys and values that can be converted to strings are
+        allowed.
+        """
+        cdef char *key_c, *value_c
+        cdef void *hobj
+        cdef const char *domain_c
+        
+        if not self._hds:
+            raise ValueError("can't read closed raster file")
+        if bidx > 0:
+            hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
+            if hobj is NULL:
+                raise ValueError("NULL band")
+        else:
+            hobj = self._hds
+        if domain:
+            domain_b = domain.encode('utf-8')
+            domain_c = domain_b
+        else:
+            domain_c = NULL
+        cdef char **papszStrList = _gdal.GDALGetMetadata(hobj, NULL)
+        for key, value in kwargs.items():
+            key_b = str(key).encode('utf-8')
+            value_b = str(value).encode('utf-8')
+            key_c = key_b
+            value_c = value_b
+            i = _gdal.CSLFindName(papszStrList, key_c)
+            if i < 0:
+                papszStrList = _gdal.CSLAddNameValue(papszStrList, key_c, value_c)
+            else:
+                papszStrList = _gdal.CSLSetNameValue(papszStrList, key_c, value_c)
+        retval = _gdal.GDALSetMetadata(hobj, papszStrList, domain_c)
 

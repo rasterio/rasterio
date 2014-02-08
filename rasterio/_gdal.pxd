@@ -6,6 +6,9 @@ cdef extern from "cpl_conv.h":
     void    CPLSetThreadLocalConfigOption (char *key, char *val)
 
 cdef extern from "cpl_string.h":
+    int CSLCount (char **papszStrList)
+    char ** CSLAddNameValue (char **papszStrList, const char *pszName, const char *pszValue)
+    int CSLFindName (char **papszStrList, const char *pszName)
     char ** CSLSetNameValue (char **list, char *name, char *val)
     void    CSLDestroy (char **list)
 
@@ -47,6 +50,11 @@ cdef extern from "gdal.h":
     void * GDALCreateCopy(void *driver, const char *filename, void *ds, int strict, char **options, void *progress_func, void *progress_data)
     const char * GDALGetDriverShortName(void *driver)
     const char * GDALGetDriverLongName(void *driver)
+
+    char** GDALGetMetadata (void *hObject, const char *pszDomain)
+    int GDALSetMetadata (void *hObject, char **papszMD, const char *pszDomain)
+    const char* GDALGetMetadataItem(void *hObject, const char *pszName, const char *pszDomain)
+    int GDALSetMetadataItem (void *hObject, const char *pszName, const char *pszValue, const char *pszDomain)
 
 cdef extern from "gdal_alg.h":
     int GDALPolygonize(void *src_band, void *mask_band, void *layer, int fidx, char **options, void *progress_func, void *progress_data)
