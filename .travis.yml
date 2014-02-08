@@ -8,5 +8,6 @@ before_install:
   - sudo apt-get install gdal-bin libgdal-dev
 install:
   - "pip install -r requirements-dev.txt"
+  - "pip install pytest"
   - "python setup.py develop"
-script: nosetests
+script: py.test
