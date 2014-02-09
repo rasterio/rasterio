@@ -1,9 +1,13 @@
 Changes
 =======
 
-Next
+0.6 (?)
 ------------------
 - Add support for dataset and band tags (#32).
+- Add testing dependence on pytest (#33).
+- Add support for simple RGBA colormaps (#34).
+- Fix for a crasher that occurs when a file is sent through a write-read
+  revolving door.
 
 0.5.1 (2014-02-02)
 ------------------
