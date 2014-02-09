@@ -162,17 +162,18 @@ def window_shape(window, height=-1, width=-1):
 def window_index(window):
     return tuple(slice(*w) for w in window)
 
+
 cdef class RasterReader:
     # Read-only access to raster data and metadata.
     
     cdef void *_hds
-    cdef int _count
-    
+
     cdef readonly object name
     cdef readonly object mode
     cdef readonly object width, height
     cdef readonly object shape
     cdef public object driver
+    cdef public object _count
     cdef public object _dtypes
     cdef public object _closed
     cdef public object _crs
@@ -192,9 +193,6 @@ cdef class RasterReader:
         self._block_shapes = []
         self._nodatavals = []
         self.driver_manager = None
-
-    def __dealloc__(self):
-        self.stop()
     
     def __repr__(self):
         return "<%s RasterReader '%s' at %s>" % (
@@ -204,15 +202,15 @@ cdef class RasterReader:
 
     def start(self):
         # Is there not a driver manager already?
-        if not self.driver_manager and driver_count() == 0:
+        if driver_count() == 0 and not self.driver_manager:
             # create a local manager and enter
             self.driver_manager = DriverManager()
-            self.driver_manager.__enter__()
+            self.driver_manager.start()
 
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
         self._hds = _gdal.GDALOpen(fname, 0)
-        if not self._hds:
+        if self._hds == NULL:
             raise ValueError("Null dataset")
 
         cdef void *drv
@@ -229,23 +227,23 @@ cdef class RasterReader:
         self._transform = self.read_transform()
         self._crs = self.read_crs()
         self._crs_wkt = self.read_crs_wkt()
-        
-        self._closed = False
-        
+
         # touch self.meta
         _ = self.meta
 
+        self._closed = False
+
     def read_crs(self):
         cdef char *proj_c = NULL
-        if self._hds is NULL:
+        if self._hds == NULL:
             raise ValueError("Null dataset")
         cdef void *osr = _gdal.OSRNewSpatialReference(
             _gdal.GDALGetProjectionRef(self._hds))
         log.debug("Got coordinate system")
         crs = {}
-        if osr is not NULL:
+        if osr != NULL:
             _gdal.OSRExportToProj4(osr, &proj_c)
-            if proj_c is NULL:
+            if proj_c == NULL:
                 raise ValueError("Null projection")
             proj_b = proj_c
             log.debug("Params: %s", proj_b)
@@ -276,15 +274,15 @@ cdef class RasterReader:
 
     def read_crs_wkt(self):
         cdef char *proj_c = NULL
-        if self._hds is NULL:
+        if self._hds == NULL:
             raise ValueError("Null dataset")
         cdef void *osr = _gdal.OSRNewSpatialReference(
             _gdal.GDALGetProjectionRef(self._hds))
         log.debug("Got coordinate system")
         crs = {}
-        if osr is not NULL:
+        if osr != NULL:
             _gdal.OSRExportToWkt(osr, &proj_c)
-            if proj_c is NULL:
+            if proj_c == NULL:
                 raise ValueError("Null projection")
             proj_b = proj_c
             crs_wkt = proj_b.decode('utf-8')
@@ -295,7 +293,7 @@ cdef class RasterReader:
         return crs_wkt
 
     def read_transform(self):
-        if self._hds is NULL:
+        if self._hds == NULL:
             raise ValueError("Null dataset")
         cdef double gt[6]
         _gdal.GDALGetGeoTransform(self._hds, gt)
@@ -305,11 +303,11 @@ cdef class RasterReader:
         return transform
 
     def stop(self):
-        if self._hds is not NULL:
+        if self._hds != NULL:
             _gdal.GDALClose(self._hds)
-        self._hds = NULL
         if self.driver_manager:
-            self.driver_manager.__exit__()
+            self.driver_manager.stop()
+        self._hds = NULL
 
     def close(self):
         self.stop()
@@ -320,7 +318,11 @@ cdef class RasterReader:
 
     def __exit__(self, type, value, traceback):
         self.close()
-    
+
+    def __dealloc__(self):
+        if self._hds != NULL:
+            _gdal.GDALClose(self._hds)
+
     @property
     def closed(self):
         return self._closed
@@ -328,7 +330,7 @@ cdef class RasterReader:
     @property
     def count(self):
         if not self._count:
-            if not self._hds:
+            if self._hds == NULL:
                 raise ValueError("Can't read closed raster file")
             self._count = _gdal.GDALGetRasterCount(self._hds)
         return self._count
@@ -342,7 +344,7 @@ cdef class RasterReader:
         """Returns an ordered list of all band data types."""
         cdef void *hband = NULL
         if not self._dtypes:
-            if not self._hds:
+            if self._hds == NULL:
                 raise ValueError("can't read closed raster file")
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
@@ -360,10 +362,12 @@ cdef class RasterReader:
         cdef void *hband = NULL
         cdef int xsize, ysize
         if not self._block_shapes:
-            if not self._hds:
+            if self._hds == NULL:
                 raise ValueError("can't read closed raster file")
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                if hband == NULL:
+                    raise ValueError("Null band")
                 _gdal.GDALGetBlockSize(hband, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
         return self._block_shapes
@@ -375,10 +379,12 @@ cdef class RasterReader:
         cdef object val
         cdef int success
         if not self._nodatavals:
-            if not self._hds:
+            if self._hds == NULL:
                 raise ValueError("can't read closed raster file")
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                if hband == NULL:
+                    raise ValueError("Null band")
                 val = _gdal.GDALGetRasterNoDataValue(hband, &success)
                 if not success:
                     val = None
@@ -494,13 +500,13 @@ cdef class RasterReader:
         if bidx not in self.indexes:
             raise IndexError("band index out of range")
         i = self.indexes.index(bidx)
-        if not self._hds:
+        if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
             raise ValueError("band and output array dtypes do not match")
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband is NULL:
+        if hband == NULL:
             raise ValueError("NULL band")
         
         dtype = self.dtypes[i]
@@ -564,14 +570,13 @@ cdef class RasterReader:
         cdef void *hobj
         cdef const char *domain_c
         cdef char **papszStrList
-        
-        if not self._hds:
+        if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if bidx > 0:
             if bidx not in self.indexes:
                 raise ValueError("Invalid band index")
             hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hobj is NULL:
+            if hobj == NULL:
                 raise ValueError("NULL band")
         else:
             hobj = self._hds
@@ -589,6 +594,34 @@ cdef class RasterReader:
             item = item_b.decode('utf-8')
             key, value = item.split('=')
             retval[key] = value
+        return retval
+
+    def read_colormap(self, bidx):
+        """Returns a dict containing the colormap for a band or None."""
+        cdef void *hBand
+        cdef void *hTable
+        cdef int i
+        cdef _gdal.GDALColorEntry *color
+        if self._hds == NULL:
+            raise ValueError("can't read closed raster file")
+        if bidx > 0:
+            if bidx not in self.indexes:
+                raise ValueError("Invalid band index")
+            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
+            if hBand == NULL:
+                raise ValueError("NULL band")
+        hTable = _gdal.GDALGetRasterColorTable(hBand)
+        if hTable == NULL:
+            raise ValueError("NULL color table")
+        retval = {}
+
+        for i in range(_gdal.GDALGetColorEntryCount(hTable)):
+            color = _gdal.GDALGetColorEntry(hTable, i)
+            if color == NULL:
+                log.warn("NULL color at %d, skipping", i)
+                continue
+            log.info("Color: (%d, %d, %d, %d)", color.c1, color.c2, color.c3, color.c4)
+            retval[i] = (color.c1, color.c2, color.c3, color.c4)
         return retval
 
 
@@ -637,10 +670,10 @@ cdef class RasterUpdater(RasterReader):
         cdef const char *fname = name_b
 
         # Is there not a driver manager already?
-        if not self.driver_manager and driver_count() == 0:
+        if driver_count() == 0 and not self.driver_manager:
             # create a local manager and enter
             self.driver_manager = DriverManager()
-            self.driver_manager.__enter__()
+            self.driver_manager.start()
 
         if self.mode == 'w':
             # GDAL can Create() GTiffs. Many other formats only support
@@ -655,7 +688,7 @@ cdef class RasterUpdater(RasterReader):
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
             drv = _gdal.GDALGetDriverByName(drv_name)
-            if drv is NULL:
+            if drv == NULL:
                 raise ValueError("NULL driver for %s", self.driver)
             
             # Find the equivalent GDAL data type or raise an exception
@@ -684,7 +717,7 @@ cdef class RasterUpdater(RasterReader):
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
                 gdal_dtype, options)
-            if not self._hds:
+            if self._hds == NULL:
                 raise ValueError("NULL dataset")
 
             if self._init_nodata is not None:
@@ -700,7 +733,9 @@ cdef class RasterUpdater(RasterReader):
         
         elif self.mode == 'a':
             self._hds = _gdal.GDALOpen(fname, 1)
-        
+            if self._hds == NULL:
+                raise ValueError("NULL dataset")
+
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
@@ -719,10 +754,10 @@ cdef class RasterUpdater(RasterReader):
         return self._crs
     
     def write_crs(self, crs):
-        if self._hds is NULL:
+        if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
         cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
-        if osr is NULL:
+        if osr == NULL:
             raise ValueError("Null spatial reference")
         params = []
         for k, v in crs.items():
@@ -745,7 +780,7 @@ cdef class RasterUpdater(RasterReader):
     crs = property(get_crs, write_crs)
 
     def write_transform(self, transform):
-        if self._hds is NULL:
+        if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
         cdef double gt[6]
         for i in range(6):
@@ -774,13 +809,13 @@ cdef class RasterUpdater(RasterReader):
         if bidx not in self.indexes:
             raise IndexError("band index out of range")
         i = self.indexes.index(bidx)
-        if not self._hds:
+        if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
             raise ValueError("band and srcput array dtypes do not match")
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband is NULL:
+        if hband == NULL:
             raise ValueError("NULL band")
         
         if window:
@@ -834,14 +869,13 @@ cdef class RasterUpdater(RasterReader):
         cdef char *key_c, *value_c
         cdef void *hobj
         cdef const char *domain_c
-        
-        if not self._hds:
+        if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if bidx > 0:
             if bidx not in self.indexes:
                 raise ValueError("Invalid band index")
             hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hobj is NULL:
+            if hobj == NULL:
                 raise ValueError("NULL band")
         else:
             hobj = self._hds
@@ -862,4 +896,32 @@ cdef class RasterUpdater(RasterReader):
             else:
                 papszStrList = _gdal.CSLSetNameValue(papszStrList, key_c, value_c)
         retval = _gdal.GDALSetMetadata(hobj, papszStrList, domain_c)
+
+    def write_colormap(self, bidx, colormap):
+        """Write a colormap for a band to the dataset."""
+        cdef void *hBand
+        cdef void *hTable
+        cdef _gdal.GDALColorEntry color
+        if self._hds == NULL:
+            raise ValueError("can't read closed raster file")
+        if bidx > 0:
+            if bidx not in self.indexes:
+                raise ValueError("Invalid band index")
+            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
+            if hBand == NULL:
+                raise ValueError("NULL band")
+        # RGB only for now. TODO: the other types.
+        # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2,     GPI_HLS=3
+        hTable = _gdal.GDALCreateColorTable(1)
+        vals = range(256)
+        for i, rgba in colormap.items():
+            if i not in vals:
+                log.warn("Invalid colormap key %d", i)
+                continue
+            color.c1, color.c2, color.c3, color.c4 = rgba
+            _gdal.GDALSetColorEntry(hTable, i, &color)
+        # TODO: other color interpretations?
+        _gdal.GDALSetRasterColorInterpretation(hBand, 2)
+        _gdal.GDALSetRasterColorTable(hBand, hTable)
+        _gdal.GDALDestroyColorTable(hTable)
 

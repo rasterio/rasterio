@@ -56,6 +56,22 @@ cdef extern from "gdal.h":
     const char* GDALGetMetadataItem(void *hObject, const char *pszName, const char *pszDomain)
     int GDALSetMetadataItem (void *hObject, const char *pszName, const char *pszValue, const char *pszDomain)
 
+    ctypedef struct GDALColorEntry:
+        short c1
+        short c2
+        short c3
+        short c4
+
+    const GDALColorEntry *GDALGetColorEntry (void *hTable, int)
+    void GDALSetColorEntry (void *hTable, int i, const GDALColorEntry *poEntry)
+    int GDALSetRasterColorTable (void *hBand, void *hTable)
+    void *GDALGetRasterColorTable (void *hBand)
+    void *GDALCreateColorTable (int)
+    void GDALDestroyColorTable (void *hTable)
+    int GDALGetColorEntryCount (void *hTable)
+    int GDALGetRasterColorInterpretation (void *hBand)
+    int GDALSetRasterColorInterpretation (void *hBand, int)
+
 cdef extern from "gdal_alg.h":
     int GDALPolygonize(void *src_band, void *mask_band, void *layer, int fidx, char **options, void *progress_func, void *progress_data)
     int GDALSieveFilter(void *src_band, void *mask_band, void *dst_band, int size, int connectivity, char **options, void *progress_func, void *progress_data)

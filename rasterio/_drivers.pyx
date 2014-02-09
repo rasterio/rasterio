@@ -37,13 +37,19 @@ class DummyManager(object):
 cdef class DriverManager(object):
     
     def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        self.stop()
+
+    def start(self):
         GDALAllRegister()
         OGRRegisterAll()
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
-        return self
 
-    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+    def stop(self):
         GDALDestroyDriverManager()
         OGRCleanupAll()
         if driver_count() != 0:

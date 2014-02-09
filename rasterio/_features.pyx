@@ -37,13 +37,13 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
     cdef double gt[6]
 
     hrdriver = _gdal.GDALGetDriverByName("MEM")
-    if hrdriver is NULL:
+    if hrdriver == NULL:
         raise ValueError("NULL driver for 'MEM'")
 
     rows = image.shape[0]
     cols = image.shape[1]
     hds = _gdal.GDALCreate(hrdriver, "temp", cols, rows, 1, 1, NULL)
-    if hds is NULL:
+    if hds == NULL:
         raise ValueError("NULL datasource")
     
     if transform:
@@ -52,7 +52,7 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
         retval = _gdal.GDALSetGeoTransform(hds, gt)
 
     hband = _gdal.GDALGetRasterBand(hds, 1)
-    if hband is NULL:
+    if hband == NULL:
         raise ValueError("NULL band")
     retval = io_ubyte(hband, 1, 0, 0, cols, rows, image)
     
@@ -61,10 +61,10 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
         hmask = _gdal.GDALCreate(hrdriver, "mask", cols, rows, 1, 1, NULL)
-        if hmask is NULL:
+        if hmask == NULL:
             raise ValueError("NULL datasource")
         hmaskband = _gdal.GDALGetRasterBand(hmask, 1)
-        if hmaskband is NULL:
+        if hmaskband == NULL:
             raise ValueError("NULL band")
         a = np.ones(mask.shape, dtype=np.uint8)
         a[mask == True] = 0
@@ -74,19 +74,19 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
 
     # Create an in-memory feature store.
     hfdriver = _ogr.OGRGetDriverByName("Memory")
-    if hfdriver is NULL:
+    if hfdriver == NULL:
         raise ValueError("NULL driver")
     hfs = _ogr.OGR_Dr_CreateDataSource(hfdriver, "temp", NULL)
-    if hfs is NULL:
+    if hfs == NULL:
         raise ValueError("NULL feature dataset")
     
     # And a layer.
     hlayer = _ogr.OGR_DS_CreateLayer(hfs, "polygons", NULL, 3, NULL)
-    if hlayer is NULL:
+    if hlayer == NULL:
         raise ValueError("NULL layer")
 
     fielddefn = _ogr.OGR_Fld_Create("image_value", 0)
-    if fielddefn is NULL:
+    if fielddefn == NULL:
         raise ValueError("NULL field definition")
     _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
     _ogr.OGR_Fld_Destroy(fielddefn)
@@ -101,11 +101,11 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
     for s, v in shape_iter:
         yield s, v
 
-    if hds is not NULL:
+    if hds != NULL:
         _gdal.GDALClose(hds)
-    if hmask is not NULL:
+    if hmask != NULL:
         _gdal.GDALClose(hmask)
-    if hfs is not NULL:
+    if hfs != NULL:
         _ogr.OGR_DS_Destroy(hfs)
 
 
@@ -123,25 +123,25 @@ def _sieve(image, size, connectivity=4, output=None):
     cdef void *hbandout
 
     hrdriver = _gdal.GDALGetDriverByName("MEM")
-    if hrdriver is NULL:
+    if hrdriver == NULL:
         raise ValueError("NULL driver for 'MEM'")
 
     rows = image.shape[0]
     cols = image.shape[1]
     hdsin = _gdal.GDALCreate(hrdriver, "input", cols, rows, 1, 1, NULL)
-    if hdsin is NULL:
+    if hdsin == NULL:
         raise ValueError("NULL input datasource")
     hdsout = _gdal.GDALCreate(hrdriver, "output", cols, rows, 1, 1, NULL)
-    if hdsout is NULL:
+    if hdsout == NULL:
         raise ValueError("NULL output datasource")
 
     hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
-    if hbandin is NULL:
+    if hbandin == NULL:
         raise ValueError("NULL input band")
     retval = io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
 
     hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
-    if hbandout is NULL:
+    if hbandout == NULL:
         raise ValueError("NULL output band")
 
     retval = _gdal.GDALSieveFilter(
@@ -151,9 +151,9 @@ def _sieve(image, size, connectivity=4, output=None):
     out = np.zeros(image.shape, np.uint8)
     retval = io_ubyte(hbandout, 0, 0, 0, cols, rows, out)
 
-    if hdsin is not NULL:
+    if hdsin != NULL:
         _gdal.GDALClose(hdsin)
-    if hdsout is not NULL:
+    if hdsout != NULL:
         _gdal.GDALClose(hdsout)
 
     return out
@@ -201,14 +201,14 @@ cdef void * _createOgrGeomFromWKB(object wkb) except NULL:
     geom_type = bytearray(wkb)[1]
     cdef unsigned char *buffer = wkb
     cdef void *cogr_geometry = _ogr.OGR_G_CreateGeometry(geom_type)
-    if cogr_geometry is not NULL:
+    if cogr_geometry != NULL:
         _ogr.OGR_G_ImportFromWkb(cogr_geometry, buffer, len(wkb))
     return cogr_geometry
 
 
 cdef _deleteOgrGeom(void *cogr_geometry):
     """Delete an OGR geometry"""
-    if cogr_geometry is not NULL:
+    if cogr_geometry != NULL:
         _ogr.OGR_G_DestroyGeometry(cogr_geometry)
     cogr_geometry = NULL
 
@@ -224,7 +224,7 @@ cdef class GeomBuilder:
     cdef _buildCoords(self, void *geom):
         # Build a coordinate sequence
         cdef int i
-        if geom is NULL:
+        if geom == NULL:
             raise ValueError("Null geom")
         npoints = _ogr.OGR_G_GetPointCount(geom)
         coords = []
@@ -247,7 +247,7 @@ cdef class GeomBuilder:
     cdef _buildParts(self, void *geom):
         cdef int j
         cdef void *part
-        if geom is NULL:
+        if geom == NULL:
             raise ValueError("Null geom")
         parts = []
         for j in range(_ogr.OGR_G_GetGeometryCount(geom)):
@@ -265,7 +265,7 @@ cdef class GeomBuilder:
 
     cdef build(self, void *geom):
         # The only method anyone needs to call
-        if geom is NULL:
+        if geom == NULL:
             raise ValueError("Null geom")
         
         cdef unsigned int etype = _ogr.OGR_G_GetGeometryType(geom)
@@ -293,7 +293,7 @@ cdef geometry(void *geom):
 
 cdef _deleteOgrFeature(void *cogr_feature):
     """Delete an OGR feature"""
-    if cogr_feature is not NULL:
+    if cogr_feature != NULL:
         _ogr.OGR_F_Destroy(cogr_feature)
     cogr_feature = NULL
 
@@ -320,7 +320,7 @@ cdef class ShapeIterator:
             raise StopIteration
         image_value = _ogr.OGR_F_GetFieldAsInteger(ftr, 0)
         geom = _ogr.OGR_F_GetGeometryRef(ftr)
-        if geom is not NULL:
+        if geom != NULL:
             shape = GeomBuilder().build(geom)
         else:
             shape = None

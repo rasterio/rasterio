@@ -21,13 +21,13 @@ cdef class RasterCopier:
         dst_b = dst.encode('utf-8')
         cdef const char *dst_c = dst_b
         cdef void *src_ds = _gdal.GDALOpen(src_c, 0)
-        if src_ds is NULL:
+        if src_ds == NULL:
             raise ValueError("NULL source dataset")
         driver = kw.pop('driver', 'GTiff')
         driver_b = driver.encode('utf-8')
         cdef const char *driver_c = driver_b
         cdef void *drv = _gdal.GDALGetDriverByName(driver_c)
-        if drv is NULL:
+        if drv == NULL:
             raise ValueError("NULL driver")
         strictness = 0
         if kw.pop('strict', None):
@@ -45,7 +45,7 @@ cdef class RasterCopier:
 
         cdef void *dst_ds = _gdal.GDALCreateCopy(
             drv, dst_c, src_ds, strictness, NULL, NULL, NULL)
-        if dst_ds is NULL:
+        if dst_ds == NULL:
             raise ValueError("NULL destination dataset")
         _gdal.GDALClose(src_ds)
         _gdal.GDALClose(dst_ds)
