@@ -596,7 +596,7 @@ cdef class RasterReader:
             retval[key] = value
         return retval
 
-    def read_colormap(self, bidx):
+    def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""
         cdef void *hBand
         cdef void *hTable
@@ -623,8 +623,6 @@ cdef class RasterReader:
             log.info("Color: (%d, %d, %d, %d)", color.c1, color.c2, color.c3, color.c4)
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
         return retval
-
-    colormap = read_colormap
 
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.

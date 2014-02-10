@@ -7,7 +7,7 @@ Writing colormaps
 Mappings from 8-bit (rasterio.uint8) pixel values to RGBA values can be attached
 to bands using the ``write_colormap()`` method.
 
-.. code-block:: 
+.. code-block:: python
 
     import rasterio
 
