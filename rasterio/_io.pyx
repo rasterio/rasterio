@@ -624,6 +624,7 @@ cdef class RasterReader:
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
         return retval
 
+    colormap = read_colormap
 
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
