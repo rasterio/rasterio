@@ -26,3 +26,20 @@ dtype_fwd = {
 dtype_rev = {v: k for k, v in dtype_fwd.items()}
 dtype_rev[uint8] = 1
 
+typename_fwd = {
+    0: 'Unknown',
+    1: 'Byte',
+    2: 'UInt16',
+    3: 'Int16',
+    4: 'UInt32',
+    5: 'Int32',
+    6: 'Float32',
+    7: 'Float64' }
+
+typename_rev = {v: k for k, v in typename_fwd.items()}
+
+def _gdal_typename(dtype):
+    return typename_fwd[dtype_rev[dtype]]
+
+
+
