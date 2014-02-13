@@ -2,6 +2,7 @@ import logging
 import sys
 
 import numpy
+import pytest
 
 import rasterio
 import rasterio.features as ftrz
@@ -28,6 +29,16 @@ def test_shapes():
             assert True
         else:
             assert False
+
+def test_shapes_band_shortcut():
+    """Access to shapes of labeled features"""
+    with rasterio.drivers():
+        with rasterio.open('rasterio/tests/data/shade.tif') as src:
+            shapes = ftrz.shapes(rasterio.band(src, 1))
+            shape, val = next(shapes)
+            assert shape['type'] == 'Polygon'
+            assert len(shape['coordinates']) == 1
+            assert val == 255
 
 def test_shapes_internal_driver_manager():
     """Access to shapes of labeled features"""

@@ -164,24 +164,6 @@ def window_index(window):
 
 
 cdef class RasterReader:
-    # Read-only access to raster data and metadata.
-    
-    cdef void *_hds
-
-    cdef readonly object name
-    cdef readonly object mode
-    cdef readonly object width, height
-    cdef readonly object shape
-    cdef public object driver
-    cdef public object _count
-    cdef public object _dtypes
-    cdef public object _closed
-    cdef public object _crs
-    cdef public object _crs_wkt
-    cdef public object _transform
-    cdef public object _block_shapes
-    cdef public object _nodatavals
-    cdef object driver_manager
 
     def __init__(self, path):
         self.name = path
@@ -232,6 +214,14 @@ cdef class RasterReader:
         _ = self.meta
 
         self._closed = False
+
+    cdef void *band(self, int bidx):
+        if self._hds == NULL:
+            raise ValueError("Null dataset")
+        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+        if hband == NULL:
+            raise ValueError("Null band")
+        return hband
 
     def read_crs(self):
         cdef char *proj_c = NULL
@@ -627,7 +617,6 @@ cdef class RasterReader:
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
     # TODO: the r+ mode.
-    cdef readonly object _init_dtype, _init_nodata, _options
 
     def __init__(
             self, path, mode, driver=None,

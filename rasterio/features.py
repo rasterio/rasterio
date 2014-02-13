@@ -38,6 +38,9 @@ def sieve(image, size, connectivity=4, output=None):
     if image.dtype.type != rasterio.ubyte:
         raise ValueError("Image must be dtype uint8/ubyte")
 
+    if output is not None and output.dtype.type != rasterio.ubyte:
+        raise ValueError("Output must be dtype uint8/ubyte")
+
     with rasterio.drivers():
         return _sieve(image, size, connectivity)
 

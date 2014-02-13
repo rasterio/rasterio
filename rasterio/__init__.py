@@ -1,7 +1,10 @@
 # rasterio
 
+from collections import namedtuple
 import logging
 import os
+
+import numpy
 
 from rasterio.five import string_types
 from rasterio._copy import RasterCopier
@@ -22,6 +25,14 @@ class NullHandler(logging.Handler):
         pass
 log.addHandler(NullHandler())
 
+def band(ds, bidx):
+    """Wraps a dataset and a band index up as a 'Band'"""
+    Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+    return Band(
+        ds, 
+        bidx, 
+        numpy.dtype(set(ds.dtypes).pop()),
+        ds.shape)
 
 def open(
         path, mode='r', 

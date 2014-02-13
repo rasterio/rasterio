@@ -5,7 +5,7 @@ import logging
 import numpy as np
 cimport numpy as np
 
-from rasterio cimport _gdal, _ogr
+from rasterio cimport _gdal, _ogr, _io
 from rasterio.dtypes import dtype_rev
 
 
@@ -21,7 +21,8 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
     image.
 
     The image must be of unsigned 8-bit integer (rasterio.byte or
-    numpy.uint8) data type.
+    numpy.uint8) data type. It may be either a numpy ndarray or a 
+    rasterio Band object (RasterReader, bidx namedtuple).
     """
     # Write the image into an in-memory raster.
     cdef int retval, rows, cols
@@ -35,29 +36,34 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
     cdef void *hlayer
     cdef void *fielddefn
     cdef double gt[6]
+    cdef _io.RasterReader rdr
+    cdef _io.RasterReader mrdr
 
-    hrdriver = _gdal.GDALGetDriverByName("MEM")
-    if hrdriver == NULL:
-        raise ValueError("NULL driver for 'MEM'")
+    if isinstance(image, np.ndarray):
+        hrdriver = _gdal.GDALGetDriverByName("MEM")
+        if hrdriver == NULL:
+            raise ValueError("NULL driver for 'MEM'")
+        rows = image.shape[0]
+        cols = image.shape[1]
+        hds = _gdal.GDALCreate(hrdriver, "temp", cols, rows, 1, 1, NULL)
+        if hds == NULL:
+            raise ValueError("NULL datasource")
+        if transform:
+            for i in range(6):
+                gt[i] = transform[i]
+            retval = _gdal.GDALSetGeoTransform(hds, gt)
+        hband = _gdal.GDALGetRasterBand(hds, 1)
+        if hband == NULL:
+            raise ValueError("NULL band")
+        retval = io_ubyte(hband, 1, 0, 0, cols, rows, image)
+    elif isinstance(image, tuple):
+        rdr = image.ds
+        hband = rdr.band(image.bidx)
+    else:
+        raise ValueError("Invalid source image")
 
-    rows = image.shape[0]
-    cols = image.shape[1]
-    hds = _gdal.GDALCreate(hrdriver, "temp", cols, rows, 1, 1, NULL)
-    if hds == NULL:
-        raise ValueError("NULL datasource")
-    
-    if transform:
-        for i in range(6):
-            gt[i] = transform[i]
-        retval = _gdal.GDALSetGeoTransform(hds, gt)
-
-    hband = _gdal.GDALGetRasterBand(hds, 1)
-    if hband == NULL:
-        raise ValueError("NULL band")
-    retval = io_ubyte(hband, 1, 0, 0, cols, rows, image)
-    
     # The boolean mask must be converted to 0 and 1 for GDAL.
-    if mask is not None:
+    if isinstance(mask, np.ndarray):
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
         hmask = _gdal.GDALCreate(hrdriver, "mask", cols, rows, 1, 1, NULL)
@@ -69,6 +75,11 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
         a = np.ones(mask.shape, dtype=np.uint8)
         a[mask == True] = 0
         retval = io_ubyte(hmaskband, 1, 0, 0, cols, rows, a)
+    elif isinstance(mask, tuple):
+        if mask.shape != image.shape:
+            raise ValueError("Mask must have same shape as image")
+        mrdr = mask.ds
+        hmaskband = mrdr.band(mask.bidx)
     else:
         hmaskband = NULL
 
@@ -113,7 +124,12 @@ def _sieve(image, size, connectivity=4, output=None):
     """Return an ndarray with features of smaller than size removed.
     
     The image must be of unsigned 8-bit integer (rasterio.byte or
-    numpy.uint8) data type.
+    numpy.uint8) data type. It may be either a numpy ndarray or a 
+    rasterio Band object (RasterReader, bidx namedtuple).
+
+    Likewise, the optional output must be of unsigned 8-bit integer
+    (rasterio.byte or numpy.uint8) data type. It may be either a numpy
+    ndarray or a rasterio Band object (RasterUpdater, bidx namedtuple).
     """
     cdef int retval, rows, cols
     cdef void *hrdriver
@@ -121,28 +137,40 @@ def _sieve(image, size, connectivity=4, output=None):
     cdef void *hdsout
     cdef void *hbandin
     cdef void *hbandout
+    cdef _io.RasterReader rdr
+    cdef _io.RasterUpdater udr
 
-    hrdriver = _gdal.GDALGetDriverByName("MEM")
-    if hrdriver == NULL:
-        raise ValueError("NULL driver for 'MEM'")
-
-    rows = image.shape[0]
-    cols = image.shape[1]
-    hdsin = _gdal.GDALCreate(hrdriver, "input", cols, rows, 1, 1, NULL)
-    if hdsin == NULL:
-        raise ValueError("NULL input datasource")
-    hdsout = _gdal.GDALCreate(hrdriver, "output", cols, rows, 1, 1, NULL)
-    if hdsout == NULL:
-        raise ValueError("NULL output datasource")
-
-    hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
-    if hbandin == NULL:
-        raise ValueError("NULL input band")
-    retval = io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
-
-    hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
-    if hbandout == NULL:
-        raise ValueError("NULL output band")
+    if isinstance(image, np.ndarray):
+        hrdriver = _gdal.GDALGetDriverByName("MEM")
+        if hrdriver == NULL:
+            raise ValueError("NULL driver for 'MEM'")
+        rows = image.shape[0]
+        cols = image.shape[1]
+        hdsin = _gdal.GDALCreate(hrdriver, "input", cols, rows, 1, 1, NULL)
+        if hdsin == NULL:
+            raise ValueError("NULL input datasource")
+        hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
+        if hbandin == NULL:
+            raise ValueError("NULL input band")
+        retval = io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
+    elif isinstance(image, tuple):
+        rdr = image.ds
+        hband = rdr.band(image.bidx)
+    else:
+        raise ValueError("Invalid source image")
+    
+    if isinstance(output, np.ndarray):
+        hdsout = _gdal.GDALCreate(hrdriver, "output", cols, rows, 1, 1, NULL)
+        if hdsout == NULL:
+            raise ValueError("NULL output datasource")
+        hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
+        if hbandout == NULL:
+            raise ValueError("NULL output band")
+    elif isinstance(image, tuple):
+        udr = output.ds
+        hbandout = udr.band(output.bidx)
+    else:
+        raise ValueError("Invalid source image")
 
     retval = _gdal.GDALSieveFilter(
                 hbandin, NULL, hbandout, size, connectivity,

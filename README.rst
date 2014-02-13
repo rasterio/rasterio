@@ -192,11 +192,11 @@ installed. See rasterio's Travis `configuration <https://github.com/mapbox/raste
 Testing
 -------
 
-From the repo directory, run nosetests.
+From the repo directory, run py.test
 
 .. code-block:: console
 
-    $ nosetests
+    $ py.test
 
 License
 -------
