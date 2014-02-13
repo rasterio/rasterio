@@ -4,7 +4,7 @@ Changes
 Next
 ----
 - Add a Band object, providing a shortcut for shapes() and sieve() functions
-  (#38).
+  (#34).
 
 0.6 (2014-02-10)
 ----------------
