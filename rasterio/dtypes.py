@@ -23,7 +23,7 @@ dtype_fwd = {
     6: float32,     # GDT_Float32
     7: float64 }   # GDT_Float64
 
-dtype_rev = {v: k for k, v in dtype_fwd.items()}
+dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 dtype_rev[uint8] = 1
 
 typename_fwd = {
@@ -36,7 +36,7 @@ typename_fwd = {
     6: 'Float32',
     7: 'Float64' }
 
-typename_rev = {v: k for k, v in typename_fwd.items()}
+typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
 def _gdal_typename(dtype):
     return typename_fwd[dtype_rev[dtype]]
