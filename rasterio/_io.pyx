@@ -614,6 +614,45 @@ cdef class RasterReader:
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
         return retval
 
+    def mask(self, out=None, window=None):
+        """Write the src array into the dataset's band mask.
+
+        The optional `window` argument takes a tuple like:
+        
+            ((row_start, row_stop), (col_start, col_stop))
+            
+        specifying a raster subset to write into.
+        """
+        cdef void *hband
+        cdef void *hmask
+        if self._hds == NULL:
+            raise ValueError("can't write closed raster file")
+        hband = _gdal.GDALGetRasterBand(self._hds, 1)
+        if hband == NULL:
+            raise ValueError("NULL band mask")
+        hmask = _gdal.GDALGetMaskBand(hband)
+        if hmask == NULL:
+            return None
+        if out is None:
+            out_shape = (
+                window 
+                and window_shape(window, self.height, self.width) 
+                or self.shape)
+            out = np.zeros(out_shape, np.uint8)
+        if window:
+            window = eval_window(window, self.height, self.width)
+            yoff = window[0][0]
+            xoff = window[1][0]
+            height = window[0][1] - yoff
+            width = window[1][1] - xoff
+        else:
+            xoff = yoff = 0
+            width = self.width
+            height = self.height
+        retval = io_ubyte(
+            hmask, 0, xoff, yoff, width, height, out)
+        return out
+
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
     # TODO: the r+ mode.
@@ -912,4 +951,48 @@ cdef class RasterUpdater(RasterReader):
         _gdal.GDALSetRasterColorInterpretation(hBand, 2)
         _gdal.GDALSetRasterColorTable(hBand, hTable)
         _gdal.GDALDestroyColorTable(hTable)
+
+    def write_mask(self, src, window=None):
+        """Write the src array into the dataset's band mask.
+
+        The optional `window` argument takes a tuple like:
+        
+            ((row_start, row_stop), (col_start, col_stop))
+            
+        specifying a raster subset to write into.
+        """
+        cdef void *hband
+        cdef void *hmask
+        if self._hds == NULL:
+            raise ValueError("can't write closed raster file")
+        hband = _gdal.GDALGetRasterBand(self._hds, 1)
+        if hband == NULL:
+            raise ValueError("NULL band mask")
+        hmask = _gdal.GDALGetMaskBand(hband)
+        if hmask == NULL:
+            if _gdal.GDALCreateMaskBand(self._hds, 0x02) == 0:
+                raise RuntimeError("Failed to create mask")
+            hband = _gdal.GDALGetRasterBand(self._hds, 1)
+            if hband == NULL:
+                raise ValueError("NULL band mask")
+            hmask = _gdal.GDALGetMaskBand(hband)
+        if hmask == NULL:
+            raise ValueError("NULL band mask")
+        if window:
+            window = eval_window(window, self.height, self.width)
+            yoff = window[0][0]
+            xoff = window[1][0]
+            height = window[0][1] - yoff
+            width = window[1][1] - xoff
+        else:
+            xoff = yoff = 0
+            width = self.width
+            height = self.height
+        if src.dtype == np.bool:
+            array = 255 * src.astype(np.uint8)
+            retval = io_ubyte(
+                hmask, 1, xoff, yoff, width, height, array)
+        else:
+            retval = io_ubyte(
+                hmask, 1, xoff, yoff, width, height, src)
 

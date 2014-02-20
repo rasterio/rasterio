@@ -72,6 +72,9 @@ cdef extern from "gdal.h":
     int GDALGetRasterColorInterpretation (void *hBand)
     int GDALSetRasterColorInterpretation (void *hBand, int)
 
+    void *GDALGetMaskBand (void *hBand)
+    int GDALCreateMaskBand (void *hDS, int flags)
+
 cdef extern from "gdal_alg.h":
     int GDALPolygonize(void *src_band, void *mask_band, void *layer, int fidx, char **options, void *progress_func, void *progress_data)
     int GDALSieveFilter(void *src_band, void *mask_band, void *dst_band, int size, int connectivity, char **options, void *progress_func, void *progress_data)
