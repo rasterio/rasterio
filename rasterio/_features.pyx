@@ -45,7 +45,9 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
             raise ValueError("NULL driver for 'MEM'")
         rows = image.shape[0]
         cols = image.shape[1]
-        hds = _gdal.GDALCreate(hrdriver, "temp", cols, rows, 1, 1, NULL)
+        hds = _gdal.GDALCreate(
+                    hrdriver, "temp", cols, rows, 1, 
+                    <_gdal.GDALDataType>1, NULL)
         if hds == NULL:
             raise ValueError("NULL datasource")
         if transform:
@@ -66,7 +68,9 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
     if isinstance(mask, np.ndarray):
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
-        hmask = _gdal.GDALCreate(hrdriver, "mask", cols, rows, 1, 1, NULL)
+        hmask = _gdal.GDALCreate(
+                    hrdriver, "mask", cols, rows, 1, 
+                    <_gdal.GDALDataType>1, NULL)
         if hmask == NULL:
             raise ValueError("NULL datasource")
         hmaskband = _gdal.GDALGetRasterBand(hmask, 1)
@@ -146,7 +150,9 @@ def _sieve(image, size, connectivity=4, output=None):
             raise ValueError("NULL driver for 'MEM'")
         rows = image.shape[0]
         cols = image.shape[1]
-        hdsin = _gdal.GDALCreate(hrdriver, "input", cols, rows, 1, 1, NULL)
+        hdsin = _gdal.GDALCreate(
+                    hrdriver, "input", cols, rows, 1, 
+                    <_gdal.GDALDataType>1, NULL)
         if hdsin == NULL:
             raise ValueError("NULL input datasource")
         hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
@@ -160,7 +166,9 @@ def _sieve(image, size, connectivity=4, output=None):
         raise ValueError("Invalid source image")
     
     if isinstance(output, np.ndarray):
-        hdsout = _gdal.GDALCreate(hrdriver, "output", cols, rows, 1, 1, NULL)
+        hdsout = _gdal.GDALCreate(
+                    hrdriver, "output", cols, rows, 1, 
+                    <_gdal.GDALDataType>1, NULL)
         if hdsout == NULL:
             raise ValueError("NULL output datasource")
         hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
