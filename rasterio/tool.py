@@ -19,7 +19,7 @@ def main(srcfile):
     with rasterio.drivers(), rasterio.open(srcfile) as src:
         
         def show(source):
-            """Use matplotlib to show a raster.
+            """Show a raster using matplotlib.
 
             The raster may be either an ndarray or a (dataset, bidx)
             tuple.
@@ -34,6 +34,8 @@ def main(srcfile):
             plt.show()
 
         def stats(source):
+            """Return a tuple with raster min, max, and mean.
+            """
             if isinstance(source, tuple):
                 arr = source[0].read_band(source[1])
             else:
