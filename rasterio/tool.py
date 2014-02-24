@@ -1,7 +1,10 @@
 
 import code
+import collections
 import logging
 import sys
+
+import numpy
 
 import rasterio
 
@@ -9,25 +12,43 @@ import rasterio
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger('rasterio')
 
+Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 
 def main(srcfile):
     
     with rasterio.drivers(), rasterio.open(srcfile) as src:
         
-        def show(band):
+        def show(source):
+            """Use matplotlib to show a raster.
+
+            The raster may be either an ndarray or a (dataset, bidx)
+            tuple.
+            """
             import matplotlib.pyplot as plt
-            plt.imshow(band)
+            if isinstance(source, tuple):
+                arr = source[0].read_band(source[1])
+            else:
+                arr = source
+            plt.imshow(arr)
             plt.gray()
             plt.show()
-        
+
+        def stats(source):
+            if isinstance(source, tuple):
+                arr = source[0].read_band(source[1])
+            else:
+                arr = source
+            return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
+
         code.interact(
             'Rasterio %s Interactive Inspector (Python %s)\n'
-            'Type "src.name", "src.read_band(1)", or "help(src)" '
+            'Type "src.meta", "src.read_band(1)", or "help(src)" '
             'for more information.' %  (
                 rasterio.__version__, 
                 '.'.join(map(str, sys.version_info[:3]))),
-            local=locals())
-
+            local=dict(
+                    locals(), np=numpy, rio=rasterio))
+    
     return 1
 
 if __name__ == '__main__':

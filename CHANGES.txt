@@ -6,6 +6,8 @@ Next (0.7)
 - Add a Band object, providing a shortcut for shapes() and sieve() functions
   (#34).
 - Reprojection of rasters (#12).
+- Enhancements to the rasterio.insp console: module aliases, shortcut for
+  show().
 
 0.6 (2014-02-10)
 ----------------
