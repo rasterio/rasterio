@@ -1,10 +1,11 @@
 Changes
 =======
 
-Next
-----
+Next (0.7)
+----------
 - Add a Band object, providing a shortcut for shapes() and sieve() functions
   (#34).
+- Reprojection of rasters (#12).
 
 0.6 (2014-02-10)
 ----------------
