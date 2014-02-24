@@ -3,7 +3,6 @@ import logging
 import subprocess
 import sys
 
-import matplotlib.pyplot as plt
 import numpy
 
 import rasterio
@@ -26,10 +25,14 @@ def test_reproject():
                     src_crs=src.crs,
                     dst_transform=dst_transform, 
                     dst_crs=dst_crs)
-    plt.imshow(destin)
-    plt.gray()
-    plt.savefig('test_reproject.png')
     assert destin.any()
+    try:
+        import matplotlib.pyplot as plt
+        plt.imshow(destin)
+        plt.gray()
+        plt.savefig('test_reproject.png')
+    except:
+        pass
 
 def test_warp_from_file():
     """File to ndarray"""
@@ -54,11 +57,14 @@ def test_warp_from_file():
                     destin, 
                     dst_transform=dst_transform, 
                     dst_crs=dst_crs)
-    
-    plt.imshow(destin)
-    plt.gray()
-    plt.savefig('test_warp_from_file.png')
     assert destin.any()
+    try:
+        import matplotlib.pyplot as plt
+        plt.imshow(destin)
+        plt.gray()
+        plt.savefig('test_warp_from_filereproject.png')
+    except:
+        pass
 
 def test_warp_from_to_file(tmpdir):
     """File to file"""
@@ -85,5 +91,5 @@ def test_warp_from_to_file(tmpdir):
         with rasterio.open(tiffname, 'w', **kwargs) as dst:
             for i in (1, 2, 3):
                 _warp.reproject(rasterio.band(src, i), rasterio.band(dst, i))
-    subprocess.call(['open', tiffname])
+    # subprocess.call(['open', tiffname])
 
