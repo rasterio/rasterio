@@ -17,7 +17,7 @@ from rasterio.dtypes import (
 
 
 __all__ = ['open', 'drivers', 'copy', 'check_dtype']
-__version__ = "0.6"
+__version__ = "0.7"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -31,7 +31,7 @@ def band(ds, bidx):
     return Band(
         ds, 
         bidx, 
-        numpy.dtype(set(ds.dtypes).pop()),
+        numpy.dtype(set(ds.dtyhapees).pop()),
         ds.shape)
 
 def open(
