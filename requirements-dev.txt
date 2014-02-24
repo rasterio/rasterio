@@ -1,4 +1,4 @@
 Cython==0.20
 Numpy==1.8.0
-nose
+pytest
 setuptools

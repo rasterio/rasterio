@@ -7,19 +7,10 @@ import os.path
 import numpy as np
 cimport numpy as np
 
-from rasterio cimport _gdal, _ogr
+from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import DriverManager, driver_count
 from rasterio import dtypes
 from rasterio.five import text_type
-
-
-ctypedef np.uint8_t DTYPE_UBYTE_t
-ctypedef np.uint16_t DTYPE_UINT16_t
-ctypedef np.int16_t DTYPE_INT16_t
-ctypedef np.uint32_t DTYPE_UINT32_t
-ctypedef np.int32_t DTYPE_INT32_t
-ctypedef np.float32_t DTYPE_FLOAT32_t
-ctypedef np.float64_t DTYPE_FLOAT64_t
 
 
 log = logging.getLogger('rasterio')
@@ -27,7 +18,6 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
-
 
 cdef int io_ubyte(
         void *hband,
