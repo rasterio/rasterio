@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 
 from rasterio cimport _gdal, _ogr, _io
-from rasterio._drivers import DriverManager, driver_count
+from rasterio._drivers import DriverManager, NonExitingDriverManager, driver_count
 from rasterio import dtypes
 from rasterio.five import text_type
 
@@ -177,7 +177,10 @@ cdef class RasterReader:
         if driver_count() == 0 and not self.driver_manager:
             # create a local manager and enter
             self.driver_manager = DriverManager()
-            self.driver_manager.start()
+        else:
+            # create a local manager and enter
+            self.driver_manager = NonExitingDriverManager()
+        self.driver_manager.start()
 
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
@@ -690,7 +693,9 @@ cdef class RasterUpdater(RasterReader):
         if driver_count() == 0 and not self.driver_manager:
             # create a local manager and enter
             self.driver_manager = DriverManager()
-            self.driver_manager.start()
+        else:
+            self.driver_manager = NonExitingDriverManager()
+        self.driver_manager.start()
 
         if self.mode == 'w':
             # GDAL can Create() GTiffs. Many other formats only support

@@ -2,7 +2,7 @@ import logging
 import sys
 
 import rasterio
-from rasterio._drivers import driver_count, DriverManager, DummyManager
+from rasterio._drivers import driver_count, DriverManager, NonExitingDriverManager
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -13,5 +13,5 @@ def test_drivers():
         
         n = rasterio.drivers()
         assert driver_count() > 0
-        assert type(n) == DummyManager
+        assert type(n) == NonExitingDriverManager
 

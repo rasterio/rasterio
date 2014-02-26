@@ -10,7 +10,7 @@ from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 from rasterio._io import eval_window, window_index, window_shape
-from rasterio._drivers import DriverManager, DummyManager, driver_count
+from rasterio._drivers import DriverManager, NonExitingDriverManager, driver_count
 import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
@@ -130,12 +130,12 @@ def copy(src, dst, **kw):
     with drivers():
         return RasterCopier()(src, dst, **kw)
 
-def drivers(*args):
+def drivers(**kwargs):
     """Returns a context manager with registered drivers."""
     if driver_count() == 0:
         log.debug("Creating a DriverManager in drivers()")
-        return DriverManager()
+        return DriverManager(**kwargs)
     else:
-        log.debug("Creating a DummyManager in drivers()")
-        return DummyManager()
+        log.debug("Creating a NonExitingDriverManager in drivers()")
+        return NonExitingDriverManager(**kwargs)
 
