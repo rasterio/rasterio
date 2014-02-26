@@ -45,11 +45,13 @@ def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
 
 
-cdef class NonExitingDriverManager(object):
+cdef class GDALEnv(object):
 
+    cdef object is_chef
     cdef object options
 
-    def __init__(self, **options):
+    def __init__(self, is_chef=True, **options):
+        self.is_chef = is_chef
         self.options = options.copy()
 
     def __enter__(self):
@@ -80,20 +82,13 @@ cdef class NonExitingDriverManager(object):
         return self
 
     def stop(self):
-        pass
-
-cdef class DriverManager(NonExitingDriverManager):
-
-    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        self.stop()
-
-    def stop(self):
         cdef const char *key_c
-        GDALDestroyDriverManager()
-        OGRCleanupAll()
-        CPLSetErrorHandler(NULL)
-        if driver_count() != 0:
-            raise ValueError("Drivers not de-registered")
+        if self.is_chef:
+            GDALDestroyDriverManager()
+            OGRCleanupAll()
+            CPLSetErrorHandler(NULL)
+            if driver_count() != 0:
+                raise ValueError("Drivers not de-registered")
         for key in self.options:
             key_b = key.upper().encode('utf-8')
             key_c = key_b

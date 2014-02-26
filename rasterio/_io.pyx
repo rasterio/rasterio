@@ -8,7 +8,7 @@ import numpy as np
 cimport numpy as np
 
 from rasterio cimport _gdal, _ogr, _io
-from rasterio._drivers import DriverManager, NonExitingDriverManager, driver_count
+from rasterio._drivers import driver_count, GDALEnv
 from rasterio import dtypes
 from rasterio.five import text_type
 
@@ -154,7 +154,7 @@ def window_index(window):
 
 
 cdef class RasterReader:
-
+    
     def __init__(self, path):
         self.name = path
         self.mode = 'r'
@@ -164,7 +164,7 @@ cdef class RasterReader:
         self._dtypes = []
         self._block_shapes = []
         self._nodatavals = []
-        self.driver_manager = None
+        self.env = None
     
     def __repr__(self):
         return "<%s RasterReader '%s' at %s>" % (
@@ -174,13 +174,13 @@ cdef class RasterReader:
 
     def start(self):
         # Is there not a driver manager already?
-        if driver_count() == 0 and not self.driver_manager:
+        if driver_count() == 0 and not self.env:
             # create a local manager and enter
-            self.driver_manager = DriverManager()
+            self.env = GDALEnv(True)
         else:
             # create a local manager and enter
-            self.driver_manager = NonExitingDriverManager()
-        self.driver_manager.start()
+            self.env = GDALEnv(False)
+        self.env.start()
 
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
@@ -288,8 +288,8 @@ cdef class RasterReader:
     def stop(self):
         if self._hds != NULL:
             _gdal.GDALClose(self._hds)
-        if self.driver_manager:
-            self.driver_manager.stop()
+        if self.env:
+            self.env.stop()
         self._hds = NULL
 
     def close(self):
@@ -690,12 +690,12 @@ cdef class RasterUpdater(RasterReader):
         cdef const char *fname = name_b
 
         # Is there not a driver manager already?
-        if driver_count() == 0 and not self.driver_manager:
+        if driver_count() == 0 and not self.env:
             # create a local manager and enter
-            self.driver_manager = DriverManager()
+            self.env = GDALEnv(True)
         else:
-            self.driver_manager = NonExitingDriverManager()
-        self.driver_manager.start()
+            self.env = GDALEnv(False)
+        self.env.start()
 
         if self.mode == 'w':
             # GDAL can Create() GTiffs. Many other formats only support

@@ -43,7 +43,7 @@ cdef class RasterReader:
     cdef public object _transform
     cdef public object _block_shapes
     cdef public object _nodatavals
-    cdef object driver_manager
+    cdef object env
 
     cdef void *band(self, int bidx)
 
