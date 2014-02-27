@@ -8,6 +8,7 @@ Next (0.7)
 - Reprojection of rasters (#12).
 - Enhancements to the rasterio.insp console: module aliases, shortcut for
   show().
+- Add index() method.
 
 0.6 (2014-02-10)
 ----------------

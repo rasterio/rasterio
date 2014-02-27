@@ -417,6 +417,12 @@ cdef class RasterReader:
         """
         t = self.transform
         return (t[0], t[3]+t[5]*self.height, t[0]+t[1]*self.width, t[3])
+    
+    @property
+    def res(self):
+        """Returns the (width, height) of pixels."""
+        t = self.transform
+        return t[1], -t[5]
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a 
@@ -424,7 +430,16 @@ cdef class RasterReader:
         coordinate reference system.
         """
         t = self.transform
+        if col < 0:
+            col += self.width
+        if row < 0:
+            row += self.height
         return t[0]+t[1]*col, t[3]+t[5]*row
+
+    def index(self, x, y):
+        """Returns the (row, col) index of the pixel containing (x, y)."""
+        t = self.transform
+        return int((t[3]-y)/t[5]), int((x-t[0])/t[1])
 
     @property
     def meta(self):
