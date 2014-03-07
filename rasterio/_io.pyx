@@ -624,7 +624,8 @@ cdef class RasterReader:
 
     def read_mask(self, out=None, window=None):
         """Read the mask band into an `out` array if provided, 
-        otherwise return a new array.
+        otherwise return a new array containing the dataset's
+        valid data mask.
 
         The optional `window` argument takes a tuple like:
         
@@ -964,7 +965,8 @@ cdef class RasterUpdater(RasterReader):
         _gdal.GDALDestroyColorTable(hTable)
 
     def write_mask(self, src, window=None):
-        """Write the src array into the dataset's band mask.
+        """Write the valid data mask src array into the dataset's band
+        mask.
 
         The optional `window` argument takes a tuple like:
         
@@ -979,16 +981,12 @@ cdef class RasterUpdater(RasterReader):
         hband = _gdal.GDALGetRasterBand(self._hds, 1)
         if hband == NULL:
             raise ValueError("NULL band mask")
+        if _gdal.GDALCreateMaskBand(hband, 0x02) != 0:
+            raise RuntimeError("Failed to create mask")
         hmask = _gdal.GDALGetMaskBand(hband)
         if hmask == NULL:
-            if _gdal.GDALCreateMaskBand(self._hds, 0x02) == 0:
-                raise RuntimeError("Failed to create mask")
-            hband = _gdal.GDALGetRasterBand(self._hds, 1)
-            if hband == NULL:
-                raise ValueError("NULL band mask")
-            hmask = _gdal.GDALGetMaskBand(hband)
-        if hmask == NULL:
             raise ValueError("NULL band mask")
+        log.debug("Created mask band")
         if window:
             window = eval_window(window, self.height, self.width)
             yoff = window[0][0]
