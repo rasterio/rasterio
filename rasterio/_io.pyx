@@ -622,8 +622,9 @@ cdef class RasterReader:
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
         return retval
 
-    def mask(self, out=None, window=None):
-        """Write the src array into the dataset's band mask.
+    def read_mask(self, out=None, window=None):
+        """Read the mask band into an `out` array if provided, 
+        otherwise return a new array.
 
         The optional `window` argument takes a tuple like:
         

@@ -9,6 +9,7 @@ Next (0.7)
 - Enhancements to the rasterio.insp console: module aliases, shortcut for
   show().
 - Add index() method.
+- Reading of GDAL mask bands (#41).
 
 0.6 (2014-02-10)
 ----------------
