@@ -6,7 +6,7 @@ import sys
 import numpy
 
 import rasterio
-from rasterio import _warp
+from rasterio._warp import reproject, RESAMPLING
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -18,13 +18,14 @@ def test_reproject():
         dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
         dst_crs = {'init': 'EPSG:3857'}
         destin = numpy.empty(src.shape, dtype=numpy.uint8)
-        _warp.reproject(
-                    source, 
-                    destin,
-                    src_transform=src.transform,
-                    src_crs=src.crs,
-                    dst_transform=dst_transform, 
-                    dst_crs=dst_crs)
+        reproject(
+            source, 
+            destin,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_transform, 
+            dst_crs=dst_crs,
+            resampling=RESAMPLING.nearest )
     assert destin.any()
     try:
         import matplotlib.pyplot as plt
@@ -52,11 +53,11 @@ def test_warp_from_file():
                     wktext=True,
                     no_defs=True)
         destin = numpy.empty(src.shape, dtype=numpy.uint8)
-        _warp.reproject(
-                    rasterio.band(src, 1), 
-                    destin, 
-                    dst_transform=dst_transform, 
-                    dst_crs=dst_crs)
+        reproject(
+            rasterio.band(src, 1), 
+            destin, 
+            dst_transform=dst_transform, 
+            dst_crs=dst_crs)
     assert destin.any()
     try:
         import matplotlib.pyplot as plt
@@ -90,6 +91,6 @@ def test_warp_from_to_file(tmpdir):
             crs=dst_crs)
         with rasterio.open(tiffname, 'w', **kwargs) as dst:
             for i in (1, 2, 3):
-                _warp.reproject(rasterio.band(src, i), rasterio.band(dst, i))
+                reproject(rasterio.band(src, i), rasterio.band(dst, i))
     # subprocess.call(['open', tiffname])
 
