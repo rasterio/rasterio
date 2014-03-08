@@ -5,7 +5,7 @@ import tempfile
 
 import numpy
 import rasterio
-from rasterio.warp import reproject
+from rasterio.warp import reproject, RESAMPLING
 
 tempdir = '/tmp'
 tiffname = os.path.join(tempdir, 'example.tif')
@@ -27,9 +27,13 @@ with rasterio.drivers():
     destination = numpy.zeros(dst_shape, numpy.uint8)
 
     reproject(
-        source, destination, 
-        src_transform, src_crs,
-        dst_transform, dst_crs)
+        source, 
+        destination, 
+        src_transform=src_transform,
+        src_crs=src_crs,
+        dst_transform=dst_transform,
+        dst_crs=dst_crs,
+        resampling=RESAMPLING.nearest)
 
     # Assert that the destination is only partly filled.
     assert destination.any()

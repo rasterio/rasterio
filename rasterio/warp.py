@@ -1,4 +1,4 @@
 """Raster warping and reprojection"""
 
 import rasterio
-from rasterio._warp import reproject
+from rasterio._warp import reproject, RESAMPLING
