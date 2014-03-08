@@ -20,15 +20,15 @@ The remaining keyword arguments parameterize the reprojection transform.
 
     with rasterio.drivers():
 
-        # Consider a 512 x 512 raster centered on 0 degrees E and 0 degrees N
-        # with each pixel covering 15".
+        # As source: a 512 x 512 raster centered on 0 degrees E and 0
+        # degrees N, each pixel covering 15".
         src_shape = (512, 512)
         src_transform = [-256.0/240, 1.0/240, 0.0, 256.0/240, 0.0, -1.0/240]
         src_crs = {'init': 'EPSG:4326'}
         source = numpy.ones(src_shape, numpy.uint8)*255
 
-        # Prepare to reproject this rasters to a 1024 x 1024 dataset in
-        # Web Mercator (EPSG:3857) with origin at 0.0, 0.0.
+        # Destination: a 1024 x 1024 dataset in Web Mercator (EPSG:3857)
+        # with origin at 0.0, 0.0.
         dst_shape = (1024, 1024)
         dst_transform = [-237481.5, 425.0, 0.0, 237536.4, 0.0, -425.0]
         dst_crs = {'init': 'EPSG:3857'}
