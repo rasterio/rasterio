@@ -16,7 +16,19 @@ def test_reproject():
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
             source = src.read_band(1)
         dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
-        dst_crs = {'init': 'EPSG:3857'}
+        dst_crs = dict(
+                    proj='merc',
+                    a=6378137,
+                    b=6378137,
+                    lat_ts=0.0,
+                    lon_0=0.0,
+                    x_0=0.0,
+                    y_0=0,
+                    k=1.0,
+                    units='m',
+                    nadgrids='@null',
+                    wktext=True,
+                    no_defs=True)
         destin = numpy.empty(src.shape, dtype=numpy.uint8)
         reproject(
             source, 
