@@ -501,7 +501,9 @@ cdef class RasterReader:
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if out is not None and out.dtype != self.dtypes[i]:
-            raise ValueError("band and output array dtypes do not match")
+            raise ValueError(
+                "the array's dtype '%s' does not match "
+                "the file's dtype '%s'" % (out.dtype, self.dtypes[i]))
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband == NULL:
@@ -851,7 +853,9 @@ cdef class RasterUpdater(RasterReader):
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if src is not None and src.dtype != self.dtypes[i]:
-            raise ValueError("band and srcput array dtypes do not match")
+            raise ValueError(
+                "the array's dtype '%s' does not match "
+                "the file's dtype '%s'" % (src.dtype, self.dtypes[i]))
         
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband == NULL:

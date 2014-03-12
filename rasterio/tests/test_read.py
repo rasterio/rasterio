@@ -70,7 +70,12 @@ class ReaderContextTest(unittest.TestCase):
     def test_read_out_dtype_fail(self):
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((718, 791), dtype=rasterio.float32)
-            self.assertRaises(ValueError, s.read_band, 1, a)
+            try:
+                s.read_band(1, a)
+            except ValueError, e:
+                assert str(e) == "the array's dtype 'float32' does not match the file's dtype '<type 'numpy.uint8'>'"
+            except:
+                assert "failed to catch exception" is False
     def test_read_out_shape_resample(self):
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((7, 8), dtype=rasterio.ubyte)
