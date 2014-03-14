@@ -11,6 +11,7 @@ Next (0.7)
 - Add index() method.
 - Reading and writing of GDAL mask bands (#41).
 - Add rio_cp program.
+- Enable r+ mode for GeoTIFFs (#46).
 
 0.6 (2014-02-10)
 ----------------

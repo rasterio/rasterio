@@ -72,7 +72,7 @@ class ReaderContextTest(unittest.TestCase):
             a = numpy.zeros((718, 791), dtype=rasterio.float32)
             try:
                 s.read_band(1, a)
-            except ValueError, e:
+            except ValueError as e:
                 assert str(e) == "the array's dtype 'float32' does not match the file's dtype '<type 'numpy.uint8'>'"
             except:
                 assert "failed to catch exception" is False
