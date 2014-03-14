@@ -32,7 +32,7 @@ cdef extern from "gdal.h":
 
     void * GDALGetDriverByName(const char *name)
     void * GDALOpen(const char *filename, int access)
-    
+    void GDALFlushCache (void *ds)
     void GDALClose(void *ds)
     void * GDALGetDatasetDriver(void *ds)
     int GDALGetGeoTransform	(void *ds, double *transform)

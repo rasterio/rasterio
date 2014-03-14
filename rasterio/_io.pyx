@@ -287,6 +287,7 @@ cdef class RasterReader:
 
     def stop(self):
         if self._hds != NULL:
+            _gdal.GDALFlushCache(self._hds)
             _gdal.GDALClose(self._hds)
         if self.env:
             self.env.stop()
@@ -777,17 +778,26 @@ cdef class RasterUpdater(RasterReader):
             if self._hds == NULL:
                 raise ValueError("NULL dataset")
 
+        drv = _gdal.GDALGetDatasetDriver(self._hds)
+        drv_name = _gdal.GDALGetDriverShortName(drv)
+        self.driver = drv_name.decode('utf-8')
+
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
-        self._closed = False
 
-        if options:
+        self._transform = self.read_transform()
+        self._crs = self.read_crs()
+        self._crs_wkt = self.read_crs_wkt()
+
+        if options != NULL:
             _gdal.CSLDestroy(options)
         
         # touch self.meta
         _ = self.meta
+
+        self._closed = False
 
     def get_crs(self):
         if not self._crs:

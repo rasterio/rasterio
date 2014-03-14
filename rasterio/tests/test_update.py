@@ -2,6 +2,7 @@
 import shutil
 import subprocess
 
+import numpy
 import pytest
 
 import rasterio
@@ -18,4 +19,12 @@ def test_update_tags(tmpdir):
         assert ('c', '3') in f.tags(1).items()
     info = subprocess.check_output(["gdalinfo", tiffname])
     assert "Metadata:\n  a=1\n" in info.decode('utf-8')
+
+def test_update_band(tmpdir):
+    tiffname = str(tmpdir.join('foo.tif'))
+    shutil.copy('rasterio/tests/data/RGB.byte.tif', tiffname)
+    with rasterio.open(tiffname, 'r+') as f:
+        f.write_band(1, numpy.zeros(f.shape, dtype=f.dtypes[0]))
+    with rasterio.open(tiffname) as f:
+        assert not f.read_band(1).any()
 
