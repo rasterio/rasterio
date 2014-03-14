@@ -10,6 +10,7 @@ Next (0.7)
   show().
 - Add index() method.
 - Reading and writing of GDAL mask bands (#41).
+- Add rio_cp program.
 
 0.6 (2014-02-10)
 ----------------
