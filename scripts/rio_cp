@@ -24,7 +24,8 @@ def main(source, destination, opts, template=None, log=None):
                         kwargs['transform'] = tmpl.transform
                         kwargs['crs'] = tmpl.crs
 
-                # Write to the destination, using the shortcut.
+                # Write to the destination.
+                # TODO: use shortcut to source buffer.
                 with rasterio.open(destination, 'w', **kwargs) as dst:
                     for i in src.indexes:
                         dst.write_band(i, src.read_band(i))
