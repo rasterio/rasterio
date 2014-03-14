@@ -96,8 +96,7 @@ def open(
     if mode == 'r':
         s = RasterReader(path)
     elif mode == 'r+':
-        raise NotImplemented("r+ mode not implemented")
-        # s = RasterUpdater(path, mode, driver=None)
+        s = RasterUpdater(path, mode)
     elif mode == 'w':
         s = RasterUpdater(
                 path, mode, driver,

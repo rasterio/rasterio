@@ -772,7 +772,7 @@ cdef class RasterUpdater(RasterReader):
             if self._crs:
                 self.write_crs(self._crs)
         
-        elif self.mode == 'a':
+        elif self.mode == 'r+':
             self._hds = _gdal.GDALOpen(fname, 1)
             if self._hds == NULL:
                 raise ValueError("NULL dataset")
