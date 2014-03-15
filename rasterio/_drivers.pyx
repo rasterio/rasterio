@@ -48,7 +48,7 @@ def driver_count():
 cdef class GDALEnv(object):
 
     cdef object is_chef
-    cdef object options
+    cdef public object options
 
     def __init__(self, is_chef=True, **options):
         self.is_chef = is_chef
