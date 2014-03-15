@@ -102,7 +102,7 @@ else:
         Extension(
             'rasterio._drivers', ['rasterio/_drivers.c'], **ext_options),
         Extension(
-            'rasterio._warp', ['rasterio/_warp.c'], **ext_options),
+            'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
             ]
 
 with open('README.rst') as f:
