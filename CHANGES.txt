@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- Add rio_insp, deprecation warning in rasterio.insp (#50, #52).
+
 0.7.1 (2014-03-15)
 ------------------
 - Source distribution bug fix (#48).

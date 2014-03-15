@@ -14,7 +14,7 @@ logger = logging.getLogger('rasterio')
 
 Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 
-def main(srcfile):
+def main(banner, srcfile):
     
     with rasterio.drivers(), rasterio.open(srcfile) as src:
         
@@ -43,13 +43,7 @@ def main(srcfile):
             return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
 
         code.interact(
-            'Rasterio %s Interactive Inspector (Python %s)\n'
-            'Type "src.meta", "src.read_band(1)", or "help(src)" '
-            'for more information.' %  (
-                rasterio.__version__, 
-                '.'.join(map(str, sys.version_info[:3]))),
-            local=dict(
-                    locals(), np=numpy, rio=rasterio))
+            banner, local=dict(locals(), np=numpy, rio=rasterio))
     
     return 1
 

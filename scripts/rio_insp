@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 
-"""Rasterio interactive dataset inspector
-
-This script is deprecated. Use rio_insp instead.
-
-This script will be removed before 1.0.
-"""
+"""Rasterio interactive dataset inspector"""
 
 import argparse
 import sys
@@ -27,11 +22,9 @@ if __name__ == '__main__':
     sys.exit(
         main(
             'Rasterio %s Interactive Inspector (Python %s)\n'
-            '** NB: this program is deprecated, please use rio_insp instead **\n'
             'Type "src.meta", "src.read_band(1)", or "help(src)" '
             'for more information.' %  (
                 rasterio.__version__,
                 '.'.join(map(str, sys.version_info[:3]))),
             args.src))
-
 
