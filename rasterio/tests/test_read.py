@@ -73,7 +73,7 @@ class ReaderContextTest(unittest.TestCase):
             try:
                 s.read_band(1, a)
             except ValueError as e:
-                assert str(e) == "the array's dtype 'float32' does not match the file's dtype '<type 'numpy.uint8'>'"
+                assert "the array's dtype 'float32' does not match the file's dtype" in str(e)
             except:
                 assert "failed to catch exception" is False
     def test_read_out_shape_resample(self):
