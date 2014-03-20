@@ -22,7 +22,7 @@ def shapes(image, mask=None, connectivity=4, transform=None):
         raise ValueError("Mask must be dtype rasterio.bool_")
 
     with rasterio.drivers():
-        for s, v in _shapes(image, mask, transform):
+        for s, v in _shapes(image, mask, connectivity, transform):
             yield s, v
 
 

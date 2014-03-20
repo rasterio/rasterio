@@ -1,9 +1,10 @@
 Changes
 =======
 
-Next
-----
+0.7.2 (2014-03-20)
+------------------
 - Add rio_insp, deprecation warning in rasterio.insp (#50, #52).
+- Fix transform bug in shapes() (#54).
 
 0.7.1 (2014-03-15)
 ------------------

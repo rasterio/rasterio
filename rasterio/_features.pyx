@@ -53,7 +53,10 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
         if transform:
             for i in range(6):
                 gt[i] = transform[i]
-            retval = _gdal.GDALSetGeoTransform(hds, gt)
+            err = _gdal.GDALSetGeoTransform(hds, gt)
+            if err:
+                raise ValueError("transform not set: %s" % transform)
+
         hband = _gdal.GDALGetRasterBand(hds, 1)
         if hband == NULL:
             raise ValueError("NULL band")
