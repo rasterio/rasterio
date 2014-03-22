@@ -18,7 +18,9 @@ def test_sieve():
     # image.
     with rasterio.drivers():
         sieved_image = ftrz.sieve(image, 100)
-        assert map(list, numpy.where(sieved_image==127)) == map(list, numpy.where(image==127))
+        assert (
+            list(map(list, numpy.where(sieved_image==127))) == 
+            list(map(list, numpy.where(image==127))))
     # Setting the size to 100 should leave us an empty, False image.
     with rasterio.drivers():
         sieved_image = ftrz.sieve(image, 101)
