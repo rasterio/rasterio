@@ -168,7 +168,7 @@ def _sieve(image, size, connectivity=4, output=None):
     else:
         raise ValueError("Invalid source image")
     
-    if isinstance(output, np.ndarray):
+    if output is None or isinstance(output, np.ndarray):
         hdsout = _gdal.GDALCreate(
                     hrdriver, "output", cols, rows, 1, 
                     <_gdal.GDALDataType>1, NULL)
@@ -187,7 +187,7 @@ def _sieve(image, size, connectivity=4, output=None):
                 hbandin, NULL, hbandout, size, connectivity,
                 NULL, NULL, NULL)
 
-    out = np.zeros(image.shape, np.uint8)
+    out = output or np.zeros(image.shape, np.uint8)
     retval = io_ubyte(hbandout, 0, 0, 0, cols, rows, out)
 
     if hdsin != NULL:
