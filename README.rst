@@ -169,9 +169,11 @@ Development also requires (see requirements-dev.txt)
 Installation
 ------------
 
-Rasterio is a C extension and there are not yet any binary releases. You'll
-need a working compiler (XCode on OS X, etc). To install from the source 
-distribution on PyPI, do the following:
+Rasterio is a C extension and to install on Linux or OS X you'll need a working compiler
+(XCode on OS X etc). Unofficial Windows binary packages created by Christoph Gohlke 
+are available `here <http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
+
+To install from the source distribution on PyPI, do the following:
 
 .. code-block:: console
 
