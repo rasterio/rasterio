@@ -3,6 +3,7 @@
 import logging
 import os
 import os.path
+import math
 
 import numpy as np
 cimport numpy as np
@@ -421,9 +422,12 @@ cdef class RasterReader:
     
     @property
     def res(self):
-        """Returns the (width, height) of pixels."""
+        """Returns the (width, height) of pixels in the units of its
+        coordinate reference system."""
         t = self.transform
-        return t[1], -t[5]
+        if t[2] == t[4] == 0:
+            return t[1], -t[5]
+        return math.sqrt(t[1]*t[1]+t[4]*t[4]), math.sqrt(t[2]*t[2]+t[5]*t[5])
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a 
