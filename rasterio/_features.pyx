@@ -234,7 +234,7 @@ def _rasterize_geometry_json(geometries, size_t rows, size_t columns, transform=
         memdriver = _gdal.GDALGetDriverByName("MEM")
         if memdriver == NULL:
             raise ValueError("NULL driver for 'MEM'")
-        out_ds = _gdal.GDALCreate(memdriver, "output", columns, rows, 1, <_gdal.GDALDataType>1, NULL) #TODO: revisit data type
+        out_ds = _gdal.GDALCreate(memdriver, "output", columns, rows, 1, <_gdal.GDALDataType>1, NULL)
         if out_ds == NULL:
             raise ValueError("NULL output datasource")
         if transform:
@@ -255,7 +255,7 @@ def _rasterize_geometry_json(geometries, size_t rows, size_t columns, transform=
                 geometry_json, value = entry
             else:
                 geometry_json = entry
-                value = default_value #1
+                value = default_value
             ogr_geoms[i] = _ogr.OGR_G_CreateGeometryFromJson(geometry_json)
             pixel_values[i] = <double>value
 

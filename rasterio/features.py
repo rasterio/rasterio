@@ -54,7 +54,7 @@ def rasterize_features(features, rows, columns, transform=None, all_touched=Fals
     :param cols: number of columns
     :param transform: GDAL style geotransform.  If provided, will be set on output.
     :param all_touched: if true, will rasterize all pixels touched, otherwise will use GDAL default method.
-    :param value_attribute: if provided, the name of the property to extract the values from for each feature
+    :param value_property: if provided, the name of the property to extract the values from for each feature
         (must be unsigned integer type).  If not provided, this function will return a binary mask.
     """
 
