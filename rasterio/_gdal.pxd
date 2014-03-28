@@ -179,7 +179,10 @@ cdef extern from "gdal_alg.h":
     
     int GDALPolygonize(void *src_band, void *mask_band, void *layer, int fidx, char **options, void *progress_func, void *progress_data)
     int GDALSieveFilter(void *src_band, void *mask_band, void *dst_band, int size, int connectivity, char **options, void *progress_func, void *progress_data)
-    
+    int GDALRasterizeGeometries(void *out_ds, int band_count, int *dst_bands, int geom_count, void **geometries,
+                            GDALTransformerFunc transform_func, void *transform, double *pixel_values, char **options,
+                            void *progress_func, void *progress_data)
+
     void *GDALCreateGenImgProjTransformer(void* hSrcDS, const char *pszSrcWKT,
                                  void* hDstDS, const char *pszDstWKT,
                                  int bGCPUseOK, double dfGCPErrorThreshold,

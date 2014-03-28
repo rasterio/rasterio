@@ -1,7 +1,7 @@
 # cython: profile=True
 
 import logging
-
+import json
 import numpy as np
 cimport numpy as np
 
@@ -14,6 +14,9 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
+
+
+ctypedef np.uint8_t DTYPE_UBYTE_t
 
 
 def _shapes(image, mask=None, connectivity=4, transform=None):
@@ -198,7 +201,77 @@ def _sieve(image, size, connectivity=4, output=None):
     return out
 
 
-ctypedef np.uint8_t DTYPE_UBYTE_t
+def _rasterize_geometry_json(geometries, size_t rows, size_t columns, transform=None, all_touched=False, DTYPE_UBYTE_t default_value=1):
+    """
+    :param geometries: array of either geometry json strings, or array of (geometry json string, value) pairs.
+    Values must be unsigned integer type.  If not provided, this function will return a binary mask.
+    :param rows: number of rows
+    :param columns: number of columns
+    :param transform: GDAL style geotransform.  If provided, will be set on output.
+    :param all_touched: if true, will rasterize all pixels touched, otherwise will use GDAL default method.
+    :param default_value: must be 8 bit unsigned, will be used to set all values not specifically passed in geometries.
+    """
+
+    cdef int retval
+    cdef size_t i
+    cdef size_t num_geometries = len(geometries)
+    cdef void *memdriver
+    cdef void *out_ds
+    cdef void *out_band
+    cdef void **ogr_geoms = NULL
+    cdef char **options = NULL
+    cdef double geotransform[6]
+    cdef double *pixel_values = NULL  # requires one value per geometry
+    cdef int dst_bands[1]  # only need one band to burn into
+    dst_bands[0] = 1
+
+    try:
+        if all_touched:
+            options = <char **>_gdal.CPLMalloc(sizeof(char*))
+            options[0] = "ALL_TOUCHED=TRUE"
+
+        #Do the boilerplate required to create a dataset, band, and set transformation
+        memdriver = _gdal.GDALGetDriverByName("MEM")
+        if memdriver == NULL:
+            raise ValueError("NULL driver for 'MEM'")
+        out_ds = _gdal.GDALCreate(memdriver, "output", columns, rows, 1, <_gdal.GDALDataType>1, NULL) #TODO: revisit data type
+        if out_ds == NULL:
+            raise ValueError("NULL output datasource")
+        if transform:
+            for i in range(6):
+                geotransform[i] = transform[i]
+            err = _gdal.GDALSetGeoTransform(out_ds, geotransform)
+            if err:
+                raise ValueError("transform not set: %s" % transform)
+        out_band = _gdal.GDALGetRasterBand(out_ds, 1)
+        if out_band == NULL:
+            raise ValueError("NULL output band")
+
+        ogr_geoms = <void **>_gdal.CPLMalloc(num_geometries * sizeof(void*))
+        pixel_values = <double *>_gdal.CPLMalloc(num_geometries * sizeof(double))
+        for i in range(num_geometries):
+            entry = geometries[i]
+            if isinstance(entry, (tuple, list)):
+                geometry_json, value = entry
+            else:
+                geometry_json = entry
+                value = default_value #1
+            ogr_geoms[i] = _ogr.OGR_G_CreateGeometryFromJson(geometry_json)
+            pixel_values[i] = <double>value
+
+        retval = _gdal.GDALRasterizeGeometries(out_ds, 1, dst_bands, num_geometries, ogr_geoms, NULL, geotransform, pixel_values, options, NULL, NULL)
+        out = np.zeros((rows, columns), np.uint8)
+        retval = io_ubyte(out_band, 0, 0, 0, columns, rows, out)
+
+    finally:
+        _gdal.CPLFree(ogr_geoms)
+        _gdal.CPLFree(options)
+        _gdal.CPLFree(pixel_values)
+        if out_ds != NULL:
+            _gdal.GDALClose(out_ds)
+
+    return out
+
 
 cdef int io_ubyte(
         void *hband,
