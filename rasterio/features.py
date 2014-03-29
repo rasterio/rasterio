@@ -1,8 +1,10 @@
 """Functions for working with features in a raster dataset."""
 
 import json
+
+import numpy
 import rasterio
-from rasterio._features import _shapes, _sieve, _rasterize_geometry_json
+from rasterio._features import _shapes, _sieve, _rasterize
 
 
 def shapes(image, mask=None, connectivity=4, transform=None):
@@ -46,57 +48,57 @@ def sieve(image, size, connectivity=4, output=None):
         return _sieve(image, size, connectivity)
 
 
-def rasterize_features(features, rows, columns, transform=None, all_touched=False, value_property=None):
-    """
-    :param features: Fiona style features iterator (geojson python objects)
-    Values must be unsigned integer type.  If not provided, this function will return a binary mask.
-    :param rows: number of rows
-    :param cols: number of columns
-    :param transform: GDAL style geotransform.  If provided, will be set on output.
-    :param all_touched: if true, will rasterize all pixels touched, otherwise will use GDAL default method.
-    :param value_property: if provided, the name of the property to extract the values from for each feature
-        (must be unsigned integer type).  If not provided, this function will return a binary mask.
-    """
+def rasterize(
+        shapes, 
+        out_shape=None, fill=0, output=None, transform=None, 
+        all_touched=False):
+    """Returns an image array with points, lines, or polygons burned in.
 
+    A different value may be specified for each shape.  The shapes may
+    be georeferenced or may have image coordinates. An existing image
+    array may be provided, or one may be created. By default, the center
+    of image elements determines whether they are updated, but all
+    touched elements may be optionally updated.
+
+    :param shapes: an iterator over Fiona style geometry objects (with
+    a default value of 255) or an iterator over (geometry, value) pairs.
+    Values must be unsigned integer type (uint8).
+
+    :param transform: GDAL style geotransform to be applied to the
+    image.
+
+    :param out_shape: shape of created image array
+    :param fill: fill value for created image array
+    :param output: alternatively, an existing image array
+
+    :param all_touched: if True, will rasterize all pixels touched, 
+    otherwise will use GDAL default method.
+    """
 
     geoms = []
-    for index, feature in enumerate(features):  #have to loop over features, since it may be yielded from a generator
-        feature_json = json.dumps(feature['geometry'])
-        if value_property is not None:
-            if not not (feature['properties'] and value_property in feature['properties']):
-                raise ValueError("Value property is missing from feature number %i: %s" % (index, value_property))
-            value = feature['properties'][value_property]
-            if not (isinstance(value, int) and value >= 0 and value < 256):
-                raise ValueError("Value for value_property is not valid for feature %i (must be 8 bit unsigned integer)" % index)
-            geoms.append((feature_json, value))
-        else:
-            geoms.append(feature_json)
-
-    with rasterio.drivers():
-        return _rasterize_geometry_json(geoms, rows, columns, transform, all_touched)
-
-
-def rasterize_geometries(geometries, rows, columns, transform=None, all_touched=False):
-    """
-    :param geometries: array of Fiona style geometry objects or array of (geometry, value) pairs.
-    Values must be unsigned integer type.  If not provided, this function will return a binary mask.
-    :param rows: number of rows
-    :param cols: number of columns
-    :param transform: GDAL style geotransform.  If provided, will be set on output.
-    :param all_touched: if true, will rasterize all pixels touched, otherwise will use GDAL default method.
-    """
-
-
-    geoms = []
-    for index, entry in enumerate(geometries):  #have to loop over features, since it may be yielded from a generator
+    for index, entry in enumerate(shapes):
         if isinstance(entry, (tuple, list)):
             geometry, value = entry
-            if not (isinstance(value, int) and value >= 0 and value < 256):
-                raise ValueError("Value for geometry number %i is not valid (must be 8 bit unsigned integer)" % index)
-            geoms.append((json.dumps(geometry), value))
+            if not isinstance(value, int) or value > 255 or value < 0:
+                raise ValueError(
+                    "Shape number %i, value '%s' is not uint8/ubyte" % (
+                        index, value))
+            geoms.append((geometry, value))
         else:
-            geoms.append(json.dumps(entry))
-
+            geoms.append((entry, 255))
+    
+    if out_shape is not None:
+        out = numpy.empty(out_shape, dtype=rasterio.ubyte)
+        out.fill(fill)
+    elif output is not None:
+        if output.dtype.type != rasterio.ubyte:
+            raise ValueError("Output image must be dtype uint8/ubyte")
+        out = output
+    else:
+        raise ValueError("An output image must be provided or specified")
+    
     with rasterio.drivers():
-        return _rasterize_geometry_json(geoms, rows, columns, transform, all_touched)
+        _rasterize(geoms, out, transform, all_touched)
+    
+    return out
 

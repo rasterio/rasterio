@@ -3,7 +3,7 @@ import sys
 import numpy
 import pytest
 import rasterio
-from rasterio.features import shapes, rasterize_geometries
+from rasterio.features import shapes, rasterize
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -15,28 +15,36 @@ def test_rasterize_geometries():
 
     with rasterio.drivers():
         # we expect a subset of the pixels using default mode
-        result = rasterize_geometries([geometry], rows, cols, transform)
+        result = rasterize([geometry], out_shape=(rows, cols), transform=transform)
         truth = numpy.zeros((rows, cols))
-        truth[2:4, 2:4] = 1
+        truth[2:4, 2:4] = 255
         assert (result == truth).min() == True
 
         # we expect all touched pixels
-        result = rasterize_geometries([geometry], rows, cols, transform, all_touched=True)
+        result = rasterize([geometry], out_shape=(rows, cols), transform=transform, all_touched=True)
         truth = numpy.zeros((rows, cols))
-        truth[2:5, 2:5] = 1
+        truth[2:5, 2:5] = 255
         assert (result == truth).min() == True
 
         # we expect the pixel value to match the one we pass in
         value = 5
-        result = rasterize_geometries([(geometry, value)], rows, cols, transform)
+        result = rasterize([(geometry, value)], out_shape=(rows, cols), transform=transform)
         truth = numpy.zeros((rows, cols))
+        truth[2:4, 2:4] = value
+        assert (result == truth).min() == True
+        
+        # Check the fill.
+        # we expect the pixel value to match the one we pass in
+        value = 5
+        result = rasterize([(geometry, value)], out_shape=(rows, cols), fill=1, transform=transform)
+        truth = numpy.ones((rows, cols))
         truth[2:4, 2:4] = value
         assert (result == truth).min() == True
 
         # we expect a ValueError if pixel value is not in 8 bit unsigned range
         value = 500
         with pytest.raises(ValueError):
-            rasterize_geometries([(geometry, value)], rows, cols, transform)
+            rasterize([(geometry, value)], out_shape=(rows, cols), transform=transform)
 
 
 def test_rasterize_geometries_symmetric():
@@ -47,5 +55,5 @@ def test_rasterize_geometries_symmetric():
     truth[2:5, 2:5] = 1
     with rasterio.drivers():
         s = shapes(truth, transform=transform)
-        result = rasterize_geometries(s, rows, cols, transform=transform)
+        result = rasterize(s, out_shape=(rows, cols), transform=transform)
         assert (result == truth).min() == True

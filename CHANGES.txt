@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.8 (Next)
+----------
+- Add rasterize(), the inverse of shapes() (#45, #62).
+
 0.7.3 (2014-03-22)
 ------------------
 - Fix sieve() bug (#57).
