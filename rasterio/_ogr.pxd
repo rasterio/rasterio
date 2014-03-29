@@ -59,6 +59,7 @@ cdef extern from "ogr_api.h":
     void    OGR_G_AddPoint_2D (void *geometry, double x, double y)
     void    OGR_G_CloseRings (void *geometry)
     void *  OGR_G_CreateGeometry (int wkbtypecode)
+    void *  OGR_G_CreateGeometryFromJson(char *json)
     void    OGR_G_DestroyGeometry (void *geometry)
     unsigned char *  OGR_G_ExportToJson (void *geometry)
     void    OGR_G_ExportToWkb (void *geometry, int endianness, char *buffer)
