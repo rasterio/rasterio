@@ -155,7 +155,7 @@ def window_index(window):
 
 
 cdef class RasterReader:
-    
+
     def __init__(self, path):
         self.name = path
         self.mode = 'r'
@@ -165,6 +165,9 @@ cdef class RasterReader:
         self._dtypes = []
         self._block_shapes = []
         self._nodatavals = []
+        self._crs = None
+        self._crs_wkt = None
+        self._read = False
         self.env = None
     
     def __repr__(self):
@@ -448,7 +451,7 @@ cdef class RasterReader:
 
     @property
     def meta(self):
-        return {
+        m = {
             'driver': self.driver,
             'dtype': set(self.dtypes).pop(),
             'nodata': set(self.nodatavals).pop(),
@@ -457,15 +460,19 @@ cdef class RasterReader:
             'count': self.count,
             'crs': self.crs,
             'transform': self.transform }
+        self._read = True
+        return m
 
     def get_crs(self):
-        if not self._crs:
+        # _read tells us that the CRS was read before and really is
+        # None.
+        if not self._read and self._crs is None:
             self._crs = self.read_crs()
         return self._crs
     crs = property(get_crs)
 
     def get_crs_wkt(self):
-        if not self._crs_wkt:
+        if not self._read and self._crs_wkt is None:
             self._crs = self.read_crs_wkt()
         return self._crs_wkt
     crs_wkt = property(get_crs_wkt)
@@ -482,7 +489,7 @@ cdef class RasterReader:
 
         See also this class's ul() method.
         """
-        if not self._transform:
+        if not self._read and self._transform is None:
             self._transform = self.read_transform()
         return self._transform
     transform = property(get_transform)
