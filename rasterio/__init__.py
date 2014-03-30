@@ -17,7 +17,7 @@ from rasterio.dtypes import (
 
 
 __all__ = ['open', 'drivers', 'copy', 'check_dtype']
-__version__ = "0.7.3"
+__version__ = "0.8"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
