@@ -222,16 +222,20 @@ cdef class RasterReader:
 
     def read_crs(self):
         cdef char *proj_c = NULL
+        cdef void *osr = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
-        cdef void *osr = _gdal.OSRNewSpatialReference(
-            _gdal.GDALGetProjectionRef(self._hds))
-        log.debug("Got coordinate system")
         crs = {}
-        if osr != NULL:
+        cdef const char *proj = _gdal.GDALGetProjectionRef(self._hds)
+        proj_b = proj
+        if len(proj_b) > 0:
+            osr = _gdal.OSRNewSpatialReference(proj)
+            if osr == NULL:
+                raise ValueError("Unexpected NULL spatial reference")
+            log.debug("Got coordinate system")
             _gdal.OSRExportToProj4(osr, &proj_c)
             if proj_c == NULL:
-                raise ValueError("Null projection")
+                raise ValueError("Unexpected Null spatial reference")
             proj_b = proj_c
             log.debug("Params: %s", proj_b)
             value = proj_b.decode()
