@@ -4,6 +4,8 @@ Changes
 0.8 (Next)
 ----------
 - Add rasterize(), the inverse of shapes() (#45, #62).
+- Change the sense of mask for shapes(). Masks are always positive in
+  rasterio, so we extract shapes only where mask is True.
 
 0.7.3 (2014-03-22)
 ------------------

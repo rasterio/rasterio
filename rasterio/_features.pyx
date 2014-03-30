@@ -83,7 +83,8 @@ def _shapes(image, mask=None, connectivity=4, transform=None):
         if hmaskband == NULL:
             raise ValueError("NULL band")
         a = np.ones(mask.shape, dtype=np.uint8)
-        a[mask == True] = 0
+        a[mask == False] = 0
+        a[mask == True] = 1
         retval = io_ubyte(hmaskband, 1, 0, 0, cols, rows, a)
     elif isinstance(mask, tuple):
         if mask.shape != image.shape:

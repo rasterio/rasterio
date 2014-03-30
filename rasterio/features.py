@@ -16,7 +16,7 @@ def shapes(image, mask=None, connectivity=4, transform=None):
 
     The image must be of unsigned 8-bit integer (rasterio.byte or
     numpy.uint8) data type. If a mask is provided, pixels for which the
-    mask is `True` will be excluded from feature generation.
+    mask is `False` will be excluded from feature generation.
     """
     if image.dtype.type != rasterio.ubyte:
         raise ValueError("Image must be dtype uint8/ubyte")
