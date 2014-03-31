@@ -2,3 +2,8 @@ Authors
 =======
 
 Sean Gillies <sean@mapbox.com>
+@brendan-ward https://github.com/brendan-ward
+Asger Skovbo Petersen https://github.com/AsgerPetersen
+James Seppi https://github.com/jseppi
+Chrisophe Gohlke https://github.com/cgohlke
+Robin Wilson https://github.com/robintw

@@ -1,7 +1,7 @@
-rasterio
+Rasterio
 ========
 
-Rasterio is GDAL and Numpy-based Python library for geospatial raster data access.
+Geospatial raster data access and operations.
 
 .. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
    :target: https://travis-ci.org/mapbox/rasterio
@@ -71,11 +71,11 @@ This new band is then written to a new single band TIFF.
    :width: 640
    :height: 581
 
-The rasterio.drivers() function and context manager are new in 0.5. The
-example above shows the way to use it to register and de-register
-drivers in a deterministic and efficient way. Code written for rasterio
-0.4 will continue to work: opened raster datasets may manage the global
-driver registry if no other manager is present.
+The rasterio.drivers() function and context manager are new in 0.5. The example
+above shows the way to use it to register and de-register drivers in
+a deterministic and efficient way. Code written for rasterio 0.4 will continue
+to work: opened raster datasets may manage the global driver registry if no
+other manager is present.
 
 Simple access is provided to properties of a geospatial raster file.
 
@@ -110,16 +110,17 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
     
     subprocess.call(['open', 'example-total.jpg'])
 
-Rasterio.insp
--------------
+rio_insp
+--------
 
-Like a gdalinfo on steroids, pass a filename to "rasterio.insp".
+Like a gdalinfo on steroids, pass a filename to "rio_insp".
 
 .. code-block:: console
 
-    $ rasterio.insp rasterio/tests/data/RGB.byte.tif
-    Rasterio 0.5.1 Interactive Inspector (Python 2.7.5)
-    Type "src.name", "src.read_band(1)", or "help(src)" for more information.
+    $ rio_insp rasterio/tests/data/RGB.byte.tif
+    Rasterio 0.8 Interactive Inspector (Python 3.3.5)
+    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    >>> src.name
     'rasterio/tests/data/shade.tif'
     >>> src.shape
     (1024, 1024)
@@ -164,21 +165,22 @@ Python package dependencies (see also requirements.txt):
 Development also requires (see requirements-dev.txt)
 
 - Cython
-- nose
+- pytest
 
 Installation
 ------------
 
-Rasterio is a C extension and to install on Linux or OS X you'll need a working compiler
-(XCode on OS X etc). Unofficial Windows binary packages created by Christoph Gohlke 
-are available `here <http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
+Rasterio is a C extension and to install on Linux or OS X you'll need a working
+compiler (XCode on OS X etc). Unofficial Windows binary packages created by
+Christoph Gohlke are available `here
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
 
 To install from the source distribution on PyPI, do the following:
 
 .. code-block:: console
 
     $ pip install -r https://raw.github.com/mapbox/rasterio/master/requirements.txt
-    $ pip install rasterio>=0.5
+    $ pip install rasterio>=0.8
 
 To install from a forked repo, do this (in a virtualenv, preferably):
 
@@ -189,7 +191,9 @@ To install from a forked repo, do this (in a virtualenv, preferably):
 
 The Numpy headers are required to run the rasterio setup script. Numpy has to
 be installed (via the indicated requirements file) before rasterio can be
-installed. See rasterio's Travis `configuration <https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more guidance.
+installed. See rasterio's Travis `configuration
+<https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more
+guidance.
 
 Testing
 -------
