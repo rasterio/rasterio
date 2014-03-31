@@ -218,7 +218,7 @@ def _rasterize(shapes, image, transform=None, all_touched=False):
     cdef double geotransform[6]
     cdef double *pixel_values = NULL  # requires one value per geometry
     cdef int dst_bands[1]  # only need one band to burn into
-    cdef const char *json_c
+    cdef char *json_c
 
     dst_bands[0] = 1
     
@@ -259,7 +259,7 @@ def _rasterize(shapes, image, transform=None, all_touched=False):
                             num_geometries * sizeof(double))
         
         for i, (geometry, value) in enumerate(shapes):
-            json_b = json.dumps(geometry).encode('utf-8')
+            json_b = json.dumps(geometry).encode('UTF-8')
             json_c = json_b
             ogr_geoms[i] = _ogr.OGR_G_CreateGeometryFromJson(json_c)
             pixel_values[i] = <double>value
