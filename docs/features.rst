@@ -15,5 +15,5 @@ Extracting shapes of raster features
 Burning shapes into a raster
 ----------------------------
 
-.. image:: https://farm8.staticflickr.com/7018/13547682814_f2e459f7a5_o_d.png
+.. image:: https://farm4.staticflickr.com/3728/13547425455_79bdb5eaeb_o_d.png
 
