@@ -61,6 +61,16 @@ intersecting with geometries.
                 ((g, 255) for g, v in shapes),
                 out_shape=src.shape)
 
+Again, to burn in georeferenced shapes, pass an appropriate transform for the
+image to be created.
+
+.. code-block:: python
+
+    image = features.rasterize(
+                ((g, 255) for g, v in shapes),
+                out_shape=src.shape,
+                transform=src.transform)
+
 The values for the input shapes are replaced with ``255`` in a generator
 expression. The resulting image, written to disk like this,
 
