@@ -204,6 +204,11 @@ From the repo directory, run py.test
 
     $ py.test
 
+Documentation
+-------------
+
+See https://github.com/mapbox/rasterio/tree/master/docs.
+
 License
 -------
 
