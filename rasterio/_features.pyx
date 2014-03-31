@@ -259,7 +259,7 @@ def _rasterize(shapes, image, transform=None, all_touched=False):
                             num_geometries * sizeof(double))
         
         for i, (geometry, value) in enumerate(shapes):
-            json_b = json.dumps(geometry).decode('utf-8')
+            json_b = json.dumps(geometry).encode('utf-8')
             json_c = json_b
             ogr_geoms[i] = _ogr.OGR_G_CreateGeometryFromJson(json_c)
             pixel_values[i] = <double>value
