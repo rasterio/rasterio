@@ -227,8 +227,7 @@ def _rasterize(shapes, image, transform=None, all_touched=False):
 
     try:
         if all_touched:
-            options = <char **>_gdal.CPLMalloc(sizeof(char*))
-            options[0] = "ALL_TOUCHED=TRUE"
+            options = _gdal.CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
 
         # Do the boilerplate required to create a dataset, band, and 
         # set transformation
@@ -278,11 +277,14 @@ def _rasterize(shapes, image, transform=None, all_touched=False):
         retval = io_ubyte(out_band, 0, 0, 0, width, height, image)
 
     finally:
+        for i in range(num_geometries):
+            _deleteOgrGeom(ogr_geoms[i])
         _gdal.CPLFree(ogr_geoms)
-        _gdal.CPLFree(options)
         _gdal.CPLFree(pixel_values)
         if out_ds != NULL:
             _gdal.GDALClose(out_ds)
+        if options:
+            _gdal.CSLDestroy(options)
 
 
 cdef int io_ubyte(
