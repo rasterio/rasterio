@@ -2,7 +2,7 @@ import logging
 import numpy
 import sys
 import rasterio
-from rasterio.features import rasterize_geometries
+from rasterio.features import rasterize
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -13,7 +13,7 @@ rows = cols = 10
 transform = [0, 1, 0, 0, 0, 1]
 geometry = {'type':'Polygon','coordinates':[[(2,2),(2,4.25),(4.25,4.25),(4.25,2),(2,2)]]}
 with rasterio.drivers():
-    result = rasterize_geometries([geometry], rows, cols, transform)
+    result = rasterize([geometry], out_shape=(rows, cols), transform=transform)
     with rasterio.open(
             "test.tif",
             'w',
