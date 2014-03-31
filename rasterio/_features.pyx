@@ -19,7 +19,7 @@ log.addHandler(NullHandler())
 ctypedef np.uint8_t DTYPE_UBYTE_t
 
 
-def _shapes(image, mask=None, connectivity=4, transform=None):
+def _shapes(image, mask, connectivity, transform):
     """Return an iterator over Fiona-style features extracted from the
     image.
 
@@ -202,7 +202,7 @@ def _sieve(image, size, connectivity=4, output=None):
     return out
 
 
-def _rasterize(shapes, image, transform=None, all_touched=False):
+def _rasterize(shapes, image, transform, all_touched):
     """
     Burn shapes with their values into the image.
     """
@@ -241,12 +241,8 @@ def _rasterize(shapes, image, transform=None, all_touched=False):
                     <_gdal.GDALDataType>1, NULL)
         if out_ds == NULL:
             raise ValueError("NULL output datasource")
-        if transform is not None:
-            for i in range(6):
-                geotransform[i] = transform[i]
-        else:
-            for i, v in enumerate([0, 1, 0, 0, 0, 1]):
-                geotransform[i] = v
+        for i in range(6):
+            geotransform[i] = transform[i]
         err = _gdal.GDALSetGeoTransform(out_ds, geotransform)
         if err:
             raise ValueError("transform not set: %s" % transform)

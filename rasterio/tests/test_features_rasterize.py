@@ -33,10 +33,13 @@ def test_rasterize_geometries():
         truth[2:4, 2:4] = value
         assert (result == truth).min() == True
         
-        # Check the fill.
+        # Check the fill and default transform.
         # we expect the pixel value to match the one we pass in
         value = 5
-        result = rasterize([(geometry, value)], out_shape=(rows, cols), fill=1, transform=transform)
+        result = rasterize(
+            [(geometry, value)], 
+            out_shape=(rows, cols), 
+            fill=1 )
         truth = numpy.ones((rows, cols))
         truth[2:4, 2:4] = value
         assert (result == truth).min() == True

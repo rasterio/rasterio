@@ -7,7 +7,10 @@ import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize
 
 
-def shapes(image, mask=None, connectivity=4, transform=None):
+DEFAULT_TRANSFORM = [0, 1, 0, 0, 0, 1]
+
+
+def shapes(image, mask=None, connectivity=4, transform=DEFAULT_TRANSFORM):
     """Yields a (shape, image_value) pair for each feature in the image.
     
     The shapes are GeoJSON-like dicts and the image values are ints.
@@ -50,7 +53,8 @@ def sieve(image, size, connectivity=4, output=None):
 
 def rasterize(
         shapes, 
-        out_shape=None, fill=0, output=None, transform=None, 
+        out_shape=None, fill=0, output=None,
+        transform=DEFAULT_TRANSFORM,
         all_touched=False):
     """Returns an image array with points, lines, or polygons burned in.
 
