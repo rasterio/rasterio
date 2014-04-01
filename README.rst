@@ -1,8 +1,6 @@
 Rasterio
 ========
 
-Geospatial raster data access and operations.
-
 .. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
    :target: https://travis-ci.org/mapbox/rasterio
 
@@ -113,7 +111,8 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
 rio_insp
 --------
 
-Like a gdalinfo on steroids, pass a filename to "rio_insp".
+The rio_insp program opens the hood of any raster dataset so you can poke
+around using Python.
 
 .. code-block:: console
 
