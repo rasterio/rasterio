@@ -36,6 +36,7 @@ def _shapes(image, mask, connectivity, transform):
     cdef double gt[6]
     cdef _io.RasterReader rdr
     cdef _io.RasterReader mrdr
+    cdef char **options = NULL
 
     if isinstance(image, np.ndarray):
         hrdriver = _gdal.GDALGetDriverByName("MEM")
@@ -107,9 +108,10 @@ def _shapes(image, mask, connectivity, transform):
         raise ValueError("NULL field definition")
     _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
     _ogr.OGR_Fld_Destroy(fielddefn)
-    
-    # TODO: connectivity option.
-    retval = _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, NULL, NULL, NULL)
+
+    if connectivity == 8:
+        options = _gdal.CSLSetNameValue(options, "8CONNECTED", "8")
+    retval = _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
     
     # Yield Fiona-style features
     cdef ShapeIterator shape_iter = ShapeIterator()
@@ -124,6 +126,8 @@ def _shapes(image, mask, connectivity, transform):
         _gdal.GDALClose(hmask)
     if hfs != NULL:
         _ogr.OGR_DS_Destroy(hfs)
+    if options:
+        _gdal.CSLDestroy(options)
 
 
 def _sieve(image, size, connectivity=4, output=None):
