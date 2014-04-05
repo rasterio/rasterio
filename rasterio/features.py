@@ -27,6 +27,9 @@ def shapes(image, mask=None, connectivity=4, transform=DEFAULT_TRANSFORM):
     if mask is not None and mask.dtype.type != rasterio.bool_:
         raise ValueError("Mask must be dtype rasterio.bool_")
 
+    if connectivity not in (4, 8):
+        raise ValueError("Connectivity Option must be 4 or 8")
+
     with rasterio.drivers():
         for s, v in _shapes(image, mask, connectivity, transform):
             yield s, v

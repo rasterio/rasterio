@@ -48,3 +48,14 @@ def test_shapes_internal_driver_manager():
     shape, val = next(shapes)
     assert shape['type'] == 'Polygon'
 
+
+def test_shapes_connectivity():
+    """Test connectivity options"""
+    image = numpy.zeros((20, 20), dtype=rasterio.ubyte)
+    image[5:11,5:11] = 1
+    image[11,11] = 1
+
+    shapes = ftrz.shapes(image, connectivity=8)
+    shape, val = next(shapes)
+    assert len(shape['coordinates'][0]) == 9
+    #Note: geometry is not technically valid at this point, it has a self intersection at 11,11
