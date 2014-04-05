@@ -4,9 +4,7 @@ import logging
 import json
 import numpy as np
 cimport numpy as np
-
 from rasterio cimport _gdal, _ogr, _io
-from rasterio.dtypes import dtype_rev
 
 
 log = logging.getLogger('rasterio')
@@ -14,9 +12,6 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
-
-
-ctypedef np.uint8_t DTYPE_UBYTE_t
 
 
 def _shapes(image, mask, connectivity, transform):
@@ -41,6 +36,7 @@ def _shapes(image, mask, connectivity, transform):
     cdef double gt[6]
     cdef _io.RasterReader rdr
     cdef _io.RasterReader mrdr
+    cdef char **options = NULL
 
     if isinstance(image, np.ndarray):
         hrdriver = _gdal.GDALGetDriverByName("MEM")
@@ -63,7 +59,7 @@ def _shapes(image, mask, connectivity, transform):
         hband = _gdal.GDALGetRasterBand(hds, 1)
         if hband == NULL:
             raise ValueError("NULL band")
-        retval = io_ubyte(hband, 1, 0, 0, cols, rows, image)
+        retval = _io.io_ubyte(hband, 1, 0, 0, cols, rows, image)
     elif isinstance(image, tuple):
         rdr = image.ds
         hband = rdr.band(image.bidx)
@@ -85,7 +81,7 @@ def _shapes(image, mask, connectivity, transform):
         a = np.ones(mask.shape, dtype=np.uint8)
         a[mask == False] = 0
         a[mask == True] = 1
-        retval = io_ubyte(hmaskband, 1, 0, 0, cols, rows, a)
+        retval = _io.io_ubyte(hmaskband, 1, 0, 0, cols, rows, a)
     elif isinstance(mask, tuple):
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
@@ -112,9 +108,10 @@ def _shapes(image, mask, connectivity, transform):
         raise ValueError("NULL field definition")
     _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
     _ogr.OGR_Fld_Destroy(fielddefn)
-    
-    # TODO: connectivity option.
-    retval = _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, NULL, NULL, NULL)
+
+    if connectivity == 8:
+        options = _gdal.CSLSetNameValue(options, "8CONNECTED", "8")
+    retval = _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
     
     # Yield Fiona-style features
     cdef ShapeIterator shape_iter = ShapeIterator()
@@ -129,6 +126,8 @@ def _shapes(image, mask, connectivity, transform):
         _gdal.GDALClose(hmask)
     if hfs != NULL:
         _ogr.OGR_DS_Destroy(hfs)
+    if options:
+        _gdal.CSLDestroy(options)
 
 
 def _sieve(image, size, connectivity=4, output=None):
@@ -165,7 +164,7 @@ def _sieve(image, size, connectivity=4, output=None):
         hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
         if hbandin == NULL:
             raise ValueError("NULL input band")
-        retval = io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
+        retval = _io.io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
     elif isinstance(image, tuple):
         rdr = image.ds
         hband = rdr.band(image.bidx)
@@ -192,7 +191,7 @@ def _sieve(image, size, connectivity=4, output=None):
                 NULL, NULL, NULL)
 
     out = output or np.zeros(image.shape, np.uint8)
-    retval = io_ubyte(hbandout, 0, 0, 0, cols, rows, out)
+    retval = _io.io_ubyte(hbandout, 0, 0, 0, cols, rows, out)
 
     if hdsin != NULL:
         _gdal.GDALClose(hdsin)
@@ -264,7 +263,7 @@ def _rasterize(shapes, image, transform, all_touched):
             pixel_values[i] = <double>value
         
         # First, copy image data to the in-memory band.
-        retval = io_ubyte(out_band, 1, 0, 0, width, height, image)
+        retval = _io.io_ubyte(out_band, 1, 0, 0, width, height, image)
         
         # Burn the shapes in.
         retval = _gdal.GDALRasterizeGeometries(
@@ -274,7 +273,7 @@ def _rasterize(shapes, image, transform, all_touched):
                     options, NULL, NULL)
 
         # Write the in-memory band back to the image.
-        retval = io_ubyte(out_band, 0, 0, 0, width, height, image)
+        retval = _io.io_ubyte(out_band, 0, 0, 0, width, height, image)
 
     finally:
         for i in range(num_geometries):
@@ -285,19 +284,6 @@ def _rasterize(shapes, image, transform, all_touched):
             _gdal.GDALClose(out_ds)
         if options:
             _gdal.CSLDestroy(options)
-
-
-cdef int io_ubyte(
-        void *hband,
-        int mode,
-        int xoff,
-        int yoff,
-        int width, 
-        int height, 
-        np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
 
 # Mapping of OGR integer geometry types to GeoJSON type names.
