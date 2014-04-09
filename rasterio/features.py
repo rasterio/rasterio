@@ -1,7 +1,7 @@
 """Functions for working with features in a raster dataset."""
 
 import json
-
+import time
 import numpy
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize
@@ -58,7 +58,8 @@ def rasterize(
         shapes, 
         out_shape=None, fill=0, output=None,
         transform=DEFAULT_TRANSFORM,
-        all_touched=False):
+        all_touched=False,
+        default_value=255):
     """Returns an image array with points, lines, or polygons burned in.
 
     A different value may be specified for each shape.  The shapes may
@@ -80,7 +81,11 @@ def rasterize(
 
     :param all_touched: if True, will rasterize all pixels touched, 
     otherwise will use GDAL default method.
+    :param default_value: value burned in for shapes if not provided as part of shapes.  Must be unsigned integer type (uint8).
     """
+
+    if not isinstance(default_value, int) or default_value > 255 or default_value < 0:
+        raise ValueError("default_value %s is not uint8/ubyte" % default_value)
 
     geoms = []
     for index, entry in enumerate(shapes):
@@ -92,7 +97,7 @@ def rasterize(
                         index, value))
             geoms.append((geometry, value))
         else:
-            geoms.append((entry, 255))
+            geoms.append((entry, default_value))
     
     if out_shape is not None:
         out = numpy.empty(out_shape, dtype=rasterio.ubyte)
@@ -103,7 +108,7 @@ def rasterize(
         out = output
     else:
         raise ValueError("An output image must be provided or specified")
-    
+
     with rasterio.drivers():
         _rasterize(geoms, out, transform, all_touched)
     
