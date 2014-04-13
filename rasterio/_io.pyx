@@ -681,6 +681,11 @@ cdef class RasterReader:
             hmask, 0, xoff, yoff, width, height, out)
         return out
 
+    @property
+    def kwds(self):
+        return self.tags(ns='rio_creation_kwds')
+
+
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
     # TODO: the r+ mode.
@@ -731,6 +736,8 @@ cdef class RasterUpdater(RasterReader):
         else:
             self.env = GDALEnv(False)
         self.env.start()
+        
+        kwds = []
 
         if self.mode == 'w':
             # GDAL can Create() GTiffs. Many other formats only support
@@ -763,6 +770,7 @@ cdef class RasterUpdater(RasterReader):
             
             # Creation options
             for k, v in self._options.items():
+                kwds.append((k.lower(), v.upper()))
                 k, v = k.upper(), v.upper()
                 key_b = k.encode('utf-8')
                 val_b = v.encode('utf-8')
@@ -770,7 +778,7 @@ cdef class RasterUpdater(RasterReader):
                 val_c = val_b
                 options = _gdal.CSLSetNameValue(options, key_c, val_c)
                 log.debug("Option: %r\n", (k, v))
-            
+
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
                 gdal_dtype, options)
@@ -812,6 +820,7 @@ cdef class RasterUpdater(RasterReader):
         # touch self.meta
         _ = self.meta
 
+        self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
 
     def get_crs(self):
