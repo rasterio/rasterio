@@ -171,10 +171,10 @@ cdef class RasterReader:
         self.env = None
     
     def __repr__(self):
-        return "<%s RasterReader '%s' at %s>" % (
+        return "<%s RasterReader name='%s' mode='%s'>" % (
             self.closed and 'closed' or 'open', 
-            self.name, 
-            hex(id(self)))
+            self.name,
+            self.mode)
 
     def start(self):
         # Is there not a driver manager already?
@@ -714,10 +714,10 @@ cdef class RasterUpdater(RasterReader):
         self._options = kwargs.copy()
     
     def __repr__(self):
-        return "<%s RasterUpdater '%s' at %s>" % (
+        return "<%s RasterUpdater name='%s' mode='%s'>" % (
             self.closed and 'closed' or 'open', 
-            self.name, 
-            hex(id(self)))
+            self.name,
+            self.mode)
 
     def start(self):
         cdef const char *drv_name = NULL

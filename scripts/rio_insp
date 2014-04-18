@@ -17,14 +17,22 @@ if __name__ == '__main__':
         'src',
         metavar='FILE',
         help="Input dataset file name")
+    parser.add_argument(
+        '-m', '--mode',
+        metavar='MODE',
+        type=str,
+        default='r',
+        help="File mode ('r' or 'r+')")
+
     args = parser.parse_args()
 
     sys.exit(
         main(
-            'Rasterio %s Interactive Inspector (Python %s)\n'
+            "Rasterio %s Interactive Inspector (Python %s)\n"
             'Type "src.meta", "src.read_band(1)", or "help(src)" '
             'for more information.' %  (
                 rasterio.__version__,
                 '.'.join(map(str, sys.version_info[:3]))),
-            args.src))
+            args.src,
+            args.mode))
 
