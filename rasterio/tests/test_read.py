@@ -29,8 +29,8 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
                 repr(s), 
-                "<open RasterReader 'rasterio/tests/data/RGB.byte.tif' "
-                "at %s>" % hex(id(s)))
+                "<open RasterReader name='rasterio/tests/data/RGB.byte.tif' "
+                "mode='r'>")
         self.assertEqual(s.closed, True)
         self.assertEqual(s.count, 3)
         self.assertEqual(s.width, 791)
@@ -46,8 +46,8 @@ class ReaderContextTest(unittest.TestCase):
              2826915.0, 0.0, -300.041782729805])
         self.assertEqual(
             repr(s),
-            "<closed RasterReader 'rasterio/tests/data/RGB.byte.tif' "
-            "at %s>" % hex(id(s)))
+            "<closed RasterReader name='rasterio/tests/data/RGB.byte.tif' "
+            "mode='r'>")
     def test_derived_spatial(self):
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
             self.assert_(s.crs_wkt.startswith('PROJCS'), s.crs_wkt)

@@ -14,9 +14,9 @@ logger = logging.getLogger('rasterio')
 
 Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 
-def main(banner, srcfile):
+def main(banner, srcfile, mode='r'):
     
-    with rasterio.drivers(), rasterio.open(srcfile) as src:
+    with rasterio.drivers(), rasterio.open(srcfile, mode=mode) as src:
         
         def show(source):
             """Show a raster using matplotlib.
