@@ -78,8 +78,7 @@ if __name__ == '__main__':
                         'for more information.' %  (
                             rasterio.__version__,
                             '.'.join(map(str, sys.version_info[:3]))),
-                        args.src,
-                        args.mode)
+                        src)
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
