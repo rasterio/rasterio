@@ -3,6 +3,7 @@
 """Rasterio interactive dataset inspector"""
 
 import argparse
+import pprint
 import sys
 
 import rasterio
@@ -23,8 +24,39 @@ if __name__ == '__main__':
         type=str,
         default='r',
         help="File mode ('r' or 'r+')")
+    parser.add_argument(
+        '--meta',
+        action='store_true',
+        help="Pretty print the dataset's meta properties and exit")
+    parser.add_argument(
+        '--tags',
+        nargs='?',
+        default=None,
+        const='__default__',
+        type=str,
+        help="Pretty print the dataset's tags and exit")
+    parser.add_argument(
+        '--indent',
+        default=2,
+        type=int,
+        metavar='N',
+        help="Indentation level for pretty printed output")
 
     args = parser.parse_args()
+    
+    if args.meta:
+        with rasterio.open(args.src) as src:
+            pprint.pprint(src.meta, indent=args.indent)
+        sys.exit(0)
+
+    elif args.tags:
+        if args.tags == '__default__':
+            tag_ns = None
+        else:
+            tag_ns = args.tags
+        with rasterio.open(args.src) as src:
+            pprint.pprint(src.tags(ns=tag_ns), indent=args.indent)
+        sys.exit(0)
 
     sys.exit(
         main(
