@@ -84,20 +84,32 @@ def rasterize(
     :param default_value: value burned in for shapes if not provided as part of shapes.  Must be unsigned integer type (uint8).
     """
 
-    if not isinstance(default_value, int) or default_value > 255 or default_value < 0:
+    def is_uint8(value):
+        return isinstance(value, int) and 0 <= value <= 255
+
+    def is_valid_geometry(geometry):
+        return isinstance(geometry, dict) and geometry.get('type', None) in (
+            "Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon", "GeometryCollection")
+
+    if not hasattr(shapes, "__iter__") or isinstance(shapes, dict):
+        raise ValueError("shapes are not valid, must be a tuple, list, or iterable over geometry objects")
+
+    if not is_uint8(default_value):
         raise ValueError("default_value %s is not uint8/ubyte" % default_value)
 
     geoms = []
     for index, entry in enumerate(shapes):
         if isinstance(entry, (tuple, list)):
             geometry, value = entry
-            if not isinstance(value, int) or value > 255 or value < 0:
+            if not is_uint8(value):
                 raise ValueError(
-                    "Shape number %i, value '%s' is not uint8/ubyte" % (
-                        index, value))
-            geoms.append((geometry, value))
+                    "Shape number %i, value '%s' is not uint8/ubyte" % (index, value))
         else:
-            geoms.append((entry, default_value))
+            geometry = entry
+            value = default_value
+        if not is_valid_geometry(geometry):
+            raise ValueError("Shape number %i is not a a valid geometry object" % index)
+        geoms.append((geometry, value))
     
     if out_shape is not None:
         out = numpy.empty(out_shape, dtype=rasterio.ubyte)
