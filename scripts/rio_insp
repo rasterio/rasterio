@@ -32,7 +32,7 @@ if __name__ == '__main__':
         '--tags',
         nargs='?',
         default=None,
-        const='__default__',
+        const='',
         type=str,
         help="Pretty print the dataset's tags and exit")
     parser.add_argument(
@@ -49,8 +49,8 @@ if __name__ == '__main__':
             pprint.pprint(src.meta, indent=args.indent)
         sys.exit(0)
 
-    elif args.tags:
-        if args.tags == '__default__':
+    elif args.tags is not None:
+        if not args.tags:
             tag_ns = None
         else:
             tag_ns = args.tags
