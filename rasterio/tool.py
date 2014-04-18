@@ -9,7 +9,6 @@ import numpy
 import rasterio
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger('rasterio')
 
 Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
@@ -45,7 +44,7 @@ def main(banner, srcfile, mode='r'):
         code.interact(
             banner, local=dict(locals(), np=numpy, rio=rasterio))
     
-    return 1
+    return 0
 
 if __name__ == '__main__':
     

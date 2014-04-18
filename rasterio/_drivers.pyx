@@ -24,21 +24,35 @@ cdef extern from "ogr_api.h":
     int OGRGetDriverCount()
 
 
-log = logging.getLogger('rasterio')
+log = logging.getLogger('GDAL')
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
 
-code_map = {
+level_map = {
     0: 0, 
     1: logging.DEBUG, 
     2: logging.WARNING, 
     3: logging.ERROR, 
     4: logging.CRITICAL }
 
+code_map = {
+    0: 'CPLE_None',
+    1: 'CPLE_AppDefined',
+    2: 'CPLE_OutOfMemory',
+    3: 'CPLE_FileIO',
+    4: 'CPLE_OpenFailed',
+    5: 'CPLE_IllegalArg',
+    6: 'CPLE_NotSupported',
+    7: 'CPLE_AssertionFailed',
+    8: 'CPLE_NoWriteAccess',
+    9: 'CPLE_UserInterrupt',
+    10: 'CPLE_ObjectNull'
+}
+
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
-    log.log(code_map[eErrClass], "GDAL Error %s: %s", err_no, msg)
+    log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
 
 
 def driver_count():
