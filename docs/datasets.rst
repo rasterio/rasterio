@@ -60,7 +60,7 @@ GeoTIFF file that Rasterio uses for testing has 0 values in the corners:
     <matplotlib.image.AxesImage object at 0x111195c10>
     >>> pyplot.show()
 
-[link]
+.. image:: http://farm6.staticflickr.com/5032/13938576006_b99b23271b_o_d.png
 
 Get all indexes of all a dataset's bands can be had from its ``indexes``
 attribute and read all band data like this:
@@ -120,9 +120,9 @@ This is the same as a closed Python ``file``.
       File "<stdin>", line 1, in <module>
     ValueError: I/O operation on closed file
 
-As Python ``file`` objects can, Rasterio datasets can be managers of a
-``with`` statement's context and can be accessed concurrently by one or more
-dataset objects.
+As Python ``file`` objects can, Rasterio datasets can be managers of a ``with``
+statement's context and can be accessed concurrently by one or more dataset
+objects.
 
 .. code-block:: pycon
 
