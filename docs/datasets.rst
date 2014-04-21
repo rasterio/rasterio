@@ -3,7 +3,8 @@ Datasets and ndarrays
 
 Dataset objects provide read, read-write, and write access to raster data files
 and are obtained by calling ``rasterio.open()``. That function mimics Python's
-built-in ``open()`` and dataset objects mimic Python ``file`` objects.
+built-in ``open()`` and the dataset objects it returns mimic Python ``file``
+objects.
 
 .. code-block:: pycon
 
@@ -18,8 +19,8 @@ built-in ``open()`` and dataset objects mimic Python ``file`` objects.
     >>> print dataset.closed
     False
 
-If you attempt to open a nonexistent dataset, ``rasterio.open()`` does the same
-thing as ``open()``: raising an exception immediately.
+If you attempt to access a nonexistent path, ``rasterio.open()`` does the same
+thing as ``open()``, raising an exception immediately.
 
 .. code-block:: pycon
 
@@ -32,7 +33,11 @@ thing as ``open()``: raising an exception immediately.
       File "<stdin>", line 1, in <module>
     IOError: no such file or directory: '/lol/wut.tif'
 
-Datasets generally have one or more bands (or layers) and these are indexed starting with the number 1. The first band of a file can be read like this:
+Reading data
+------------
+
+Datasets generally have one or more bands (or layers) and these are indexed
+starting with the number 1. The first band of a file can be read like this:
 
 .. code-block:: pycon
 
@@ -45,10 +50,20 @@ Datasets generally have one or more bands (or layers) and these are indexed star
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
 
-The returned object is a Numpy (N-dimensional; 2 in this case) ndarry.
+The returned object is a Numpy (N-dimensional; 2 in this case) ndarray. The
+GeoTIFF file that Rasterio uses for testing has 0 values in the corners:
 
-indexes of all a dataset's bands can be had from a dataset's ``indexes``
-attribute. Read all band data from a dataset like this:
+.. code-block::
+
+    >>> from matplotlib import pyplot
+    >>> pyplot.imshow(dataset.read_band(1), cmap='pink')
+    <matplotlib.image.AxesImage object at 0x111195c10>
+    >>> pyplot.show()
+
+[link]
+
+Get all indexes of all a dataset's bands can be had from its ``indexes``
+attribute and read all band data like this:
 
 .. code-block:: pycon
 
@@ -77,3 +92,47 @@ attribute. Read all band data from a dataset like this:
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)]
 
+To close a dataset, call its ``close()`` method.
+
+.. code-block:: pycon
+
+    >>> dataset.close()
+    >>> dataset
+    <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+
+After it's closed, data can no longer be read.
+
+.. code-block:: pycon
+
+    >>> dataset.read_band(1)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ValueError: can't read closed raster file
+
+This is the same as a closed Python ``file``.
+
+.. code-block:: pycon
+
+    >>> f = open('README.rst')
+    >>> f.close()
+    >>> f.read()
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ValueError: I/O operation on closed file
+
+As Python ``file`` objects can, Rasterio datasets can be managers of a
+``with`` statement's context and can be accessed concurrently by one or more
+dataset objects.
+
+.. code-block:: pycon
+
+    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif', 'r') as one:
+    ...     with rasterio.open('rasterio/tests/data/RGB.byte.tif', 'r') as two:
+                print two
+    ... print one
+    ... print two
+    >>> print one
+    <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
