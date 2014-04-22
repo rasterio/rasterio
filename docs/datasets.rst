@@ -33,6 +33,37 @@ thing as ``open()``, raising an exception immediately.
       File "<stdin>", line 1, in <module>
     IOError: no such file or directory: '/lol/wut.tif'
 
+Attributes
+----------
+
+In addition to the file-like attributes shown above, a dataset has a number
+of other read-only attributes that help explain its role in spatial information
+systems.
+
+.. code-block:: pycon
+
+    >>> dataset.driver
+    u'GTiff'
+    >>> dataset.shape
+    (718, 791)
+    >>> dataset.height, dataset.width
+    (718, 791)
+    >>> dataset.shape
+    (718, 791)
+    >>> dataset.transform
+    [101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805]
+    >>> dataset.crs
+    {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
+
+.. code-block:: pycon
+
+    >>> dataset.count
+    3
+    >>> dataset.dtypes
+    [<type 'numpy.uint8'>, <type 'numpy.uint8'>, <type 'numpy.uint8'>]
+    >>> dataset.nodatavals
+    [0.0, 0.0, 0.0]
+
 Reading data
 ------------
 
@@ -50,7 +81,7 @@ starting with the number 1. The first band of a file can be read like this:
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
 
-The returned object is a Numpy (N-dimensional; 2 in this case) ndarray. The
+The returned object is a Numpy (N-dimensional; N=2 in this case) ndarray. The
 GeoTIFF file that Rasterio uses for testing has 0 values in the corners:
 
 .. code-block::
@@ -109,7 +140,7 @@ After it's closed, data can no longer be read.
       File "<stdin>", line 1, in <module>
     ValueError: can't read closed raster file
 
-This is the same as a closed Python ``file``.
+A Python ``file`` has the same behavior.
 
 .. code-block:: pycon
 
@@ -120,9 +151,8 @@ This is the same as a closed Python ``file``.
       File "<stdin>", line 1, in <module>
     ValueError: I/O operation on closed file
 
-As Python ``file`` objects can, Rasterio datasets can be managers of a ``with``
-statement's context and can be accessed concurrently by one or more dataset
-objects.
+As Python ``file`` objects can, Rasterio datasets can manage the entry into 
+and exit from runtime contexts created using a ``with`` statement.
 
 .. code-block:: pycon
 
