@@ -28,3 +28,13 @@ def test_update_band(tmpdir):
     with rasterio.open(tiffname) as f:
         assert not f.read_band(1).any()
 
+def test_update_spatial(tmpdir):
+    tiffname = str(tmpdir.join('foo.tif'))
+    shutil.copy('rasterio/tests/data/RGB.byte.tif', tiffname)
+    with rasterio.open(tiffname, 'r+') as f:
+        f.transform = [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        f.crs = {'+init': 'epsg:4326'}
+    with rasterio.open(tiffname) as f:
+        assert f.transform == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        assert f.crs == {
+            u'datum': u'WGS84', u'no_defs': True, u'proj': u'longlat'}

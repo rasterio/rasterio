@@ -22,13 +22,13 @@ def test_context(tmpdir):
         assert s.height == 100
         assert s.shape == (100, 100)
         assert s.indexes == [1]
-        assert repr(s) == "<open RasterUpdater '%s' at %s>" % (name, hex(id(s)))
+        assert repr(s) == "<open RasterUpdater name='%s' mode='w'>" % name
     assert s.closed == True
     assert s.count == 1
     assert s.width == 100
     assert s.height == 100
     assert s.shape == (100, 100)
-    assert repr(s) == "<closed RasterUpdater '%s' at %s>" % (name, hex(id(s)))
+    assert repr(s) == "<closed RasterUpdater name='%s' mode='w'>" % name
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "GTiff" in info
     assert "Size is 100, 100" in info
