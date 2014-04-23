@@ -31,7 +31,7 @@ cdef extern from "gdal.h":
     void GDALSetDescription (void *, const char *)
 
     void * GDALGetDriverByName(const char *name)
-    void * GDALOpen(const char *filename, int access)
+    void * GDALOpen(const char *filename, int access) # except -1
     void GDALFlushCache (void *ds)
     void GDALClose(void *ds)
     void * GDALGetDatasetDriver(void *ds)

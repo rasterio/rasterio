@@ -11,7 +11,7 @@ cdef extern from "cpl_conv.h":
     const char * CPLGetConfigOption ( const char *key, const char *default)
 
 cdef extern from "cpl_error.h":
-    void    CPLSetErrorHandler (void *handler)
+    void CPLSetErrorHandler (void *handler)
 
 cdef extern from "gdal.h":
     void GDALAllRegister()
@@ -23,7 +23,6 @@ cdef extern from "ogr_api.h":
     void OGRCleanupAll()
     int OGRGetDriverCount()
 
-
 log = logging.getLogger('GDAL')
 class NullHandler(logging.Handler):
     def emit(self, record):
@@ -31,10 +30,10 @@ class NullHandler(logging.Handler):
 log.addHandler(NullHandler())
 
 level_map = {
-    0: 0, 
-    1: logging.DEBUG, 
-    2: logging.WARNING, 
-    3: logging.ERROR, 
+    0: 0,
+    1: logging.DEBUG,
+    2: logging.WARNING,
+    3: logging.ERROR,
     4: logging.CRITICAL }
 
 code_map = {
@@ -53,7 +52,6 @@ code_map = {
 
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
     log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
-
 
 def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()

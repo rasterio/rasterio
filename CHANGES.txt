@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- Add meta and tag dumping options to rio_insp.
+
 0.8 (2014-03-31)
 ----------------
 - Add rasterize(), the inverse of shapes() (#45, #62).
