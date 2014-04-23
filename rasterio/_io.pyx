@@ -786,8 +786,8 @@ cdef class RasterUpdater(RasterReader):
             
             # Creation options
             for k, v in self._options.items():
-                kwds.append((k.lower(), v.upper()))
-                k, v = k.upper(), v.upper()
+                kwds.append((k.lower(), v))
+                k, v = k.upper(), str(v).upper()
                 key_b = k.encode('utf-8')
                 val_b = v.encode('utf-8')
                 key_c = key_b
