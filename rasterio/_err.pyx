@@ -3,18 +3,17 @@
 Transformation of GDAL C API errors to Python exceptions using Python's
 ``with`` statement and an error-handling context manager class.
 
-The ``g_errs()`` function, a factory for error-handling context
-managers, is intended for use in Rasterio's Cython code. When entering
-the body of a ``with`` statement, the context manager clears GDAL's
-error stack. On exit, the context manager pops the last error off the
-stack and raises an appropriate Python exception. It's otherwise pretty
-difficult to do this kind of thing.  I couldn't make it work with a CPL
-error handler, Cython's C code swallows exceptions raised from
-C callbacks.
+The ``cpl_errs`` error-handling context manager is intended for use in
+Rasterio's Cython code. When entering the body of a ``with`` statement,
+the context manager clears GDAL's error stack. On exit, the context
+manager pops the last error off the stack and raises an appropriate
+Python exception. It's otherwise pretty difficult to do this kind of
+thing.  I couldn't make it work with a CPL error handler, Cython's
+C code swallows exceptions raised from C callbacks.
 
 When used to wrap a call to open a PNG in update mode
 
-    with g_errs():
+    with cpl_errs:
         cdef void *hds = GDALOpen('file.png', 1)
     if hds == NULL:
         raise ValueError("NULL dataset")
@@ -67,7 +66,5 @@ cdef class GDALErrCtxManager:
         if err_type >= 3:
             raise exception_map[err_no](msg)
 
-def g_errs():
-    """Returns a context manager."""
-    return GDALErrCtxManager()
+cpl_errs = GDALErrCtxManager()
 

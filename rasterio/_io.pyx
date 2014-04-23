@@ -10,7 +10,7 @@ cimport numpy as np
 
 from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import g_errs
+from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.five import text_type
 
@@ -189,7 +189,7 @@ cdef class RasterReader(object):
 
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
-        with g_errs():
+        with cpl_errs:
             self._hds = _gdal.GDALOpen(fname, 0)
         if self._hds == NULL:
             raise ValueError("Null dataset")
@@ -813,7 +813,7 @@ cdef class RasterUpdater(RasterReader):
                 self.write_crs(self._crs)
         
         elif self.mode == 'r+':
-            with g_errs():
+            with cpl_errs:
                 self._hds = _gdal.GDALOpen(fname, 1)
             if self._hds == NULL:
                 raise ValueError("NULL dataset")
