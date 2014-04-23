@@ -1,60 +1,59 @@
+"""rasterio._err
 
-from rasterio cimport _gdal
+Transformation of GDAL C API errors to Python exceptions using Python's
+``with`` statement and an error-handling context manager class.
 
-import logging
+The ``g_errs()`` function, a factory for error-handling context
+managers, is intended for use in Rasterio's Cython code. When entering
+the body of a ``with`` statement, the context manager clears GDAL's
+error stack. On exit, the context manager pops the last error off the
+stack and raises an appropriate Python exception. It's otherwise pretty
+difficult to do this kind of thing.  I couldn't make it work with a CPL
+error handler, Cython's C code swallows exceptions raised from
+C callbacks.
 
+When used to wrap a call to open a PNG in update mode
+
+    with g_errs():
+        cdef void *hds = GDALOpen('file.png', 1)
+    if hds == NULL:
+        raise ValueError("NULL dataset")
+
+the ValueError of last resort never gets raised because the context
+manager raises a more useful and informative error:
+
+    Traceback (most recent call last):
+      File "/Users/sean/code/rasterio/scripts/rio_insp", line 65, in <module>
+        with rasterio.open(args.src, args.mode) as src:
+      File "/Users/sean/code/rasterio/rasterio/__init__.py", line 111, in open
+        s.start()
+    ValueError: The PNG driver does not support update access to existing datasets.
+"""
+
+# CPL function declarations.
 cdef extern from "cpl_error.h":
-    void    CPLSetErrorHandler (void *handler)
-    int CPLGetLastErrorNo ( )
-    const char* CPLGetLastErrorMsg ( )
-    int CPLGetLastErrorType ()
-    void CPLErrorReset ()
+    int CPLGetLastErrorNo()
+    const char* CPLGetLastErrorMsg()
+    int CPLGetLastErrorType()
+    void CPLErrorReset()
 
-log = logging.getLogger('GDAL')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
-
-level_map = {
-    0: 0, 
-    1: logging.DEBUG, 
-    2: logging.WARNING, 
-    3: logging.ERROR, 
-    4: logging.CRITICAL }
-
-code_map = {
-    0: 'CPLE_None',
-    1: 'CPLE_AppDefined',
-    2: 'CPLE_OutOfMemory',
-    3: 'CPLE_FileIO',
-    4: 'CPLE_OpenFailed',
-    5: 'CPLE_IllegalArg',
-    6: 'CPLE_NotSupported',
-    7: 'CPLE_AssertionFailed',
-    8: 'CPLE_NoWriteAccess',
-    9: 'CPLE_UserInterrupt',
-    10: 'CPLE_ObjectNull'
-}
-
+# Map GDAL error numbers to Python exceptions.
 exception_map = {
-    1: RuntimeError,
-    2: MemoryError,
-    3: IOError,
-    4: IOError,
-    5: TypeError,
-    6: ValueError,
-    7: AssertionError,
-    8: IOError,
-    9: KeyboardInterrupt,
-    10: ValueError }
+    1: RuntimeError,        # CPLE_AppDefined
+    2: MemoryError,         # CPLE_OutOfMemory
+    3: IOError,             # CPLE_FileIO
+    4: IOError,             # CPLE_OpenFailed
+    5: TypeError,           # CPLE_IllegalArg
+    6: ValueError,          # CPLE_NotSupported
+    7: AssertionError,      # CPLE_AssertionFailed
+    8: IOError,             # CPLE_NoWriteAccess
+    9: KeyboardInterrupt,   # CPLE_UserInterrupt
+    10: ValueError          # ObjectNull
+    }
 
 
 cdef class GDALErrCtxManager:
-    """Wraps up calls to GDAL library functions in a function that also
-    checks a GDAL error stack, allowing propagation of GDAL errors to
-    Python's exceptions mechanism.
-    """
+    """A manager for GDAL error handling contexts."""
 
     def __enter__(self):
         CPLErrorReset()
@@ -69,5 +68,6 @@ cdef class GDALErrCtxManager:
             raise exception_map[err_no](msg)
 
 def g_errs():
+    """Returns a context manager."""
     return GDALErrCtxManager()
 
