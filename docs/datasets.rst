@@ -38,31 +38,36 @@ Attributes
 
 In addition to the file-like attributes shown above, a dataset has a number
 of other read-only attributes that help explain its role in spatial information
-systems.
+systems. The ``driver``
 
 .. code-block:: pycon
 
     >>> dataset.driver
     u'GTiff'
-    >>> dataset.shape
-    (718, 791)
     >>> dataset.height, dataset.width
     (718, 791)
     >>> dataset.shape
     (718, 791)
-    >>> dataset.transform
-    [101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805]
-    >>> dataset.crs
-    {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
-
-.. code-block:: pycon
-
     >>> dataset.count
     3
     >>> dataset.dtypes
     [<type 'numpy.uint8'>, <type 'numpy.uint8'>, <type 'numpy.uint8'>]
     >>> dataset.nodatavals
     [0.0, 0.0, 0.0]
+
+What makes geospatial raster datasets different from other raster files is
+that their pixels map to regions of the Earth. A dataset has a coordinate
+reference system and an affine transformation matrix that maps pixel
+coordinates to coordinates in that reference system.
+
+.. code-block:: pycon
+
+    >>> dataset.crs
+    {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
+    >>> dataset.transform
+    [101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805]
+
+
 
 Reading data
 ------------

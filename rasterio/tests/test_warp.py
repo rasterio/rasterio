@@ -106,3 +106,33 @@ def test_warp_from_to_file(tmpdir):
                 reproject(rasterio.band(src, i), rasterio.band(dst, i))
     # subprocess.call(['open', tiffname])
 
+def test_warp_from_to_file_multi(tmpdir):
+    """File to file"""
+    tiffname = str(tmpdir.join('foo.tif'))
+    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
+        dst_crs = dict(
+                    proj='merc',
+                    a=6378137,
+                    b=6378137,
+                    lat_ts=0.0,
+                    lon_0=0.0,
+                    x_0=0.0,
+                    y_0=0,
+                    k=1.0,
+                    units='m',
+                    nadgrids='@null',
+                    wktext=True,
+                    no_defs=True)
+        kwargs = src.meta.copy()
+        kwargs.update(
+            transform=dst_transform,
+            crs=dst_crs)
+        with rasterio.open(tiffname, 'w', **kwargs) as dst:
+            for i in (1, 2, 3):
+                reproject(
+                    rasterio.band(src, i), 
+                    rasterio.band(dst, i),
+                    num_threads=2)
+    # subprocess.call(['open', tiffname])
+
