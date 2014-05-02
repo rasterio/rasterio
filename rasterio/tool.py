@@ -15,7 +15,7 @@ Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 
 def main(banner, dataset):
 
-    def show(source):
+    def show(source, cmap='gray'):
         """Show a raster using matplotlib.
 
         The raster may be either an ndarray or a (dataset, bidx)
@@ -26,8 +26,7 @@ def main(banner, dataset):
             arr = source[0].read_band(source[1])
         else:
             arr = source
-        plt.imshow(arr)
-        plt.gray()
+        plt.imshow(arr, cmap=cmap)
         plt.show()
 
     def stats(source):
