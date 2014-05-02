@@ -793,7 +793,9 @@ cdef class RasterUpdater(RasterReader):
                 key_c = key_b
                 val_c = val_b
                 options = _gdal.CSLSetNameValue(options, key_c, val_c)
-                log.debug("Option: %r\n", (k, v))
+                log.debug(
+                    "Option: %r\n", 
+                    (k, _gdal.CSLFetchNameValue(options, key_c)))
 
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
