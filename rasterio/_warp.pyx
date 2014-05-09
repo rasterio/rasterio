@@ -86,6 +86,10 @@ def reproject(
     cdef char *dstwkt= NULL
     cdef const char *proj_c
     cdef void *osr
+    cdef char **warp_extras
+    cdef char *key_c
+    cdef char *val_c
+    cdef const char* pszWarpThreads
 
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
@@ -223,8 +227,23 @@ def reproject(
         log.debug("Created transformer")
 
         psWOptions = _gdal.GDALCreateWarpOptions()
-        # TODO: get options from kwargs
-        # psWOptions = GDALCloneWarpOptions( psOptions );
+        
+        warp_extras = psWOptions.papszWarpOptions
+        for k, v in kwargs.items():
+            k, v = k.upper(), str(v).upper()
+            key_b = k.encode('utf-8')
+            val_b = v.encode('utf-8')
+            key_c = key_b
+            val_c = val_b
+            warp_extras = _gdal.CSLSetNameValue(warp_extras, key_c, val_c)
+        
+        pszWarpThreads = _gdal.CSLFetchNameValue(warp_extras, "NUM_THREADS")
+        if pszWarpThreads == NULL:
+            pszWarpThreads = _gdal.CPLGetConfigOption(
+                                "GDAL_NUM_THREADS", "1")
+            warp_extras = _gdal.CSLSetNameValue(
+                warp_extras, "NUM_THREADS", pszWarpThreads)
+
         log.debug("Created warp options")
     
         psWOptions.eResampleAlg = <_gdal.GDALResampleAlg>resampling
@@ -261,7 +280,7 @@ def reproject(
             log.debug(
                 "Chunk and warp window: %d, %d, %d, %d",
                 0, 0, cols, rows)
-            eErr = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+            eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             log.debug("Chunked and warped: %d", retval)
     
     except Exception, e:

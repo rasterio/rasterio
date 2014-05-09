@@ -88,6 +88,8 @@ if os.path.exists("MANIFEST.in"):
             'rasterio._drivers', ['rasterio/_drivers.pyx'], **ext_options),
         Extension(
             'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
+        Extension(
+            'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
             ])
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -103,6 +105,8 @@ else:
             'rasterio._drivers', ['rasterio/_drivers.c'], **ext_options),
         Extension(
             'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
+        Extension(
+            'rasterio._err', ['rasterio/_err.cpp'], **ext_options),
             ]
 
 with open('README.rst') as f:
@@ -136,7 +140,7 @@ setup(name='rasterio',
       license='BSD',
       package_dir={'': '.'},
       packages=['rasterio'],
-      scripts = ['scripts/rasterio.insp', 'scripts/rio_cp', 'scripts/rio_insp'],
+      scripts = ['scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp'],
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,

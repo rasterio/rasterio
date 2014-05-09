@@ -10,6 +10,7 @@ cimport numpy as np
 
 from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import driver_count, GDALEnv
+from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.five import text_type
 
@@ -154,7 +155,7 @@ def window_index(window):
     return tuple(slice(*w) for w in window)
 
 
-cdef class RasterReader:
+cdef class RasterReader(object):
 
     def __init__(self, path):
         self.name = path
@@ -188,7 +189,8 @@ cdef class RasterReader:
 
         name_b = self.name.encode('utf-8')
         cdef const char *fname = name_b
-        self._hds = _gdal.GDALOpen(fname, 0)
+        with cpl_errs:
+            self._hds = _gdal.GDALOpen(fname, 0)
         if self._hds == NULL:
             raise ValueError("Null dataset")
 
@@ -473,31 +475,45 @@ cdef class RasterReader:
         if not self._read and self._crs is None:
             self._crs = self.read_crs()
         return self._crs
-    crs = property(get_crs)
 
-    def get_crs_wkt(self):
-        if not self._read and self._crs_wkt is None:
-            self._crs = self.read_crs_wkt()
-        return self._crs_wkt
-    crs_wkt = property(get_crs_wkt)
+    property crs:
+        """A mapping of PROJ.4 coordinate reference system params.
+        """
+
+        def __get__(self):
+            return self.get_crs()
+
+    property crs_wkt:
+        """An OGC WKT string representation of the coordinate reference
+        system.
+        """
+
+        def __get__(self):
+            if not self._read and self._crs_wkt is None:
+                self._crs = self.read_crs_wkt()
+            return self._crs_wkt
 
     def get_transform(self):
-        """Get an affine transformation that maps pixel row/column
-        coordinates to coordinates in the specified crs. The affine
-        transformation is represented by a six-element sequence.
-        Reference system coordinates can be calculated by the following
-        formula
-
-          X = Item 0 + Column * Item 1 + Row * Item 2
-          Y = Item 3 + Column * Item 4 + Row * Item 5
-
-        See also this class's ul() method.
-        """
         if not self._read and self._transform is None:
             self._transform = self.read_transform()
         return self._transform
-    transform = property(get_transform)
-    
+
+    property transform:
+        """An affine transformation that maps pixel row/column
+        coordinates to coordinates in the specified crs. The affine
+        transformation is represented by a six-element sequence.
+        Reference system coordinates can be calculated by the
+        following formula
+
+        X = Item 0 + Column * Item 1 + Row * Item 2 Y = Item
+        3 + Column * Item 4 + Row * Item 5
+
+        See also this class's ul() method.
+        """
+
+        def __get__(self):
+            return self.get_transform()
+
     def read_band(self, bidx, out=None, window=None):
         """Read the `bidx` band into an `out` array if provided, 
         otherwise return a new array.
@@ -770,14 +786,16 @@ cdef class RasterUpdater(RasterReader):
             
             # Creation options
             for k, v in self._options.items():
-                kwds.append((k.lower(), v.upper()))
-                k, v = k.upper(), v.upper()
+                kwds.append((k.lower(), v))
+                k, v = k.upper(), str(v).upper()
                 key_b = k.encode('utf-8')
                 val_b = v.encode('utf-8')
                 key_c = key_b
                 val_c = val_b
                 options = _gdal.CSLSetNameValue(options, key_c, val_c)
-                log.debug("Option: %r\n", (k, v))
+                log.debug(
+                    "Option: %r\n", 
+                    (k, _gdal.CSLFetchNameValue(options, key_c)))
 
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
@@ -797,7 +815,8 @@ cdef class RasterUpdater(RasterReader):
                 self.write_crs(self._crs)
         
         elif self.mode == 'r+':
-            self._hds = _gdal.GDALOpen(fname, 1)
+            with cpl_errs:
+                self._hds = _gdal.GDALOpen(fname, 1)
             if self._hds == NULL:
                 raise ValueError("NULL dataset")
 
@@ -823,11 +842,6 @@ cdef class RasterUpdater(RasterReader):
         self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
 
-    def get_crs(self):
-        if not self._crs:
-            self._crs = self.read_crs()
-        return self._crs
-    
     def write_crs(self, crs):
         if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
@@ -849,10 +863,17 @@ cdef class RasterUpdater(RasterReader):
         _gdal.GDALSetProjection(self._hds, wkt)
         _gdal.CPLFree(wkt)
         _gdal.OSRDestroySpatialReference(osr)
-
         self._crs = crs
-    
-    crs = property(get_crs, write_crs)
+
+    property crs:
+        """A mapping of PROJ.4 coordinate reference system params.
+        """
+
+        def __get__(self):
+            return self.get_crs()
+
+        def __set__(self, value):
+            self.write_crs(value)
 
     def write_transform(self, transform):
         if self._hds == NULL:
@@ -863,12 +884,24 @@ cdef class RasterUpdater(RasterReader):
         retval = _gdal.GDALSetGeoTransform(self._hds, gt)
         self._transform = transform
 
-    def get_transform(self):
-        if not self._transform:
-            self._transform = self.read_transform()
-        return self._transform
+    property transform:
+        """An affine transformation that maps pixel row/column
+        coordinates to coordinates in the specified crs. The affine
+        transformation is represented by a six-element sequence.
+        Reference system coordinates can be calculated by the
+        following formula
 
-    transform = property(get_transform, write_transform)
+        X = Item 0 + Column * Item 1 + Row * Item 2 Y = Item
+        3 + Column * Item 4 + Row * Item 5
+
+        See also this class's ul() method.
+        """
+
+        def __get__(self):
+            return self.get_transform()
+
+        def __set__(self, value):
+            self.write_transform(value)
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
@@ -878,7 +911,7 @@ cdef class RasterUpdater(RasterReader):
         The optional `window` argument takes a tuple like:
         
             ((row_start, row_stop), (col_start, col_stop))
-            
+
         specifying a raster subset to write into.
         """
         if bidx not in self.indexes:
