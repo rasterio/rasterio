@@ -891,8 +891,8 @@ cdef class RasterUpdater(RasterReader):
         Reference system coordinates can be calculated by the
         following formula
 
-        X = Item 0 + Column * Item 1 + Row * Item 2 Y = Item
-        3 + Column * Item 4 + Row * Item 5
+        X = Item 0 + Column * Item 1 + Row * Item 2
+        Y = Item 3 + Column * Item 4 + Row * Item 5
 
         See also this class's ul() method.
         """
