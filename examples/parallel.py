@@ -45,6 +45,8 @@ def main(infile, outfile, num_workers=4, max_iterations=3):
         block_height, block_width = block_shapes.pop()
         meta.update(blockxsize=block_width, blockysize=block_height)
         
+        if block_width != src.shape[1]:
+          meta.update(tiled = 'yes')
         # Create an empty destination file on disk.
         with rasterio.open(outfile, 'w', **meta) as dst:
             pass
