@@ -16,7 +16,7 @@ from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
 
 
-__all__ = ['open', 'drivers', 'copy', 'check_dtype']
+__all__ = ['band', 'AffineMatrix', 'open', 'drivers', 'copy', 'check_dtype']
 __version__ = "0.8"
 
 log = logging.getLogger('rasterio')
@@ -138,3 +138,15 @@ def drivers(**kwargs):
         log.debug("Creating a not-responsible GDALEnv in drivers()")
         return GDALEnv(False, **kwargs)
 
+
+AffineMatrixBase = namedtuple(
+                    'AffineMatrix',  ('a', 'b', 'xoff', 'd', 'e', 'yoff'))
+
+class AffineMatrix(AffineMatrixBase):
+
+    @classmethod
+    def from_gdal(self, xoff, a, b, yoff, d, e):
+        return AffineMatrix(a, b, xoff, d, e, yoff)
+
+    def to_gdal(self):
+        return (self.xoff, self.a, self.b, self.yoff, self.d, self.e)
