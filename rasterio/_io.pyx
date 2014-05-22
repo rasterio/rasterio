@@ -12,6 +12,7 @@ from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
+from rasterio.coords import AffineMatrix, BoundingBox
 from rasterio.five import text_type
 
 
@@ -426,34 +427,35 @@ cdef class RasterReader(object):
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
-        t = self.transform
-        return (t[0], t[3]+t[5]*self.height, t[0]+t[1]*self.width, t[3])
+        a, b, c, d, e, f = self.transform
+        return BoundingBox(c, f+e*self.height, c+a*self.width, f)
     
     @property
     def res(self):
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
-        t = self.transform
-        if t[2] == t[4] == 0:
-            return t[1], -t[5]
-        return math.sqrt(t[1]*t[1]+t[4]*t[4]), math.sqrt(t[2]*t[2]+t[5]*t[5])
+        a, b, c, d, e, f = self.transform
+        if b == d == 0:
+            return a, -e
+        else:
+            return math.sqrt(a*a+d*d), math.sqrt(b*b+e*e)
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a 
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
-        t = self.transform
+        a, b, c, d, e, f = self.transform
         if col < 0:
             col += self.width
         if row < 0:
             row += self.height
-        return t[0]+t[1]*col, t[3]+t[5]*row
+        return c+a*col, f+e*row
 
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        t = self.transform
-        return int((t[3]-y)/t[5]), int((x-t[0])/t[1])
+        a, b, c, d, e, f = self.transform
+        return int((f-y)/e), int((x-c)/a)
 
     @property
     def meta(self):
@@ -512,7 +514,7 @@ cdef class RasterReader(object):
         """
 
         def __get__(self):
-            return self.get_transform()
+            return AffineMatrix.from_gdal(*self.get_transform())
 
     def read_band(self, bidx, out=None, window=None):
         """Read the `bidx` band into an `out` array if provided, 
@@ -723,6 +725,8 @@ cdef class RasterUpdater(RasterReader):
         self._hds = NULL
         self._count = count
         self._crs = crs
+        if isinstance(transform, AffineMatrix):
+            transform = transform.to_gdal()
         self._transform = transform
         self._closed = True
         self._dtypes = []
@@ -898,10 +902,10 @@ cdef class RasterUpdater(RasterReader):
         """
 
         def __get__(self):
-            return self.get_transform()
+            return AffineMatrix.from_gdal(*self.get_transform())
 
         def __set__(self, value):
-            self.write_transform(value)
+            self.write_transform(value.to_gdal())
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.

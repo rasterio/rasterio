@@ -14,10 +14,11 @@ from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+from rasterio.coords import AffineMatrix
 
-
-__all__ = ['band', 'AffineMatrix', 'open', 'drivers', 'copy', 'check_dtype']
-__version__ = "0.8"
+__all__ = [
+    'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
+__version__ = "0.9"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -25,14 +26,6 @@ class NullHandler(logging.Handler):
         pass
 log.addHandler(NullHandler())
 
-def band(ds, bidx):
-    """Wraps a dataset and a band index up as a 'Band'"""
-    Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
-    return Band(
-        ds, 
-        bidx, 
-        numpy.dtype(set(ds.dtypes).pop()),
-        ds.shape)
 
 def open(
         path, mode='r', 
@@ -111,9 +104,11 @@ def open(
     s.start()
     return s
 
+
 def check_dtype(dt):
     tp = getattr(dt, 'type', dt)
     return tp in rasterio.dtypes.dtype_rev
+
 
 def copy(src, dst, **kw):
     """Copy a source dataset to a new destination with driver specific
@@ -129,6 +124,7 @@ def copy(src, dst, **kw):
     with drivers():
         return RasterCopier()(src, dst, **kw)
 
+
 def drivers(**kwargs):
     """Returns a gdal environment with registered drivers."""
     if driver_count() == 0:
@@ -139,34 +135,24 @@ def drivers(**kwargs):
         return GDALEnv(False, **kwargs)
 
 
-class AffineMatrix(
-        namedtuple('AffineMatrix',  ('a', 'b', 'c', 'd', 'e', 'f'))):
-    """
-    The augmented affine transformation matrix.
+Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
 
-      | x' |   | a  b  c | | x |
-      | y' | = | d  e  f | | y |
-      | 1  |   | 0  0  1 | | 1 |
+def band(ds, bidx):
+    """Wraps a dataset and a band index up as a 'Band'"""
+    return Band(
+        ds, 
+        bidx, 
+        numpy.dtype(set(ds.dtypes).pop()),
+        ds.shape)
 
-    The vector on the left hand side is position in world coordinates
-    and the vector on the right hand side, image/array coordinates.
 
-    Note that c and f are the world coordinates at the image/array
-    origin (upper left corner).
-    """
-
-    @classmethod
-    def from_gdal(self, c, a, b, f, d, e):
-        return AffineMatrix(a, b, c, d, e, f)
-
-    def to_gdal(self):
-        return (self.c, self.a, self.b, self.f, self.d, self.e)
-
-    @property
-    def xoff(self):
-        return self.c
-
-    @property
-    def yoff(self):
-        return self.f
+def pad(array, transform, pad_width, mode=None, **kwargs):
+    """Returns a padded array and shifted affine transform matrix.
+    
+    Array is padded using `numpy.pad()`."""
+    padded_array = numpy.pad(array, pad_width, mode, **kwargs)
+    padded_trans = list(transform)
+    padded_trans[2] -= pad_width*padded_trans[0]
+    padded_trans[5] -= pad_width*padded_trans[4]
+    return padded_array, AffineMatrix(*padded_trans)
 

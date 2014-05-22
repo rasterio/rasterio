@@ -91,6 +91,11 @@ def reproject(
     cdef char *val_c
     cdef const char* pszWarpThreads
 
+    if src_transform:
+        src_transform = src_transform.to_gdal()
+    if dst_transform:
+        dst_transform = dst_transform.to_gdal()
+
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
     # be copied to the MEM dataset.

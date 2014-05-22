@@ -24,8 +24,8 @@ class ReaderContextTest(unittest.TestCase):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
                 s.transform, 
-                [101985.0, 300.0379266750948, 0.0, 
-                 2826915.0, 0.0, -300.041782729805])
+                (300.0379266750948, 0.0, 101985.0,
+                 0.0, -300.041782729805, 2826915.0 ))
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
                 repr(s), 
@@ -42,8 +42,8 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.crs['zone'], 18)
         self.assertEqual(
             s.transform, 
-            [101985.0, 300.0379266750948, 0.0, 
-             2826915.0, 0.0, -300.041782729805])
+            (300.0379266750948, 0.0, 101985.0,
+             0.0, -300.041782729805, 2826915.0))
         self.assertEqual(
             repr(s),
             "<closed RasterReader name='rasterio/tests/data/RGB.byte.tif' "

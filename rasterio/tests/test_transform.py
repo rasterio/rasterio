@@ -1,5 +1,5 @@
 
-from rasterio import AffineMatrix
+from rasterio.coords import AffineMatrix
 
 def test_gdal():
     t = AffineMatrix.from_gdal(-237481.5, 425.0, 0.0, 237536.4, 0.0, -425.0)
