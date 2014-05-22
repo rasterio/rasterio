@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 import logging
 import os
 import subprocess
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 from distutils.extension import Extension
 
@@ -70,7 +71,7 @@ ext_options = dict(
     extra_link_args=extra_link_args)
 
 # When building from a repo, Cython is required.
-if os.path.exists("MANIFEST.in"):
+if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
     log.info("MANIFEST.in found, presume a repo, cythonizing...")
     if not cythonize:
         log.critical(
