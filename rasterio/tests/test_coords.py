@@ -22,5 +22,5 @@ def test_index():
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
         assert src.index(101985.0, 2826915.0) == (0, 0)
         assert src.index(101985.0+400.0, 2826915.0) == (0, 1)
-        assert src.index(101985.0+400.0, 2826915.0+700.0) == (2, 1)
+        assert src.index(101985.0+400.0, 2826915.0-700.0) == (2, 1)
 

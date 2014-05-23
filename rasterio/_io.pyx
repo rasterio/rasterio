@@ -455,7 +455,12 @@ cdef class RasterReader(object):
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
         a, b, c, d, e, f = self.transform
-        return int((f-y)/e), int((x-c)/a)
+        return round((y-f)/e), round((x-c)/a)
+
+    def window(self, *bbox):
+        """Returns the window corresponding to the world bounding box."""
+        left, bottom, right, top = bbox
+        return tuple(zip(self.index(left, top), self.index(right, bottom)))
 
     @property
     def meta(self):
