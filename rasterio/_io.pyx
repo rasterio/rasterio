@@ -7,12 +7,13 @@ import math
 
 import numpy as np
 cimport numpy as np
+from affine import Affine
 
 from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
-from rasterio.coords import AffineMatrix, BoundingBox
+from rasterio.coords import BoundingBox
 from rasterio.five import text_type
 
 
@@ -427,14 +428,14 @@ cdef class RasterReader(object):
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
-        a, b, c, d, e, f = self.transform
+        a, b, c, d, e, f, _, _, _ = self.transform
         return BoundingBox(c, f+e*self.height, c+a*self.width, f)
     
     @property
     def res(self):
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
-        a, b, c, d, e, f = self.transform
+        a, b, c, d, e, f, _, _, _ = self.transform
         if b == d == 0:
             return a, -e
         else:
@@ -445,7 +446,7 @@ cdef class RasterReader(object):
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
-        a, b, c, d, e, f = self.transform
+        a, b, c, d, e, f, _, _, _ = self.transform
         if col < 0:
             col += self.width
         if row < 0:
@@ -454,7 +455,7 @@ cdef class RasterReader(object):
 
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        a, b, c, d, e, f = self.transform
+        a, b, c, d, e, f, _, _, _ = self.transform
         return round((y-f)/e), round((x-c)/a)
 
     def window(self, *bbox):
@@ -519,7 +520,7 @@ cdef class RasterReader(object):
         """
 
         def __get__(self):
-            return AffineMatrix.from_gdal(*self.get_transform())
+            return Affine.from_gdal(*self.get_transform())
 
     def read_band(self, bidx, out=None, window=None):
         """Read the `bidx` band into an `out` array if provided, 
@@ -730,7 +731,7 @@ cdef class RasterUpdater(RasterReader):
         self._hds = NULL
         self._count = count
         self._crs = crs
-        if isinstance(transform, AffineMatrix):
+        if isinstance(transform, Affine):
             transform = transform.to_gdal()
         self._transform = transform
         self._closed = True
@@ -907,7 +908,7 @@ cdef class RasterUpdater(RasterReader):
         """
 
         def __get__(self):
-            return AffineMatrix.from_gdal(*self.get_transform())
+            return Affine.from_gdal(*self.get_transform())
 
         def __set__(self, value):
             self.write_transform(value.to_gdal())

@@ -25,7 +25,8 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(
                 s.transform, 
                 (300.0379266750948, 0.0, 101985.0,
-                 0.0, -300.041782729805, 2826915.0 ))
+                 0.0, -300.041782729805, 2826915.0,
+                 0, 0, 1.0))
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
                 repr(s), 
@@ -43,7 +44,8 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(
             s.transform, 
             (300.0379266750948, 0.0, 101985.0,
-             0.0, -300.041782729805, 2826915.0))
+             0.0, -300.041782729805, 2826915.0,
+             0, 0, 1.0))
         self.assertEqual(
             repr(s),
             "<closed RasterReader name='rasterio/tests/data/RGB.byte.tif' "
