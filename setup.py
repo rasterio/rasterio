@@ -145,6 +145,7 @@ setup(name='rasterio',
       ext_modules=ext_modules,
       zip_safe=False,
       install_requires=[
+          'affine',
           'Numpy',
           'setuptools'
       ])
