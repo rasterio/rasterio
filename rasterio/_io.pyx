@@ -458,9 +458,8 @@ cdef class RasterReader(object):
         a, b, c, d, e, f, _, _, _ = self.transform
         return round((y-f)/e), round((x-c)/a)
 
-    def window(self, *bbox):
+    def window(self, left, bottom, right, top):
         """Returns the window corresponding to the world bounding box."""
-        left, bottom, right, top = bbox
         return tuple(zip(self.index(left, top), self.index(right, bottom)))
 
     @property
