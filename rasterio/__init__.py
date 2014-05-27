@@ -4,6 +4,7 @@ from collections import namedtuple
 import logging
 import os
 
+from affine import Affine
 import numpy
 
 from rasterio.five import string_types
@@ -14,7 +15,6 @@ from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
-from rasterio.coords import AffineMatrix
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
@@ -154,5 +154,5 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans = list(transform)
     padded_trans[2] -= pad_width*padded_trans[0]
     padded_trans[5] -= pad_width*padded_trans[4]
-    return padded_array, AffineMatrix(*padded_trans)
+    return padded_array, Affine(*padded_trans[:6])
 
