@@ -5,6 +5,7 @@
 from collections import namedtuple
 import logging
 
+from affine import Affine
 import numpy as np
 cimport numpy as np
 
@@ -56,6 +57,10 @@ class NullHandler(logging.Handler):
 log.addHandler(NullHandler())
 
 
+def tastes_like_gdal(t):
+    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
+
+
 def reproject(
         source, destination,
         src_transform=None, src_crs=None, 
@@ -92,9 +97,15 @@ def reproject(
     cdef const char* pszWarpThreads
 
     if src_transform:
-        src_transform = src_transform.to_gdal()
+        if isinstance(src_transform, Affine):
+            src_transform = src_transform.to_gdal()
+        elif not tastes_like_gdal(src_transform):
+            src_transform = Affine(*src_transform).to_gdal()
     if dst_transform:
-        dst_transform = dst_transform.to_gdal()
+        if isinstance(dst_transform, Affine):
+            dst_transform = dst_transform.to_gdal()
+        elif not tastes_like_gdal(dst_transform):
+            dst_transform = Affine(*dst_transform).to_gdal()
 
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will

@@ -1,9 +1,10 @@
 # cython: profile=True
 
 import logging
+import math
 import os
 import os.path
-import math
+import warnings
 
 import numpy as np
 cimport numpy as np
@@ -155,6 +156,9 @@ def window_shape(window, height=-1, width=-1):
 
 def window_index(window):
     return tuple(slice(*w) for w in window)
+
+def tastes_like_gdal(t):
+    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
 
 cdef class RasterReader(object):
@@ -420,33 +424,33 @@ cdef class RasterReader(object):
                 width = min(w, self.width - col)
                 yield (j, i), ((row, row+height), (col, col+width))
 
-    @property
-    def bounds(self):
+    property bounds:
         """Returns the lower left and upper right bounds of the dataset
         in the units of its coordinate reference system.
         
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
-        a, b, c, d, e, f, _, _, _ = self.transform
-        return BoundingBox(c, f+e*self.height, c+a*self.width, f)
+        def __get__(self):
+            a, b, c, d, e, f, _, _, _ = self.affine
+            return BoundingBox(c, f+e*self.height, c+a*self.width, f)
     
-    @property
-    def res(self):
+    property res:
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
-        a, b, c, d, e, f, _, _, _ = self.transform
-        if b == d == 0:
-            return a, -e
-        else:
-            return math.sqrt(a*a+d*d), math.sqrt(b*b+e*e)
+        def __get__(self):
+            a, b, c, d, e, f, _, _, _ = self.affine
+            if b == d == 0:
+                return a, -e
+            else:
+                return math.sqrt(a*a+d*d), math.sqrt(b*b+e*e)
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a 
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
-        a, b, c, d, e, f, _, _, _ = self.transform
+        a, b, c, d, e, f, _, _, _ = self.affine
         if col < 0:
             col += self.width
         if row < 0:
@@ -455,7 +459,7 @@ cdef class RasterReader(object):
 
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        a, b, c, d, e, f, _, _, _ = self.transform
+        a, b, c, d, e, f, _, _, _ = self.affine
         return round((y-f)/e), round((x-c)/a)
 
     def window(self, left, bottom, right, top):
@@ -472,7 +476,8 @@ cdef class RasterReader(object):
             'height': self.height,
             'count': self.count,
             'crs': self.crs,
-            'transform': self.transform }
+            'transform': self.affine.to_gdal(),
+            'affine': self.affine }
         self._read = True
         return m
 
@@ -517,7 +522,18 @@ cdef class RasterReader(object):
 
         See also this class's ul() method.
         """
+        def __get__(self):
+            warnings.warn(
+                    "GDAL-style transforms are deprecated and will not "
+                    "be supported in Rasterio 1.0",
+                    DeprecationWarning)
+            return self.get_transform()
 
+    property affine:
+        """An affine transformation that maps pixel row/column
+        coordinates to coordinates in the specified crs. The value is
+        an instance of ``affine.Affine``.
+        """
         def __get__(self):
             return Affine.from_gdal(*self.get_transform())
 
@@ -730,9 +746,8 @@ cdef class RasterUpdater(RasterReader):
         self._hds = NULL
         self._count = count
         self._crs = crs
-        if isinstance(transform, Affine):
-            transform = transform.to_gdal()
-        self._transform = transform
+        if transform is not None:
+            self._transform = transform.to_gdal()
         self._closed = True
         self._dtypes = []
         self._nodatavals = []

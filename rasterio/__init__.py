@@ -3,18 +3,22 @@
 from collections import namedtuple
 import logging
 import os
+import warnings
 
 from affine import Affine
 import numpy
 
-from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 from rasterio._io import eval_window, window_index, window_shape
+from rasterio._io import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
+from rasterio.coords import BoundingBox
 import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+from rasterio.five import string_types
+
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
@@ -54,24 +58,26 @@ def open(
       {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
        'no_defs': True}
 
-    An affine transformation that maps pixel row/column coordinates to
-    coordinates in the specified reference system can be specified using
-    the ``transform`` argument. The affine transformation is represented
-    by a six-element sequence where th:wqe items are ordered like
+    An affine transformation that maps ``col,row`` pixel coordinates to
+    ``x,y`` coordinates in the coordinate reference system can be
+    specified using the ``transform`` argument. The value may be either
+    an instance of ``affine.Affine`` or a 6-element sequence of the
+    affine transformation matrix coefficients ``a, b, c, d, e, f``.
+    These coefficients are shown in the figure below.
 
-    Item 0: X coordinate of the top left corner of the top left pixel 
-    Item 1: rate of change of X with respect to increasing column, i.e.
+      | x |   | a  b  c | | c |
+      | y | = | d  e  f | | r |
+      | 1 |   | 0  0  1 | | 1 |
+
+    a: rate of change of X with respect to increasing column, i.e.
             pixel width
-    Item 2: rotation, 0 if the raster is oriented "north up" 
-    Item 3: Y coordinate of the top left corner of the top left pixel 
-    Item 4: rotation, 0 if the raster is oriented "north up"
-    Item 5: rate of change of Y with respect to increasing row, usually
+    b: rotation, 0 if the raster is oriented "north up" 
+    c: X coordinate of the top left corner of the top left pixel 
+    f: Y coordinate of the top left corner of the top left pixel 
+    d: rotation, 0 if the raster is oriented "north up"
+    e: rate of change of Y with respect to increasing row, usually
             a negative number i.e. -1 * pixel height
-
-    Reference system oordinates can be calculated by the formula
-
-      X = Item 0 + Column * Item 1 + Row * Item 2
-      Y = Item 3 + Column * Item 4 + Row * Item 5
+    f: Y coordinate of the top left corner of the top left pixel 
 
     Finally, additional kwargs are passed to GDAL as driver-specific
     dataset creation parameters.
@@ -85,7 +91,16 @@ def open(
     if mode in ('r', 'r+'):
         if not os.path.exists(path):
             raise IOError("no such file or directory: %r" % path)
-    
+    if transform:
+        if not isinstance(transform, Affine):
+            if tastes_like_gdal(transform):
+                warnings.warn(
+                    "GDAL-style transforms are deprecated and will not "
+                    "be supported in Rasterio 1.0",
+                    DeprecationWarning)
+                transform = Affine.from_gdal(*transform)
+            else:
+                transform = Affine(*transform)
     if mode == 'r':
         s = RasterReader(path)
     elif mode == 'r+':
@@ -100,7 +115,6 @@ def open(
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
-
     s.start()
     return s
 
