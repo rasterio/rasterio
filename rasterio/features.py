@@ -2,15 +2,16 @@
 
 import json
 import time
+import warnings
+
 import numpy
+
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize
+from rasterio.transform import IDENTITY, guard_transform
 
 
-DEFAULT_TRANSFORM = [0, 1, 0, 0, 0, 1]
-
-
-def shapes(image, mask=None, connectivity=4, transform=DEFAULT_TRANSFORM):
+def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     """Yields a (shape, image_value) pair for each feature in the image.
     
     The shapes are GeoJSON-like dicts and the image values are ints.
@@ -30,8 +31,10 @@ def shapes(image, mask=None, connectivity=4, transform=DEFAULT_TRANSFORM):
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
 
+    transform = guard_transform(transform)
+
     with rasterio.drivers():
-        for s, v in _shapes(image, mask, connectivity, transform):
+        for s, v in _shapes(image, mask, connectivity, transform.to_gdal()):
             yield s, v
 
 
@@ -57,7 +60,7 @@ def sieve(image, size, connectivity=4, output=None):
 def rasterize(
         shapes, 
         out_shape=None, fill=0, output=None,
-        transform=DEFAULT_TRANSFORM,
+        transform=IDENTITY,
         all_touched=False,
         default_value=255):
     """Returns an image array with points, lines, or polygons burned in.
@@ -108,9 +111,11 @@ def rasterize(
         out = output
     else:
         raise ValueError("An output image must be provided or specified")
+    
+    transform = guard_transform(transform)
 
     with rasterio.drivers():
-        _rasterize(geoms, out, transform, all_touched)
+        _rasterize(geoms, out, transform.to_gdal(), all_touched)
     
     return out
 

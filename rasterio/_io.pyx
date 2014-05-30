@@ -8,7 +8,6 @@ import warnings
 
 import numpy as np
 cimport numpy as np
-from affine import Affine
 
 from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import driver_count, GDALEnv
@@ -16,7 +15,7 @@ from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type
-
+from rasterio.transform import Affine
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -491,7 +490,6 @@ cdef class RasterReader(object):
     property crs:
         """A mapping of PROJ.4 coordinate reference system params.
         """
-
         def __get__(self):
             return self.get_crs()
 
@@ -499,40 +497,49 @@ cdef class RasterReader(object):
         """An OGC WKT string representation of the coordinate reference
         system.
         """
-
         def __get__(self):
             if not self._read and self._crs_wkt is None:
                 self._crs = self.read_crs_wkt()
             return self._crs_wkt
 
     def get_transform(self):
+        """Returns a GDAL geotransform in its native form."""
         if not self._read and self._transform is None:
             self._transform = self.read_transform()
         return self._transform
 
     property transform:
-        """An affine transformation that maps pixel row/column
-        coordinates to coordinates in the specified crs. The affine
-        transformation is represented by a six-element sequence.
-        Reference system coordinates can be calculated by the
-        following formula
+        """Coefficients of the affine transformation that maps col,row
+        pixel coordinates to x,y coordinates in the specified crs. The
+        coefficients of the augmented matrix are shown below.
+        
+          | x |   | a  b  c | | r |
+          | y | = | d  e  f | | c |
+          | 1 |   | 0  0  1 | | 1 |
+        
+        In Rasterio versions before 1.0 the value of this property
+        is a list of coefficients ``[c, a, b, f, d, e]``. This form
+        is *deprecated* beginning in 0.9 and in version 1.0 this 
+        property will be replaced by an instance of ``affine.Affine``,
+        which is a namedtuple with coefficients in the order
+        ``(a, b, c, d, e, f)``.
 
-        X = Item 0 + Column * Item 1 + Row * Item 2 Y = Item
-        3 + Column * Item 4 + Row * Item 5
-
-        See also this class's ul() method.
+        Please see https://github.com/mapbox/rasterio/issues/86
+        for more details.
         """
         def __get__(self):
             warnings.warn(
-                    "GDAL-style transforms are deprecated and will not "
-                    "be supported in Rasterio 1.0",
-                    DeprecationWarning)
+                    "The value of this property will change in version 1.0. "
+                    "Please see https://github.com/mapbox/rasterio/issues/86 "
+                    "for details.",
+                    FutureWarning,
+                    stacklevel=2)
             return self.get_transform()
 
     property affine:
-        """An affine transformation that maps pixel row/column
-        coordinates to coordinates in the specified crs. The value is
-        an instance of ``affine.Affine``.
+        """An instance of ``affine.Affine``. This property is a
+        transitional feature: see the docstring of ``transform``
+        (above) for more details.
         """
         def __get__(self):
             return Affine.from_gdal(*self.get_transform())

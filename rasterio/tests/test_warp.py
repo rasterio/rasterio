@@ -7,7 +7,7 @@ import affine
 import numpy
 
 import rasterio
-from rasterio._warp import reproject, RESAMPLING
+from rasterio.warp import reproject, RESAMPLING
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

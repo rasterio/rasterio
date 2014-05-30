@@ -31,7 +31,7 @@ def main(raster_file, vector_file, driver, mask_value):
             {'properties': {'raster_val': v}, 'geometry': s}
             for i, (s, v) 
             in enumerate(
-                shapes(image, mask=mask, transform=src.transform)))
+                shapes(image, mask=mask, transform=src.affine)))
 
         with fiona.open(
                 vector_file, 'w', 

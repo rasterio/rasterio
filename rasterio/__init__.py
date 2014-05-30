@@ -5,7 +5,6 @@ import logging
 import os
 import warnings
 
-from affine import Affine
 import numpy
 
 from rasterio._copy import RasterCopier
@@ -13,11 +12,11 @@ from rasterio._io import RasterReader, RasterUpdater
 from rasterio._io import eval_window, window_index, window_shape
 from rasterio._io import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio.coords import BoundingBox
 import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
 from rasterio.five import string_types
+from rasterio.transform import Affine, guard_transform
 
 
 __all__ = [
@@ -92,15 +91,8 @@ def open(
         if not os.path.exists(path):
             raise IOError("no such file or directory: %r" % path)
     if transform:
-        if not isinstance(transform, Affine):
-            if tastes_like_gdal(transform):
-                warnings.warn(
-                    "GDAL-style transforms are deprecated and will not "
-                    "be supported in Rasterio 1.0",
-                    DeprecationWarning)
-                transform = Affine.from_gdal(*transform)
-            else:
-                transform = Affine(*transform)
+        transform = guard_transform(transform)
+
     if mode == 'r':
         s = RasterReader(path)
     elif mode == 'r+':
@@ -164,6 +156,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     """Returns a padded array and shifted affine transform matrix.
     
     Array is padded using `numpy.pad()`."""
+    transform = guard_transform(transform)
     padded_array = numpy.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)
     padded_trans[2] -= pad_width*padded_trans[0]
