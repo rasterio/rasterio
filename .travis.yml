@@ -4,8 +4,8 @@ python:
   - "3.3"
   - "3.4"
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install gdal-bin libgdal-dev
+  - sudo apt-get update -qq
+  - sudo apt-get install -y gdal-bin libgdal-dev
 install:
   - "pip install -r requirements-dev.txt"
   - "pip install pytest"
