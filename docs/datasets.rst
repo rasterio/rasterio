@@ -166,3 +166,9 @@ and exit from runtime contexts created using a ``with`` statement.
     <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
     <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
 
+Writing data
+------------
+
+Writing data mostly works as with a Python file. There are a few format-
+specific differences. TODO: details.
+
