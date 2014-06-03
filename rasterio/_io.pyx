@@ -4,6 +4,7 @@ import logging
 import math
 import os
 import os.path
+import sys
 import warnings
 
 import numpy as np
@@ -18,10 +19,17 @@ from rasterio.five import text_type
 from rasterio.transform import Affine
 
 log = logging.getLogger('rasterio')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+if 'all' in sys.warnoptions:
+    # show messages in console with: python -W all
+    logging.basicConfig()
+else:
+    # no handler messages shown
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+    log.addHandler(NullHandler())
+
 
 cdef int io_ubyte(
         void *hband,
@@ -115,7 +123,13 @@ cpdef eval_window(object window, int height, int width):
     """Evaluates a window tuple that might contain negative values
     in the context of a raster height and width."""
     cdef int r_start, r_stop, c_start, c_stop
-    r, c = window
+    try:
+        r, c = window
+        assert len(r) == 2
+        assert len(c) == 2
+    except (ValueError, TypeError, AssertionError):
+        raise ValueError("invalid window structure; expecting "
+                         "((row_start, row_stop), (col_start, col_stop))")
     r_start = r[0] or 0
     if r_start < 0:
         if height < 0:
@@ -469,8 +483,8 @@ cdef class RasterReader(object):
     def meta(self):
         m = {
             'driver': self.driver,
-            'dtype': set(self.dtypes).pop(),
-            'nodata': set(self.nodatavals).pop(),
+            'dtype': self.dtypes[0],
+            'nodata': self.nodatavals[0],
             'width': self.width,
             'height': self.height,
             'count': self.count,
@@ -577,7 +591,7 @@ cdef class RasterReader(object):
                 window 
                 and window_shape(window, self.height, self.width) 
                 or self.shape)
-            out = np.zeros(out_shape, dtype)
+            out = np.empty(out_shape, dtype)
         if window:
             window = eval_window(window, self.height, self.width)
             yoff = window[0][0]
@@ -614,6 +628,77 @@ cdef class RasterReader(object):
         # TODO: handle errors (by retval).
         
         return out
+
+    def read(self, indexes=None, out=None, window=None, masked=None):
+        """Read raster bands as a multidimensional array
+
+        If `indexes` is a list, the result is a 3D array, but
+        is a 2D array if it is a band index number.
+        
+        TODO: complete this.
+        """
+        return2d = False
+        if indexes is None:  # Default: read all bands
+            indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            return2d = True
+            if out is not None and out.ndim == 2:
+                out.shape = (1,) + out.shape
+        check_dtypes = set()
+        nodatavals = []
+        # Check each index before processing 3D array
+        for bidx in indexes:
+            if bidx not in self.indexes:
+                raise IndexError("band index out of range")
+            idx = self.indexes.index(bidx)
+            check_dtypes.add(self.dtypes[idx])
+            nodatavals.append(self.nodatavals[idx])
+        if len(check_dtypes) > 1:
+            raise ValueError("more than one 'dtype' found")
+        elif len(check_dtypes) == 0:
+            dtype = self.dtypes[0]
+        else:  # unique dtype; normal case
+            dtype = check_dtypes.pop()
+        if out is None:
+            out_shape2d = (
+                window
+                and window_shape(window, self.height, self.width)
+                or self.shape)
+            out_shape3d = (len(indexes),) + out_shape2d
+            out = np.empty(out_shape3d, dtype)
+        has_nodata = bool(masked)
+        for aix, bidx in enumerate(indexes):
+            res = self.read_band(bidx, out=out[aix], window=window)
+            if (not has_nodata and (masked or masked is None)
+                    and nodatavals[aix] is not None):
+                if ((res == nodatavals[aix]).any()
+                        or (np.isnan(nodatavals[aix])
+                            and np.isnan(nodatavals[aix]).any())):
+                    has_nodata = True
+        if has_nodata:
+            test1nodata = set(nodatavals)
+            if len(test1nodata) == 1:
+                if nodatavals[0] is None:
+                    out = np.ma.masked_array(out, copy=False)
+                elif np.isnan(nodatavals[0]):
+                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
+                else:
+                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
+            else:
+                out = np.ma.masked_array(out, copy=False)
+                for aix in range(len(indexes)):
+                    if nodatavals[aix] is None:
+                        band_mask = False
+                    elif np.isnan(nodatavals[aix]):
+                        band_mask = np.isnan(nodatavals[aix])
+                    else:
+                        band_mask = out[aix] == nodatavals[aix]
+                    out[aix].mask = band_mask
+        if return2d:
+            out.shape = out.shape[1:]
+        return out
+
 
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
@@ -712,7 +797,7 @@ cdef class RasterReader(object):
                 window 
                 and window_shape(window, self.height, self.width) 
                 or self.shape)
-            out = np.zeros(out_shape, np.uint8)
+            out = np.empty(out_shape, np.uint8)
         if window:
             window = eval_window(window, self.height, self.width)
             yoff = window[0][0]
