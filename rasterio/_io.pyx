@@ -3,6 +3,7 @@
 import logging
 import os
 import os.path
+import sys
 import math
 
 import numpy as np
@@ -16,10 +17,17 @@ from rasterio.five import text_type
 
 
 log = logging.getLogger('rasterio')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+if 'all' in sys.warnoptions:
+    # show messages in console with: python -W all
+    logging.basicConfig()
+else:
+    # no handler messages shown
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+    log.addHandler(NullHandler())
+
 
 cdef int io_ubyte(
         void *hband,
@@ -592,12 +600,21 @@ cdef class RasterReader(object):
         return out
 
     def read(self, indexes=None, out=None, window=None, masked=None):
-        """Read raster bands as 3D array.
+        """Read raster bands as a multidimensional array
 
-        TODO: finish this.
+        If `indexes` is a list, the result is a 3D array, but
+        is a 2D array if it is a band index number.
+        
+        TODO: complete this.
         """
+        return2d = False
         if indexes is None:  # Default: read all bands
             indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            return2d = True
+            if out is not None and out.ndim == 2:
+                out.shape = (1,) + out.shape
         check_dtypes = set()
         nodatavals = []
         # Check each index before processing 3D array
@@ -608,7 +625,7 @@ cdef class RasterReader(object):
             check_dtypes.add(self.dtypes[idx])
             nodatavals.append(self.nodatavals[idx])
         if len(check_dtypes) > 1:
-            raise ValueError("more than one dtype found")
+            raise ValueError("more than one 'dtype' found")
         elif len(check_dtypes) == 0:
             dtype = self.dtypes[0]
         else:  # unique dtype; normal case
@@ -624,20 +641,32 @@ cdef class RasterReader(object):
         for aix, bidx in enumerate(indexes):
             res = self.read_band(bidx, out=out[aix], window=window)
             if (not has_nodata and (masked or masked is None)
-                    and nodatavals[aix] is not None
-                    and (res == nodatavals[aix]).any()):
-                has_nodata = True
+                    and nodatavals[aix] is not None):
+                if ((res == nodatavals[aix]).any()
+                        or (np.isnan(nodatavals[aix])
+                            and np.isnan(nodatavals[aix]).any())):
+                    has_nodata = True
         if has_nodata:
             test1nodata = set(nodatavals)
-            if len(test1nodata) == 1 and nodatavals[0] is None:
-                out = np.ma.masked_array(out, copy=False)
-            elif len(test1nodata) == 1:
-                out = np.ma.masked_where(out == nodatavals[0], out, copy=False)
+            if len(test1nodata) == 1:
+                if nodatavals[0] is None:
+                    out = np.ma.masked_array(out, copy=False)
+                elif np.isnan(nodatavals[0]):
+                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
+                else:
+                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
             else:
                 out = np.ma.masked_array(out, copy=False)
                 for aix in range(len(indexes)):
-                    if nodatavals[aix] is not None:
-                        out.mask[aix] = out.data[aix] == nodatavals[aix]
+                    if nodatavals[aix] is None:
+                        band_mask = False
+                    elif np.isnan(nodatavals[aix]):
+                        band_mask = np.isnan(nodatavals[aix])
+                    else:
+                        band_mask = out[aix] == nodatavals[aix]
+                    out[aix].mask = band_mask
+        if return2d:
+            out.shape = out.shape[1:]
         return out
 
 
