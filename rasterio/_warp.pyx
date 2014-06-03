@@ -217,8 +217,8 @@ def _reproject(
     else:
         raise ValueError("Invalid destination")
     
-    cdef void *hTransformArg
-    cdef _gdal.GDALWarpOptions *psWOptions
+    cdef void *hTransformArg = NULL
+    cdef _gdal.GDALWarpOptions *psWOptions = NULL
     cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
     reprojected = False
 
@@ -295,10 +295,12 @@ def _reproject(
         reprojected = True
 
     finally:
-        _gdal.GDALDestroyGenImgProjTransformer( hTransformArg );
+        if hTransformArg != NULL:
+            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
         #if maxerror > 0.0:
         #    _gdal.GDALDestroyApproxTransformer(psWOptions.pTransformerArg)
-        _gdal.GDALDestroyWarpOptions(psWOptions)
+        if psWOptions != NULL:
+            _gdal.GDALDestroyWarpOptions(psWOptions)
         if isinstance(source, np.ndarray):
             if hdsin != NULL:
                 _gdal.GDALClose(hdsin)
