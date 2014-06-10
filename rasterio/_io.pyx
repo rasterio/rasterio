@@ -580,7 +580,7 @@ cdef class RasterReader(object):
             raise ValueError(
                 "the array's dtype '%s' does not match "
                 "the file's dtype '%s'" % (out.dtype, self.dtypes[i]))
-        
+
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband == NULL:
             raise ValueError("NULL band")
