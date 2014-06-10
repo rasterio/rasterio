@@ -99,10 +99,5 @@ cdef class GDALEnv(object):
             key_b = key.upper().encode('utf-8')
             key_c = key_b
             CPLSetThreadLocalConfigOption(key_c, NULL)
-        if self.is_chef:
-            CPLSetErrorHandler(NULL)
-            GDALDestroyDriverManager()
-            OGRCleanupAll()
-            if driver_count() != 0:
-                raise ValueError("Drivers not de-registered")
+        CPLSetErrorHandler(NULL)
 
