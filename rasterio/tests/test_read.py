@@ -234,3 +234,8 @@ class ReaderContextTest(unittest.TestCase):
             a = s.read(masked=False)
             self.assertFalse(hasattr(a, 'mask'))
             self.assertTrue(numpy.isnan(a).any())
+            # Window does not contain a nodatavalue
+            a = s.read(window=((0, 2), (0, 2)))
+            self.assertEqual(a.ndim, 3)
+            self.assertEqual(a.shape, (1, 2, 2))
+            self.assertFalse(hasattr(a, 'mask'))
