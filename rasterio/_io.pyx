@@ -674,7 +674,7 @@ cdef class RasterReader(object):
                     and nodatavals[aix] is not None):
                 if ((res == nodatavals[aix]).any()
                         or (np.isnan(nodatavals[aix])
-                            and np.isnan(nodatavals[aix]).any())):
+                            and np.isnan(res).any())):
                     has_nodata = True
         if has_nodata:
             test1nodata = set(nodatavals)
@@ -691,7 +691,7 @@ cdef class RasterReader(object):
                     if nodatavals[aix] is None:
                         band_mask = False
                     elif np.isnan(nodatavals[aix]):
-                        band_mask = np.isnan(nodatavals[aix])
+                        band_mask = np.isnan(out[aix])
                     else:
                         band_mask = out[aix] == nodatavals[aix]
                     out[aix].mask = band_mask
