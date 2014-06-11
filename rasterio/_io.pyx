@@ -639,8 +639,18 @@ cdef class RasterReader(object):
 
         If `indexes` is a list, the result is a 3D array, but
         is a 2D array if it is a band index number.
-        
-        TODO: complete this.
+
+        Optional `out` argument is a reference to an output array with the
+        same dimensions and shape.
+
+        See `read_band` for usage of the optional `window` argument.
+
+        The return type will be either a regular NumPy array, or a masked
+        NumPy array depending on the `masked` argument. The return type is
+        forced if either `True` or `False`, but will be chosen if `None`.
+        For `masked=None` (default), the array will be the same type as
+        `out` (if used), or will be masked if any of the nodatavals are
+        not `None`.
         """
         return2d = False
         if indexes is None:  # Default: read all bands
@@ -665,23 +675,34 @@ cdef class RasterReader(object):
             dtype = self.dtypes[0]
         else:  # unique dtype; normal case
             dtype = check_dtypes.pop()
+        out_shape = (len(indexes),) + (
+            window
+            and window_shape(window, self.height, self.width)
+            or self.shape)
+        if out is not None:
+            if masked is None:
+                masked = hasattr(out, 'mask')
+            # Check 'out' array dimensions
+            if return2d:
+                if out.shape[1:] != out_shape[1:]:
+                    raise ValueError(
+                        "'out' shape %s does not mach raster index shape %s" %
+                        (out.shape[1:], out_shape[1:]))
+            else:  # 3D array
+                if out.shape != out_shape:
+                    raise ValueError(
+                        "'out' shape %s does not mach raster slice shape %s" %
+                        (out.shape, out_shape))
+        if masked is None:
+            masked = any([x is not None for x in nodatavals])
         if out is None:
-            out_shape2d = (
-                window
-                and window_shape(window, self.height, self.width)
-                or self.shape)
-            out_shape3d = (len(indexes),) + out_shape2d
-            out = np.empty(out_shape3d, dtype)
-        has_nodata = bool(masked)
+            if masked:
+                out = np.ma.empty(out_shape, dtype)
+            else:
+                out = np.empty(out_shape, dtype)
         for aix, bidx in enumerate(indexes):
             res = self.read_band(bidx, out=out[aix], window=window)
-            if (not has_nodata and (masked or masked is None)
-                    and nodatavals[aix] is not None):
-                if ((res == nodatavals[aix]).any()
-                        or (np.isnan(nodatavals[aix])
-                            and np.isnan(res).any())):
-                    has_nodata = True
-        if has_nodata:
+        if masked:
             test1nodata = set(nodatavals)
             if len(test1nodata) == 1:
                 if nodatavals[0] is None:
