@@ -180,11 +180,11 @@ class ReaderContextTest(unittest.TestCase):
                               ['1df719040daa9dfdb3de96d6748345e8',
                                'ec8fb3659f40c4a209027231bef12bdb',
                                '5a9c12aebc126ec6f27604babd67a4e2'])
-            # window without any missing data
+            # window without any missing data, but still is masked result
             a = s.read(window=((310, 330), (320, 330)))
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 20, 10))
-            self.assertFalse(hasattr(a, 'mask'))
+            self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual([md5(x.tostring()).hexdigest() for x in a[:]],
                               ['9e3000d60b4b6fb956f10dc57c4dc9b9',
                                '6a675416a32fcb70fbcf601d01aeb6ee',
@@ -192,14 +192,19 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_out(self):
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
-            # without mask
+            # regular array, without mask
             a = numpy.empty((3, 718, 791), numpy.ubyte)
-            b = s.read(out=a, masked=False)
+            b = s.read(out=a)
             self.assertEqual(id(a), id(b))
-            # with mask
+            self.assertFalse(hasattr(a, 'mask'))
+            self.assertFalse(hasattr(b, 'mask'))
+            # with masked array
             a = numpy.ma.empty((3, 718, 791), numpy.ubyte)
-            b = s.read(out=a, masked=True)
+            b = s.read(out=a)
             self.assertEqual(id(a.data), id(b.data))
+            # TODO: is there a way to id(a.mask)?
+            self.assertTrue(hasattr(a, 'mask'))
+            self.assertTrue(hasattr(b, 'mask'))
             # use all parameters
             a = numpy.empty((1, 20, 10), numpy.ubyte)
             b = s.read([2], a, ((310, 330), (320, 330)), False)
@@ -214,12 +219,14 @@ class ReaderContextTest(unittest.TestCase):
             self.assertRaises(ValueError, s.read, out=a)
             # different number of array dimensions
             a = numpy.empty((20, 10), numpy.ubyte)
-            return
-            # TODO: find out why this assert statement doesn't work
             self.assertRaises(ValueError, s.read, [2], out=a)
-            # b = s.read([2], out=a)
-            # Exception ValueError: 'Buffer has wrong number of dimensions
-            # (expected 2, got 1)' in 'rasterio._io.io_ubyte' ignored
+            # different number of array shape in 2D
+            a = numpy.empty((20, 10), numpy.ubyte)
+            self.assertRaises(ValueError, s.read, 2, out=a)
+            # different number of array shape in 3D
+            a = numpy.empty((1, 20, 10), numpy.ubyte)
+            self.assertRaises(ValueError, s.read, [2], out=a)
+            a = numpy.empty((1, 20, 10), numpy.ubyte)
 
     def test_read_nan_nodata(self):
         with rasterio.open('rasterio/tests/data/float_nan.tif') as s:
@@ -234,8 +241,8 @@ class ReaderContextTest(unittest.TestCase):
             a = s.read(masked=False)
             self.assertFalse(hasattr(a, 'mask'))
             self.assertTrue(numpy.isnan(a).any())
-            # Window does not contain a nodatavalue
+            # Window does not contain a nodatavalue, result is still masked
             a = s.read(window=((0, 2), (0, 2)))
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 2))
-            self.assertFalse(hasattr(a, 'mask'))
+            self.assertTrue(hasattr(a, 'mask'))
