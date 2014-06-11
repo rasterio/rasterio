@@ -473,11 +473,16 @@ cdef class RasterReader(object):
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
         a, b, c, d, e, f, _, _, _ = self.affine
-        return round((y-f)/e), round((x-c)/a)
+        return int(round((y-f)/e)), int(round((x-c)/a))
 
     def window(self, left, bottom, right, top):
         """Returns the window corresponding to the world bounding box."""
-        return tuple(zip(self.index(left, top), self.index(right, bottom)))
+        ul = self.index(left, top)
+        lr = self.index(right, bottom)
+        if ul[0] < 0 or ul[1] < 0 or lr[0] > self.height or lr[1] > self.width:
+            raise ValueError("Bounding box overflows the dataset extents")
+        else:
+            return tuple(zip(ul, lr))
 
     @property
     def meta(self):
