@@ -25,7 +25,7 @@ cdef extern from "ogr_srs_api.h":
     void *  OSRNewSpatialReference (char *wkt)
     void    OSRRelease (void *srs)
 
-cdef extern from "gdal.h":
+cdef extern from "gdal.h" nogil:
     void GDALAllRegister()
     int GDALGetDriverCount()
 

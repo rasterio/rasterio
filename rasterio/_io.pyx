@@ -39,9 +39,10 @@ cdef int io_ubyte(
         int width, 
         int height, 
         np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
 cdef int io_uint16(
         void *hband, 
@@ -51,9 +52,10 @@ cdef int io_uint16(
         int width, 
         int height, 
         np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
 
 cdef int io_int16(
         void *hband, 
@@ -63,9 +65,10 @@ cdef int io_int16(
         int width, 
         int height, 
         np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
 
 cdef int io_uint32(
         void *hband, 
@@ -75,9 +78,10 @@ cdef int io_uint32(
         int width, 
         int height, 
         np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
 
 cdef int io_int32(
         void *hband, 
@@ -87,9 +91,10 @@ cdef int io_int32(
         int width, 
         int height, 
         np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
 
 cdef int io_float32(
         void *hband, 
@@ -99,9 +104,10 @@ cdef int io_float32(
         int width, 
         int height, 
         np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
 
 cdef int io_float64(
         void *hband,
@@ -111,9 +117,10 @@ cdef int io_float64(
         int width, 
         int height, 
         np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
@@ -183,7 +190,7 @@ cdef class RasterReader(object):
         self._count = 0
         self._closed = True
         self._dtypes = []
-        self._block_shapes = []
+        self._block_shapes = None
         self._nodatavals = []
         self._crs = None
         self._crs_wkt = None
@@ -374,9 +381,10 @@ cdef class RasterReader(object):
         """
         cdef void *hband = NULL
         cdef int xsize, ysize
-        if not self._block_shapes:
+        if self._block_shapes is None:
             if self._hds == NULL:
                 raise ValueError("can't read closed raster file")
+            self._block_shapes = []
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 if hband == NULL:

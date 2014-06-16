@@ -1,8 +1,8 @@
 Changes
 =======
 
-0.9 (Soon)
-----------
+0.9 (2014-06-12)
+----------------
 - Add meta and tag dumping options to rio_insp.
 - Leave GDAL finalization to the DLL's destructor (#91).
 - Add pad() function (#84).
