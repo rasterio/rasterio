@@ -124,7 +124,7 @@ multiple cores using the ``ThreadPoolExecutor`` from Python 3's
     user    0m0.179s
     sys     0m0.039s
 
-we get an almost 4x speed up with four concurrent jobs.
+we get an almost 3x speed up with four concurrent jobs.
 
 .. code-block:: console
 
