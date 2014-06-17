@@ -13,7 +13,7 @@ from rasterio cimport _io
 from rasterio import dtypes
 
 
-cdef extern from "gdalwarper.h":
+cdef extern from "gdalwarper.h" nogil:
 
     ctypedef struct GDALWarpOptions
 
@@ -284,7 +284,8 @@ def _reproject(
             log.debug(
                 "Chunk and warp window: %d, %d, %d, %d",
                 0, 0, cols, rows)
-            eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+            with nogil:
+                eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             log.debug("Chunked and warped: %d", retval)
     
     except Exception, e:

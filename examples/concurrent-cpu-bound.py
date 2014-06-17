@@ -17,7 +17,8 @@ import rasterio
 def process_window(data):
     # Fake an expensive computation.
     time.sleep(0.1)
-    return data
+    # Reverse the bands just for fun.
+    return data[::-1]
 
 
 def main(infile, outfile, num_workers=4):
@@ -32,10 +33,11 @@ def main(infile, outfile, num_workers=4):
             # The destination will be tiled, and we'll "process" the tiles
             # concurrently.
             meta = src.meta
-            meta.update(blockxsize=256, blockysize=256)
-            meta.update(tiled = 'yes')
+            del meta['transform']
+            meta.update(affine=src.affine)
+            meta.update(blockxsize=256, blockysize=256, tiled='yes')
             with rasterio.open(outfile, 'w', **meta) as dst:
-                
+
                 # Define a generator for data, window pairs.
                 # We use the new read() method here to a 3D array with all
                 # bands, but could also use read_band().
@@ -46,19 +48,19 @@ def main(infile, outfile, num_workers=4):
                 # Submit the jobs to the thread pool executor.
                 with concurrent.futures.ThreadPoolExecutor(
                         max_workers=num_workers) as executor:
-                    
+
                     # Map the futures returned from executor.submit()
                     # to their destination windows.
                     future_to_window = {
                         executor.submit(process_window, data): window
                         for data, window in jobs()}
-                    
+
                     # As the processing jobs are completed, get the
                     # results and write the data to the appropriate
                     # destination window.
                     for future in concurrent.futures.as_completed(
                             future_to_window):
-                        
+
                         window = future_to_window[future]
 
                         data = future.result()
@@ -77,15 +79,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Concurrent raster processing demo")
     parser.add_argument(
-        'input', 
-        metavar='INPUT', 
+        'input',
+        metavar='INPUT',
         help="Input file name")
     parser.add_argument(
-        'output', 
+        'output',
         metavar='OUTPUT',
         help="Output file name")
     parser.add_argument(
-        '-j', 
+        '-j',
         metavar='NUM_JOBS',
         type=int,
         default=multiprocessing.cpu_count(),
@@ -93,4 +95,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.input, args.output, args.j)
-    
+
