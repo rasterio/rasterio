@@ -14,15 +14,7 @@ import time
 import rasterio
 
 
-def process_window(data):
-    # Fake an expensive computation.
-    time.sleep(0.1)
-    # Reverse the bands just for fun.
-    return data[::-1]
-
-
 def main(infile, outfile, num_workers=4):
-    """Use process_window() to process a file in parallel."""
 
     with rasterio.drivers():
 
@@ -48,6 +40,12 @@ def main(infile, outfile, num_workers=4):
                 # Submit the jobs to the thread pool executor.
                 with concurrent.futures.ThreadPoolExecutor(
                         max_workers=num_workers) as executor:
+
+                    def compute(data):
+                        # Fake an expensive computation.
+                        time.sleep(0.1)
+                        # Reverse the bands just for fun.
+                        return data[::-1]
 
                     # Map the futures returned from executor.submit()
                     # to their destination windows.
