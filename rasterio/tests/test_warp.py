@@ -3,10 +3,11 @@ import logging
 import subprocess
 import sys
 
+import affine
 import numpy
 
 import rasterio
-from rasterio._warp import reproject, RESAMPLING
+from rasterio.warp import reproject, RESAMPLING
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -15,7 +16,7 @@ def test_reproject():
     with rasterio.drivers():
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
             source = src.read_band(1)
-        dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
+        dst_transform = affine.Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
                     proj='merc',
                     a=6378137,
@@ -50,7 +51,7 @@ def test_reproject():
 def test_warp_from_file():
     """File to ndarray"""
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
+        dst_transform = affine.Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
                     proj='merc',
                     a=6378137,
@@ -83,7 +84,7 @@ def test_warp_from_to_file(tmpdir):
     """File to file"""
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
+        dst_transform = affine.Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
                     proj='merc',
                     a=6378137,
@@ -110,7 +111,7 @@ def test_warp_from_to_file_multi(tmpdir):
     """File to file"""
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        dst_transform = [-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0]
+        dst_transform = affine.Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
                     proj='merc',
                     a=6378137,

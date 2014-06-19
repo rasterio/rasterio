@@ -1,3 +1,4 @@
+git+https://github.com/sgillies/affine.git#egg=affine
 Cython==0.20
 Numpy==1.8.0
 pytest

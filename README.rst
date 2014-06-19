@@ -1,6 +1,8 @@
 Rasterio
 ========
 
+Rasterio reads and writes geospatial raster datasets.
+
 .. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
    :target: https://travis-ci.org/mapbox/rasterio
 
@@ -30,13 +32,13 @@ This new band is then written to a new single band TIFF.
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
             b, g, r = map(src.read_band, (1, 2, 3))
         
-        # Combine arrays using the 'iadd' ufunc. Expecting that the sum
-        # will exceed the 8-bit integer range, initialize it as 16-bit.
-        # Adding other arrays to it in-place converts those arrays up
-        # and preserves the type of the total array.
+        # Combine arrays in place. Expecting that the sum will 
+        # temporarily exceed the 8-bit integer range, initialize it as
+        # 16-bit. Adding other arrays to it in-place converts those
+        # arrays "up" and preserves the type of the total array.
 
         total = numpy.zeros(r.shape, dtype=rasterio.uint16)
-        for band in (r, g, b):
+        for band in r, g, b:
             total += band
         total /= 3
         assert total.dtype == rasterio.uint16
@@ -84,14 +86,15 @@ Simple access is provided to properties of a geospatial raster file.
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
             print(src.width, src.height)
             print(src.crs)
-            print(src.transform)
+            print(src.affine)
             print(src.count)
             print(src.indexes)
 
     # Output:
     # (791, 718)
     # {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
-    # [101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805]
+    # Affine(300.0379266750948, 0.0, 101985.0,
+    #        0.0, -300.041782729805, 2826915.0)
     # 3
     # [1, 2, 3]
 
@@ -120,34 +123,27 @@ around using Python.
     Rasterio 0.8 Interactive Inspector (Python 3.3.5)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>> src.name
-    'rasterio/tests/data/shade.tif'
+    'rasterio/tests/data/RGB.byte.tif'
     >>> src.shape
-    (1024, 1024)
+    (718, 791)
     >>> import pprint
     >>> pprint.pprint(src.crs)
-    {u'a': 6378137,
-     u'b': 6378137,
-     u'k': 1,
-     u'lat_ts': 0,
-     u'lon_0': 0,
-     u'nadgrids': u'@null',
-     u'no_defs': True,
-     u'proj': u'merc',
-     u'units': u'm',
-     u'wktext': True,
-     u'x_0': 0,
-     u'y_0': 0}
+    {u'ellps': u'WGS84',
+    u'no_defs': True,
+    u'proj': u'utm',
+    u'units': u'm',
+    u'zone': 18}
     >>> b = src.read_band(1)
     >>> b
-    array([[255, 255, 255, ...,   0,   0,   0],
-           [255, 255, 255, ...,   0,   0,   0],
-           [255, 255, 255, ...,   0,   0,   0],
+    array([[0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0],
            ...,
-           [255, 255, 255, ..., 255, 255, 255],
-           [255, 255, 255, ..., 255, 255, 255],
-           [255, 255, 255, ..., 255, 255, 255]], dtype=uint8)
+           [0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
     >>> b.min(), b.max(), b.mean()
-    (0, 255, 224.75362300872803)
+    (0, 255, 29.94772668847656)
 
 Dependencies
 ------------
@@ -158,6 +154,7 @@ C library dependecies:
 
 Python package dependencies (see also requirements.txt):
 
+- affine
 - Numpy
 - setuptools
 
@@ -179,14 +176,14 @@ To install from the source distribution on PyPI, do the following:
 .. code-block:: console
 
     $ pip install -r https://raw.github.com/mapbox/rasterio/master/requirements.txt
-    $ pip install rasterio>=0.8
+    $ pip install rasterio
 
 To install from a forked repo, do this (in a virtualenv, preferably):
 
 .. code-block:: console
 
     $ pip install -r requirements-dev.txt
-    $ python setup.py install
+    $ pip install -e .
 
 The Numpy headers are required to run the rasterio setup script. Numpy has to
 be installed (via the indicated requirements file) before rasterio can be

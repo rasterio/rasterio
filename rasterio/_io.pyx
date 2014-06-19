@@ -1,9 +1,11 @@
 # cython: profile=True
 
 import logging
+import math
 import os
 import os.path
-import math
+import sys
+import warnings
 
 import numpy as np
 cimport numpy as np
@@ -12,14 +14,22 @@ from rasterio cimport _gdal, _ogr, _io
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
+from rasterio.coords import BoundingBox
 from rasterio.five import text_type
-
+from rasterio.transform import Affine
 
 log = logging.getLogger('rasterio')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+if 'all' in sys.warnoptions:
+    # show messages in console with: python -W all
+    logging.basicConfig()
+else:
+    # no handler messages shown
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+    log.addHandler(NullHandler())
+
 
 cdef int io_ubyte(
         void *hband,
@@ -29,9 +39,10 @@ cdef int io_ubyte(
         int width, 
         int height, 
         np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
 cdef int io_uint16(
         void *hband, 
@@ -41,9 +52,10 @@ cdef int io_uint16(
         int width, 
         int height, 
         np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
 
 cdef int io_int16(
         void *hband, 
@@ -53,9 +65,10 @@ cdef int io_int16(
         int width, 
         int height, 
         np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
 
 cdef int io_uint32(
         void *hband, 
@@ -65,9 +78,10 @@ cdef int io_uint32(
         int width, 
         int height, 
         np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
 
 cdef int io_int32(
         void *hband, 
@@ -77,9 +91,10 @@ cdef int io_int32(
         int width, 
         int height, 
         np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
 
 cdef int io_float32(
         void *hband, 
@@ -89,9 +104,10 @@ cdef int io_float32(
         int width, 
         int height, 
         np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
 
 cdef int io_float64(
         void *hband,
@@ -101,9 +117,10 @@ cdef int io_float64(
         int width, 
         int height, 
         np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer):
-    return _gdal.GDALRasterIO(
-        hband, mode, xoff, yoff, width, height,
-        &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
+    with nogil:
+        return _gdal.GDALRasterIO(
+            hband, mode, xoff, yoff, width, height,
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
@@ -113,7 +130,13 @@ cpdef eval_window(object window, int height, int width):
     """Evaluates a window tuple that might contain negative values
     in the context of a raster height and width."""
     cdef int r_start, r_stop, c_start, c_stop
-    r, c = window
+    try:
+        r, c = window
+        assert len(r) == 2
+        assert len(c) == 2
+    except (ValueError, TypeError, AssertionError):
+        raise ValueError("invalid window structure; expecting "
+                         "((row_start, row_stop), (col_start, col_stop))")
     r_start = r[0] or 0
     if r_start < 0:
         if height < 0:
@@ -154,6 +177,9 @@ def window_shape(window, height=-1, width=-1):
 def window_index(window):
     return tuple(slice(*w) for w in window)
 
+def tastes_like_gdal(t):
+    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
+
 
 cdef class RasterReader(object):
 
@@ -164,7 +190,7 @@ cdef class RasterReader(object):
         self._count = 0
         self._closed = True
         self._dtypes = []
-        self._block_shapes = []
+        self._block_shapes = None
         self._nodatavals = []
         self._crs = None
         self._crs_wkt = None
@@ -355,9 +381,10 @@ cdef class RasterReader(object):
         """
         cdef void *hband = NULL
         cdef int xsize, ysize
-        if not self._block_shapes:
+        if self._block_shapes is None:
             if self._hds == NULL:
                 raise ValueError("can't read closed raster file")
+            self._block_shapes = []
             for i in range(self._count):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 if hband == NULL:
@@ -418,54 +445,65 @@ cdef class RasterReader(object):
                 width = min(w, self.width - col)
                 yield (j, i), ((row, row+height), (col, col+width))
 
-    @property
-    def bounds(self):
+    property bounds:
         """Returns the lower left and upper right bounds of the dataset
         in the units of its coordinate reference system.
         
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
-        t = self.transform
-        return (t[0], t[3]+t[5]*self.height, t[0]+t[1]*self.width, t[3])
+        def __get__(self):
+            a, b, c, d, e, f, _, _, _ = self.affine
+            return BoundingBox(c, f+e*self.height, c+a*self.width, f)
     
-    @property
-    def res(self):
+    property res:
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
-        t = self.transform
-        if t[2] == t[4] == 0:
-            return t[1], -t[5]
-        return math.sqrt(t[1]*t[1]+t[4]*t[4]), math.sqrt(t[2]*t[2]+t[5]*t[5])
+        def __get__(self):
+            a, b, c, d, e, f, _, _, _ = self.affine
+            if b == d == 0:
+                return a, -e
+            else:
+                return math.sqrt(a*a+d*d), math.sqrt(b*b+e*e)
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a 
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
-        t = self.transform
+        a, b, c, d, e, f, _, _, _ = self.affine
         if col < 0:
             col += self.width
         if row < 0:
             row += self.height
-        return t[0]+t[1]*col, t[3]+t[5]*row
+        return c+a*col, f+e*row
 
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        t = self.transform
-        return int((t[3]-y)/t[5]), int((x-t[0])/t[1])
+        a, b, c, d, e, f, _, _, _ = self.affine
+        return int(round((y-f)/e)), int(round((x-c)/a))
+
+    def window(self, left, bottom, right, top):
+        """Returns the window corresponding to the world bounding box."""
+        ul = self.index(left, top)
+        lr = self.index(right, bottom)
+        if ul[0] < 0 or ul[1] < 0 or lr[0] > self.height or lr[1] > self.width:
+            raise ValueError("Bounding box overflows the dataset extents")
+        else:
+            return tuple(zip(ul, lr))
 
     @property
     def meta(self):
         m = {
             'driver': self.driver,
-            'dtype': set(self.dtypes).pop(),
-            'nodata': set(self.nodatavals).pop(),
+            'dtype': self.dtypes[0],
+            'nodata': self.nodatavals[0],
             'width': self.width,
             'height': self.height,
             'count': self.count,
             'crs': self.crs,
-            'transform': self.transform }
+            'transform': self.affine.to_gdal(),
+            'affine': self.affine }
         self._read = True
         return m
 
@@ -479,7 +517,6 @@ cdef class RasterReader(object):
     property crs:
         """A mapping of PROJ.4 coordinate reference system params.
         """
-
         def __get__(self):
             return self.get_crs()
 
@@ -487,32 +524,52 @@ cdef class RasterReader(object):
         """An OGC WKT string representation of the coordinate reference
         system.
         """
-
         def __get__(self):
             if not self._read and self._crs_wkt is None:
                 self._crs = self.read_crs_wkt()
             return self._crs_wkt
 
     def get_transform(self):
+        """Returns a GDAL geotransform in its native form."""
         if not self._read and self._transform is None:
             self._transform = self.read_transform()
         return self._transform
 
     property transform:
-        """An affine transformation that maps pixel row/column
-        coordinates to coordinates in the specified crs. The affine
-        transformation is represented by a six-element sequence.
-        Reference system coordinates can be calculated by the
-        following formula
+        """Coefficients of the affine transformation that maps col,row
+        pixel coordinates to x,y coordinates in the specified crs. The
+        coefficients of the augmented matrix are shown below.
+        
+          | x |   | a  b  c | | r |
+          | y | = | d  e  f | | c |
+          | 1 |   | 0  0  1 | | 1 |
+        
+        In Rasterio versions before 1.0 the value of this property
+        is a list of coefficients ``[c, a, b, f, d, e]``. This form
+        is *deprecated* beginning in 0.9 and in version 1.0 this 
+        property will be replaced by an instance of ``affine.Affine``,
+        which is a namedtuple with coefficients in the order
+        ``(a, b, c, d, e, f)``.
 
-        X = Item 0 + Column * Item 1 + Row * Item 2 Y = Item
-        3 + Column * Item 4 + Row * Item 5
-
-        See also this class's ul() method.
+        Please see https://github.com/mapbox/rasterio/issues/86
+        for more details.
         """
-
         def __get__(self):
+            warnings.warn(
+                    "The value of this property will change in version 1.0. "
+                    "Please see https://github.com/mapbox/rasterio/issues/86 "
+                    "for details.",
+                    FutureWarning,
+                    stacklevel=2)
             return self.get_transform()
+
+    property affine:
+        """An instance of ``affine.Affine``. This property is a
+        transitional feature: see the docstring of ``transform``
+        (above) for more details.
+        """
+        def __get__(self):
+            return Affine.from_gdal(*self.get_transform())
 
     def read_band(self, bidx, out=None, window=None):
         """Read the `bidx` band into an `out` array if provided, 
@@ -536,7 +593,7 @@ cdef class RasterReader(object):
             raise ValueError(
                 "the array's dtype '%s' does not match "
                 "the file's dtype '%s'" % (out.dtype, self.dtypes[i]))
-        
+
         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband == NULL:
             raise ValueError("NULL band")
@@ -547,7 +604,7 @@ cdef class RasterReader(object):
                 window 
                 and window_shape(window, self.height, self.width) 
                 or self.shape)
-            out = np.zeros(out_shape, dtype)
+            out = np.empty(out_shape, dtype)
         if window:
             window = eval_window(window, self.height, self.width)
             yoff = window[0][0]
@@ -584,6 +641,98 @@ cdef class RasterReader(object):
         # TODO: handle errors (by retval).
         
         return out
+
+    def read(self, indexes=None, out=None, window=None, masked=None):
+        """Read raster bands as a multidimensional array
+
+        If `indexes` is a list, the result is a 3D array, but
+        is a 2D array if it is a band index number.
+
+        Optional `out` argument is a reference to an output array with the
+        same dimensions and shape.
+
+        See `read_band` for usage of the optional `window` argument.
+
+        The return type will be either a regular NumPy array, or a masked
+        NumPy array depending on the `masked` argument. The return type is
+        forced if either `True` or `False`, but will be chosen if `None`.
+        For `masked=None` (default), the array will be the same type as
+        `out` (if used), or will be masked if any of the nodatavals are
+        not `None`.
+        """
+        return2d = False
+        if indexes is None:  # Default: read all bands
+            indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            return2d = True
+            if out is not None and out.ndim == 2:
+                out.shape = (1,) + out.shape
+        check_dtypes = set()
+        nodatavals = []
+        # Check each index before processing 3D array
+        for bidx in indexes:
+            if bidx not in self.indexes:
+                raise IndexError("band index out of range")
+            idx = self.indexes.index(bidx)
+            check_dtypes.add(self.dtypes[idx])
+            nodatavals.append(self.nodatavals[idx])
+        if len(check_dtypes) > 1:
+            raise ValueError("more than one 'dtype' found")
+        elif len(check_dtypes) == 0:
+            dtype = self.dtypes[0]
+        else:  # unique dtype; normal case
+            dtype = check_dtypes.pop()
+        out_shape = (len(indexes),) + (
+            window
+            and window_shape(window, self.height, self.width)
+            or self.shape)
+        if out is not None:
+            if masked is None:
+                masked = hasattr(out, 'mask')
+            # Check 'out' array dimensions
+            if return2d:
+                if out.shape[1:] != out_shape[1:]:
+                    raise ValueError(
+                        "'out' shape %s does not mach raster index shape %s" %
+                        (out.shape[1:], out_shape[1:]))
+            else:  # 3D array
+                if out.shape != out_shape:
+                    raise ValueError(
+                        "'out' shape %s does not mach raster slice shape %s" %
+                        (out.shape, out_shape))
+        if masked is None:
+            masked = any([x is not None for x in nodatavals])
+        if out is None:
+            if masked:
+                out = np.ma.empty(out_shape, dtype)
+            else:
+                out = np.empty(out_shape, dtype)
+        for aix, bidx in enumerate(indexes):
+            res = self.read_band(bidx, out=out[aix], window=window)
+        if masked:
+            test1nodata = set(nodatavals)
+            if len(test1nodata) == 1:
+                if nodatavals[0] is None:
+                    out = np.ma.masked_array(out, copy=False)
+                elif np.isnan(nodatavals[0]):
+                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
+                else:
+                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
+            else:
+                out = np.ma.masked_array(out, copy=False)
+                for aix in range(len(indexes)):
+                    if nodatavals[aix] is None:
+                        band_mask = False
+                    elif np.isnan(nodatavals[aix]):
+                        band_mask = np.isnan(out[aix])
+                    else:
+                        band_mask = out[aix] == nodatavals[aix]
+                    out[aix].mask = band_mask
+        if return2d:
+            out.shape = out.shape[1:]
+        return out
+
 
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
@@ -682,7 +831,7 @@ cdef class RasterReader(object):
                 window 
                 and window_shape(window, self.height, self.width) 
                 or self.shape)
-            out = np.zeros(out_shape, np.uint8)
+            out = np.empty(out_shape, np.uint8)
         if window:
             window = eval_window(window, self.height, self.width)
             yoff = window[0][0]
@@ -723,7 +872,8 @@ cdef class RasterUpdater(RasterReader):
         self._hds = NULL
         self._count = count
         self._crs = crs
-        self._transform = transform
+        if transform is not None:
+            self._transform = transform.to_gdal()
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -891,17 +1041,17 @@ cdef class RasterUpdater(RasterReader):
         Reference system coordinates can be calculated by the
         following formula
 
-        X = Item 0 + Column * Item 1 + Row * Item 2 Y = Item
-        3 + Column * Item 4 + Row * Item 5
+        X = Item 0 + Column * Item 1 + Row * Item 2
+        Y = Item 3 + Column * Item 4 + Row * Item 5
 
         See also this class's ul() method.
         """
 
         def __get__(self):
-            return self.get_transform()
+            return Affine.from_gdal(*self.get_transform())
 
         def __set__(self, value):
-            self.write_transform(value)
+            self.write_transform(value.to_gdal())
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.

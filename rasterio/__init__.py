@@ -3,21 +3,25 @@
 from collections import namedtuple
 import logging
 import os
+import warnings
 
 import numpy
 
-from rasterio.five import string_types
 from rasterio._copy import RasterCopier
 from rasterio._io import RasterReader, RasterUpdater
 from rasterio._io import eval_window, window_index, window_shape
+from rasterio._io import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+from rasterio.five import string_types
+from rasterio.transform import Affine, guard_transform
 
 
-__all__ = ['open', 'drivers', 'copy', 'check_dtype']
-__version__ = "0.8"
+__all__ = [
+    'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
+__version__ = "0.9"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -25,14 +29,6 @@ class NullHandler(logging.Handler):
         pass
 log.addHandler(NullHandler())
 
-def band(ds, bidx):
-    """Wraps a dataset and a band index up as a 'Band'"""
-    Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
-    return Band(
-        ds, 
-        bidx, 
-        numpy.dtype(set(ds.dtypes).pop()),
-        ds.shape)
 
 def open(
         path, mode='r', 
@@ -61,24 +57,26 @@ def open(
       {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
        'no_defs': True}
 
-    An affine transformation that maps pixel row/column coordinates to
-    coordinates in the specified reference system can be specified using
-    the ``transform`` argument. The affine transformation is represented
-    by a six-element sequence where th:wqe items are ordered like
+    An affine transformation that maps ``col,row`` pixel coordinates to
+    ``x,y`` coordinates in the coordinate reference system can be
+    specified using the ``transform`` argument. The value may be either
+    an instance of ``affine.Affine`` or a 6-element sequence of the
+    affine transformation matrix coefficients ``a, b, c, d, e, f``.
+    These coefficients are shown in the figure below.
 
-    Item 0: X coordinate of the top left corner of the top left pixel 
-    Item 1: rate of change of X with respect to increasing column, i.e.
+      | x |   | a  b  c | | c |
+      | y | = | d  e  f | | r |
+      | 1 |   | 0  0  1 | | 1 |
+
+    a: rate of change of X with respect to increasing column, i.e.
             pixel width
-    Item 2: rotation, 0 if the raster is oriented "north up" 
-    Item 3: Y coordinate of the top left corner of the top left pixel 
-    Item 4: rotation, 0 if the raster is oriented "north up"
-    Item 5: rate of change of Y with respect to increasing row, usually
+    b: rotation, 0 if the raster is oriented "north up" 
+    c: X coordinate of the top left corner of the top left pixel 
+    f: Y coordinate of the top left corner of the top left pixel 
+    d: rotation, 0 if the raster is oriented "north up"
+    e: rate of change of Y with respect to increasing row, usually
             a negative number i.e. -1 * pixel height
-
-    Reference system oordinates can be calculated by the formula
-
-      X = Item 0 + Column * Item 1 + Row * Item 2
-      Y = Item 3 + Column * Item 4 + Row * Item 5
+    f: Y coordinate of the top left corner of the top left pixel 
 
     Finally, additional kwargs are passed to GDAL as driver-specific
     dataset creation parameters.
@@ -92,7 +90,9 @@ def open(
     if mode in ('r', 'r+'):
         if not os.path.exists(path):
             raise IOError("no such file or directory: %r" % path)
-    
+    if transform:
+        transform = guard_transform(transform)
+
     if mode == 'r':
         s = RasterReader(path)
     elif mode == 'r+':
@@ -107,13 +107,14 @@ def open(
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
-
     s.start()
     return s
+
 
 def check_dtype(dt):
     tp = getattr(dt, 'type', dt)
     return tp in rasterio.dtypes.dtype_rev
+
 
 def copy(src, dst, **kw):
     """Copy a source dataset to a new destination with driver specific
@@ -129,6 +130,7 @@ def copy(src, dst, **kw):
     with drivers():
         return RasterCopier()(src, dst, **kw)
 
+
 def drivers(**kwargs):
     """Returns a gdal environment with registered drivers."""
     if driver_count() == 0:
@@ -137,4 +139,27 @@ def drivers(**kwargs):
     else:
         log.debug("Creating a not-responsible GDALEnv in drivers()")
         return GDALEnv(False, **kwargs)
+
+
+Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+
+def band(ds, bidx):
+    """Wraps a dataset and a band index up as a 'Band'"""
+    return Band(
+        ds, 
+        bidx, 
+        numpy.dtype(set(ds.dtypes).pop()),
+        ds.shape)
+
+
+def pad(array, transform, pad_width, mode=None, **kwargs):
+    """Returns a padded array and shifted affine transform matrix.
+    
+    Array is padded using `numpy.pad()`."""
+    transform = guard_transform(transform)
+    padded_array = numpy.pad(array, pad_width, mode, **kwargs)
+    padded_trans = list(transform)
+    padded_trans[2] -= pad_width*padded_trans[0]
+    padded_trans[5] -= pad_width*padded_trans[4]
+    return padded_array, Affine(*padded_trans[:6])
 

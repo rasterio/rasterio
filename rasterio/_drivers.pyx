@@ -76,9 +76,9 @@ cdef class GDALEnv(object):
     def start(self):
         cdef const char *key_c
         cdef const char *val_c
-        CPLSetErrorHandler(<void *>errorHandler)
         GDALAllRegister()
         OGRRegisterAll()
+        CPLSetErrorHandler(<void *>errorHandler)
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
         for key, val in self.options.items():
@@ -95,14 +95,9 @@ cdef class GDALEnv(object):
 
     def stop(self):
         cdef const char *key_c
-        if self.is_chef:
-            GDALDestroyDriverManager()
-            OGRCleanupAll()
-            CPLSetErrorHandler(NULL)
-            if driver_count() != 0:
-                raise ValueError("Drivers not de-registered")
         for key in self.options:
             key_b = key.upper().encode('utf-8')
             key_c = key_b
             CPLSetThreadLocalConfigOption(key_c, NULL)
+        CPLSetErrorHandler(NULL)
 

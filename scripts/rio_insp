@@ -6,12 +6,17 @@ import argparse
 import logging
 import pprint
 import sys
+import warnings
 
 import rasterio
 from rasterio.tool import main
 
-if __name__ == '__main__':
 
+warnings.simplefilter('default')
+
+
+if __name__ == '__main__':
+    
     parser = argparse.ArgumentParser(
         prog="rio_insp",
         description="Open a dataset and drop into an interactive interpreter")

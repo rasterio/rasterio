@@ -10,13 +10,13 @@ objects.
 
     >>> import rasterio
     >>> dataset = rasterio.open('rasterio/tests/data/RGB.byte.tif')
-    >>> print dataset
+    >>> dataset
     <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
     >>> dataset.name
     'rasterio/tests/data/RGB.byte.tif'
-    >>> print dataset.mode
+    >>> dataset.mode
     r
-    >>> print dataset.closed
+    >>> dataset.closed
     False
 
 If you attempt to access a nonexistent path, ``rasterio.open()`` does the same
@@ -38,7 +38,10 @@ Attributes
 
 In addition to the file-like attributes shown above, a dataset has a number
 of other read-only attributes that help explain its role in spatial information
-systems. The ``driver``
+systems. The ``driver`` attribute gives you the name of the GDAL format
+driver used. The ``height`` and ``width`` are the number of rows and columns of
+the raster dataset and ``shape`` is a ``height, width`` tuple as used by
+Numpy. The ``count`` attribute tells you the number of bands in the dataset.
 
 .. code-block:: pycon
 
@@ -50,10 +53,6 @@ systems. The ``driver``
     (718, 791)
     >>> dataset.count
     3
-    >>> dataset.dtypes
-    [<type 'numpy.uint8'>, <type 'numpy.uint8'>, <type 'numpy.uint8'>]
-    >>> dataset.nodatavals
-    [0.0, 0.0, 0.0]
 
 What makes geospatial raster datasets different from other raster files is
 that their pixels map to regions of the Earth. A dataset has a coordinate
@@ -64,16 +63,29 @@ coordinates to coordinates in that reference system.
 
     >>> dataset.crs
     {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
-    >>> dataset.transform
-    [101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805]
+    >>> dataset.affine
+    Affine(300.0379266750948, 0.0, 101985.0,
+           0.0, -300.041782729805, 2826915.0)
 
+To get the ``x, y`` world coordinates for the upper left corner of any pixel,
+take the product of the affine transformation matrix and the tuple ``(col,
+row)``.  
 
+.. code-block:: pycon
+
+    >>> col, row = 0, 0
+    >>> src.affine * (col, row)
+    (101985.0, 2826915.0)
+    >>> col, row = src.width, src.height
+    >>> src.affine * (col, row)
+    (339315.0, 2611485.0)
 
 Reading data
 ------------
 
-Datasets generally have one or more bands (or layers) and these are indexed
-starting with the number 1. The first band of a file can be read like this:
+Datasets generally have one or more bands (or layers). Following the GDAL
+convention, these are indexed starting with the number 1. The first band of
+a file can be read like this:
 
 .. code-block:: pycon
 
@@ -86,7 +98,7 @@ starting with the number 1. The first band of a file can be read like this:
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
 
-The returned object is a Numpy (N-dimensional; N=2 in this case) ndarray. The
+The returned object is a 2-dimensional Numpy ndarray. The
 GeoTIFF file that Rasterio uses for testing has 0 values in the corners:
 
 .. code-block::
@@ -98,35 +110,17 @@ GeoTIFF file that Rasterio uses for testing has 0 values in the corners:
 
 .. image:: http://farm6.staticflickr.com/5032/13938576006_b99b23271b_o_d.png
 
-Get all indexes of all a dataset's bands can be had from its ``indexes``
-attribute and read all band data like this:
+The indexes, Numpy data types, and nodata values of all a dataset's bands can
+be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
 
 .. code-block:: pycon
 
-    >>> dataset.indexes
-    [1, 2, 3]
-    >>> [dataset.read_band(i) for i in dataset.indexes]
-    [array([[0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           ...,
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8),
-     array([[0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           ...,
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8),
-     array([[0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           ...,
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)]
+    >>> for i, dtype, ndval in zip(src.indexes, src.dtypes, src.nodatavals):
+    ...     print i, dtype, nodataval
+    ...
+    1 <type 'numpy.uint8'> 0.0
+    2 <type 'numpy.uint8'> 0.0
+    3 <type 'numpy.uint8'> 0.0
 
 To close a dataset, call its ``close()`` method.
 
@@ -145,7 +139,7 @@ After it's closed, data can no longer be read.
       File "<stdin>", line 1, in <module>
     ValueError: can't read closed raster file
 
-A Python ``file`` has the same behavior.
+This is the same behavior as Python's ``file``.
 
 .. code-block:: pycon
 
@@ -171,3 +165,10 @@ and exit from runtime contexts created using a ``with`` statement.
     <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
     <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
     <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+
+Writing data
+------------
+
+Writing data mostly works as with a Python file. There are a few format-
+specific differences. TODO: details.
+

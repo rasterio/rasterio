@@ -13,7 +13,7 @@ from rasterio cimport _io
 from rasterio import dtypes
 
 
-cdef extern from "gdalwarper.h":
+cdef extern from "gdalwarper.h" nogil:
 
     ctypedef struct GDALWarpOptions
 
@@ -56,7 +56,11 @@ class NullHandler(logging.Handler):
 log.addHandler(NullHandler())
 
 
-def reproject(
+def tastes_like_gdal(t):
+    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
+
+
+def _reproject(
         source, destination,
         src_transform=None, src_crs=None, 
         dst_transform=None, dst_crs=None,
@@ -213,8 +217,8 @@ def reproject(
     else:
         raise ValueError("Invalid destination")
     
-    cdef void *hTransformArg
-    cdef _gdal.GDALWarpOptions *psWOptions
+    cdef void *hTransformArg = NULL
+    cdef _gdal.GDALWarpOptions *psWOptions = NULL
     cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
     reprojected = False
 
@@ -280,7 +284,8 @@ def reproject(
             log.debug(
                 "Chunk and warp window: %d, %d, %d, %d",
                 0, 0, cols, rows)
-            eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+            with nogil:
+                eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             log.debug("Chunked and warped: %d", retval)
     
     except Exception, e:
@@ -291,10 +296,12 @@ def reproject(
         reprojected = True
 
     finally:
-        _gdal.GDALDestroyGenImgProjTransformer( hTransformArg );
+        if hTransformArg != NULL:
+            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
         #if maxerror > 0.0:
         #    _gdal.GDALDestroyApproxTransformer(psWOptions.pTransformerArg)
-        _gdal.GDALDestroyWarpOptions(psWOptions)
+        if psWOptions != NULL:
+            _gdal.GDALDestroyWarpOptions(psWOptions)
         if isinstance(source, np.ndarray):
             if hdsin != NULL:
                 _gdal.GDALClose(hdsin)

@@ -1,29 +1,35 @@
 Reprojection
 ============
 
-Rasterio can map the pixels of a destination raster with an associated coordinate
-reference system and transform to the pixels of a source image with a different
-coordinate reference system and transform. This process is known as reprojection.
+Rasterio can map the pixels of a destination raster with an associated
+coordinate reference system and transform to the pixels of a source image with
+a different coordinate reference system and transform. This process is known as
+reprojection.
 
-Rasterio's ``rasterio.warp.reproject()`` is a very geospatial-specific analog to
-SciPy's ``scipy.ndimage.interpolation.geometric_transform()`` [1]_.
+Rasterio's ``rasterio.warp.reproject()`` is a very geospatial-specific analog
+to SciPy's ``scipy.ndimage.interpolation.geometric_transform()`` [1]_.
 
-The code below reprojects between two arrays, using no pre-existing GIS datasets.
-``rasterio.warp.reproject()`` has two positional arguments: source and destination.
-The remaining keyword arguments parameterize the reprojection transform.
+The code below reprojects between two arrays, using no pre-existing GIS
+datasets.  ``rasterio.warp.reproject()`` has two positional arguments: source
+and destination.  The remaining keyword arguments parameterize the reprojection
+transform.
 
 .. code-block:: python
 
     import numpy
     import rasterio
+    from rasterio import Affine as A
     from rasterio.warp import reproject, RESAMPLING
 
     with rasterio.drivers():
 
         # As source: a 512 x 512 raster centered on 0 degrees E and 0
         # degrees N, each pixel covering 15".
-        src_shape = (512, 512)
-        src_transform = [-256.0/240, 1.0/240, 0.0, 256.0/240, 0.0, -1.0/240]
+        rows, cols = src_shape = (512, 512)
+        d = 1.0/240 # decimal degrees per pixel
+        # The following is equivalent to 
+        # A(d, 0, -cols*d/2, 0, -d, rows*d/2).
+        src_transform = A.translation(-cols*d/2, rows*d/2) * A.scale(d, -d)
         src_crs = {'init': 'EPSG:4326'}
         source = numpy.ones(src_shape, numpy.uint8)*255
 

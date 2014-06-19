@@ -1,9 +1,14 @@
 Changes
 =======
 
-Next
-----
+0.9 (2014-06-12)
+----------------
 - Add meta and tag dumping options to rio_insp.
+- Leave GDAL finalization to the DLL's destructor (#91).
+- Add pad() function (#84).
+- New read() method, returns 3D arrays (#83).
+- New affine attribute and AffineMatrix object (#80, #86).
+- Removal of rasterio.insp script (#51).
 
 0.8 (2014-03-31)
 ----------------

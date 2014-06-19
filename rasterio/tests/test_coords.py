@@ -22,5 +22,13 @@ def test_index():
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
         assert src.index(101985.0, 2826915.0) == (0, 0)
         assert src.index(101985.0+400.0, 2826915.0) == (0, 1)
-        assert src.index(101985.0+400.0, 2826915.0+700.0) == (2, 1)
+        assert src.index(101985.0+400.0, 2826915.0-700.0) == (2, 1)
+
+def test_window():
+    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        left, bottom, right, top = src.bounds
+        assert src.window(left, bottom, right, top) == ((0, src.height), 
+                                                        (0, src.width))
+        assert src.window(left, top-400, left+400, top) == ((0, 1), (0, 1))
+        assert src.window(left, top-500, left+500, top) == ((0, 2), (0, 2))
 
