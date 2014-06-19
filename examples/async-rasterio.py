@@ -40,7 +40,10 @@ def main(infile, outfile):
                 # With the exception of the ``yield from`` statement,
                 # process_window() looks just good ole synchronous code.
                 # With a coroutine, we can keep the read, compute, and
-                # write statements close together.
+                # write statements close together for maintainability.
+                # As in the concurrent-cpu-bound.py example, all of the
+                # speedup is provided by distributing raster
+                # computation across multiple threads.
                 @asyncio.coroutine
                 def process_window(window):
                     # Read a window of data.
