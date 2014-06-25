@@ -13,16 +13,17 @@ import time
 import rasterio
 
 
-def main(infile, outfile):
+def main(infile, outfile, with_threads=False):
     
     with rasterio.drivers():
 
         # Open the source dataset.
         with rasterio.open(infile) as src:
 
-            # Create a destination dataset based on source params.
-            # The destination will be tiled, and we'll "process" the tiles
+            # Create a destination dataset based on source params. The
+            # destination will be tiled, and we'll "process" the tiles
             # concurrently.
+
             meta = src.meta
             del meta['transform']
             meta.update(affine=src.affine)
@@ -33,28 +34,40 @@ def main(infile, outfile):
                 
                 def compute(data):
                     # Fake a CPU-intensive computation.
-                    time.sleep(0.1)
+                    dtype = data.dtype
+                    tmp_data = data.astype(rasterio.float32)
+                    for j in range(100):
+                        tmp_data *= 2.0
+                    tmp_data /= 180.0
+                    tmp_data = data.astype(dtype.type)
                     # Reverse the bands just for fun.
-                    return data[::-1]
+                    return tmp_data[::-1]
 
                 # With the exception of the ``yield from`` statement,
-                # process_window() looks just good ole synchronous code.
-                # With a coroutine, we can keep the read, compute, and
-                # write statements close together for maintainability.
-                # As in the concurrent-cpu-bound.py example, all of the
-                # speedup is provided by distributing raster
-                # computation across multiple threads.
+                # process_window() looks like callback-free synchronous
+                # code. With a coroutine, we can keep the read, compute,
+                # and write statements close together for
+                # maintainability. As in the concurrent-cpu-bound.py
+                # example, all of the speedup is provided by
+                # distributing raster computation across multiple
+                # threads. The difference here is that we're submitting
+                # jobs to the thread pool asynchronously.
+
                 @asyncio.coroutine
                 def process_window(window):
+                    
                     # Read a window of data.
                     data = src.read(window=window)
                     
-                    # We run the raster computation in a separate
-                    # thread and pause until the computation finishes,
-                    # letting other coroutines, which run computations
-                    # in other threads, advance.
-                    result = yield from loop.run_in_executor(
-                                            None, compute, data)
+                    # We run the raster computation in a separate thread
+                    # and pause until the computation finishes, letting
+                    # other coroutines advance.
+
+                    if with_threads:
+                        result = yield from loop.run_in_executor(
+                                                    None, compute, data)
+                    else:
+                        result = compute(data)
                     
                     # Write the result.
                     for i, arr in enumerate(result, 1):
@@ -82,7 +95,11 @@ if __name__ == '__main__':
         'output',
         metavar='OUTPUT',
         help="Output file name")
+    parser.add_argument(
+        '--with-workers',
+        action='store_true',
+        help="Run with a pool of worker threads")
     args = parser.parse_args()
     
-    main(args.input, args.output)
+    main(args.input, args.output, args.with_workers)
 

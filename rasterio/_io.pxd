@@ -125,3 +125,81 @@ cdef int io_float64(
         int height, 
         np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer)
 
+cdef int io_multi_ubyte(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.uint8_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_uint16(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.uint16_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_int16(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.int16_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_uint32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.uint32_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_int32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.int32_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_float32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.float32_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_float64(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.float64_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+

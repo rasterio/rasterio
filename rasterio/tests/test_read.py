@@ -220,13 +220,9 @@ class ReaderContextTest(unittest.TestCase):
             # different number of array dimensions
             a = numpy.empty((20, 10), numpy.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)
-            # different number of array shape in 2D
-            a = numpy.empty((20, 10), numpy.ubyte)
-            self.assertRaises(ValueError, s.read, 2, out=a)
             # different number of array shape in 3D
-            a = numpy.empty((1, 20, 10), numpy.ubyte)
+            a = numpy.empty((2, 20, 10), numpy.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)
-            a = numpy.empty((1, 20, 10), numpy.ubyte)
 
     def test_read_nan_nodata(self):
         with rasterio.open('rasterio/tests/data/float_nan.tif') as s:
