@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: boundscheck(False)
 
 import logging
 import math
@@ -30,6 +30,7 @@ else:
 
     log.addHandler(NullHandler())
 
+# Single band IO functions.
 
 cdef int io_ubyte(
         void *hband, 
@@ -162,7 +163,7 @@ cdef int io_multi_uint16(
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
-    cdef void *hband
+    cdef void *hband = NULL
     with nogil:
         for i in range(count):
             hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
@@ -189,7 +190,7 @@ cdef int io_multi_int16(
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
-    cdef void *hband
+    cdef void *hband = NULL
     with nogil:
         for i in range(count):
             hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
@@ -216,7 +217,7 @@ cdef int io_multi_uint32(
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
-    cdef void *hband
+    cdef void *hband = NULL
     with nogil:
         for i in range(count):
             hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
@@ -243,7 +244,7 @@ cdef int io_multi_int32(
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
-    cdef void *hband
+    cdef void *hband = NULL
     with nogil:
         for i in range(count):
             hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
@@ -270,7 +271,7 @@ cdef int io_multi_float32(
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
-    cdef void *hband
+    cdef void *hband = NULL
     with nogil:
         for i in range(count):
             hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
@@ -297,7 +298,7 @@ cdef int io_multi_float64(
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
-    cdef void *hband
+    cdef void *hband = NULL
     with nogil:
         for i in range(count):
             hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
@@ -312,11 +313,6 @@ cdef int io_multi_float64(
                 if retval > 0:
                     break
     return retval
-
-
-
-
-
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
@@ -608,7 +604,7 @@ cdef class RasterReader(object):
                 self._nodatavals.append(val)
         return self._nodatavals
 
-    def block_windows(self, bdix):
+    def block_windows(self, bidx=0):
         """Returns an iterator over a band's block windows and their
         indexes.
 
@@ -628,7 +624,14 @@ cdef class RasterReader(object):
         read_band() for highly efficient access to raster block data.
         """
         cdef int i, j
-        h, w = self.block_shapes[bdix-1]
+        block_shapes = self.block_shapes
+        if bidx < 1:
+            if len(set(block_shapes)) > 1:
+                raise ValueError(
+                    "A band index must be provided when band block shapes"
+                    "are inhomogeneous")
+            bidx = 1
+        h, w = block_shapes[bidx-1]
         d, m = divmod(self.height, h)
         nrows = d + int(m>0)
         d, m = divmod(self.width, w)
@@ -927,7 +930,6 @@ cdef class RasterReader(object):
         if return2d:
             out.shape = out.shape[1:]
         return out
-
 
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
