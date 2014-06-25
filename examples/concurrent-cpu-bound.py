@@ -34,7 +34,7 @@ def main(infile, outfile, num_workers=4):
                 # We use the new read() method here to a 3D array with all
                 # bands, but could also use read_band().
                 def jobs():
-                    for ij, window in dst.block_windows(1):
+                    for ij, window in dst.block_windows():
                         yield src.read(window=window), window
 
                 # Submit the jobs to the thread pool executor.
@@ -50,7 +50,7 @@ def main(infile, outfile, num_workers=4):
                     # Map the futures returned from executor.submit()
                     # to their destination windows.
                     future_to_window = {
-                        executor.submit(process_window, data): window
+                        executor.submit(compute, data): window
                         for data, window in jobs()}
 
                     # As the processing jobs are completed, get the
