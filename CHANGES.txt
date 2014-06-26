@@ -10,6 +10,7 @@ Changes
 - New affine attribute and AffineMatrix object (#80, #86).
 - Removal of rasterio.insp script (#51).
 - Read_band() is now a special case of read() (#96).
+- Add support for multi-band reprojection (#98).
 
 0.8 (2014-03-31)
 ----------------
