@@ -99,18 +99,24 @@ def _reproject(
     # We need a src_transform and src_dst in this case. These will
     # be copied to the MEM dataset.
     if isinstance(source, np.ndarray):
+        # Convert 2D single-band arrays to 3D multi-band.
+        if len(source.shape) == 2:
+            source = source.reshape(1, *source.shape)
+        src_count = source.shape[0]
+        rows = source.shape[1]
+        cols = source.shape[2]
+        dtype = source.dtype.type
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
             raise ValueError("NULL driver for 'MEM'")
-        rows = source.shape[0]
-        cols = source.shape[1]
-        dtype = source.dtype.type
+
         hdsin = _gdal.GDALCreate(
                     hrdriver, "input", cols, rows, 
-                    1, dtypes.dtype_rev[dtype], NULL)
+                    src_count, dtypes.dtype_rev[dtype], NULL)
         if hdsin == NULL:
             raise ValueError("NULL input datasource")
-        _gdal.GDALSetDescription(hdsin, "Temporary source dataset for _reproject()")
+        _gdal.GDALSetDescription(
+            hdsin, "Temporary source dataset for _reproject()")
         log.debug("Created temp source dataset")
         for i in range(6):
             gt[i] = src_transform[i]
@@ -135,32 +141,33 @@ def _reproject(
         _gdal.OSRDestroySpatialReference(osr)
         log.debug("Set CRS on temp source dataset: %s", srcwkt)
         
-        # Copy ndarry to the MEM dataset's first band.
-        hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
-        if hbandin == NULL:
-            raise ValueError("NULL input band")
-        log.debug("Got temp source band")
+        # Copy arrays to the dataset.
+        #hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
+        #if hbandin == NULL:
+        #    raise ValueError("NULL input band")
+        #log.debug("Got temp source band")
+        indexes = np.array(range(1, src_count+1))
         if dtype == dtypes.ubyte:
-            retval = _io.io_ubyte(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_ubyte(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         elif dtype == dtypes.uint16:
-            retval = _io.io_uint16(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_uint16(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         elif dtype == dtypes.int16:
-            retval = _io.io_int16(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_int16(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         elif dtype == dtypes.uint32:
-            retval = _io.io_uint32(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_uint32(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         elif dtype == dtypes.int32:
-            retval = _io.io_int32(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_int32(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         elif dtype == dtypes.float32:
-            retval = _io.io_float32(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_float32(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         elif dtype == dtypes.float64:
-            retval = _io.io_float64(
-                hbandin, 1, 0, 0, cols, rows, source)
+            retval = _io.io_multi_float64(
+                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
         else:
             raise ValueError("Invalid dtype")
         # TODO: handle errors (by retval).
@@ -170,21 +177,27 @@ def _reproject(
     elif isinstance(source, tuple):
         rdr = source.ds
         hdsin = rdr._hds
+        src_count = 1
     else:
         raise ValueError("Invalid source")
     
     # Next, do the same for the destination raster.
     if isinstance(destination, np.ndarray):
+        if len(destination.shape) == 2:
+            destination = destination.reshape(1, *destination.shape)
+        if destination.shape[0] != src_count:
+            raise ValueError("Destination's shape is invalid")
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
             raise ValueError("NULL driver for 'MEM'")
-        rows, cols = destination.shape
+        _, rows, cols = destination.shape
         hdsout = _gdal.GDALCreate(
-                        hrdriver, "output", cols, rows, 1, 
+                        hrdriver, "output", cols, rows, src_count, 
                         dtypes.dtype_rev[destination.dtype.type], NULL)
         if hdsout == NULL:
             raise ValueError("NULL output datasource")
-        _gdal.GDALSetDescription(hdsout, "Temporary destination dataset for _reproject()")
+        _gdal.GDALSetDescription(
+            hdsout, "Temporary destination dataset for _reproject()")
         log.debug("Created temp destination dataset")
         for i in range(6):
             gt[i] = dst_transform[i]
@@ -263,24 +276,26 @@ def _reproject(
         psWOptions.pTransformerArg = hTransformArg
         psWOptions.hSrcDS = hdsin
         psWOptions.hDstDS = hdsout
-        psWOptions.nBandCount = 1
-        psWOptions.panSrcBands = <int *>_gdal.CPLMalloc(sizeof(int))
-        psWOptions.panDstBands = <int *>_gdal.CPLMalloc(sizeof(int))
+        psWOptions.nBandCount = src_count
+        psWOptions.panSrcBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
+        psWOptions.panDstBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
         if isinstance(source, tuple):
             psWOptions.panSrcBands[0] = source.bidx
         else:
-            psWOptions.panSrcBands[0] = 1
+            for i in range(src_count):
+                psWOptions.panSrcBands[i] = i+1
         if isinstance(destination, tuple):
             psWOptions.panDstBands[0] = destination.bidx
         else:
-            psWOptions.panDstBands[0] = 1
+            for i in range(src_count):
+                psWOptions.panDstBands[i] = i+1
         log.debug("Set transformer options")
 
         # TODO: Src nodata and alpha band.
 
         eErr = oWarper.Initialize(psWOptions)
         if eErr == 0:
-            rows, cols = destination.shape
+            _, rows, cols = destination.shape
             log.debug(
                 "Chunk and warp window: %d, %d, %d, %d",
                 0, 0, cols, rows)
@@ -288,7 +303,7 @@ def _reproject(
                 eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             log.debug("Chunked and warped: %d", retval)
     
-    except Exception, e:
+    except Exception:
         log.exception(
             "Caught exception in warping. Source not reprojected.")
     
@@ -309,36 +324,40 @@ def _reproject(
     if reprojected and isinstance(destination, np.ndarray):
         try:
             dtype = destination.dtype
-            rows, cols = destination.shape
-            hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
-            if hbandout == NULL:
-                raise ValueError("NULL output band")
+            _, rows, cols = destination.shape
+            indexes = np.array(range(1, src_count+1))
             if dtype == dtypes.ubyte:
-                retval = _io.io_ubyte(
-                    hbandout, 0, 0, 0, cols, rows, destination)
-                log.debug("Wrote data to destination: %d", retval)
+                retval = _io.io_multi_ubyte(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             elif dtype == dtypes.uint16:
-                retval = _io.io_uint16(
-                    hbandout, 0, 0, 0, cols, rows, destination)
+                retval = _io.io_multi_uint16(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             elif dtype == dtypes.int16:
-                retval = _io.io_int16(
-                    hbandout, 0, 0, 0, cols, rows, destination)
+                retval = _io.io_multi_int16(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             elif dtype == dtypes.uint32:
-                retval = _io.io_uint32(
-                    hbandout, 0, 0, 0, cols, rows, destination)
+                retval = _io.io_multi_uint32(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             elif dtype == dtypes.int32:
-                retval = _io.io_int32(
-                    hbandout, 0, 0, 0, cols, rows, destination)
+                retval = _io.io_multi_int32(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             elif dtype == dtypes.float32:
-                retval = _io.io_float32(
-                    hbandout, 0, 0, 0, cols, rows, destination)
+                retval = _io.io_multi_float32(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             elif dtype == dtypes.float64:
-                retval = _io.io_float64(
-                    hbandout, 0, 0, 0, cols, rows, destination)
+                retval = _io.io_multi_float64(
+                    hdsout, 0, 0, 0, cols, rows,
+                    destination, indexes, src_count)
             else:
                 raise ValueError("Invalid dtype")
             # TODO: handle errors (by retval).
-        except Exception, e:
+        except Exception:
             raise
         finally:
             if hdsout != NULL:
