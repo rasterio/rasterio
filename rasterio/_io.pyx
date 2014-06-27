@@ -7,6 +7,7 @@ import os.path
 import sys
 import warnings
 
+from libc.stdlib cimport malloc, free
 import numpy as np
 cimport numpy as np
 
@@ -313,6 +314,53 @@ cdef int io_multi_float64(
                 if retval > 0:
                     break
     return retval
+
+cdef int io_multi_cint16(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.int16_t[:, :] buf,
+        int buf_width,
+        int buf_height,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    with nogil:
+        for i in range(count):
+            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
+            if hband == NULL:
+                retval = 4
+                break
+            else:
+                retval = _gdal.GDALRasterIO(
+                    hband, mode, xoff, yoff, width, height,
+                    &buf[i, 0], buf_width, buf_height,
+                    8, 0, 0)
+                if retval > 0:
+                    break
+    return retval
+
+cdef void to_cint16(
+        np.complex_t[:, :, :] out,
+        np.int16_t[:, :] buf):
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.int16_t real, imag
+
+    I = out.shape[0]
+    J = out.shape[1]
+    K = out.shape[2]
+    for i in range(I):
+        for j in range(J):
+            for k in range(K):
+                real = buf[i, 2*(j*K+k)]
+                imag = buf[i, 2*(j*K+k)+1]
+                out[i,j,k].real = real
+                out[i,j,k].imag = imag
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
@@ -900,6 +948,14 @@ cdef class RasterReader(object):
             retval = io_multi_float64(
                             self._hds, 0, xoff, yoff, width, height,
                             out, indexes_arr, indexes_count)
+        elif gdt == 8:
+            io_buffer = np.empty(
+                (out.shape[0], 2*out.shape[2]*out.shape[1]), dtype=np.int16)
+            retval = io_multi_cint16(
+                            self._hds, 0, xoff, yoff, width, height,
+                            io_buffer, out.shape[2], out.shape[1],
+                            indexes_arr, indexes_count)
+            to_cint16(out, io_buffer)
 
         if retval in (1, 2, 3):
             raise IOError("Read or write failed")

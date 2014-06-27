@@ -25,6 +25,7 @@ cdef extern from "gdal.h":
         GF_Read
         GF_Write
 
+
 cdef class RasterReader:
     # Read-only access to raster data and metadata.
     
@@ -202,4 +203,16 @@ cdef int io_multi_float64(
         long[:] indexes,
         int count) nogil
 
+cdef int io_multi_cint16(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.int16_t[:, :] buf,
+        int buf_width,
+        int buf_height,
+        long[:] indexes,
+        int count) nogil
 

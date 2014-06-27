@@ -14,7 +14,8 @@ from rasterio._io import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
-    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
+    complex_)
 from rasterio.five import string_types
 from rasterio.transform import Affine, guard_transform
 
