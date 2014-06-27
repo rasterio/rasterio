@@ -138,19 +138,16 @@ cdef int io_multi_ubyte(
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    1, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buffer[0, 0, 0], buffer.shape[2], buffer.shape[1], 
+                        1, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef int io_multi_uint16(
@@ -160,24 +157,21 @@ cdef int io_multi_uint16(
         int yoff,
         int width, 
         int height,
-        np.uint16_t[:, :, :] buffer,
+        np.uint16_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    2, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        2, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef int io_multi_int16(
@@ -187,24 +181,21 @@ cdef int io_multi_int16(
         int yoff,
         int width, 
         int height,
-        np.int16_t[:, :, :] buffer,
+        np.int16_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    3, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        3, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef int io_multi_uint32(
@@ -214,24 +205,21 @@ cdef int io_multi_uint32(
         int yoff,
         int width, 
         int height,
-        np.uint32_t[:, :, :] buffer,
+        np.uint32_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    4, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        4, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef int io_multi_int32(
@@ -241,25 +229,23 @@ cdef int io_multi_int32(
         int yoff,
         int width, 
         int height,
-        np.int32_t[:, :, :] buffer,
+        np.int32_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    5, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        5, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
+
 
 cdef int io_multi_float32(
         void *hds,
@@ -268,24 +254,21 @@ cdef int io_multi_float32(
         int yoff,
         int width, 
         int height,
-        np.float32_t[:, :, :] buffer,
+        np.float32_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    6, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        6, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef int io_multi_float64(
@@ -295,24 +278,21 @@ cdef int io_multi_float64(
         int yoff,
         int width, 
         int height,
-        np.float64_t[:, :, :] buffer,
+        np.float64_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 
-                    7, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        7, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef int io_multi_cint16(
@@ -329,19 +309,16 @@ cdef int io_multi_cint16(
         int count) nogil:
     cdef int i, retval=0
     cdef void *hband = NULL
+    cdef int *bandmap
     with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
-            hband = _gdal.GDALGetRasterBand(hds, <int>indexes[i])
-            if hband == NULL:
-                retval = 4
-                break
-            else:
-                retval = _gdal.GDALRasterIO(
-                    hband, mode, xoff, yoff, width, height,
-                    &buf[i, 0], buf_width, buf_height,
-                    8, 0, 0)
-                if retval > 0:
-                    break
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0], buf_width, buf_height,
+                        8, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
     return retval
 
 cdef void to_cint16(
@@ -350,17 +327,17 @@ cdef void to_cint16(
     cdef int I, J, K
     cdef int i, j, k
     cdef np.int16_t real, imag
-
-    I = out.shape[0]
-    J = out.shape[1]
-    K = out.shape[2]
-    for i in range(I):
-        for j in range(J):
-            for k in range(K):
-                real = buf[i, 2*(j*K+k)]
-                imag = buf[i, 2*(j*K+k)+1]
-                out[i,j,k].real = real
-                out[i,j,k].imag = imag
+    with nogil:
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf[i, 2*(j*K+k)]
+                    imag = buf[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:

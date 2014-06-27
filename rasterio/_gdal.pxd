@@ -1,7 +1,7 @@
 # GDAL function definitions.
 #
 
-cdef extern from "cpl_conv.h":
+cdef extern from "cpl_conv.h" nogil:
     void *  CPLMalloc (size_t)
     void    CPLFree (void *ptr)
     void    CPLSetThreadLocalConfigOption (char *key, char *val)
@@ -68,7 +68,9 @@ cdef extern from "gdal.h" nogil:
     void GDALGetBlockSize(void *band, int *xsize, int *ysize)
     int GDALGetRasterDataType(void *band)
     double GDALGetRasterNoDataValue(void *band, int *success)
+    int GDALDatasetRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int count, int *bmap, int poff, int loff, int boff)
     int GDALRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int poff, int loff)
+
     int GDALSetRasterNoDataValue(void *band, double value)
 
     void * GDALCreate(void *driver, const char *filename, int width, int height, int nbands, GDALDataType dtype, const char **options)
