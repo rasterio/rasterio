@@ -210,9 +210,40 @@ cdef int io_multi_cint16(
         int yoff, 
         int width, 
         int height, 
-        np.int16_t[:, :] buf,
-        int buf_width,
-        int buf_height,
+        np.complex_t[:, :, :] out,
         long[:] indexes,
-        int count) nogil
+        int count)
+
+cdef int io_multi_cint32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex_t[:, :, :] out,
+        long[:] indexes,
+        int count)
+
+cdef int io_multi_cfloat32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex64_t[:, :, :] out,
+        long[:] indexes,
+        int count)
+
+cdef int io_multi_cfloat64(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex128_t[:, :, :] out,
+        long[:] indexes,
+        int count)
 

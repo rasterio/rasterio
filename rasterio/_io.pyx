@@ -302,42 +302,190 @@ cdef int io_multi_cint16(
         int yoff,
         int width, 
         int height,
-        np.int16_t[:, :] buf,
-        int buf_width,
-        int buf_height,
+        np.complex_t[:, :, :] out,
         long[:] indexes,
-        int count) nogil:
-    cdef int i, retval=0
-    cdef void *hband = NULL
+        int count):
+    
+    cdef int retval=0
     cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.int16_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.int16)
+    cdef np.int16_t[:, :] buf_view = buf
+
     with nogil:
         bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
         retval = _gdal.GDALDatasetRasterIO(
                         hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0], buf_width, buf_height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
                         8, count, bandmap, 0, 0, 0)
         _gdal.CPLFree(bandmap)
-    return retval
 
-cdef void to_cint16(
-        np.complex_t[:, :, :] out,
-        np.int16_t[:, :] buf):
-    cdef int I, J, K
-    cdef int i, j, k
-    cdef np.int16_t real, imag
-    with nogil:
+        if retval > 0:
+            return retval
+
         I = out.shape[0]
         J = out.shape[1]
         K = out.shape[2]
         for i in range(I):
             for j in range(J):
                 for k in range(K):
-                    real = buf[i, 2*(j*K+k)]
-                    imag = buf[i, 2*(j*K+k)+1]
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
                     out[i,j,k].real = real
                     out[i,j,k].imag = imag
+
+    return retval
+
+cdef int io_multi_cint32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.int32_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.int32)
+    cdef np.int32_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        9, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
+
+cdef int io_multi_cfloat32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex64_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.float32_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.float32)
+    cdef np.float32_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        10, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
+
+cdef int io_multi_cfloat64(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex128_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.float64_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.float64)
+    cdef np.float64_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        11, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
@@ -926,13 +1074,21 @@ cdef class RasterReader(object):
                             self._hds, 0, xoff, yoff, width, height,
                             out, indexes_arr, indexes_count)
         elif gdt == 8:
-            io_buffer = np.empty(
-                (out.shape[0], 2*out.shape[2]*out.shape[1]), dtype=np.int16)
             retval = io_multi_cint16(
                             self._hds, 0, xoff, yoff, width, height,
-                            io_buffer, out.shape[2], out.shape[1],
-                            indexes_arr, indexes_count)
-            to_cint16(out, io_buffer)
+                            out, indexes_arr, indexes_count)
+        elif gdt == 9:
+            retval = io_multi_cint32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 10:
+            retval = io_multi_cfloat32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 11:
+            retval = io_multi_cfloat64(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
 
         if retval in (1, 2, 3):
             raise IOError("Read or write failed")
