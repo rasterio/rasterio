@@ -78,7 +78,6 @@ def test_reproject_multi():
             dst_crs=dst_crs,
             resampling=RESAMPLING.nearest )
     assert destin.any()
-    import pdb; pdb.set_trace()
     try:
         import matplotlib.pyplot as plt
         plt.imshow(destin)
