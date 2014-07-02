@@ -53,6 +53,10 @@ def main(infile, outfile, with_threads=False):
                     # We run the raster computation in a separate thread
                     # and pause until the computation finishes, letting
                     # other coroutines advance.
+                    #
+                    # The _example.compute function modifies no Python
+                    # objects and releases the GIL. It can execute
+                    # concurrently.
                     result = numpy.zeros(data.shape, dtype=data.dtype)
                     if with_threads:
                         yield from loop.run_in_executor(
