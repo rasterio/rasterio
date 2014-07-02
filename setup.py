@@ -113,6 +113,15 @@ else:
 with open('README.rst') as f:
     readme = f.read()
 
+# Runtime requirements.
+inst_reqs = [
+    'affine>=1.0',
+    'Numpy>=1.7',
+    'setuptools' ] 
+
+if sys.version_info < (3, 4):
+    inst_reqs.append('enum34')
+
 setup(name='rasterio',
       version=version,
       description=(
@@ -145,8 +154,5 @@ setup(name='rasterio',
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,
-      install_requires=[
-          'affine>=1.0',
-          'Numpy',
-          'setuptools'
-      ])
+      install_requires=inst_reqs )
+

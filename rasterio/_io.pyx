@@ -1560,21 +1560,6 @@ cdef class RasterUpdater(RasterReader):
                 papszStrList = _gdal.CSLSetNameValue(papszStrList, key_c, value_c)
         retval = _gdal.GDALSetMetadata(hobj, papszStrList, domain_c)
 
-    def write_colorinterp(self, bidx, colorinterp):
-        """Write a color interpreation for a band."""
-        cdef void *hBand
-
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        if bidx > 0:
-            if bidx not in self.indexes:
-                raise ValueError("Invalid band index")
-            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hBand == NULL:
-                raise ValueError("NULL band")
-        
-        _gdal.GDALSetRasterColorInterpretation(hBand, ColorInterp(colorinterp))
-
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
         cdef void *hBand
