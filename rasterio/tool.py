@@ -4,6 +4,7 @@ import collections
 import logging
 import sys
 
+import matplotlib.pyplot as plt
 import numpy
 
 import rasterio
@@ -21,7 +22,6 @@ def main(banner, dataset):
         The raster may be either an ndarray or a (dataset, bidx)
         tuple.
         """
-        import matplotlib.pyplot as plt
         if isinstance(source, tuple):
             arr = source[0].read_band(source[1])
         else:
@@ -39,6 +39,8 @@ def main(banner, dataset):
         return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
 
     code.interact(
-        banner, local=dict(locals(), src=dataset, np=numpy, rio=rasterio))
+        banner, 
+        local=dict(
+            locals(), src=dataset, np=numpy, rio=rasterio, plt=plt))
 
     return 0
