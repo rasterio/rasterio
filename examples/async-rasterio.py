@@ -10,8 +10,10 @@ performance.
 import asyncio
 import time
 
+import numpy
 import rasterio
 
+from rasterio._example import compute
 
 def main(infile, outfile, with_threads=False):
     
@@ -32,17 +34,6 @@ def main(infile, outfile, with_threads=False):
 
                 loop = asyncio.get_event_loop()
                 
-                def compute(data):
-                    # Fake a CPU-intensive computation.
-                    dtype = data.dtype
-                    tmp_data = data.astype(rasterio.float32)
-                    for j in range(100):
-                        tmp_data *= 2.0
-                    tmp_data /= 180.0
-                    tmp_data = data.astype(dtype.type)
-                    # Reverse the bands just for fun.
-                    return tmp_data[::-1]
-
                 # With the exception of the ``yield from`` statement,
                 # process_window() looks like callback-free synchronous
                 # code. With a coroutine, we can keep the read, compute,
@@ -62,12 +53,12 @@ def main(infile, outfile, with_threads=False):
                     # We run the raster computation in a separate thread
                     # and pause until the computation finishes, letting
                     # other coroutines advance.
-
+                    result = numpy.zeros(data.shape, dtype=data.dtype)
                     if with_threads:
-                        result = yield from loop.run_in_executor(
-                                                    None, compute, data)
+                        yield from loop.run_in_executor(
+                                            None, compute, data, result)
                     else:
-                        result = compute(data)
+                        compute(data, result)
                     
                     # Write the result.
                     for i, arr in enumerate(result, 1):

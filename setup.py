@@ -91,6 +91,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
+        Extension(
+            'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
             ])
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -108,6 +110,8 @@ else:
             'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.cpp'], **ext_options),
+        Extension(
+            'rasterio._example', ['rasterio/_example.cpp'], **ext_options),
             ]
 
 with open('README.rst') as f:
