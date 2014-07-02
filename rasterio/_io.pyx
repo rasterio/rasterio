@@ -1177,7 +1177,8 @@ cdef class RasterReader(object):
             hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
             if hBand == NULL:
                 raise ValueError("NULL band")
-        return _gdal.GDALGetRasterColorInterpretation(hBand)
+        value = _gdal.GDALGetRasterColorInterpretation(hBand)
+        return ColorInterp(value)
     
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""
