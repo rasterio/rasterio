@@ -1573,8 +1573,7 @@ cdef class RasterUpdater(RasterReader):
             if hBand == NULL:
                 raise ValueError("NULL band")
         
-        value = _gdal.GDALSetRasterColorInterpretation(hBand, colorinterp)
-        return ColorInterp(value)
+        _gdal.GDALSetRasterColorInterpretation(hBand, ColorInterp(colorinterp))
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
