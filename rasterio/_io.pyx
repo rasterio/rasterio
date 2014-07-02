@@ -18,6 +18,7 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type
 from rasterio.transform import Affine
+from rasterio.enums import ColorInterp
 
 log = logging.getLogger('rasterio')
 if 'all' in sys.warnoptions:
@@ -1570,7 +1571,9 @@ cdef class RasterUpdater(RasterReader):
             hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
             if hBand == NULL:
                 raise ValueError("NULL band")
-        _gdal.GDALSetRasterColorInterpretation(hBand, colorinterp)
+        
+        value = _gdal.GDALSetRasterColorInterpretation(hBand, colorinterp)
+        return ColorInterp(value)
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
