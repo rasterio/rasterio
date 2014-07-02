@@ -11,8 +11,9 @@ import concurrent.futures
 import multiprocessing
 import time
 
+import numpy
 import rasterio
-
+from rasterio._example import compute
 
 def main(infile, outfile, num_workers=4):
 
@@ -35,23 +36,23 @@ def main(infile, outfile, num_workers=4):
                 # bands, but could also use read_band().
                 def jobs():
                     for ij, window in dst.block_windows():
-                        yield src.read(window=window), window
+                        data = src.read(window=window)
+                        result = numpy.zeros(data.shape, dtype=data.dtype)
+                        yield data, result, window
 
                 # Submit the jobs to the thread pool executor.
                 with concurrent.futures.ThreadPoolExecutor(
                         max_workers=num_workers) as executor:
 
-                    def compute(data):
-                        # Fake an expensive computation.
-                        time.sleep(0.1)
-                        # Reverse the bands just for fun.
-                        return data[::-1]
-
                     # Map the futures returned from executor.submit()
                     # to their destination windows.
+                    #
+                    # The _example.compute function modifies no Python
+                    # objects and releases the GIL. It can execute
+                    # concurrently.
                     future_to_window = {
-                        executor.submit(compute, data): window
-                        for data, window in jobs()}
+                        executor.submit(compute, data, res): (res, window)
+                        for data, res, window in jobs()}
 
                     # As the processing jobs are completed, get the
                     # results and write the data to the appropriate
@@ -59,14 +60,12 @@ def main(infile, outfile, num_workers=4):
                     for future in concurrent.futures.as_completed(
                             future_to_window):
 
-                        window = future_to_window[future]
-
-                        data = future.result()
+                        result, window = future_to_window[future]
 
                         # Since there's no multiband write() method yet in
                         # Rasterio, we use write_band for each part of the
                         # 3D data array.
-                        for i, arr in enumerate(data, 1):
+                        for i, arr in enumerate(result, 1):
                             dst.write_band(i, arr, window=window)
 
 
