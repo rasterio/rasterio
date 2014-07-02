@@ -1162,7 +1162,21 @@ cdef class RasterReader(object):
             key, value = item.split('=')
             retval[key] = value
         return retval
-
+    
+    def colorinterp(self, bidx):
+        """Returns the color interpretation for a band or None."""
+        cdef void *hBand
+        
+        if self._hds == NULL:
+          raise ValueError("can't read closed raster file")
+        if bidx > 0:
+            if bidx not in self.indexes:
+                raise ValueError("Invalid band index")
+            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
+            if hBand == NULL:
+                raise ValueError("NULL band")
+        return _gdal.GDALGetRasterColorInterpretation(hBand)
+    
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""
         cdef void *hBand
