@@ -98,8 +98,10 @@ a file can be read like this:
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
 
-The returned object is a 2-dimensional Numpy ndarray. The
-GeoTIFF file that Rasterio uses for testing has 0 values in the corners:
+The returned object is a 2-dimensional Numpy ndarray. The representation of
+that array at the Python prompt is just a summary; the GeoTIFF file that
+Rasterio uses for testing has 0 values in the corners, but has nonzero values
+elsewhere.
 
 .. code-block::
 
@@ -151,7 +153,9 @@ This is the same behavior as Python's ``file``.
     ValueError: I/O operation on closed file
 
 As Python ``file`` objects can, Rasterio datasets can manage the entry into 
-and exit from runtime contexts created using a ``with`` statement.
+and exit from runtime contexts created using a ``with`` statement. This 
+ensures that files are closed no matter what exceptions may be raised within
+the the block.
 
 .. code-block:: pycon
 
@@ -168,6 +172,14 @@ and exit from runtime contexts created using a ``with`` statement.
 
 Writing data
 ------------
+
+Opening a file in writing mode is a little more complicated than opening
+a text file in Python. The dimensions of the raster dataset, the 
+data types, and the specific format must be specified.
+
+.. code-block:: pycon
+
+   >>> with rasterio.oepn
 
 Writing data mostly works as with a Python file. There are a few format-
 specific differences. TODO: details.
