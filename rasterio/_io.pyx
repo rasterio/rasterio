@@ -616,6 +616,8 @@ cdef class RasterReader(object):
 
     def read_crs(self):
         cdef char *proj_c = NULL
+        cdef char *auth_key = NULL
+        cdef char *auth_val = NULL
         cdef void *osr = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
@@ -627,30 +629,48 @@ cdef class RasterReader(object):
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             log.debug("Got coordinate system")
-            _gdal.OSRExportToProj4(osr, &proj_c)
-            if proj_c == NULL:
-                raise ValueError("Unexpected Null spatial reference")
-            proj_b = proj_c
-            log.debug("Params: %s", proj_b)
-            value = proj_b.decode()
-            value = value.strip()
-            for param in value.split():
-                kv = param.split("=")
-                if len(kv) == 2:
-                    k, v = kv
-                    try:
-                        v = float(v)
-                        if v % 1 == 0:
-                            v = int(v)
-                    except ValueError:
-                        # Leave v as a string
-                        pass
-                elif len(kv) == 1:
-                    k, v = kv[0], True
-                else:
-                    raise ValueError("Unexpected proj parameter %s" % param)
-                k = k.lstrip("+")
-                crs[k] = v
+
+            retval = _gdal.OSRAutoIdentifyEPSG(osr)
+            if retval > 0:
+                log.info("Failed to auto identify EPSG: %d", retval)
+            
+            auth_key = _gdal.OSRGetAuthorityName(osr, NULL)
+            auth_val = _gdal.OSRGetAuthorityCode(osr, NULL)
+
+            if auth_key != NULL and auth_val != NULL:
+                key_b = auth_key
+                key = key_b.decode('utf-8')
+                if key == 'EPSG':
+                    val_b = auth_val
+                    val = val_b.decode('utf-8')
+                    crs['init'] = 'epsg:%s' % val
+            
+            else:
+                _gdal.OSRExportToProj4(osr, &proj_c)
+                if proj_c == NULL:
+                    raise ValueError("Unexpected Null spatial reference")
+                proj_b = proj_c
+                log.debug("Params: %s", proj_b)
+                value = proj_b.decode()
+                value = value.strip()
+                for param in value.split():
+                    kv = param.split("=")
+                    if len(kv) == 2:
+                        k, v = kv
+                        try:
+                            v = float(v)
+                            if v % 1 == 0:
+                                v = int(v)
+                        except ValueError:
+                            # Leave v as a string
+                            pass
+                    elif len(kv) == 1:
+                        k, v = kv[0], True
+                    else:
+                        raise ValueError(
+                            "Unexpected proj parameter %s" % param)
+                    k = k.lstrip("+")
+                    crs[k] = v
             _gdal.CPLFree(proj_c)
             _gdal.OSRDestroySpatialReference(osr)
         else:
@@ -659,6 +679,7 @@ cdef class RasterReader(object):
 
     def read_crs_wkt(self):
         cdef char *proj_c = NULL
+        cdef char *key_c = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
         cdef void *osr = _gdal.OSRNewSpatialReference(
@@ -666,6 +687,9 @@ cdef class RasterReader(object):
         log.debug("Got coordinate system")
         crs = {}
         if osr != NULL:
+            retval = _gdal.OSRAutoIdentifyEPSG(osr)
+            if retval > 0:
+                log.info("Failed to auto identify EPSG: %d", retval)
             _gdal.OSRExportToWkt(osr, &proj_c)
             if proj_c == NULL:
                 raise ValueError("Null projection")

@@ -35,9 +35,8 @@ def test_update_spatial(tmpdir):
     shutil.copy('rasterio/tests/data/RGB.byte.tif', tiffname)
     with rasterio.open(tiffname, 'r+') as f:
         f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
-        f.crs = {'+init': 'epsg:4326'}
+        f.crs = {'init': 'epsg:4326'}
     with rasterio.open(tiffname) as f:
         assert list(f.transform) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
         assert list(f.affine.to_gdal()) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-        assert f.crs == {
-            u'datum': u'WGS84', u'no_defs': True, u'proj': u'longlat'}
+        assert f.crs == {'init': 'epsg:4326'}

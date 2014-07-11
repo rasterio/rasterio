@@ -22,6 +22,9 @@ cdef extern from "ogr_srs_api.h":
     int     OSRExportToProj4 (void *srs, char **params)
     int     OSRExportToWkt (void *srs, char **params)
     int     OSRImportFromProj4 (void *srs, char *proj)
+    int     OSRAutoIdentifyEPSG (void *srs)
+    const char * OSRGetAuthorityName (void *srs, const char *key)
+    const char * OSRGetAuthorityCode (void *srs, const char *key)
     void *  OSRNewSpatialReference (char *wkt)
     void    OSRRelease (void *srs)
 
