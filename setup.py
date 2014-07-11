@@ -120,6 +120,7 @@ with open('README.rst') as f:
 # Runtime requirements.
 inst_reqs = [
     'affine>=1.0',
+    'click',
     'Numpy>=1.7',
     'setuptools' ] 
 
@@ -154,7 +155,7 @@ setup(name='rasterio',
       license='BSD',
       package_dir={'': '.'},
       packages=['rasterio'],
-      scripts = ['scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp'],
+      scripts = ['scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp', 'scripts/rio'],
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,

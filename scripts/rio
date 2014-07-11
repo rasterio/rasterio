@@ -1,0 +1,94 @@
+#!/usr/bin/env python
+
+"""Rasterio interactive dataset inspector"""
+
+import argparse
+import logging
+import pprint
+import sys
+import warnings
+
+import click
+
+import rasterio
+from rasterio.tool import main
+
+
+warnings.simplefilter('default')
+
+@click.group()
+@click.option('--verbose', '-v', count=True, help="Increase verbosity")
+@click.option('--quiet', '-q', count=True, help="Decrease verbosity")
+@click.option('--indent', default=2, type=int, 
+              help="Indentation level for pretty printed output")
+@click.pass_context
+def cli(ctx, verbose, quiet, indent):
+    verbosity = verbose - quiet
+    log_level = max(10, 30 - 10*verbosity)
+    logging.basicConfig(stream=sys.stderr, level=log_level)
+    logger = logging.getLogger('rio_insp')
+    ctx.obj = {}
+    ctx.obj['verbosity'] = verbosity
+    ctx.obj['indent'] = indent
+
+@cli.command()
+@click.argument('input', type=click.Path(exists=True))
+@click.pass_context
+def meta(ctx, input):
+    verbosity = ctx.obj['verbosity']
+    indent = ctx.obj['indent']
+    try:
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            with rasterio.open(input) as src:
+                pprint.pprint(src.meta, indent=indent)
+        sys.exit(0)
+    except Exception:
+        logger.exception("Failed. Exception caught")
+        sys.exit(1)
+
+@cli.command()
+@click.option('--namespace', '-n', type=str, default=None,
+              help="Tag namespace")
+@click.argument('input', type=click.Path(exists=True))
+@click.pass_context
+def tags(ctx, namespace, input):
+    verbosity = ctx.obj['verbosity']
+    indent = ctx.obj['indent']
+    try:
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            with rasterio.open(input) as src:
+                pprint.pprint(src.tags(ns=namespace), indent=indent)
+        sys.exit(0)
+    except Exception:
+        logger.exception("Failed. Exception caught")
+        sys.exit(1)
+
+@cli.command()
+@click.option('--mode', '-m', type=click.Choice(['r', 'r+']))
+@click.argument('input', type=click.Path(exists=True))
+@click.pass_context
+def insp(ctx, mode, input):
+    verbosity = ctx.obj['verbosity']
+    indent = ctx.obj['indent']
+    try:
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            with rasterio.open(input) as src:
+                main(
+                    "Rasterio %s Interactive Inspector (Python %s)\n"
+                    'Type "src.meta", "src.read_band(1)", or "help(src)" '
+                    'for more information.' %  (
+                        rasterio.__version__,
+                        '.'.join(map(str, sys.version_info[:3]))),
+                    src)
+        sys.exit(0)
+    except Exception:
+        logger.exception("Failed. Exception caught")
+        sys.exit(1)
+
+cli.add_command(meta)
+cli.add_command(insp)
+cli.add_command(tags)
+
+if __name__ == '__main__':
+    cli()
+
