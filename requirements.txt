@@ -1,3 +1,4 @@
 affine>=1.0
+click
 Numpy
 setuptools
