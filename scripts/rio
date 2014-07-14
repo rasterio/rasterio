@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Rasterio interactive dataset inspector"""
+"""Rasterio command line interface"""
 
 import argparse
 import logging
@@ -13,66 +13,65 @@ import click
 import rasterio
 from rasterio.tool import main
 
-
 warnings.simplefilter('default')
 
-@click.group()
-@click.option('--verbose', '-v', count=True, help="Increase verbosity")
-@click.option('--quiet', '-q', count=True, help="Decrease verbosity")
-@click.option('--indent', default=2, type=int, 
-              help="Indentation level for pretty printed output")
-@click.pass_context
-def cli(ctx, verbose, quiet, indent):
-    verbosity = verbose - quiet
+def configure_logging(verbosity):
     log_level = max(10, 30 - 10*verbosity)
     logging.basicConfig(stream=sys.stderr, level=log_level)
-    logger = logging.getLogger('rio_insp')
+
+# The CLI command group.
+@click.group(help="Rasterio command line interface.")
+@click.option('--verbose', '-v', count=True, help="Increase verbosity.")
+@click.option('--quiet', '-q', count=True, help="Decrease verbosity.")
+@click.pass_context
+def cli(ctx, verbose, quiet):
+    verbosity = verbose - quiet
+    configure_logging(verbosity)
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
-    ctx.obj['indent'] = indent
 
-@cli.command()
-@click.argument('input', type=click.Path(exists=True))
+# Commands are below.
+#
+# Command bodies less than ~20 lines, e.g. info() below, can go in this
+# module. Longer ones, e.g. insp() shall call functions imported from
+# rasterio.tool.
+
+# Info command.
+@cli.command(short_help="Print information about a data file.")
+@click.argument('src_path', type=click.Path(exists=True))
+@click.option('--meta', 'aspect', flag_value='meta', default=True, 
+    help="Show data file structure (default).")
+@click.option('--tags', 'aspect', flag_value='tags', 
+    help="Show data file tags.")
+@click.option('--indent', default=2, type=int, 
+              help="Indentation level for pretty printed output")
+@click.option('--namespace', help="Select a tag namespace.")
 @click.pass_context
-def meta(ctx, input):
+def info(ctx, src_path, aspect, indent, namespace):
     verbosity = ctx.obj['verbosity']
-    indent = ctx.obj['indent']
+    logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            with rasterio.open(input) as src:
-                pprint.pprint(src.meta, indent=indent)
+            with rasterio.open(src_path) as src:
+                if aspect == 'meta':
+                    pprint.pprint(src.meta, indent=indent)
+                elif aspect == 'tags':
+                    pprint.pprint(src.tags(ns=namespace), indent=indent)
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
         sys.exit(1)
 
-@cli.command()
-@click.option('--namespace', '-n', type=str, default=None,
-              help="Tag namespace")
-@click.argument('input', type=click.Path(exists=True))
+# Insp command.
+@cli.command(short_help="Open a data file and start an interpreter.")
+@click.argument('src_path', type=click.Path(exists=True))
+@click.option('--mode', type=click.Choice(['r', 'r+']), default='r', help="File mode (default 'r').")
 @click.pass_context
-def tags(ctx, namespace, input):
+def insp(ctx, src_path, mode):
     verbosity = ctx.obj['verbosity']
-    indent = ctx.obj['indent']
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            with rasterio.open(input) as src:
-                pprint.pprint(src.tags(ns=namespace), indent=indent)
-        sys.exit(0)
-    except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
-
-@cli.command()
-@click.option('--mode', '-m', type=click.Choice(['r', 'r+']))
-@click.argument('input', type=click.Path(exists=True))
-@click.pass_context
-def insp(ctx, mode, input):
-    verbosity = ctx.obj['verbosity']
-    indent = ctx.obj['indent']
-    try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            with rasterio.open(input) as src:
+            with rasterio.open(src_path, mode) as src:
                 main(
                     "Rasterio %s Interactive Inspector (Python %s)\n"
                     'Type "src.meta", "src.read_band(1)", or "help(src)" '
@@ -85,10 +84,5 @@ def insp(ctx, mode, input):
         logger.exception("Failed. Exception caught")
         sys.exit(1)
 
-cli.add_command(meta)
-cli.add_command(insp)
-cli.add_command(tags)
-
 if __name__ == '__main__':
     cli()
-
