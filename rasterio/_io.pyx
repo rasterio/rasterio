@@ -622,10 +622,10 @@ cdef class RasterReader(object):
         if self._hds == NULL:
             raise ValueError("Null dataset")
         crs = {}
-        cdef const char *proj = _gdal.GDALGetProjectionRef(self._hds)
-        proj_b = proj
-        if len(proj_b) > 0:
-            osr = _gdal.OSRNewSpatialReference(proj)
+        cdef char *wkt = _gdal.GDALGetProjectionRef(self._hds)
+        wkt_b = wkt
+        if wkt != NULL:
+            osr = _gdal.OSRNewSpatialReference(wkt)
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             log.debug("Got coordinate system")
@@ -643,8 +643,7 @@ cdef class RasterReader(object):
                 if key == 'EPSG':
                     val_b = auth_val
                     val = val_b.decode('utf-8')
-                    crs['init'] = 'epsg:%s' % val
-            
+                    crs['init'] = "epsg:" + val
             else:
                 _gdal.OSRExportToProj4(osr, &proj_c)
                 if proj_c == NULL:
@@ -671,6 +670,7 @@ cdef class RasterReader(object):
                             "Unexpected proj parameter %s" % param)
                     k = k.lstrip("+")
                     crs[k] = v
+
             _gdal.CPLFree(proj_c)
             _gdal.OSRDestroySpatialReference(osr)
         else:
@@ -1420,27 +1420,48 @@ cdef class RasterUpdater(RasterReader):
         self._closed = False
 
     def write_crs(self, crs):
+        """Writes a coordinate reference system to the dataset."""
+        cdef char *proj_c = NULL
+        cdef char *wkt = NULL
         if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
         cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
         if osr == NULL:
             raise ValueError("Null spatial reference")
         params = []
-        for k, v in crs.items():
-            if v is True or (k == 'no_defs' and v):
-                params.append("+%s" % k)
-            else:
-                params.append("+%s=%s" % (k, v))
-        proj = " ".join(params)
-        proj_b = proj.encode()
-        cdef const char *proj_c = proj_b
-        _gdal.OSRImportFromProj4(osr, proj_c)
-        cdef char *wkt
+
+        log.debug("Input CRS: %r", crs)
+
+        # EPSG is a special case.
+        init = crs.get('init')
+        if init:
+            auth, val = init.split(':')
+            if auth.upper() == 'EPSG':
+                _gdal.OSRImportFromEPSG(osr, int(val))
+        else:
+            crs['wktext'] = True
+            for k, v in crs.items():
+                if v is True or (k in ('no_defs', 'wktext') and v):
+                    params.append("+%s" % k)
+                else:
+                    params.append("+%s=%s" % (k, v))
+            proj = " ".join(params)
+            log.debug("PROJ.4 to be imported: %r", proj)
+            proj_b = proj.encode('utf-8')
+            proj_c = proj_b
+            _gdal.OSRImportFromProj4(osr, proj_c)
+        
+        # Fixup, export to WKT, and set the GDAL dataset's projection.
+        _gdal.OSRFixup(osr)
         _gdal.OSRExportToWkt(osr, &wkt)
+        wkt_b = wkt
+        log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
         _gdal.GDALSetProjection(self._hds, wkt)
+
         _gdal.CPLFree(wkt)
         _gdal.OSRDestroySpatialReference(osr)
         self._crs = crs
+        log.debug("Self CRS: %r", self._crs)
 
     property crs:
         """A mapping of PROJ.4 coordinate reference system params.
