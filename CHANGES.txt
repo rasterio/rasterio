@@ -12,6 +12,7 @@ Changes
 - Read_band() is now a special case of read() (#96).
 - Add support for multi-band reprojection (#98).
 - Support for GDAL CInt16 datasets (#97).
+- Fix loss of projection information (#102).
 
 0.8 (2014-03-31)
 ----------------
