@@ -1389,7 +1389,7 @@ cdef class RasterUpdater(RasterReader):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
-                self.write_crs(self._crs)
+                self.set_crs(self._crs)
         
         elif self.mode == 'r+':
             with cpl_errs:
@@ -1419,7 +1419,7 @@ cdef class RasterUpdater(RasterReader):
         self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
 
-    def write_crs(self, crs):
+    def set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
         cdef char *proj_c = NULL
         cdef char *wkt = NULL
@@ -1471,7 +1471,7 @@ cdef class RasterUpdater(RasterReader):
             return self.get_crs()
 
         def __set__(self, value):
-            self.write_crs(value)
+            self.set_crs(value)
 
     def write_transform(self, transform):
         if self._hds == NULL:
