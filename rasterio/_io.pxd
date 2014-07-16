@@ -70,7 +70,7 @@ cdef int io_ubyte(
         int yoff, 
         int width, 
         int height, 
-        np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer)
+        np.uint8_t[:, :] buffer)
 
 cdef int io_uint16(
         void *hband, 
@@ -78,8 +78,8 @@ cdef int io_uint16(
         int xoff, 
         int yoff, 
         int width, 
-        int height, 
-        np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer)
+        int height,
+        np.uint16_t[:, :] buffer)
 
 cdef int io_int16(
         void *hband, 
@@ -88,7 +88,7 @@ cdef int io_int16(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer)
+        np.int16_t[:, :] buffer)
 
 cdef int io_uint32(
         void *hband, 
@@ -97,7 +97,7 @@ cdef int io_uint32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer)
+        np.uint32_t[:, :] buffer)
 
 cdef int io_int32(
         void *hband, 
@@ -106,7 +106,7 @@ cdef int io_int32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer)
+        np.int32_t[:, :] buffer)
 
 cdef int io_float32(
         void *hband, 
@@ -115,7 +115,7 @@ cdef int io_float32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer)
+        np.float32_t[:, :] buffer)
 
 cdef int io_float64(
         void *hband,
@@ -124,7 +124,7 @@ cdef int io_float64(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer)
+        np.float64_t[:, :] buffer)
 
 cdef int io_multi_ubyte(
         void *hds, 

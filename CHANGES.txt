@@ -14,6 +14,7 @@ Changes
 - Support for GDAL CInt16 datasets (#97).
 - Fix loss of projection information (#102).
 - Fix for loss of nodata values (#109).
+- Permit other than C-contiguous arrays (#108).
 
 0.8 (2014-03-31)
 ----------------

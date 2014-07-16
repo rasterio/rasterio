@@ -37,6 +37,7 @@ def _shapes(image, mask, connectivity, transform):
     cdef _io.RasterReader rdr
     cdef _io.RasterReader mrdr
     cdef char **options = NULL
+    cdef np.uint8_t[:, :] image_view
 
     if isinstance(image, np.ndarray):
         hrdriver = _gdal.GDALGetDriverByName("MEM")
@@ -59,7 +60,8 @@ def _shapes(image, mask, connectivity, transform):
         hband = _gdal.GDALGetRasterBand(hds, 1)
         if hband == NULL:
             raise ValueError("NULL band")
-        retval = _io.io_ubyte(hband, 1, 0, 0, cols, rows, image)
+        image_view = image
+        retval = _io.io_ubyte(hband, 1, 0, 0, cols, rows, image_view)
     elif isinstance(image, tuple):
         rdr = image.ds
         hband = rdr.band(image.bidx)
