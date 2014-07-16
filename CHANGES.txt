@@ -13,6 +13,7 @@ Changes
 - Add support for multi-band reprojection (#98).
 - Support for GDAL CInt16 datasets (#97).
 - Fix loss of projection information (#102).
+- Fix for loss of nodata values (#109).
 
 0.8 (2014-03-31)
 ----------------

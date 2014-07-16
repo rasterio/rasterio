@@ -36,9 +36,9 @@ def open(
         driver=None,
         width=None, height=None,
         count=None,
+        crs=None, transform=None,
         dtype=None,
         nodata=None,
-        crs=None, transform=None,
         **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
     or "w" (write) and return a ``Reader`` or ``Updater`` object.

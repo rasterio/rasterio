@@ -73,6 +73,7 @@ cdef extern from "gdal.h" nogil:
     void GDALGetBlockSize(void *band, int *xsize, int *ysize)
     int GDALGetRasterDataType(void *band)
     double GDALGetRasterNoDataValue(void *band, int *success)
+    int GDALSetRasterNoDataValue(void *band, double value)
     int GDALDatasetRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int count, int *bmap, int poff, int loff, int boff)
     int GDALRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int poff, int loff)
 
