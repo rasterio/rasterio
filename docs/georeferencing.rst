@@ -66,7 +66,6 @@ a transitional phase.
 
     >>> src.transform
     /usr/local/Cellar/python3/3.4.1/Frameworks/Python.framework/Versions/3.4/lib/python3.4/code.py:90: FutureWarning: The value of this property will change in version 1.0. Please see https://github.com/mapbox/rasterio/issues/86 for details.
-  exec(code, self.locals)
     [101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805]
 
 In Rasterio 1.0, the value of a  ``transform`` attribute will be an instance
