@@ -8,6 +8,42 @@ import rasterio
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
+def test_validate_dtype_None(tmpdir):
+    name = str(tmpdir.join("lol.tif"))
+    try:
+        ds = rasterio.open(
+            name, 'w', driver='GTiff', width=100, height=100, count=1,
+            # dtype=None
+            )
+    except TypeError:
+        pass
+
+def test_validate_dtype_str(tmpdir):
+    name = str(tmpdir.join("lol.tif"))
+    try:
+        ds = rasterio.open(
+            name, 'w', driver='GTiff', width=100, height=100, count=1,
+            dtype='Int16')
+    except TypeError:
+        pass
+
+def test_validate_count_None(tmpdir):
+    name = str(tmpdir.join("lol.tif"))
+    try:
+        ds = rasterio.open(
+            name, 'w', driver='GTiff', width=100, height=100, #count=None
+            dtype=rasterio.uint8)
+    except TypeError:
+        pass
+
+def test_no_crs(tmpdir):
+    # A dataset without crs is okay.
+    name = str(tmpdir.join("lol.tif"))
+    with rasterio.open(
+            name, 'w', driver='GTiff', width=100, height=100, count=1,
+            dtype=rasterio.uint8) as dst:
+        dst.write_band(1, numpy.ones((100, 100), dtype=rasterio.uint8))
+
 def test_context(tmpdir):
     name = str(tmpdir.join("test_context.tif"))
     with rasterio.open(

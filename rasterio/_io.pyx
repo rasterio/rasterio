@@ -16,7 +16,7 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.five import text_type
+from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp
 
@@ -1288,6 +1288,24 @@ cdef class RasterUpdater(RasterReader):
             crs=None, transform=None, dtype=None,
             nodata=None,
             **kwargs):
+        # Validate write mode arguments.
+        if mode == 'w':
+            if not isinstance(driver, string_types):
+                raise TypeError("A driver name string is required.")
+            try:
+                width = int(width)
+                height = int(height)
+            except:
+                raise TypeError("Integer width and height are required.")
+            try:
+                count = int(count)
+            except:
+                raise TypeError("Integer band count is required.")
+            try:
+                assert dtype is not None
+                _ = np.dtype(dtype)
+            except:
+                raise TypeError("A valid dtype is required.")
         self.name = path
         self.mode = mode
         self.driver = driver
