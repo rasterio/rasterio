@@ -59,6 +59,80 @@ log.addHandler(NullHandler())
 def tastes_like_gdal(t):
     return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
+def _transform(src_crs, dst_crs, xs, ys):
+    cdef double *x, *y
+    cdef char *proj_c = NULL
+    cdef void *src, *dst
+    cdef void *transform
+    cdef int i
+
+    assert len(xs) == len(ys)
+    
+    src = _gdal.OSRNewSpatialReference(NULL)
+    # EPSG is a special case.
+    init = src_crs.get('init')
+    if init:
+        auth, val = init.split(':')
+        if auth.upper() == 'EPSG':
+            _gdal.OSRImportFromEPSG(src, int(val))
+    else:
+        params = []
+        for k, v in src_crs.items():
+            if v is True or (k in ('no_defs', 'wktext') and v):
+                params.append("+%s" % k)
+            else:
+                params.append("+%s=%s" % (k, v))
+        proj = " ".join(params)
+        log.debug("PROJ.4 to be imported: %r", proj)
+        proj_b = proj.encode('utf-8')
+        proj_c = proj_b
+        _gdal.OSRImportFromProj4(src, proj_c)
+
+    dst = _gdal.OSRNewSpatialReference(NULL)
+    # EPSG is a special case.
+    init = dst_crs.get('init')
+    if init:
+        auth, val = init.split(':')
+        if auth.upper() == 'EPSG':
+            _gdal.OSRImportFromEPSG(dst, int(val))
+    else:
+        params = []
+        for k, v in dst_crs.items():
+            if v is True or (k in ('no_defs', 'wktext') and v):
+                params.append("+%s" % k)
+            else:
+                params.append("+%s=%s" % (k, v))
+        proj = " ".join(params)
+        log.debug("PROJ.4 to be imported: %r", proj)
+        proj_b = proj.encode('utf-8')
+        proj_c = proj_b
+        _gdal.OSRImportFromProj4(dst, proj_c)
+
+    n = len(xs)
+    x = <double *>_gdal.CPLMalloc(n*sizeof(double))
+    y = <double *>_gdal.CPLMalloc(n*sizeof(double))
+    for i in range(n):
+        x[i] = xs[i]
+        y[i] = ys[i]
+
+    transform = _gdal.OCTNewCoordinateTransformation(src, dst)
+    res = _gdal.OCTTransform(transform, n, x, y, NULL)
+    #if res:
+    #    raise ValueError("Failed coordinate transformation")
+
+    res_xs = [0]*n
+    res_ys = [0]*n
+
+    for i in range(n):
+        res_xs[i] = x[i]
+        res_ys[i] = y[i]
+
+    _gdal.CPLFree(x)
+    _gdal.CPLFree(y)
+    _gdal.OCTDestroyCoordinateTransformation(transform)
+    _gdal.OSRDestroySpatialReference(src)
+    _gdal.OSRDestroySpatialReference(dst)
+    return res_xs, res_ys
 
 def _reproject(
         source, destination,

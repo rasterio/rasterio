@@ -16,8 +16,9 @@ Rasterio's new command line interface is a program named "rio".
       --help         Show this message and exit.
 
     Commands:
-      info  Print information about a data file.
-      insp  Open a data file and start an interpreter.
+      bounds  Write bounding boxes to stdout as GeoJSON.
+      info    Print information about a data file.
+      insp    Open a data file and start an interpreter.
 
 It is developed using the ``click`` package.
 
@@ -66,6 +67,55 @@ The insp command opens a dataset and an interpreter.
                    0.0,
                    -300.041782729805),
      'width': 791}
+
+The bounds command writes the bounding boxes of raster datasets to GeoJSON for
+use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
+
+.. code-block:: console
+
+    $ rio bounds rasterio/tests/data/RGB.byte.tif --indent 2
+    {
+      "features": [
+        {
+          "geometry": {
+            "coordinates": [
+              [
+                [
+                  -78.898133,
+                  23.564991
+                ],
+                [
+                  -76.599438,
+                  23.564991
+                ],
+                [
+                  -76.599438,
+                  25.550874
+                ],
+                [
+                  -78.898133,
+                  25.550874
+                ],
+                [
+                  -78.898133,
+                  23.564991
+                ]
+              ]
+            ],
+            "type": "Polygon"
+          },
+          "properties": {
+            "id": "0",
+            "title": "rasterio/tests/data/RGB.byte.tif"
+          },
+          "type": "Feature"
+        }
+      ],
+      "type": "FeatureCollection"
+    }
+
+Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing 
+``rio bounds rasterio/tests/data/RGB.byte.tif | geojsonio``.
 
 Suggestions for other commands are welcome!
 

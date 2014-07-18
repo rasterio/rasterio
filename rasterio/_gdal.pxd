@@ -29,6 +29,9 @@ cdef extern from "ogr_srs_api.h":
     const char * OSRGetAuthorityCode (void *srs, const char *key)
     void *  OSRNewSpatialReference (char *wkt)
     void    OSRRelease (void *srs)
+    void *  OCTNewCoordinateTransformation (void *source, void *dest)
+    void    OCTDestroyCoordinateTransformation (void *source)
+    int     OCTTransform (void *ct, int nCount, double *x, double *y, double *z)
 
 cdef extern from "gdal.h" nogil:
     void GDALAllRegister()

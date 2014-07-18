@@ -3,6 +3,7 @@
 """Rasterio command line interface"""
 
 import argparse
+import json
 import logging
 import pprint
 import sys
@@ -12,6 +13,7 @@ import click
 
 import rasterio
 from rasterio.tool import main
+from rasterio.warp import transform
 
 warnings.simplefilter('default')
 
@@ -79,6 +81,51 @@ def insp(ctx, src_path, mode):
                         rasterio.__version__,
                         '.'.join(map(str, sys.version_info[:3]))),
                     src)
+        sys.exit(0)
+    except Exception:
+        logger.exception("Failed. Exception caught")
+        sys.exit(1)
+
+# Bounds command.
+@cli.command(short_help="Write bounding boxes to stdout as GeoJSON.",
+    help="""
+Write bounding boxes to stdout as GeoJSON for use with, e.g., geojsonio
+
+  $ rio bounds *.tif | geojsonio
+""")
+@click.argument('src_paths', nargs=-1, type=click.Path(exists=True))
+@click.option('--precision', type=int, default=6,
+              help="Decimal precision of coordinates.")
+@click.option('--indent', default=None, type=int, 
+              help="Indentation level for JSON output")
+@click.option('--projected/--geographic', default=False,
+              help="Output in projected coordinates (default is geographic).")
+@click.pass_context
+def bounds(ctx, src_paths, precision, indent, projected):
+    verbosity = ctx.obj['verbosity']
+    logger = logging.getLogger('rio')
+    try:
+        collection = {'type': 'FeatureCollection'}
+        features = []
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            for i, path in enumerate(src_paths):
+                with rasterio.open(path) as src:
+                    bounds = src.bounds
+                    xs = [bounds[0], bounds[2]]
+                    ys = [bounds[1], bounds[3]]
+                    if not projected:
+                        xs, ys = transform(
+                            src.crs, {'init': 'epsg:4326'}, xs, ys)
+                    xs = [round(v, precision) for v in xs]
+                    ys = [round(v, precision) for v in ys]
+                    features.append(
+                        {'type': 'Feature', 'geometry': 
+                            {'type': 'Polygon', 'coordinates': [
+                                [[xs[0], ys[0]], [xs[1], ys[0]], [xs[1], ys[1]],
+                                 [xs[0], ys[1]], [xs[0], ys[0]] ]]},
+                        'properties': {'id': str(i), 'title': path} })
+        collection['features'] = features
+        print(json.dumps(collection, indent=indent, sort_keys=True))
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
