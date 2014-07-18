@@ -153,7 +153,7 @@ def transform(ctx, input, src_crs, dst_crs, mode, precision):
     logger = logging.getLogger('rio')
     try:
         if mode == 'interleaved':
-            coords = json.load(input)
+            coords = json.loads(input.read().decode('utf-8'))
             xs = coords[::2]
             ys = coords[1::2]
         else:
