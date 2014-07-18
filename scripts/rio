@@ -107,6 +107,8 @@ def bounds(ctx, src_paths, precision, indent, projected):
     try:
         collection = {'type': 'FeatureCollection'}
         features = []
+        col_xs = []
+        col_ys = []
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             for i, path in enumerate(src_paths):
                 with rasterio.open(path) as src:
@@ -118,12 +120,16 @@ def bounds(ctx, src_paths, precision, indent, projected):
                             src.crs, {'init': 'epsg:4326'}, xs, ys)
                     xs = [round(v, precision) for v in xs]
                     ys = [round(v, precision) for v in ys]
+                    col_xs.extend(xs)
+                    col_ys.extend(ys)
                     features.append(
                         {'type': 'Feature', 'geometry': 
                             {'type': 'Polygon', 'coordinates': [
                                 [[xs[0], ys[0]], [xs[1], ys[0]], [xs[1], ys[1]],
                                  [xs[0], ys[1]], [xs[0], ys[0]] ]]},
                         'properties': {'id': str(i), 'title': path} })
+        collection['bbox'] = [
+            min(col_xs), min(col_ys), max(col_xs), max(col_ys)]
         collection['features'] = features
         print(json.dumps(collection, indent=indent, sort_keys=True))
         sys.exit(0)
