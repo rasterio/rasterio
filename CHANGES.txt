@@ -1,8 +1,8 @@
 Changes
 =======
 
-Next
-----
+0.10 (2014-07-18)
+-----------------
 - Add rio bounds command (#111).
 - Add rio transform command (#112).
 
