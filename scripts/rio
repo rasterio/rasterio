@@ -144,7 +144,7 @@ def bounds(ctx, src_paths, precision, indent, projected):
 @click.argument('input', type=click.File('rb'))
 @click.option('--src_crs', default='EPSG:4326', help="Source CRS.")
 @click.option('--dst_crs', default='EPSG:4326', help="Destination CRS.")
-@click.option('--bbox', 'mode', flag_value='bbox', default=True)
+@click.option('--interleaved', 'mode', flag_value='interleaved', default=True)
 @click.option('--precision', type=int, default=-1,
               help="Decimal precision of coordinates.")
 @click.pass_context
@@ -152,10 +152,10 @@ def transform(ctx, input, src_crs, dst_crs, mode, precision):
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:
-        if mode == 'bbox':
-            bbox = json.load(input)
-            xs = [bbox[0], bbox[2]]
-            ys = [bbox[1], bbox[3]]
+        if mode == 'interleaved':
+            coords = json.load(input)
+            xs = coords[::2]
+            ys = coords[1::2]
         else:
             raise ValueError("Invalid input type '%s'" % input_type)
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
@@ -173,8 +173,10 @@ def transform(ctx, input, src_crs, dst_crs, mode, precision):
             if precision >= 0:
                 xs = [round(v, precision) for v in xs]
                 ys = [round(v, precision) for v in ys]
-        if mode == 'bbox':
-            result = [xs[0], ys[0], xs[1], ys[1]]
+        if mode == 'interleaved':
+            result = [0]*len(coords)
+            result[::2] = xs
+            result[1::2] = ys
         print(json.dumps(result))
         sys.exit(0)
     except Exception:

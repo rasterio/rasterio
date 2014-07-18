@@ -16,9 +16,10 @@ Rasterio's new command line interface is a program named "rio".
       --help         Show this message and exit.
 
     Commands:
-      bounds  Write bounding boxes to stdout as GeoJSON.
-      info    Print information about a data file.
-      insp    Open a data file and start an interpreter.
+      bounds     Write bounding boxes to stdout as GeoJSON.
+      info       Print information about a data file.
+      insp       Open a data file and start an interpreter.
+      transform  Transform coordinates.
 
 It is developed using the ``click`` package.
 
@@ -128,6 +129,31 @@ The insp command opens a dataset and an interpreter.
                    0.0,
                    -300.041782729805),
      'width': 791}
+
+transform
+---------
+
+New in 0.10.
+
+The transform command reads a JSON array of coordinates, interleaved, and
+writes another array of transformed coordinates to stdout.
+
+To transform a longitude, latitude point (EPSG:4326 is the default) to 
+another coordinate system with 2 decimal places of output precision, do the
+following.
+
+.. code-block:: console
+
+    $ echo "[-78.0, 23.0]" | rio transform - --dst_crs EPSG:32618 --precision 2
+    [192457.13, 2546667.68]
+
+To transform a longitude, latitude bounding box to the coordinate system of
+a raster dataset, do the following.
+
+.. code-block:: console
+
+    $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst_crs rasterio/tests/data/RGB.byte.tif --precision 2
+    [192457.13, 2546667.68, 399086.97, 2765319.94]
 
 Suggestions for other commands are welcome!
 
