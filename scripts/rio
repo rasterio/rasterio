@@ -5,6 +5,7 @@
 import argparse
 import json
 import logging
+import os.path
 import pprint
 import sys
 import warnings
@@ -12,8 +13,8 @@ import warnings
 import click
 
 import rasterio
-from rasterio.tool import main
-from rasterio.warp import transform
+import rasterio.tool
+import rasterio.warp
 
 warnings.simplefilter('default')
 
@@ -74,7 +75,7 @@ def insp(ctx, src_path, mode):
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             with rasterio.open(src_path, mode) as src:
-                main(
+                rasterio.tool.main(
                     "Rasterio %s Interactive Inspector (Python %s)\n"
                     'Type "src.meta", "src.read_band(1)", or "help(src)" '
                     'for more information.' %  (
@@ -94,7 +95,7 @@ Write bounding boxes to stdout as GeoJSON for use with, e.g., geojsonio
   $ rio bounds *.tif | geojsonio
 """)
 @click.argument('src_paths', nargs=-1, type=click.Path(exists=True))
-@click.option('--precision', type=int, default=6,
+@click.option('--precision', type=int, default=-1,
               help="Decimal precision of coordinates.")
 @click.option('--indent', default=None, type=int, 
               help="Indentation level for JSON output")
@@ -116,10 +117,11 @@ def bounds(ctx, src_paths, precision, indent, projected):
                     xs = [bounds[0], bounds[2]]
                     ys = [bounds[1], bounds[3]]
                     if not projected:
-                        xs, ys = transform(
+                        xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:4326'}, xs, ys)
-                    xs = [round(v, precision) for v in xs]
-                    ys = [round(v, precision) for v in ys]
+                    if precision >= 0:
+                        xs = [round(v, precision) for v in xs]
+                        ys = [round(v, precision) for v in ys]
                     col_xs.extend(xs)
                     col_ys.extend(ys)
                     features.append(
@@ -136,6 +138,49 @@ def bounds(ctx, src_paths, precision, indent, projected):
     except Exception:
         logger.exception("Failed. Exception caught")
         sys.exit(1)
+
+# Transform command.
+@cli.command(short_help="Transform coordinates.")
+@click.argument('input', type=click.File('rb'))
+@click.option('--src_crs', default='EPSG:4326', help="Source CRS.")
+@click.option('--dst_crs', default='EPSG:4326', help="Destination CRS.")
+@click.option('--bbox', 'mode', flag_value='bbox', default=True)
+@click.option('--precision', type=int, default=-1,
+              help="Decimal precision of coordinates.")
+@click.pass_context
+def transform(ctx, input, src_crs, dst_crs, mode, precision):
+    verbosity = ctx.obj['verbosity']
+    logger = logging.getLogger('rio')
+    try:
+        if mode == 'bbox':
+            bbox = json.load(input)
+            xs = [bbox[0], bbox[2]]
+            ys = [bbox[1], bbox[3]]
+        else:
+            raise ValueError("Invalid input type '%s'" % input_type)
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            if src_crs.startswith('EPSG'):
+                src_crs = {'init': src_crs}
+            elif os.path.exists(src_crs):
+                with rasterio.open(src_crs) as f:
+                    src_crs = f.crs
+            if dst_crs.startswith('EPSG'):
+                dst_crs = {'init': dst_crs}
+            elif os.path.exists(dst_crs):
+                with rasterio.open(dst_crs) as f:
+                    dst_crs = f.crs
+            xs, ys = rasterio.warp.transform(src_crs, dst_crs, xs, ys)
+            if precision >= 0:
+                xs = [round(v, precision) for v in xs]
+                ys = [round(v, precision) for v in ys]
+        if mode == 'bbox':
+            result = [xs[0], ys[0], xs[1], ys[1]]
+        print(json.dumps(result))
+        sys.exit(0)
+    except Exception:
+        logger.exception("Failed. Exception caught")
+        sys.exit(1)
+
 
 if __name__ == '__main__':
     cli()
