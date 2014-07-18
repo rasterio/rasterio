@@ -109,9 +109,9 @@ else:
         Extension(
             'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
         Extension(
-            'rasterio._err', ['rasterio/_err.cpp'], **ext_options),
+            'rasterio._err', ['rasterio/_err.c'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.cpp'], **ext_options),
+            'rasterio._example', ['rasterio/_example.c'], **ext_options),
             ]
 
 with open('README.rst') as f:
