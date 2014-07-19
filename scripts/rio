@@ -72,6 +72,7 @@ def info(ctx, src_path, aspect, indent, namespace):
 @click.pass_context
 def insp(ctx, src_path, mode):
     verbosity = ctx.obj['verbosity']
+    logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             with rasterio.open(src_path, mode) as src:
