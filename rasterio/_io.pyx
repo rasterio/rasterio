@@ -1381,6 +1381,9 @@ cdef class RasterUpdater(RasterReader):
             
             # Creation options
             for k, v in self._options.items():
+                # Skip items that are definitely *not* valid driver options.
+                if k.lower() in ['affine']:
+                    continue
                 kwds.append((k.lower(), v))
                 k, v = k.upper(), str(v).upper()
                 key_b = k.encode('utf-8')
