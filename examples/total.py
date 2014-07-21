@@ -2,11 +2,11 @@ import numpy
 import rasterio
 import subprocess
 
-with rasterio.drivers():
+with rasterio.drivers(CPL_DEBUG=True):
 
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        r, g, b = map(src.read_band, (1, 2, 3))
+        r, g, b = src.read()
 
     # Combine arrays using the 'iadd' ufunc. Expecting that the sum will
     # exceed the 8-bit integer range, initialize it as 16-bit. Adding other
@@ -16,7 +16,6 @@ with rasterio.drivers():
     for band in (r, g, b):
         total += band
     total /= 3
-    assert total.dtype == rasterio.uint16
 
     # Write the product as a raster band to a new 8-bit file. For keyword
     # arguments, we start with the meta attributes of the source file, but

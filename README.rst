@@ -13,9 +13,9 @@ make working with geospatial raster data more productive and more fun.
 Example
 -------
 
-Here's an example of the basic features rasterio provides. Three bands are
-read from an image and summed to produce something like a panchromatic band.
-This new band is then written to a new single band TIFF.
+Here's a simple example of the basic features rasterio provides. Three bands
+are read from an image and summed to produce something like a panchromatic
+band.  This new band is then written to a new single band TIFF. 
 
 .. code-block:: python
 
@@ -23,14 +23,15 @@ This new band is then written to a new single band TIFF.
     import rasterio
     import subprocess
     
-    # Register format drivers with a context manager
+    # Register GDAL format drivers and configuration options with a
+    # context manager.
     
-    with rasterio.drivers():
+    with rasterio.drivers(CPL_DEBUG=True):
         
         # Read raster bands directly to Numpy arrays.
         #
         with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-            b, g, r = map(src.read_band, (1, 2, 3))
+            b, g, r = src.read()
         
         # Combine arrays in place. Expecting that the sum will 
         # temporarily exceed the 8-bit integer range, initialize it as
@@ -41,7 +42,6 @@ This new band is then written to a new single band TIFF.
         for band in r, g, b:
             total += band
         total /= 3
-        assert total.dtype == rasterio.uint16
 
         # Write the product as a raster band to a new 8-bit file. For
         # keyword arguments, we start with the meta attributes of the
@@ -77,6 +77,9 @@ a deterministic and efficient way. Code written for rasterio 0.4 will continue
 to work: opened raster datasets may manage the global driver registry if no
 other manager is present.
 
+API Overview
+------------
+
 Simple access is provided to properties of a geospatial raster file.
 
 .. code-block:: python
@@ -98,7 +101,7 @@ Simple access is provided to properties of a geospatial raster file.
     # 3
     # [1, 2, 3]
 
-Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
+Rasterio also affords conversion of GeoTIFFs to other formats.
 
 .. code-block:: python
     
@@ -111,46 +114,56 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
     
     subprocess.call(['open', 'example-total.jpg'])
 
-rio_insp
---------
+Rasterio CLI
+------------
 
-The rio_insp program opens the hood of any raster dataset so you can poke
-around using Python.
+Rasterio's command line interface, named "rio", is documented at `cli.rst
+<https://github.com/mapbox/rasterio/blob/master/docs/cli.rst>`__. Its ``rio
+insp`` command opens the hood of any raster dataset so you can poke around
+using Python.
 
-.. code-block:: console
+.. code-block:: pycon
 
-    $ rio_insp rasterio/tests/data/RGB.byte.tif
-    Rasterio 0.8 Interactive Inspector (Python 3.3.5)
+    $ rio insp rasterio/tests/data/RGB.byte.tif
+    Rasterio 0.10 Interactive Inspector (Python 3.4.1)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>> src.name
     'rasterio/tests/data/RGB.byte.tif'
+    >>> src.closed
+    False
     >>> src.shape
     (718, 791)
-    >>> import pprint
-    >>> pprint.pprint(src.crs)
-    {u'ellps': u'WGS84',
-    u'no_defs': True,
-    u'proj': u'utm',
-    u'units': u'm',
-    u'zone': 18}
-    >>> b = src.read_band(1)
+    >>> src.crs
+    {'init': 'epsg:32618'}
+    >>> b, g, r = src.read()
     >>> b
-    array([[0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           ...,
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
+    masked_array(data =
+     [[-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     ...,
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]],
+                 mask =
+     [[ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     ...,
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]],
+           fill_value = 0)
+
     >>> b.min(), b.max(), b.mean()
-    (0, 255, 29.94772668847656)
+    (1, 255, 44.434478650699106)
 
 Dependencies
 ------------
 
 C library dependecies:
 
-- GDAL
+- GDAL 1.9+
 
 Python package dependencies (see also requirements.txt):
 
