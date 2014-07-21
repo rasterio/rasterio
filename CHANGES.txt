@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.10.1 (2014-07-21)
+-------------------
+- Numpy.require C-contiguous data when writing bands (#108).
+
 0.10 (2014-07-18)
 -----------------
 - Add rio bounds command (#111).
