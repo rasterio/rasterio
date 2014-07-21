@@ -1558,6 +1558,8 @@ cdef class RasterUpdater(RasterReader):
             width = self.width
             height = self.height
         dtype = self.dtypes[i]
+        # Require C-continguous arrays (see #108).
+        src = np.require(src, dtype=dtype, requirements='C')
         if dtype == dtypes.ubyte:
             retval = io_ubyte(
                 hband, 1, xoff, yoff, width, height, src)
