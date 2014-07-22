@@ -148,3 +148,25 @@ def test_write_lzw(tmpdir):
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "LZW" in info
 
+def test_write_noncontiguous(tmpdir):
+    name = str(tmpdir.join("test_write_nodata.tif"))
+    ROWS = 4
+    COLS = 10
+    BANDS = 6
+    with rasterio.drivers():
+        # Create a 3-D random int array (rows, columns, bands)
+        total = ROWS * COLS * BANDS
+        arr = numpy.random.randint(
+            0, 10, size=total).reshape(
+                (ROWS, COLS, BANDS), order='F').astype(numpy.int32)
+    kwargs = {
+        'driver': 'GTiff',
+        'width': COLS,
+        'height': ROWS,
+        'count': BANDS,
+        'dtype': rasterio.int32
+    }
+    with rasterio.open(name, 'w', **kwargs) as dst:
+        for i in range(BANDS):
+            dst.write_band(i+1, arr[:,:,i])
+
