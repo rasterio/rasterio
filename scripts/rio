@@ -188,10 +188,13 @@ def transform_geom(transformer, g, precision=-1):
               help="Indentation level for JSON output")
 @click.option('--projected/--geographic', default=False,
               help="Output in projected coordinates (default is geographic).")
-@click.option('--json-seq/--json-obj', default=False,
-              help="Write a JSON sequence (default is object).")
+@click.option('--x-json-seq/--x-json-obj', default=False,
+              help="Write a JSON sequence (default is object). Requires specification of text separator. Experimental.")
+@click.option('--x-text-sep-lf', 'text_sep', flag_value='\n',
+              help="Use LF as text separator. Experimental.")
 @click.pass_context
-def shapes(ctx, src_path, precision, indent, projected, json_seq):
+def shapes(
+        ctx, src_path, precision, indent, projected, x_json_seq, text_sep=None):
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     def to_feature(i, geom):
@@ -228,18 +231,24 @@ def shapes(ctx, src_path, precision, indent, projected, json_seq):
                     feature_gen = (to_feature(i, g) for g, i
                                 in rasterio.features.shapes(
                                     src.read(1), transform=src.affine))
-                if json_seq:
+                if x_json_seq:
+                    if text_sep is None:
+                        raise click.BadParameter('Text separator is required')
                     sys.stdout.write(
                         json.dumps(collection, indent=indent, sort_keys=True) 
-                        + "\n")
+                        + text_sep)
                     for feature in feature_gen:
                         sys.stdout.write(
                             json.dumps(feature, indent=indent, sort_keys=True)
-                        + "\n")
+                        + text_sep)
+                    sys.stdout.flush()
                 else:
                     collection['features'] = list(feature_gen)
                     sys.stdout.write(
                         json.dumps(collection, indent=indent, sort_keys=True))
+        sys.exit(0)
+    except IOError:
+        logger.info("IOError caught")
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
