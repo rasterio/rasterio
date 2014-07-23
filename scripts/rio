@@ -188,8 +188,10 @@ def transform_geom(transformer, g, precision=-1):
               help="Indentation level for JSON output")
 @click.option('--projected/--geographic', default=False,
               help="Output in projected coordinates (default is geographic).")
+@click.option('--json-seq/--json-obj', default=False,
+              help="Write a JSON sequence (default is object).")
 @click.pass_context
-def shapes(ctx, src_path, precision, indent, projected):
+def shapes(ctx, src_path, precision, indent, projected, json_seq):
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     def to_feature(i, geom):
@@ -200,25 +202,8 @@ def shapes(ctx, src_path, precision, indent, projected):
             'geometry': geom }
     try:
         collection = {'type': 'FeatureCollection'}
-        features = []
-        col_xs = []
-        col_ys = []
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             with rasterio.open(src_path) as src:
-                if not projected:
-                    transformer = functools.partial(
-                        rasterio.warp.transform,
-                        src.crs,
-                        {'init': 'epsg:4326'})
-                    features = [to_feature(i,
-                                    transform_geom(
-                                        transformer, g, precision)) for g, i
-                                in rasterio.features.shapes(
-                                    src.read(1), transform=src.affine)]
-                else:
-                    features = [to_feature(i, g) for g, i
-                                in rasterio.features.shapes(
-                                    src.read(1), transform=src.affine)]
                 bounds = src.bounds
                 xs = [bounds[0], bounds[2]]
                 ys = [bounds[1], bounds[3]]
@@ -228,12 +213,33 @@ def shapes(ctx, src_path, precision, indent, projected):
                 if precision >= 0:
                     xs = [round(v, precision) for v in xs]
                     ys = [round(v, precision) for v in ys]
-                col_xs.extend(xs)
-                col_ys.extend(ys)
-        collection['bbox'] = [
-            min(col_xs), min(col_ys), max(col_xs), max(col_ys)]
-        collection['features'] = features
-        print(json.dumps(collection, indent=indent, sort_keys=True))
+                collection['bbox'] = (min(xs), min(ys), max(xs), max(ys))
+                if not projected:
+                    transformer = functools.partial(
+                        rasterio.warp.transform,
+                        src.crs,
+                        {'init': 'epsg:4326'})
+                    feature_gen = (to_feature(i,
+                                    transform_geom(
+                                        transformer, g, precision)) for g, i
+                                in rasterio.features.shapes(
+                                    src.read(1), transform=src.affine))
+                else:
+                    feature_gen = (to_feature(i, g) for g, i
+                                in rasterio.features.shapes(
+                                    src.read(1), transform=src.affine))
+                if json_seq:
+                    sys.stdout.write(
+                        json.dumps(collection, indent=indent, sort_keys=True) 
+                        + "\n")
+                    for feature in feature_gen:
+                        sys.stdout.write(
+                            json.dumps(feature, indent=indent, sort_keys=True)
+                        + "\n")
+                else:
+                    collection['features'] = list(feature_gen)
+                    sys.stdout.write(
+                        json.dumps(collection, indent=indent, sort_keys=True))
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
