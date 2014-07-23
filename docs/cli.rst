@@ -19,6 +19,7 @@ Rasterio's new command line interface is a program named "rio".
       bounds     Write bounding boxes to stdout as GeoJSON.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
+      shapes     Write the shapes of features.
       transform  Transform coordinates.
 
 It is developed using the ``click`` package.
@@ -129,6 +130,20 @@ The insp command opens a dataset and an interpreter.
                    0.0,
                    -300.041782729805),
      'width': 791}
+
+shapes
+------
+
+New in 0.11.
+
+The shapes command writes features of a dataset out as GeoJSON. It's intended
+for use with single-band rasters and reads from the first band.
+
+.. code-block:: console
+
+    $ rio shapes rasterio/tests/data/shade.tif --precision 6 > shade.geojson
+
+The resulting file, uploaded to Mapbox, looks like this: `sgillies.j1ho338j <https://a.tiles.mapbox.com/v4/sgillies.j1ho338j/page.html?access_token=pk.eyJ1Ijoic2dpbGxpZXMiLCJhIjoiWUE2VlZVcyJ9.OITHkb1GHNh9nvzIfUc9QQ#13/39.6079/-106.4822>`__.
 
 transform
 ---------

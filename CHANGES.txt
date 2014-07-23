@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- Add rio shapes command (#115).
+
 0.10.1 (2014-07-21)
 -------------------
 - Numpy.require C-contiguous data when writing bands (#108).

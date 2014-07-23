@@ -3,6 +3,7 @@
 """Rasterio command line interface"""
 
 import argparse
+import functools
 import json
 import logging
 import os.path
@@ -13,6 +14,7 @@ import warnings
 import click
 
 import rasterio
+import rasterio.features
 import rasterio.tool
 import rasterio.warp
 
@@ -131,6 +133,103 @@ def bounds(ctx, src_paths, precision, indent, projected):
                                 [[xs[0], ys[0]], [xs[1], ys[0]], [xs[1], ys[1]],
                                  [xs[0], ys[1]], [xs[0], ys[0]] ]]},
                         'properties': {'id': str(i), 'title': path} })
+        collection['bbox'] = [
+            min(col_xs), min(col_ys), max(col_xs), max(col_ys)]
+        collection['features'] = features
+        print(json.dumps(collection, indent=indent, sort_keys=True))
+        sys.exit(0)
+    except Exception:
+        logger.exception("Failed. Exception caught")
+        sys.exit(1)
+
+def transform_geom(transformer, g, precision=-1):
+    if g['type'] == 'Point':
+        x, y = g['coordinates']
+        xp, yp = transformer([x], [y])
+        if precision >= 0:
+            xp = [round(v, precision) for v in xp]
+            yp = [round(v, precision) for v in yp]
+        new_coords = list(zip(xp, yp))[0]
+    if g['type'] in ['LineString', 'MultiPoint']:
+        xp, yp = transformer(*zip(g['coordinates']))
+        if precision >= 0:
+            xp = [round(v, precision) for v in xp]
+            yp = [round(v, precision) for v in yp]
+        new_coords = list(zip(xp, yp))
+    elif g['type'] in ['Polygon', 'MultiLineString']:
+        new_coords = []
+        for piece in g['coordinates']:
+            xp, yp = transformer(*zip(*piece))
+            if precision >= 0:
+                xp = [round(v, precision) for v in xp]
+                yp = [round(v, precision) for v in yp]
+            new_coords.append(list(zip(xp, yp)))
+    elif g['type'] == 'MultiPolygon':
+        parts = g['coordinates']
+        new_coords = []
+        for part in parts:
+            inner_coords = []
+            for ring in part:
+                xp, yp = transformer(*zip(*ring))
+                if precision >= 0:
+                    xp = [round(v, precision) for v in xp]
+                    yp = [round(v, precision) for v in yp]
+                inner_coords.append(list(zip(xp, yp)))
+            new_coords.append(inner_coords)
+    g['coordinates'] = new_coords
+    return g
+
+# Shapes command.
+@cli.command(short_help="Write the shapes of features.")
+@click.argument('src_path', type=click.Path(exists=True))
+@click.option('--precision', type=int, default=-1,
+              help="Decimal precision of coordinates.")
+@click.option('--indent', default=None, type=int, 
+              help="Indentation level for JSON output")
+@click.option('--projected/--geographic', default=False,
+              help="Output in projected coordinates (default is geographic).")
+@click.pass_context
+def shapes(ctx, src_path, precision, indent, projected):
+    verbosity = ctx.obj['verbosity']
+    logger = logging.getLogger('rio')
+    def to_feature(i, geom):
+        return {
+            'type': 'Feature', 
+            'id': str(i), 
+            'properties': {'val': i},
+            'geometry': geom }
+    try:
+        collection = {'type': 'FeatureCollection'}
+        features = []
+        col_xs = []
+        col_ys = []
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            with rasterio.open(src_path) as src:
+                if not projected:
+                    transformer = functools.partial(
+                        rasterio.warp.transform,
+                        src.crs,
+                        {'init': 'epsg:4326'})
+                    features = [to_feature(i,
+                                    transform_geom(
+                                        transformer, g, precision)) for g, i
+                                in rasterio.features.shapes(
+                                    src.read(1), transform=src.affine)]
+                else:
+                    features = [to_feature(i, g) for g, i
+                                in rasterio.features.shapes(
+                                    src.read(1), transform=src.affine)]
+                bounds = src.bounds
+                xs = [bounds[0], bounds[2]]
+                ys = [bounds[1], bounds[3]]
+                if not projected:
+                    xs, ys = rasterio.warp.transform(
+                        src.crs, {'init': 'epsg:4326'}, xs, ys)
+                if precision >= 0:
+                    xs = [round(v, precision) for v in xs]
+                    ys = [round(v, precision) for v in ys]
+                col_xs.extend(xs)
+                col_ys.extend(ys)
         collection['bbox'] = [
             min(col_xs), min(col_ys), max(col_xs), max(col_ys)]
         collection['features'] = features
