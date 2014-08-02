@@ -1,0 +1,33 @@
+Source: rasterio
+Maintainer: Angelos Tzotsos <gcpp.kalxas@gmail.com>
+Section: science
+Priority: optional
+Build-Depends: debhelper (>= 9),
+               python-setuptools (>= 0.6),
+               python-support (>=0.6), 
+               dpkg-dev (>= 1.16),
+               python-numpy, 
+               cython, 
+               python-affine,
+               libgdal-dev, 
+               gcc, 
+               python-setuptools,
+               python-all (>= 2.7),
+               python-all-dev (>= 2.7)
+Standards-Version: 3.9.3
+X-Python-Version: >= 2.7
+Homepage: https://github.com/mapbox/rasterio
+
+Package: python-rasterio
+Architecture: any
+Section: science
+Depends: ${shlibs:Depends},
+         ${misc:Depends}, 
+         python (>=2.7), 
+         python-gdal, 
+         python-numpy, 
+         python-affine,
+         debconf
+Description: This package contains the rasterio library
+ .
+ Clean and fast and geospatial raster I/O for Python programmers who use Numpy
