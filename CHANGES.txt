@@ -4,6 +4,7 @@ Changes
 Next
 ----
 - Add rio shapes command (#115).
+- Accept CRS strings like 'EPSG:3857' (#116).
 
 0.10.1 (2014-07-21)
 -------------------
