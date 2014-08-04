@@ -107,6 +107,48 @@ def test_write_crs_transform(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write_band(1, a)
+    assert s.crs == {'init': 'epsg:32618'}
+    info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
+    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
+    # make sure that pixel size is nearly the same as transform
+    # (precision varies slightly by platform)
+    assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+
+def test_write_crs_transform_2(tmpdir):
+    """Using 'EPSG:32618' as CRS."""
+    name = str(tmpdir.join("test_write_crs_transform.tif"))
+    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    transform = [101985.0, 300.0379266750948, 0.0,
+                       2826915.0, 0.0, -300.041782729805]
+    with rasterio.open(
+            name, 'w', 
+            driver='GTiff', width=100, height=100, count=1,
+            crs='EPSG:32618',
+            transform=transform,
+            dtype=rasterio.ubyte) as s:
+        s.write_band(1, a)
+    assert s.crs == {'init': 'epsg:32618'}
+    info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
+    assert 'PROJCS["WGS 84 / UTM zone 18N",' in info
+    # make sure that pixel size is nearly the same as transform
+    # (precision varies slightly by platform)
+    assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+
+def test_write_crs_transform_3(tmpdir):
+    """Using WKT as CRS."""
+    name = str(tmpdir.join("test_write_crs_transform.tif"))
+    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    transform = [101985.0, 300.0379266750948, 0.0,
+                       2826915.0, 0.0, -300.041782729805]
+    crs_wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
+    with rasterio.open(
+            name, 'w', 
+            driver='GTiff', width=100, height=100, count=1,
+            crs=crs_wkt,
+            transform=transform,
+            dtype=rasterio.ubyte) as s:
+        s.write_band(1, a)
+    assert s.crs == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform

@@ -1453,25 +1453,32 @@ cdef class RasterUpdater(RasterReader):
 
         log.debug("Input CRS: %r", crs)
 
-        # EPSG is a special case.
-        init = crs.get('init')
-        if init:
-            auth, val = init.split(':')
-            if auth.upper() == 'EPSG':
-                _gdal.OSRImportFromEPSG(osr, int(val))
+        # Normally, we expect a CRS dict.
+        if isinstance(crs, dict):
+            # EPSG is a special case.
+            init = crs.get('init')
+            if init:
+                auth, val = init.split(':')
+                if auth.upper() == 'EPSG':
+                    _gdal.OSRImportFromEPSG(osr, int(val))
+            else:
+                crs['wktext'] = True
+                for k, v in crs.items():
+                    if v is True or (k in ('no_defs', 'wktext') and v):
+                        params.append("+%s" % k)
+                    else:
+                        params.append("+%s=%s" % (k, v))
+                proj = " ".join(params)
+                log.debug("PROJ.4 to be imported: %r", proj)
+                proj_b = proj.encode('utf-8')
+                proj_c = proj_b
+                _gdal.OSRImportFromProj4(osr, proj_c)
+        # Fall back for CRS strings like "EPSG:3857."
         else:
-            crs['wktext'] = True
-            for k, v in crs.items():
-                if v is True or (k in ('no_defs', 'wktext') and v):
-                    params.append("+%s" % k)
-                else:
-                    params.append("+%s=%s" % (k, v))
-            proj = " ".join(params)
-            log.debug("PROJ.4 to be imported: %r", proj)
-            proj_b = proj.encode('utf-8')
+            proj_b = crs.encode('utf-8')
             proj_c = proj_b
-            _gdal.OSRImportFromProj4(osr, proj_c)
-        
+            _gdal.OSRSetFromUserInput(osr, proj_c)
+
         # Fixup, export to WKT, and set the GDAL dataset's projection.
         _gdal.OSRFixup(osr)
         _gdal.OSRExportToWkt(osr, &wkt)

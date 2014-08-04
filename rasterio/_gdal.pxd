@@ -23,6 +23,7 @@ cdef extern from "ogr_srs_api.h":
     int     OSRExportToWkt (void *srs, char **params)
     int     OSRImportFromEPSG (void *srs, int code)
     int     OSRImportFromProj4 (void *srs, char *proj)
+    int     OSRSetFromUserInput (void *srs, char *input)
     int     OSRAutoIdentifyEPSG (void *srs)
     int     OSRFixup(void *srs)
     const char * OSRGetAuthorityName (void *srs, const char *key)

@@ -31,6 +31,14 @@ attribute.
     >>> src.crs_wkt
     'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["Unknown datum based upon the WGS 84 ellipsoid",DATUM["Not_specified_based_on_WGS_84_spheroid",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","32618"]]'
 
+When opening a new file for writing, you may also use a CRS string as an
+argument.
+
+.. code-block:: pycon
+
+   >>> with rasterio.open('/tmp/foo.tif', 'w', crs='EPSG:3857', ...) as dst:
+   ...     # write data to this Web Mercator projection dataset.
+
 Coordinate Transformation
 -------------------------
 
