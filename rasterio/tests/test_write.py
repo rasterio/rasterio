@@ -80,7 +80,37 @@ def test_write_ubyte(tmpdir):
         s.write_band(1, a)
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
-    
+def test_write_ubyte_multi(tmpdir):
+    name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi.tif"))
+    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    with rasterio.open(
+            name, 'w', 
+            driver='GTiff', width=100, height=100, count=1, 
+            dtype=a.dtype) as s:
+        s.write(a, 1)
+    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+def test_write_ubyte_multi_list(tmpdir):
+    name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
+    a = numpy.array([numpy.ones((100, 100), dtype=rasterio.ubyte) * 127])
+    with rasterio.open(
+            name, 'w', 
+            driver='GTiff', width=100, height=100, count=1, 
+            dtype=a.dtype) as s:
+        s.write(a, [1])
+    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+def test_write_ubyte_multi_3(tmpdir):
+    name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
+    arr = numpy.array(3*[numpy.ones((100, 100), dtype=rasterio.ubyte) * 127])
+    with rasterio.open(
+            name, 'w', 
+            driver='GTiff', width=100, height=100, count=3, 
+            dtype=arr.dtype) as s:
+        s.write(arr)
+    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+
 def test_write_float(tmpdir):
     name = str(tmpdir.join("test_write_float.tif"))
     a = numpy.ones((100, 100), dtype=rasterio.float32) * 42.0

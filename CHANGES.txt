@@ -5,6 +5,7 @@ Next
 ----
 - Add rio shapes command (#115).
 - Accept CRS strings like 'EPSG:3857' (#116).
+- Write multiple bands at a time (#95).
 
 0.10.1 (2014-07-21)
 -------------------

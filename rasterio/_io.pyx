@@ -1,4 +1,4 @@
-# cython: boundscheck(False)
+# cython: boundscheck=False
 
 import logging
 import math
@@ -1002,7 +1002,6 @@ cdef class RasterReader(object):
         `out` (if used), or will be masked if any of the nodatavals are
         not `None`.
         """
-        cdef void *hband = NULL
         cdef int height, width, xoff, yoff, aix, bidx, indexes_count
         cdef int retval = 0
         return2d = False
@@ -1016,6 +1015,8 @@ cdef class RasterReader(object):
             return2d = True
             if out is not None and out.ndim == 2:
                 out.shape = (1,) + out.shape
+        if not indexes:
+            raise ValueError("No indexes to read")
         check_dtypes = set()
         nodatavals = []
         # Check each index before processing 3D array
@@ -1071,6 +1072,7 @@ cdef class RasterReader(object):
         indexes_arr = np.array(indexes, dtype=int)
         indexes_count = <int>indexes_arr.shape[0]
         gdt = dtypes.dtype_rev[dtype]
+
         if gdt == 1:
             retval = io_multi_ubyte(
                             self._hds, 0, xoff, yoff, width, height,
@@ -1529,6 +1531,118 @@ cdef class RasterUpdater(RasterReader):
         def __set__(self, value):
             self.write_transform(value.to_gdal())
 
+    def write(self, src, indexes=None, window=None):
+        """Write the src array into indexed bands of the dataset.
+
+        If `indexes` is a list, the src must be a 3D array of
+        matching shape. If an int, the src must be a 2D array.
+
+        See `read()` for usage of the optional `window` argument.
+        """
+        cdef int height, width, xoff, yoff, indexes_count
+        cdef int retval = 0
+
+        if self._hds == NULL:
+            raise ValueError("can't write to closed raster file")
+
+        if indexes is None:
+            indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            src = np.array([src])
+        if len(src.shape) != 3 or src.shape[0] != len(indexes):
+            raise ValueError(
+                "Source shape is inconsistent with given indexes")
+
+        check_dtypes = set()
+        # Check each index before processing 3D array
+        for bidx in indexes:
+            if bidx not in self.indexes:
+                raise IndexError("band index out of range")
+            idx = self.indexes.index(bidx)
+            check_dtypes.add(self.dtypes[idx])
+        if len(check_dtypes) > 1:
+            raise ValueError("more than one 'dtype' found")
+        elif len(check_dtypes) == 0:
+            dtype = self.dtypes[0]
+        else:  # unique dtype; normal case
+            dtype = check_dtypes.pop()
+
+        if src is not None and src.dtype != dtype:
+            raise ValueError(
+                "the array's dtype '%s' does not match "
+                "the file's dtype '%s'" % (src.dtype, dtype))
+
+        # Require C-continguous arrays (see #108).
+        src = np.require(src, dtype=dtype, requirements='C')
+
+        # Prepare the IO window.
+        if window:
+            window = eval_window(window, self.height, self.width)
+            yoff = <int>window[0][0]
+            xoff = <int>window[1][0]
+            height = <int>window[0][1] - yoff
+            width = <int>window[1][1] - xoff
+        else:
+            xoff = yoff = <int>0
+            width = <int>self.width
+            height = <int>self.height
+
+        # Call io_multi* functions with C type args so that they
+        # can release the GIL.
+        indexes_arr = np.array(indexes, dtype=int)
+        indexes_count = <int>indexes_arr.shape[0]
+        gdt = dtypes.dtype_rev[dtype]
+        if gdt == 1:
+            retval = io_multi_ubyte(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 2:
+            retval = io_multi_uint16(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 3:
+            retval = io_multi_int16(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 4:
+            retval = io_multi_uint32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 5:
+            retval = io_multi_int32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 6:
+            retval = io_multi_float32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 7:
+            retval = io_multi_float64(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 8:
+            retval = io_multi_cint16(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 9:
+            retval = io_multi_cint32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 10:
+            retval = io_multi_cfloat32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 11:
+            retval = io_multi_cfloat64(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+
+        if retval in (1, 2, 3):
+            raise IOError("Read or write failed")
+        elif retval == 4:
+            raise ValueError("NULL band")
+
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
 
@@ -1540,57 +1654,59 @@ cdef class RasterUpdater(RasterReader):
 
         specifying a raster subset to write into.
         """
-        if bidx not in self.indexes:
-            raise IndexError("band index out of range")
-        i = self.indexes.index(bidx)
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        if src is not None and src.dtype != self.dtypes[i]:
-            raise ValueError(
-                "the array's dtype '%s' does not match "
-                "the file's dtype '%s'" % (src.dtype, self.dtypes[i]))
-        
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband == NULL:
-            raise ValueError("NULL band")
-        
-        if window:
-            window = eval_window(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
-        else:
-            xoff = yoff = 0
-            width = self.width
-            height = self.height
-        dtype = self.dtypes[i]
-        # Require C-continguous arrays (see #108).
-        src = np.require(src, dtype=dtype, requirements='C')
-        if dtype == dtypes.ubyte:
-            retval = io_ubyte(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.uint16:
-            retval = io_uint16(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.int16:
-            retval = io_int16(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.uint32:
-            retval = io_uint32(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.int32:
-            retval = io_int32(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.float32:
-            retval = io_float32(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.float64:
-            retval = io_float64(
-                hband, 1, xoff, yoff, width, height, src)
-        else:
-            raise ValueError("Invalid dtype")
-        # TODO: handle errors (by retval).
+        self.write(src, bidx, window=window)
+
+#         if bidx not in self.indexes:
+#             raise IndexError("band index out of range")
+#         i = self.indexes.index(bidx)
+#         if self._hds == NULL:
+#             raise ValueError("can't read closed raster file")
+#         if src is not None and src.dtype != self.dtypes[i]:
+#             raise ValueError(
+#                 "the array's dtype '%s' does not match "
+#                 "the file's dtype '%s'" % (src.dtype, self.dtypes[i]))
+#         
+#         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+#         if hband == NULL:
+#             raise ValueError("NULL band")
+#         
+#         if window:
+#             window = eval_window(window, self.height, self.width)
+#             yoff = window[0][0]
+#             xoff = window[1][0]
+#             height = window[0][1] - yoff
+#             width = window[1][1] - xoff
+#         else:
+#             xoff = yoff = 0
+#             width = self.width
+#             height = self.height
+#         dtype = self.dtypes[i]
+#         # Require C-continguous arrays (see #108).
+#         src = np.require(src, dtype=dtype, requirements='C')
+#         if dtype == dtypes.ubyte:
+#             retval = io_ubyte(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.uint16:
+#             retval = io_uint16(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.int16:
+#             retval = io_int16(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.uint32:
+#             retval = io_uint32(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.int32:
+#             retval = io_int32(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.float32:
+#             retval = io_float32(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.float64:
+#             retval = io_float64(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         else:
+#             raise ValueError("Invalid dtype")
+#         # TODO: handle errors (by retval).
 
     def update_tags(self, bidx=0, ns=None, **kwargs):
         """Updates the tags of a dataset or one of its bands.
