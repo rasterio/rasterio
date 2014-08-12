@@ -1,3 +1,4 @@
+========
 Rasterio
 ========
 
@@ -10,8 +11,10 @@ Rasterio employs GDAL under the hood for file I/O and raster formatting. Its
 functions typically accept and return Numpy ndarrays. Rasterio is designed to
 make working with geospatial raster data more productive and more fun.
 
+Rasterio is pronounced raw-STIER-ee-oh.
+
 Example
--------
+=======
 
 Here's a simple example of the basic features rasterio provides. Three bands
 are read from an image and summed to produce something like a panchromatic
@@ -78,7 +81,7 @@ to work: opened raster datasets may manage the global driver registry if no
 other manager is present.
 
 API Overview
-------------
+============
 
 Simple access is provided to properties of a geospatial raster file.
 
@@ -115,7 +118,7 @@ Rasterio also affords conversion of GeoTIFFs to other formats.
     subprocess.call(['open', 'example-total.jpg'])
 
 Rasterio CLI
-------------
+============
 
 Rasterio's command line interface, named "rio", is documented at `cli.rst
 <https://github.com/mapbox/rasterio/blob/master/docs/cli.rst>`__. Its ``rio
@@ -159,7 +162,7 @@ using Python.
     (1, 255, 44.434478650699106)
 
 Dependencies
-------------
+============
 
 C library dependecies:
 
@@ -177,32 +180,51 @@ Development also requires (see requirements-dev.txt)
 - pytest
 
 Installation
-------------
+============
 
 Rasterio is a C extension and to install on Linux or OS X you'll need a working
-compiler (XCode on OS X etc). Unofficial Windows binary packages created by
-Christoph Gohlke are available `here
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
-
-To install from the source distribution on PyPI, do the following:
-
-.. code-block:: console
-
-    $ pip install -r https://raw.github.com/mapbox/rasterio/master/requirements.txt
-    $ pip install rasterio
-
-To install from a forked repo, do this (in a virtualenv, preferably):
-
-.. code-block:: console
-
-    $ pip install -r requirements-dev.txt
-    $ pip install -e .
-
-The Numpy headers are required to run the rasterio setup script. Numpy has to
-be installed (via the indicated requirements file) before rasterio can be
+compiler (XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy
+headers are required to run the rasterio setup script. Numpy has to be
+installed (via the indicated requirements file) before rasterio can be
 installed. See rasterio's Travis `configuration
 <https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more
 guidance.
+
+
+Linux
+-----
+
+The following commands are adapted from Rasterio's Travis-CI configuration.
+
+.. code-block:: console
+
+    $ sudo add-apt-repository ppa:ubuntugis/ppa
+    $ sudo apt-get update -qq
+    $ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    $ pip install -r https://raw.githubusercontent.com/mapbox/rasterio/master/requirements.txt
+    $ pip install rasterio
+
+Adapt them as necessary for your Linux system.
+
+OS X
+----
+
+Wheels are available on PyPI for Homebrew based Python environments.
+
+.. code-block:: console
+
+    $ brew install gdal
+    $ pip install -r https://raw.githubusercontent.com/mapbox/rasterio/master/requirements.txt
+    $ pip install rasterio
+
+The wheels are incompatible with MacPorts. MacPorts users will need to specify
+a source installation instead: ``pip install --no-use-wheel``.
+
+Windows
+-------
+
+Windows binary packages created by Christoph Gohlke are available `here
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
 
 Testing
 -------
