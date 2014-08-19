@@ -3,6 +3,10 @@ Changes
 
 Next
 ----
+- Add --bbox option for rio bounds (#124).
+
+0.11 (2014-08-06)
+-----------------
 - Add rio shapes command (#115).
 - Accept CRS strings like 'EPSG:3857' (#116).
 - Write multiple bands at a time (#95).

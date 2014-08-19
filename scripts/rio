@@ -2,7 +2,6 @@
 
 """Rasterio command line interface"""
 
-import argparse
 import functools
 import json
 import logging
@@ -44,11 +43,11 @@ def cli(ctx, verbose, quiet):
 # Info command.
 @cli.command(short_help="Print information about a data file.")
 @click.argument('src_path', type=click.Path(exists=True))
-@click.option('--meta', 'aspect', flag_value='meta', default=True, 
+@click.option('--meta', 'aspect', flag_value='meta', default=True,
     help="Show data file structure (default).")
-@click.option('--tags', 'aspect', flag_value='tags', 
+@click.option('--tags', 'aspect', flag_value='tags',
     help="Show data file tags.")
-@click.option('--indent', default=2, type=int, 
+@click.option('--indent', default=2, type=int,
               help="Indentation level for pretty printed output")
 @click.option('--namespace', help="Select a tag namespace.")
 @click.pass_context
@@ -100,12 +99,20 @@ Write bounding boxes to stdout as GeoJSON for use with, e.g., geojsonio
 @click.argument('src_paths', nargs=-1, type=click.Path(exists=True))
 @click.option('--precision', type=int, default=-1,
               help="Decimal precision of coordinates.")
-@click.option('--indent', default=None, type=int, 
+@click.option('--indent', default=None, type=int,
               help="Indentation level for JSON output")
-@click.option('--projected/--geographic', default=False,
-              help="Output in projected coordinates (default is geographic).")
+@click.option('--geographic', 'projected', flag_value='geographic',
+              default=True,
+              help="Output in geographic coordinates (the default).")
+@click.option('--projected', 'projected', flag_value='projected',
+              help="Output in projected coordinates.")
+@click.option('--collection', 'output_mode', flag_value='collection',
+              default=True,
+              help="Output as a GeoJSON feature collection (the default).")
+@click.option('--bbox', 'output_mode', flag_value='bbox',
+              help="Output as a GeoJSON bounding box array.")
 @click.pass_context
-def bounds(ctx, src_paths, precision, indent, projected):
+def bounds(ctx, src_paths, precision, indent, projected, output_mode):
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:
@@ -119,7 +126,7 @@ def bounds(ctx, src_paths, precision, indent, projected):
                     bounds = src.bounds
                     xs = [bounds[0], bounds[2]]
                     ys = [bounds[1], bounds[3]]
-                    if not projected:
+                    if projected == 'geographic':
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:4326'}, xs, ys)
                     if precision >= 0:
@@ -128,15 +135,18 @@ def bounds(ctx, src_paths, precision, indent, projected):
                     col_xs.extend(xs)
                     col_ys.extend(ys)
                     features.append(
-                        {'type': 'Feature', 'geometry': 
+                        {'type': 'Feature', 'geometry':
                             {'type': 'Polygon', 'coordinates': [
                                 [[xs[0], ys[0]], [xs[1], ys[0]], [xs[1], ys[1]],
                                  [xs[0], ys[1]], [xs[0], ys[0]] ]]},
                         'properties': {'id': str(i), 'title': path} })
         collection['bbox'] = [
             min(col_xs), min(col_ys), max(col_xs), max(col_ys)]
-        collection['features'] = features
-        print(json.dumps(collection, indent=indent, sort_keys=True))
+        if output_mode == 'bbox':
+            click.echo(json.dumps(collection['bbox']))
+        else:
+            collection['features'] = features
+            click.echo(json.dumps(collection, indent=indent, sort_keys=True))
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
@@ -184,7 +194,7 @@ def transform_geom(transformer, g, precision=-1):
 @click.argument('src_path', type=click.Path(exists=True))
 @click.option('--precision', type=int, default=-1,
               help="Decimal precision of coordinates.")
-@click.option('--indent', default=None, type=int, 
+@click.option('--indent', default=None, type=int,
               help="Indentation level for JSON output")
 @click.option('--projected/--geographic', default=False,
               help="Output in projected coordinates (default is geographic).")
@@ -199,8 +209,8 @@ def shapes(
     logger = logging.getLogger('rio')
     def to_feature(i, geom):
         return {
-            'type': 'Feature', 
-            'id': str(i), 
+            'type': 'Feature',
+            'id': str(i),
             'properties': {'val': i},
             'geometry': geom }
     try:
@@ -235,7 +245,7 @@ def shapes(
                     if text_sep is None:
                         raise click.BadParameter('Text separator is required')
                     sys.stdout.write(
-                        json.dumps(collection, indent=indent, sort_keys=True) 
+                        json.dumps(collection, indent=indent, sort_keys=True)
                         + text_sep)
                     for feature in feature_gen:
                         sys.stdout.write(
