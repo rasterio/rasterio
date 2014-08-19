@@ -106,6 +106,8 @@ Write bounding boxes to stdout as GeoJSON for use with, e.g., geojsonio
               help="Output in geographic coordinates (the default).")
 @click.option('--projected', 'projected', flag_value='projected',
               help="Output in projected coordinates.")
+@click.option('--mercator', 'projected', flag_value='mercator',
+              help="Output in Web Mercator coordinates.")
 @click.option('--collection', 'output_mode', flag_value='collection',
               default=True,
               help="Output as a GeoJSON feature collection (the default).")
@@ -129,6 +131,9 @@ def bounds(ctx, src_paths, precision, indent, projected, output_mode):
                     if projected == 'geographic':
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:4326'}, xs, ys)
+                    if projected == 'mercator':
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': 'epsg:3857'}, xs, ys)
                     if precision >= 0:
                         xs = [round(v, precision) for v in xs]
                         ys = [round(v, precision) for v in ys]
