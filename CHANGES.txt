@@ -4,6 +4,7 @@ Changes
 Next
 ----
 - Add --mercator option for rio bounds (#126).
+- Add option for RS as a JSON text sequence separator (#127).
 
 0.11.1 (2014-08-19)
 -------------------
