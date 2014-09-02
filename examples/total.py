@@ -5,7 +5,7 @@ import subprocess
 with rasterio.drivers(CPL_DEBUG=True):
 
     # Read raster bands directly to Numpy arrays.
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         r, g, b = src.read()
 
     # Combine arrays using the 'iadd' ufunc. Expecting that the sum will

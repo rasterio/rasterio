@@ -66,7 +66,7 @@ test file.
 .. code-block:: pycon
 
     >>> import rasterio
-    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     w = src.read_band(1, window=((0, 100), (0, 100)))
     ...
     >>> print(w.shape)
@@ -103,7 +103,7 @@ Below, the window is scaled to one third of the source image.
 
 .. code-block:: python
 
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read_band(k) for k in (1, 2, 3))
     
     write_window = (30, 269), (50, 313)
@@ -143,7 +143,7 @@ destination dataset.
 
     read_window = (350, 410), (350, 450)
     
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read_band(k, window=read_window) for k in (1, 2, 3))
     
     write_window = (-240, None), (-400, None)
@@ -171,7 +171,7 @@ of blocks for any band can be had from the block_shapes property.
 
 .. code-block:: pycon
 
-    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     for i, shape in enumerate(src.block_shapes, 1):
     ...         print(i, shape)
     ...
@@ -184,7 +184,7 @@ The block windows themselves can be had from the block_windows function.
 
 .. code-block:: pycon
 
-    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     for ji, window in src.block_windows(1):
     ...         print(ji, window)
     ...
@@ -201,7 +201,7 @@ You may read windows of data from a file block-by-block like this.
 
 .. code-block:: pycon
 
-    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     for ji, window in src.block_windows(1):
     ...         r = src.read_band(1, window=window)
     ...         print(r.shape)
@@ -214,7 +214,7 @@ it's a good idea to test this assumption in your code.
 
 .. code-block:: pycon
 
-    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     assert len(set(src.block_shapes)) == 1
     ...     for ji, window in src.block_windows(1):
     ...         b, g, r = (src.read_band(k, window=window) for k in (1, 2, 3))
