@@ -1,8 +1,12 @@
+import functools
 import operator
 import os
 import sys
 
 import pytest
+
+if sys.version_info > (3,):
+    reduce = functools.reduce
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
     'data/RGB.byte.tif', 'data/float.tif', 'data/float_nan.tif', 'data/shade.tif']]
