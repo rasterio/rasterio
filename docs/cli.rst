@@ -131,6 +131,16 @@ The insp command opens a dataset and an interpreter.
                    -300.041782729805),
      'width': 791}
 
+merge
+-----
+
+The merge command can be used to flatten a stack of identically layed out
+datasets.
+
+.. code-block:: console
+
+    $ rio merge rasterio/tests/data/R*.tif -o result.tif
+
 shapes
 ------
 
