@@ -10,6 +10,5 @@ before_install:
 install:
   - "pip install -r requirements-dev.txt"
   - "pip install pytest"
-  - "python setup.py sdist"
-  - "pip install dist/rasterio*.tar.gz"
+  - "pip install -e ."
 script: py.test
