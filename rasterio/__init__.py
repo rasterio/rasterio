@@ -22,7 +22,7 @@ from rasterio.transform import Affine, guard_transform
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
-__version__ = "0.11.2"
+__version__ = "0.12"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):

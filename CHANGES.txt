@@ -1,10 +1,12 @@
 Changes
 =======
 
-Next
-----
+0.12 (2014-09-02)
+-----------------
 - Add --mercator option for rio bounds (#126).
 - Add option for RS as a JSON text sequence separator (#127).
+- Add rio merge command (#131).
+- Change layout of tests (#134).
 
 0.11.1 (2014-08-19)
 -------------------

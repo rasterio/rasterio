@@ -7,3 +7,7 @@ Asger Skovbo Petersen https://github.com/AsgerPetersen
 James Seppi https://github.com/jseppi
 Chrisophe Gohlke https://github.com/cgohlke
 Robin Wilson https://github.com/robintw
+Mike Toews https://github.com/mwtoews
+Amit Kapadia https://github.com/kapadia
+
+See also https://github.com/mapbox/rasterio/graphs/contributors.
