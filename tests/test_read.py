@@ -9,8 +9,8 @@ import rasterio
 class ReaderContextTest(unittest.TestCase):
 
     def test_context(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
-            self.assertEqual(s.name, 'rasterio/tests/data/RGB.byte.tif')
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
+            self.assertEqual(s.name, 'tests/data/RGB.byte.tif')
             self.assertEqual(s.driver, 'GTiff')
             self.assertEqual(s.closed, False)
             self.assertEqual(s.count, 3)
@@ -32,7 +32,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
                 repr(s), 
-                "<open RasterReader name='rasterio/tests/data/RGB.byte.tif' "
+                "<open RasterReader name='tests/data/RGB.byte.tif' "
                 "mode='r'>")
         self.assertEqual(s.closed, True)
         self.assertEqual(s.count, 3)
@@ -49,11 +49,11 @@ class ReaderContextTest(unittest.TestCase):
              0, 0, 1.0))
         self.assertEqual(
             repr(s),
-            "<closed RasterReader name='rasterio/tests/data/RGB.byte.tif' "
+            "<closed RasterReader name='tests/data/RGB.byte.tif' "
             "mode='r'>")
 
     def test_derived_spatial(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assert_(s.crs_wkt.startswith('PROJCS'), s.crs_wkt)
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
@@ -61,22 +61,22 @@ class ReaderContextTest(unittest.TestCase):
                 self.assertAlmostEqual(a, b)
 
     def test_read_ubyte(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read_band(1)
             self.assertEqual(a.dtype, rasterio.ubyte)
 
     def test_read_ubyte_bad_index(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assertRaises(IndexError, s.read_band, 0)
 
     def test_read_ubyte_out(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((718, 791), dtype=rasterio.ubyte)
             a = s.read_band(1, a)
             self.assertEqual(a.dtype, rasterio.ubyte)
 
     def test_read_out_dtype_fail(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((718, 791), dtype=rasterio.float32)
             try:
                 s.read_band(1, a)
@@ -86,7 +86,7 @@ class ReaderContextTest(unittest.TestCase):
                 assert "failed to catch exception" is False
 
     def test_read_out_shape_resample(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((7, 8), dtype=rasterio.ubyte)
             s.read_band(1, a)
             self.assert_(
@@ -99,7 +99,7 @@ class ReaderContextTest(unittest.TestCase):
        [  0,   0,   0,   0,  74,  23,   0,   0]], dtype=uint8)""", a)
 
     def test_read_basic(self):
-        with rasterio.open('rasterio/tests/data/shade.tif') as s:
+        with rasterio.open('tests/data/shade.tif') as s:
             a = s.read()  # Gray
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 1024, 1024))
@@ -108,7 +108,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(list(set(s.nodatavals)), [255])
             self.assertEqual(a.dtype, rasterio.ubyte)
             self.assertEqual(a.sum((1, 2)).tolist(), [0])
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read()  # RGB
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 718, 791))
@@ -120,7 +120,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertFalse(hasattr(a, 'mask'))
             self.assertEqual(list(set(s.nodatavals)), [0])
             self.assertEqual(a.dtype, rasterio.ubyte)
-        with rasterio.open('rasterio/tests/data/float.tif') as s:
+        with rasterio.open('tests/data/float.tif') as s:
             a = s.read()  # floating point values
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
@@ -129,7 +129,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.dtype, rasterio.float64)
 
     def test_read_indexes(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read()  # RGB
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 718, 791))
@@ -165,7 +165,7 @@ class ReaderContextTest(unittest.TestCase):
                 pass
 
     def test_read_window(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             # correct format
             self.assertRaises(ValueError, s.read, window=(300, 320, 320, 330))
             # window with 1 nodata on band 3
@@ -189,7 +189,7 @@ class ReaderContextTest(unittest.TestCase):
                                '94fd2733b534376c273a894f36ad4e0b'])
 
     def test_read_out(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             # regular array, without mask
             a = numpy.empty((3, 718, 791), numpy.ubyte)
             b = s.read(out=a)
@@ -223,7 +223,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertRaises(ValueError, s.read, [2], out=a)
 
     def test_read_nan_nodata(self):
-        with rasterio.open('rasterio/tests/data/float_nan.tif') as s:
+        with rasterio.open('tests/data/float_nan.tif') as s:
             a = s.read()
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))

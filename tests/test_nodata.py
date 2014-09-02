@@ -11,7 +11,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_nodata(tmpdir):
     dst_path = str(tmpdir.join('lol.tif'))
     with rasterio.drivers():
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             with rasterio.open(dst_path, 'w', **src.meta) as dst:
                 assert dst.meta['nodata'] == 0.0
                 assert dst.nodatavals == [0.0, 0.0, 0.0]
@@ -27,7 +27,7 @@ def test_nodata(tmpdir):
 def test_set_nodata(tmpdir):
     dst_path = str(tmpdir.join('lol.tif'))
     with rasterio.drivers():
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             meta = src.meta
             meta['nodata'] = 42
             with rasterio.open(dst_path, 'w', **meta) as dst:
