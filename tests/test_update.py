@@ -11,7 +11,7 @@ import rasterio
 
 def test_update_tags(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
-    shutil.copy('rasterio/tests/data/RGB.byte.tif', tiffname)
+    shutil.copy('tests/data/RGB.byte.tif', tiffname)
     with rasterio.open(tiffname, 'r+') as f:
         f.update_tags(a='1', b='2')
         f.update_tags(1, c=3)
@@ -24,7 +24,7 @@ def test_update_tags(tmpdir):
 
 def test_update_band(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
-    shutil.copy('rasterio/tests/data/RGB.byte.tif', tiffname)
+    shutil.copy('tests/data/RGB.byte.tif', tiffname)
     with rasterio.open(tiffname, 'r+') as f:
         f.write_band(1, numpy.zeros(f.shape, dtype=f.dtypes[0]))
     with rasterio.open(tiffname) as f:
@@ -32,7 +32,7 @@ def test_update_band(tmpdir):
 
 def test_update_spatial(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
-    shutil.copy('rasterio/tests/data/RGB.byte.tif', tiffname)
+    shutil.copy('tests/data/RGB.byte.tif', tiffname)
     with rasterio.open(tiffname, 'r+') as f:
         f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         f.crs = {'init': 'epsg:4326'}

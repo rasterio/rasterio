@@ -35,7 +35,7 @@ use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
 
 .. code-block:: console
 
-    $ rio bounds rasterio/tests/data/RGB.byte.tif --indent 2
+    $ rio bounds tests/data/RGB.byte.tif --indent 2
     {
       "features": [
         {
@@ -68,7 +68,7 @@ use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
           },
           "properties": {
             "id": "0",
-            "title": "rasterio/tests/data/RGB.byte.tif"
+            "title": "tests/data/RGB.byte.tif"
           },
           "type": "Feature"
         }
@@ -77,7 +77,7 @@ use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
     }
 
 Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing 
-``rio bounds rasterio/tests/data/RGB.byte.tif | geojsonio``.
+``rio bounds tests/data/RGB.byte.tif | geojsonio``.
 
 info
 ----
@@ -86,7 +86,7 @@ Rio's info command intends to serve some of the same uses as gdalinfo.
 
 .. code-block:: console
 
-    $ rio info rasterio/tests/data/RGB.byte.tif
+    $ rio info tests/data/RGB.byte.tif
     { 'affine': Affine(300.0379266750948, 0.0, 101985.0,
            0.0, -300.041782729805, 2826915.0),
       'count': 3,
@@ -110,7 +110,7 @@ The insp command opens a dataset and an interpreter.
 
 .. code-block:: console
 
-    $ rio insp rasterio/tests/data/RGB.byte.tif
+    $ rio insp tests/data/RGB.byte.tif
     Rasterio 0.9 Interactive Inspector (Python 2.7.5)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>> import pprint
@@ -151,7 +151,7 @@ for use with single-band rasters and reads from the first band.
 
 .. code-block:: console
 
-    $ rio shapes rasterio/tests/data/shade.tif --precision 6 > shade.geojson
+    $ rio shapes tests/data/shade.tif --precision 6 > shade.geojson
 
 The resulting file, uploaded to Mapbox, looks like this: `sgillies.j1ho338j <https://a.tiles.mapbox.com/v4/sgillies.j1ho338j/page.html?access_token=pk.eyJ1Ijoic2dpbGxpZXMiLCJhIjoiWUE2VlZVcyJ9.OITHkb1GHNh9nvzIfUc9QQ#13/39.6079/-106.4822>`__.
 
@@ -159,7 +159,7 @@ This command supports `JSON text sequences <http://tools.ietf.org/html/draft-iet
 
 .. code-block:: console
 
-    $ rio shapes rasterio/tests/data/shade.tif --precision 1 --x-json-seq --x-text-sep-lf | head -n 2
+    $ rio shapes tests/data/shade.tif --precision 1 --x-json-seq --x-text-sep-lf | head -n 2
     {"bbox": [-106.5, 39.6, -106.4, 39.6], "type": "FeatureCollection"}
     {"geometry": {"coordinates": [[[-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6]]], "type": "Polygon"}, "id": "255", "properties": {"val": 255}, "type": "Feature"}
 
@@ -185,7 +185,7 @@ a raster dataset, do the following.
 
 .. code-block:: console
 
-    $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst_crs rasterio/tests/data/RGB.byte.tif --precision 2
+    $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst_crs tests/data/RGB.byte.tif --precision 2
     [192457.13, 2546667.68, 399086.97, 2765319.94]
 
 Suggestions for other commands are welcome!

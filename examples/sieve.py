@@ -13,7 +13,7 @@ from rasterio.features import sieve, shapes
 with rasterio.drivers():
     
     # Read a raster to be sieved.
-    with rasterio.open('rasterio/tests/data/shade.tif') as src:
+    with rasterio.open('tests/data/shade.tif') as src:
         shade = src.read_band(1)
     
     # Print the number of shapes in the source raster.

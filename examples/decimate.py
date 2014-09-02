@@ -6,7 +6,7 @@ import rasterio
 
 with rasterio.drivers():
 
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read_band(k) for k in (1, 2, 3))
         meta = src.meta
 

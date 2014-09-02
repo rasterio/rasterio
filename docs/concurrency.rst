@@ -144,7 +144,7 @@ spread over multiple cores using the ``ThreadPoolExecutor`` from Python 3's
 
 .. code-block:: console
 
-    $ time python examples/concurrent-cpu-bound.py rasterio/tests/data/RGB.byte.tif /tmp/threads.tif -j 1
+    $ time python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 1
 
     real    0m3.474s
     user    0m3.426s
@@ -154,7 +154,7 @@ we get an almost 3x speed up with four concurrent jobs.
 
 .. code-block:: console
 
-    $ time python examples/concurrent-cpu-bound.py rasterio/tests/data/RGB.byte.tif /tmp/threads.tif -j 4
+    $ time python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 4
 
     real    0m1.335s
     user    0m3.400s

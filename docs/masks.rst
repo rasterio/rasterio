@@ -13,7 +13,7 @@ its declared nodata value of 0.
     
     import rasterio
 
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         mask = src.read_mask()
         print mask.any()
         count = mask.shape[0] * mask.shape[1]

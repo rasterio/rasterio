@@ -10,14 +10,14 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 # When possible, Rasterio gives you the CRS in the form of an EPSG code.
 def test_read_epsg(tmpdir):
     with rasterio.drivers():
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             assert src.crs == {'init': 'epsg:32618'}
 
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
     subprocess.call([
         'gdalwarp', '-t_srs', 'EPSG:3857', 
-        'rasterio/tests/data/RGB.byte.tif', tiffname])
+        'tests/data/RGB.byte.tif', tiffname])
     with rasterio.drivers():
         with rasterio.open(tiffname) as src:
             assert src.crs == {'init': 'epsg:3857'}
@@ -27,7 +27,7 @@ def test_write_3857(tmpdir):
     src_path = str(tmpdir.join('lol.tif'))
     subprocess.call([
         'gdalwarp', '-t_srs', 'EPSG:3857', 
-        'rasterio/tests/data/RGB.byte.tif', src_path])
+        'tests/data/RGB.byte.tif', src_path])
     dst_path = str(tmpdir.join('wut.tif'))
     with rasterio.drivers():
         with rasterio.open(src_path) as src:

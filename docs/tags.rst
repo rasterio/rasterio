@@ -13,7 +13,7 @@ I'm going to use the rasterio interactive inspector in these examples below.
 
 .. code-block:: console
 
-    $ rasterio.insp rasterio/tests/data/RGB.byte.tif
+    $ rasterio.insp tests/data/RGB.byte.tif
     Rasterio 0.6 Interactive Inspector (Python 2.7.5)
     Type "src.name", "src.read_band(1)", or "help(src)" for more information.
     >>> 

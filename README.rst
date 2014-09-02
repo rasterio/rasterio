@@ -33,7 +33,7 @@ band.  This new band is then written to a new single band TIFF.
         
         # Read raster bands directly to Numpy arrays.
         #
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             b, g, r = src.read()
         
         # Combine arrays in place. Expecting that the sum will 
@@ -89,7 +89,7 @@ Simple access is provided to properties of a geospatial raster file.
     
     with rasterio.drivers():
 
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             print(src.width, src.height)
             print(src.crs)
             print(src.affine)
@@ -127,11 +127,11 @@ using Python.
 
 .. code-block:: pycon
 
-    $ rio insp rasterio/tests/data/RGB.byte.tif
+    $ rio insp tests/data/RGB.byte.tif
     Rasterio 0.10 Interactive Inspector (Python 3.4.1)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>> src.name
-    'rasterio/tests/data/RGB.byte.tif'
+    'tests/data/RGB.byte.tif'
     >>> src.closed
     False
     >>> src.shape

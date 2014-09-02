@@ -7,7 +7,7 @@ def test_colorinterp(tmpdir):
     
     with rasterio.drivers():
 
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             assert src.colorinterp(1) == ColorInterp.red
             assert src.colorinterp(2) == ColorInterp.green
             assert src.colorinterp(3) == ColorInterp.blue

@@ -4,7 +4,7 @@ import pytest
 import rasterio
 
 def test_tags_read():
-    with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.tags() == {'AREA_OR_POINT': 'Area'}
         assert src.tags(ns='IMAGE_STRUCTURE') == {'INTERLEAVE': 'PIXEL'}
         assert src.tags(ns='bogus') == {}
