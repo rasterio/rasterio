@@ -9,11 +9,11 @@ objects.
 .. code-block:: pycon
 
     >>> import rasterio
-    >>> dataset = rasterio.open('rasterio/tests/data/RGB.byte.tif')
+    >>> dataset = rasterio.open('tests/data/RGB.byte.tif')
     >>> dataset
-    <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
     >>> dataset.name
-    'rasterio/tests/data/RGB.byte.tif'
+    'tests/data/RGB.byte.tif'
     >>> dataset.mode
     r
     >>> dataset.closed
@@ -130,7 +130,7 @@ To close a dataset, call its ``close()`` method.
 
     >>> dataset.close()
     >>> dataset
-    <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
 
 After it's closed, data can no longer be read.
 
@@ -159,16 +159,16 @@ the the block.
 
 .. code-block:: pycon
 
-    >>> with rasterio.open('rasterio/tests/data/RGB.byte.tif', 'r') as one:
-    ...     with rasterio.open('rasterio/tests/data/RGB.byte.tif', 'r') as two:
+    >>> with rasterio.open('tests/data/RGB.byte.tif', 'r') as one:
+    ...     with rasterio.open('tests/data/RGB.byte.tif', 'r') as two:
                 print two
     ... print one
     ... print two
     >>> print one
-    <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
-    <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
-    <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
-    <closed RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
 
 Writing data
 ------------

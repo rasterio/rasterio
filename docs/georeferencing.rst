@@ -10,7 +10,7 @@ Coordinate Reference System
 ---------------------------
 
 The coordinate reference system of a dataset is accessed from its ``crs``
-attribute. Type ``rio insp rasterio/tests/data/RGB.byte.tif`` from the 
+attribute. Type ``rio insp tests/data/RGB.byte.tif`` from the 
 Rasterio distribution root to see.
 
 .. code-block:: pycon
@@ -18,7 +18,7 @@ Rasterio distribution root to see.
     Rasterio 0.9 Interactive Inspector (Python 3.4.1)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>> src
-    <open RasterReader name='rasterio/tests/data/RGB.byte.tif' mode='r'>
+    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
     >>> src.crs
     {'init': 'epsg:32618'}
 
