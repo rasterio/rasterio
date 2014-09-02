@@ -152,7 +152,7 @@ setup(name='rasterio',
       url='https://github.com/sgillies/rasterio',
       license='BSD',
       package_dir={'': '.'},
-      packages=['rasterio', 'rasterio.rio'],
+      packages=['rasterio'],
       scripts = [
         'scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp', 'scripts/rio'],
       include_package_data=True,
