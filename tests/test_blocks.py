@@ -66,10 +66,14 @@ def test_window_index():
 
 class RasterBlocksTest(unittest.TestCase):
     def test_blocks(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assertEqual(len(s.block_shapes), 3)
             self.assertEqual(s.block_shapes, [(3, 791), (3, 791), (3, 791)])
             windows = s.block_windows(1)
+            (j,i), first = next(windows)
+            self.assertEqual((j,i), (0, 0))
+            self.assertEqual(first, ((0, 3), (0, 791)))
+            windows = s.block_windows()
             (j,i), first = next(windows)
             self.assertEqual((j,i), (0, 0))
             self.assertEqual(first, ((0, 3), (0, 791)))
@@ -80,7 +84,7 @@ class RasterBlocksTest(unittest.TestCase):
             self.assertEqual((j,i), (239, 0))
             self.assertEqual(last, ((717, 718), (0, 791)))
     def test_block_coverage(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assertEqual(
                 s.width*s.height,
                 sum((w[0][1]-w[0][0])*(w[1][1]-w[1][0]) 
@@ -88,7 +92,7 @@ class RasterBlocksTest(unittest.TestCase):
 
 class WindowReadTest(unittest.TestCase):
     def test_read_window(self):
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as s:
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
             windows = s.block_windows(1)
             ji, first_window = next(windows)
             first_block = s.read_band(1, window=first_window)

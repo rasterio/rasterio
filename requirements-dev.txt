@@ -3,3 +3,4 @@ Cython==0.20
 Numpy==1.8.0
 pytest
 setuptools
+six

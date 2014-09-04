@@ -9,19 +9,26 @@ uint32 = numpy.uint32
 int32 = numpy.int32
 float32 = numpy.float32
 float64 = numpy.float64
+complex_ = numpy.complex_
+complex64 = numpy.complex64
+complex128 = numpy.complex128
 
 # Not supported:
 #  GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10, GDT_CFloat64 = 11
 
 dtype_fwd = {
-    0: None,      # GDT_Unknown
-    1: ubyte,     # GDT_Byte
-    2: uint16,    # GDT_UInt16
-    3: int16,     # GDT_Int16
-    4: uint32,    # GDT_UInt32
-    5: int32,       # GDT_Int32
-    6: float32,     # GDT_Float32
-    7: float64 }   # GDT_Float64
+    0: None,            # GDT_Unknown
+    1: ubyte,           # GDT_Byte
+    2: uint16,          # GDT_UInt16
+    3: int16,           # GDT_Int16
+    4: uint32,          # GDT_UInt32
+    5: int32,           # GDT_Int32
+    6: float32,         # GDT_Float32
+    7: float64,         # GDT_Float64
+    8: complex_,        # GDT_CInt16
+    9: complex_,        # GDT_CInt32
+    10: complex64,      # GDT_CFloat32
+    11: complex128 }    # GDT_CFloat64
 
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 dtype_rev[uint8] = 1
@@ -34,7 +41,11 @@ typename_fwd = {
     4: 'UInt32',
     5: 'Int32',
     6: 'Float32',
-    7: 'Float64' }
+    7: 'Float64',
+    8: 'CInt16',
+    9: 'CInt32',
+    10: 'CFloat32',
+    11: 'CFloat64' }
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 

@@ -11,7 +11,7 @@ def test_write_colormap(tmpdir):
 
     with rasterio.drivers():
 
-        with rasterio.open('rasterio/tests/data/shade.tif') as src:
+        with rasterio.open('tests/data/shade.tif') as src:
             shade = src.read_band(1)
             meta = src.meta
 

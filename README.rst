@@ -1,3 +1,4 @@
+========
 Rasterio
 ========
 
@@ -10,12 +11,14 @@ Rasterio employs GDAL under the hood for file I/O and raster formatting. Its
 functions typically accept and return Numpy ndarrays. Rasterio is designed to
 make working with geospatial raster data more productive and more fun.
 
-Example
--------
+Rasterio is pronounced raw-STIER-ee-oh.
 
-Here's an example of the basic features rasterio provides. Three bands are
-read from an image and summed to produce something like a panchromatic band.
-This new band is then written to a new single band TIFF.
+Example
+=======
+
+Here's a simple example of the basic features rasterio provides. Three bands
+are read from an image and summed to produce something like a panchromatic
+band.  This new band is then written to a new single band TIFF. 
 
 .. code-block:: python
 
@@ -23,14 +26,15 @@ This new band is then written to a new single band TIFF.
     import rasterio
     import subprocess
     
-    # Register format drivers with a context manager
+    # Register GDAL format drivers and configuration options with a
+    # context manager.
     
-    with rasterio.drivers():
+    with rasterio.drivers(CPL_DEBUG=True):
         
         # Read raster bands directly to Numpy arrays.
         #
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-            b, g, r = map(src.read_band, (1, 2, 3))
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            b, g, r = src.read()
         
         # Combine arrays in place. Expecting that the sum will 
         # temporarily exceed the 8-bit integer range, initialize it as
@@ -41,7 +45,6 @@ This new band is then written to a new single band TIFF.
         for band in r, g, b:
             total += band
         total /= 3
-        assert total.dtype == rasterio.uint16
 
         # Write the product as a raster band to a new 8-bit file. For
         # keyword arguments, we start with the meta attributes of the
@@ -77,13 +80,16 @@ a deterministic and efficient way. Code written for rasterio 0.4 will continue
 to work: opened raster datasets may manage the global driver registry if no
 other manager is present.
 
+API Overview
+============
+
 Simple access is provided to properties of a geospatial raster file.
 
 .. code-block:: python
     
     with rasterio.drivers():
 
-        with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
             print(src.width, src.height)
             print(src.crs)
             print(src.affine)
@@ -98,7 +104,7 @@ Simple access is provided to properties of a geospatial raster file.
     # 3
     # [1, 2, 3]
 
-Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
+Rasterio also affords conversion of GeoTIFFs to other formats.
 
 .. code-block:: python
     
@@ -111,46 +117,56 @@ Rasterio also affords conversion of GeoTIFFs, on copy, to other formats.
     
     subprocess.call(['open', 'example-total.jpg'])
 
-rio_insp
---------
+Rasterio CLI
+============
 
-The rio_insp program opens the hood of any raster dataset so you can poke
-around using Python.
+Rasterio's command line interface, named "rio", is documented at `cli.rst
+<https://github.com/mapbox/rasterio/blob/master/docs/cli.rst>`__. Its ``rio
+insp`` command opens the hood of any raster dataset so you can poke around
+using Python.
 
-.. code-block:: console
+.. code-block:: pycon
 
-    $ rio_insp rasterio/tests/data/RGB.byte.tif
-    Rasterio 0.8 Interactive Inspector (Python 3.3.5)
+    $ rio insp tests/data/RGB.byte.tif
+    Rasterio 0.10 Interactive Inspector (Python 3.4.1)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>> src.name
-    'rasterio/tests/data/RGB.byte.tif'
+    'tests/data/RGB.byte.tif'
+    >>> src.closed
+    False
     >>> src.shape
     (718, 791)
-    >>> import pprint
-    >>> pprint.pprint(src.crs)
-    {u'ellps': u'WGS84',
-    u'no_defs': True,
-    u'proj': u'utm',
-    u'units': u'm',
-    u'zone': 18}
-    >>> b = src.read_band(1)
+    >>> src.crs
+    {'init': 'epsg:32618'}
+    >>> b, g, r = src.read()
     >>> b
-    array([[0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           ...,
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0],
-           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
+    masked_array(data =
+     [[-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     ...,
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]],
+                 mask =
+     [[ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     ...,
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]],
+           fill_value = 0)
+
     >>> b.min(), b.max(), b.mean()
-    (0, 255, 29.94772668847656)
+    (1, 255, 44.434478650699106)
 
 Dependencies
-------------
+============
 
 C library dependecies:
 
-- GDAL
+- GDAL 1.9+
 
 Python package dependencies (see also requirements.txt):
 
@@ -164,32 +180,51 @@ Development also requires (see requirements-dev.txt)
 - pytest
 
 Installation
-------------
+============
 
 Rasterio is a C extension and to install on Linux or OS X you'll need a working
-compiler (XCode on OS X etc). Unofficial Windows binary packages created by
-Christoph Gohlke are available `here
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
-
-To install from the source distribution on PyPI, do the following:
-
-.. code-block:: console
-
-    $ pip install -r https://raw.github.com/mapbox/rasterio/master/requirements.txt
-    $ pip install rasterio
-
-To install from a forked repo, do this (in a virtualenv, preferably):
-
-.. code-block:: console
-
-    $ pip install -r requirements-dev.txt
-    $ pip install -e .
-
-The Numpy headers are required to run the rasterio setup script. Numpy has to
-be installed (via the indicated requirements file) before rasterio can be
+compiler (XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy
+headers are required to run the rasterio setup script. Numpy has to be
+installed (via the indicated requirements file) before rasterio can be
 installed. See rasterio's Travis `configuration
 <https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more
 guidance.
+
+
+Linux
+-----
+
+The following commands are adapted from Rasterio's Travis-CI configuration.
+
+.. code-block:: console
+
+    $ sudo add-apt-repository ppa:ubuntugis/ppa
+    $ sudo apt-get update -qq
+    $ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    $ pip install -r https://raw.githubusercontent.com/mapbox/rasterio/master/requirements.txt
+    $ pip install rasterio
+
+Adapt them as necessary for your Linux system.
+
+OS X
+----
+
+Wheels are available on PyPI for Homebrew based Python environments.
+
+.. code-block:: console
+
+    $ brew install gdal
+    $ pip install -r https://raw.githubusercontent.com/mapbox/rasterio/master/requirements.txt
+    $ pip install rasterio
+
+The wheels are incompatible with MacPorts. MacPorts users will need to specify
+a source installation instead: ``pip install --no-use-wheel``.
+
+Windows
+-------
+
+Windows binary packages created by Christoph Gohlke are available `here
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`_.
 
 Testing
 -------

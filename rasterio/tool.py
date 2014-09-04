@@ -4,6 +4,11 @@ import collections
 import logging
 import sys
 
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
 import numpy
 
 import rasterio
@@ -21,13 +26,15 @@ def main(banner, dataset):
         The raster may be either an ndarray or a (dataset, bidx)
         tuple.
         """
-        import matplotlib.pyplot as plt
         if isinstance(source, tuple):
             arr = source[0].read_band(source[1])
         else:
             arr = source
-        plt.imshow(arr, cmap=cmap)
-        plt.show()
+        if plt is not None:
+            plt.imshow(arr, cmap=cmap)
+            plt.show()
+        else:
+            raise ImportError("matplotlib could not be imported")
 
     def stats(source):
         """Return a tuple with raster min, max, and mean.
@@ -39,6 +46,8 @@ def main(banner, dataset):
         return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
 
     code.interact(
-        banner, local=dict(locals(), src=dataset, np=numpy, rio=rasterio))
+        banner, 
+        local=dict(
+            locals(), src=dataset, np=numpy, rio=rasterio, plt=plt))
 
     return 0

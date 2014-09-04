@@ -91,6 +91,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
+        Extension(
+            'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
             ])
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -107,11 +109,23 @@ else:
         Extension(
             'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
         Extension(
-            'rasterio._err', ['rasterio/_err.cpp'], **ext_options),
+            'rasterio._err', ['rasterio/_err.c'], **ext_options),
+        Extension(
+            'rasterio._example', ['rasterio/_example.c'], **ext_options),
             ]
 
 with open('README.rst') as f:
     readme = f.read()
+
+# Runtime requirements.
+inst_reqs = [
+    'affine>=1.0',
+    'click',
+    'Numpy>=1.7',
+    'setuptools' ] 
+
+if sys.version_info < (3, 4):
+    inst_reqs.append('enum34')
 
 setup(name='rasterio',
       version=version,
@@ -119,7 +133,7 @@ setup(name='rasterio',
           "Fast and direct raster I/O for Python programmers who use Numpy"),
       long_description=readme,
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
           'Intended Audience :: Information Technology',
           'Intended Audience :: Science/Research',
@@ -127,10 +141,8 @@ setup(name='rasterio',
           'Programming Language :: C',
           'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
-          'Programming Language :: Python :: 3.0',
-          'Programming Language :: Python :: 3.1',
-          'Programming Language :: Python :: 3.2',
           'Programming Language :: Python :: 3.3',
+          'Programming Language :: Python :: 3.4',
           'Topic :: Multimedia :: Graphics :: Graphics Conversion',
           'Topic :: Scientific/Engineering :: GIS'
           ],
@@ -141,12 +153,10 @@ setup(name='rasterio',
       license='BSD',
       package_dir={'': '.'},
       packages=['rasterio'],
-      scripts = ['scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp'],
+      scripts = [
+        'scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp', 'scripts/rio'],
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,
-      install_requires=[
-          'affine>=1.0',
-          'Numpy',
-          'setuptools'
-      ])
+      install_requires=inst_reqs )
+

@@ -1,7 +1,7 @@
 # GDAL function definitions.
 #
 
-cdef extern from "cpl_conv.h":
+cdef extern from "cpl_conv.h" nogil:
     void *  CPLMalloc (size_t)
     void    CPLFree (void *ptr)
     void    CPLSetThreadLocalConfigOption (char *key, char *val)
@@ -21,9 +21,18 @@ cdef extern from "ogr_srs_api.h":
     void    OSRDestroySpatialReference (void *srs)
     int     OSRExportToProj4 (void *srs, char **params)
     int     OSRExportToWkt (void *srs, char **params)
+    int     OSRImportFromEPSG (void *srs, int code)
     int     OSRImportFromProj4 (void *srs, char *proj)
+    int     OSRSetFromUserInput (void *srs, char *input)
+    int     OSRAutoIdentifyEPSG (void *srs)
+    int     OSRFixup(void *srs)
+    const char * OSRGetAuthorityName (void *srs, const char *key)
+    const char * OSRGetAuthorityCode (void *srs, const char *key)
     void *  OSRNewSpatialReference (char *wkt)
     void    OSRRelease (void *srs)
+    void *  OCTNewCoordinateTransformation (void *source, void *dest)
+    void    OCTDestroyCoordinateTransformation (void *source)
+    int     OCTTransform (void *ct, int nCount, double *x, double *y, double *z)
 
 cdef extern from "gdal.h" nogil:
     void GDALAllRegister()
@@ -68,7 +77,10 @@ cdef extern from "gdal.h" nogil:
     void GDALGetBlockSize(void *band, int *xsize, int *ysize)
     int GDALGetRasterDataType(void *band)
     double GDALGetRasterNoDataValue(void *band, int *success)
+    int GDALSetRasterNoDataValue(void *band, double value)
+    int GDALDatasetRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int count, int *bmap, int poff, int loff, int boff)
     int GDALRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int poff, int loff)
+
     int GDALSetRasterNoDataValue(void *band, double value)
 
     void * GDALCreate(void *driver, const char *filename, int width, int height, int nbands, GDALDataType dtype, const char **options)

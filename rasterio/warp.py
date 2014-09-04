@@ -1,8 +1,12 @@
 """Raster warping and reprojection"""
 
-from rasterio._warp import _reproject, RESAMPLING
+from rasterio._warp import _reproject, _transform, RESAMPLING
 from rasterio.transform import guard_transform
 
+
+def transform(src_crs, dst_crs, xs, ys):
+    """Return transformed vectors of x and y."""
+    return _transform(src_crs, dst_crs, xs, ys)
 
 def reproject(
         source, destination,

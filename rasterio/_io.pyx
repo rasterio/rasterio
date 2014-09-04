@@ -1,4 +1,4 @@
-# cython: profile=True
+# cython: boundscheck=False
 
 import logging
 import math
@@ -7,6 +7,7 @@ import os.path
 import sys
 import warnings
 
+from libc.stdlib cimport malloc, free
 import numpy as np
 cimport numpy as np
 
@@ -15,8 +16,9 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.five import text_type
+from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
+from rasterio.enums import ColorInterp
 
 log = logging.getLogger('rasterio')
 if 'all' in sys.warnoptions:
@@ -30,15 +32,16 @@ else:
 
     log.addHandler(NullHandler())
 
+# Single band IO functions.
 
 cdef int io_ubyte(
-        void *hband,
+        void *hband, 
         int mode,
         int xoff,
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer):
+        np.uint8_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
@@ -51,7 +54,7 @@ cdef int io_uint16(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer):
+        np.uint16_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
@@ -64,7 +67,7 @@ cdef int io_int16(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer):
+        np.int16_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
@@ -77,7 +80,7 @@ cdef int io_uint32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer):
+        np.uint32_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
@@ -90,7 +93,7 @@ cdef int io_int32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer):
+        np.int32_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
@@ -103,7 +106,7 @@ cdef int io_float32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer):
+        np.float32_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
@@ -116,11 +119,374 @@ cdef int io_float64(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer):
+        np.float64_t[:, :] buffer):
     with nogil:
         return _gdal.GDALRasterIO(
             hband, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
+
+# The multi-band IO functions.
+
+cdef int io_multi_ubyte(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.uint8_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buffer[0, 0, 0], buffer.shape[2], buffer.shape[1], 
+                        1, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+cdef int io_multi_uint16(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.uint16_t[:, :, :] buf,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        2, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+cdef int io_multi_int16(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.int16_t[:, :, :] buf,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        3, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+cdef int io_multi_uint32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.uint32_t[:, :, :] buf,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        4, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+cdef int io_multi_int32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.int32_t[:, :, :] buf,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        5, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+
+cdef int io_multi_float32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.float32_t[:, :, :] buf,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        6, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+cdef int io_multi_float64(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.float64_t[:, :, :] buf,
+        long[:] indexes,
+        int count) nogil:
+    cdef int i, retval=0
+    cdef void *hband = NULL
+    cdef int *bandmap
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf[0, 0, 0], buf.shape[2], buf.shape[1], 
+                        7, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+    return retval
+
+cdef int io_multi_cint16(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.int16_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.int16)
+    cdef np.int16_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        8, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
+
+cdef int io_multi_cint32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.int32_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.int32)
+    cdef np.int32_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        9, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
+
+cdef int io_multi_cfloat32(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex64_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.float32_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.float32)
+    cdef np.float32_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        10, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
+
+cdef int io_multi_cfloat64(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.complex128_t[:, :, :] out,
+        long[:] indexes,
+        int count):
+    
+    cdef int retval=0
+    cdef int *bandmap
+    cdef int I, J, K
+    cdef int i, j, k
+    cdef np.float64_t real, imag
+
+    buf = np.empty(
+            (out.shape[0], 2*out.shape[2]*out.shape[1]), 
+            dtype=np.float64)
+    cdef np.float64_t[:, :] buf_view = buf
+
+    with nogil:
+        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        for i in range(count):
+            bandmap[i] = indexes[i]
+        retval = _gdal.GDALDatasetRasterIO(
+                        hds, mode, xoff, yoff, width, height,
+                        &buf_view[0, 0], out.shape[2], out.shape[1],
+                        11, count, bandmap, 0, 0, 0)
+        _gdal.CPLFree(bandmap)
+
+        if retval > 0:
+            return retval
+
+        I = out.shape[0]
+        J = out.shape[1]
+        K = out.shape[2]
+        for i in range(I):
+            for j in range(J):
+                for k in range(K):
+                    real = buf_view[i, 2*(j*K+k)]
+                    imag = buf_view[i, 2*(j*K+k)+1]
+                    out[i,j,k].real = real
+                    out[i,j,k].imag = imag
+
+    return retval
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
@@ -250,41 +616,61 @@ cdef class RasterReader(object):
 
     def read_crs(self):
         cdef char *proj_c = NULL
+        cdef char *auth_key = NULL
+        cdef char *auth_val = NULL
         cdef void *osr = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
         crs = {}
-        cdef const char *proj = _gdal.GDALGetProjectionRef(self._hds)
-        proj_b = proj
-        if len(proj_b) > 0:
-            osr = _gdal.OSRNewSpatialReference(proj)
+        cdef char *wkt = _gdal.GDALGetProjectionRef(self._hds)
+        wkt_b = wkt
+        if wkt != NULL:
+            osr = _gdal.OSRNewSpatialReference(wkt)
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             log.debug("Got coordinate system")
-            _gdal.OSRExportToProj4(osr, &proj_c)
-            if proj_c == NULL:
-                raise ValueError("Unexpected Null spatial reference")
-            proj_b = proj_c
-            log.debug("Params: %s", proj_b)
-            value = proj_b.decode()
-            value = value.strip()
-            for param in value.split():
-                kv = param.split("=")
-                if len(kv) == 2:
-                    k, v = kv
-                    try:
-                        v = float(v)
-                        if v % 1 == 0:
-                            v = int(v)
-                    except ValueError:
-                        # Leave v as a string
-                        pass
-                elif len(kv) == 1:
-                    k, v = kv[0], True
-                else:
-                    raise ValueError("Unexpected proj parameter %s" % param)
-                k = k.lstrip("+")
-                crs[k] = v
+
+            retval = _gdal.OSRAutoIdentifyEPSG(osr)
+            if retval > 0:
+                log.info("Failed to auto identify EPSG: %d", retval)
+            
+            auth_key = _gdal.OSRGetAuthorityName(osr, NULL)
+            auth_val = _gdal.OSRGetAuthorityCode(osr, NULL)
+
+            if auth_key != NULL and auth_val != NULL:
+                key_b = auth_key
+                key = key_b.decode('utf-8')
+                if key == 'EPSG':
+                    val_b = auth_val
+                    val = val_b.decode('utf-8')
+                    crs['init'] = "epsg:" + val
+            else:
+                _gdal.OSRExportToProj4(osr, &proj_c)
+                if proj_c == NULL:
+                    raise ValueError("Unexpected Null spatial reference")
+                proj_b = proj_c
+                log.debug("Params: %s", proj_b)
+                value = proj_b.decode()
+                value = value.strip()
+                for param in value.split():
+                    kv = param.split("=")
+                    if len(kv) == 2:
+                        k, v = kv
+                        try:
+                            v = float(v)
+                            if v % 1 == 0:
+                                v = int(v)
+                        except ValueError:
+                            # Leave v as a string
+                            pass
+                    elif len(kv) == 1:
+                        k, v = kv[0], True
+                    else:
+                        raise ValueError(
+                            "Unexpected proj parameter %s" % param)
+                    k = k.lstrip("+")
+                    crs[k] = v
+
             _gdal.CPLFree(proj_c)
             _gdal.OSRDestroySpatialReference(osr)
         else:
@@ -293,6 +679,7 @@ cdef class RasterReader(object):
 
     def read_crs_wkt(self):
         cdef char *proj_c = NULL
+        cdef char *key_c = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
         cdef void *osr = _gdal.OSRNewSpatialReference(
@@ -300,6 +687,9 @@ cdef class RasterReader(object):
         log.debug("Got coordinate system")
         crs = {}
         if osr != NULL:
+            retval = _gdal.OSRAutoIdentifyEPSG(osr)
+            if retval > 0:
+                log.info("Failed to auto identify EPSG: %d", retval)
             _gdal.OSRExportToWkt(osr, &proj_c)
             if proj_c == NULL:
                 raise ValueError("Null projection")
@@ -412,7 +802,7 @@ cdef class RasterReader(object):
                 self._nodatavals.append(val)
         return self._nodatavals
 
-    def block_windows(self, bdix):
+    def block_windows(self, bidx=0):
         """Returns an iterator over a band's block windows and their
         indexes.
 
@@ -432,7 +822,14 @@ cdef class RasterReader(object):
         read_band() for highly efficient access to raster block data.
         """
         cdef int i, j
-        h, w = self.block_shapes[bdix-1]
+        block_shapes = self.block_shapes
+        if bidx < 1:
+            if len(set(block_shapes)) > 1:
+                raise ValueError(
+                    "A band index must be provided when band block shapes"
+                    "are inhomogeneous")
+            bidx = 1
+        h, w = block_shapes[bidx-1]
         d, m = divmod(self.height, h)
         nrows = d + int(m>0)
         d, m = divmod(self.width, w)
@@ -507,6 +904,7 @@ cdef class RasterReader(object):
         self._read = True
         return m
 
+    
     def get_crs(self):
         # _read tells us that the CRS was read before and really is
         # None.
@@ -571,7 +969,7 @@ cdef class RasterReader(object):
         def __get__(self):
             return Affine.from_gdal(*self.get_transform())
 
-    def read_band(self, bidx, out=None, window=None):
+    def read_band(self, bidx, out=None, window=None, masked=None):
         """Read the `bidx` band into an `out` array if provided, 
         otherwise return a new array.
 
@@ -584,63 +982,7 @@ cdef class RasterReader(object):
         example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
         of the raster dataset.
         """
-        if bidx not in self.indexes:
-            raise IndexError("band index out of range")
-        i = self.indexes.index(bidx)
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        if out is not None and out.dtype != self.dtypes[i]:
-            raise ValueError(
-                "the array's dtype '%s' does not match "
-                "the file's dtype '%s'" % (out.dtype, self.dtypes[i]))
-
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband == NULL:
-            raise ValueError("NULL band")
-        
-        dtype = self.dtypes[i]
-        if out is None:
-            out_shape = (
-                window 
-                and window_shape(window, self.height, self.width) 
-                or self.shape)
-            out = np.empty(out_shape, dtype)
-        if window:
-            window = eval_window(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
-        else:
-            xoff = yoff = 0
-            width = self.width
-            height = self.height
-        if dtype == dtypes.ubyte:
-            retval = io_ubyte(
-                hband, 0, xoff, yoff, width, height, out)
-        elif dtype == dtypes.uint16:
-            retval = io_uint16(
-                hband, 0, xoff, yoff, width, height, out)
-        elif dtype == dtypes.int16:
-            retval = io_int16(
-                hband, 0, xoff, yoff, width, height, out)
-        elif dtype == dtypes.uint32:
-            retval = io_uint32(
-                hband, 0, xoff, yoff, width, height, out)
-        elif dtype == dtypes.int32:
-            retval = io_int32(
-                hband, 0, xoff, yoff, width, height, out)
-        elif dtype == dtypes.float32:
-            retval = io_float32(
-                hband, 0, xoff, yoff, width, height, out)
-        elif dtype == dtypes.float64:
-            retval = io_float64(
-                hband, 0, xoff, yoff, width, height, out)
-        else:
-            raise ValueError("Invalid dtype")
-        # TODO: handle errors (by retval).
-        
-        return out
+        return self.read(bidx, out=out, window=window, masked=masked)
 
     def read(self, indexes=None, out=None, window=None, masked=None):
         """Read raster bands as a multidimensional array
@@ -660,7 +1002,12 @@ cdef class RasterReader(object):
         `out` (if used), or will be masked if any of the nodatavals are
         not `None`.
         """
+        cdef int height, width, xoff, yoff, aix, bidx, indexes_count
+        cdef int retval = 0
         return2d = False
+
+        if self._hds == NULL:
+            raise ValueError("can't read closed raster file")
         if indexes is None:  # Default: read all bands
             indexes = self.indexes
         elif isinstance(indexes, int):
@@ -668,6 +1015,8 @@ cdef class RasterReader(object):
             return2d = True
             if out is not None and out.ndim == 2:
                 out.shape = (1,) + out.shape
+        if not indexes:
+            raise ValueError("No indexes to read")
         check_dtypes = set()
         nodatavals = []
         # Check each index before processing 3D array
@@ -688,19 +1037,16 @@ cdef class RasterReader(object):
             and window_shape(window, self.height, self.width)
             or self.shape)
         if out is not None:
+            if out.dtype != dtype:
+                raise ValueError(
+                    "the array's dtype '%s' does not match "
+                    "the file's dtype '%s'" % (out.dtype, dtype))
+            if out.shape[0] != out_shape[0]:
+                raise ValueError(
+                    "'out' shape %s does not mach raster slice shape %s" %
+                    (out.shape, out_shape))
             if masked is None:
                 masked = hasattr(out, 'mask')
-            # Check 'out' array dimensions
-            if return2d:
-                if out.shape[1:] != out_shape[1:]:
-                    raise ValueError(
-                        "'out' shape %s does not mach raster index shape %s" %
-                        (out.shape[1:], out_shape[1:]))
-            else:  # 3D array
-                if out.shape != out_shape:
-                    raise ValueError(
-                        "'out' shape %s does not mach raster slice shape %s" %
-                        (out.shape, out_shape))
         if masked is None:
             masked = any([x is not None for x in nodatavals])
         if out is None:
@@ -708,8 +1054,76 @@ cdef class RasterReader(object):
                 out = np.ma.empty(out_shape, dtype)
             else:
                 out = np.empty(out_shape, dtype)
-        for aix, bidx in enumerate(indexes):
-            res = self.read_band(bidx, out=out[aix], window=window)
+
+        # Prepare the IO window.
+        if window:
+            window = eval_window(window, self.height, self.width)
+            yoff = <int>window[0][0]
+            xoff = <int>window[1][0]
+            height = <int>window[0][1] - yoff
+            width = <int>window[1][1] - xoff
+        else:
+            xoff = yoff = <int>0
+            width = <int>self.width
+            height = <int>self.height
+
+        # Call io_multi* functions with C type args so that they
+        # can release the GIL.
+        indexes_arr = np.array(indexes, dtype=int)
+        indexes_count = <int>indexes_arr.shape[0]
+        gdt = dtypes.dtype_rev[dtype]
+
+        if gdt == 1:
+            retval = io_multi_ubyte(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 2:
+            retval = io_multi_uint16(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 3:
+            retval = io_multi_int16(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 4:
+            retval = io_multi_uint32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 5:
+            retval = io_multi_int32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 6:
+            retval = io_multi_float32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 7:
+            retval = io_multi_float64(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 8:
+            retval = io_multi_cint16(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 9:
+            retval = io_multi_cint32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 10:
+            retval = io_multi_cfloat32(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 11:
+            retval = io_multi_cfloat64(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+
+        if retval in (1, 2, 3):
+            raise IOError("Read or write failed")
+        elif retval == 4:
+            raise ValueError("NULL band")
+
+        # Masking the output. TODO: explain the logic better.
         if masked:
             test1nodata = set(nodatavals)
             if len(test1nodata) == 1:
@@ -729,10 +1143,10 @@ cdef class RasterReader(object):
                     else:
                         band_mask = out[aix] == nodatavals[aix]
                     out[aix].mask = band_mask
+        
         if return2d:
             out.shape = out.shape[1:]
         return out
-
 
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
@@ -776,7 +1190,22 @@ cdef class RasterReader(object):
             key, value = item.split('=')
             retval[key] = value
         return retval
-
+    
+    def colorinterp(self, bidx):
+        """Returns the color interpretation for a band or None."""
+        cdef void *hBand
+        
+        if self._hds == NULL:
+          raise ValueError("can't read closed raster file")
+        if bidx > 0:
+            if bidx not in self.indexes:
+                raise ValueError("Invalid band index")
+            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
+            if hBand == NULL:
+                raise ValueError("NULL band")
+        value = _gdal.GDALGetRasterColorInterpretation(hBand)
+        return ColorInterp(value)
+    
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""
         cdef void *hBand
@@ -861,6 +1290,24 @@ cdef class RasterUpdater(RasterReader):
             crs=None, transform=None, dtype=None,
             nodata=None,
             **kwargs):
+        # Validate write mode arguments.
+        if mode == 'w':
+            if not isinstance(driver, string_types):
+                raise TypeError("A driver name string is required.")
+            try:
+                width = int(width)
+                height = int(height)
+            except:
+                raise TypeError("Integer width and height are required.")
+            try:
+                count = int(count)
+            except:
+                raise TypeError("Integer band count is required.")
+            try:
+                assert dtype is not None
+                _ = np.dtype(dtype)
+            except:
+                raise TypeError("A valid dtype is required.")
         self.name = path
         self.mode = mode
         self.driver = driver
@@ -936,6 +1383,9 @@ cdef class RasterUpdater(RasterReader):
             
             # Creation options
             for k, v in self._options.items():
+                # Skip items that are definitely *not* valid driver options.
+                if k.lower() in ['affine']:
+                    continue
                 kwds.append((k.lower(), v))
                 k, v = k.upper(), str(v).upper()
                 key_b = k.encode('utf-8')
@@ -962,7 +1412,7 @@ cdef class RasterUpdater(RasterReader):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
-                self.write_crs(self._crs)
+                self.set_crs(self._crs)
         
         elif self.mode == 'r+':
             with cpl_errs:
@@ -992,28 +1442,56 @@ cdef class RasterUpdater(RasterReader):
         self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
 
-    def write_crs(self, crs):
+    def set_crs(self, crs):
+        """Writes a coordinate reference system to the dataset."""
+        cdef char *proj_c = NULL
+        cdef char *wkt = NULL
         if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
         cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
         if osr == NULL:
             raise ValueError("Null spatial reference")
         params = []
-        for k, v in crs.items():
-            if v is True or (k == 'no_defs' and v):
-                params.append("+%s" % k)
+
+        log.debug("Input CRS: %r", crs)
+
+        # Normally, we expect a CRS dict.
+        if isinstance(crs, dict):
+            # EPSG is a special case.
+            init = crs.get('init')
+            if init:
+                auth, val = init.split(':')
+                if auth.upper() == 'EPSG':
+                    _gdal.OSRImportFromEPSG(osr, int(val))
             else:
-                params.append("+%s=%s" % (k, v))
-        proj = " ".join(params)
-        proj_b = proj.encode()
-        cdef const char *proj_c = proj_b
-        _gdal.OSRImportFromProj4(osr, proj_c)
-        cdef char *wkt
+                crs['wktext'] = True
+                for k, v in crs.items():
+                    if v is True or (k in ('no_defs', 'wktext') and v):
+                        params.append("+%s" % k)
+                    else:
+                        params.append("+%s=%s" % (k, v))
+                proj = " ".join(params)
+                log.debug("PROJ.4 to be imported: %r", proj)
+                proj_b = proj.encode('utf-8')
+                proj_c = proj_b
+                _gdal.OSRImportFromProj4(osr, proj_c)
+        # Fall back for CRS strings like "EPSG:3857."
+        else:
+            proj_b = crs.encode('utf-8')
+            proj_c = proj_b
+            _gdal.OSRSetFromUserInput(osr, proj_c)
+
+        # Fixup, export to WKT, and set the GDAL dataset's projection.
+        _gdal.OSRFixup(osr)
         _gdal.OSRExportToWkt(osr, &wkt)
+        wkt_b = wkt
+        log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
         _gdal.GDALSetProjection(self._hds, wkt)
+
         _gdal.CPLFree(wkt)
         _gdal.OSRDestroySpatialReference(osr)
         self._crs = crs
+        log.debug("Self CRS: %r", self._crs)
 
     property crs:
         """A mapping of PROJ.4 coordinate reference system params.
@@ -1023,7 +1501,7 @@ cdef class RasterUpdater(RasterReader):
             return self.get_crs()
 
         def __set__(self, value):
-            self.write_crs(value)
+            self.set_crs(value)
 
     def write_transform(self, transform):
         if self._hds == NULL:
@@ -1053,6 +1531,118 @@ cdef class RasterUpdater(RasterReader):
         def __set__(self, value):
             self.write_transform(value.to_gdal())
 
+    def write(self, src, indexes=None, window=None):
+        """Write the src array into indexed bands of the dataset.
+
+        If `indexes` is a list, the src must be a 3D array of
+        matching shape. If an int, the src must be a 2D array.
+
+        See `read()` for usage of the optional `window` argument.
+        """
+        cdef int height, width, xoff, yoff, indexes_count
+        cdef int retval = 0
+
+        if self._hds == NULL:
+            raise ValueError("can't write to closed raster file")
+
+        if indexes is None:
+            indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            src = np.array([src])
+        if len(src.shape) != 3 or src.shape[0] != len(indexes):
+            raise ValueError(
+                "Source shape is inconsistent with given indexes")
+
+        check_dtypes = set()
+        # Check each index before processing 3D array
+        for bidx in indexes:
+            if bidx not in self.indexes:
+                raise IndexError("band index out of range")
+            idx = self.indexes.index(bidx)
+            check_dtypes.add(self.dtypes[idx])
+        if len(check_dtypes) > 1:
+            raise ValueError("more than one 'dtype' found")
+        elif len(check_dtypes) == 0:
+            dtype = self.dtypes[0]
+        else:  # unique dtype; normal case
+            dtype = check_dtypes.pop()
+
+        if src is not None and src.dtype != dtype:
+            raise ValueError(
+                "the array's dtype '%s' does not match "
+                "the file's dtype '%s'" % (src.dtype, dtype))
+
+        # Require C-continguous arrays (see #108).
+        src = np.require(src, dtype=dtype, requirements='C')
+
+        # Prepare the IO window.
+        if window:
+            window = eval_window(window, self.height, self.width)
+            yoff = <int>window[0][0]
+            xoff = <int>window[1][0]
+            height = <int>window[0][1] - yoff
+            width = <int>window[1][1] - xoff
+        else:
+            xoff = yoff = <int>0
+            width = <int>self.width
+            height = <int>self.height
+
+        # Call io_multi* functions with C type args so that they
+        # can release the GIL.
+        indexes_arr = np.array(indexes, dtype=int)
+        indexes_count = <int>indexes_arr.shape[0]
+        gdt = dtypes.dtype_rev[dtype]
+        if gdt == 1:
+            retval = io_multi_ubyte(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 2:
+            retval = io_multi_uint16(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 3:
+            retval = io_multi_int16(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 4:
+            retval = io_multi_uint32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 5:
+            retval = io_multi_int32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 6:
+            retval = io_multi_float32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 7:
+            retval = io_multi_float64(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 8:
+            retval = io_multi_cint16(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 9:
+            retval = io_multi_cint32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 10:
+            retval = io_multi_cfloat32(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+        elif gdt == 11:
+            retval = io_multi_cfloat64(
+                            self._hds, 1, xoff, yoff, width, height,
+                            src, indexes_arr, indexes_count)
+
+        if retval in (1, 2, 3):
+            raise IOError("Read or write failed")
+        elif retval == 4:
+            raise ValueError("NULL band")
+
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
 
@@ -1064,55 +1654,59 @@ cdef class RasterUpdater(RasterReader):
 
         specifying a raster subset to write into.
         """
-        if bidx not in self.indexes:
-            raise IndexError("band index out of range")
-        i = self.indexes.index(bidx)
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        if src is not None and src.dtype != self.dtypes[i]:
-            raise ValueError(
-                "the array's dtype '%s' does not match "
-                "the file's dtype '%s'" % (src.dtype, self.dtypes[i]))
-        
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband == NULL:
-            raise ValueError("NULL band")
-        
-        if window:
-            window = eval_window(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
-        else:
-            xoff = yoff = 0
-            width = self.width
-            height = self.height
-        dtype = self.dtypes[i]
-        if dtype == dtypes.ubyte:
-            retval = io_ubyte(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.uint16:
-            retval = io_uint16(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.int16:
-            retval = io_int16(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.uint32:
-            retval = io_uint32(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.int32:
-            retval = io_int32(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.float32:
-            retval = io_float32(
-                hband, 1, xoff, yoff, width, height, src)
-        elif dtype == dtypes.float64:
-            retval = io_float64(
-                hband, 1, xoff, yoff, width, height, src)
-        else:
-            raise ValueError("Invalid dtype")
-        # TODO: handle errors (by retval).
+        self.write(src, bidx, window=window)
+
+#         if bidx not in self.indexes:
+#             raise IndexError("band index out of range")
+#         i = self.indexes.index(bidx)
+#         if self._hds == NULL:
+#             raise ValueError("can't read closed raster file")
+#         if src is not None and src.dtype != self.dtypes[i]:
+#             raise ValueError(
+#                 "the array's dtype '%s' does not match "
+#                 "the file's dtype '%s'" % (src.dtype, self.dtypes[i]))
+#         
+#         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+#         if hband == NULL:
+#             raise ValueError("NULL band")
+#         
+#         if window:
+#             window = eval_window(window, self.height, self.width)
+#             yoff = window[0][0]
+#             xoff = window[1][0]
+#             height = window[0][1] - yoff
+#             width = window[1][1] - xoff
+#         else:
+#             xoff = yoff = 0
+#             width = self.width
+#             height = self.height
+#         dtype = self.dtypes[i]
+#         # Require C-continguous arrays (see #108).
+#         src = np.require(src, dtype=dtype, requirements='C')
+#         if dtype == dtypes.ubyte:
+#             retval = io_ubyte(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.uint16:
+#             retval = io_uint16(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.int16:
+#             retval = io_int16(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.uint32:
+#             retval = io_uint32(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.int32:
+#             retval = io_int32(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.float32:
+#             retval = io_float32(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         elif dtype == dtypes.float64:
+#             retval = io_float64(
+#                 hband, 1, xoff, yoff, width, height, src)
+#         else:
+#             raise ValueError("Invalid dtype")
+#         # TODO: handle errors (by retval).
 
     def update_tags(self, bidx=0, ns=None, **kwargs):
         """Updates the tags of a dataset or one of its bands.

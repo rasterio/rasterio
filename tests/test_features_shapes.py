@@ -33,7 +33,7 @@ def test_shapes():
 def test_shapes_band_shortcut():
     """Access to shapes of labeled features"""
     with rasterio.drivers():
-        with rasterio.open('rasterio/tests/data/shade.tif') as src:
+        with rasterio.open('tests/data/shade.tif') as src:
             shapes = ftrz.shapes(rasterio.band(src, 1))
             shape, val = next(shapes)
             assert shape['type'] == 'Polygon'

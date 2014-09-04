@@ -27,21 +27,21 @@ def test_options(tmpdir):
     # With CPL_DEBUG=True, expect debug messages from GDAL in
     # logfile1
     with rasterio.drivers(CPL_DEBUG=True):
-        with rasterio.open("rasterio/tests/data/RGB.byte.tif") as src:
+        with rasterio.open("tests/data/RGB.byte.tif") as src:
             pass
 
     log = open(logfile1).read()
-    assert "GDAL: GDALOpen(rasterio/tests/data/RGB.byte.tif" in log
+    assert "GDAL: GDALOpen(tests/data/RGB.byte.tif" in log
     
     # The GDAL env above having exited, CPL_DEBUG should be OFF.
     logfile2 = str(tmpdir.join('test_options2.log'))
     fh = logging.FileHandler(logfile2)
     logger.addHandler(fh)
 
-    with rasterio.open("rasterio/tests/data/RGB.byte.tif") as src:
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
         pass
     
     # Expect no debug messages from GDAL.
     log = open(logfile2).read()
-    assert "GDAL: GDALOpen(rasterio/tests/data/RGB.byte.tif" not in log
+    assert "GDAL: GDALOpen(tests/data/RGB.byte.tif" not in log
 

@@ -14,14 +14,15 @@ from rasterio._io import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
-    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64)
+    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
+    complex_)
 from rasterio.five import string_types
 from rasterio.transform import Affine, guard_transform
 
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
-__version__ = "0.9"
+__version__ = "0.12.1"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -35,9 +36,9 @@ def open(
         driver=None,
         width=None, height=None,
         count=None,
+        crs=None, transform=None,
         dtype=None,
         nodata=None,
-        crs=None, transform=None,
         **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
     or "w" (write) and return a ``Reader`` or ``Updater`` object.

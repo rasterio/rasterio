@@ -13,7 +13,7 @@ to bands using the ``write_colormap()`` method.
 
     with rasterio.drivers():
 
-        with rasterio.open('rasterio/tests/data/shade.tif') as src:
+        with rasterio.open('tests/data/shade.tif') as src:
             shade = src.read_band(1)
             meta = src.meta
 

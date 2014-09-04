@@ -25,6 +25,7 @@ cdef extern from "gdal.h":
         GF_Read
         GF_Write
 
+
 cdef class RasterReader:
     # Read-only access to raster data and metadata.
     
@@ -69,7 +70,7 @@ cdef int io_ubyte(
         int yoff, 
         int width, 
         int height, 
-        np.ndarray[DTYPE_UBYTE_t, ndim=2, mode='c'] buffer)
+        np.uint8_t[:, :] buffer)
 
 cdef int io_uint16(
         void *hband, 
@@ -77,8 +78,8 @@ cdef int io_uint16(
         int xoff, 
         int yoff, 
         int width, 
-        int height, 
-        np.ndarray[DTYPE_UINT16_t, ndim=2, mode='c'] buffer)
+        int height,
+        np.uint16_t[:, :] buffer)
 
 cdef int io_int16(
         void *hband, 
@@ -87,7 +88,7 @@ cdef int io_int16(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_INT16_t, ndim=2, mode='c'] buffer)
+        np.int16_t[:, :] buffer)
 
 cdef int io_uint32(
         void *hband, 
@@ -96,7 +97,7 @@ cdef int io_uint32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_UINT32_t, ndim=2, mode='c'] buffer)
+        np.uint32_t[:, :] buffer)
 
 cdef int io_int32(
         void *hband, 
@@ -105,7 +106,7 @@ cdef int io_int32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_INT32_t, ndim=2, mode='c'] buffer)
+        np.int32_t[:, :] buffer)
 
 cdef int io_float32(
         void *hband, 
@@ -114,7 +115,7 @@ cdef int io_float32(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_FLOAT32_t, ndim=2, mode='c'] buffer)
+        np.float32_t[:, :] buffer)
 
 cdef int io_float64(
         void *hband,
@@ -123,5 +124,126 @@ cdef int io_float64(
         int yoff,
         int width, 
         int height, 
-        np.ndarray[DTYPE_FLOAT64_t, ndim=2, mode='c'] buffer)
+        np.float64_t[:, :] buffer)
+
+cdef int io_multi_ubyte(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.uint8_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_uint16(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.uint16_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_int16(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.int16_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_uint32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.uint32_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_int32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.int32_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_float32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.float32_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_float64(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.float64_t[:, :, :] buffer,
+        long[:] indexes,
+        int count) nogil
+
+cdef int io_multi_cint16(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex_t[:, :, :] out,
+        long[:] indexes,
+        int count)
+
+cdef int io_multi_cint32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex_t[:, :, :] out,
+        long[:] indexes,
+        int count)
+
+cdef int io_multi_cfloat32(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex64_t[:, :, :] out,
+        long[:] indexes,
+        int count)
+
+cdef int io_multi_cfloat64(
+        void *hds, 
+        int mode, 
+        int xoff, 
+        int yoff, 
+        int width, 
+        int height, 
+        np.complex128_t[:, :, :] out,
+        long[:] indexes,
+        int count)
 
