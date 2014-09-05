@@ -9,14 +9,13 @@ import sys
 import warnings
 
 import rasterio
-from rasterio.tool import main
+import rasterio.tool
 
 
 warnings.simplefilter('default')
 
+def main():
 
-if __name__ == '__main__':
-    
     parser = argparse.ArgumentParser(
         prog="rio_insp",
         description="Open a dataset and drop into an interactive interpreter")
@@ -77,7 +76,7 @@ if __name__ == '__main__':
                         tag_ns = args.tags
                     pprint.pprint(src.tags(ns=tag_ns), indent=args.indent)
                 else:
-                    main(
+                    rasterio.tool.main(
                         "Rasterio %s Interactive Inspector (Python %s)\n"
                         'Type "src.meta", "src.read_band(1)", or "help(src)" '
                         'for more information.' %  (
