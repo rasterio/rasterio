@@ -4,7 +4,7 @@ import json
 import time
 import warnings
 
-import numpy
+import numpy as np
 
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize
@@ -22,10 +22,10 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     numpy.uint8) data type. If a mask is provided, pixels for which the
     mask is `False` will be excluded from feature generation.
     """
-    if image.dtype.type != rasterio.ubyte:
+    if np.dtype(image.dtype) != np.dtype(rasterio.ubyte):
         raise ValueError("Image must be dtype uint8/ubyte")
 
-    if mask is not None and mask.dtype.type != rasterio.bool_:
+    if mask is not None and np.dtype(mask.dtype) != np.dtype(rasterio.bool_):
         raise ValueError("Mask must be dtype rasterio.bool_")
 
     if connectivity not in (4, 8):
@@ -47,10 +47,11 @@ def sieve(image, size, connectivity=4, output=None):
     The image must be of unsigned 8-bit integer (rasterio.byte or
     numpy.uint8) data type.
     """
-    if image.dtype.type != rasterio.ubyte:
+    if np.dtype(image.dtype) != np.dtype(rasterio.ubyte):
         raise ValueError("Image must be dtype uint8/ubyte")
 
-    if output is not None and output.dtype.type != rasterio.ubyte:
+    if output is not None and (
+            np.dtype(output.dtype) != np.dtype(rasterio.ubyte)):
         raise ValueError("Output must be dtype uint8/ubyte")
 
     with rasterio.drivers():
@@ -87,7 +88,8 @@ def rasterize(
     :param default_value: value burned in for shapes if not provided as part of shapes.  Must be unsigned integer type (uint8).
     """
 
-    if not isinstance(default_value, int) or default_value > 255 or default_value < 0:
+    if not isinstance(default_value, int) or (
+            default_value > 255 or default_value < 0):
         raise ValueError("default_value %s is not uint8/ubyte" % default_value)
 
     geoms = []
@@ -103,10 +105,10 @@ def rasterize(
             geoms.append((entry, default_value))
     
     if out_shape is not None:
-        out = numpy.empty(out_shape, dtype=rasterio.ubyte)
+        out = np.empty(out_shape, dtype=rasterio.ubyte)
         out.fill(fill)
     elif output is not None:
-        if output.dtype.type != rasterio.ubyte:
+        if np.dtype(output.dtype) != np.dtype(rasterio.ubyte):
             raise ValueError("Output image must be dtype uint8/ubyte")
         out = output
     else:

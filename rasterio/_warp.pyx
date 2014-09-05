@@ -179,7 +179,7 @@ def _reproject(
         src_count = source.shape[0]
         rows = source.shape[1]
         cols = source.shape[2]
-        dtype = source.dtype.type
+        dtype = np.dtype(source.dtype).name
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
             raise ValueError("NULL driver for 'MEM'")
@@ -267,7 +267,7 @@ def _reproject(
         _, rows, cols = destination.shape
         hdsout = _gdal.GDALCreate(
                         hrdriver, "output", cols, rows, src_count, 
-                        dtypes.dtype_rev[destination.dtype.type], NULL)
+                        dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
         if hdsout == NULL:
             raise ValueError("NULL output datasource")
         _gdal.GDALSetDescription(
@@ -397,7 +397,7 @@ def _reproject(
 
     if reprojected and isinstance(destination, np.ndarray):
         try:
-            dtype = destination.dtype
+            dtype = np.dtype(destination.dtype).name
             _, rows, cols = destination.shape
             indexes = np.array(range(1, src_count+1))
             if dtype == dtypes.ubyte:
