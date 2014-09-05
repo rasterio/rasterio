@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- Add single value options to rio info command (#139).
+
 0.12.1 (2014-09-02)
 -------------------
 - Add missing rasterio.rio package (#135).
