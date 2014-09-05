@@ -113,5 +113,5 @@ def test_cli_info_shape():
     result = subprocess.check_output(
         'if [[ `rio info tests/data/RGB.byte.tif --shape` == "718 791" ]]; '
         'then echo "True"; fi',
-        shell=True)
+        shell=True, executable='/bin/bash')
     assert result.decode('utf-8').strip() == 'True'

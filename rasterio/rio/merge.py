@@ -5,7 +5,6 @@ import os.path
 import sys
 
 import click
-import numpy as np
 
 import rasterio
 
@@ -31,6 +30,8 @@ def merge(ctx, input, output):
     Input files are merged in their listed order using a reverse
     painter's algorithm.
     """
+    import numpy as np
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:

@@ -13,9 +13,6 @@ import warnings
 import click
 
 import rasterio
-import rasterio.features
-import rasterio.tool
-import rasterio.warp
 
 from rasterio.rio.cli import cli
 from rasterio.rio.info import info
@@ -95,6 +92,8 @@ def write_features(file, collection,
 @click.option('--mode', type=click.Choice(['r', 'r+']), default='r', help="File mode (default 'r').")
 @click.pass_context
 def insp(ctx, src_path, mode):
+    import rasterio.tool
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:
@@ -171,6 +170,8 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
     $ rio bounds *.tif | geojsonio
 
     """
+    import rasterio.warp
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
@@ -332,6 +333,8 @@ def shapes(
     """Writes features of a dataset out as GeoJSON. It's intended for
     use with single-band rasters and reads from the first band.
     """
+    import rasterio.features
+    import rasterio.warp
 
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
@@ -409,6 +412,8 @@ def shapes(
               help="Decimal precision of coordinates.")
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, mode, precision):
+    import rasterio.warp
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:
