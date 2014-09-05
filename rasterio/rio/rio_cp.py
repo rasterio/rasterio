@@ -2,46 +2,15 @@
 
 """Copy a raster with various options."""
 
+import argparse
+import logging
+import sys
+
 import rasterio
 
 
-def main(source, destination, opts, template=None, log=None):
+def main():
     """Copy from source to destination with new options"""
-
-    with rasterio.drivers():
-
-        try:
-
-            with rasterio.open(source) as src:
-
-                # First, copy the opts to the destination's kwargs.
-                kwargs = src.meta
-                kwargs.update(opts)
-
-                # If there's a template file, overlay its georeferencing.
-                if template is not None:
-                    with rasterio.open(template) as tmpl:
-                        kwargs['transform'] = tmpl.transform
-                        kwargs['crs'] = tmpl.crs
-
-                # Write to the destination.
-                # TODO: use shortcut to source buffer.
-                with rasterio.open(destination, 'w', **kwargs) as dst:
-                    for i in dst.indexes:
-                        dst.write_band(i, src.read_band(i))
-
-        except:
-            log.exception("rio_cp failed, exception caught")
-            return 1
-
-    return 0
-
-
-if __name__ == '__main__':
-
-    import argparse
-    import logging
-    import sys
 
     parser = argparse.ArgumentParser(
         description="Copy raster file with options")
@@ -112,11 +81,40 @@ if __name__ == '__main__':
     # TODO: support other formats.
     options['driver'] = 'GTiff'
 
-    sys.exit(
-        main(
-            args.source,
-            args.destination,
-            options,
-            args.template_file,
-            log=logger))
+    source = args.source
+    destination = args.destination
+    opts = options
+    template=args.template_file,
+    log = logger
 
+    with rasterio.drivers():
+
+        try:
+
+            with rasterio.open(source) as src:
+
+                # First, copy the opts to the destination's kwargs.
+                kwargs = src.meta
+                kwargs.update(opts)
+
+                # If there's a template file, overlay its georeferencing.
+                if template is not None:
+                    with rasterio.open(template) as tmpl:
+                        kwargs['transform'] = tmpl.transform
+                        kwargs['crs'] = tmpl.crs
+
+                # Write to the destination.
+                # TODO: use shortcut to source buffer.
+                with rasterio.open(destination, 'w', **kwargs) as dst:
+                    for i in dst.indexes:
+                        dst.write_band(i, src.read_band(i))
+
+        except:
+            log.exception("rio_cp failed, exception caught")
+            sys.exit(1)
+
+    sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()

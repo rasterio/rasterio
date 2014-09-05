@@ -153,14 +153,18 @@ setup(name='rasterio',
       keywords='raster gdal',
       author='Sean Gillies',
       author_email='sean@mapbox.com',
-      url='https://github.com/sgillies/rasterio',
+      url='https://github.com/mapbox/rasterio',
       license='BSD',
       package_dir={'': '.'},
       packages=['rasterio'],
-      scripts = [
-        'scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp', 'scripts/rio'],
+      entry_points='''
+        [console_scripts]
+        rio=rasterio.rio.rio:cli
+        rio_cp=rasterio.rio.rio_cp:main
+        rio_insp=rasterio.rio.rio_insp:main
+        rio_warp=rasterio.rio.rio_warp:main
+      ''',
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,
       install_requires=inst_reqs )
-
