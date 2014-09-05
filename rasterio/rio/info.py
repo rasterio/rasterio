@@ -7,8 +7,9 @@ import pprint
 import sys
 
 import click
-import rasterio
 
+import rasterio
+import rasterio.crs
 from rasterio.rio.cli import cli
 
 @cli.command(short_help="Print information about a data file.")
@@ -20,27 +21,39 @@ from rasterio.rio.cli import cli
 
 @click.option('--tags', 'aspect', flag_value='tags',
               help="Show data file tags.")
-
-@click.option('--indent', default=2, type=int,
-              help="Indentation level for pretty printed output")
-
 @click.option('--namespace', help="Select a tag namespace.")
 
+@click.option('--indent', default=None, type=int,
+              help="Indentation level for pretty printed output")
+
+# Options to pick out a single metadata item and print it as
+# a string.
 @click.option('--count', 'meta_member', flag_value='count',
               help="Print the count of bands.")
-
 @click.option('--dtype', 'meta_member', flag_value='dtype',
               help="Print the dtype name.")
-
 @click.option('--nodata', 'meta_member', flag_value='nodata',
               help="Print the nodata value.")
-
+@click.option('--driver', 'meta_member', flag_value='driver',
+              help="Print the format driver.")
 @click.option('--shape', 'meta_member', flag_value='shape',
+              help="Print the (height, width) shape.")
+@click.option('--height', 'meta_member', flag_value='height',
+              help="Print the height (number of rows).")
+@click.option('--width', 'meta_member', flag_value='width',
+              help="Print the width (number of columns).")
+@click.option('--crs', 'meta_member', flag_value='crs',
+              help="Print the CRS as a PROJ.4 string.")
+@click.option('--bounds', 'meta_member', flag_value='bounds',
               help="Print the nodata value.")
 
 @click.pass_context
 
 def info(ctx, src_path, aspect, indent, namespace, meta_member):
+    """Print metadata about the dataset as JSON.
+
+    Optionally print a single metadata item as a string.
+    """
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     stdout = click.get_text_stream('stdout')
@@ -48,7 +61,14 @@ def info(ctx, src_path, aspect, indent, namespace, meta_member):
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             with rasterio.open(src_path, 'r-') as src:
                 info = src.meta
+                del info['affine']
+                del info['transform']
                 info['shape'] = info['height'], info['width']
+                info['bounds'] = src.bounds
+                proj4 = rasterio.crs.to_string(src.crs)
+                if proj4.startswith('+init=epsg'):
+                    proj4 = proj4.split('=')[1].upper()
+                info['crs'] = proj4
                 if aspect == 'meta':
                     if meta_member:
                         if isinstance(info[meta_member], (list, tuple)):
