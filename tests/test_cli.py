@@ -84,3 +84,34 @@ def test_cli_bounds_seq_collection_multi(tmpdir):
     assert json_texts[0].strip() == '{"bbox": [-78.898133, 23.564991, -76.599438, 25.550874], "features": [{"bbox": [-78.898133, 23.564991, -76.599438, 25.550874], "geometry": {"coordinates": [[[-78.898133, 23.564991], [-76.599438, 23.564991], [-76.599438, 25.550874], [-78.898133, 25.550874], [-78.898133, 23.564991]]], "type": "Polygon"}, "properties": {"id": "0", "title": "tests/data/RGB.byte.tif"}, "type": "Feature"}], "type": "FeatureCollection"}'
     assert json_texts[1].strip() == '{"bbox": [-78.898133, 23.564991, -76.599438, 25.550874], "features": [{"bbox": [-78.898133, 23.564991, -76.599438, 25.550874], "geometry": {"coordinates": [[[-78.898133, 23.564991], [-76.599438, 23.564991], [-76.599438, 25.550874], [-78.898133, 25.550874], [-78.898133, 23.564991]]], "type": "Polygon"}, "properties": {"id": "1", "title": "tests/data/RGB.byte.tif"}, "type": "Feature"}], "type": "FeatureCollection"}'
 
+
+def test_cli_info_count():
+    result = subprocess.check_output(
+        'if [ `rio info tests/data/RGB.byte.tif --count` -eq 3 ]; '
+        'then echo "True"; fi',
+        shell=True)
+    assert result.decode('utf-8').strip() == 'True'
+
+
+def test_cli_info_nodata():
+    result = subprocess.check_output(
+        'if [ `rio info tests/data/RGB.byte.tif --nodata` = "0.0" ]; '
+        'then echo "True"; fi',
+        shell=True)
+    assert result.decode('utf-8').strip() == 'True'
+
+
+def test_cli_info_dtype():
+    result = subprocess.check_output(
+        'if [ `rio info tests/data/RGB.byte.tif --dtype` = "uint8" ]; '
+        'then echo "True"; fi',
+        shell=True)
+    assert result.decode('utf-8').strip() == 'True'
+
+
+def test_cli_info_shape():
+    result = subprocess.check_output(
+        'if [[ `rio info tests/data/RGB.byte.tif --shape` == "718 791" ]]; '
+        'then echo "True"; fi',
+        shell=True, executable='/bin/bash')
+    assert result.decode('utf-8').strip() == 'True'

@@ -1,17 +1,26 @@
+# Mapping of GDAL to Numpy data types.
+#
+# Since 0.13 we are not importing numpy here and data types are strings.
+# Happily strings can be used throughout Numpy and so existing code will
+# break.
+#
+# Within Rasterio, to test data types, we use Numpy's dtype() factory to 
+# do something like this:
+#
+#   if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...
+#
 
-import numpy
-
-bool_ = numpy.bool_
-ubyte = uint8 = numpy.uint8
-uint16 = numpy.uint16
-int16 = numpy.int16
-uint32 = numpy.uint32
-int32 = numpy.int32
-float32 = numpy.float32
-float64 = numpy.float64
-complex_ = numpy.complex_
-complex64 = numpy.complex64
-complex128 = numpy.complex128
+bool_ = 'bool'
+ubyte = uint8 = 'uint8'
+uint16 = 'uint16'
+int16 = 'int16'
+uint32 = 'uint32'
+int32 = 'int32'
+float32 = 'float32'
+float64 = 'float64'
+complex_ = 'complex'
+complex64 = 'complex64'
+complex128 = 'complex128'
 
 # Not supported:
 #  GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10, GDT_CFloat64 = 11
@@ -31,7 +40,7 @@ dtype_fwd = {
     11: complex128 }    # GDT_CFloat64
 
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
-dtype_rev[uint8] = 1
+dtype_rev['uint8'] = 1
 
 typename_fwd = {
     0: 'Unknown',
@@ -49,8 +58,16 @@ typename_fwd = {
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
-def _gdal_typename(dtype):
-    return typename_fwd[dtype_rev[dtype]]
+def _gdal_typename(dt):
+    try:
+        return typename_fwd[dtype_rev[dt]]
+    except KeyError:
+        return typename_fwd[dtype_rev[dt().dtype.name]]
 
-
-
+def check_dtype(dt):
+    if dt not in dtype_rev:
+        try:
+            return dt().dtype.name in dtype_rev
+        except:
+            return False
+    return True

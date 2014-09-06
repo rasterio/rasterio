@@ -5,12 +5,7 @@ import logging
 import os
 import warnings
 
-import numpy
-
-from rasterio._copy import RasterCopier
-from rasterio._io import RasterReader, RasterUpdater
-from rasterio._io import eval_window, window_index, window_shape
-from rasterio._io import tastes_like_gdal
+from rasterio._base import eval_window, window_shape, window_index
 from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
@@ -19,10 +14,11 @@ from rasterio.dtypes import (
 from rasterio.five import string_types
 from rasterio.transform import Affine, guard_transform
 
+# Classes in rasterio._io are imported below just before we need them.
 
 __all__ = [
-    'band', 'open', 'drivers', 'copy', 'check_dtype', 'pad']
-__version__ = "0.12.1"
+    'band', 'open', 'drivers', 'copy', 'pad']
+__version__ = "0.13"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -95,10 +91,16 @@ def open(
         transform = guard_transform(transform)
 
     if mode == 'r':
+        from rasterio._io import RasterReader
         s = RasterReader(path)
     elif mode == 'r+':
+        from rasterio._io import RasterUpdater
         s = RasterUpdater(path, mode)
+    elif mode == 'r-':
+        from rasterio._base import DatasetReader
+        s = DatasetReader(path)
     elif mode == 'w':
+        from rasterio._io import RasterUpdater
         s = RasterUpdater(
                 path, mode, driver,
                 width, height, count, 
@@ -112,11 +114,6 @@ def open(
     return s
 
 
-def check_dtype(dt):
-    tp = getattr(dt, 'type', dt)
-    return tp in rasterio.dtypes.dtype_rev
-
-
 def copy(src, dst, **kw):
     """Copy a source dataset to a new destination with driver specific
     creation options.
@@ -128,6 +125,7 @@ def copy(src, dst, **kw):
     
     This is the one way to create write-once files like JPEGs.
     """
+    from rasterio._copy import RasterCopier
     with drivers():
         return RasterCopier()(src, dst, **kw)
 
@@ -149,7 +147,7 @@ def band(ds, bidx):
     return Band(
         ds, 
         bidx, 
-        numpy.dtype(set(ds.dtypes).pop()),
+        set(ds.dtypes).pop(),
         ds.shape)
 
 
@@ -157,6 +155,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     """Returns a padded array and shifted affine transform matrix.
     
     Array is padded using `numpy.pad()`."""
+    import numpy
     transform = guard_transform(transform)
     padded_array = numpy.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)

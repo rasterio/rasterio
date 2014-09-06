@@ -80,6 +80,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         sys.exit(1)
     ext_modules = cythonize([
         Extension(
+            'rasterio._base', ['rasterio/_base.pyx'], **ext_options),
+        Extension(
             'rasterio._io', ['rasterio/_io.pyx'], **ext_options),
         Extension(
             'rasterio._copy', ['rasterio/_copy.pyx'], **ext_options),
@@ -98,6 +100,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
     ext_modules = [
+        Extension(
+            'rasterio._base', ['rasterio/_base.c'], **ext_options),
         Extension(
             'rasterio._io', ['rasterio/_io.c'], **ext_options),
         Extension(
@@ -149,14 +153,18 @@ setup(name='rasterio',
       keywords='raster gdal',
       author='Sean Gillies',
       author_email='sean@mapbox.com',
-      url='https://github.com/sgillies/rasterio',
+      url='https://github.com/mapbox/rasterio',
       license='BSD',
       package_dir={'': '.'},
       packages=['rasterio'],
-      scripts = [
-        'scripts/rio_cp', 'scripts/rio_insp', 'scripts/rio_warp', 'scripts/rio'],
+      entry_points='''
+        [console_scripts]
+        rio=rasterio.rio.rio:cli
+        rio_cp=rasterio.rio.rio_cp:main
+        rio_insp=rasterio.rio.rio_insp:main
+        rio_warp=rasterio.rio.rio_warp:main
+      ''',
       include_package_data=True,
       ext_modules=ext_modules,
       zip_safe=False,
       install_requires=inst_reqs )
-

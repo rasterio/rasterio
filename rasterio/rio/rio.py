@@ -13,11 +13,9 @@ import warnings
 import click
 
 import rasterio
-import rasterio.features
-import rasterio.tool
-import rasterio.warp
 
 from rasterio.rio.cli import cli
+from rasterio.rio.info import info
 from rasterio.rio.merge import merge
 
 
@@ -88,38 +86,14 @@ def write_features(file, collection,
 # module. Longer ones, e.g. insp() shall call functions imported from
 # rasterio.tool.
 
-# Info command.
-@cli.command(short_help="Print information about a data file.")
-@click.argument('src_path', type=click.Path(exists=True))
-@click.option('--meta', 'aspect', flag_value='meta', default=True,
-    help="Show data file structure (default).")
-@click.option('--tags', 'aspect', flag_value='tags',
-    help="Show data file tags.")
-@click.option('--indent', default=2, type=int,
-              help="Indentation level for pretty printed output")
-@click.option('--namespace', help="Select a tag namespace.")
-@click.pass_context
-def info(ctx, src_path, aspect, indent, namespace):
-    verbosity = ctx.obj['verbosity']
-    logger = logging.getLogger('rio')
-    try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            with rasterio.open(src_path) as src:
-                if aspect == 'meta':
-                    pprint.pprint(src.meta, indent=indent)
-                elif aspect == 'tags':
-                    pprint.pprint(src.tags(ns=namespace), indent=indent)
-        sys.exit(0)
-    except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
-
 # Insp command.
 @cli.command(short_help="Open a data file and start an interpreter.")
 @click.argument('src_path', type=click.Path(exists=True))
 @click.option('--mode', type=click.Choice(['r', 'r+']), default='r', help="File mode (default 'r').")
 @click.pass_context
 def insp(ctx, src_path, mode):
+    import rasterio.tool
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:
@@ -196,6 +170,8 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
     $ rio bounds *.tif | geojsonio
 
     """
+    import rasterio.warp
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
@@ -357,6 +333,8 @@ def shapes(
     """Writes features of a dataset out as GeoJSON. It's intended for
     use with single-band rasters and reads from the first band.
     """
+    import rasterio.features
+    import rasterio.warp
 
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
@@ -434,6 +412,8 @@ def shapes(
               help="Decimal precision of coordinates.")
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, mode, precision):
+    import rasterio.warp
+
     verbosity = ctx.obj['verbosity']
     logger = logging.getLogger('rio')
     try:
