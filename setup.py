@@ -156,7 +156,7 @@ setup(name='rasterio',
       url='https://github.com/mapbox/rasterio',
       license='BSD',
       package_dir={'': '.'},
-      packages=['rasterio'],
+      packages=['rasterio', 'rasterio.rio'],
       entry_points='''
         [console_scripts]
         rio=rasterio.rio.rio:cli
