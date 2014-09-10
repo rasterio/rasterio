@@ -1,8 +1,8 @@
 Changes
 =======
 
-Next
-----
+0.13 (2014-09-09)
+-----------------
 - Add single value options to rio info command (#139, #143).
 - Switch to console scripts entry points for rio, &c (#137).
 - Avoid unnecessary imports of Numpy in info command, elsewhere (#140).
