@@ -106,8 +106,10 @@ cdef class DatasetReader(object):
             raise ValueError("Null dataset")
         crs = {}
         cdef char *wkt = _gdal.GDALGetProjectionRef(self._hds)
+        if wkt is NULL:
+            raise ValueError("Unexpected NULL spatial reference")
         wkt_b = wkt
-        if wkt != NULL:
+        if len(wkt_b) > 0:
             osr = _gdal.OSRNewSpatialReference(wkt)
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
@@ -157,31 +159,37 @@ cdef class DatasetReader(object):
             _gdal.CPLFree(proj_c)
             _gdal.OSRDestroySpatialReference(osr)
         else:
-            log.debug("Projection not found (cogr_crs was NULL)")
+            log.debug("GDAL dataset has no projection.")
         return crs
 
     def read_crs_wkt(self):
         cdef char *proj_c = NULL
         cdef char *key_c = NULL
+        cdef void *osr = NULL
+        cdef char *wkt = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
-        cdef void *osr = _gdal.OSRNewSpatialReference(
-            _gdal.GDALGetProjectionRef(self._hds))
-        log.debug("Got coordinate system")
-        crs = {}
-        if osr != NULL:
-            retval = _gdal.OSRAutoIdentifyEPSG(osr)
-            if retval > 0:
-                log.info("Failed to auto identify EPSG: %d", retval)
-            _gdal.OSRExportToWkt(osr, &proj_c)
-            if proj_c == NULL:
-                raise ValueError("Null projection")
-            proj_b = proj_c
-            crs_wkt = proj_b.decode('utf-8')
-            _gdal.CPLFree(proj_c)
-            _gdal.OSRDestroySpatialReference(osr)
+        wkt = _gdal.GDALGetProjectionRef(self._hds)
+        if wkt is NULL:
+            raise ValueError("Unexpected NULL spatial reference")
+        wkt_b = wkt
+        if len(wkt_b) > 0:
+            osr = _gdal.OSRNewSpatialReference(wkt)
+            log.debug("Got coordinate system")
+            if osr != NULL:
+                retval = _gdal.OSRAutoIdentifyEPSG(osr)
+                if retval > 0:
+                    log.info("Failed to auto identify EPSG: %d", retval)
+                _gdal.OSRExportToWkt(osr, &proj_c)
+                if proj_c == NULL:
+                    raise ValueError("Null projection")
+                proj_b = proj_c
+                crs_wkt = proj_b.decode('utf-8')
+                _gdal.CPLFree(proj_c)
+                _gdal.OSRDestroySpatialReference(osr)
         else:
-            log.debug("Projection not found (cogr_crs was NULL)")
+            log.debug("GDAL dataset has no projection.")
+            crs_wkt = None
         return crs_wkt
 
     def read_transform(self):
