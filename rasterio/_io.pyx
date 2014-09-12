@@ -1081,64 +1081,12 @@ cdef class RasterUpdater(RasterReader):
         Band indexes begin with 1: read_band(1) returns the first band.
 
         The optional `window` argument takes a tuple like:
-        
+
             ((row_start, row_stop), (col_start, col_stop))
 
         specifying a raster subset to write into.
         """
         self.write(src, bidx, window=window)
-
-#         if bidx not in self.indexes:
-#             raise IndexError("band index out of range")
-#         i = self.indexes.index(bidx)
-#         if self._hds == NULL:
-#             raise ValueError("can't read closed raster file")
-#         if src is not None and src.dtype != self.dtypes[i]:
-#             raise ValueError(
-#                 "the array's dtype '%s' does not match "
-#                 "the file's dtype '%s'" % (src.dtype, self.dtypes[i]))
-#         
-#         cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-#         if hband == NULL:
-#             raise ValueError("NULL band")
-#         
-#         if window:
-#             window = eval_window(window, self.height, self.width)
-#             yoff = window[0][0]
-#             xoff = window[1][0]
-#             height = window[0][1] - yoff
-#             width = window[1][1] - xoff
-#         else:
-#             xoff = yoff = 0
-#             width = self.width
-#             height = self.height
-#         dtype = self.dtypes[i]
-#         # Require C-continguous arrays (see #108).
-#         src = np.require(src, dtype=dtype, requirements='C')
-#         if dtype == dtypes.ubyte:
-#             retval = io_ubyte(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         elif dtype == dtypes.uint16:
-#             retval = io_uint16(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         elif dtype == dtypes.int16:
-#             retval = io_int16(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         elif dtype == dtypes.uint32:
-#             retval = io_uint32(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         elif dtype == dtypes.int32:
-#             retval = io_int32(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         elif dtype == dtypes.float32:
-#             retval = io_float32(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         elif dtype == dtypes.float64:
-#             retval = io_float64(
-#                 hband, 1, xoff, yoff, width, height, src)
-#         else:
-#             raise ValueError("Invalid dtype")
-#         # TODO: handle errors (by retval).
 
     def update_tags(self, bidx=0, ns=None, **kwargs):
         """Updates the tags of a dataset or one of its bands.
@@ -1152,9 +1100,11 @@ cdef class RasterUpdater(RasterReader):
         band. The optional ns argument can be used to select a namespace
         other than the default.
         """
-        cdef char *key_c, *value_c
-        cdef void *hobj
-        cdef const char *domain_c
+        cdef char *key_c = NULL
+        cdef char *value_c = NULL
+        cdef void *hobj = NULL
+        cdef const char *domain_c = NULL
+        cdef char **papszStrList = NULL
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if bidx > 0:
@@ -1170,18 +1120,23 @@ cdef class RasterUpdater(RasterReader):
             domain_c = domain_b
         else:
             domain_c = NULL
-        cdef char **papszStrList = _gdal.GDALGetMetadata(hobj, domain_c)
+        
+        papszStrList = _gdal.GDALGetMetadata(hobj, domain_c)
+
         for key, value in kwargs.items():
             key_b = text_type(key).encode('utf-8')
             value_b = text_type(value).encode('utf-8')
             key_c = key_b
             value_c = value_b
             i = _gdal.CSLFindName(papszStrList, key_c)
-            if i < 0:
-                papszStrList = _gdal.CSLAddNameValue(papszStrList, key_c, value_c)
-            else:
-                papszStrList = _gdal.CSLSetNameValue(papszStrList, key_c, value_c)
+            papszStrList = _gdal.CSLSetNameValue(
+                    papszStrList, key_c, value_c)
+
         retval = _gdal.GDALSetMetadata(hobj, papszStrList, domain_c)
+        if retval == 2:
+            log.warn("Tags accepted but may not be persisted.")
+        elif retval == 3:
+            raise RuntimeError("Tag update failed.")
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""

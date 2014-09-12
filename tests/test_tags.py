@@ -1,7 +1,11 @@
 #-*- coding: utf-8 -*-
+import logging
+import sys
 
 import pytest
 import rasterio
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 def test_tags_read():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
