@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.13.1 (2014-09-13)
+-------------------
+- Read unprojected images with less flailing (#117).
+
 0.13 (2014-09-09)
 -----------------
 - Add single value options to rio info command (#139, #143).
