@@ -1,6 +1,7 @@
 """Functions for working with features in a raster dataset."""
 
 import json
+import logging
 import time
 import warnings
 
@@ -9,6 +10,13 @@ import numpy as np
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize
 from rasterio.transform import IDENTITY, guard_transform
+
+
+log = logging.getLogger('rasterio')
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+log.addHandler(NullHandler())
 
 
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
@@ -92,18 +100,33 @@ def rasterize(
             default_value > 255 or default_value < 0):
         raise ValueError("default_value %s is not uint8/ubyte" % default_value)
 
-    geoms = []
-    for index, entry in enumerate(shapes):
-        if isinstance(entry, (tuple, list)):
-            geometry, value = entry
-            if not isinstance(value, int) or value > 255 or value < 0:
-                raise ValueError(
-                    "Shape number %i, value '%s' is not uint8/ubyte" % (
-                        index, value))
-            geoms.append((geometry, value))
-        else:
-            geoms.append((entry, default_value))
-    
+    def shape_source():
+        """A generator that screens out non-geometric objects and does
+        its best to make sure that no NULLs get through to 
+        GDALRasterizeGeometries."""
+        for index, item in enumerate(shapes):
+            try:
+                
+                if isinstance(item, (tuple, list)):
+                    geom, value = item
+                    # TODO: relax this for other data types.
+                    if not isinstance(value, int) or value > 255 or value < 0:
+                        raise ValueError(
+                            "Shape number %i, value '%s' is not uint8/ubyte" % (
+                                index, value))
+                else:
+                    geom = item
+                    value = default_value
+                geom = getattr(geom, '__geo_interface__', None) or geom
+                if (not isinstance(geom, dict) or 
+                    'type' not in geom or 'coordinates' not in geom):
+                    raise ValueError(
+                        "Object %r at index %d is not a geometric object" %
+                        (geom, index))
+                yield geom, value
+            except Exception:
+                log.exception("Exception caught, skipping shape %d", index)
+
     if out_shape is not None:
         out = np.empty(out_shape, dtype=rasterio.ubyte)
         out.fill(fill)
@@ -117,7 +140,7 @@ def rasterize(
     transform = guard_transform(transform)
 
     with rasterio.drivers():
-        _rasterize(geoms, out, transform.to_gdal(), all_touched)
+        _rasterize(shape_source(), out, transform.to_gdal(), all_touched)
     
     return out
 
