@@ -1,7 +1,5 @@
 import subprocess
 
-from six import StringIO
-
 
 def test_cli_bounds_obj_bbox():
     result = subprocess.check_output(

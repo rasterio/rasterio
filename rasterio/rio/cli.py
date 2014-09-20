@@ -3,6 +3,7 @@ import sys
 
 import click
 
+from rasterio.rio import options
 
 def configure_logging(verbosity):
     log_level = max(10, 30 - 10*verbosity)
@@ -11,8 +12,8 @@ def configure_logging(verbosity):
 
 # The CLI command group.
 @click.group(help="Rasterio command line interface.")
-@click.option('--verbose', '-v', count=True, help="Increase verbosity.")
-@click.option('--quiet', '-q', count=True, help="Decrease verbosity.")
+@options.verbose
+@options.quiet
 @click.pass_context
 def cli(ctx, verbose, quiet):
     verbosity = verbose - quiet

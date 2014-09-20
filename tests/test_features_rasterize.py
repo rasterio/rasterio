@@ -45,11 +45,6 @@ def test_rasterize_geometries():
         truth[2:4, 2:4] = value
         assert (result == truth).min() == True
 
-        # we expect a ValueError if pixel value is not in 8 bit unsigned range
-        value = 500
-        with pytest.raises(ValueError):
-            rasterize([(geometry, value)], out_shape=(rows, cols))
-
 
 def test_rasterize_geometries_symmetric():
     """Make sure that rasterize is symmetric with shapes"""

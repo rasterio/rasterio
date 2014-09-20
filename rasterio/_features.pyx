@@ -210,7 +210,7 @@ def _rasterize(shapes, image, transform, all_touched):
 
     cdef int retval
     cdef size_t i
-    cdef size_t num_geometries = len(shapes)
+    cdef size_t num_geometries = 0
     cdef void *memdriver
     cdef void *out_ds
     cdef void *out_band
@@ -249,14 +249,23 @@ def _rasterize(shapes, image, transform, all_touched):
         if out_band == NULL:
             raise ValueError("NULL output band")
 
+        # GDAL needs an array of geometries.
+        # For now, we'll build a Python list on the way to building that
+        # C array. TODO: make this more efficient.
+        all_shapes = list(shapes)
+        num_geometries = len(all_shapes)
 
         ogr_geoms = <void **>_gdal.CPLMalloc(num_geometries * sizeof(void*))
         pixel_values = <double *>_gdal.CPLMalloc(
                             num_geometries * sizeof(double))
 
-        for i, (geometry, value) in enumerate(shapes):
-            ogr_geoms[i] = OGRGeomBuilder().build(geometry)
-            pixel_values[i] = <double>value
+        for i, (geometry, value) in enumerate(all_shapes):
+            try:
+                ogr_geoms[i] = OGRGeomBuilder().build(geometry)
+                pixel_values[i] = <double>value
+            except:
+                log.error("Geometry %r at index %d with value %d skipped",
+                    geometry, i, value)
 
         # First, copy image data to the in-memory band.
         retval = _io.io_ubyte(out_band, 1, 0, 0, width, height, image)
@@ -497,6 +506,8 @@ cdef class OGRGeomBuilder:
     cdef void * build(self, object geometry) except NULL:
         cdef object typename = geometry['type']
         cdef object coordinates = geometry.get('coordinates')
+        if not typename or not coordinates:
+            raise ValueError("Input is not a valid geometry object")
         if typename == 'Point':
             return self._buildPoint(coordinates)
         elif typename == 'LineString':

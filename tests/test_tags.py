@@ -1,7 +1,11 @@
 #-*- coding: utf-8 -*-
+import logging
+import sys
 
 import pytest
 import rasterio
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 def test_tags_read():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -41,4 +45,3 @@ def test_tags_update(tmpdir):
         assert src.tags() == {'a': '1', 'b': '2'}
         assert src.tags(1) == {'c': '3'}
         assert src.tags(ns='rasterio_testing') == {'rus': u'другая строка'}
-
