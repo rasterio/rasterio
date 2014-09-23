@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.13.2 (2014-09-23)
+-------------------
+- Add enum34 to requirements (#149).
+- Make rasterize() more robust (#146).
+- Pin Cython>=0.20 and Numpy>=1.8 (#151).
+
 0.13.1 (2014-09-13)
 -------------------
 - Read unprojected images with less flailing (#117).
