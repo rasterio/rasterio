@@ -1,5 +1,5 @@
 affine>=1.0
 click
 enum34
-numpy
+numpy>=1.8
 setuptools
