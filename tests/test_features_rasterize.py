@@ -87,7 +87,7 @@ def test_rasterize_dtype():
             # Since dtype is auto-detected, it may not match due to upcasting
 
         # Unsupported types should all raise exceptions
-        unsupported_types = (('int8', -127), ('int64', 20439845334323L),
+        unsupported_types = (('int8', -127), ('int64', 20439845334323),
                              ('float16', -9343.232))
 
         for dtype, default_value in unsupported_types:
