@@ -1278,7 +1278,7 @@ cdef class InMemoryRaster:
         (see rasterio.dtypes.dtype_rev)
         :param transform: GDAL compatible transform array
         """
-        
+
         self._image = image
         self.dataset = NULL
 

@@ -90,9 +90,9 @@ def get_minimum_int_dtype(values):
             return uint8
         elif max_value <= 65535:
             return uint16
-        elif max_value <= 4294967295L:
+        elif max_value <= 4294967295:
             return uint32
     elif min_value >= -32768 and max_value <= 32767:
         return int16
-    elif min_value >= -2147483648L and max_value <= 2147483647L:
+    elif min_value >= -2147483648 and max_value <= 2147483647:
         return int32
