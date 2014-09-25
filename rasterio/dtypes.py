@@ -71,3 +71,28 @@ def check_dtype(dt):
         except:
             return False
     return True
+
+
+def get_minimum_int_dtype(values):
+    """
+    Uses range checking to determine the minimum integer data type required
+    to represent values.
+
+    :param values: numpy array
+    :return: named data type that can be later used to create a numpy dtype
+    """
+
+    min_value = values.min()
+    max_value = values.max()
+    
+    if min_value >= 0:
+        if max_value <= 255:
+            return uint8
+        elif max_value <= 65535:
+            return uint16
+        elif max_value <= 4294967295L:
+            return uint32
+    elif min_value >= -32768 and max_value <= 32767:
+        return int16
+    elif min_value >= -2147483648L and max_value <= 2147483647L:
+        return int32

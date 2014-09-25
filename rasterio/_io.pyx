@@ -489,6 +489,45 @@ cdef int io_multi_cfloat64(
 
     return retval
 
+
+cdef int io_auto(image, void *hband, bint write):
+    """
+    Convenience function to handle IO with a GDAL band and a 2D numpy image
+
+    :param image: a numpy 2D image
+    :param hband: an instance of GDALGetRasterBand
+    :param write: 1 (True) uses write mode, 0 (False) uses read
+    :return: the return value from the data-type specific IO function
+    """
+
+    if not len(image.shape) == 2:
+        raise ValueError("Specified image must have 2 dimensions")
+
+    cdef int width = image.shape[1]
+    cdef int height = image.shape[0]
+
+    dtype_name = image.dtype.name
+
+    if dtype_name == "float32":
+        return io_float32(hband, write, 0, 0, width, height, image)
+    elif dtype_name == "float64":
+        return io_float64(hband, write, 0, 0, width, height, image)
+    elif dtype_name == "uint8":
+        return io_ubyte(hband, write, 0, 0, width, height, image)
+    elif dtype_name == "int16":
+        return io_int16(hband, write, 0, 0, width, height, image)
+    elif dtype_name == "int32":
+        return io_int32(hband, write, 0, 0, width, height, image)
+    elif dtype_name == "uint16":
+        return io_uint16(hband, write, 0, 0, width, height, image)
+    elif dtype_name == "uint32":
+        return io_uint32(hband, write, 0, 0, width, height, image)
+    else:
+        raise ValueError("Image dtype is not supported for this function."
+                         "Must be float32, float64, int16, int32, uint8, "
+                         "uint16, or uint32")
+
+
 cdef class RasterReader(_base.DatasetReader):
 
     def read_band(self, bidx, out=None, window=None, masked=None):
@@ -812,7 +851,7 @@ cdef class RasterUpdater(RasterReader):
                     gdal_dtype = dtypes.dtype_rev.get(tp)
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
-            
+
             # Creation options
             for k, v in self._options.items():
                 # Skip items that are definitely *not* valid driver options.
@@ -1207,3 +1246,85 @@ cdef class RasterUpdater(RasterReader):
             retval = io_ubyte(
                 hmask, 1, xoff, yoff, width, height, src)
 
+
+cdef class InMemoryRaster:
+    """
+    Class that manages a single-band in memory GDAL raster dataset.  Data type
+    is determined from the data type of the input numpy 2D array (image), and
+    must be one of the data types supported by GDAL
+    (see rasterio.dtypes.dtype_rev).  Data are populated at create time from
+    the 2D array passed in.
+
+    Use the 'with' pattern to instantiate this class for automatic closing
+    of the memory dataset.
+
+    This class includes attributes that are intended to be passed into GDAL
+    functions:
+    self.dataset
+    self.band
+    self.band_ids  (single element array with band ID of this dataset's band)
+    self.transform (GDAL compatible transform array)
+
+    This class is only intended for internal use within rasterio to support
+    IO with GDAL.  Other memory based operations should use numpy arrays.
+    """
+
+    def __init__(self, image, transform):
+        """
+        Create in-memory raster dataset, and populate its initial values with
+        the values in image.
+
+        :param image: 2D numpy array.  Must be of supported data type
+        (see rasterio.dtypes.dtype_rev)
+        :param transform: GDAL compatible transform array
+        """
+        
+        self._image = image
+        self.dataset = NULL
+
+        cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
+
+        # Several GDAL operations require the array of band IDs as input
+        self.band_ids[0] = 1
+
+        self.dataset = _gdal.GDALCreate(
+            memdriver,
+            "output",
+            image.shape[1],
+            image.shape[0],
+            1,
+            <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
+            NULL
+        )
+
+        if self.dataset == NULL:
+            raise ValueError("NULL output datasource")
+
+        for i in range(6):
+            self.transform[i] = transform[i]
+        err = _gdal.GDALSetGeoTransform(self.dataset, self.transform)
+        if err:
+            raise ValueError("transform not set: %s" % transform)
+
+        self.band = _gdal.GDALGetRasterBand(self.dataset, 1)
+        if self.band == NULL:
+            raise ValueError("NULL output band: {0}".format(i))
+
+        self.write(image)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
+
+    def close(self):
+        if self.dataset != NULL:
+            _gdal.GDALClose(self.dataset)
+
+    def read(self):
+        io_auto(self._image, self.band, False)
+        return self._image
+
+    def write(self, image):
+        io_auto(image, self.band, True)
