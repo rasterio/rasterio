@@ -137,5 +137,3 @@ def test_rasterize_geometries_symmetric():
         result = rasterize(s, out_shape=(rows, cols), transform=transform)
         assert numpy.array_equal(result, truth)
 
-
-test_rasterize_dtype()
