@@ -40,6 +40,14 @@ cdef class RasterUpdater(RasterReader):
     cdef readonly object _options
 
 
+cdef class InMemoryRaster:
+    cdef void *dataset
+    cdef void *band
+    cdef double transform[6]
+    cdef int band_ids[1]
+    cdef np.ndarray _image
+
+
 ctypedef np.uint8_t DTYPE_UBYTE_t
 ctypedef np.uint16_t DTYPE_UINT16_t
 ctypedef np.int16_t DTYPE_INT16_t
@@ -232,3 +240,4 @@ cdef int io_multi_cfloat64(
         long[:] indexes,
         int count)
 
+cdef int io_auto(image, void *hband, bint write)

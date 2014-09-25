@@ -10,6 +10,7 @@ import numpy as np
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize
 from rasterio.transform import IDENTITY, guard_transform
+from rasterio.dtypes import get_minimum_int_dtype
 
 
 log = logging.getLogger('rasterio')
@@ -68,10 +69,13 @@ def sieve(image, size, connectivity=4, output=None):
 
 def rasterize(
         shapes, 
-        out_shape=None, fill=0, output=None,
+        out_shape=None,
+        fill=0,
+        output=None,
         transform=IDENTITY,
         all_touched=False,
-        default_value=255):
+        default_value=1,
+        dtype=None):
     """Returns an image array with points, lines, or polygons burned in.
 
     A different value may be specified for each shape.  The shapes may
@@ -80,9 +84,10 @@ def rasterize(
     of image elements determines whether they are updated, but all
     touched elements may be optionally updated.
 
-    :param shapes: an iterator over Fiona style geometry objects (with
-    a default value of 255) or an iterator over (geometry, value) pairs.
-    Values must be unsigned integer type (uint8).
+    Valid data types are: int16, int32, uint8, uint16, uint32, float32, float64
+
+    :param shapes: an iterator over Fiona style geometry objects (with a default
+    value of default_value) or an iterator over (geometry, value) pairs.
 
     :param transform: GDAL style geotransform to be applied to the
     image.
@@ -93,54 +98,102 @@ def rasterize(
 
     :param all_touched: if True, will rasterize all pixels touched, 
     otherwise will use GDAL default method.
-    :param default_value: value burned in for shapes if not provided as part of shapes.  Must be unsigned integer type (uint8).
+    :param default_value: value burned in for shapes if not provided as part
+    of shapes.
     """
 
-    if not isinstance(default_value, int) or (
-            default_value > 255 or default_value < 0):
-        raise ValueError("default_value %s is not uint8/ubyte" % default_value)
+    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32',
+                    'float64')
 
-    def shape_source():
-        """A generator that screens out non-geometric objects and does
-        its best to make sure that no NULLs get through to 
-        GDALRasterizeGeometries."""
-        for index, item in enumerate(shapes):
-            try:
-                
-                if isinstance(item, (tuple, list)):
-                    geom, value = item
-                    # TODO: relax this for other data types.
-                    if not isinstance(value, int) or value > 255 or value < 0:
-                        raise ValueError(
-                            "Shape number %i, value '%s' is not uint8/ubyte" % (
-                                index, value))
-                else:
-                    geom = item
-                    value = default_value
-                geom = getattr(geom, '__geo_interface__', None) or geom
-                if (not isinstance(geom, dict) or 
-                    'type' not in geom or 'coordinates' not in geom):
-                    raise ValueError(
-                        "Object %r at index %d is not a geometric object" %
-                        (geom, index))
-                yield geom, value
-            except Exception:
-                log.exception("Exception caught, skipping shape %d", index)
+    def get_valid_dtype(values):
+        values_dtype = values.dtype
+        if values_dtype.kind == 'i':
+            values_dtype = np.dtype(get_minimum_int_dtype(values))
+        if values_dtype.name in valid_dtypes:
+            return values_dtype
+        return None
 
-    if out_shape is not None:
-        out = np.empty(out_shape, dtype=rasterio.ubyte)
-        out.fill(fill)
-    elif output is not None:
-        if np.dtype(output.dtype) != np.dtype(rasterio.ubyte):
-            raise ValueError("Output image must be dtype uint8/ubyte")
-        out = output
+    def can_cast_dtype(values, dtype):
+        if values.dtype.name == np.dtype(dtype).name:
+            return True
+        elif values.dtype.kind == 'f':
+            return np.allclose(values, values.astype(dtype))
+        else:
+            return np.array_equal(values, values.astype(dtype))
+
+    if fill != 0:
+        fill_array = np.array([fill])
+        if get_valid_dtype(fill_array) is None:
+            raise ValueError('fill must be one of these types: %s'
+                             % (', '.join(valid_dtypes)))
+        elif dtype is not None and not can_cast_dtype(fill_array, dtype):
+            raise ValueError('fill value cannot be cast to specified dtype')
+
+
+    if default_value != 1:
+        default_value_array = np.array([default_value])
+        if get_valid_dtype(default_value_array) is None:
+            raise ValueError('default_value must be one of these types: %s'
+                             % (', '.join(valid_dtypes)))
+        elif dtype is not None and not can_cast_dtype(default_value_array,
+                                                      dtype):
+            raise ValueError('default_value cannot be cast to specified dtype')
+
+    valid_shapes = []
+    shape_values = []
+    for index, item in enumerate(shapes):
+        try:
+            if isinstance(item, (tuple, list)):
+                geom, value = item
+            else:
+                geom = item
+                value = default_value
+            geom = getattr(geom, '__geo_interface__', None) or geom
+            if (not isinstance(geom, dict) or
+                'type' not in geom or 'coordinates' not in geom):
+                raise ValueError(
+                    'Object %r at index %d is not a geometry object' %
+                    (geom, index))
+            valid_shapes.append((geom, value))
+            shape_values.append(value)
+        except Exception:
+            log.exception('Exception caught, skipping shape %d', index)
+
+    if not valid_shapes:
+        raise ValueError('No valid shapes found for rasterize.  Shapes must be '
+                         'valid geometry objects')
+
+    shape_values = np.array(shape_values)
+    values_dtype = get_valid_dtype(shape_values)
+    if values_dtype is None:
+        raise ValueError('shape values must be one of these dtypes: %s' %
+                         (', '.join(valid_dtypes)))
+
+    if dtype is None:
+        dtype = values_dtype
+    elif np.dtype(dtype).name not in valid_dtypes:
+        raise ValueError('dtype must be one of: %s' % (', '.join(valid_dtypes)))
+    elif not can_cast_dtype(shape_values, dtype):
+        raise ValueError('shape values could not be cast to specified dtype')
+
+    if output is not None:
+        if np.dtype(output.dtype).name not in valid_dtypes:
+            raise ValueError('Output image dtype must be one of: %s' 
+                             % (', '.join(valid_dtypes)))
+        if not can_cast_dtype(shape_values, output.dtype):
+            raise ValueError('shape values cannot be cast to dtype of output '
+                             'image')
+
+    elif out_shape is not None:
+        output = np.empty(out_shape, dtype=dtype)
+        output.fill(fill)
     else:
-        raise ValueError("An output image must be provided or specified")
+        raise ValueError('Either an output shape or image must be provided')
     
     transform = guard_transform(transform)
 
     with rasterio.drivers():
-        _rasterize(shape_source(), out, transform.to_gdal(), all_touched)
+        _rasterize(valid_shapes, output, transform.to_gdal(), all_touched)
     
-    return out
+    return output
 
