@@ -4,7 +4,9 @@ import logging
 import json
 import numpy as np
 cimport numpy as np
+from rasterio._io cimport InMemoryRaster
 from rasterio cimport _gdal, _ogr, _io
+from rasterio import dtypes
 
 
 log = logging.getLogger('rasterio')
@@ -211,43 +213,14 @@ def _rasterize(shapes, image, transform, all_touched):
     cdef int retval
     cdef size_t i
     cdef size_t num_geometries = 0
-    cdef void *memdriver
-    cdef void *out_ds
-    cdef void *out_band
     cdef void **ogr_geoms = NULL
     cdef char **options = NULL
-    cdef double geotransform[6]
     cdef double *pixel_values = NULL  # requires one value per geometry
-    cdef int dst_bands[1]  # only need one band to burn into
-
-    dst_bands[0] = 1
-    
-    cdef int width = image.shape[1]
-    cdef int height = image.shape[0]
+    cdef InMemoryRaster mem
 
     try:
         if all_touched:
             options = _gdal.CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
-
-        # Do the boilerplate required to create a dataset, band, and 
-        # set transformation
-        memdriver = _gdal.GDALGetDriverByName("MEM")
-        if memdriver == NULL:
-            raise ValueError("NULL driver for 'MEM'")
-        out_ds = _gdal.GDALCreate(
-                    memdriver, "output", width, height, 1,
-                    <_gdal.GDALDataType>1, NULL)
-        if out_ds == NULL:
-            raise ValueError("NULL output datasource")
-        for i in range(6):
-            geotransform[i] = transform[i]
-        err = _gdal.GDALSetGeoTransform(out_ds, geotransform)
-        if err:
-            raise ValueError("transform not set: %s" % transform)
-        
-        out_band = _gdal.GDALGetRasterBand(out_ds, 1)
-        if out_band == NULL:
-            raise ValueError("NULL output band")
 
         # GDAL needs an array of geometries.
         # For now, we'll build a Python list on the way to building that
@@ -267,26 +240,21 @@ def _rasterize(shapes, image, transform, all_touched):
                 log.error("Geometry %r at index %d with value %d skipped",
                     geometry, i, value)
 
-        # First, copy image data to the in-memory band.
-        retval = _io.io_ubyte(out_band, 1, 0, 0, width, height, image)
+        with InMemoryRaster(image, transform) as mem:
+            _gdal.GDALRasterizeGeometries(
+                        mem.dataset, 1, mem.band_ids,
+                        num_geometries, ogr_geoms,
+                        NULL, mem.transform, pixel_values,
+                        options, NULL, NULL)
 
-        # Burn the shapes in.
-        retval = _gdal.GDALRasterizeGeometries(
-                    out_ds, 1, dst_bands,
-                    num_geometries, ogr_geoms,
-                    NULL, geotransform, pixel_values,
-                    options, NULL, NULL)
-
-        # Write the in-memory band back to the image.
-        retval = _io.io_ubyte(out_band, 0, 0, 0, width, height, image)
+            # Read in-memory data back into image
+            image = mem.read()
 
     finally:
         for i in range(num_geometries):
             _deleteOgrGeom(ogr_geoms[i])
         _gdal.CPLFree(ogr_geoms)
         _gdal.CPLFree(pixel_values)
-        if out_ds != NULL:
-            _gdal.GDALClose(out_ds)
         if options:
             _gdal.CSLDestroy(options)
 
@@ -436,16 +404,13 @@ cdef class OGRGeomBuilder:
     cdef void * _buildLineString(self, object coordinates) except NULL:
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['LineString'])
         for coordinate in coordinates:
-            log.debug("Adding point %s", coordinate)
             self._addPointToGeometry(cogr_geometry, coordinate)
         return cogr_geometry
 
     cdef void * _buildLinearRing(self, object coordinates) except NULL:
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['LinearRing'])
         for coordinate in coordinates:
-            log.debug("Adding point %s", coordinate)
             self._addPointToGeometry(cogr_geometry, coordinate)
-        log.debug("Closing ring")
         _ogr.OGR_G_CloseRings(cogr_geometry)
         return cogr_geometry
 
@@ -453,54 +418,40 @@ cdef class OGRGeomBuilder:
         cdef void *cogr_ring
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['Polygon'])
         for ring in coordinates:
-            log.debug("Adding ring %s", ring)
             cogr_ring = self._buildLinearRing(ring)
-            log.debug("Built ring")
             _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_ring)
-            log.debug("Added ring %s", ring)
         return cogr_geometry
 
     cdef void * _buildMultiPoint(self, object coordinates) except NULL:
         cdef void *cogr_part
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['MultiPoint'])
         for coordinate in coordinates:
-            log.debug("Adding point %s", coordinate)
             cogr_part = self._buildPoint(coordinate)
             _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-            log.debug("Added point %s", coordinate)
         return cogr_geometry
 
     cdef void * _buildMultiLineString(self, object coordinates) except NULL:
         cdef void *cogr_part
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['MultiLineString'])
         for line in coordinates:
-            log.debug("Adding line %s", line)
             cogr_part = self._buildLineString(line)
-            log.debug("Built line")
             _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-            log.debug("Added line %s", line)
         return cogr_geometry
 
     cdef void * _buildMultiPolygon(self, object coordinates) except NULL:
         cdef void *cogr_part
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['MultiPolygon'])
         for part in coordinates:
-            log.debug("Adding polygon %s", part)
             cogr_part = self._buildPolygon(part)
-            log.debug("Built polygon")
             _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-            log.debug("Added polygon %s", part)
         return cogr_geometry
 
     cdef void * _buildGeometryCollection(self, object coordinates) except NULL:
         cdef void *cogr_part
         cdef void *cogr_geometry = self._createOgrGeometry(GEOJSON2OGR_GEOMETRY_TYPES['GeometryCollection'])
         for part in coordinates:
-            log.debug("Adding part %s", part)
             cogr_part = OGRGeomBuilder().build(part)
-            log.debug("Built part")
             _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-            log.debug("Added part %s", part)
         return cogr_geometry
 
     cdef void * build(self, object geometry) except NULL:
@@ -566,4 +517,5 @@ cdef class ShapeIterator:
             shape = None
         _deleteOgrFeature(ftr)
         return shape, image_value
+
 
