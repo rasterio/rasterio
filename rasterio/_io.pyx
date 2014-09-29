@@ -1172,6 +1172,9 @@ cdef class RasterUpdater(RasterReader):
                     papszStrList, key_c, value_c)
 
         retval = _gdal.GDALSetMetadata(hobj, papszStrList, domain_c)
+        if papszStrList != NULL:
+            _gdal.CSLDestroy(papszStrList)
+
         if retval == 2:
             log.warn("Tags accepted but may not be persisted.")
         elif retval == 3:
