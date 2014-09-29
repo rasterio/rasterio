@@ -1160,14 +1160,14 @@ cdef class RasterUpdater(RasterReader):
         else:
             domain_c = NULL
         
-        papszStrList = _gdal.GDALGetMetadata(hobj, domain_c)
+        papszStrList = _gdal.CSLDuplicate(
+            _gdal.GDALGetMetadata(hobj, domain_c))
 
         for key, value in kwargs.items():
             key_b = text_type(key).encode('utf-8')
             value_b = text_type(value).encode('utf-8')
             key_c = key_b
             value_c = value_b
-            i = _gdal.CSLFindName(papszStrList, key_c)
             papszStrList = _gdal.CSLSetNameValue(
                     papszStrList, key_c, value_c)
 
