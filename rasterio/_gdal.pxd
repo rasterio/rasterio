@@ -10,6 +10,8 @@ cdef extern from "cpl_conv.h" nogil:
 cdef extern from "cpl_string.h":
     int CSLCount (char **papszStrList)
     char ** CSLAddNameValue (char **papszStrList, const char *pszName, const char *pszValue)
+    char ** CSLDuplicate (char ** papszStrList)
+
     int CSLFindName (char **papszStrList, const char *pszName)
     const char * CSLFetchNameValue (char **papszStrList, const char *pszName)
     char ** CSLSetNameValue (char **list, char *name, char *val)
