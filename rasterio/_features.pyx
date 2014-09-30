@@ -281,10 +281,6 @@ cdef _deleteOgrGeom(void *cogr_geometry):
 cdef class GeomBuilder:
     """Builds Fiona (GeoJSON) geometries from an OGR geometry handle.
     """
-    cdef void *geom
-    cdef object code
-    cdef object typename
-    cdef object ndims
 
     cdef _buildCoords(self, void *geom):
         # Build a coordinate sequence
@@ -335,10 +331,10 @@ cdef class GeomBuilder:
 
         cdef unsigned int etype = _ogr.OGR_G_GetGeometryType(geom)
         self.code = etype
-        self.typename = GEOMETRY_TYPES[self.code & (~0x80000000)]
+        self.geomtypename = GEOMETRY_TYPES[self.code & (~0x80000000)]
         self.ndims = _ogr.OGR_G_GetCoordinateDimension(geom)
         self.geom = geom
-        return getattr(self, '_build' + self.typename)()
+        return getattr(self, '_build' + self.geomtypename)()
 
     cpdef build_wkb(self, object wkb):
         # The only other method anyone needs to call

@@ -1,12 +1,22 @@
 """Raster warping and reprojection"""
 
-from rasterio._warp import _reproject, _transform, RESAMPLING
+from rasterio._warp import _reproject, _transform, _transform_geom, RESAMPLING
 from rasterio.transform import guard_transform
 
 
 def transform(src_crs, dst_crs, xs, ys):
     """Return transformed vectors of x and y."""
     return _transform(src_crs, dst_crs, xs, ys)
+
+
+def transform_geom(
+        src_crs, dst_crs, geom,
+        antimeridian_cutting=False, antimeridian_offset=10.0, precision=-1):
+    """Return transformed geometry."""
+    return _transform_geom(
+        src_crs, dst_crs, geom,
+        antimeridian_cutting, antimeridian_offset, precision)
+
 
 def reproject(
         source, destination,
@@ -30,8 +40,7 @@ def reproject(
         dst_transform = guard_transform(dst_transform).to_gdal()
 
     _reproject(
-        source, destination, 
-        src_transform, src_crs, 
-        dst_transform, dst_crs, 
+        source, destination,
+        src_transform, src_crs,
+        dst_transform, dst_crs,
         resampling, **kwargs)
-

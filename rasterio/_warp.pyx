@@ -8,8 +8,7 @@ import logging
 import numpy as np
 cimport numpy as np
 
-from rasterio cimport _gdal, _ogr
-from rasterio cimport _io
+from rasterio cimport _gdal, _ogr, _io, _features
 from rasterio import dtypes
 
 
@@ -49,6 +48,25 @@ RESAMPLING = namedtuple('RESAMPLING', [
                 'average', 
                 'mode'] )(*list(range(7)))
 
+
+cdef extern from "ogr_geometry.h" nogil:
+
+    cdef cppclass OGRGeometry:
+        pass
+
+    cdef cppclass OGRGeometryFactory:
+        void * transformWithOptions(void *geom, void *ct, char **options)
+#            const OGRGeometry* poSrcGeom,
+#            OGRCoordinateTransformation *poCT,
+#            char** papszOptions
+
+
+cdef extern from "ogr_spatialref.h":
+
+    cdef cppclass OGRCoordinateTransformation:
+        pass
+
+
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
     def emit(self, record):
@@ -59,6 +77,40 @@ log.addHandler(NullHandler())
 def tastes_like_gdal(t):
     return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
+
+cdef void *_osr_from_crs(object crs):
+    cdef char *proj_c = NULL
+    cdef void *osr
+    osr = _gdal.OSRNewSpatialReference(NULL)
+    params = []
+    # Normally, we expect a CRS dict.
+    if isinstance(crs, dict):
+        # EPSG is a special case.
+        init = crs.get('init')
+        if init:
+            auth, val = init.split(':')
+            if auth.upper() == 'EPSG':
+                _gdal.OSRImportFromEPSG(osr, int(val))
+        else:
+            crs['wktext'] = True
+            for k, v in crs.items():
+                if v is True or (k in ('no_defs', 'wktext') and v):
+                    params.append("+%s" % k)
+                else:
+                    params.append("+%s=%s" % (k, v))
+            proj = " ".join(params)
+            log.debug("PROJ.4 to be imported: %r", proj)
+            proj_b = proj.encode('utf-8')
+            proj_c = proj_b
+            _gdal.OSRImportFromProj4(osr, proj_c)
+    # Fall back for CRS strings like "EPSG:3857."
+    else:
+        proj_b = crs.encode('utf-8')
+        proj_c = proj_b
+        _gdal.OSRSetFromUserInput(osr, proj_c)
+    return osr
+
+
 def _transform(src_crs, dst_crs, xs, ys):
     cdef double *x, *y
     cdef char *proj_c = NULL
@@ -68,45 +120,8 @@ def _transform(src_crs, dst_crs, xs, ys):
 
     assert len(xs) == len(ys)
     
-    src = _gdal.OSRNewSpatialReference(NULL)
-    # EPSG is a special case.
-    init = src_crs.get('init')
-    if init:
-        auth, val = init.split(':')
-        if auth.upper() == 'EPSG':
-            _gdal.OSRImportFromEPSG(src, int(val))
-    else:
-        params = []
-        for k, v in src_crs.items():
-            if v is True or (k in ('no_defs', 'wktext') and v):
-                params.append("+%s" % k)
-            else:
-                params.append("+%s=%s" % (k, v))
-        proj = " ".join(params)
-        log.debug("PROJ.4 to be imported: %r", proj)
-        proj_b = proj.encode('utf-8')
-        proj_c = proj_b
-        _gdal.OSRImportFromProj4(src, proj_c)
-
-    dst = _gdal.OSRNewSpatialReference(NULL)
-    # EPSG is a special case.
-    init = dst_crs.get('init')
-    if init:
-        auth, val = init.split(':')
-        if auth.upper() == 'EPSG':
-            _gdal.OSRImportFromEPSG(dst, int(val))
-    else:
-        params = []
-        for k, v in dst_crs.items():
-            if v is True or (k in ('no_defs', 'wktext') and v):
-                params.append("+%s" % k)
-            else:
-                params.append("+%s=%s" % (k, v))
-        proj = " ".join(params)
-        log.debug("PROJ.4 to be imported: %r", proj)
-        proj_b = proj.encode('utf-8')
-        proj_c = proj_b
-        _gdal.OSRImportFromProj4(dst, proj_c)
+    src = _osr_from_crs(src_crs)
+    dst = _osr_from_crs(dst_crs)
 
     n = len(xs)
     x = <double *>_gdal.CPLMalloc(n*sizeof(double))
@@ -133,6 +148,83 @@ def _transform(src_crs, dst_crs, xs, ys):
     _gdal.OSRDestroySpatialReference(src)
     _gdal.OSRDestroySpatialReference(dst)
     return res_xs, res_ys
+
+
+def _transform_geom(
+        src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
+        precision):
+    """Return a transformed geometry."""
+    cdef char *proj_c = NULL
+    cdef char *key_c = NULL
+    cdef char *val_c = NULL
+    cdef char **options = NULL
+    cdef void *src, *dst
+    cdef void *transform
+    cdef OGRGeometryFactory *factory
+    cdef void *src_ogr_geom
+    cdef void *dst_ogr_geom
+    cdef int i
+
+    src = _osr_from_crs(src_crs)
+    dst = _osr_from_crs(dst_crs)
+    transform = _gdal.OCTNewCoordinateTransformation(src, dst)
+
+    # Transform options.
+    options = _gdal.CSLSetNameValue(
+                options, "DATELINEOFFSET", 
+                str(antimeridian_offset).encode('utf-8'))
+    if antimeridian_cutting:
+        options = _gdal.CSLSetNameValue(options, "WRAPDATELINE", "YES")
+
+    factory = new OGRGeometryFactory()
+    src_ogr_geom = _features.OGRGeomBuilder().build(geom)
+    dst_ogr_geom = factory.transformWithOptions(
+                    <const OGRGeometry *>src_ogr_geom,
+                    <OGRCoordinateTransformation *>transform,
+                    options)
+    g = _features.GeomBuilder().build(dst_ogr_geom)
+
+    _ogr.OGR_G_DestroyGeometry(dst_ogr_geom)
+    _ogr.OGR_G_DestroyGeometry(src_ogr_geom)
+    _gdal.OCTDestroyCoordinateTransformation(transform)
+    if options != NULL:
+        _gdal.CSLDestroy(options)
+    _gdal.OSRDestroySpatialReference(src)
+    _gdal.OSRDestroySpatialReference(dst)
+
+    if precision >= 0:
+        if g['type'] == 'Point':
+            x, y = g['coordinates']
+            x = round(x, precision)
+            y = round(y, precision)
+            new_coords = [x, y]
+        elif g['type'] in ['LineString', 'MultiPoint']:
+            xp, yp = zip(*g['coordinates'])
+            xp = [round(v, precision) for v in xp]
+            yp = [round(v, precision) for v in yp]
+            new_coords = list(zip(xp, yp))
+        elif g['type'] in ['Polygon', 'MultiLineString']:
+            new_coords = []
+            for piece in g['coordinates']:
+                xp, yp = zip(*piece)
+                xp = [round(v, precision) for v in xp]
+                yp = [round(v, precision) for v in yp]
+                new_coords.append(list(zip(xp, yp)))
+        elif g['type'] == 'MultiPolygon':
+            parts = g['coordinates']
+            new_coords = []
+            for part in parts:
+                inner_coords = []
+                for ring in part:
+                    xp, yp = zip(*ring)
+                    xp = [round(v, precision) for v in xp]
+                    yp = [round(v, precision) for v in yp]
+                    inner_coords.append(list(zip(xp, yp)))
+                new_coords.append(inner_coords)
+        g['coordinates'] = new_coords
+
+    return g
+
 
 def _reproject(
         source, destination,
