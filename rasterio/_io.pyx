@@ -1272,7 +1272,7 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
 
-    def __init__(self, image, transform):
+    def __cinit__(self, image, transform):
         """
         Create in-memory raster dataset, and populate its initial values with
         the values in image.
@@ -1324,6 +1324,7 @@ cdef class InMemoryRaster:
     def close(self):
         if self.dataset != NULL:
             _gdal.GDALClose(self.dataset)
+            self.dataset = NULL
 
     def read(self):
         io_auto(self._image, self.band, False)

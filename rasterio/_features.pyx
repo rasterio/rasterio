@@ -26,66 +26,37 @@ def _shapes(image, mask, connectivity, transform):
     """
     # Write the image into an in-memory raster.
     cdef int retval, rows, cols
-    cdef void *hrdriver
-    cdef void *hds
     cdef void *hband
-    cdef void *hmask
     cdef void *hmaskband
     cdef void *hfdriver
     cdef void *hfs
     cdef void *hlayer
     cdef void *fielddefn
-    cdef double gt[6]
     cdef _io.RasterReader rdr
     cdef _io.RasterReader mrdr
     cdef char **options = NULL
-    cdef np.uint8_t[:, :] image_view
+
+    cdef InMemoryRaster mem_ds
+    cdef InMemoryRaster mask_ds = None
+    cdef bint is_float = np.dtype(image.dtype).kind == 'f'
+    cdef int fieldtp = 0
+
+    if is_float:
+        fieldtp = 2
 
     if isinstance(image, np.ndarray):
-        hrdriver = _gdal.GDALGetDriverByName("MEM")
-        if hrdriver == NULL:
-            raise ValueError("NULL driver for 'MEM'")
-        rows = image.shape[0]
-        cols = image.shape[1]
-        hds = _gdal.GDALCreate(
-                    hrdriver, "temp", cols, rows, 1, 
-                    <_gdal.GDALDataType>1, NULL)
-        if hds == NULL:
-            raise ValueError("NULL datasource")
-        if transform:
-            for i in range(6):
-                gt[i] = transform[i]
-            err = _gdal.GDALSetGeoTransform(hds, gt)
-            if err:
-                raise ValueError("transform not set: %s" % transform)
-
-        hband = _gdal.GDALGetRasterBand(hds, 1)
-        if hband == NULL:
-            raise ValueError("NULL band")
-        image_view = image
-        retval = _io.io_ubyte(hband, 1, 0, 0, cols, rows, image_view)
+        mem_ds = InMemoryRaster(image, transform)
+        hband = mem_ds.band
     elif isinstance(image, tuple):
         rdr = image.ds
         hband = rdr.band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
-    # The boolean mask must be converted to 0 and 1 for GDAL.
     if isinstance(mask, np.ndarray):
-        if mask.shape != image.shape:
-            raise ValueError("Mask must have same shape as image")
-        hmask = _gdal.GDALCreate(
-                    hrdriver, "mask", cols, rows, 1, 
-                    <_gdal.GDALDataType>1, NULL)
-        if hmask == NULL:
-            raise ValueError("NULL datasource")
-        hmaskband = _gdal.GDALGetRasterBand(hmask, 1)
-        if hmaskband == NULL:
-            raise ValueError("NULL band")
-        a = np.ones(mask.shape, dtype=np.uint8)
-        a[mask == False] = 0
-        a[mask == True] = 1
-        retval = _io.io_ubyte(hmaskband, 1, 0, 0, cols, rows, a)
+        # A boolean mask must be converted to uint8 for GDAL
+        mask_ds = InMemoryRaster(mask.astype('uint8'), transform)
+        hmaskband = mask_ds.band
     elif isinstance(mask, tuple):
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
@@ -107,7 +78,7 @@ def _shapes(image, mask, connectivity, transform):
     if hlayer == NULL:
         raise ValueError("NULL layer")
 
-    fielddefn = _ogr.OGR_Fld_Create("image_value", 0)
+    fielddefn = _ogr.OGR_Fld_Create("image_value", fieldtp)
     if fielddefn == NULL:
         raise ValueError("NULL field definition")
     _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
@@ -115,19 +86,24 @@ def _shapes(image, mask, connectivity, transform):
 
     if connectivity == 8:
         options = _gdal.CSLSetNameValue(options, "8CONNECTED", "8")
-    retval = _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
+
+    if is_float:
+        _gdal.GDALFPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
+    else:
+        _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
     
     # Yield Fiona-style features
     cdef ShapeIterator shape_iter = ShapeIterator()
     shape_iter.hfs = hfs
     shape_iter.hlayer = hlayer
+    shape_iter.fieldtp = fieldtp
     for s, v in shape_iter:
         yield s, v
 
-    if hds != NULL:
-        _gdal.GDALClose(hds)
-    if hmask != NULL:
-        _gdal.GDALClose(hmask)
+    if mem_ds is not None:
+        mem_ds.close()
+    if mask_ds is not None:
+        mask_ds.close()
     if hfs != NULL:
         _ogr.OGR_DS_Destroy(hfs)
     if options:
@@ -161,7 +137,7 @@ def _sieve(image, size, connectivity=4, output=None):
         rows = image.shape[0]
         cols = image.shape[1]
         hdsin = _gdal.GDALCreate(
-                    hrdriver, "input", cols, rows, 1, 
+                    hrdriver, "input", cols, rows, 1,
                     <_gdal.GDALDataType>1, NULL)
         if hdsin == NULL:
             raise ValueError("NULL input datasource")
@@ -490,13 +466,15 @@ cdef _deleteOgrFeature(void *cogr_feature):
 
 
 cdef class ShapeIterator:
-
-    """Provides iterated access to feature shapes.
+    """
+    Provides iterated access to feature shapes.
     """
 
     # Reference to its Collection
     cdef void *hfs
     cdef void *hlayer
+
+    cdef int fieldtp  # OGR Field Type: 0=int, 2=double
 
     def __iter__(self):
         _ogr.OGR_L_ResetReading(self.hlayer)
@@ -509,7 +487,10 @@ cdef class ShapeIterator:
         ftr = _ogr.OGR_L_GetNextFeature(self.hlayer)
         if ftr == NULL:
             raise StopIteration
-        image_value = _ogr.OGR_F_GetFieldAsInteger(ftr, 0)
+        if self.fieldtp == 0:
+            image_value = _ogr.OGR_F_GetFieldAsInteger(ftr, 0)
+        else:
+            image_value = _ogr.OGR_F_GetFieldAsDouble(ftr, 0)
         geom = _ogr.OGR_F_GetGeometryRef(ftr)
         if geom != NULL:
             shape = GeomBuilder().build(geom)
