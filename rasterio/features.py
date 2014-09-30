@@ -22,17 +22,26 @@ log.addHandler(NullHandler())
 
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     """Yields a (shape, image_value) pair for each feature in the image.
-    
-    The shapes are GeoJSON-like dicts and the image values are ints.
-    
+
+    The shapes are GeoJSON-like dicts and the image values are ints or floats
+    depending on the data type of the image.
+
     Features are found using a connected-component labeling algorithm.
 
-    The image must be of unsigned 8-bit integer (rasterio.byte or
-    numpy.uint8) data type. If a mask is provided, pixels for which the
-    mask is `False` will be excluded from feature generation.
+    The image must be one of int16, int32, uint8, uint16, float32 data types.
+    Note: due to floating point precision issues, the floating point values
+    returned from a floating point image may not exactly match the original
+    values.
+
+    If a mask is provided, pixels for which the mask is `False` will be
+    excluded from feature generation.
     """
-    if np.dtype(image.dtype) != np.dtype(rasterio.ubyte):
-        raise ValueError("Image must be dtype uint8/ubyte")
+
+    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
+
+    if np.dtype(image.dtype).name not in valid_dtypes:
+        raise ValueError('image dtype must be one of: %s'
+                         % (', '.join(valid_dtypes)))
 
     if mask is not None and np.dtype(mask.dtype) != np.dtype(rasterio.bool_):
         raise ValueError("Mask must be dtype rasterio.bool_")
@@ -52,7 +61,7 @@ def sieve(image, size, connectivity=4, output=None):
 
     Features smaller than the specified size have their pixel value
     replaced by that of the largest neighboring features.
-    
+
     The image must be of unsigned 8-bit integer (rasterio.byte or
     numpy.uint8) data type.
     """
@@ -68,7 +77,7 @@ def sieve(image, size, connectivity=4, output=None):
 
 
 def rasterize(
-        shapes, 
+        shapes,
         out_shape=None,
         fill=0,
         output=None,
@@ -96,7 +105,7 @@ def rasterize(
     :param fill: fill value for created image array
     :param output: alternatively, an existing image array
 
-    :param all_touched: if True, will rasterize all pixels touched, 
+    :param all_touched: if True, will rasterize all pixels touched,
     otherwise will use GDAL default method.
     :param default_value: value burned in for shapes if not provided as part
     of shapes.
@@ -178,7 +187,7 @@ def rasterize(
 
     if output is not None:
         if np.dtype(output.dtype).name not in valid_dtypes:
-            raise ValueError('Output image dtype must be one of: %s' 
+            raise ValueError('Output image dtype must be one of: %s'
                              % (', '.join(valid_dtypes)))
         if not can_cast_dtype(shape_values, output.dtype):
             raise ValueError('shape values cannot be cast to dtype of output '
