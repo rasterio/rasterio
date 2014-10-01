@@ -19,6 +19,7 @@ Rasterio's new command line interface is a program named "rio".
       bounds     Write bounding boxes to stdout as GeoJSON.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
+      merge      Merge a stack of raster datasets.
       shapes     Write the shapes of features.
       transform  Transform coordinates.
 
@@ -159,9 +160,17 @@ This command supports `JSON text sequences <http://tools.ietf.org/html/draft-iet
 
 .. code-block:: console
 
-    $ rio shapes tests/data/shade.tif --precision 1 --x-json-seq --x-text-sep-lf | head -n 2
+    $ rio shapes tests/data/shade.tif --precision 1 --x-json-seq | head -n 2
     {"bbox": [-106.5, 39.6, -106.4, 39.6], "type": "FeatureCollection"}
     {"geometry": {"coordinates": [[[-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6]]], "type": "Polygon"}, "id": "255", "properties": {"val": 255}, "type": "Feature"}
+
+Using the ``--mask`` option you can write out the shapes of a dataset's valid data region.
+
+.. code-block:: console
+
+    $ rio shapes --mask --precision 6 tests/data/RGB.byte.tif | geojsonio
+
+See http://bl.ocks.org/anonymous/raw/ef244954b719dba97926/.
 
 transform
 ---------
@@ -189,4 +198,3 @@ a raster dataset, do the following.
     [192457.13, 2546667.68, 399086.97, 2765319.94]
 
 Suggestions for other commands are welcome!
-
