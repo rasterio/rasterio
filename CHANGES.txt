@@ -1,9 +1,13 @@
 Changes
 =======
 
-0.14
-----
+0.14 (2014-10-01)
+-----------------
 - Fixed tag update crasher (#145).
+- Add --mask and --bidx options to rio shapes (#150).
+- Faster geometry transforms and antimeridian cutting (#163).
+- Support for more data types in shapes() and rasterize() (#155, #158).
+- Switch to Cython 0.20+ for development (#151).
 
 0.13.2 (2014-09-23)
 -------------------
