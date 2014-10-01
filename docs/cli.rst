@@ -147,24 +147,17 @@ shapes
 
 New in 0.11.
 
-The shapes command writes features of a dataset out as GeoJSON. It's intended
-for use with single-band rasters and reads from the first band.
+The shapes command extracts and writes features of a specified dataset band out
+as GeoJSON.
 
 .. code-block:: console
 
-    $ rio shapes tests/data/shade.tif --precision 6 > shade.geojson
+    $ rio shapes tests/data/shade.tif --bidx 1 --precision 6 > shade.geojson
 
 The resulting file, uploaded to Mapbox, looks like this: `sgillies.j1ho338j <https://a.tiles.mapbox.com/v4/sgillies.j1ho338j/page.html?access_token=pk.eyJ1Ijoic2dpbGxpZXMiLCJhIjoiWUE2VlZVcyJ9.OITHkb1GHNh9nvzIfUc9QQ#13/39.6079/-106.4822>`__.
 
-This command supports `JSON text sequences <http://tools.ietf.org/html/draft-ietf-json-text-sequence-04>`__ as an experimental feature.
-
-.. code-block:: console
-
-    $ rio shapes tests/data/shade.tif --precision 1 --x-json-seq | head -n 2
-    {"bbox": [-106.5, 39.6, -106.4, 39.6], "type": "FeatureCollection"}
-    {"geometry": {"coordinates": [[[-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6], [-106.5, 39.6]]], "type": "Polygon"}, "id": "255", "properties": {"val": 255}, "type": "Feature"}
-
-Using the ``--mask`` option you can write out the shapes of a dataset's valid data region.
+Using the ``--mask`` option you can write out the shapes of a dataset's valid
+data region.
 
 .. code-block:: console
 
