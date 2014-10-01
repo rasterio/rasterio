@@ -56,24 +56,69 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
             yield s, v
 
 
-def sieve(image, size, connectivity=4, output=None):
-    """Returns a copy of the image, but with smaller features removed.
-
-    Features smaller than the specified size have their pixel value
-    replaced by that of the largest neighboring features.
-
-    The image must be of unsigned 8-bit integer (rasterio.byte or
-    numpy.uint8) data type.
+def sieve(image, size, output=None, mask=None, connectivity=4):
     """
-    if np.dtype(image.dtype) != np.dtype(rasterio.ubyte):
-        raise ValueError("Image must be dtype uint8/ubyte")
+    Removes raster polygons smaller than provided size (in pixels) and
+    replaces replaces them with the pixel value of the largest neighbor polygon.
+    GDAL only supports values that can be cast to 32-bit integers for this
+    operation.
 
-    if output is not None and (
-            np.dtype(output.dtype) != np.dtype(rasterio.ubyte)):
-        raise ValueError("Output must be dtype uint8/ubyte")
+    The algorithm makes three passes over the input file to enumerate the
+    polygons and collect limited information about them.  Memory use is
+    proportional to the number of polygons, but is not directly related to the
+    size of the raster.  So very large raster files can be processed effectively
+    if there aren't too many polygons.  But extremely noisy rasters with many
+    one pixel polygons will end up being expensive (in memory) to process.
+
+    :param image: numpy ndarray or rasterio Band object (RasterReader,
+    bidx namedtuple).  Must be of type: int16, int32, uint8, uint16.
+    :param size: size in pixels below which features will be removed.
+    :param output: if provided, must be numpy ndarray or rasterio Band object.
+    Must be same dtype as image.  Ouput is updated with the result of this
+    operation.
+    :param mask: if provided, must be a boolean numpy ndarray or rasterio Band
+    object.
+    :param connectivity: used to determine neighboring pixels (4 or 8).
+
+
+    :return numpy ndarray with features that are smaller than size removed.
+    Will be the same as output, if provided to this function.
+    """
+
+    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
+
+    if np.dtype(image.dtype).name not in valid_dtypes:
+        valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
+                                     in valid_dtypes))
+        raise ValueError('image dtype must be one of: %' % valid_types_str)
+
+    if size <= 0:
+        raise ValueError('size must be greater than 0')
+    elif type(size) == float:
+        raise ValueError('size must be an integer number of pixels')
+    elif size > (image.shape[0] * image.shape[1]):
+        raise ValueError('size must be smaller than size of image')
+
+    if connectivity not in (4, 8):
+        raise ValueError('connectivity must be 4 or 8')
+
+    if mask is not None:
+        if np.dtype(mask.dtype) != np.dtype(rasterio.bool_):
+            raise ValueError('Mask must be dtype rasterio.bool_')
+        elif mask.shape != image.shape:
+            raise ValueError('mask shape must be same as image shape')
+
+    if output is None:
+        output = np.zeros_like(image)
+    else:
+        if np.dtype(image.dtype).name != np.dtype(output.dtype).name:
+            raise ValueError('output must match dtype of image')
+        elif output.shape != image.shape:
+            raise ValueError('mask shape must be same as image shape')
 
     with rasterio.drivers():
-        return _sieve(image, size, connectivity)
+        _sieve(image, size, output, mask, connectivity)
+        return output
 
 
 def rasterize(

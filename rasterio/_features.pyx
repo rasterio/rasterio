@@ -36,7 +36,7 @@ def _shapes(image, mask, connectivity, transform):
     cdef _io.RasterReader mrdr
     cdef char **options = NULL
 
-    cdef InMemoryRaster mem_ds
+    cdef InMemoryRaster mem_ds = None
     cdef InMemoryRaster mask_ds = None
     cdef bint is_float = np.dtype(image.dtype).kind == 'f'
     cdef int fieldtp = 0
@@ -110,75 +110,81 @@ def _shapes(image, mask, connectivity, transform):
         _gdal.CSLDestroy(options)
 
 
-def _sieve(image, size, connectivity=4, output=None):
-    """Return an ndarray with features of smaller than size removed.
-    
-    The image must be of unsigned 8-bit integer (rasterio.byte or
-    numpy.uint8) data type. It may be either a numpy ndarray or a 
-    rasterio Band object (RasterReader, bidx namedtuple).
-
-    Likewise, the optional output must be of unsigned 8-bit integer
-    (rasterio.byte or numpy.uint8) data type. It may be either a numpy
-    ndarray or a rasterio Band object (RasterUpdater, bidx namedtuple).
+def _sieve(image, size, output, mask, connectivity):
     """
+    Removes raster polygons smaller than provided size (in pixels) and
+    replaces replaces them with the pixel value of the largest neighbor polygon.
+
+    :param image: numpy ndarray or rasterio Band object (RasterReader,
+    bidx namedtuple).  Must be of type: int16, int32, uint8, uint16.
+    :param size: size in pixels below which features will be removed.
+    :param output: numpy ndarray or rasterio Band object.  Must be same dtype
+    as image.  Updated with the result of this operation.
+    :param mask: a boolean numpy ndarray or rasterio Band object.
+    :param connectivity: used to determine neighboring pixels (4 or 8).
+    """
+
     cdef int retval, rows, cols
-    cdef void *hrdriver
-    cdef void *hdsin
-    cdef void *hdsout
-    cdef void *hbandin
-    cdef void *hbandout
+    cdef InMemoryRaster in_mem_ds = None
+    cdef InMemoryRaster out_mem_ds = None
+    cdef InMemoryRaster mask_mem_ds = None
+    cdef void *in_band
+    cdef void *out_band
+    cdef void *mask_band
     cdef _io.RasterReader rdr
     cdef _io.RasterUpdater udr
+    cdef _io.RasterReader mask_reader
 
     if isinstance(image, np.ndarray):
-        hrdriver = _gdal.GDALGetDriverByName("MEM")
-        if hrdriver == NULL:
-            raise ValueError("NULL driver for 'MEM'")
-        rows = image.shape[0]
-        cols = image.shape[1]
-        hdsin = _gdal.GDALCreate(
-                    hrdriver, "input", cols, rows, 1,
-                    <_gdal.GDALDataType>1, NULL)
-        if hdsin == NULL:
-            raise ValueError("NULL input datasource")
-        hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
-        if hbandin == NULL:
-            raise ValueError("NULL input band")
-        retval = _io.io_ubyte(hbandin, 1, 0, 0, cols, rows, image)
+        in_mem_ds = InMemoryRaster(image)
+        in_band = in_mem_ds.band
     elif isinstance(image, tuple):
         rdr = image.ds
         hband = rdr.band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
-    if output is None or isinstance(output, np.ndarray):
-        hdsout = _gdal.GDALCreate(
-                    hrdriver, "output", cols, rows, 1, 
-                    <_gdal.GDALDataType>1, NULL)
-        if hdsout == NULL:
-            raise ValueError("NULL output datasource")
-        hbandout = _gdal.GDALGetRasterBand(hdsout, 1)
-        if hbandout == NULL:
-            raise ValueError("NULL output band")
-    elif isinstance(image, tuple):
+    if isinstance(output, np.ndarray):
+        out_mem_ds = InMemoryRaster(output)
+        out_band = out_mem_ds.band
+    elif isinstance(output, tuple):
         udr = output.ds
-        hbandout = udr.band(output.bidx)
+        out_band = udr.band(output.bidx)
     else:
-        raise ValueError("Invalid source image")
+        raise ValueError("Invalid output image")
 
-    retval = _gdal.GDALSieveFilter(
-                hbandin, NULL, hbandout, size, connectivity,
-                NULL, NULL, NULL)
+    if isinstance(mask, np.ndarray):
+        # A boolean mask must be converted to uint8 for GDAL
+        mask_mem_ds = InMemoryRaster(mask.astype('uint8'))
+        mask_band = mask_mem_ds.band
+    elif isinstance(mask, tuple):
+        if mask.shape != image.shape:
+            raise ValueError("Mask must have same shape as image")
+        mask_reader = mask.ds
+        mask_band = mask_reader.band(mask.bidx)
+    else:
+        mask_band = NULL
 
-    out = output or np.zeros(image.shape, np.uint8)
-    retval = _io.io_ubyte(hbandout, 0, 0, 0, cols, rows, out)
+    _gdal.GDALSieveFilter(
+        in_band,
+        mask_band,
+        out_band,
+        size,
+        connectivity,
+        NULL,
+        NULL,
+        NULL
+    )
 
-    if hdsin != NULL:
-        _gdal.GDALClose(hdsin)
-    if hdsout != NULL:
-        _gdal.GDALClose(hdsout)
+    # Read from out_band into output
+    _io.io_auto(output, out_band, False)
 
-    return out
+    if in_mem_ds is not None:
+        in_mem_ds.close()
+    if out_mem_ds is not None:
+        out_mem_ds.close()
+    if mask_mem_ds is not None:
+        mask_mem_ds.close()
 
 
 def _rasterize(shapes, image, transform, all_touched):

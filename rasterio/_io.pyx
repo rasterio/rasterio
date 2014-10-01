@@ -1293,7 +1293,7 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
 
-    def __cinit__(self, image, transform):
+    def __cinit__(self, image, transform=None):
         """
         Create in-memory raster dataset, and populate its initial values with
         the values in image.
@@ -1324,11 +1324,12 @@ cdef class InMemoryRaster:
         if self.dataset == NULL:
             raise ValueError("NULL output datasource")
 
-        for i in range(6):
-            self.transform[i] = transform[i]
-        err = _gdal.GDALSetGeoTransform(self.dataset, self.transform)
-        if err:
-            raise ValueError("transform not set: %s" % transform)
+        if transform is not None:
+            for i in range(6):
+                self.transform[i] = transform[i]
+            err = _gdal.GDALSetGeoTransform(self.dataset, self.transform)
+            if err:
+                raise ValueError("transform not set: %s" % transform)
 
         self.band = _gdal.GDALGetRasterBand(self.dataset, 1)
         if self.band == NULL:
