@@ -170,9 +170,10 @@ def _transform_geom(
     transform = _gdal.OCTNewCoordinateTransformation(src, dst)
 
     # Transform options.
+    val_b = str(antimeridian_offset).encode('utf-8')
+    val_c = val_b
     options = _gdal.CSLSetNameValue(
-                options, "DATELINEOFFSET", 
-                str(antimeridian_offset).encode('utf-8'))
+                options, "DATELINEOFFSET", val_c)
     if antimeridian_cutting:
         options = _gdal.CSLSetNameValue(options, "WRAPDATELINE", "YES")
 
