@@ -40,3 +40,22 @@ def test_update_spatial(tmpdir):
         assert list(f.transform) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
         assert list(f.affine.to_gdal()) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
         assert f.crs == {'init': 'epsg:4326'}
+
+def test_update_spatial_epsg(tmpdir):
+    tiffname = str(tmpdir.join('foo.tif'))
+    shutil.copy('tests/data/RGB.byte.tif', tiffname)
+    with rasterio.open(tiffname, 'r+') as f:
+        f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
+        f.crs = 'EPSG:4326'
+    with rasterio.open(tiffname) as f:
+        assert list(f.transform) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        assert list(f.affine.to_gdal()) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        assert f.crs == {'init': 'epsg:4326'}
+
+def test_update_nodatavals(tmpdir):
+    tiffname = str(tmpdir.join('foo.tif'))
+    shutil.copy('tests/data/RGB.byte.tif', tiffname)
+    with rasterio.open(tiffname, 'r+') as f:
+        f.nodatavals = [-1, -1, -1]
+    with rasterio.open(tiffname) as f:
+        assert f.nodatavals == [-1, -1, -1]

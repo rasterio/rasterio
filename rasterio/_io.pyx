@@ -586,7 +586,7 @@ cdef class RasterReader(_base.DatasetReader):
                 raise IndexError("band index out of range")
             idx = self.indexes.index(bidx)
             check_dtypes.add(self.dtypes[idx])
-            nodatavals.append(self.nodatavals[idx])
+            nodatavals.append(self._nodatavals[idx])
         if len(check_dtypes) > 1:
             raise ValueError("more than one 'dtype' found")
         elif len(check_dtypes) == 0:
@@ -1001,6 +1001,27 @@ cdef class RasterUpdater(RasterReader):
 
         def __set__(self, value):
             self.write_transform(value.to_gdal())
+
+    def set_nodatavals(self, vals):
+        cdef void *hband = NULL
+        cdef double val
+        for i, val in zip(self.indexes, vals):
+            hband = _gdal.GDALGetRasterBand(self._hds, i)
+            success = _gdal.GDALSetRasterNoDataValue(hband, val)
+            if success:
+                raise ValueError("Invalid nodata values")
+        self._nodatavals = vals
+
+    property nodatavals:
+        """A list by band of a dataset's nodata values.
+        """
+
+        def __get__(self):
+            return self.get_nodatavals()
+
+        def __set__(self, value):
+            self.set_nodatavals(value)
+
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.

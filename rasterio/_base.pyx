@@ -274,9 +274,7 @@ cdef class DatasetReader(object):
                 self._block_shapes.append((ysize, xsize))
         return self._block_shapes
 
-    @property
-    def nodatavals(self):
-        """Returns a band-ordered list of nodata values."""
+    def get_nodatavals(self):
         cdef void *hband = NULL
         cdef object val
         cdef int success
@@ -292,6 +290,10 @@ cdef class DatasetReader(object):
                     val = None
                 self._nodatavals.append(val)
         return self._nodatavals
+
+    property nodatavals:
+        def __get__(self):
+            return self.get_nodatavals()
 
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's block windows and their
