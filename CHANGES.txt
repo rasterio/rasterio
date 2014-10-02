@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.14.1 (2014-10-02)
+-------------------
+- Allow update of nodata values in r+ mode (#167).
+
 0.14 (2014-10-01)
 -----------------
 - Fixed tag update crasher (#145).
