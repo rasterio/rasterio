@@ -10,5 +10,10 @@ before_install:
 install:
   - "pip install -r requirements-dev.txt"
   - "pip install pytest"
+  - "pip install coveralls"
   - "pip install -e ."
-script: py.test
+script: 
+  - py.test
+  - coverage run --source=rasterio --omit='*.pxd,*.pyx,*/tests/*,*/docs/*,*/examples/*,*/benchmarks/*' -m py.test
+after_success:
+  - coveralls
