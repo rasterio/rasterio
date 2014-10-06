@@ -4,6 +4,7 @@ import subprocess
 import sys
 
 import rasterio
+from rasterio import crs
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -54,3 +55,12 @@ def test_write_3857(tmpdir):
     EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"],
     AUTHORITY["EPSG","3857"]]""" in info.decode('utf-8')
 
+
+def test_bare_parameters():
+    """ Make sure that bare parameters (e.g., no_defs) are handled properly,
+    even if they come in with key=True.  This covers interaction with pyproj,
+    which makes presents bare parameters as key=<bool>."""
+
+    # Example produced by pyproj
+    crs_dict = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert crs_dict.get('no_defs', False) is True

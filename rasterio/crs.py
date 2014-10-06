@@ -40,14 +40,19 @@ def from_string(prjs):
     """
     parts = [o.lstrip('+') for o in prjs.strip().split()]
     def parse(v):
-        try:
-            return int(v)
-        except ValueError:
-            pass
-        try:
-            return float(v)
-        except ValueError:
-            return v
+        if v in ('True', 'true'):
+            return True
+        elif v in ('False', 'false'):
+            return False
+        else:
+            try:
+                return int(v)
+            except ValueError:
+                pass
+            try:
+                return float(v)
+            except ValueError:
+                return v
     items = map(
         lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
         (p.split('=') for p in parts) )
