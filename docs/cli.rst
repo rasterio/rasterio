@@ -178,11 +178,11 @@ rio-stack will take all bands from each input and write them in same order to
 the output. Optionally, bands for each input may be specified using a simple
 syntax:
 
-- --bidx N takes the Nth band from the input (first band is 1).
-- --bidx M,N,0 takes bands M, N, and O.
-- --bidx M..O takes bands M-O, inclusive.
-- --bidx ..N takes all bands up to and including N.
-- --bidx N.. takes all bands from N to the end.
+- ``--bidx N`` takes the Nth band from the input (first band is 1).
+- ``--bidx M,N,O`` takes bands M, N, and O.
+- ``--bidx M..O`` takes bands M-O, inclusive.
+- ``--bidx ..N`` takes all bands up to and including N.
+- ``--bidx N..`` takes all bands from N to the end.
 
 Examples using the Rasterio testing dataset that produce a copy of it.
 
