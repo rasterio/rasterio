@@ -1,4 +1,3 @@
-from itertools import izip_longest
 import logging
 import os.path
 import sys
@@ -7,6 +6,7 @@ import click
 
 import rasterio
 
+from rasterio.five import zip_longest
 from rasterio.rio.cli import cli
 
 
@@ -74,7 +74,7 @@ def stack(ctx, input, bidx, photometric, output):
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             output_count = 0
             indexes = []
-            for path, item in izip_longest(input, bidx, fillvalue=None):
+            for path, item in zip_longest(input, bidx, fillvalue=None):
                 with rasterio.open(path) as src:
                     src_indexes = src.indexes
                 if item is None:
