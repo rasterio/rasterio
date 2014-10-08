@@ -21,6 +21,7 @@ Rasterio's new command line interface is a program named "rio".
       insp       Open a data file and start an interpreter.
       merge      Merge a stack of raster datasets.
       shapes     Write the shapes of features.
+      stack      Stack a number of bands into a multiband dataset.
       transform  Transform coordinates.
 
 It is developed using the ``click`` package.
@@ -164,6 +165,33 @@ data region.
     $ rio shapes --mask --precision 6 tests/data/RGB.byte.tif | geojsonio
 
 See http://bl.ocks.org/anonymous/raw/ef244954b719dba97926/.
+
+stack
+-----
+
+New in 0.15.
+
+The rio-stack command stack a number of bands from one or more input files into
+a multiband dataset. Input datasets must be of a kind: same data type,
+dimensions, etc. The output is cloned from the first input. By default,
+rio-stack will take all bands from each input and write them in same order to
+the output. Optionally, bands for each input may be specified using a simple
+syntax:
+
+- --bidx N takes the Nth band from the input (first band is 1).
+- --bidx M,N,0 takes bands M, N, and O.
+- --bidx M..O takes bands M-O, inclusive.
+- --bidx ..N takes all bands up to and including N.
+- --bidx N.. takes all bands from N to the end.
+
+Examples using the Rasterio testing dataset that produce a copy of it.
+
+.. code-block:: console
+
+    $ rio stack RGB.byte.tif -o stacked.tif
+    $ rio stack RGB.byte.tif --bidx 1,2,3 -o stacked.tif
+    $ rio stack RGB.byte.tif --bidx 1..3 -o stacked.tif
+    $ rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. -o stacked.tif
 
 transform
 ---------
