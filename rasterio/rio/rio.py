@@ -15,6 +15,7 @@ import click
 import rasterio
 
 from rasterio.rio.cli import cli, write_features
+from rasterio.rio.bands import stack
 from rasterio.rio.info import info
 from rasterio.rio.merge import merge
 from rasterio.rio.features import shapes
