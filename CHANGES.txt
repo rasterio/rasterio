@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.15
+----
+- Support for more data types in seive() (#159).
+- Handle unexpected PROJ.4 values like "+no_defs=True" (#173).
+- Support for writing PNG, JPEG, etc using GDALCreateCopy (#177).
+- New rio-stack command (#180).
+- Moved rio CLI main entry point to rasterio/rio/main:cli.
+
 0.14.1 (2014-10-02)
 -------------------
 - Allow update of nodata values in r+ mode (#167).
