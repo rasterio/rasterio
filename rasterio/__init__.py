@@ -94,19 +94,18 @@ def open(
         from rasterio._io import RasterReader
         s = RasterReader(path)
     elif mode == 'r+':
-        from rasterio._io import RasterUpdater
-        s = RasterUpdater(path, mode)
+        from rasterio._io import writer
+        s = writer(path, mode)
     elif mode == 'r-':
         from rasterio._base import DatasetReader
         s = DatasetReader(path)
     elif mode == 'w':
-        from rasterio._io import RasterUpdater
-        s = RasterUpdater(
-                path, mode, driver,
-                width, height, count, 
-                crs, transform, dtype,
-                nodata,
-                **kwargs)
+        from rasterio._io import writer
+        s = writer(path, mode, driver=driver,
+                   width=width, height=height, count=count,
+                   crs=crs, transform=transform, dtype=dtype,
+                   nodata=nodata,
+                   **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)

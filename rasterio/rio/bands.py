@@ -33,8 +33,9 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 @click.option('-o','--output',
               type=click.Path(exists=False, resolve_path=True), required=True,
               help="Path to output file.")
+@click.option('--driver', default='GTiff', help="Output format driver")
 @click.pass_context
-def stack(ctx, input, bidx, photometric, output):
+def stack(ctx, input, bidx, photometric, output, driver):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
 
@@ -68,7 +69,7 @@ def stack(ctx, input, bidx, photometric, output):
     """
     import numpy as np
 
-    verbosity = ctx.obj['verbosity']
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 2
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
@@ -88,7 +89,7 @@ def stack(ctx, input, bidx, photometric, output):
                     indexes.append(src_indexes[slice(start-1, stop)])
                     output_count += len(src_indexes[slice(start-1, stop)])
                 else:
-                    parts = map(int, item.split(','))
+                    parts = list(map(int, item.split(',')))
                     if len(parts) == 1:
                         indexes.append(parts[0])
                         output_count += 1
@@ -102,7 +103,7 @@ def stack(ctx, input, bidx, photometric, output):
                 kwargs['transform'] = kwargs.pop('affine')
 
             kwargs.update(
-                driver='GTiff',
+                driver=driver,
                 count=output_count)
 
             if photometric:
