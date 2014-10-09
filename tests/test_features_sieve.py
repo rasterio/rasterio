@@ -57,7 +57,7 @@ def test_sieve_output():
 
         # Output should match returned array
         output = numpy.zeros_like(image)
-        output [1:3, 1:3] = 5
+        output[1:3, 1:3] = 5
         sieved_image = ftrz.sieve(image, 100, output=output)
         assert numpy.array_equal(output, sieved_image)
 
@@ -76,7 +76,8 @@ def test_sieve_mask():
         image[5:15, 5:15] = 1
         image[1:3, 1:3] = 2
 
-        # Blank mask has no effect, only areas smaller than size will be removed
+        # Blank mask has no effect, only areas smaller than size will be
+        # removed
         mask = numpy.ones(shape, dtype=rasterio.bool_)
         sieved_image = ftrz.sieve(image, 100, mask=mask)
         truth = numpy.zeros_like(image)
@@ -98,7 +99,7 @@ def test_sieve_mask():
 
 
 def test_dtypes():
-    """Test dtype support for sieve"""
+    """Test data type support for sieve"""
 
     rows = cols = 10
     with rasterio.drivers():

@@ -14,6 +14,8 @@ from rasterio.dtypes import get_minimum_int_dtype
 
 
 log = logging.getLogger('rasterio')
+
+
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
@@ -21,20 +23,42 @@ log.addHandler(NullHandler())
 
 
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
-    """Yields a (shape, image_value) pair for each feature in the image.
+    """
+    Return a generator of (polygon, value) for each each set of adjacent pixels
+    of the same value.
 
-    The shapes are GeoJSON-like dicts and the image values are ints or floats
-    depending on the data type of the image.
+    Parameters
+    ----------
+    image : numpy ndarray or rasterio Band object
+        (RasterReader, bidx namedtuple).
+        Data type must be one of rasterio.int16, rasterio.int32,
+        rasterio.uint8, rasterio.uint16, or rasterio.float32.
+    mask : numpy ndarray or rasterio Band object, optional
+        Values of False will be excluded from feature generation
+        Must be of type rasterio.bool_
+    connectivity : int, optional
+        Use 4 or 8 pixel connectivity for grouping pixels into features
+    transform : Affine transformation, optional
+        If not provided, feature coordinates will be generated based on pixel
+        coordinates
 
-    Features are found using a connected-component labeling algorithm.
+    Returns
+    -------
+    Generator of (polygon, value)
+        Yields a pair of (polygon, value) for each feature found in the image.
+        Polygons are GeoJSON-like dicts and the values are the associated value
+        from the image, in the data type of the image.
+        Note: due to floating point precision issues, values returned from a
+        floating point image may not exactly match the original values.
 
-    The image must be one of int16, int32, uint8, uint16, float32 data types.
-    Note: due to floating point precision issues, the floating point values
-    returned from a floating point image may not exactly match the original
-    values.
+    Notes
+    -----
+    The amount of memory used by this algorithm is proportional to the number
+    and complexity of polygons produced.  This algorithm is most appropriate
+    for simple thematic data.  Data with high pixel-to-pixel variability, such
+    as imagery, may produce one polygon per pixel and consume large amounts of
+    memory.
 
-    If a mask is provided, pixels for which the mask is `False` will be
-    excluded from feature generation.
     """
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
@@ -58,31 +82,42 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
 def sieve(image, size, output=None, mask=None, connectivity=4):
     """
-    Removes raster polygons smaller than provided size (in pixels) and
-    replaces replaces them with the pixel value of the largest neighbor polygon.
+    Replaces small polygons in `image` with the value of their largest
+    neighbor.  Polygons are found for each set of neighboring pixels of the
+    same value.
+
+    Parameters
+    ----------
+    image : numpy ndarray or rasterio Band object
+        (RasterReader, bidx namedtuple)
+        Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
+        rasterio.uint16, or rasterio.float32
+    size : int
+        minimum polygon size (number of pixels) to retain.
+    output : numpy ndarray, optional
+        Array of same shape and data type as `image` in which to store results.
+    mask : numpy ndarray or rasterio Band object, optional
+        Values of False will be excluded from feature generation
+        Must be of type rasterio.bool_
+    connectivity : int, optional
+        Use 4 or 8 pixel connectivity for grouping pixels into features
+
+    Returns
+    -------
+    output : numpy ndarray
+        Result
+
+    Notes
+    -----
     GDAL only supports values that can be cast to 32-bit integers for this
     operation.
 
-    The algorithm makes three passes over the input file to enumerate the
-    polygons and collect limited information about them.  Memory use is
-    proportional to the number of polygons, but is not directly related to the
-    size of the raster.  So very large raster files can be processed effectively
-    if there aren't too many polygons.  But extremely noisy rasters with many
-    one pixel polygons will end up being expensive (in memory) to process.
+    The amount of memory used by this algorithm is proportional to the number
+    and complexity of polygons found in the image.  This algorithm is most
+    appropriate for simple thematic data.  Data with high pixel-to-pixel
+    variability, such as imagery, may produce one polygon per pixel and consume
+    large amounts of memory.
 
-    :param image: numpy ndarray or rasterio Band object (RasterReader,
-    bidx namedtuple).  Must be of type: int16, int32, uint8, uint16.
-    :param size: size in pixels below which features will be removed.
-    :param output: if provided, must be numpy ndarray or rasterio Band object.
-    Must be same dtype as image.  Ouput is updated with the result of this
-    operation.
-    :param mask: if provided, must be a boolean numpy ndarray or rasterio Band
-    object.
-    :param connectivity: used to determine neighboring pixels (4 or 8).
-
-
-    :return numpy ndarray with features that are smaller than size removed.
-    Will be the same as output, if provided to this function.
     """
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
@@ -130,30 +165,41 @@ def rasterize(
         all_touched=False,
         default_value=1,
         dtype=None):
-    """Returns an image array with points, lines, or polygons burned in.
+    """
+    Returns an image array with input geometries burned in.
 
-    A different value may be specified for each shape.  The shapes may
-    be georeferenced or may have image coordinates. An existing image
-    array may be provided, or one may be created. By default, the center
-    of image elements determines whether they are updated, but all
-    touched elements may be optionally updated.
+    Parameters
+    ----------
+    shapes : iterable of (geometry, value) pairs or iterable over geometries
+        `geometry` can either be an object that implements the geo interface or
+        GeoJSON-like object.
+    out_shape : tuple or list
+        Shape of output numpy ndarray
+    fill : int or float, optional
+        Used as fill value for all areas not covered by input geometries
+    output : numpy ndarray, optional
+    transform : Affine transformation object, optional
+        transformation applied to shape geometries into pixel coordinates
+    all_touched : boolean, optional
+        If True, all pixels touched by geometries will be burned in.
+        If false, only pixels whose center is within the polygon or that are
+        selected by brezenhams line algorithm will be burned in.
+    default_value : int or float, optional
+        Used as value for all geometries, if not provided in `shapes`
+    dtype : rasterio or numpy data type, optional
+        Used as data type for results, if `output` is not provided
 
-    Valid data types are: int16, int32, uint8, uint16, uint32, float32, float64
+    Returns
+    -------
+    output : numpy ndarray
+        Results
 
-    :param shapes: an iterator over Fiona style geometry objects (with a default
-    value of default_value) or an iterator over (geometry, value) pairs.
+    Notes
+    -----
+    Valid data types for `fill`, `default_value`, `output`, `dtype` and
+    shape values are rasterio.int16, rasterio.int32, rasterio.uint8,
+    rasterio.uint16, rasterio.uint32, rasterio.float32, rasterio.float64
 
-    :param transform: GDAL style geotransform to be applied to the
-    image.
-
-    :param out_shape: shape of created image array
-    :param fill: fill value for created image array
-    :param output: alternatively, an existing image array
-
-    :param all_touched: if True, will rasterize all pixels touched,
-    otherwise will use GDAL default method.
-    :param default_value: value burned in for shapes if not provided as part
-    of shapes.
     """
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32',
@@ -182,7 +228,6 @@ def rasterize(
                              % (', '.join(valid_dtypes)))
         elif dtype is not None and not can_cast_dtype(fill_array, dtype):
             raise ValueError('fill value cannot be cast to specified dtype')
-
 
     if default_value != 1:
         default_value_array = np.array([default_value])
@@ -243,11 +288,10 @@ def rasterize(
         output.fill(fill)
     else:
         raise ValueError('Either an output shape or image must be provided')
-    
+
     transform = guard_transform(transform)
 
     with rasterio.drivers():
         _rasterize(valid_shapes, output, transform.to_gdal(), all_touched)
-    
-    return output
 
+    return output
