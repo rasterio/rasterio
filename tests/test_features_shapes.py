@@ -1,6 +1,5 @@
 import logging
 import sys
-
 import numpy
 import pytest
 
@@ -12,19 +11,19 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_shapes():
-    """Access to shapes of labeled features"""
+    """Test creation of shapes from pixel values"""
 
     image = numpy.zeros((20, 20), dtype=rasterio.ubyte)
-    image[5:15,5:15] = 127
+    image[5:15, 5:15] = 127
     with rasterio.drivers():
         shapes = ftrz.shapes(image)
         shape, val = next(shapes)
         assert shape['type'] == 'Polygon'
-        assert len(shape['coordinates']) == 2 # exterior and hole
+        assert len(shape['coordinates']) == 2  # exterior and hole
         assert val == 0
         shape, val = next(shapes)
         assert shape['type'] == 'Polygon'
-        assert len(shape['coordinates']) == 1 # no hole
+        assert len(shape['coordinates']) == 1  # no hole
         assert val == 127
         try:
             shape, val = next(shapes)
@@ -35,7 +34,7 @@ def test_shapes():
 
 
 def test_shapes_band_shortcut():
-    """Access to shapes of labeled features"""
+    """Test rasterio bands as input to shapes"""
 
     with rasterio.drivers():
         with rasterio.open('tests/data/shade.tif') as src:
@@ -47,10 +46,10 @@ def test_shapes_band_shortcut():
 
 
 def test_shapes_internal_driver_manager():
-    """Access to shapes of labeled features"""
+    """Make sure this works if driver is managed outside this test"""
 
     image = numpy.zeros((20, 20), dtype=rasterio.ubyte)
-    image[5:15,5:15] = 127
+    image[5:15, 5:15] = 127
     shapes = ftrz.shapes(image)
     shape, val = next(shapes)
     assert shape['type'] == 'Polygon'
@@ -58,18 +57,20 @@ def test_shapes_internal_driver_manager():
 
 def test_shapes_connectivity():
     """Test connectivity options"""
+
     image = numpy.zeros((20, 20), dtype=rasterio.ubyte)
-    image[5:11,5:11] = 1
-    image[11,11] = 1
+    image[5:11, 5:11] = 1
+    image[11, 11] = 1
 
     shapes = ftrz.shapes(image, connectivity=8)
     shape, val = next(shapes)
     assert len(shape['coordinates'][0]) == 9
-    #Note: geometry is not technically valid at this point, it has a self intersection at 11,11
+    # Note: geometry is not technically valid at this point, it has a self
+    # intersection at 11,11
 
 
 def test_shapes_dtype():
-    """Test image dtype handling"""
+    """Test image data type handling"""
 
     rows = cols = 10
     with rasterio.drivers():
