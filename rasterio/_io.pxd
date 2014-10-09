@@ -33,11 +33,16 @@ cdef class RasterReader(_base.DatasetReader):
     # Read-only access to raster data and metadata.
     pass
 
+
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
     cdef readonly object _init_dtype
     cdef readonly object _init_nodata
     cdef readonly object _options
+
+
+cdef class IndirectRasterUpdater(RasterUpdater):
+    pass
 
 
 cdef class InMemoryRaster:

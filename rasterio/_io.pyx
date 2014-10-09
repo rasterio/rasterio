@@ -1355,3 +1355,168 @@ cdef class InMemoryRaster:
 
     def write(self, image):
         io_auto(image, self.band, True)
+
+
+cdef class IndirectRasterUpdater(RasterUpdater):
+
+    def __repr__(self):
+        return "<%s IndirectRasterUpdater name='%s' mode='%s'>" % (
+            self.closed and 'closed' or 'open', 
+            self.name,
+            self.mode)
+
+    def start(self):
+        cdef const char *drv_name = NULL
+        cdef void *drv = NULL
+        cdef void *memdrv = NULL
+        cdef void *hband = NULL
+        cdef void *temp = NULL
+        cdef int success
+        name_b = self.name.encode('utf-8')
+        cdef const char *fname = name_b
+
+        memdrv = _gdal.GDALGetDriverByName("MEM")
+
+        # Is there not a driver manager already?
+        if driver_count() == 0 and not self.env:
+            # create a local manager and enter
+            self.env = GDALEnv(True)
+        else:
+            self.env = GDALEnv(False)
+        self.env.start()
+        
+        if self.mode == 'w':
+            # Find the equivalent GDAL data type or raise an exception
+            # We've mapped numpy scalar types to GDAL types so see
+            # if we can crosswalk those.
+            if hasattr(self._init_dtype, 'type'):
+                tp = self._init_dtype.type
+                if tp not in dtypes.dtype_rev:
+                    raise ValueError(
+                        "Unsupported dtype: %s" % self._init_dtype)
+                else:
+                    gdal_dtype = dtypes.dtype_rev.get(tp)
+            else:
+                gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
+            self._hds = _gdal.GDALCreate(
+                memdrv, "temp", self.width, self.height, self._count,
+                gdal_dtype, NULL)
+            if self._hds == NULL:
+                raise ValueError("NULL dataset")
+            if self._init_nodata is not None:
+                for i in range(self._count):
+                    hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                    success = _gdal.GDALSetRasterNoDataValue(
+                                    hband, self._init_nodata)
+            if self._transform:
+                self.write_transform(self._transform)
+            if self._crs:
+                self.set_crs(self._crs)
+
+        elif self.mode == 'r+':
+            with cpl_errs:
+                temp = _gdal.GDALOpen(fname, 0)
+            if temp == NULL:
+                raise ValueError("Null dataset")
+            self._hds = _gdal.GDALCreateCopy(
+                                memdrv, "temp", temp, 1, NULL, NULL, NULL)
+            if self._hds == NULL:
+                raise ValueError("NULL dataset")
+            drv = _gdal.GDALGetDatasetDriver(temp)
+            drv_name = _gdal.GDALGetDriverShortName(drv)
+            self.driver = drv_name.decode('utf-8')
+            _gdal.GDALClose(temp)
+
+        self._count = _gdal.GDALGetRasterCount(self._hds)
+        self.width = _gdal.GDALGetRasterXSize(self._hds)
+        self.height = _gdal.GDALGetRasterYSize(self._hds)
+        self.shape = (self.height, self.width)
+
+        self._transform = self.read_transform()
+        self._crs = self.read_crs()
+        self._crs_wkt = self.read_crs_wkt()
+
+        # touch self.meta
+        _ = self.meta
+
+        self._closed = False
+
+    def close(self):
+        cdef const char *drv_name = NULL
+        cdef char **options = NULL
+        cdef char *key_c, *val_c = NULL
+        cdef void *drv = NULL
+        cdef void *temp = NULL
+        cdef int success
+        name_b = self.name.encode('utf-8')
+        cdef const char *fname = name_b
+
+        # Delete existing file, create.
+        if os.path.exists(self.name):
+            os.unlink(self.name)
+
+        driver_b = self.driver.encode('utf-8')
+        drv_name = driver_b
+        drv = _gdal.GDALGetDriverByName(drv_name)
+        if drv == NULL:
+            raise ValueError("NULL driver for %s", self.driver)
+
+        kwds = []
+        # Creation options
+        for k, v in self._options.items():
+            # Skip items that are definitely *not* valid driver options.
+            if k.lower() in ['affine']:
+                continue
+            kwds.append((k.lower(), v))
+            k, v = k.upper(), str(v).upper()
+            key_b = k.encode('utf-8')
+            val_b = v.encode('utf-8')
+            key_c = key_b
+            val_c = val_b
+            options = _gdal.CSLSetNameValue(options, key_c, val_c)
+            log.debug(
+                "Option: %r\n", 
+                (k, _gdal.CSLFetchNameValue(options, key_c)))
+        
+        #self.update_tags(ns='rio_creation_kwds', **kwds)
+        temp = _gdal.GDALCreateCopy(
+                    drv, fname, self._hds, 1, options, NULL, NULL)
+
+        if options != NULL:
+            _gdal.CSLDestroy(options)
+
+        if temp != NULL:
+            _gdal.GDALClose(temp)
+
+
+def writer(path, mode, **kwargs):
+    # Dispatch to direct or indirect writer/updater according to the
+    # format driver's capabilities.
+    cdef void *hds = NULL
+    cdef void *drv = NULL
+    cdef char *drv_name = NULL
+    cdef const char *fname = NULL
+
+    if mode == 'w' and 'driver' in kwargs:
+        if kwargs['driver'] == 'GTiff':
+            return RasterUpdater(path, mode, **kwargs)
+        else:
+            return IndirectRasterUpdater(path, mode, **kwargs)
+    else:
+        # Peek into the dataset at path to determine it's format
+        # driver.
+        name_b = path.encode('utf-8')
+        fname = name_b
+        with cpl_errs:
+            hds = _gdal.GDALOpen(fname, 0)
+        if hds == NULL:
+            raise ValueError("NULL dataset")
+        drv = _gdal.GDALGetDatasetDriver(hds)
+        drv_name = _gdal.GDALGetDriverShortName(drv)
+        drv_name_b = drv_name
+        driver = drv_name_b.decode('utf-8')
+        _gdal.GDALClose(hds)
+        if driver == 'GTiff':
+            return RasterUpdater(path, mode)
+        else:
+            return IndirectRasterUpdater(path, mode)

@@ -12,17 +12,14 @@ from rasterio.rio.cli import cli
 
 
 @cli.command(short_help="Merge a stack of raster datasets.")
-
 @click.argument('input', nargs=-1,
     type=click.Path(exists=True, resolve_path=True), required=True)
-
 @click.option('-o','--output',
     type=click.Path(exists=False, resolve_path=True), required=True,
     help="Path to output file.")
-
+@click.option('--driver', default='GTiff', help="Output format driver")
 @click.pass_context
-
-def merge(ctx, input, output):
+def merge(ctx, input, output, driver):
     """Copy valid pixels from input files to the output file.
 
     All files must have the same shape, number of bands, and data type.
@@ -38,15 +35,16 @@ def merge(ctx, input, output):
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
 
             with rasterio.open(input[0]) as first:
-                meta = first.meta
-                meta['transform'] = meta.pop('affine')
+                kwargs = first.meta
+                kwargs['transform'] = kwargs.pop('affine')
                 dest = np.empty((3,) + first.shape, dtype=first.dtypes[0])
 
             if os.path.exists(output):
                 dst = rasterio.open(output, 'r+')
                 nodataval = dst.nodatavals[0]
             else:
-                dst = rasterio.open(output, 'w', **meta)
+                kwargs['driver'] == driver
+                dst = rasterio.open(output, 'w', **kwargs)
                 nodataval = first.nodatavals[0]
 
             dest.fill(nodataval)
