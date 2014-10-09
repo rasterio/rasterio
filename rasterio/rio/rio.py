@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Rasterio command line interface"""
 
 import functools
@@ -15,10 +13,6 @@ import click
 import rasterio
 
 from rasterio.rio.cli import cli, write_features
-from rasterio.rio.bands import stack
-from rasterio.rio.info import info
-from rasterio.rio.merge import merge
-from rasterio.rio.features import shapes
 
 
 warnings.simplefilter('default')
@@ -32,17 +26,16 @@ warnings.simplefilter('default')
 
 # Insp command.
 @cli.command(short_help="Open a data file and start an interpreter.")
-@click.argument('src_path', type=click.Path(exists=True))
+@click.argument('input', type=click.Path(exists=True))
 @click.option('--mode', type=click.Choice(['r', 'r+']), default='r', help="File mode (default 'r').")
 @click.pass_context
-def insp(ctx, src_path, mode):
+def insp(ctx, input, mode):
     import rasterio.tool
-
-    verbosity = ctx.obj['verbosity']
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            with rasterio.open(src_path, mode) as src:
+            with rasterio.open(input, mode) as src:
                 rasterio.tool.main(
                     "Rasterio %s Interactive Inspector (Python %s)\n"
                     'Type "src.meta", "src.read_band(1)", or "help(src)" '
@@ -55,23 +48,20 @@ def insp(ctx, src_path, mode):
         logger.exception("Failed. Exception caught")
         sys.exit(1)
 
+
 # Bounds command.
 @cli.command(short_help="Write bounding boxes to stdout as GeoJSON.")
-
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
 @click.argument('input', nargs=-1, type=click.Path(exists=True))
-
 # Coordinate precision option.
 @click.option('--precision', type=int, default=-1,
               help="Decimal precision of coordinates.")
-
 # JSON formatting options.
 @click.option('--indent', default=None, type=int,
               help="Indentation level for JSON output")
 @click.option('--compact/--no-compact', default=False,
               help="Use compact separators (',', ':').")
-
 # Geographic (default) or Mercator switch.
 @click.option('--geographic', 'projected', flag_value='geographic',
               default=True,
@@ -80,19 +70,16 @@ def insp(ctx, src_path, mode):
               help="Output in projected coordinates.")
 @click.option('--mercator', 'projected', flag_value='mercator',
               help="Output in Web Mercator coordinates.")
-
 # JSON object (default) or sequence (experimental) switch.
 @click.option('--json-obj', 'json_mode', flag_value='obj', default=True,
         help="Write a single JSON object (the default).")
 @click.option('--x-json-seq', 'json_mode', flag_value='seq',
         help="Write a JSON sequence. Experimental.")
-
 # Use ASCII RS control code to signal a sequence item (False is default).
 # See http://tools.ietf.org/html/draft-ietf-json-text-sequence-05.
 # Experimental.
 @click.option('--x-json-seq-rs/--x-json-seq-no-rs', default=False,
         help="Use RS as text separator. Experimental.")
-
 # GeoJSON feature (default), bbox, or collection switch. Meaningful only
 # when --x-json-seq is used.
 @click.option('--collection', 'output_mode', flag_value='collection',
@@ -102,21 +89,17 @@ def insp(ctx, src_path, mode):
               help="Output as sequence of GeoJSON features.")
 @click.option('--bbox', 'output_mode', flag_value='bbox',
               help="Output as a GeoJSON bounding box array.")
-
 @click.pass_context
-
 def bounds(ctx, input, precision, indent, compact, projected, json_mode,
         x_json_seq_rs, output_mode):
-
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
     geojsonio
 
-    $ rio bounds *.tif | geojsonio
+      $ rio bounds *.tif | geojsonio
 
     """
     import rasterio.warp
-
-    verbosity = ctx.obj['verbosity']
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -152,7 +135,7 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
                     xs = [round(v, precision) for v in xs]
                     ys = [round(v, precision) for v in ys]
                 bbox = [min(xs), min(ys), max(xs), max(ys)]
-                
+
                 yield {
                     'type': 'Feature',
                     'bbox': bbox,
@@ -172,7 +155,7 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
 
     collection = Collection()
 
-    # Use the generator defined above as input to the generic output 
+    # Use the generator defined above as input to the generic output
     # writing function.
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
@@ -188,25 +171,25 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
 
 # Transform command.
 @cli.command(short_help="Transform coordinates.")
-@click.argument('input', type=click.File('rb'))
+@click.argument('input', default='-', required=False)
 @click.option('--src_crs', default='EPSG:4326', help="Source CRS.")
 @click.option('--dst_crs', default='EPSG:4326', help="Destination CRS.")
-@click.option('--interleaved', 'mode', flag_value='interleaved', default=True)
 @click.option('--precision', type=int, default=-1,
               help="Decimal precision of coordinates.")
 @click.pass_context
-def transform(ctx, input, src_crs, dst_crs, mode, precision):
+def transform(ctx, input, src_crs, dst_crs, precision):
     import rasterio.warp
 
-    verbosity = ctx.obj['verbosity']
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
+
+    # Handle the case of file, stream, or string input.
     try:
-        if mode == 'interleaved':
-            coords = json.loads(input.read().decode('utf-8'))
-            xs = coords[::2]
-            ys = coords[1::2]
-        else:
-            raise ValueError("Invalid input type '%s'" % input_type)
+        src = click.open_file(input).readlines()
+    except IOError:
+        src = [input]
+
+    try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             if src_crs.startswith('EPSG'):
                 src_crs = {'init': src_crs}
@@ -218,20 +201,20 @@ def transform(ctx, input, src_crs, dst_crs, mode, precision):
             elif os.path.exists(dst_crs):
                 with rasterio.open(dst_crs) as f:
                     dst_crs = f.crs
-            xs, ys = rasterio.warp.transform(src_crs, dst_crs, xs, ys)
-            if precision >= 0:
-                xs = [round(v, precision) for v in xs]
-                ys = [round(v, precision) for v in ys]
-        if mode == 'interleaved':
-            result = [0]*len(coords)
-            result[::2] = xs
-            result[1::2] = ys
-        print(json.dumps(result))
+            for line in src:
+                coords = json.loads(line)
+                xs = coords[::2]
+                ys = coords[1::2]
+                xs, ys = rasterio.warp.transform(src_crs, dst_crs, xs, ys)
+                if precision >= 0:
+                    xs = [round(v, precision) for v in xs]
+                    ys = [round(v, precision) for v in ys]
+                result = [0]*len(coords)
+                result[::2] = xs
+                result[1::2] = ys
+                print(json.dumps(result))
+
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
         sys.exit(1)
-
-
-if __name__ == '__main__':
-    cli()

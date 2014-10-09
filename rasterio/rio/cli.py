@@ -78,4 +78,4 @@ def write_features(file, collection,
                 'type': 'FeatureCollection', 
                 'features': features},
                 **dump_kwds))
-            file.write('\n')
+        file.write('\n')
