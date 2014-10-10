@@ -17,6 +17,9 @@ cdef extern from "gdal.h":
     void GDALAllRegister()
     void GDALDestroyDriverManager()
     int GDALGetDriverCount()
+    void * GDALGetDriver(int i)
+    const char * GDALGetDriverShortName(void *driver)
+    const char * GDALGetDriverLongName(void *driver)
 
 cdef extern from "ogr_api.h":
     void OGRRegisterAll()
@@ -101,3 +104,17 @@ cdef class GDALEnv(object):
             CPLSetThreadLocalConfigOption(key_c, NULL)
         CPLSetErrorHandler(NULL)
 
+    def drivers(self):
+        cdef void *drv = NULL
+        cdef char *key = NULL
+        cdef char *val = NULL
+        cdef int i
+        result = {}
+        for i in range(GDALGetDriverCount()):
+            drv = GDALGetDriver(i)
+            key = GDALGetDriverShortName(drv)
+            key_b = key
+            val = GDALGetDriverLongName(drv)
+            val_b = val
+            result[key_b.decode('utf-8')] = val_b.decode('utf-8')
+        return result

@@ -39,7 +39,7 @@ cdef extern from "ogr_srs_api.h":
 cdef extern from "gdal.h" nogil:
     void GDALAllRegister()
     int GDALGetDriverCount()
-
+    void * GDALGetDriver(int)
     const char* GDALGetDescription (void *)
     void GDALSetDescription (void *, const char *)
 

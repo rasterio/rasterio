@@ -6,6 +6,13 @@ import rasterio
 from rasterio.rio import info
 
 
+def test_env():
+    runner = CliRunner()
+    result = runner.invoke(info.env, ['--formats'])
+    assert result.exit_code == 0
+    assert 'GTiff' in result.output
+
+
 def test_info_err():
     runner = CliRunner()
     result = runner.invoke(

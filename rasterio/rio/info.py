@@ -13,6 +13,24 @@ import rasterio.crs
 from rasterio.rio.cli import cli
 
 
+@cli.command(short_help="Print information about the rio environment.")
+@click.option('--formats/--no-formats', default=True,
+              help="Enumerate the available formats.")
+@click.pass_context
+def env(ctx, formats):
+    """Print information about the Rasterio environment: available
+    formats, etc.
+    """
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    logger = logging.getLogger('rio')
+    stdout = click.get_text_stream('stdout')
+    with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
+        if formats:
+            for k, v in sorted(env.drivers().items()):
+                stdout.write("%s: %s\n" % (k, v))
+            stdout.write('\n')
+
+
 @cli.command(short_help="Print information about a data file.")
 @click.argument('input', type=click.Path(exists=True))
 @click.option('--meta', 'aspect', flag_value='meta', default=True,
@@ -52,7 +70,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member):
     logger = logging.getLogger('rio')
     stdout = click.get_text_stream('stdout')
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+        with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, 'r-') as src:
                 info = src.meta
                 del info['affine']
