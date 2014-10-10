@@ -12,20 +12,16 @@ import rasterio
 import rasterio.crs
 from rasterio.rio.cli import cli
 
+
 @cli.command(short_help="Print information about a data file.")
-
-@click.argument('src_path', type=click.Path(exists=True))
-
+@click.argument('input', type=click.Path(exists=True))
 @click.option('--meta', 'aspect', flag_value='meta', default=True,
               help="Show data file structure (default).")
-
 @click.option('--tags', 'aspect', flag_value='tags',
               help="Show data file tags.")
 @click.option('--namespace', help="Select a tag namespace.")
-
 @click.option('--indent', default=None, type=int,
               help="Indentation level for pretty printed output")
-
 # Options to pick out a single metadata item and print it as
 # a string.
 @click.option('--count', 'meta_member', flag_value='count',
@@ -46,20 +42,18 @@ from rasterio.rio.cli import cli
               help="Print the CRS as a PROJ.4 string.")
 @click.option('--bounds', 'meta_member', flag_value='bounds',
               help="Print the nodata value.")
-
 @click.pass_context
-
-def info(ctx, src_path, aspect, indent, namespace, meta_member):
+def info(ctx, input, aspect, indent, namespace, meta_member):
     """Print metadata about the dataset as JSON.
 
     Optionally print a single metadata item as a string.
     """
-    verbosity = ctx.obj['verbosity']
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     stdout = click.get_text_stream('stdout')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            with rasterio.open(src_path, 'r-') as src:
+            with rasterio.open(input, 'r-') as src:
                 info = src.meta
                 del info['affine']
                 del info['transform']
