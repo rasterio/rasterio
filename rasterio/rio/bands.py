@@ -33,7 +33,8 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 @click.option('-o','--output',
               type=click.Path(exists=False, resolve_path=True), required=True,
               help="Path to output file.")
-@click.option('--driver', default='GTiff', help="Output format driver")
+@click.option('-f', '--format', '--driver', default='GTiff',
+              help="Output format driver")
 @click.pass_context
 def stack(ctx, input, bidx, photometric, output, driver):
     """Stack a number of bands from one or more input files into a

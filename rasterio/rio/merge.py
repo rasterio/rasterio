@@ -13,11 +13,14 @@ from rasterio.rio.cli import cli
 
 @cli.command(short_help="Merge a stack of raster datasets.")
 @click.argument('input', nargs=-1,
-    type=click.Path(exists=True, resolve_path=True), required=True)
+                type=click.Path(exists=True, resolve_path=True),
+                required=True)
 @click.option('-o','--output',
-    type=click.Path(exists=False, resolve_path=True), required=True,
-    help="Path to output file.")
-@click.option('--driver', default='GTiff', help="Output format driver")
+              type=click.Path(exists=False, resolve_path=True),
+              required=True,
+              help="Path to output file.")
+@click.option('-f', '--format', '--driver', default='GTiff',
+              help="Output format driver")
 @click.pass_context
 def merge(ctx, input, output, driver):
     """Copy valid pixels from input files to the output file.

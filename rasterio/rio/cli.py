@@ -4,6 +4,7 @@ import sys
 
 import click
 
+import rasterio
 from rasterio.rio import options
 
 def configure_logging(verbosity):
@@ -15,6 +16,7 @@ def configure_logging(verbosity):
 @click.group(help="Rasterio command line interface.")
 @options.verbose
 @options.quiet
+@options.version
 @click.pass_context
 def cli(ctx, verbose, quiet):
     verbosity = verbose - quiet

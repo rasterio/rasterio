@@ -61,6 +61,15 @@ def test_stack_single_slice(tmpdir):
         assert out.count == 3
 
 
+def test_format_jpeg(tmpdir):
+    outputname = str(tmpdir.join('stacked.jpg'))
+    runner = CliRunner()
+    result = runner.invoke(
+        bands.stack,
+        ['tests/data/RGB.byte.tif', '-o', outputname, '--format', 'JPEG'])
+    assert result.exit_code == 0
+
+
 def test_error(tmpdir):
     outputname = str(tmpdir.join('stacked.tif'))
     runner = CliRunner()

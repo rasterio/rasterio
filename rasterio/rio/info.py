@@ -14,10 +14,10 @@ from rasterio.rio.cli import cli
 
 
 @cli.command(short_help="Print information about the rio environment.")
-@click.option('--formats/--no-formats', default=True,
+@click.option('--formats', 'key', flag_value='formats', default=True,
               help="Enumerate the available formats.")
 @click.pass_context
-def env(ctx, formats):
+def env(ctx, key):
     """Print information about the Rasterio environment: available
     formats, etc.
     """
@@ -25,7 +25,7 @@ def env(ctx, formats):
     logger = logging.getLogger('rio')
     stdout = click.get_text_stream('stdout')
     with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
-        if formats:
+        if key == 'formats':
             for k, v in sorted(env.drivers().items()):
                 stdout.write("%s: %s\n" % (k, v))
             stdout.write('\n')
@@ -48,7 +48,7 @@ def env(ctx, formats):
               help="Print the dtype name.")
 @click.option('--nodata', 'meta_member', flag_value='nodata',
               help="Print the nodata value.")
-@click.option('--driver', 'meta_member', flag_value='driver',
+@click.option('-f', '--format', '--driver', 'meta_member', flag_value='driver',
               help="Print the format driver.")
 @click.option('--shape', 'meta_member', flag_value='shape',
               help="Print the (height, width) shape.")

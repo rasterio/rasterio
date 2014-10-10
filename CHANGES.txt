@@ -8,7 +8,8 @@ Changes
 - Support for writing PNG, JPEG, etc using GDALCreateCopy (#177).
 - New rio-stack command (#180).
 - Moved rio CLI main entry point to rasterio/rio/main:cli.
-- Add rio-env command.
+- Add rio-env command and --version option to rio.
+- Make -f and --format aliases for --driver in CLI options (#183).
 
 0.14.1 (2014-10-02)
 -------------------
