@@ -20,13 +20,15 @@ with rasterio.drivers():
     print("Slope shapes: %d" % len(list(shapes(shade))))
     
     # Sieve out features 13 pixels or smaller.
-    sieved = sieve(shade, 13, output=numpy.zeros(src.shape, src.dtypes[0]))
+    sieved = sieve(shade, 13, out=numpy.zeros(src.shape, src.dtypes[0]))
 
     # Print the number of shapes in the sieved raster.
     print("Sieved (13) shapes: %d" % len(list(shapes(sieved))))
 
     # Write out the sieved raster.
-    with rasterio.open('example-sieved.tif', 'w', **src.meta) as dst:
+    kwargs = src.meta
+    kwargs['transform'] = kwargs.pop('affine')
+    with rasterio.open('example-sieved.tif', 'w', **kwargs) as dst:
         dst.write_band(1, sieved)
 
 # Dump out gdalinfo's report card and open (or "eog") the TIFF.

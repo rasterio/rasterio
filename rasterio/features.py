@@ -152,7 +152,8 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
             stacklevel=2)
-    out = out or output
+    
+    out = out if out is not None else output
     if out is None:
         out = np.zeros_like(image)
     else:
@@ -294,7 +295,7 @@ def rasterize(
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
             stacklevel=2)
-    out = out or output
+    out = out if out is not None else output
     if out is not None:
         if np.dtype(output.dtype).name not in valid_dtypes:
             raise ValueError('Output image dtype must be one of: %s'
