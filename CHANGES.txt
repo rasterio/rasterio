@@ -1,8 +1,8 @@
 Changes
 =======
 
-0.15
-----
+0.15 (2014-10-11)
+-----------------
 - Support for more data types in seive() (#159).
 - Handle unexpected PROJ.4 values like "+no_defs=True" (#173).
 - Support for writing PNG, JPEG, etc using GDALCreateCopy (#177).
