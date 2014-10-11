@@ -160,9 +160,6 @@ setup(name='rasterio',
       entry_points='''
         [console_scripts]
         rio=rasterio.rio.main:cli
-        rio_cp=rasterio.rio.rio_cp:main
-        rio_insp=rasterio.rio.rio_insp:main
-        rio_warp=rasterio.rio.rio_warp:main
       ''',
       include_package_data=True,
       ext_modules=ext_modules,
