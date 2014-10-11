@@ -80,7 +80,7 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
             yield s, v
 
 
-def sieve(image, size, output=None, mask=None, connectivity=4):
+def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     """
     Replaces small polygons in `image` with the value of their largest
     neighbor.  Polygons are found for each set of neighboring pixels of the
@@ -94,8 +94,10 @@ def sieve(image, size, output=None, mask=None, connectivity=4):
         rasterio.uint16, or rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
-    output : numpy ndarray, optional
+    out : numpy ndarray, optional
         Array of same shape and data type as `image` in which to store results.
+    output : older alias for `out`, will be removed before 1.0.
+    output : numpy ndarray, optional
     mask : numpy ndarray or rasterio Band object, optional
         Values of False will be excluded from feature generation
         Must be of type rasterio.bool_
@@ -104,7 +106,7 @@ def sieve(image, size, output=None, mask=None, connectivity=4):
 
     Returns
     -------
-    output : numpy ndarray
+    out : numpy ndarray
         Result
 
     Notes
@@ -143,23 +145,32 @@ def sieve(image, size, output=None, mask=None, connectivity=4):
         elif mask.shape != image.shape:
             raise ValueError('mask shape must be same as image shape')
 
-    if output is None:
-        output = np.zeros_like(image)
+    # Start moving users over to 'out'.
+    if output is not None:
+        warnings.warn(
+            "The 'output' keyword arg has been superceded by 'out' "
+            "and will be removed before Rasterio 1.0.",
+            FutureWarning,
+            stacklevel=2)
+    out = out or output
+    if out is None:
+        out = np.zeros_like(image)
     else:
-        if np.dtype(image.dtype).name != np.dtype(output.dtype).name:
+        if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
             raise ValueError('output must match dtype of image')
-        elif output.shape != image.shape:
+        elif out.shape != image.shape:
             raise ValueError('mask shape must be same as image shape')
 
     with rasterio.drivers():
-        _sieve(image, size, output, mask, connectivity)
-        return output
+        _sieve(image, size, out, mask, connectivity)
+        return out
 
 
 def rasterize(
         shapes,
         out_shape=None,
         fill=0,
+        out=None,
         output=None,
         transform=IDENTITY,
         all_touched=False,
@@ -177,7 +188,9 @@ def rasterize(
         Shape of output numpy ndarray
     fill : int or float, optional
         Used as fill value for all areas not covered by input geometries
-    output : numpy ndarray, optional
+    out : numpy ndarray, optional
+        Array of same shape and data type as `image` in which to store results.
+    output : older alias for `out`, will be removed before 1.0.
     transform : Affine transformation object, optional
         transformation applied to shape geometries into pixel coordinates
     all_touched : boolean, optional
@@ -191,12 +204,12 @@ def rasterize(
 
     Returns
     -------
-    output : numpy ndarray
+    out : numpy ndarray
         Results
 
     Notes
     -----
-    Valid data types for `fill`, `default_value`, `output`, `dtype` and
+    Valid data types for `fill`, `default_value`, `out`, `dtype` and
     shape values are rasterio.int16, rasterio.int32, rasterio.uint8,
     rasterio.uint16, rasterio.uint32, rasterio.float32, rasterio.float64
 
@@ -276,6 +289,13 @@ def rasterize(
         raise ValueError('shape values could not be cast to specified dtype')
 
     if output is not None:
+        warnings.warn(
+            "The 'output' keyword arg has been superceded by 'out' "
+            "and will be removed before Rasterio 1.0.",
+            FutureWarning,
+            stacklevel=2)
+    out = out or output
+    if out is not None:
         if np.dtype(output.dtype).name not in valid_dtypes:
             raise ValueError('Output image dtype must be one of: %s'
                              % (', '.join(valid_dtypes)))
@@ -284,14 +304,14 @@ def rasterize(
                              'image')
 
     elif out_shape is not None:
-        output = np.empty(out_shape, dtype=dtype)
-        output.fill(fill)
+        out = np.empty(out_shape, dtype=dtype)
+        out.fill(fill)
     else:
         raise ValueError('Either an output shape or image must be provided')
 
     transform = guard_transform(transform)
 
     with rasterio.drivers():
-        _rasterize(valid_shapes, output, transform.to_gdal(), all_touched)
+        _rasterize(valid_shapes, out, transform.to_gdal(), all_touched)
 
-    return output
+    return out

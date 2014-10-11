@@ -10,6 +10,8 @@ Changes
 - Moved rio CLI main entry point to rasterio/rio/main:cli.
 - Add rio-env command and --version option to rio.
 - Make -f and --format aliases for --driver in CLI options (#183).
+- Remove older rio_* scripts (#184).
+- `out` keyword arg supercedes `output` in rasterio.features (#179).
 
 0.14.1 (2014-10-02)
 -------------------

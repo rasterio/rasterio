@@ -20,7 +20,7 @@ with rasterio.drivers():
     print("Slope shapes: %d" % len(list(shapes(shade))))
     
     # Sieve out features 13 pixels or smaller.
-    sieved = sieve(shade, 13)
+    sieved = sieve(shade, 13, output=numpy.zeros(src.shape, src.dtypes[0]))
 
     # Print the number of shapes in the sieved raster.
     print("Sieved (13) shapes: %d" % len(list(shapes(sieved))))
