@@ -29,6 +29,10 @@ def test_rasterize_geometries():
         truth[2:4, 2:4] = 1
         assert numpy.array_equal(result, truth)
 
+        out = numpy.zeros((rows, cols))
+        result = rasterize([geometry], out=out, default_value=1)
+        assert numpy.array_equal(out, truth)
+
         # we expect all touched pixels
         result = rasterize(
             [geometry], out_shape=(rows, cols), all_touched=True
