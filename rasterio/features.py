@@ -297,10 +297,10 @@ def rasterize(
             stacklevel=2)
     out = out if out is not None else output
     if out is not None:
-        if np.dtype(output.dtype).name not in valid_dtypes:
+        if np.dtype(out.dtype).name not in valid_dtypes:
             raise ValueError('Output image dtype must be one of: %s'
                              % (', '.join(valid_dtypes)))
-        if not can_cast_dtype(shape_values, output.dtype):
+        if not can_cast_dtype(shape_values, out.dtype):
             raise ValueError('shape values cannot be cast to dtype of output '
                              'image')
 
