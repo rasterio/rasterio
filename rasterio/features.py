@@ -182,26 +182,30 @@ def rasterize(
 
     Parameters
     ----------
-    shapes : iterable of (geometry, value) pairs or iterable over geometries
-        `geometry` can either be an object that implements the geo interface or
-        GeoJSON-like object.
+    shapes : iterable of (geometry, value) pairs or iterable over
+        geometries `geometry` can either be an object that implements
+        the geo interface or GeoJSON-like object.
     out_shape : tuple or list
-        Shape of output numpy ndarray
+        Shape of output numpy ndarray.
     fill : int or float, optional
-        Used as fill value for all areas not covered by input geometries
+        Used as fill value for all areas not covered by input
+        geometries.
     out : numpy ndarray, optional
-        Array of same shape and data type as `image` in which to store results.
+        Array of same shape and data type as `image` in which to store
+        results.
     output : older alias for `out`, will be removed before 1.0.
     transform : Affine transformation object, optional
-        transformation applied to shape geometries into pixel coordinates
+        Transformation from pixel coordinates of `image` to the
+        coordinate system of the input `shapes`. See the `transform`
+        property of dataset objects.
     all_touched : boolean, optional
-        If True, all pixels touched by geometries will be burned in.
-        If false, only pixels whose center is within the polygon or that are
-        selected by brezenhams line algorithm will be burned in.
+        If True, all pixels touched by geometries will be burned in.  If
+        false, only pixels whose center is within the polygon or that
+        are selected by brezenhams line algorithm will be burned in.
     default_value : int or float, optional
-        Used as value for all geometries, if not provided in `shapes`
+        Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
-        Used as data type for results, if `output` is not provided
+        Used as data type for results, if `output` is not provided.
 
     Returns
     -------
@@ -212,7 +216,8 @@ def rasterize(
     -----
     Valid data types for `fill`, `default_value`, `out`, `dtype` and
     shape values are rasterio.int16, rasterio.int32, rasterio.uint8,
-    rasterio.uint16, rasterio.uint32, rasterio.float32, rasterio.float64
+    rasterio.uint16, rasterio.uint32, rasterio.float32,
+    rasterio.float64.
 
     """
 

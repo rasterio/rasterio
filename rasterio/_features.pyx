@@ -232,12 +232,14 @@ def _rasterize(shapes, image, transform, all_touched):
     image : numpy ndarray
         Array in which to store results.
     transform : Affine transformation object, optional
-        Transformation applied to shape geometries into pixel coordinates.
+        Transformation from pixel coordinates of `image` to the
+        coordinate system of the input `shapes`. See the `transform`
+        property of dataset objects.
     all_touched : boolean, optional
         If True, all pixels touched by geometries will be burned in.
-        If false, only pixels whose center is within the polygon or that are
-        selected by brezenhams line algorithm will be burned in.
-
+        If false, only pixels whose center is within the polygon or
+        that are selected by brezenhams line algorithm will be burned
+        in.
     """
 
     cdef int retval
