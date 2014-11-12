@@ -111,15 +111,16 @@ cdef void *_osr_from_crs(object crs):
     return osr
 
 
-def _transform(src_crs, dst_crs, xs, ys):
-    cdef double *x, *y
+def _transform(src_crs, dst_crs, xs, ys, zs):
+    cdef double *x, *y, *z = NULL
     cdef char *proj_c = NULL
     cdef void *src, *dst
     cdef void *transform
     cdef int i
 
     assert len(xs) == len(ys)
-    
+    assert zs is None or len(xs) == len(zs)
+
     src = _osr_from_crs(src_crs)
     dst = _osr_from_crs(dst_crs)
 
@@ -130,8 +131,13 @@ def _transform(src_crs, dst_crs, xs, ys):
         x[i] = xs[i]
         y[i] = ys[i]
 
+    if zs is not None:
+        z = <double *>_gdal.CPLMalloc(n*sizeof(double))
+        for i in range(n):
+            z[i] = zs[i]
+
     transform = _gdal.OCTNewCoordinateTransformation(src, dst)
-    res = _gdal.OCTTransform(transform, n, x, y, NULL)
+    res = _gdal.OCTTransform(transform, n, x, y, z)
     #if res:
     #    raise ValueError("Failed coordinate transformation")
 
@@ -142,12 +148,22 @@ def _transform(src_crs, dst_crs, xs, ys):
         res_xs[i] = x[i]
         res_ys[i] = y[i]
 
+    if zs is not None:
+        res_zs = [0]*n
+        for i in range(n):
+            res_zs[i] = z[i]
+        _gdal.CPLFree(z)
+
+        retval = (res_xs, res_ys, res_zs)
+    else:
+        retval = (res_xs, res_ys)
+
     _gdal.CPLFree(x)
     _gdal.CPLFree(y)
     _gdal.OCTDestroyCoordinateTransformation(transform)
     _gdal.OSRDestroySpatialReference(src)
     _gdal.OSRDestroySpatialReference(dst)
-    return res_xs, res_ys
+    return retval
 
 
 def _transform_geom(
