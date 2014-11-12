@@ -4,9 +4,9 @@ from rasterio._warp import _reproject, _transform, _transform_geom, RESAMPLING
 from rasterio.transform import guard_transform
 
 
-def transform(src_crs, dst_crs, xs, ys):
+def transform(src_crs, dst_crs, xs, ys, zs=None):
     """Return transformed vectors of x and y."""
-    return _transform(src_crs, dst_crs, xs, ys)
+    return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
 def transform_geom(
