@@ -7,10 +7,24 @@ import affine
 import numpy
 
 import rasterio
-from rasterio.warp import reproject, RESAMPLING, transform_geom
+from rasterio.warp import reproject, RESAMPLING, transform_geom, transform
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+def test_transform():
+    """2D and 3D"""
+    WGS84_crs = {'init': 'EPSG:4326'}
+    WGS84_points = ([12.492269], [41.890169], [48.])
+    ECEF_crs = {'init': 'EPSG:4978'}
+    ECEF_points = ([4642610.], [1028584.], [4236562.])
+    ECEF_result = transform(WGS84_crs, ECEF_crs, *WGS84_points)
+    assert numpy.allclose(numpy.array(ECEF_result), numpy.array(ECEF_points))
+
+    UTM33_crs = {'init': 'EPSG:32633'}
+    UTM33_points = ([291952], [4640623])
+    UTM33_result = transform(WGS84_crs, UTM33_crs, *WGS84_points[:2])
+    assert numpy.allclose(numpy.array(UTM33_result), numpy.array(UTM33_points))
 
 def test_reproject():
     """Ndarry to ndarray"""
