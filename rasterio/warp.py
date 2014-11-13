@@ -4,9 +4,15 @@ from rasterio._warp import _reproject, _transform, _transform_geom, RESAMPLING
 from rasterio.transform import guard_transform
 
 
-def transform(src_crs, dst_crs, xs, ys):
-    """Return transformed vectors of x and y."""
-    return _transform(src_crs, dst_crs, xs, ys)
+def transform(src_crs, dst_crs, xs, ys, zs=None):
+    """Return transformed vectors of x, y and optionally z.
+    
+    The sequences of points x, y, z in the coordinate system defined by
+    src_crs are transformed in the coordinate system defined by dst_crs.
+    z is optional, if it is not set it is assumed to be all zeros and only
+    x and y are returned.
+    """
+    return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
 def transform_geom(
