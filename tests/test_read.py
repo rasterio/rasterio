@@ -188,6 +188,27 @@ class ReaderContextTest(unittest.TestCase):
                                '6a675416a32fcb70fbcf601d01aeb6ee',
                                '94fd2733b534376c273a894f36ad4e0b'])
 
+    def test_read_window_overflow(self):
+        """Test graceful Numpy-like handling of windows that overflow
+        the dataset's bounds."""
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
+            a = s.read(window=((None, 20000), (None, 20000)))
+            self.assertEqual(a.shape, (3,) + s.shape)
+
+    def test_read_window_beyond(self):
+        """Test graceful Numpy-like handling of windows beyond
+        the dataset's bounds."""
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
+            a = s.read(window=((10000, 20000), (10000, 20000)))
+            self.assertEqual(a.shape, (3,0,0))
+
+    def test_read_window_underflow(self):
+        """Test graceful Numpy-like handling of windows beyond
+        the dataset's bounds."""
+        with rasterio.open('tests/data/RGB.byte.tif') as s:
+            a = s.read(window=((-10000, 20000), (-10000, 20000)))
+            self.assertEqual(a.shape, (3,) + s.shape)
+
     def test_read_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             # regular array, without mask
