@@ -1,9 +1,14 @@
+import logging
+import sys
 import unittest
 
 import numpy
 from hashlib import md5
 
 import rasterio
+
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 class ReaderContextTest(unittest.TestCase):
@@ -202,12 +207,12 @@ class ReaderContextTest(unittest.TestCase):
             a = s.read(window=((10000, 20000), (10000, 20000)))
             self.assertEqual(a.shape, (3,0,0))
 
-    def test_read_window_underflow(self):
+    def test_read_window_overlap(self):
         """Test graceful Numpy-like handling of windows beyond
         the dataset's bounds."""
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = s.read(window=((-10000, 20000), (-10000, 20000)))
-            self.assertEqual(a.shape, (3,) + s.shape)
+            a = s.read(window=((-100, 20000), (-100, 20000)))
+            self.assertEqual(a.shape, (3,100,100))
 
     def test_read_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:

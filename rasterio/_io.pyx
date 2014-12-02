@@ -598,11 +598,11 @@ cdef class RasterReader(_base.DatasetReader):
 
         # Windows are always limited to the dataset's extent.
         if window:
-            _ = eval_window(window, self.height, self.width)
+            window = eval_window(window, self.height, self.width)
             window = ((
-                    max(min(window[0][0] or 0, self.height), 0),
+                    min(window[0][0] or 0, self.height),
                     min(window[0][1] or self.height, self.height)), (
-                    max(min(window[1][0] or 0, self.width), 0),
+                    min(window[1][0] or 0, self.width),
                     min(window[1][1] or self.width, self.width)))
 
         out_shape = (len(indexes),) + (
