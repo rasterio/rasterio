@@ -546,6 +546,82 @@ cdef class RasterReader(_base.DatasetReader):
         """
         return self.read(bidx, out=out, window=window, masked=masked)
 
+    def read_extra(self, indexes=None, window=None, masked=None):
+        """Read into a window that may or may not overlap with the
+        dataset."""
+        return2d = False
+        if indexes is None:  # Default: read all bands
+            indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            return2d = True
+        if not indexes:
+            raise ValueError("No indexes to read")
+        nodatavals = []
+        # Check each index before processing 3D array
+        for bidx in indexes:
+            if bidx not in self.indexes:
+                raise IndexError("band index out of range")
+            idx = self.indexes.index(bidx)
+            nodatavals.append(self._nodatavals[idx])
+
+        # Read data that overlaps with the window
+        if not window:
+            window = ((0, self.height), (0, self.width))
+        overlap = ((
+            max(min(window[0][0] or 0, self.height), 0),
+            max(min(window[0][1] or self.height, self.height), 0)), (
+            max(min(window[1][0] or 0, self.width), 0),
+            max(min(window[1][1] or self.width, self.width), 0)))
+        try:
+            assert overlap != ((0, 0), (0, 0))
+            data = self.read(indexes=indexes, window=overlap, masked=masked)
+        except:
+            data = self.read(indexes=indexes, window=((1,1),(1,1)), masked=masked)
+
+        window_h = window[0][1] - window[0][0]
+        window_w = window[1][1] - window[1][0]
+        data_h, data_w = data.shape[-2:]
+        output_shape = data.shape[-3:-2] + (window_h, window_w)
+        out = np.ma.empty(output_shape, data.dtype)
+        if len(output_shape) == 3:
+            for ndv, arr in zip(self.nodatavals, out):
+                arr.fill(ndv)
+
+        if data.shape[-2:] > (0, 0):
+            # Determine where to put the data in the output window.
+            roff = window_h - data_h
+            coff = window_w - data_w
+            if len(output_shape) == 3:
+                for dst, src in zip(out, data):
+                    dst[roff:roff+data_h, coff:coff+data_w] = src
+            else:
+                out[roff:roff+data_h, coff:coff+data_w] = data
+
+        # Masking the output. TODO: explain the logic better.
+        if masked:
+            test1nodata = set(nodatavals)
+            if len(test1nodata) == 1:
+                if nodatavals[0] is None:
+                    out = np.ma.masked_array(out, copy=False)
+                elif np.isnan(nodatavals[0]):
+                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
+                else:
+                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
+            else:
+                out = np.ma.masked_array(out, copy=False)
+                for aix in range(len(indexes)):
+                    if nodatavals[aix] is None:
+                        band_mask = False
+                    elif np.isnan(nodatavals[aix]):
+                        band_mask = np.isnan(out[aix])
+                    else:
+                        band_mask = out[aix] == nodatavals[aix]
+                    out[aix].mask = band_mask
+
+        return out
+
+
     def read(self, indexes=None, out=None, window=None, masked=None):
         """Read raster bands as a multidimensional array
 
