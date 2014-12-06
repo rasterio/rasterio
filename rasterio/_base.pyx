@@ -593,6 +593,14 @@ cpdef eval_window(object window, int height, int width):
     if not c_stop >= c_start:
         raise ValueError(
             "invalid window: col range (%d, %d)" % (c_start, c_stop))
+    if height > 0:
+        if r_stop > height:
+            raise ValueError(
+                "invalid window: row range (%d, %d)" % (r_start, r_stop))
+    if width > 0:
+        if c_stop > width:
+            raise ValueError(
+                "invalid window: col range (%d, %d)" % (c_start, c_stop))
     return (r_start, r_stop), (c_start, c_stop)
 
 def window_shape(window, height=-1, width=-1):
