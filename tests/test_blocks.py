@@ -52,6 +52,15 @@ class WindowTest(unittest.TestCase):
         self.assertEqual(
             rasterio.eval_window(((None, -10), (None, -10)), 100, 90),
             ((0, 90), (0, 80)))
+    def test_eval_outofbounds(self):
+        self.assertRaises(
+            ValueError,
+            rasterio.eval_window,
+            ((0, 101), (0, 150)), 100, 150)
+        self.assertRaises(
+            ValueError,
+            rasterio.eval_window,
+            ((0, 100), (0, 151)), 100, 150)
 
 def test_window_index():
     idx = rasterio.window_index(((0,4),(1,12)))
