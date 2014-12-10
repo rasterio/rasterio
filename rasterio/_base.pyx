@@ -511,12 +511,11 @@ cdef class DatasetReader(object):
         
         if self._hds == NULL:
           raise ValueError("can't read closed raster file")
-        if bidx > 0:
-            if bidx not in self.indexes:
-                raise ValueError("Invalid band index")
-            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hBand == NULL:
-                raise ValueError("NULL band")
+        if bidx not in self.indexes:
+            raise ValueError("Invalid band index")
+        hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
+        if hBand == NULL:
+            raise ValueError("NULL band")
         value = _gdal.GDALGetRasterColorInterpretation(hBand)
         return ColorInterp(value)
     
@@ -528,12 +527,11 @@ cdef class DatasetReader(object):
         cdef _gdal.GDALColorEntry *color
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
-        if bidx > 0:
-            if bidx not in self.indexes:
-                raise ValueError("Invalid band index")
-            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hBand == NULL:
-                raise ValueError("NULL band")
+        if bidx not in self.indexes:
+            raise ValueError("Invalid band index")
+        hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
+        if hBand == NULL:
+            raise ValueError("NULL band")
         hTable = _gdal.GDALGetRasterColorTable(hBand)
         if hTable == NULL:
             raise ValueError("NULL color table")
