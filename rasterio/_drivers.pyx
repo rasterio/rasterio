@@ -1,17 +1,23 @@
 # The GDAL and OGR driver registry.
 # GDAL driver management.
 
+import os
+import os.path
 import logging
+import sys
 
 from rasterio.five import string_types
+
 
 cdef extern from "cpl_conv.h":
     void    CPLFree (void *ptr)
     void    CPLSetThreadLocalConfigOption (char *key, char *val)
     const char * CPLGetConfigOption ( const char *key, const char *default)
 
+
 cdef extern from "cpl_error.h":
     void CPLSetErrorHandler (void *handler)
+
 
 cdef extern from "gdal.h":
     void GDALAllRegister()
@@ -21,16 +27,19 @@ cdef extern from "gdal.h":
     const char * GDALGetDriverShortName(void *driver)
     const char * GDALGetDriverLongName(void *driver)
 
+
 cdef extern from "ogr_api.h":
     void OGRRegisterAll()
     void OGRCleanupAll()
     int OGRGetDriverCount()
+
 
 log = logging.getLogger('GDAL')
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
+
 
 level_map = {
     0: 0,
@@ -84,6 +93,12 @@ cdef class GDALEnv(object):
         CPLSetErrorHandler(<void *>errorHandler)
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
+
+        if 'GDAL_DATA' not in os.environ:
+            datadir = os.path.join(sys.prefix, 'share/gdal')
+            if os.path.exists(os.path.join(datadir, 'pcs.csv')):
+                os.environ['GDAL_DATA'] = datadir
+
         for key, val in self.options.items():
             key_b = key.upper().encode('utf-8')
             key_c = key_b
