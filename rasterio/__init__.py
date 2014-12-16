@@ -18,7 +18,7 @@ from rasterio.transform import Affine, guard_transform
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'pad']
-__version__ = "0.15.1"
+__version__ = "0.16"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -161,4 +161,3 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans[2] -= pad_width*padded_trans[0]
     padded_trans[5] -= pad_width*padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
-
