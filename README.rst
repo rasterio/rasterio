@@ -202,9 +202,8 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 .. code-block:: console
 
     $ sudo add-apt-repository ppa:ubuntugis/ppa
-    $ sudo apt-get update -qq
+    $ sudo apt-get update
     $ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
-    $ pip install -r https://raw.githubusercontent.com/mapbox/rasterio/master/requirements.txt
     $ pip install rasterio
 
 Adapt them as necessary for your Linux system.
@@ -212,16 +211,14 @@ Adapt them as necessary for your Linux system.
 OS X
 ----
 
-Wheels are available on PyPI for Homebrew based Python environments.
+For a Homebrew based Python environment, do the following.
 
 .. code-block:: console
 
     $ brew install gdal
-    $ pip install -r https://raw.githubusercontent.com/mapbox/rasterio/master/requirements.txt
     $ pip install rasterio
 
-The wheels are incompatible with MacPorts. MacPorts users will need to specify
-a source installation instead: ``pip install --no-use-wheel``.
+Adapt as necessary for MacPorts or Fink.
 
 Windows
 -------
@@ -257,4 +254,3 @@ Changes
 -------
 
 See CHANGES.txt
-
