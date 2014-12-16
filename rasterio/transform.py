@@ -1,12 +1,14 @@
-
 import warnings
 
 from affine import Affine
 
 IDENTITY = Affine.identity()
 
-def tastes_like_gdal(t):
-    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
+
+def tastes_like_gdal(seq):
+    """Return True if `seq` matches the GDAL geotransform pattern."""
+    return seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0
+
 
 def guard_transform(transform):
     """Return an Affine transformation instance"""
@@ -20,10 +22,4 @@ def guard_transform(transform):
             transform = Affine.from_gdal(*transform)
         else:
             transform = Affine(*transform)
-    a, e = transform.a, transform.e
-    if a == 0.0 or e == 0.0:
-        raise ValueError(
-            "Transform has invalid coefficients a, e: (%f, %f)" % (
-                transform.a, transform.e))
     return transform
-
