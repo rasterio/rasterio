@@ -22,6 +22,7 @@ from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp
 
+
 log = logging.getLogger('rasterio')
 if 'all' in sys.warnoptions:
     # show messages in console with: python -W all
@@ -594,6 +595,16 @@ cdef class RasterReader(_base.DatasetReader):
             dtype = self.dtypes[0]
         else:  # unique dtype; normal case
             dtype = check_dtypes.pop()
+
+        # Windows are always limited to the dataset's extent.
+        if window:
+            window = eval_window(window, self.height, self.width)
+            window = ((
+                    min(window[0][0] or 0, self.height),
+                    min(window[0][1] or self.height, self.height)), (
+                    min(window[1][0] or 0, self.width),
+                    min(window[1][1] or self.width, self.width)))
+
         out_shape = (len(indexes),) + (
             window
             and window_shape(window, self.height, self.width)
