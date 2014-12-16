@@ -14,7 +14,7 @@ def test_stack(tmpdir):
     runner = CliRunner()
     result = runner.invoke(
         bands.stack,
-        ['tests/data/RGB.byte.tif', '-o', outputname],
+        ['tests/data/RGB.byte.tif', outputname],
         catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outputname) as out:
@@ -26,7 +26,7 @@ def test_stack_list(tmpdir):
     runner = CliRunner()
     result = runner.invoke(
         bands.stack,
-        ['tests/data/RGB.byte.tif', '--bidx', '1,2,3', '-o', outputname])
+        ['tests/data/RGB.byte.tif', '--bidx', '1,2,3', outputname])
     assert result.exit_code == 0
     with rasterio.open(outputname) as out:
         assert out.count == 3
@@ -40,7 +40,7 @@ def test_stack_slice(tmpdir):
         [
             'tests/data/RGB.byte.tif', '--bidx', '..2',
             'tests/data/RGB.byte.tif', '--bidx', '3..',
-            '-o', outputname])
+            outputname])
     assert result.exit_code == 0
     with rasterio.open(outputname) as out:
         assert out.count == 3
@@ -55,7 +55,7 @@ def test_stack_single_slice(tmpdir):
             'tests/data/RGB.byte.tif', '--bidx', '1',
             'tests/data/RGB.byte.tif', '--bidx', '2..',
             '--photometric', 'rgb',
-            '-o', outputname])
+            outputname])
     assert result.exit_code == 0
     with rasterio.open(outputname) as out:
         assert out.count == 3
@@ -66,7 +66,7 @@ def test_format_jpeg(tmpdir):
     runner = CliRunner()
     result = runner.invoke(
         bands.stack,
-        ['tests/data/RGB.byte.tif', '-o', outputname, '--format', 'JPEG'])
+        ['tests/data/RGB.byte.tif', outputname, '--format', 'JPEG'])
     assert result.exit_code == 0
 
 
@@ -75,5 +75,5 @@ def test_error(tmpdir):
     runner = CliRunner()
     result = runner.invoke(
         bands.stack,
-        ['tests/data/RGB.byte.tif', '-o', outputname, '--driver', 'BOGUS'])
+        ['tests/data/RGB.byte.tif', outputname, '--driver', 'BOGUS'])
     assert result.exit_code == 1
