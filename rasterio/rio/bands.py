@@ -8,6 +8,7 @@ import rasterio
 
 from rasterio.five import zip_longest
 from rasterio.rio.cli import cli
+from rasterio.rio import params
 
 
 PHOTOMETRIC_CHOICES = [val.lower() for val in [
@@ -23,20 +24,15 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 
 # Stack command.
 @cli.command(short_help="Stack a number of bands into a multiband dataset.")
-@click.argument('input', nargs=-1,
-                type=click.Path(exists=True, resolve_path=True), required=True)
+@params.files_arg
+@params.format_opt
 @click.option('--bidx', multiple=True,
               help="Indexes of input file bands.")
 @click.option('--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
-@click.option('-o','--output',
-              type=click.Path(exists=False, resolve_path=True), required=True,
-              help="Path to output file.")
-@click.option('-f', '--format', '--driver', default='GTiff',
-              help="Output format driver")
 @click.pass_context
-def stack(ctx, input, bidx, photometric, output, driver):
+def stack(ctx, files, bidx, photometric, driver):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
 
@@ -74,9 +70,11 @@ def stack(ctx, input, bidx, photometric, output, driver):
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            output = files[-1]
+            files = files[:-1]
             output_count = 0
             indexes = []
-            for path, item in zip_longest(input, bidx, fillvalue=None):
+            for path, item in zip_longest(files, bidx, fillvalue=None):
                 with rasterio.open(path) as src:
                     src_indexes = src.indexes
                 if item is None:
@@ -99,7 +97,7 @@ def stack(ctx, input, bidx, photometric, output, driver):
                         indexes.append(parts)
                         output_count += len(parts)
 
-            with rasterio.open(input[0]) as first:
+            with rasterio.open(files[0]) as first:
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
 
@@ -112,7 +110,7 @@ def stack(ctx, input, bidx, photometric, output, driver):
 
             with rasterio.open(output, 'w', **kwargs) as dst:
                 dst_idx = 1
-                for path, index in zip(input, indexes):
+                for path, index in zip(files, indexes):
                     with rasterio.open(path) as src:
                         if isinstance(index, int):
                             data = src.read(index)
