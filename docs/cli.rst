@@ -136,12 +136,12 @@ The insp command opens a dataset and an interpreter.
 merge
 -----
 
-The merge command can be used to flatten a stack of identically layed out
+The merge command can be used to flatten a stack of identically structured
 datasets.
 
 .. code-block:: console
 
-    $ rio merge rasterio/tests/data/R*.tif -o result.tif
+    $ rio merge rasterio/tests/data/R*.tif merged.tif
 
 shapes
 ------
@@ -188,10 +188,10 @@ Examples using the Rasterio testing dataset that produce a copy of it.
 
 .. code-block:: console
 
-    $ rio stack RGB.byte.tif -o stacked.tif
-    $ rio stack RGB.byte.tif --bidx 1,2,3 -o stacked.tif
-    $ rio stack RGB.byte.tif --bidx 1..3 -o stacked.tif
-    $ rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. -o stacked.tif
+    $ rio stack RGB.byte.tif stacked.tif
+    $ rio stack RGB.byte.tif --bidx 1,2,3 stacked.tif
+    $ rio stack RGB.byte.tif --bidx 1..3 stacked.tif
+    $ rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. stacked.tif
 
 transform
 ---------
