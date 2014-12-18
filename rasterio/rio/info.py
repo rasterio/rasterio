@@ -59,7 +59,8 @@ def env(ctx, key):
 @click.option('--crs', 'meta_member', flag_value='crs',
               help="Print the CRS as a PROJ.4 string.")
 @click.option('--bounds', 'meta_member', flag_value='bounds',
-              help="Print the nodata value.")
+              help="Print the boundary coordinates "
+                   "(left, bottom, right, top).")
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member):
     """Print metadata about the dataset as JSON.
