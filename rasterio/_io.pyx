@@ -544,13 +544,38 @@ cdef class RasterReader(_base.DatasetReader):
         example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
         of the raster dataset.
         """
-        return self.read(bidx, out=out, window=window, masked=masked)
+        return self._read(bidx, out=out, window=window, masked=masked)
 
-    def read_extra(self, indexes=None, window=None, masked=None):
-        """Read into a window that may or may not overlap with the
-        dataset."""
+
+    def read(self, indexes=None, out=None, window=None, masked=None,
+            greedy=False):
+        """Read raster bands as a multidimensional array
+
+        If `indexes` is a list, the result is a 3D array, but
+        is a 2D array if it is a band index number.
+
+        Optional `out` argument is a reference to an output array with the
+        same dimensions and shape.
+
+        See `read_band` for usage of the optional `window` argument.
+
+        The return type will be either a regular NumPy array, or a masked
+        NumPy array depending on the `masked` argument. The return type is
+        forced if either `True` or `False`, but will be chosen if `None`.
+        For `masked=None` (default), the array will be the same type as
+        `out` (if used), or will be masked if any of the nodatavals are
+        not `None`.
+
+        if `greedy` is True, windows that extend beyond the dataset's
+        extent are permitted and partially or completely filled arrays
+        will be returned as appropriate.
+        """
+        # We can jump straight to _read() in some cases.
+        if not window or not greedy:
+            return self._read(indexes, out=out, window=window, masked=masked)
+
         return2d = False
-        if indexes is None:  # Default: read all bands
+        if indexes is None:
             indexes = self.indexes
         elif isinstance(indexes, int):
             indexes = [indexes]
@@ -565,19 +590,20 @@ cdef class RasterReader(_base.DatasetReader):
             idx = self.indexes.index(bidx)
             nodatavals.append(self._nodatavals[idx])
 
-        # Read data that overlaps with the window
-        if not window:
-            window = ((0, self.height), (0, self.width))
         overlap = ((
             max(min(window[0][0] or 0, self.height), 0),
             max(min(window[0][1] or self.height, self.height), 0)), (
             max(min(window[1][0] or 0, self.width), 0),
             max(min(window[1][1] or self.width, self.width), 0)))
-        try:
-            assert overlap != ((0, 0), (0, 0))
-            data = self.read(indexes=indexes, window=overlap, masked=masked)
-        except:
-            data = self.read(indexes=indexes, window=((1,1),(1,1)), masked=masked)
+        
+        # If there's no overlap between the greedy window and the dataset
+        # return an Nx0x0 array of the appropriate type using this one
+        # simple trick.
+        if overlap == ((0, 0), (0, 0)):
+            data = self.read(indexes, out=out, window=((1,1),(1,1)),
+                    masked=masked)
+        else:
+            data = self.read(indexes, out=out, window=overlap, masked=masked)
 
         window_h = window[0][1] - window[0][0]
         window_w = window[1][1] - window[1][0]
@@ -600,8 +626,7 @@ cdef class RasterReader(_base.DatasetReader):
 
         # Masking the output. TODO: explain the logic better.
         if masked:
-            test1nodata = set(nodatavals)
-            if len(test1nodata) == 1:
+            if len(set(nodatavals)) == 1:
                 if nodatavals[0] is None:
                     out = np.ma.masked_array(out, copy=False)
                 elif np.isnan(nodatavals[0]):
@@ -622,7 +647,7 @@ cdef class RasterReader(_base.DatasetReader):
         return out
 
 
-    def read(self, indexes=None, out=None, window=None, masked=None):
+    def _read(self, indexes=None, out=None, window=None, masked=None):
         """Read raster bands as a multidimensional array
 
         If `indexes` is a list, the result is a 3D array, but
