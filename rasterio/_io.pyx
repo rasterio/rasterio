@@ -544,7 +544,7 @@ cdef class RasterReader(_base.DatasetReader):
         example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
         of the raster dataset.
         """
-        return self.read(bidx, out, window=window, masked=masked)
+        return self.read(bidx, out=out, window=window, masked=masked)
 
 
     def read(self, indexes=None, out=None, window=None, masked=None,
