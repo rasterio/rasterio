@@ -544,35 +544,49 @@ cdef class RasterReader(_base.DatasetReader):
         example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
         of the raster dataset.
         """
-        return self._read(bidx, out=out, window=window, masked=masked)
+        return self.read(bidx, out, window=window, masked=masked)
 
 
     def read(self, indexes=None, out=None, window=None, masked=None,
             greedy=False):
         """Read raster bands as a multidimensional array
 
-        If `indexes` is a list, the result is a 3D array, but
-        is a 2D array if it is a band index number.
+        Parameters
+        ----------
+        indexes : list of ints or a single int, optional
+            If `indexes` is a list, the result is a 3D array, but is
+            a 2D array if it is a band index number.
 
-        Optional `out` argument is a reference to an output array with the
-        same dimensions and shape.
+        out: numpy ndarray, optional
+            An optional reference to an output array with the same
+            dimensions and shape.
 
-        See `read_band` for usage of the optional `window` argument.
+        window : a pair (tuple) of pairs of ints, optional
+            The optional `window` argument is a 2 item tuple. The first
+            item is a tuple containing the indexes of the rows at which
+            the window starts and stops and the second is a tuple
+            containing the indexes of the columns at which the window
+            starts and stops. For example, ((0, 2), (0, 2)) defines
+            a 2x2 window at the upper left of the raster dataset.
 
-        The return type will be either a regular NumPy array, or a masked
-        NumPy array depending on the `masked` argument. The return type is
-        forced if either `True` or `False`, but will be chosen if `None`.
-        For `masked=None` (default), the array will be the same type as
-        `out` (if used), or will be masked if any of the nodatavals are
-        not `None`.
+        masked : bool, optional
+            The return type will be either a regular NumPy array, or
+            a masked NumPy array depending on the `masked` argument. The
+            return type is forced if either `True` or `False`, but will
+            be chosen if `None`.  For `masked=None` (default), the array
+            will be the same type as `out` (if used), or will be masked
+            if any of the nodatavals are not `None`.
 
-        if `greedy` is True, windows that extend beyond the dataset's
-        extent are permitted and partially or completely filled arrays
-        will be returned as appropriate.
+        greedy : bool, optional (default `False`)
+            If `True`, windows that extend beyond the dataset's extent
+            are permitted and partially or completely filled arrays will
+            be returned as appropriate.
+
+        Returns
+        -------
+        Numpy ndarray
+
         """
-        # We can jump straight to _read() in some cases.
-        if not window or not greedy:
-            return self._read(indexes, out=out, window=window, masked=masked)
 
         return2d = False
         if indexes is None:
@@ -580,49 +594,93 @@ cdef class RasterReader(_base.DatasetReader):
         elif isinstance(indexes, int):
             indexes = [indexes]
             return2d = True
+            if out is not None and out.ndim == 2:
+                out.shape = (1,) + out.shape
         if not indexes:
             raise ValueError("No indexes to read")
+
+        check_dtypes = set()
         nodatavals = []
         # Check each index before processing 3D array
         for bidx in indexes:
             if bidx not in self.indexes:
                 raise IndexError("band index out of range")
             idx = self.indexes.index(bidx)
+            check_dtypes.add(self.dtypes[idx])
             nodatavals.append(self._nodatavals[idx])
-
-        overlap = ((
-            max(min(window[0][0] or 0, self.height), 0),
-            max(min(window[0][1] or self.height, self.height), 0)), (
-            max(min(window[1][0] or 0, self.width), 0),
-            max(min(window[1][1] or self.width, self.width), 0)))
-        
-        # If there's no overlap between the greedy window and the dataset
-        # return an Nx0x0 array of the appropriate type using this one
-        # simple trick.
-        if overlap == ((0, 0), (0, 0)):
-            data = self.read(indexes, out=out, window=((1,1),(1,1)),
-                    masked=masked)
+        # Mixed dtype reads are not supported at this time.
+        if len(check_dtypes) > 1:
+            raise ValueError("more than one 'dtype' found")
+        elif len(check_dtypes) == 0:
+            dtype = self.dtypes[0]
         else:
-            data = self.read(indexes, out=out, window=overlap, masked=masked)
+            dtype = check_dtypes.pop()
 
-        window_h = window[0][1] - window[0][0]
-        window_w = window[1][1] - window[1][0]
-        data_h, data_w = data.shape[-2:]
-        output_shape = data.shape[-3:-2] + (window_h, window_w)
-        out = np.ma.empty(output_shape, data.dtype)
-        if len(output_shape) == 3:
-            for ndv, arr in zip(self.nodatavals, out):
+        # Get the natural shape of the read window, greedy or not.
+        win_shape = (len(indexes),)
+        if window:
+            if greedy:
+                win_shape += (
+                        window[0][1]-window[0][0], window[1][1]-window[1][0])
+            else:
+                w = eval_window(window, self.height, self.width)
+                if (w[0][0] < 0 or w[0][1] > self.height or w[1][0] < 0 or
+                        w[1][1] > self.width):
+                    # GDAL's RasterIO will segfault if we don't bail out.
+                    raise ValueError(
+                        "Window: %r cannot be handled in non-greedy mode"
+                        % (window,))
+                win_shape += (w[0][1]-w[0][0], w[1][1]-w[1][0])
+        else:
+            win_shape += self.shape
+
+        if out is not None:
+            if out.dtype != dtype:
+                raise ValueError(
+                    "the array's dtype '%s' does not match "
+                    "the file's dtype '%s'" % (out.dtype, dtype))
+            if out.shape[0] != win_shape[0]:
+                raise ValueError(
+                    "'out' shape %s does not match window shape %s" %
+                    (out.shape, win_shape))
+            if masked is None:
+                masked = hasattr(out, 'mask')
+        if masked is None:
+            masked = any([x is not None for x in nodatavals])
+        if out is None:
+            out = np.empty(win_shape, dtype)
+            for ndv, arr in zip(
+                    self.nodatavals, out if len(win_shape) == 3 else [out]):
                 arr.fill(ndv)
 
-        if data.shape[-2:] > (0, 0):
-            # Determine where to put the data in the output window.
-            roff = window_h - data_h
-            coff = window_w - data_w
-            if len(output_shape) == 3:
-                for dst, src in zip(out, data):
-                    dst[roff:roff+data_h, coff:coff+data_w] = src
+        # We can jump straight to _read() in some cases. We can ignore
+        # the greedy flag if there's no given window.
+        if not greedy or not window:
+            out = self._read(indexes, out, window, dtype)
+
+        else:
+            # Compute the overlap between the dataset and the greedy window.
+            overlap = ((
+                max(min(window[0][0] or 0, self.height), 0),
+                max(min(window[0][1] or self.height, self.height), 0)), (
+                max(min(window[1][0] or 0, self.width), 0),
+                max(min(window[1][1] or self.width, self.width), 0)))
+
+            if overlap != ((0, 0), (0, 0)):
+                data = self.read(indexes, window=overlap)
             else:
-                out[roff:roff+data_h, coff:coff+data_w] = data
+                data = None
+
+            if data is not None:
+                # Determine where to put the data in the output window.
+                window_h, window_w = win_shape[-2:]
+                data_h, data_w = data.shape[-2:]
+                roff = -window[0][0]
+                coff = -window[1][0]
+                for dst, src in zip(
+                        out if len(out.shape) == 3 else [out],
+                        data if len(data.shape) == 3 else [data]):
+                    dst[roff:roff+data_h, coff:coff+data_w] = src
 
         # Masking the output. TODO: explain the logic better.
         if masked:
@@ -643,11 +701,13 @@ cdef class RasterReader(_base.DatasetReader):
                     else:
                         band_mask = out[aix] == nodatavals[aix]
                     out[aix].mask = band_mask
+        if return2d:
+            out.shape = out.shape[1:]
 
         return out
 
 
-    def _read(self, indexes=None, out=None, window=None, masked=None):
+    def _read(self, indexes, out, window, dtype):
         """Read raster bands as a multidimensional array
 
         If `indexes` is a list, the result is a 3D array, but
@@ -667,56 +727,9 @@ cdef class RasterReader(_base.DatasetReader):
         """
         cdef int height, width, xoff, yoff, aix, bidx, indexes_count
         cdef int retval = 0
-        return2d = False
 
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
-        if indexes is None:  # Default: read all bands
-            indexes = self.indexes
-        elif isinstance(indexes, int):
-            indexes = [indexes]
-            return2d = True
-            if out is not None and out.ndim == 2:
-                out.shape = (1,) + out.shape
-        if not indexes:
-            raise ValueError("No indexes to read")
-        check_dtypes = set()
-        nodatavals = []
-        # Check each index before processing 3D array
-        for bidx in indexes:
-            if bidx not in self.indexes:
-                raise IndexError("band index out of range")
-            idx = self.indexes.index(bidx)
-            check_dtypes.add(self.dtypes[idx])
-            nodatavals.append(self._nodatavals[idx])
-        if len(check_dtypes) > 1:
-            raise ValueError("more than one 'dtype' found")
-        elif len(check_dtypes) == 0:
-            dtype = self.dtypes[0]
-        else:  # unique dtype; normal case
-            dtype = check_dtypes.pop()
-        out_shape = (len(indexes),) + (
-            window
-            and window_shape(window, self.height, self.width)
-            or self.shape)
-        if out is not None:
-            if out.dtype != dtype:
-                raise ValueError(
-                    "the array's dtype '%s' does not match "
-                    "the file's dtype '%s'" % (out.dtype, dtype))
-            if out.shape[0] != out_shape[0]:
-                raise ValueError(
-                    "'out' shape %s does not mach raster slice shape %s" %
-                    (out.shape, out_shape))
-            if masked is None:
-                masked = hasattr(out, 'mask')
-        if masked is None:
-            masked = any([x is not None for x in nodatavals])
-        if out is None:
-            if masked:
-                out = np.ma.empty(out_shape, dtype)
-            else:
-                out = np.empty(out_shape, dtype)
 
         # Prepare the IO window.
         if window:
@@ -786,30 +799,8 @@ cdef class RasterReader(_base.DatasetReader):
         elif retval == 4:
             raise ValueError("NULL band")
 
-        # Masking the output. TODO: explain the logic better.
-        if masked:
-            test1nodata = set(nodatavals)
-            if len(test1nodata) == 1:
-                if nodatavals[0] is None:
-                    out = np.ma.masked_array(out, copy=False)
-                elif np.isnan(nodatavals[0]):
-                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
-                else:
-                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
-            else:
-                out = np.ma.masked_array(out, copy=False)
-                for aix in range(len(indexes)):
-                    if nodatavals[aix] is None:
-                        band_mask = False
-                    elif np.isnan(nodatavals[aix]):
-                        band_mask = np.isnan(out[aix])
-                    else:
-                        band_mask = out[aix] == nodatavals[aix]
-                    out[aix].mask = band_mask
-        
-        if return2d:
-            out.shape = out.shape[1:]
         return out
+
 
     def read_mask(self, out=None, window=None):
         """Read the mask band into an `out` array if provided, 
