@@ -9,5 +9,6 @@ Chrisophe Gohlke https://github.com/cgohlke
 Robin Wilson https://github.com/robintw
 Mike Toews https://github.com/mwtoews
 Amit Kapadia https://github.com/kapadia
+Alessandro Amici https://github.com/alexamici
 
 See also https://github.com/mapbox/rasterio/graphs/contributors.

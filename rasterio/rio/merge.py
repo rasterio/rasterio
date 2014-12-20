@@ -9,21 +9,15 @@ import click
 import rasterio
 
 from rasterio.rio.cli import cli
+from rasterio.rio import params
 
 
 @cli.command(short_help="Merge a stack of raster datasets.")
-@click.argument('input', nargs=-1,
-                type=click.Path(exists=True, resolve_path=True),
-                required=True)
-@click.option('-o','--output',
-              type=click.Path(exists=False, resolve_path=True),
-              required=True,
-              help="Path to output file.")
-@click.option('-f', '--format', '--driver', default='GTiff',
-              help="Output format driver")
+@params.files_arg
+@params.format_opt
 @click.pass_context
-def merge(ctx, input, output, driver):
-    """Copy valid pixels from input files to the output file.
+def merge(ctx, files, driver):
+    """Copy valid pixels from input files to an output file.
 
     All files must have the same shape, number of bands, and data type.
 
@@ -36,8 +30,10 @@ def merge(ctx, input, output, driver):
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            output = files[-1]
+            files = files[:-1]
 
-            with rasterio.open(input[0]) as first:
+            with rasterio.open(files[0]) as first:
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
                 dest = np.empty((3,) + first.shape, dtype=first.dtypes[0])
@@ -52,7 +48,7 @@ def merge(ctx, input, output, driver):
 
             dest.fill(nodataval)
 
-            for fname in reversed(input):
+            for fname in reversed(files):
                 with rasterio.open(fname) as src:
                     data = src.read()
                     np.copyto(dest, data,
@@ -72,4 +68,3 @@ def merge(ctx, input, output, driver):
     except Exception:
         logger.exception("Failed. Exception caught")
         sys.exit(1)
-

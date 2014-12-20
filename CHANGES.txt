@@ -1,8 +1,16 @@
 Changes
 =======
 
-0.1.5.1 (2014-11-03)
---------------------
+0.16.0 (2014-12-16)
+-------------------
+- More graceful, slice-like handling of windows (#191).
+- Addition of optional z coordinate to warp.transform() (#199).
+- Relax excessively strict transform guard, allowing translation of rasters
+  with no georeferencing (#210).
+- Removal of setuptools from the package's install_requires (#222).
+
+0.15.1 (2014-11-03)
+-------------------
 - Fix incorrect use of output.dtype (#196).
 
 0.15 (2014-10-11)

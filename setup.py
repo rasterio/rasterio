@@ -124,9 +124,8 @@ with open('README.rst') as f:
 # Runtime requirements.
 inst_reqs = [
     'affine>=1.0',
-    'click',
-    'Numpy>=1.7',
-    'setuptools' ] 
+    'click>=3.0',
+    'Numpy>=1.7' ]
 
 if sys.version_info < (3, 4):
     inst_reqs.append('enum34')

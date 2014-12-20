@@ -22,6 +22,7 @@ from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp
 
+
 log = logging.getLogger('rasterio')
 if 'all' in sys.warnoptions:
     # show messages in console with: python -W all
@@ -37,7 +38,7 @@ else:
 # Single band IO functions.
 
 cdef int io_ubyte(
-        void *hband, 
+        void *hband,
         int mode,
         int xoff,
         int yoff,
@@ -50,7 +51,7 @@ cdef int io_ubyte(
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
 cdef int io_uint16(
-        void *hband, 
+        void *hband,
         int mode,
         int xoff,
         int yoff,
@@ -548,7 +549,7 @@ cdef class RasterReader(_base.DatasetReader):
 
 
     def read(self, indexes=None, out=None, window=None, masked=None,
-            greedy=False):
+            boundless=False):
         """Read raster bands as a multidimensional array
 
         Parameters
@@ -577,7 +578,7 @@ cdef class RasterReader(_base.DatasetReader):
             will be the same type as `out` (if used), or will be masked
             if any of the nodatavals are not `None`.
 
-        greedy : bool, optional (default `False`)
+        boundless : bool, optional (default `False`)
             If `True`, windows that extend beyond the dataset's extent
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
@@ -616,21 +617,20 @@ cdef class RasterReader(_base.DatasetReader):
         else:
             dtype = check_dtypes.pop()
 
-        # Get the natural shape of the read window, greedy or not.
+        # Get the natural shape of the read window, boundless or not.
         win_shape = (len(indexes),)
         if window:
-            if greedy:
+            if boundless:
                 win_shape += (
                         window[0][1]-window[0][0], window[1][1]-window[1][0])
             else:
                 w = eval_window(window, self.height, self.width)
-                if (w[0][0] < 0 or w[0][1] > self.height or w[1][0] < 0 or
-                        w[1][1] > self.width):
-                    # GDAL's RasterIO will segfault if we don't bail out.
-                    raise ValueError(
-                        "Window: %r cannot be handled in non-greedy mode"
-                        % (window,))
-                win_shape += (w[0][1]-w[0][0], w[1][1]-w[1][0])
+                minr = min(max(w[0][0], 0), self.height)
+                maxr = max(0, min(w[0][1], self.height))
+                minc = min(max(w[1][0], 0), self.width)
+                maxc = max(0, min(w[1][1], self.width))
+                win_shape += (maxr - minr, maxc - minc)
+                window = ((minr, maxr), (minc, maxc))
         else:
             win_shape += self.shape
 
@@ -654,12 +654,12 @@ cdef class RasterReader(_base.DatasetReader):
                 arr.fill(ndv)
 
         # We can jump straight to _read() in some cases. We can ignore
-        # the greedy flag if there's no given window.
-        if not greedy or not window:
+        # the boundless flag if there's no given window.
+        if not boundless or not window:
             out = self._read(indexes, out, window, dtype)
 
         else:
-            # Compute the overlap between the dataset and the greedy window.
+            # Compute the overlap between the dataset and the boundless window.
             overlap = ((
                 max(min(window[0][0] or 0, self.height), 0),
                 max(min(window[0][1] or self.height, self.height), 0)), (
