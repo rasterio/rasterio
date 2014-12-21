@@ -211,5 +211,5 @@ cdef extern from "gdal_alg.h":
     int  GDALApproxTransform(void *pTransformArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess )
     void GDALDestroyApproxTransformer( void * )
 
-
+    int GDALFillNodata(void *dst_band, void *mask_band, double max_search_distance, int deprecated, int smoothing_iterations, char **options, void *progress_func, void *progress_data)
 
