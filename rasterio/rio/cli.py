@@ -44,12 +44,12 @@ def coords(obj):
 
 
 def write_features(file, collection,
-        agg_mode='obj', expression='feature', use_rs=False,
+        collect=True, expression='feature', use_rs=False,
         **dump_kwds):
     """Read an iterator of (feat, bbox) pairs and write to file using
     the selected modes."""
     # Sequence of features expressed as bbox, feature, or collection.
-    if agg_mode == 'seq':
+    if not collect:
         for feat in collection():
             xs, ys = zip(*coords(feat))
             bbox = (min(xs), min(ys), max(xs), max(ys))

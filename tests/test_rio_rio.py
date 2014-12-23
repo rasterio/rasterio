@@ -88,7 +88,7 @@ def test_bounds_seq():
     runner = CliRunner()
     result = runner.invoke(
         rio.bounds,
-        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--x-json-seq', '--bbox', '--precision', '2'])
+        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--sequence', '--bbox', '--precision', '2'])
     assert result.exit_code == 0
     assert result.output == '[-78.9, 23.56, -76.6, 25.55]\n[-78.9, 23.56, -76.6, 25.55]\n'
     assert '\x1e' not in result.output
@@ -98,19 +98,9 @@ def test_bounds_seq_rs():
     runner = CliRunner()
     result = runner.invoke(
         rio.bounds,
-        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--x-json-seq', '--x-json-seq-rs', '--bbox', '--precision', '2'])
+        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--sequence', '--with-rs', '--bbox', '--precision', '2'])
     assert result.exit_code == 0
     assert result.output == '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n'
-
-
-
-def test_bounds_obj_feature():
-    runner = CliRunner()
-    result = runner.invoke(
-        rio.bounds,
-        ['tests/data/RGB.byte.tif', '--feature', '--precision', '6'])
-    assert result.exit_code == 0
-    assert result.output.strip() == '{"bbox": [-78.898133, 23.564991, -76.599438, 25.550874], "geometry": {"coordinates": [[[-78.898133, 23.564991], [-76.599438, 23.564991], [-76.599438, 25.550874], [-78.898133, 25.550874], [-78.898133, 23.564991]]], "type": "Polygon"}, "properties": {"id": "0", "title": "tests/data/RGB.byte.tif"}, "type": "Feature"}'
 
 
 def test_transform_err():

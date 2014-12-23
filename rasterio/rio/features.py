@@ -9,7 +9,9 @@ import click
 import rasterio
 from rasterio.transform import Affine
 from rasterio.rio.cli import cli, coords, write_features
-
+from rasterio.rio.params import (
+    precision_opt, indent_opt, compact_opt, geographic_opt, projected_opt,
+    collection_opt, rs_opt, feature_mode_opt, bbox_mode_opt)
 
 warnings.simplefilter('default')
 
@@ -17,39 +19,15 @@ warnings.simplefilter('default')
 # Shapes command.
 @cli.command(short_help="Write the shapes of features.")
 @click.argument('input', type=click.Path(exists=True))
-# Coordinate precision option.
-@click.option('--precision', type=int, default=-1,
-              help="Decimal precision of coordinates.")
-# JSON formatting options.
-@click.option('--indent', default=None, type=int,
-              help="Indentation level for JSON output")
-@click.option('--compact/--no-compact', default=False,
-              help="Use compact separators (',', ':').")
-# Geographic (default) or Mercator switch.
-@click.option('--geographic', 'projected', flag_value='geographic',
-              default=True,
-              help="Output in geographic coordinates (the default).")
-@click.option('--projected', 'projected', flag_value='projected',
-              help="Output in projected coordinates.")
-# JSON object (default) or sequence (experimental) switch.
-@click.option('--json-obj', 'json_mode', flag_value='obj', default=True,
-        help="Write a single JSON object (the default).")
-@click.option('--x-json-seq', 'json_mode', flag_value='seq',
-        help="Write a JSON sequence. Experimental.")
-# Use ASCII RS control code to signal a sequence item (False is default).
-# See http://tools.ietf.org/html/draft-ietf-json-text-sequence-05.
-# Experimental.
-@click.option('--x-json-seq-rs/--x-json-seq-no-rs', default=False,
-        help="Use RS as text separator. Experimental.")
-# GeoJSON feature (default), bbox, or collection switch. Meaningful only
-# when --x-json-seq is used.
-@click.option('--collection', 'output_mode', flag_value='collection',
-              default=True,
-              help="Output as a GeoJSON feature collection (the default).")
-@click.option('--feature', 'output_mode', flag_value='feature',
-              help="Output as sequence of GeoJSON features.")
-@click.option('--bbox', 'output_mode', flag_value='bbox',
-              help="Output as a GeoJSON bounding box array.")
+@precision_opt
+@indent_opt
+@compact_opt
+@geographic_opt
+@projected_opt
+@collection_opt
+@rs_opt
+@feature_mode_opt(True)
+@bbox_mode_opt(False)
 @click.option('--bands/--mask', default=True,
               help="Extract shapes from one of the dataset bands or from "
                    "its nodata mask")
@@ -61,17 +39,17 @@ warnings.simplefilter('default')
               help="Include or do not include (the default) nodata regions.")
 @click.pass_context
 def shapes(
-        ctx, input, precision, indent, compact, projected, json_mode,
-        x_json_seq_rs, output_mode, bands, bidx, sampling, with_nodata):
+        ctx, input, precision, indent, compact, projected, collection,
+        use_rs, output_mode, bands, bidx, sampling, with_nodata):
     """Writes features of a dataset out as GeoJSON. It's intended for
     use with single-band rasters and reads from the first band.
     """
-    # These import numpy, which we don't want to do unless its needed.
+    # These import numpy, which we don't want to do unless it's needed.
     import numpy
     import rasterio.features
     import rasterio.warp
 
-    verbosity = ctx.obj['verbosity']
+    verbosity = ctx.obj['verbosity'] if ctx.obj else 1
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -144,11 +122,14 @@ def shapes(
                         'bbox': [min(xs), min(ys), max(xs), max(ys)],
                         'geometry': g }
 
+    if collection:
+        output_mode = 'collection'
+
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             write_features(
-                stdout, Collection(), agg_mode=json_mode,
-                expression=output_mode, use_rs=x_json_seq_rs,
+                stdout, Collection(), collect=collection,
+                expression=output_mode, use_rs=use_rs,
                 **dump_kwds)
         sys.exit(0)
     except Exception:
