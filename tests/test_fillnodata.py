@@ -11,11 +11,35 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_fillnodata():
     """Test filling nodata values in an ndarray"""
     # create a 5x5 array, with some missing data
-    a = numpy.ones([5, 5]) * 42
-    a[1:4,1:4] = numpy.nan
+    a = numpy.ones([3, 3]) * 42
+    a[1][1] = 0
     # find the missing data
-    mask = ~numpy.isnan(a)
+    mask = ~(a == 0)
     # fill the missing data using interpolation from the edges
-    ret = fillnodata(a, mask)
-    assert(((numpy.ones([5, 5]) * 42) - a).sum() == 0)
-    assert(ret is None) # inplace modification, should not return anything
+    result = fillnodata(a, mask)
+    assert(numpy.all((numpy.ones([3, 3]) * 42) == result))
+
+def test_fillnodata_invalid_types():
+    a = numpy.ones([3, 3])
+    with pytest.raises(ValueError):
+        fillnodata(None, a)
+    with pytest.raises(ValueError):
+        fillnodata(a, 42)
+
+def test_fillnodata_mask_ones():
+    # when mask is all ones, image should be unmodified
+    a = numpy.ones([3, 3]) * 42
+    a[1][1] = 0
+    mask = numpy.ones([3, 3])
+    result = fillnodata(a, mask)
+    assert(numpy.all(a == result))
+
+'''
+def test_fillnodata_smooth():
+    a = numpy.array([[1,3,3,1],[2,0,0,2],[2,0,0,2],[1,3,3,1]], dtype=numpy.float64)
+    mask = ~(a == 0)
+    result = fillnodata(a, mask, max_search_distance=1, smoothing_iterations=0)
+    assert(result[1][1] == 3)
+    result = fillnodata(a, mask, max_search_distance=1, smoothing_iterations=1)
+    assert(round(result[1][1], 1) == 2.2)
+'''
