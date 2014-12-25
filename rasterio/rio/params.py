@@ -66,18 +66,21 @@ mercator_opt = click.option(
     flag_value='mercator',
     help="Output in Web Mercator coordinates.")
 
-# Collection or sequence.
+# Feature collection or feature sequence switch.
 collection_opt = click.option(
     '--collection/--sequence',
     default=True,
-    help="Write a collection of shapes as a single object "
-         "(the default) or write a sequence of objects.")
+    help="Write a single JSON text containing a feature collection object "
+         "(the default) or write a LF-delimited sequence of texts containing "
+         "individual objects.")
 
 rs_opt = click.option(
     '--with-rs/--without-rs',
     'use_rs',
     default=False,
-    help="Use RS as text separator.")
+    help="Use RS (0x1E) as a prefix for individual texts in a sequence "
+         "as per http://tools.ietf.org/html/draft-ietf-json-text-sequence-13 "
+         "(default is False).")
 
 # GeoJSON output mode option.
 def collection_mode_opt(default=False):
