@@ -13,7 +13,10 @@ import click
 import rasterio
 
 from rasterio.rio.cli import cli, write_features
-
+from rasterio.rio.params import (
+    precision_opt, indent_opt, compact_opt, geographic_opt, projected_opt,
+    mercator_opt, collection_opt, rs_opt, feature_mode_opt, bbox_mode_opt,
+    collection_mode_opt)
 
 warnings.simplefilter('default')
 
@@ -27,7 +30,11 @@ warnings.simplefilter('default')
 # Insp command.
 @cli.command(short_help="Open a data file and start an interpreter.")
 @click.argument('input', type=click.Path(exists=True))
-@click.option('--mode', type=click.Choice(['r', 'r+']), default='r', help="File mode (default 'r').")
+@click.option(
+    '--mode',
+    type=click.Choice(['r', 'r+']),
+    default='r',
+    help="File mode (default 'r').")
 @click.pass_context
 def insp(ctx, input, mode):
     import rasterio.tool
@@ -54,44 +61,20 @@ def insp(ctx, input, mode):
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
 @click.argument('input', nargs=-1, type=click.Path(exists=True))
-# Coordinate precision option.
-@click.option('--precision', type=int, default=-1,
-              help="Decimal precision of coordinates.")
-# JSON formatting options.
-@click.option('--indent', default=None, type=int,
-              help="Indentation level for JSON output")
-@click.option('--compact/--no-compact', default=False,
-              help="Use compact separators (',', ':').")
-# Geographic (default) or Mercator switch.
-@click.option('--geographic', 'projected', flag_value='geographic',
-              default=True,
-              help="Output in geographic coordinates (the default).")
-@click.option('--projected', 'projected', flag_value='projected',
-              help="Output in projected coordinates.")
-@click.option('--mercator', 'projected', flag_value='mercator',
-              help="Output in Web Mercator coordinates.")
-# JSON object (default) or sequence (experimental) switch.
-@click.option('--json-obj', 'json_mode', flag_value='obj', default=True,
-        help="Write a single JSON object (the default).")
-@click.option('--x-json-seq', 'json_mode', flag_value='seq',
-        help="Write a JSON sequence. Experimental.")
-# Use ASCII RS control code to signal a sequence item (False is default).
-# See http://tools.ietf.org/html/draft-ietf-json-text-sequence-05.
-# Experimental.
-@click.option('--x-json-seq-rs/--x-json-seq-no-rs', default=False,
-        help="Use RS as text separator. Experimental.")
-# GeoJSON feature (default), bbox, or collection switch. Meaningful only
-# when --x-json-seq is used.
-@click.option('--collection', 'output_mode', flag_value='collection',
-              default=True,
-              help="Output as a GeoJSON feature collection (the default).")
-@click.option('--feature', 'output_mode', flag_value='feature',
-              help="Output as sequence of GeoJSON features.")
-@click.option('--bbox', 'output_mode', flag_value='bbox',
-              help="Output as a GeoJSON bounding box array.")
+@precision_opt
+@indent_opt
+@compact_opt
+@geographic_opt
+@projected_opt
+@mercator_opt
+@collection_opt
+@rs_opt
+@collection_mode_opt(True)
+@feature_mode_opt(False)
+@bbox_mode_opt(False)
 @click.pass_context
-def bounds(ctx, input, precision, indent, compact, projected, json_mode,
-        x_json_seq_rs, output_mode):
+def bounds(ctx, input, precision, indent, compact, projected, collection,
+        use_rs, output_mode):
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
     geojsonio
 
@@ -153,15 +136,14 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
                 self._xs.extend(bbox[::2])
                 self._ys.extend(bbox[1::2])
 
-    collection = Collection()
-
+    col = Collection()
     # Use the generator defined above as input to the generic output
     # writing function.
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             write_features(
-                stdout, collection, agg_mode=json_mode,
-                expression=output_mode, use_rs=x_json_seq_rs,
+                stdout, col, collect=collection,
+                expression=output_mode, use_rs=use_rs,
                 **dump_kwds)
         sys.exit(0)
     except Exception:
@@ -174,8 +156,7 @@ def bounds(ctx, input, precision, indent, compact, projected, json_mode,
 @click.argument('input', default='-', required=False)
 @click.option('--src_crs', default='EPSG:4326', help="Source CRS.")
 @click.option('--dst_crs', default='EPSG:4326', help="Destination CRS.")
-@click.option('--precision', type=int, default=-1,
-              help="Decimal precision of coordinates.")
+@precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):
     import rasterio.warp
