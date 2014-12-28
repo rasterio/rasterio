@@ -3,12 +3,12 @@ import os.path
 import sys
 
 import click
+from cligj import files_inout_arg, format_opt
 
 import rasterio
 
 from rasterio.five import zip_longest
 from rasterio.rio.cli import cli
-from rasterio.rio import params
 
 
 PHOTOMETRIC_CHOICES = [val.lower() for val in [
@@ -24,15 +24,15 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 
 # Stack command.
 @cli.command(short_help="Stack a number of bands into a multiband dataset.")
-@params.files_arg
-@params.format_opt
+@files_inout_arg
+@format_opt
 @click.option('--bidx', multiple=True,
               help="Indexes of input file bands.")
 @click.option('--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
 @click.pass_context
-def stack(ctx, files, bidx, photometric, driver):
+def stack(ctx, files, driver, bidx, photometric):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
 

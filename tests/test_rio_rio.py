@@ -98,7 +98,7 @@ def test_bounds_seq_rs():
     runner = CliRunner()
     result = runner.invoke(
         rio.bounds,
-        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--sequence', '--with-rs', '--bbox', '--precision', '2'])
+        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--sequence', '--rs', '--bbox', '--precision', '2'])
     assert result.exit_code == 0
     assert result.output == '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n'
 

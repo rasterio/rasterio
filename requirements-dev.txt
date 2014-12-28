@@ -5,3 +5,4 @@ pytest
 coveralls>=0.4
 setuptools
 six
+git+https://github.com/mapbox/cligj.git#egg=cligj

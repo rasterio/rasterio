@@ -124,7 +124,7 @@ with open('README.rst') as f:
 # Runtime requirements.
 inst_reqs = [
     'affine>=1.0',
-    'click>=3.0',
+    'cligj',
     'Numpy>=1.7' ]
 
 if sys.version_info < (3, 4):
