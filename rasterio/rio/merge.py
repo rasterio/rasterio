@@ -5,16 +5,16 @@ import os.path
 import sys
 
 import click
+from cligj import files_inout_arg, format_opt
 
 import rasterio
 
 from rasterio.rio.cli import cli
-from rasterio.rio import params
 
 
 @cli.command(short_help="Merge a stack of raster datasets.")
-@params.files_arg
-@params.format_opt
+@files_inout_arg
+@format_opt
 @click.pass_context
 def merge(ctx, files, driver):
     """Copy valid pixels from input files to an output file.

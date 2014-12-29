@@ -9,14 +9,15 @@ import sys
 import warnings
 
 import click
+from cligj import (
+    precision_opt, indent_opt, compact_opt, projection_geographic_opt,
+    projection_projected_opt, projection_mercator_opt,
+    sequence_opt, use_rs_opt, geojson_type_collection_opt,
+    geojson_type_feature_opt, geojson_type_bbox_opt)
 
 import rasterio
-
 from rasterio.rio.cli import cli, write_features
-from rasterio.rio.params import (
-    precision_opt, indent_opt, compact_opt, geographic_opt, projected_opt,
-    mercator_opt, collection_opt, rs_opt, feature_mode_opt, bbox_mode_opt,
-    collection_mode_opt)
+
 
 warnings.simplefilter('default')
 
@@ -64,17 +65,17 @@ def insp(ctx, input, mode):
 @precision_opt
 @indent_opt
 @compact_opt
-@geographic_opt
-@projected_opt
-@mercator_opt
-@collection_opt
-@rs_opt
-@collection_mode_opt(True)
-@feature_mode_opt(False)
-@bbox_mode_opt(False)
+@projection_geographic_opt
+@projection_projected_opt
+@projection_mercator_opt
+@sequence_opt
+@use_rs_opt
+@geojson_type_collection_opt(True)
+@geojson_type_feature_opt(False)
+@geojson_type_bbox_opt(False)
 @click.pass_context
-def bounds(ctx, input, precision, indent, compact, projected, collection,
-        use_rs, output_mode):
+def bounds(ctx, input, precision, indent, compact, projection, sequence,
+        use_rs, geojson_type):
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
     geojsonio
 
@@ -108,10 +109,10 @@ def bounds(ctx, input, precision, indent, compact, projected, collection,
                     bounds = src.bounds
                     xs = [bounds[0], bounds[2]]
                     ys = [bounds[1], bounds[3]]
-                    if projected == 'geographic':
+                    if projection == 'geographic':
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:4326'}, xs, ys)
-                    if projected == 'mercator':
+                    if projection == 'mercator':
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:3857'}, xs, ys)
                 if precision >= 0:
@@ -142,8 +143,8 @@ def bounds(ctx, input, precision, indent, compact, projected, collection,
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             write_features(
-                stdout, col, collect=collection,
-                expression=output_mode, use_rs=use_rs,
+                stdout, col, sequence=sequence,
+                geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
         sys.exit(0)
     except Exception:

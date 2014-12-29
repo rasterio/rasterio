@@ -5,13 +5,15 @@ import sys
 import warnings
 
 import click
+from cligj import (
+    precision_opt, indent_opt, compact_opt, projection_geographic_opt,
+    projection_projected_opt, sequence_opt, use_rs_opt,
+    geojson_type_feature_opt, geojson_type_bbox_opt)
 
 import rasterio
 from rasterio.transform import Affine
 from rasterio.rio.cli import cli, coords, write_features
-from rasterio.rio.params import (
-    precision_opt, indent_opt, compact_opt, geographic_opt, projected_opt,
-    collection_opt, rs_opt, feature_mode_opt, bbox_mode_opt)
+
 
 warnings.simplefilter('default')
 
@@ -22,12 +24,12 @@ warnings.simplefilter('default')
 @precision_opt
 @indent_opt
 @compact_opt
-@geographic_opt
-@projected_opt
-@collection_opt
-@rs_opt
-@feature_mode_opt(True)
-@bbox_mode_opt(False)
+@projection_geographic_opt
+@projection_projected_opt
+@sequence_opt
+@use_rs_opt
+@geojson_type_feature_opt(True)
+@geojson_type_bbox_opt(False)
 @click.option('--bands/--mask', default=True,
               help="Extract shapes from one of the dataset bands or from "
                    "its nodata mask")
@@ -39,8 +41,8 @@ warnings.simplefilter('default')
               help="Include or do not include (the default) nodata regions.")
 @click.pass_context
 def shapes(
-        ctx, input, precision, indent, compact, projected, collection,
-        use_rs, output_mode, bands, bidx, sampling, with_nodata):
+        ctx, input, precision, indent, compact, projection, sequence,
+        use_rs, geojson_type, bands, bidx, sampling, with_nodata):
     """Writes features of a dataset out as GeoJSON. It's intended for
     use with single-band rasters and reads from the first band.
     """
@@ -97,7 +99,7 @@ def shapes(
                 bounds = src.bounds
                 xs = [bounds[0], bounds[2]]
                 ys = [bounds[1], bounds[3]]
-                if projected == 'geographic':
+                if projection == 'geographic':
                     xs, ys = rasterio.warp.transform(
                         src.crs, {'init': 'epsg:4326'}, xs, ys)
                 if precision >= 0:
@@ -110,7 +112,7 @@ def shapes(
                 if not bands and not with_nodata:
                     kwargs['mask'] = (img==255)
                 for g, i in rasterio.features.shapes(img, **kwargs):
-                    if projected == 'geographic':
+                    if projection == 'geographic':
                         g = rasterio.warp.transform_geom(
                             src.crs, 'EPSG:4326', g,
                             antimeridian_cutting=True, precision=precision)
@@ -122,14 +124,14 @@ def shapes(
                         'bbox': [min(xs), min(ys), max(xs), max(ys)],
                         'geometry': g }
 
-    if collection:
-        output_mode = 'collection'
+    if not sequence:
+        geojson_type = 'collection'
 
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             write_features(
-                stdout, Collection(), collect=collection,
-                expression=output_mode, use_rs=use_rs,
+                stdout, Collection(), sequence=sequence,
+                geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
         sys.exit(0)
     except Exception:

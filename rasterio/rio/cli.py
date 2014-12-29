@@ -3,6 +3,7 @@ import logging
 import sys
 
 import click
+from cligj import verbose_opt, quiet_opt
 
 import rasterio
 from rasterio.rio import options
@@ -14,8 +15,8 @@ def configure_logging(verbosity):
 
 # The CLI command group.
 @click.group(help="Rasterio command line interface.")
-@options.verbose
-@options.quiet
+@verbose_opt
+@quiet_opt
 @options.version
 @click.pass_context
 def cli(ctx, verbose, quiet):
@@ -43,41 +44,41 @@ def coords(obj):
                 yield f
 
 
-def write_features(file, collection,
-        collect=True, expression='feature', use_rs=False,
+def write_features(
+        fobj, collection, sequence=False, geojson_type='feature', use_rs=False,
         **dump_kwds):
     """Read an iterator of (feat, bbox) pairs and write to file using
     the selected modes."""
     # Sequence of features expressed as bbox, feature, or collection.
-    if not collect:
+    if sequence:
         for feat in collection():
             xs, ys = zip(*coords(feat))
             bbox = (min(xs), min(ys), max(xs), max(ys))
             if use_rs:
-                file.write(u'\u001e')
-            if expression == 'feature':
-                file.write(json.dumps(feat, **dump_kwds))
-            elif expression == 'bbox':
-                file.write(json.dumps(bbox, **dump_kwds))
+                fobj.write(u'\u001e')
+            if geojson_type == 'feature':
+                fobj.write(json.dumps(feat, **dump_kwds))
+            elif geojson_type == 'bbox':
+                fobj.write(json.dumps(bbox, **dump_kwds))
             else:
-                file.write(
+                fobj.write(
                     json.dumps({
                         'type': 'FeatureCollection',
                         'bbox': bbox,
                         'features': [feat]}, **dump_kwds))
-            file.write('\n')
+            fobj.write('\n')
     # Aggregate all features into a single object expressed as 
     # bbox or collection.
     else:
         features = list(collection())
-        if expression == 'bbox':
-            file.write(json.dumps(collection.bbox, **dump_kwds))
-        elif expression == 'feature':
-            file.write(json.dumps(features[0], **dump_kwds))
+        if geojson_type == 'bbox':
+            fobj.write(json.dumps(collection.bbox, **dump_kwds))
+        elif geojson_type == 'feature':
+            fobj.write(json.dumps(features[0], **dump_kwds))
         else:
-            file.write(json.dumps({
+            fobj.write(json.dumps({
                 'bbox': collection.bbox,
                 'type': 'FeatureCollection', 
                 'features': features},
                 **dump_kwds))
-        file.write('\n')
+        fobj.write('\n')
