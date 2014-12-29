@@ -55,7 +55,7 @@ def write_features(
             xs, ys = zip(*coords(feat))
             bbox = (min(xs), min(ys), max(xs), max(ys))
             if use_rs:
-                fobj.write(b'\x1e')
+                fobj.write(u'\u001e')
             if geojson_type == 'feature':
                 fobj.write(json.dumps(feat, **dump_kwds))
             elif geojson_type == 'bbox':
