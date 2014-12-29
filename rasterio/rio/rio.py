@@ -143,8 +143,8 @@ def bounds(ctx, input, precision, indent, compact, projection, sequence,
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             write_features(
-                stdout, col, collect=not(sequence),
-                expression=geojson_type, use_rs=use_rs,
+                stdout, col, sequence=sequence,
+                geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
         sys.exit(0)
     except Exception:

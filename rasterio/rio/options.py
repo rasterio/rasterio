@@ -10,12 +10,6 @@ def print_version(ctx, param, value):
     ctx.exit()
 
 
-verbose = click.option('--verbose', '-v', count=True,
-                       help="Increase verbosity.")
-
-quiet = click.option('--quiet', '-q', count=True,
-                     help="Decrease verbosity.")
-
 version = click.option('--version', is_flag=True, callback=print_version,
                        expose_value=False, is_eager=True,
                        help="Print Rasterio version.")
