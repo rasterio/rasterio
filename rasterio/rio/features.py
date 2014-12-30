@@ -73,6 +73,7 @@ def shapes(
 
         def __call__(self):
             with rasterio.open(input) as src:
+                img = None
                 if bands:
                     if sampling == 1:
                         img = src.read_band(bidx)
@@ -84,16 +85,17 @@ def shapes(
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read_band(bidx, img)
                         transform = src.affine * Affine.scale(float(sampling))
-                else:
+                    nodata_mask = None
+                if not bands or not with_nodata:
                     if sampling == 1:
-                        img = src.read_mask()
+                        nodata_mask = src.read_mask()
                         transform = src.transform
                     # Decimate the mask.
                     else:
-                        img = numpy.zeros(
+                        nodata_mask = numpy.zeros(
                             (src.height//sampling, src.width//sampling),
                             dtype=numpy.uint8)
-                        img = src.read_mask(img)
+                        nodata_mask = src.read_mask(nodata_mask)
                         transform = src.affine * Affine.scale(float(sampling))
 
                 bounds = src.bounds
@@ -109,8 +111,11 @@ def shapes(
                 self._ys = ys
 
                 kwargs = {'transform': transform}
-                if not bands and not with_nodata:
-                    kwargs['mask'] = (img==255)
+                # Default is to exclude nodata features.
+                if nodata_mask is not None:
+                    kwargs['mask'] = (nodata_mask==255)
+                if img is None:
+                    img = nodata_mask
                 for g, i in rasterio.features.shapes(img, **kwargs):
                     if projection == 'geographic':
                         g = rasterio.warp.transform_geom(
