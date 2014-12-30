@@ -74,6 +74,7 @@ def shapes(
         def __call__(self):
             with rasterio.open(input) as src:
                 img = None
+                nodata_mask = None
                 if bands:
                     if sampling == 1:
                         img = src.read_band(bidx)
@@ -85,7 +86,6 @@ def shapes(
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read_band(bidx, img)
                         transform = src.affine * Affine.scale(float(sampling))
-                    nodata_mask = None
                 if not bands or not with_nodata:
                     if sampling == 1:
                         nodata_mask = src.read_mask()
