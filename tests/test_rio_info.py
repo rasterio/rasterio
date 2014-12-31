@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 
 import rasterio
-from rasterio.rio import info
+from rasterio.rio import cli, info
 
 
 def test_env():
@@ -28,6 +28,22 @@ def test_info():
         ['tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
     assert '"count": 3' in result.output
+
+
+def test_info_verbose():
+    runner = CliRunner()
+    result = runner.invoke(
+        cli.cli,
+        ['-v', 'info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+
+
+def test_info_quiet():
+    runner = CliRunner()
+    result = runner.invoke(
+        cli.cli,
+        ['-q', 'info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
 
 
 def test_info_count():

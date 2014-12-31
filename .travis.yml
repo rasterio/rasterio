@@ -14,7 +14,6 @@ install:
   - "pip install coveralls"
   - "pip install -e ."
 script: 
-  - py.test
-  - coverage run --source=rasterio --omit='*.pxd,*.pyx,*/tests/*,*/docs/*,*/examples/*,*/benchmarks/*' -m py.test
+  - coverage run --source=rasterio --omit='*.pxd,*.pyx,*/tests/*,*/docs/*,*/examples/*,*/benchmarks/*,*/rio/main.py,*/rio/__init__.py' -m py.test
 after_success:
   - coveralls
