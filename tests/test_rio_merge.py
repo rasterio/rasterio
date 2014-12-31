@@ -43,10 +43,10 @@ def test_data_dir(tmpdir):
 
 def test_merge(test_data_dir):
     outputname = str(test_data_dir.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir.listdir()]
+    inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(
-        merge,
-        [str(x) for x in test_data_dir.listdir()] + [outputname])
+    result = runner.invoke(merge, inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
