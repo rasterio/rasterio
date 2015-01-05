@@ -26,7 +26,7 @@ def merge(ctx, files, driver):
     """
     import numpy as np
 
-    verbosity = ctx.obj['verbosity']
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
@@ -36,7 +36,8 @@ def merge(ctx, files, driver):
             with rasterio.open(files[0]) as first:
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
-                dest = np.empty((3,) + first.shape, dtype=first.dtypes[0])
+                dest = np.empty((first.count,) + first.shape, 
+                    dtype=first.dtypes[0])
 
             if os.path.exists(output):
                 dst = rasterio.open(output, 'r+')
