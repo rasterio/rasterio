@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 import os
+import shutil
 import subprocess
 import sys
 from setuptools import setup
@@ -43,13 +44,15 @@ except ImportError:
     sys.exit(1)
 
 try:
-    gdal_config = "gdal-config"
+    gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
     with open("gdal-config.txt", "w") as gcfg:
         subprocess.call([gdal_config, "--cflags"], stdout=gcfg)
         subprocess.call([gdal_config, "--libs"], stdout=gcfg)
+        subprocess.call([gdal_config, "--datadir"], stdout=gcfg)
     with open("gdal-config.txt", "r") as gcfg:
         cflags = gcfg.readline().strip()
         libs = gcfg.readline().strip()
+        datadir = gcfg.readline().strip()
     for item in cflags.split():
         if item.startswith("-I"):
             include_dirs.extend(item[2:].split(":"))
@@ -61,6 +64,7 @@ try:
         else:
             # e.g. -framework GDAL
             extra_link_args.append(item)
+    shutil.copytree(datadir, 'rasterio/data')
 except Exception as e:
     log.warning("Failed to get options via gdal-config: %s", str(e))
 
@@ -161,6 +165,7 @@ setup(name='rasterio',
         rio=rasterio.rio.main:cli
       ''',
       include_package_data=True,
+      package_data={'rasterio': ['data/*']},
       ext_modules=ext_modules,
       zip_safe=False,
       install_requires=inst_reqs )

@@ -95,9 +95,13 @@ cdef class GDALEnv(object):
             raise ValueError("Drivers not registered")
 
         if 'GDAL_DATA' not in os.environ:
-            datadir = os.path.join(sys.prefix, 'share/gdal')
-            if os.path.exists(os.path.join(datadir, 'pcs.csv')):
-                os.environ['GDAL_DATA'] = datadir
+            whl_datadir = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "data"))
+            share_datadir = os.path.join(sys.prefix, 'share/gdal')
+            if os.path.exists(os.path.join(whl_datadir, 'pcs.csv')):
+                os.environ['GDAL_DATA'] = whl_datadir
+            elif os.path.exists(os.path.join(share_datadir, 'pcs.csv')):
+                os.environ['GDAL_DATA'] = share_datadir
 
         for key, val in self.options.items():
             key_b = key.upper().encode('utf-8')
