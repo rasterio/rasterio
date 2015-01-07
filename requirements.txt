@@ -1,5 +1,5 @@
-affine>=1.0
-click
+affine
+cligj
 enum34
-numpy>=1.8
+numpy>=1.8.0
 setuptools

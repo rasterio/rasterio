@@ -14,7 +14,7 @@ Rasterio employs GDAL under the hood for file I/O and raster formatting. Its
 functions typically accept and return Numpy ndarrays. Rasterio is designed to
 make working with geospatial raster data more productive and more fun.
 
-Rasterio is pronounced raw-STIER-ee-oh.
+Rasterio is pronounced raw-STEER-ee-oh.
 
 Example
 =======
@@ -164,35 +164,43 @@ using Python.
     >>> b.min(), b.max(), b.mean()
     (1, 255, 44.434478650699106)
 
-Dependencies
-============
-
-C library dependecies:
-
-- GDAL 1.9+
-
-Python package dependencies (see also requirements.txt):
-
-- affine
-- Numpy
-- setuptools
-
-Development also requires (see requirements-dev.txt)
-
-- Cython
-- pytest
-
 Installation
 ============
 
-Rasterio is a C extension and to install on Linux or OS X you'll need a working
-compiler (XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy
-headers are required to run the rasterio setup script. Numpy has to be
-installed (via the indicated requirements file) before rasterio can be
-installed. See rasterio's Travis `configuration
+Dependencies
+------------
+
+Rasterio has one C library dependency: GDAL >=1.9. GDAL itself depends on a
+number of other libraries provided by most major operating systems and also
+depends on the non standard GEOS and PROJ4 libraries.
+
+Python package dependencies (see also requirements.txt): affine, cligj (and
+click), enum34, numpy.
+
+Development also requires (see requirements-dev.txt) Cython and other packages.
+
+Rasterio binaries for OS X
+--------------------------
+
+Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
+for OS X versions 10.7+ starting with Rasterio version 0.17. To install, just
+run ``pip install rasterio``. These binary wheels are preferred by newer
+versions of pip. If you don't want these wheels and want to install from
+a source distribution, run ``pip install rasterio --no-use-wheel`` instead.
+
+Binary wheels for other operating systems will be available in a future
+release.
+
+Installing from the source distribution
+---------------------------------------
+
+Rasterio is a Python C extension and to build you'll need a working compiler
+(XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy headers are
+required to run the rasterio setup script. Numpy has to be installed (via the
+indicated requirements file) before rasterio can be installed. See rasterio's
+Travis `configuration
 <https://github.com/mapbox/rasterio/blob/master/.travis.yml>`__ for more
 guidance.
-
 
 Linux
 -----
@@ -217,8 +225,6 @@ For a Homebrew based Python environment, do the following.
 
     $ brew install gdal
     $ pip install rasterio
-
-Adapt as necessary for MacPorts or Fink.
 
 Windows
 -------

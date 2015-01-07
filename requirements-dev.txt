@@ -3,7 +3,8 @@ cligj
 coveralls>=0.4
 cython>=0.20
 delocate
+enum34
 numpy>=1.8.0
 pytest
-six
+setuptools
 wheel
