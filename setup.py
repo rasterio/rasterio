@@ -64,9 +64,16 @@ try:
         else:
             # e.g. -framework GDAL
             extra_link_args.append(item)
-    shutil.copytree(datadir, 'rasterio/data')
+    shutil.rmtree('rasterio/gdal_data')
+    shutil.copytree(datadir, 'rasterio/gdal_data')
 except Exception as e:
     log.warning("Failed to get options via gdal-config: %s", str(e))
+
+# Copy PROJ.4 data.
+projdatadir = '/usr/local/share/proj'
+if os.path.exists(projdatadir):
+    shutil.rmtree('rasterio/proj_data')
+    shutil.copytree(projdatadir, 'rasterio/proj_data')
 
 ext_options = dict(
     include_dirs=include_dirs,
@@ -165,7 +172,7 @@ setup(name='rasterio',
         rio=rasterio.rio.main:cli
       ''',
       include_package_data=True,
-      package_data={'rasterio': ['data/*']},
+      package_data={'rasterio': ['gdal_data/*', 'proj_data/*']},
       ext_modules=ext_modules,
       zip_safe=False,
       install_requires=inst_reqs )

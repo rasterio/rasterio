@@ -96,12 +96,16 @@ cdef class GDALEnv(object):
 
         if 'GDAL_DATA' not in os.environ:
             whl_datadir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "data"))
+                os.path.join(os.path.dirname(__file__), "gdal_data"))
             share_datadir = os.path.join(sys.prefix, 'share/gdal')
             if os.path.exists(os.path.join(whl_datadir, 'pcs.csv')):
                 os.environ['GDAL_DATA'] = whl_datadir
             elif os.path.exists(os.path.join(share_datadir, 'pcs.csv')):
                 os.environ['GDAL_DATA'] = share_datadir
+        if 'PROJ_LIB' not in os.environ:
+            whl_datadir = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "proj_data"))
+            os.environ['PROJ_LIB'] = whl_datadir
 
         for key, val in self.options.items():
             key_b = key.upper().encode('utf-8')
