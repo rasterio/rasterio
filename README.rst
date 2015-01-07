@@ -188,6 +188,10 @@ run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
 a source distribution, run ``pip install rasterio --no-use-wheel`` instead.
 
+The included GDAL library is fairly minimal, providing only the format drivers
+that ship with GDAL and are enabled by default. To get access to more formats,
+you must build from a source distribution (see below).
+
 Binary wheels for other operating systems will be available in a future
 release.
 
