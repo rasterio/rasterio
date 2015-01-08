@@ -24,18 +24,18 @@ def test_data_dir_1(tmpdir):
         "driver": "GTiff",
         "width": 10,
         "height": 10,
-        "nodata": 0
+        "nodata": 1
     }
 
     with rasterio.drivers():
 
         with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+            data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
             dst.write_band(1, data)
 
         with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+            data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
             dst.write_band(1, data)
 
@@ -52,6 +52,7 @@ def test_data_dir_2(tmpdir):
         "driver": "GTiff",
         "width": 10,
         "height": 10
+        # these files have undefined nodata.
     }
 
     with rasterio.drivers():
@@ -80,7 +81,7 @@ def test_merge_with_nodata(test_data_dir_1):
     with rasterio.open(outputname) as out:
         assert out.count == 1
         data = out.read_band(1, masked=False)
-        expected = numpy.zeros((10, 10), dtype=rasterio.uint8)
+        expected = numpy.ones((10, 10), dtype=rasterio.uint8)
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
         assert numpy.all(data == expected)
@@ -116,6 +117,15 @@ def test_merge_output_exists(tmpdir):
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
         assert out.count == 3
+
+
+def test_merge_output_exists_without_nodata(test_data_dir_2):
+    runner = CliRunner()
+    result = runner.invoke(
+        merge,
+        [str(test_data_dir_2.join('a.tif')),
+            str(test_data_dir_2.join('b.tif'))])
+    assert result.exit_code == 0
 
 
 def test_merge_err():
