@@ -651,7 +651,8 @@ cdef class RasterReader(_base.DatasetReader):
             out = np.empty(win_shape, dtype)
             for ndv, arr in zip(
                     self.nodatavals, out if len(win_shape) == 3 else [out]):
-                arr.fill(ndv)
+                if ndv is not None:
+                    arr.fill(ndv)
 
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.

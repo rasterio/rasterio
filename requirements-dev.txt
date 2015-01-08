@@ -1,8 +1,10 @@
-git+https://github.com/sgillies/affine.git#egg=affine
-Cython>=0.20
-Numpy>=1.8.0
-pytest
+affine
+cligj
 coveralls>=0.4
+cython>=0.20
+delocate
+enum34
+numpy>=1.8.0
+pytest
 setuptools
-six
-git+https://github.com/mapbox/cligj.git#egg=cligj
+wheel
