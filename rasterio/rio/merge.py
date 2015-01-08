@@ -39,7 +39,7 @@ def merge(ctx, files, driver):
                 dest = np.zeros((first.count,) + first.shape, 
                     dtype=first.dtypes[0])
 
-            nodataval = 0.0
+            nodataval = next(dest.flat)
             if os.path.exists(output):
                 dst = rasterio.open(output, 'r+')
                 nodataval = dst.nodatavals[0] or nodataval
