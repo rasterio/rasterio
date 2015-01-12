@@ -286,7 +286,7 @@ cdef class DatasetReader(object):
                 if hband == NULL:
                     raise ValueError("Null band")
                 val = _gdal.GDALGetRasterNoDataValue(hband, &success)
-                if not success:
+                if not success or val == -9999.0:
                     val = None
                 self._nodatavals.append(val)
         return self._nodatavals
@@ -377,10 +377,10 @@ cdef class DatasetReader(object):
         """Returns the window corresponding to the world bounding box."""
         ul = self.index(left, top)
         lr = self.index(right, bottom)
-        if ul[0] < 0 or ul[1] < 0 or lr[0] > self.height or lr[1] > self.width:
-            raise ValueError("Bounding box overflows the dataset extents")
-        else:
-            return tuple(zip(ul, lr))
+        #if ul[0] < 0 or ul[1] < 0 or lr[0] > self.height or lr[1] > self.width:
+        #    raise ValueError("Bounding box overflows the dataset extents")
+        #else:
+        return tuple(zip(ul, lr))
 
     @property
     def meta(self):

@@ -648,7 +648,7 @@ cdef class RasterReader(_base.DatasetReader):
         if masked is None:
             masked = any([x is not None for x in nodatavals])
         if out is None:
-            out = np.empty(win_shape, dtype)
+            out = np.zeros(win_shape, dtype)
             for ndv, arr in zip(
                     self.nodatavals, out if len(win_shape) == 3 else [out]):
                 if ndv is not None:
@@ -668,16 +668,31 @@ cdef class RasterReader(_base.DatasetReader):
                 max(min(window[1][1] or self.width, self.width), 0)))
 
             if overlap != ((0, 0), (0, 0)):
-                data = self.read(indexes, window=overlap)
+                # Prepare a buffer.
+                window_h, window_w = win_shape[-2:]
+                overlap_h = overlap[0][1] - overlap[0][0]
+                overlap_w = overlap[1][1] - overlap[1][0]
+                scaling_h = float(out.shape[-2:][0])/window_h
+                scaling_w = float(out.shape[-2:][1])/window_w
+                buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
+                data = np.empty(win_shape[:-2] + buffer_shape, dtype)
+                data = self._read(indexes, data, overlap, dtype)
             else:
                 data = None
 
             if data is not None:
                 # Determine where to put the data in the output window.
-                window_h, window_w = win_shape[-2:]
                 data_h, data_w = data.shape[-2:]
-                roff = -window[0][0]
-                coff = -window[1][0]
+                roff = 0
+                coff = 0
+                if window[0][0] < 0:
+                    roff = int(window_h*scaling_h) - data_h
+                if window[0][0] > 0:
+                    roff = 0
+                if window[1][0] < 0:
+                    coff = int(window_w*scaling_w) - data_w
+                if window[1][0] > 0:
+                    coff = 0
                 for dst, src in zip(
                         out if len(out.shape) == 3 else [out],
                         data if len(data.shape) == 3 else [data]):
