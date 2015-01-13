@@ -101,15 +101,11 @@ def merge(ctx, files, driver, bounds, res, nodata):
             if nodataval is not None:
                 # Only fill if the nodataval is within dtype's range.
                 inrange = False
-                try:
+                if np.dtype(dtype).kind in ('i', 'u'):
                     info = np.iinfo(dtype)
-                    inrange = (info.min <= nodataval <= info.max)
-                except ValueError:
-                    try:
-                        info = np.finfo(dtype)
-                        inrange = (info.min <= nodataval <= info.max)
-                    except:
-                        pass
+                elif np.dtype(dtype).kind == 'f':
+                    info = np.finfo(dtype)
+                inrange = (info.min <= nodataval <= info.max)
                 if inrange:
                     dest.fill(nodataval)
                 else:
