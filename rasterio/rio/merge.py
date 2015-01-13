@@ -36,31 +36,39 @@ def merge(ctx, files, driver):
             with rasterio.open(files[0]) as first:
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
-                dest = np.empty((first.count,) + first.shape, 
+                dest = np.zeros((first.count,) + first.shape, 
                     dtype=first.dtypes[0])
 
+            nodataval = next(dest.flat)
             if os.path.exists(output):
                 dst = rasterio.open(output, 'r+')
-                nodataval = dst.nodatavals[0]
+                nodataval = dst.nodatavals[0] or nodataval
             else:
                 kwargs['driver'] == driver
                 dst = rasterio.open(output, 'w', **kwargs)
-                nodataval = first.nodatavals[0]
+                nodataval = first.nodatavals[0] or nodataval
 
-            dest.fill(nodataval)
+            if nodataval:
+                dest.fill(nodataval)
 
             for fname in reversed(files):
                 with rasterio.open(fname) as src:
                     data = src.read()
-                    np.copyto(dest, data,
-                        where=np.logical_and(
-                        dest==nodataval, data.mask==False))
+                    try:
+                        where = np.logical_and(
+                                dest==nodataval, data.mask==False)
+                    except AttributeError:
+                        where = dest==nodataval
+                    np.copyto(dest, data, where=where)
 
             if dst.mode == 'r+':
                 data = dst.read()
-                np.copyto(dest, data,
-                    where=np.logical_and(
-                    dest==nodataval, data.mask==False))
+                try:
+                    where = np.logical_and(
+                            dest==nodataval, data.mask==False)
+                except AttributeError:
+                    where = dest==nodataval
+                np.copyto(dest, data, where=where)
 
             dst.write(dest)
             dst.close()
