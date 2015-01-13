@@ -17,8 +17,5 @@ def test_window_no_exception():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
         left -= 1000.0
-        try:
-            _ = src.window(left, bottom, right, top)
-            assert True
-        except ValueError:
-            assert False
+        assert src.window(left, bottom, right, top) == (
+                (0, src.height), (-3, src.width))

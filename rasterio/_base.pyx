@@ -377,9 +377,6 @@ cdef class DatasetReader(object):
         """Returns the window corresponding to the world bounding box."""
         ul = self.index(left, top)
         lr = self.index(right, bottom)
-        #if ul[0] < 0 or ul[1] < 0 or lr[0] > self.height or lr[1] > self.width:
-        #    raise ValueError("Bounding box overflows the dataset extents")
-        #else:
         return tuple(zip(ul, lr))
 
     @property

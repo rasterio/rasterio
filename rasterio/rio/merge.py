@@ -87,12 +87,14 @@ def merge(ctx, files, driver, bounds, res):
                 kwargs['height'] = output_height
 
                 dst = rasterio.open(output, 'w', **kwargs)
-                dest = np.zeros((first.count,) + (output_height, output_width),
+                dest = np.zeros((first.count, output_height, output_width),
                         dtype=first.dtypes[0])
                 nodataval = first.nodatavals[0]
 
             if nodataval is not None:
                 dest.fill(nodataval)
+            else:
+                notdataval = 0
 
             for fname in reversed(files):
                 with rasterio.open(fname) as src:
@@ -108,13 +110,13 @@ def merge(ctx, files, driver, bounds, res):
                             masked=True)
                     np.copyto(dest, data,
                         where=np.logical_and(
-                        dest==(nodataval or 0), data.mask==False))
+                        dest==nodataval, data.mask==False))
 
             if dst.mode == 'r+':
                 data = dst.read(masked=True)
                 np.copyto(dest, data,
                     where=np.logical_and(
-                    dest==(nodataval or 0), data.mask==False))
+                    dest==nodataval, data.mask==False))
 
             dst.write(dest)
             dst.close()
