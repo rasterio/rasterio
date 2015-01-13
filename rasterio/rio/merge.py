@@ -20,8 +20,10 @@ from rasterio.transform import Affine
               help="Output bounds: left, bottom, right, top.")
 @click.option('--res', nargs=2, type=float, default=None,
               help="Output dataset resolution: pixel width, pixel height")
+@click.option('--nodata', '-n', type=float, default=None,
+              help="Override nodata values defined in input datasets")
 @click.pass_context
-def merge(ctx, files, driver, bounds, res):
+def merge(ctx, files, driver, bounds, res, nodata):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -39,6 +41,7 @@ def merge(ctx, files, driver, bounds, res):
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
+
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             output = files[-1]
@@ -48,6 +51,8 @@ def merge(ctx, files, driver, bounds, res):
                 first_res = first.res
                 kwargs = first.meta
                 kwargs.pop('affine')
+                nodataval = first.nodatavals[0]
+                dtype = first.dtypes[0]
 
             if os.path.exists(output):
                 # TODO: prompt user to update existing file (-i option) like:
@@ -55,8 +60,8 @@ def merge(ctx, files, driver, bounds, res):
                 # not overwritten
                 dst = rasterio.open(output, 'r+')
                 nodataval = dst.nodatavals[0]
-                dest = np.zeros((dst.count,) + dst.shape,
-                        dtype=dst.dtypes[0])
+                dtype = dst.dtypes[0]
+                dest = np.zeros((dst.count,) + dst.shape, dtype=dtype)
             else:
                 # Create new output file.
                 # Extent from option or extent of all inputs.
@@ -88,13 +93,31 @@ def merge(ctx, files, driver, bounds, res):
 
                 dst = rasterio.open(output, 'w', **kwargs)
                 dest = np.zeros((first.count, output_height, output_width),
-                        dtype=first.dtypes[0])
-                nodataval = first.nodatavals[0]
+                        dtype=dtype)
+
+            if nodata is not None:
+                nodataval = nodata
 
             if nodataval is not None:
-                dest.fill(nodataval)
-            else:
-                notdataval = 0
+                # Only fill if the nodataval is within dtype's range.
+                inrange = False
+                try:
+                    info = np.iinfo(dtype)
+                    inrange = (info.min <= nodataval <= info.max)
+                except ValueError:
+                    try:
+                        info = np.finfo(dtype)
+                        inrange = (info.min <= nodataval <= info.max)
+                    except:
+                        pass
+                if inrange:
+                    dest.fill(nodataval)
+                else:
+                    logger.warn(
+                        "Input file's nodata value, %s, is beyond the valid "
+                        "range of its data type, %s. Consider overriding it "
+                        "using the --nodata option for better results.",
+                        nodataval, dtype)
 
             for fname in reversed(files):
                 with rasterio.open(fname) as src:

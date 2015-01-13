@@ -286,7 +286,7 @@ cdef class DatasetReader(object):
                 if hband == NULL:
                     raise ValueError("Null band")
                 val = _gdal.GDALGetRasterNoDataValue(hband, &success)
-                if not success or val == -9999.0:
+                if not success:
                     val = None
                 self._nodatavals.append(val)
         return self._nodatavals
