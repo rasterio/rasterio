@@ -3,7 +3,14 @@ from click.testing import CliRunner
 
 
 import rasterio
-from rasterio.rio import rio
+from rasterio.rio import cli, rio
+
+
+def test_version():
+    runner = CliRunner()
+    result = runner.invoke(cli.cli, ['--version'])
+    assert result.exit_code == 0
+    assert rasterio.__version__ in result.output
 
 
 def test_insp():
@@ -37,6 +44,15 @@ def test_bounds_err():
         rio.bounds,
         ['tests'])
     assert result.exit_code == 1
+
+
+def test_bounds_feature():
+    runner = CliRunner()
+    result = runner.invoke(
+        rio.bounds,
+        ['tests/data/RGB.byte.tif', '--feature'])
+    assert result.exit_code == 0
+    assert result.output.count('Polygon') == 1
 
 
 def test_bounds_obj_bbox():
@@ -86,6 +102,12 @@ def test_bounds_obj_bbox_projected():
 
 def test_bounds_seq():
     runner = CliRunner()
+    result = runner.invoke(
+        rio.bounds,
+        ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--sequence'])
+    assert result.exit_code == 0
+    assert result.output.count('Polygon') == 2
+
     result = runner.invoke(
         rio.bounds,
         ['tests/data/RGB.byte.tif', 'tests/data/RGB.byte.tif', '--sequence', '--bbox', '--precision', '2'])
