@@ -58,6 +58,16 @@ def test_merge(test_data_dir):
         assert numpy.all(data == expected)
 
 
+def test_merge_warn(test_data_dir):
+    outputname = str(test_data_dir.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname] + ['-n', '-1'])
+    assert result.exit_code == 0
+    assert "using the --nodata option for better results" in result.output
+
+
 def test_merge_output_exists(tmpdir):
     outputname = str(tmpdir.join('merged.tif'))
     runner = CliRunner()
@@ -135,4 +145,48 @@ def test_merge_overlapping(test_data_dir_overlapping):
         expected = numpy.zeros((15, 15), dtype=rasterio.uint8)
         expected[0:10, 0:10] = 1
         expected[5:, 5:] = 2
+        assert numpy.all(data == expected)
+
+
+# Fixture to create test datasets within temporary directory
+@fixture(scope='function')
+def test_data_dir_float(tmpdir):
+    kwargs = {
+        "crs": {'init': 'epsg:4326'},
+        "transform": (-114, 0.2, 0, 46, 0, -0.2),
+        "count": 1,
+        "dtype": rasterio.float64,
+        "driver": "GTiff",
+        "width": 10,
+        "height": 10,
+        "nodata": 0
+    }
+
+    with rasterio.drivers():
+        with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
+            data = numpy.zeros((10, 10), dtype=rasterio.float64)
+            data[0:6, 0:6] = 255
+            dst.write_band(1, data)
+
+        with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
+            data = numpy.zeros((10, 10), dtype=rasterio.float64)
+            data[4:8, 4:8] = 254
+            dst.write_band(1, data)
+    return tmpdir
+
+
+def test_merge_float(test_data_dir_float):
+    outputname = str(test_data_dir_float.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_float.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname] + ['-n', '-1.5'])
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(outputname) as out:
+        assert out.count == 1
+        data = out.read_band(1, masked=False)
+        expected = numpy.zeros((10, 10), dtype=rasterio.float64) * -1.5
+        expected[0:6, 0:6] = 255
+        expected[4:8, 4:8] = 254
         assert numpy.all(data == expected)

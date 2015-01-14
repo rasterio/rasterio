@@ -4,6 +4,7 @@ import logging
 import math
 import os.path
 import sys
+import warnings
 
 import click
 from cligj import files_inout_arg, format_opt
@@ -103,17 +104,18 @@ def merge(ctx, files, driver, bounds, res, nodata):
                 inrange = False
                 if np.dtype(dtype).kind in ('i', 'u'):
                     info = np.iinfo(dtype)
+                    inrange = (info.min <= nodataval <= info.max)
                 elif np.dtype(dtype).kind == 'f':
                     info = np.finfo(dtype)
-                inrange = (info.min <= nodataval <= info.max)
+                    inrange = (info.min <= nodataval <= info.max)
                 if inrange:
                     dest.fill(nodataval)
                 else:
-                    logger.warn(
+                    warnings.warn(
                         "Input file's nodata value, %s, is beyond the valid "
                         "range of its data type, %s. Consider overriding it "
-                        "using the --nodata option for better results.",
-                        nodataval, dtype)
+                        "using the --nodata option for better results." % (
+                            nodataval, dtype))
 
             for fname in reversed(files):
                 with rasterio.open(fname) as src:
