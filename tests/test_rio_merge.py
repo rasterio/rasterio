@@ -186,7 +186,7 @@ def test_merge_float(test_data_dir_float):
     with rasterio.open(outputname) as out:
         assert out.count == 1
         data = out.read_band(1, masked=False)
-        expected = numpy.zeros((10, 10), dtype=rasterio.float64) * -1.5
+        expected = numpy.ones((10, 10), dtype=rasterio.float64) * -1.5
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
         assert numpy.all(data == expected)
