@@ -116,6 +116,8 @@ def merge(ctx, files, driver, bounds, res, nodata):
                         "range of its data type, %s. Consider overriding it "
                         "using the --nodata option for better results." % (
                             nodataval, dtype))
+            else:
+                nodataval = 0
 
             for fname in reversed(files):
                 with rasterio.open(fname) as src:
