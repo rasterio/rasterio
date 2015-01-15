@@ -6,5 +6,5 @@ delocate
 enum34
 numpy>=1.8.0
 pytest
-setuptools
+setuptools>=0.9.8
 wheel

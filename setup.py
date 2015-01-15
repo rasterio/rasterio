@@ -9,17 +9,22 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 
-import logging
 import os
-import shutil
-import subprocess
 import sys
-from setuptools import setup
+import pprint
+import shutil
+import logging
+import subprocess
 
-from distutils.extension import Extension
+from setuptools import setup
+from setuptools.extension import Extension
 
 logging.basicConfig()
 log = logging.getLogger()
+
+# python -W all setup.py ...
+if 'all' in sys.warnoptions:
+    log.level = logging.DEBUG
 
 # Parse the version from the fiona module.
 with open('rasterio/__init__.py') as f:
@@ -103,6 +108,8 @@ ext_options = dict(
     library_dirs=library_dirs,
     libraries=libraries,
     extra_link_args=extra_link_args)
+
+log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
 # When building from a repo, Cython is required.
 if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
