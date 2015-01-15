@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.17.0 (2015-01-15)
+-------------------
+- Enhancements to rio-merge: relaxation of same-extent and same-resolution
+  constraints, addition of --bounds and --res options (#242, 247).
+- Data files in support of binary wheels (#239).
+- Fix for reading bands with undefined nodata (#237, #240).
+
 0.16.0 (2014-12-16)
 -------------------
 - More graceful, slice-like handling of windows (#191).
