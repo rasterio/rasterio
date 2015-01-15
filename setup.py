@@ -9,12 +9,12 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 
+import logging
 import os
-import sys
 import pprint
 import shutil
-import logging
 import subprocess
+import sys
 
 from setuptools import setup
 from setuptools.extension import Extension
