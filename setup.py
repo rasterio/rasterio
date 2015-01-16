@@ -132,6 +132,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
         Extension(
+            'rasterio._fill', ['rasterio/_fill.pyx'], **ext_options),
+        Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
