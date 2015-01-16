@@ -92,10 +92,9 @@ try:
 except Exception as e:
     log.warning("Failed to get options via gdal-config: %s", str(e))
 
-# Conditionally copy PROJ.4 data. Presumes PROJ.4 is installed locally
-# with --prefix=/usr/local.
+# Conditionally copy PROJ.4 data.
 if os.environ.get('PACKAGE_DATA'):
-    projdatadir = '/usr/local/share/proj'
+    projdatadir = os.environ.get('PROJ_LIB', '/usr/local/share/proj')
     if os.path.exists(projdatadir):
         try:
             shutil.rmtree('rasterio/proj_data')
