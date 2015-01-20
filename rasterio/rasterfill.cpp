@@ -7,7 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2008, Frank Warmerdam
- * Copyright (c) 2015, Sean Gillies
+ * Copyright (c) 2015, Sean Gillies <sean@mapbox.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,14 +27,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
-
-/******************************************************************************
- * Memory Driver Version
- *
- * The original version of rasterfill.cpp in GDAL uses the GeoTIFF format
- * for temporary files. This version uses in-memory datasets (MEM format)
- * trading a larger memory footprint to avoid I/O.
- *****************************************************************************/
 
 #include "gdal_alg.h"
 #include "cpl_conv.h"
@@ -394,13 +386,13 @@ if( quad_value != nNoDataVal ) 						\
  */
 
 CPLErr CPL_STDCALL
-GDALFillNodata( GDALRasterBandH hTargetBand, 
+GDALFillNodata( GDALRasterBandH hTargetBand,
                 GDALRasterBandH hMaskBand,
-                double dfMaxSearchDist, 
+                double dfMaxSearchDist,
                 int bDeprecatedOption,
                 int nSmoothingIterations,
                 char **papszOptions,
-                GDALProgressFunc pfnProgress, 
+                GDALProgressFunc pfnProgress,
                 void * pProgressArg )
 
 {
@@ -457,7 +449,7 @@ GDALFillNodata( GDALRasterBandH hTargetBand,
     if (hDriver == NULL)
     {
         CPLError(CE_Failure, CPLE_AppDefined,
-                 "GDALFillNodata needs MEM driver");
+                 "Temp file driver can not be found");
         return CE_Failure;
     }
     
