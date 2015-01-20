@@ -498,7 +498,7 @@ cdef class DatasetReader(object):
             item_c = papszStrList[i]
             item_b = item_c
             item = item_b.decode('utf-8')
-            key, value = item.split('=')
+            key, value = item.split('=', 1)
             retval[key] = value
         return retval
     
