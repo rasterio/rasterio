@@ -18,6 +18,7 @@ def _fillnodata(image, mask, double max_search_distance=100.0, int smoothing_ite
     cdef void *image_band
     cdef void *mask_dataset
     cdef void *mask_band
+    cdef char **alg_options = NULL
 
     if isinstance(image, np.ndarray):
         # copy numpy ndarray into an in-memory dataset
@@ -58,7 +59,17 @@ def _fillnodata(image, mask, double max_search_distance=100.0, int smoothing_ite
         raise ValueError("Invalid source image mask")
 
     with cpl_errs:
-        _gdal.GDALFillNodata(image_band, mask_band, max_search_distance, 0, smoothing_iterations, NULL, NULL, NULL)
+        alg_options = _gdal.CSLSetNameValue(
+                alg_options, "TEMP_FILE_DRIVER", "MEM")
+        _gdal.GDALFillNodata(
+                image_band,
+                mask_band,
+                max_search_distance,
+                0,
+                smoothing_iterations,
+                alg_options,
+                NULL,
+                NULL)
 
     # read the result into a numpy ndarray
     result = np.empty(image.shape, dtype=image.dtype)
@@ -66,5 +77,6 @@ def _fillnodata(image, mask, double max_search_distance=100.0, int smoothing_ite
 
     _gdal.GDALClose(image_dataset)
     _gdal.GDALClose(mask_dataset)
+    _gdal.CSLDestroy(alg_options)
 
     return result

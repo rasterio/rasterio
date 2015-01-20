@@ -385,8 +385,8 @@ if( quad_value != nNoDataVal ) 						\
  * @param bDeprecatedOption unused argument, should be zero.
  * @param nSmoothingIterations the number of 3x3 smoothing filter passes to 
  * run (0 or more).
- * @param papszOptions additional name=value options in a string list (none 
- * supported at this time - just pass NULL).
+ * @param papszOptions additional name=value options in a string list (the
+ * temporary file driver can be specified like TEMP_FILE_DRIVER=MEM).
  * @param pfnProgress the progress function to report completion.
  * @param pProgressArg callback data for progress function.
  * 
@@ -451,7 +451,9 @@ GDALFillNodata( GDALRasterBandH hTargetBand,
 /* -------------------------------------------------------------------- */
 /*      Create a work file to hold the Y "last value" indices.          */
 /* -------------------------------------------------------------------- */
-    GDALDriverH  hDriver = GDALGetDriverByName( "MEM" );
+    CPLString osTmpFileDriver = CSLFetchNameValueDef(
+            papszOptions, "TEMP_FILE_DRIVER", "GTiff");
+    GDALDriverH  hDriver = GDALGetDriverByName(osTmpFileDriver);
     if (hDriver == NULL)
     {
         CPLError(CE_Failure, CPLE_AppDefined,
@@ -461,7 +463,13 @@ GDALFillNodata( GDALRasterBandH hTargetBand,
     
     GDALDatasetH hYDS;
     GDALRasterBandH hYBand;
-    static const char *apszOptions[] = {};
+
+    char **apszOptions = NULL;
+    if (osTmpFileDriver == "GTiff") {
+        CSLSetNameValue(apszOptions, "COMPRESS", "LZW");
+        CSLSetNameValue(apszOptions, "BIGTIFF", "IF_SAFER");
+    }
+
     CPLString osTmpFile = CPLGenerateTempFilename("");
     CPLString osYTmpFile = osTmpFile + "fill_y_work.tif";
     
@@ -850,6 +858,8 @@ end:
     GDALClose( hYDS );
     GDALClose( hValDS );
     GDALClose( hFiltMaskDS );
+
+    CSLDestroy(apszOptions);
 
     GDALDeleteDataset( hDriver, osYTmpFile );
     GDALDeleteDataset( hDriver, osValTmpFile );
