@@ -54,3 +54,11 @@ def test_tags_update_twice():
         assert dst.tags() == {'a': '1', 'b': '2'}
         dst.update_tags(c=3)
         assert dst.tags() == {'a': '1', 'b': '2', 'c': '3'}
+
+
+def test_tags_eq():
+    with rasterio.open(
+            'test.tif', 'w', 
+            'GTiff', 3, 4, 1, dtype=rasterio.ubyte) as dst:
+        dst.update_tags(a="foo=bar")
+        assert dst.tags() == {'a': "foo=bar"}
