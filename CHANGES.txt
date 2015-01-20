@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.17.1 (2015-01-20)
+-------------------
+- Properly handle metadata tags with values that contain "=" (#254).
+
 0.17.0 (2015-01-15)
 -------------------
 - Enhancements to rio-merge: relaxation of same-extent and same-resolution
