@@ -444,7 +444,7 @@ GDALFillNodata( GDALRasterBandH hTargetBand,
 /*      Determine format driver for temp work files.                    */
 /* -------------------------------------------------------------------- */
     CPLString osTmpFileDriver = CSLFetchNameValueDef(
-            papszOptions, "TEMP_FILE_DRIVER", "GTiff");
+            papszOptions, "TEMP_FILE_DRIVER", "MEM");
     GDALDriverH hDriver = GDALGetDriverByName((const char *) osTmpFileDriver);
 
     if (hDriver == NULL)
