@@ -291,6 +291,45 @@ def _rasterize(shapes, image, transform, all_touched):
             _gdal.CSLDestroy(options)
 
 
+def _explode(coords):
+    """Explode a GeoJSON geometry's coordinates object and yield
+    coordinate tuples. As long as the input is conforming, the type of
+    the geometry doesn't matter.  From Fiona 1.4.8"""
+    for e in coords:
+        if isinstance(e, (float, int)):
+            yield coords
+            break
+        else:
+            for f in _explode(e):
+                yield f
+
+
+def _bounds(geometry):
+    """Bounding box of a GeoJSON geometry.  
+    From Fiona 1.4.8 with updates here to handle feature collections.
+    TODO: add to Fiona.
+    """
+
+    try:  
+        if 'features' in geometry:
+            xmins = []
+            ymins = []
+            xmaxs = []
+            ymaxs = []
+            for feature in geometry['features']:
+                xmin, ymin, xmax, ymax = _bounds(feature['geometry'])
+                xmins.append(xmin)
+                ymins.append(ymin)
+                xmaxs.append(xmax)
+                ymaxs.append(ymax)
+            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+        else:
+            xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
+            return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
+    except (KeyError, TypeError):
+        return None
+
+
 # Mapping of OGR integer geometry types to GeoJSON type names.
 GEOMETRY_TYPES = {
     0: 'Unknown',

@@ -143,6 +143,53 @@ datasets.
 
     $ rio merge rasterio/tests/data/R*.tif merged.tif
 
+rasterize
+---------
+
+New in 0.18.
+
+The rasterize command rasterizes GeoJSON features into a new or existing
+raster.
+
+.. code-block:: console
+
+    $ rio rasterize test.tif --res 0.0167 < input.geojson
+
+The resulting file will have an upper left coordinate determined by the bounds
+of the GeoJSON (in EPSG:4326, which is the default), with a
+pixel size of approximately 30 arc seconds.  Pixels whose center is within the
+polygon or that are selected by brezenhams line algorithm will be burned in
+with a default value of 1.
+
+It is possible to rasterize into an existing raster and use an alternative
+default value:
+
+.. code-block:: console
+
+    $ rio rasterize existing.tif --default_value 10 < input.geojson
+
+It is also possible to rasterize using a template raster, which will be used
+to determine the transform, dimensions, and coordinate reference system of the
+output raster:
+
+.. code-block:: console
+
+    $ rio rasterize test.tif --like tests/data/shade.tif < input.geojson
+
+GeoJSON features may be provided using stdin or specified directly as first
+argument, and dimensions may be provided in place of pixel resolution:
+
+.. code-block:: console
+
+    $ rio rasterize input.geojson test.tif --dimensions 1024 1024
+
+Other options are available, see:
+
+.. code-block:: console
+
+    $ rio rasterize --help
+
+
 shapes
 ------
 
