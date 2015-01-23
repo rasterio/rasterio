@@ -50,12 +50,12 @@ def _shapes(image, mask, connectivity, transform):
     """
 
     cdef int retval, rows, cols
-    cdef void *hband
-    cdef void *hmaskband
-    cdef void *hfdriver
-    cdef void *hfs
-    cdef void *hlayer
-    cdef void *fielddefn
+    cdef void *hband = NULL
+    cdef void *hmaskband = NULL
+    cdef void *hfdriver = NULL
+    cdef void *hfs = NULL
+    cdef void *hlayer = NULL
+    cdef void *fielddefn = NULL
     cdef _io.RasterReader rdr
     cdef _io.RasterReader mrdr
     cdef char **options = NULL
@@ -162,9 +162,9 @@ def _sieve(image, size, output, mask, connectivity):
     cdef InMemoryRaster in_mem_ds = None
     cdef InMemoryRaster out_mem_ds = None
     cdef InMemoryRaster mask_mem_ds = None
-    cdef void *in_band
-    cdef void *out_band
-    cdef void *mask_band
+    cdef void *in_band = NULL
+    cdef void *out_band = NULL
+    cdef void *mask_band = NULL
     cdef _io.RasterReader rdr
     cdef _io.RasterUpdater udr
     cdef _io.RasterReader mask_reader
@@ -414,12 +414,6 @@ cdef class GeomBuilder:
         result = self.build(cogr_geometry)
         _deleteOgrGeom(cogr_geometry)
         return result
-
-
-cdef geometry(void *geom):
-    """Returns a GeoJSON object from an OGR geometry object."""
-
-    return GeomBuilder().build(geom)
 
 
 cdef class OGRGeomBuilder:

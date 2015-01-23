@@ -80,8 +80,7 @@ def tastes_like_gdal(t):
 
 cdef void *_osr_from_crs(object crs):
     cdef char *proj_c = NULL
-    cdef void *osr
-    osr = _gdal.OSRNewSpatialReference(NULL)
+    cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
     params = []
     # Normally, we expect a CRS dict.
     if isinstance(crs, dict):
@@ -112,10 +111,13 @@ cdef void *_osr_from_crs(object crs):
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):
-    cdef double *x, *y, *z = NULL
+    cdef double *x = NULL
+    cdef double *y = NULL
+    cdef double *z = NULL
     cdef char *proj_c = NULL
-    cdef void *src, *dst
-    cdef void *transform
+    cdef void *src = NULL
+    cdef void *dst = NULL
+    cdef void *transform = NULL
     cdef int i
 
     assert len(xs) == len(ys)
@@ -174,11 +176,12 @@ def _transform_geom(
     cdef char *key_c = NULL
     cdef char *val_c = NULL
     cdef char **options = NULL
-    cdef void *src, *dst
-    cdef void *transform
-    cdef OGRGeometryFactory *factory
-    cdef void *src_ogr_geom
-    cdef void *dst_ogr_geom
+    cdef void *src = NULL
+    cdef void *dst = NULL
+    cdef void *transform = NULL
+    cdef OGRGeometryFactory *factory = NULL
+    cdef void *src_ogr_geom = NULL
+    cdef void *dst_ogr_geom = NULL
     cdef int i
 
     src = _osr_from_crs(src_crs)
@@ -259,7 +262,7 @@ def _reproject(
     bands of datasets on disk, the coordinate reference systems and
     transforms will be read from the appropriate datasets.
     """
-    cdef int retval, rows, cols
+    cdef int retval=0, rows, cols
     cdef void *hrdriver
     cdef void *hdsin
     cdef void *hdsout

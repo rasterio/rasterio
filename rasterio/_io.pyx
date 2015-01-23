@@ -911,7 +911,8 @@ cdef class RasterUpdater(RasterReader):
     def start(self):
         cdef const char *drv_name = NULL
         cdef char **options = NULL
-        cdef char *key_c, *val_c = NULL
+        cdef char *key_c = NULL
+        cdef char *val_c = NULL
         cdef void *drv = NULL
         cdef void *hband = NULL
         cdef int success
@@ -1308,7 +1309,7 @@ cdef class RasterUpdater(RasterReader):
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
-        cdef void *hBand
+        cdef void *hBand = NULL
         cdef void *hTable
         cdef _gdal.GDALColorEntry color
         if self._hds == NULL:
@@ -1412,6 +1413,7 @@ cdef class InMemoryRaster:
         self.dataset = NULL
 
         cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
+        cdef int i = 0  # avoids Cython warning in for loop below
 
         # Several GDAL operations require the array of band IDs as input
         self.band_ids[0] = 1
@@ -1548,7 +1550,8 @@ cdef class IndirectRasterUpdater(RasterUpdater):
     def close(self):
         cdef const char *drv_name = NULL
         cdef char **options = NULL
-        cdef char *key_c, *val_c = NULL
+        cdef char *key_c = NULL
+        cdef char *val_c = NULL
         cdef void *drv = NULL
         cdef void *temp = NULL
         cdef int success
@@ -1598,7 +1601,7 @@ def writer(path, mode, **kwargs):
     # format driver's capabilities.
     cdef void *hds = NULL
     cdef void *drv = NULL
-    cdef char *drv_name = NULL
+    cdef const char *drv_name = NULL
     cdef const char *fname = NULL
 
     if mode == 'w' and 'driver' in kwargs:

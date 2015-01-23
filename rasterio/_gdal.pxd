@@ -101,7 +101,7 @@ cdef extern from "gdal.h" nogil:
         short c3
         short c4
 
-    const GDALColorEntry *GDALGetColorEntry (void *hTable, int)
+    const GDALColorEntry * GDALGetColorEntry (void *hTable, int)
     void GDALSetColorEntry (void *hTable, int i, const GDALColorEntry *poEntry)
     int GDALSetRasterColorTable (void *hBand, void *hTable)
     void *GDALGetRasterColorTable (void *hBand)

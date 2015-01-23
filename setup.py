@@ -135,7 +135,7 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
-            ])
+        ], quiet=True)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
