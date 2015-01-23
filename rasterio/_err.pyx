@@ -61,7 +61,7 @@ cdef class GDALErrCtxManager:
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
         cdef int err_type = CPLGetLastErrorType()
         cdef int err_no = CPLGetLastErrorNo()
-        cdef char *msg = CPLGetLastErrorMsg()
+        cdef const char *msg = CPLGetLastErrorMsg()
         # TODO: warn for err_type 2?
         if err_type >= 3:
             raise exception_map[err_no](msg)

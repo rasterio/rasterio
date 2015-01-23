@@ -129,8 +129,8 @@ cdef class GDALEnv(object):
 
     def drivers(self):
         cdef void *drv = NULL
-        cdef char *key = NULL
-        cdef char *val = NULL
+        cdef const char *key = NULL
+        cdef const char *val = NULL
         cdef int i
         result = {}
         for i in range(GDALGetDriverCount()):

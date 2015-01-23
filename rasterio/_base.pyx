@@ -99,13 +99,13 @@ cdef class DatasetReader(object):
 
     def read_crs(self):
         cdef char *proj_c = NULL
-        cdef char *auth_key = NULL
-        cdef char *auth_val = NULL
+        cdef const char * auth_key = NULL
+        cdef const char * auth_val = NULL
         cdef void *osr = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
         crs = {}
-        cdef char *wkt = _gdal.GDALGetProjectionRef(self._hds)
+        cdef const char * wkt = _gdal.GDALGetProjectionRef(self._hds)
         if wkt is NULL:
             raise ValueError("Unexpected NULL spatial reference")
         wkt_b = wkt
@@ -166,7 +166,7 @@ cdef class DatasetReader(object):
         cdef char *proj_c = NULL
         cdef char *key_c = NULL
         cdef void *osr = NULL
-        cdef char *wkt = NULL
+        cdef const char * wkt = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
         wkt = _gdal.GDALGetProjectionRef(self._hds)
@@ -521,7 +521,7 @@ cdef class DatasetReader(object):
         cdef void *hBand
         cdef void *hTable
         cdef int i
-        cdef _gdal.GDALColorEntry *color
+        cdef const _gdal.GDALColorEntry * color
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         if bidx not in self.indexes:
