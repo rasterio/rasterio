@@ -1,3 +1,5 @@
+# cython: boundscheck=False
+
 import numpy
 cimport numpy
 

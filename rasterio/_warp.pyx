@@ -1,6 +1,4 @@
 # distutils: language = c++
-# cython: profile=True
-#
 
 from collections import namedtuple
 import logging
