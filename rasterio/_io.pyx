@@ -592,7 +592,8 @@ cdef class RasterReader(_base.DatasetReader):
         use the optional `out` argument and the return value shall be
         preferentially used by callers.
         """
-
+        orig_out = out
+        
         return2d = False
         if indexes is None:
             indexes = self.indexes
@@ -707,6 +708,10 @@ cdef class RasterReader(_base.DatasetReader):
                     out = np.ma.masked_where(np.isnan(out), out, copy=False)
                 else:
                     out = np.ma.masked_equal(out, nodatavals[0], copy=False)
+                # Update orig_out
+                if hasattr(orig_out, 'mask'):
+                  orig_out.mask = out.mask
+                  orig_out.fill_value = out.fill_value
             else:
                 out = np.ma.masked_array(out, copy=False)
                 for aix in range(len(indexes)):
