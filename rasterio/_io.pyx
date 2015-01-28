@@ -559,8 +559,9 @@ cdef class RasterReader(_base.DatasetReader):
             a 2D array if it is a band index number.
 
         out: numpy ndarray, optional
-            An optional reference to an output array with the same
-            dimensions and shape.
+            As with Numpy ufuncs, this is an optional reference to an
+            output array with the same dimensions and shape into which
+            data will be placed.
 
         window : a pair (tuple) of pairs of ints, optional
             The optional `window` argument is a 2 item tuple. The first
@@ -585,8 +586,11 @@ cdef class RasterReader(_base.DatasetReader):
 
         Returns
         -------
-        Numpy ndarray
+        Numpy ndarray or a view on a Numpy ndarray
 
+        Note: as with Numpy ufuncs, an object is returned even if you
+        use the optional `out` argument and the return value shall be
+        preferentially used by callers.
         """
 
         return2d = False
