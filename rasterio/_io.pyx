@@ -562,6 +562,10 @@ cdef class RasterReader(_base.DatasetReader):
             As with Numpy ufuncs, this is an optional reference to an
             output array with the same dimensions and shape into which
             data will be placed.
+            
+            *Note*: the method's return value may be a view on this
+            array. In other words, `out` is likely to be an
+            incomplete representation of the method's results.
 
         window : a pair (tuple) of pairs of ints, optional
             The optional `window` argument is a 2 item tuple. The first
