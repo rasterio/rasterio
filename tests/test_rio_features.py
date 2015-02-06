@@ -177,7 +177,7 @@ def test_rasterize_err(tmpdir, runner):
                            input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 2
 
-    # Tets invalid CRS value
+    # Test invalid CRS value
     result = runner.invoke(features.rasterize, [output,
                                                 '--res', 1,
                                                 '--src_crs', 'BOGUS'],
@@ -291,7 +291,7 @@ def test_rasterize_property_value(tmpdir, runner):
     # Test feature collection property values
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(features.rasterize,
-                           [output, 
+                           [output,
                             '--res', 1000,
                             '--property', 'val',
                             '--src_crs', 'EPSG:3857'
@@ -318,3 +318,26 @@ def test_rasterize_property_value(tmpdir, runner):
         data = out.read_band(1, masked=False)
         assert (data == 0).sum() == 55
         assert (data == 15).sum() == 145
+
+def test_rasterize_out_of_bounds(tmpdir, runner):
+    output = str(tmpdir.join('test.tif'))
+
+    # Test out of bounds of --like raster
+    result = runner.invoke(features.rasterize,
+                           [output, '--like', 'tests/data/shade.tif'],
+                           input=TEST_FEATURES)
+    assert result.exit_code == 2
+
+    # Test out of bounds of existing output raster (first have to create one)
+    result = runner.invoke(features.rasterize,
+                           [output,
+                            '--res', 1000,
+                            '--property', 'val',
+                            '--src_crs', 'EPSG:3857'
+                           ],
+                           input=TEST_MERC_FEATURECOLLECTION)
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+
+    result = runner.invoke(features.rasterize, [output], input=TEST_FEATURES)
+    assert result.exit_code == 2

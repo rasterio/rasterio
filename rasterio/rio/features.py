@@ -213,6 +213,9 @@ def rasterize(
     --driver, --bounds, --dimensions, --res, and --src_crs are ignored when
     output exists or --like raster is provided
 
+    The GeoJSON must be within the bounds of the existing output or --like
+    raster, or an error will be raised.
+
 
     If the output does not exist and --like raster is not provided, the input
     GeoJSON will be used to determine the bounds of the output unless
@@ -254,6 +257,12 @@ def rasterize(
                 return feature['properties'].get(property, default_value)
             return default_value
 
+        def disjoint_bounds(bounds1, bounds2):
+            return (bounds1[0] > bounds2[2] or
+                    bounds1[2] < bounds2[0] or
+                    bounds1[1] > bounds2[3] or
+                    bounds1[3] < bounds2[1])
+
         geojson = json.loads(input.read())
         if 'features' in geojson:
             geometries = []
@@ -265,8 +274,15 @@ def rasterize(
             raise click.BadParameter('Invalid GeoJSON', param=input,
                                      param_hint='input')
 
+        geojson_bounds = geojson.get('bbox', calculate_bounds(geojson))
+
         if os.path.exists(output):
             with rasterio.open(output, 'r+') as out:
+                if disjoint_bounds(geojson_bounds, out.bounds):
+                    raise click.BadParameter('GeoJSON outside bounds of '
+                                             'existing output raster',
+                                             param=input, param_hint='input')
+
                 meta = out.meta.copy()
 
                 result = rasterize(
@@ -289,11 +305,17 @@ def rasterize(
         else:
             if like is not None:
                 template_ds = rasterio.open(like)
+                if disjoint_bounds(geojson_bounds, template_ds.bounds):
+                    raise click.BadParameter('GeoJSON outside bounds of '
+                                             '--like raster', param=input,
+                                             param_hint='input')
+
                 kwargs = template_ds.meta.copy()
                 kwargs['count'] = 1
+                template_ds.close()
 
             else:
-                bounds = bounds or geojson.get('bbox', calculate_bounds(geojson))
+                bounds = bounds or geojson_bounds
 
                 if src_crs == 'EPSG:4326':
                     if (bounds[0] < -180 or bounds[2] > 180 or
