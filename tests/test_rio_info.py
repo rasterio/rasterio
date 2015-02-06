@@ -103,7 +103,9 @@ def test_info_stats():
     runner = CliRunner()
     result = runner.invoke(info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
     assert result.exit_code == 0
-    assert '"stats": [{"max": 255.0, "mean": 44.4344' in result.output
+    assert '"max": 255.0' in result.output
+    assert '"min": 1.0' in result.output
+    assert '"mean": 44.4344' in result.output
 
 
 def test_info_stats_only():
