@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 
 import rasterio
-from rasterio._features import _shapes, _sieve, _rasterize
+from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.transform import IDENTITY, guard_transform
 from rasterio.dtypes import get_minimum_int_dtype
 
@@ -321,3 +321,24 @@ def rasterize(
         _rasterize(valid_shapes, out, transform.to_gdal(), all_touched)
 
     return out
+
+
+def bounds(geometry):
+    """Returns a (minx, miny, maxx, maxy) bounding box.  From Fiona 1.4.8.
+    Modified to return bbox from geometry if available.
+
+    Parameters
+    ----------
+    geometry: GeoJSON-like feature, feature collection, or geometry.
+
+    Returns
+    -------
+    tuple
+        Bounding box: (minx, miny, maxx, maxy)
+    """
+
+    if 'bbox' in geometry:
+        return tuple(geometry['bbox'])
+
+    geom = geometry.get('geometry') or geometry
+    return _bounds(geom)
