@@ -62,6 +62,7 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
     with cpl_errs:
         alg_options = _gdal.CSLSetNameValue(
                 alg_options, "TEMP_FILE_DRIVER", "MEM")
+
         _gdal.GDALFillNodata(
                 image_band,
                 mask_band,

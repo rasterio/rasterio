@@ -1,8 +1,11 @@
 import rasterio
 from rasterio._fill import _fillnodata
 
-def fillnodata(image, mask=None, max_search_distance=100.0,
-    smoothing_iterations=0):
+def fillnodata(
+        image,
+        mask=None,
+        max_search_distance=100.0,
+        smoothing_iterations=0):
     """
     Fill selected raster regions by interpolation from the edges.
 
@@ -22,7 +25,7 @@ def fillnodata(image, mask=None, max_search_distance=100.0,
     Parameters
     ----------
     image : numpy ndarray
-        The band to be modified in place
+        The source  containing nodata holes.
     mask : numpy ndarray
         A mask band indicating which pixels to interpolate. Pixels to
         interpolate into are indicated by the value 0. Values of 1 indicate
@@ -36,10 +39,9 @@ def fillnodata(image, mask=None, max_search_distance=100.0,
     Returns
     -------
     out : numpy ndarray
-        The interpolated raster array
+        The filled raster array.
     """
     max_search_distance = float(max_search_distance)
     smoothing_iterations = int(smoothing_iterations)
     with rasterio.drivers():
-        ret = _fillnodata(image, mask, max_search_distance, smoothing_iterations)
-    return ret
+        return _fillnodata(image, mask, max_search_distance, smoothing_iterations)
