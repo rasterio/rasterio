@@ -61,6 +61,10 @@ def env(ctx, key):
 @click.option('--bounds', 'meta_member', flag_value='bounds',
               help="Print the boundary coordinates "
                    "(left, bottom, right, top).")
+@click.option('--res', 'meta_member', flag_value='res',
+              help="Print pixel width and height.")
+@click.option('--lnglat', 'meta_member', flag_value='lnglat',
+              help="Print longitude and latitude at center.")
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member):
     """Print metadata about the dataset as JSON.

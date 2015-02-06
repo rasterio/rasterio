@@ -71,3 +71,12 @@ def test_info_tags():
         ['tests/data/RGB.byte.tif', '--tags'])
     assert result.exit_code == 0
     assert result.output == '{"AREA_OR_POINT": "Area"}\n'
+
+
+def test_info_res():
+    runner = CliRunner()
+    result = runner.invoke(
+        info.info,
+        ['tests/data/RGB.byte.tif', '--res])
+    assert result.exit_code == 0
+    assert result.output == '300.0 300.0\n'
