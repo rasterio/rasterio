@@ -23,3 +23,4 @@ cdef class DatasetReader:
 
     cdef void *band(self, int bidx)
 
+cdef void *_osr_from_crs(object crs)

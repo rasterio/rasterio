@@ -1,6 +1,7 @@
 """Raster warping and reprojection"""
 
-from rasterio._warp import _reproject, _transform, _transform_geom, RESAMPLING
+from rasterio._base import _transform
+from rasterio._warp import _transform_geom, _reproject, RESAMPLING
 from rasterio.transform import guard_transform
 
 

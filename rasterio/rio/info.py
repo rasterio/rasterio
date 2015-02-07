@@ -61,18 +61,29 @@ def env(ctx, key):
 @click.option('--bounds', 'meta_member', flag_value='bounds',
               help="Print the boundary coordinates "
                    "(left, bottom, right, top).")
+@click.option('--res', 'meta_member', flag_value='res',
+              help="Print pixel width and height.")
+@click.option('--lnglat', 'meta_member', flag_value='lnglat',
+              help="Print longitude and latitude at center.")
+@click.option('--stats', 'meta_member', flag_value='stats',
+              help="Print statistics (min, max, mean) of a single band "
+                   "(use --bidx).")
+@click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
+              help="Output extra information.")
+@click.option('--bidx', type=int, default=1,
+              help="Input file band index (default: 1).")
 @click.pass_context
-def info(ctx, input, aspect, indent, namespace, meta_member):
+def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx):
     """Print metadata about the dataset as JSON.
 
     Optionally print a single metadata item as a string.
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
-    stdout = click.get_text_stream('stdout')
+    mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     try:
         with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
-            with rasterio.open(input, 'r-') as src:
+            with rasterio.open(input, mode) as src:
                 info = src.meta
                 del info['affine']
                 del info['transform']
@@ -82,19 +93,28 @@ def info(ctx, input, aspect, indent, namespace, meta_member):
                 if proj4.startswith('+init=epsg'):
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4
+                if verbose:
+                    stats = [{'min': float(b.min()),
+                              'max': float(b.max()),
+                              'mean': float(b.mean())} for b in src.read()]
+                    info['stats'] = stats
                 if aspect == 'meta':
-                    if meta_member:
+                    if meta_member == 'stats':
+                        band = src.read(bidx)
+                        click.echo('%f %f %f' % (
+                            float(band.min()),
+                            float(band.max()),
+                            float(band.mean())))
+                    elif meta_member:
                         if isinstance(info[meta_member], (list, tuple)):
-                            print(" ".join(map(str, info[meta_member])))
+                            click.echo(" ".join(map(str, info[meta_member])))
                         else:
-                            print(info[meta_member])
+                            click.echo(info[meta_member])
                     else:
-                        stdout.write(json.dumps(info, indent=indent))
-                        stdout.write("\n")
+                        click.echo(json.dumps(info, indent=indent))
                 elif aspect == 'tags':
-                    stdout.write(json.dumps(src.tags(ns=namespace), 
+                    click.echo(json.dumps(src.tags(ns=namespace), 
                                             indent=indent))
-                    stdout.write("\n")
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
