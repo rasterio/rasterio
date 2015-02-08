@@ -132,6 +132,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
         Extension(
+            'rasterio._fill', ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp'], **ext_options),
+        Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
@@ -152,6 +154,8 @@ else:
             'rasterio._drivers', ['rasterio/_drivers.c'], **ext_options),
         Extension(
             'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
+        Extension(
+            'rasterio._fill', ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp'], **ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.c'], **ext_options),
         Extension(

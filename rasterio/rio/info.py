@@ -93,6 +93,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx):
                 if proj4.startswith('+init=epsg'):
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4
+                info['res'] = src.res
+                info['lnglat'] = src.lnglat()
                 if verbose:
                     stats = [{'min': float(b.min()),
                               'max': float(b.max()),
