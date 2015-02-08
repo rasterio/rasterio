@@ -390,9 +390,7 @@ cdef class DatasetReader(object):
             'count': self.count,
             'crs': self.crs,
             'transform': self.affine.to_gdal(),
-            'affine': self.affine,
-            'res': self.res,
-            'lnglat': self.lnglat() }
+            'affine': self.affine }
         self._read = True
         return m
 
