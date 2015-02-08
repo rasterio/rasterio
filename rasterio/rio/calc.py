@@ -33,21 +33,48 @@ def calc(ctx, command, files):
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
 
-            with rasterio.open(output, 'w', **kwargs) as dst:
                 sources = [rasterio.open(path).read() for path in files]
+
 
                 # TODO: implement a real parser for calc expressions,
                 # perhaps using numexpr's parser as a guide, instead
                 # eval'ing any string.
-                # This one translates, eg, '{1}' to 'sources[0]'.
-                cmd = re.sub(
-                        r'{(\d)}',
-                        lambda m: 'sources[%d]' % (int(m.group(1))-1),
-                        command)
 
-                logger.debug("Translated cmd: %r", cmd)
-                results = eval(cmd)
-                dst.write(results.astype(kwargs['dtype']))
+                parts = command.split(';')
+                if len(parts) == 1:
+                    with rasterio.open(output, 'w', **kwargs) as dst:
+
+                        # This one translates, eg, '{1}' to
+                        # 'sources[0]'.
+                        cmd = re.sub(
+                                r'{(\d)}',
+                                lambda m: 'sources[%d]' % (int(m.group(1))-1),
+                                parts.pop())
+
+                        logger.debug("Translated cmd: %r", cmd)
+
+                        # TODO: enable output dtype selection.
+                        results = eval(cmd).astype(kwargs['dtype'])
+                        dst.write(results)
+
+                else:
+                    parts = list(filter(lambda p: p.strip(), parts))
+                    kwargs['count'] = len(parts)
+                    with rasterio.open(output, 'w', **kwargs) as dst:
+
+                        for i, part in enumerate(parts, 1):
+                            cmd = re.sub(
+                                    r'{(\d)\s*,\s*(\d)}',
+                                    lambda m: 'sources[%d][%d]' % (
+                                        int(m.group(1))-1, int(m.group(2))-1),
+                                    part)
+
+                            logger.debug("Translated cmd: %r", cmd)
+
+                            # TODO: enable output dtype selection.
+                            result = eval(cmd).astype(kwargs['dtype'])
+                            dst.write(result, i)
+
         sys.exit(0)
     except Exception:
         logger.exception("Failed. Exception caught")
