@@ -379,6 +379,11 @@ cdef class DatasetReader(object):
         lr = self.index(right, bottom)
         return tuple(zip(ul, lr))
 
+    def window_transform(self, window):
+        """Returns the affine transform for a dataset window."""
+        (r, _), (c, _) = window
+        return self.affine * Affine.translation(c or 0, r or 0)
+
     @property
     def meta(self):
         m = {
