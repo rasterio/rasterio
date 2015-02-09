@@ -863,6 +863,29 @@ cdef class RasterReader(_base.DatasetReader):
             hmask, 0, xoff, yoff, width, height, out)
         return out
 
+    def sample(self, xy, indexes=None):
+        """Get the values of a dataset at certain positions
+
+        Parameters
+        ----------
+        xy : iterable, pairs of floats
+            A sequence or generator of (x, y) pairs.
+
+        indexes : list of ints or a single int, optional
+            If `indexes` is a list, the result is a 3D array, but is
+            a 2D array if it is a band index number.
+
+        Returns
+        -------
+        Iterable, yielding dataset values for the specified `indexes`
+        as an ndarray.
+        """
+        for x, y in xy:
+            r, c = self.index(x, y)
+            window = ((r, r+1), (c, c+1))
+            data = self.read(
+                    indexes, window=window, masked=False, boundless=True)
+            yield data[:,0,0]
 
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
