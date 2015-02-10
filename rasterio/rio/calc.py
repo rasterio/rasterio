@@ -16,7 +16,12 @@ from rasterio.rio.cli import cli
 
 @cli.command(short_help="Raster data calculator.")
 @click.argument('command')
-@files_inout_arg
+@click.argument(
+    'files',
+    nargs=-1,
+    type=click.Path(resolve_path=False),
+    required=True,
+    metavar="INPUTS... OUTPUT")
 @click.option('--dtype', 
               type=click.Choice([
                 'ubyte', 'uint8', 'uint16', 'int16', 'uint32',
@@ -58,57 +63,74 @@ def calc(ctx, command, files, dtype):
                 kwargs['transform'] = kwargs.pop('affine')
                 kwargs['dtype'] = dtype
 
-                # Using the class method instead of instance method.
-                # Latter raises
-                # TypeError: astype() got an unexpected keyword argument 'copy'
-                # Possibly something to do with the instance being a masked
-                # array.
-                sources = np.ma.asanyarray([np.ndarray.astype(
-                                rasterio.open(path).read(),
-                                'float64',
-                                copy=False
-                            ) for path in files])
+            names = []
+            sources = []
+            for path in files:
+                with rasterio.open(path) as src:
+                    names.append(src.name)
+                    # Using the class method instead of instance method.
+                    # Latter raises
+                    # TypeError: astype() got an unexpected keyword argument 'copy'
+                    # Possibly something to do with the instance being a masked
+                    # array.
+                    sources.append(
+                        np.ndarray.astype(src.read(), 'float64', copy=False))
 
-                parts = command.split(';')
-                _prev = None
+            #sources = np.ma.asanyarray([s for s in sources])
 
-                for part in filter(lambda p: p.strip(), parts):
+            parts = command.split(';')
+            _prev = None
 
-                    # TODO: implement a real parser for calc expressions,
-                    # perhaps using numexpr's parser as a guide, instead
-                    # eval'ing any string.
+            def cmd_sources(match):
+                text = match.group(1)
+                parts = text.split(',')
+                v = parts.pop(0)
+                if v in names:
+                    a = names.index(v)
+                s = 'sources[%d]' % a
+                if parts:
+                    s += '[%d]' % (int(parts.pop(0)) - 1)
+                return s
 
-                    cmd = re.sub(
-                            r'{(\d)\s*,\s*(\d)}',
-                            lambda m: 'sources[%d,%d]' % (
-                                int(m.group(1))-1, int(m.group(2))-1),
-                            part)
+            for part in filter(lambda p: p.strip(), parts):
 
-                    # Translates, eg, '{1}' to 'sources[0]'.
-                    cmd = re.sub(
-                            r'{(\d)}',
-                            lambda m: 'sources[%d]' % (int(m.group(1))-1),
-                            cmd)
+                # TODO: implement a real parser for calc expressions,
+                # perhaps using numexpr's parser as a guide, instead
+                # eval'ing any string.
 
-                    # Translate '{}' to '_prev'.
-                    cmd = re.sub(r'{}', '_prev', cmd)
+                # Translate '{}' to '_prev'.
+                cmd = re.sub(r'{}', '_prev', part)
 
-                    logger.debug("Translated cmd: %r", cmd)
+                cmd = re.sub(
+                        r'{(\d+),(\d+)}',
+                        lambda m: 'sources[%d][%d]' % (
+                            int(m.group(1))-1,
+                            int(m.group(2))-1),
+                        cmd)
 
-                    res = eval(cmd)
-                    _prev = res
+                cmd = re.sub(
+                        r'{(\d+)}',
+                        lambda m: 'sources[%d]' % (int(m.group(1))-1),
+                        cmd)
 
-                if isinstance(res, tuple) or len(res.shape) == 3:
-                    results = np.asanyarray([
-                                np.ndarray.astype(r, dtype, copy=False
-                                ) for r in res])
-                else:
-                    results = np.asanyarray(
-                        [np.ndarray.astype(res, dtype, copy=False)])
+                cmd = re.sub(r'{(.+)}', cmd_sources, cmd)
 
-                kwargs['count'] = results.shape[0]
-                with rasterio.open(output, 'w', **kwargs) as dst:
-                    dst.write(results)
+                logger.debug("Translated cmd: %r", cmd)
+
+                res = eval(cmd)
+                _prev = res
+
+            if isinstance(res, tuple) or len(res.shape) == 3:
+                results = np.asanyarray([
+                            np.ndarray.astype(r, dtype, copy=False
+                            ) for r in res])
+            else:
+                results = np.asanyarray(
+                    [np.ndarray.astype(res, dtype, copy=False)])
+
+            kwargs['count'] = results.shape[0]
+            with rasterio.open(output, 'w', **kwargs) as dst:
+                dst.write(results)
 
         sys.exit(0)
     except Exception:
