@@ -13,19 +13,21 @@ Rasterio's new command line interface is a program named "rio".
     Options:
       -v, --verbose  Increase verbosity.
       -q, --quiet    Decrease verbosity.
+      --version      Show the version and exit.
       --help         Show this message and exit.
 
     Commands:
       bounds     Write bounding boxes to stdout as GeoJSON.
+      env        Print information about the rio environment.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
       merge      Merge a stack of raster datasets.
+      rasterize  Rasterize features.
+      sample     Sample a dataset.
       shapes     Write the shapes of features.
       stack      Stack a number of bands into a multiband dataset.
-      transform  Transform coordinates.
 
-It is developed using the ``click`` package.
-
+It is developed using `Click <http://click.pocoo.org/3/>`__.
 
 bounds
 ------
@@ -84,26 +86,89 @@ Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing
 info
 ----
 
-Rio's info command intends to serve some of the same uses as gdalinfo.
+Rio's info command prints structured information about a dataset.
 
 .. code-block:: console
 
-    $ rio info tests/data/RGB.byte.tif
-    { 'affine': Affine(300.0379266750948, 0.0, 101985.0,
-           0.0, -300.041782729805, 2826915.0),
-      'count': 3,
-      'crs': { 'init': u'epsg:32618'},
-      'driver': u'GTiff',
-      'dtype': <type 'numpy.uint8'>,
-      'height': 718,
-      'nodata': 0.0,
-      'transform': ( 101985.0,
-                     300.0379266750948,
-                     0.0,
-                     2826915.0,
-                     0.0,
-                     -300.041782729805),
-      'width': 791}
+    $ rio info tests/data/RGB.byte.tif --indent 2
+    {
+      "count": 3,
+      "crs": "EPSG:32618",
+      "dtype": "uint8",
+      "driver": "GTiff",
+      "bounds": [
+        101985.0,
+        2611485.0,
+        339315.0,
+        2826915.0
+      ],
+      "lnglat": [
+        -77.75790625255473,
+        24.561583285327067
+      ],
+      "height": 718,
+      "width": 791,
+      "shape": [
+        718,
+        791
+      ],
+      "res": [
+        300.0379266750948,
+        300.041782729805
+      ],
+      "nodata": 0.0
+    }
+
+More information, such as band statistics, can be had using the `--verbose`
+option.
+
+.. code-block:: console
+
+    $ rio info tests/data/RGB.byte.tif --indent 2
+    {
+      "count": 3,
+      "crs": "EPSG:32618",
+      "stats": [
+        {
+          "max": 255.0,
+          "mean": 44.434478650699106,
+          "min": 1.0
+        },
+        {
+          "max": 255.0,
+          "mean": 66.02203484105824,
+          "min": 1.0
+        },
+        {
+          "max": 255.0,
+          "mean": 71.39316199120559,
+          "min": 1.0
+        }
+      ],
+      "dtype": "uint8",
+      "driver": "GTiff",
+      "bounds": [
+        101985.0,
+        2611485.0,
+        339315.0,
+        2826915.0
+      ],
+      "lnglat": [
+        -77.75790625255473,
+        24.561583285327067
+      ],
+      "height": 718,
+      "width": 791,
+      "shape": [
+        718,
+        791
+      ],
+      "res": [
+        300.0379266750948,
+        300.041782729805
+      ],
+      "nodata": 0.0
+    }
 
 insp
 ----
@@ -113,25 +178,12 @@ The insp command opens a dataset and an interpreter.
 .. code-block:: console
 
     $ rio insp tests/data/RGB.byte.tif
-    Rasterio 0.9 Interactive Inspector (Python 2.7.5)
+    Rasterio 0.18 Interactive Inspector (Python 2.7.9)
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
-    >>> import pprint
-    >>> pprint.pprint(src.meta)
-    {'affine': Affine(300.0379266750948, 0.0, 101985.0,
-           0.0, -300.041782729805, 2826915.0),
-     'count': 3,
-     'crs': {'init': u'epsg:32618'},
-     'driver': u'GTiff',
-     'dtype': <type 'numpy.uint8'>,
-     'height': 718,
-     'nodata': 0.0,
-     'transform': (101985.0,
-                   300.0379266750948,
-                   0.0,
-                   2826915.0,
-                   0.0,
-                   -300.041782729805),
-     'width': 791}
+    >>> print src.name
+    tests/data/RGB.byte.tif
+    >>> print src.bounds
+    BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)
 
 merge
 -----
@@ -189,6 +241,22 @@ Other options are available, see:
 
     $ rio rasterize --help
 
+sample
+------
+
+New in 0.18.
+
+The sample command reads ``x, y`` positions from stdin and writes the dataset
+values at that position to stdout.
+
+.. code-block:: console
+
+    $ cat << EOF | rio sample tests/data/RGB.byte.tif
+    > [220649.99999832606, 2719199.999999095]
+    > EOF
+    [18, 25, 14]
+
+The output of the transform command (see below) makes good input for sample.
 
 shapes
 ------
