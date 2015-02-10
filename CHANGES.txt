@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- 
+
 0.17.1 (2015-01-20)
 -------------------
 - Properly handle metadata tags with values that contain "=" (#254).

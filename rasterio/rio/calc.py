@@ -34,11 +34,14 @@ def calc(ctx, command, files, dtype):
     
     * {n} represents the n-th input dataset (a 3-D array)
     * {n,m} represents the m-th band of the n-th dataset (a 2-D array).
-    *
+    * Standard numpy array operators (+, -, *, /) are available.
+    * Multiple commands delimited by ; may be executed.
+    * The result of the previous command is represented by {}.
+    * When the final result is a tuple of arrays, a multi band output
+      file is written.
+    * When the final result is a single array, a single band output
+      file is written.
 
-    
-    Calculations on all bands of a
-    dataset can be specified using 
     """
     import numpy as np
 
@@ -66,58 +69,46 @@ def calc(ctx, command, files, dtype):
                                 copy=False
                             ) for path in files])
 
-                # TODO: implement a real parser for calc expressions,
-                # perhaps using numexpr's parser as a guide, instead
-                # eval'ing any string.
-
                 parts = command.split(';')
-                if len(parts) == 1:
+                _prev = None
+
+                for part in filter(lambda p: p.strip(), parts):
+
+                    # TODO: implement a real parser for calc expressions,
+                    # perhaps using numexpr's parser as a guide, instead
+                    # eval'ing any string.
+
+                    cmd = re.sub(
+                            r'{(\d)\s*,\s*(\d)}',
+                            lambda m: 'sources[%d,%d]' % (
+                                int(m.group(1))-1, int(m.group(2))-1),
+                            part)
 
                     # Translates, eg, '{1}' to 'sources[0]'.
                     cmd = re.sub(
                             r'{(\d)}',
                             lambda m: 'sources[%d]' % (int(m.group(1))-1),
-                            parts.pop())
+                            cmd)
+
+                    # Translate '{}' to '_prev'.
+                    cmd = re.sub(r'{}', '_prev', cmd)
 
                     logger.debug("Translated cmd: %r", cmd)
 
-                    results = eval(cmd)
-                    results = np.ndarray.astype(results, dtype, copy=False)
+                    res = eval(cmd)
+                    _prev = res
 
-                    # Write results.
-                    if len(results.shape) == 3:
-                        kwargs['count'] = results.shape[0]
-                        with rasterio.open(output, 'w', **kwargs) as dst:
-                            dst.write(results)
-
-                    elif len(results.shape) == 2:
-                        kwargs['count'] = 1
-                        with rasterio.open(output, 'w', **kwargs) as dst:
-                            dst.write(results, 1)
-
+                if isinstance(res, tuple) or len(res.shape) == 3:
+                    results = np.asanyarray([
+                                np.ndarray.astype(r, dtype, copy=False
+                                ) for r in res])
                 else:
-                    parts = list(filter(lambda p: p.strip(), parts))
-                    kwargs['count'] = len(parts)
+                    results = np.asanyarray(
+                        [np.ndarray.astype(res, dtype, copy=False)])
 
-                    results = []
-
-                    for part in parts:
-                        cmd = re.sub(
-                                r'{(\d)\s*,\s*(\d)}',
-                                lambda m: 'sources[%d,%d]' % (
-                                    int(m.group(1))-1, int(m.group(2))-1),
-                                part)
-
-                        logger.debug("Translated cmd: %r", cmd)
-
-                        res = eval(cmd)
-                        res = np.ndarray.astype(res, dtype, copy=False)
-                        results.append(res)
-
-                    results = np.asanyarray(results)
-                    kwargs['count'] = results.shape[0]
-                    with rasterio.open(output, 'w', **kwargs) as dst:
-                        dst.write(results)
+                kwargs['count'] = results.shape[0]
+                with rasterio.open(output, 'w', **kwargs) as dst:
+                    dst.write(results)
 
         sys.exit(0)
     except Exception:
