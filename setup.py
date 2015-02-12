@@ -169,7 +169,8 @@ with open('README.rst') as f:
 inst_reqs = [
     'affine>=1.0',
     'cligj',
-    'Numpy>=1.7' ]
+    'Numpy>=1.7',
+    'parsnip']
 
 if sys.version_info < (3, 4):
     inst_reqs.append('enum34')

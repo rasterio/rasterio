@@ -8,7 +8,7 @@ import sys
 import warnings
 
 import click
-from cligj import files_inout_arg
+import parsnip
 
 import rasterio
 from rasterio.rio.cli import cli
@@ -22,6 +22,9 @@ from rasterio.rio.cli import cli
     type=click.Path(resolve_path=False),
     required=True,
     metavar="INPUTS... OUTPUT")
+@click.option('--name', multiple=True,
+        help='Specify an input file with a unique short (alphas only) name '
+             'for use in commands like "a=tests/data/RGB.byte.tif".')
 @click.option('--dtype', 
               type=click.Choice([
                 'ubyte', 'uint8', 'uint16', 'int16', 'uint32',
@@ -29,23 +32,44 @@ from rasterio.rio.cli import cli
                 default='float64',
               help="Output data type (default: float64).")
 @click.pass_context
-def calc(ctx, command, files, dtype):
+def calc(ctx, command, files, name, dtype):
     """A raster data calculator
 
-    Applies one or more commands to a set of input datasets and writes
-    the results to a new dataset.
+    Evaluates an expression using input datasets and writes the result
+    to a new dataset.
 
-    Command syntax is a work in progress. Currently:
-    
-    * {n} represents the n-th input dataset (a 3-D array)
-    * {n,m} represents the m-th band of the n-th dataset (a 2-D array).
-    * Standard numpy array operators (+, -, *, /) are available.
-    * Multiple commands delimited by ; may be executed.
-    * The result of the previous command is represented by {}.
-    * When the final result is a tuple of arrays, a multi band output
-      file is written.
-    * When the final result is a single array, a single band output
-      file is written.
+    Command syntax is lisp-like. An expression consists of an operator
+    or function name and one or more strings, numbers, or expressions
+    enclosed in parentheses. Functions include ``ra`` (gets a raster
+    array) and ``list`` (makes a list of arrays).
+
+    \b
+        * (ra i) evaluates to the i-th input dataset (a 3-D array).
+        * (ra i j) evaluates to the j-th band of the i-th dataset (a 2-D
+          array).
+        * (ra foo j) evaluates to the j-th band of a dataset named foo (see
+          help on the --name option above).
+        * Standard numpy array operators (+, -, *, /) are available.
+        * When the final result is a list of arrays, a multi band output
+          file is written.
+        * When the final result is a single array, a single band output
+          file is written.
+
+    Example:
+
+    \b
+         $ rio calc "(+ (* (ra 1) 0.95) 2)" tests/data/RGB.byte.tif \\
+         > /tmp/out.tif --dtype ubyte
+
+    Produces a 3-band GeoTIFF with all values scaled by 0.95 and
+    incremented by 2.
+
+    \b
+        $ rio calc "(list (+ (ra 1) 125) (ra 1) (ra 1))" \\
+        > tests/data/shade.tif /tmp/out.tif --dtype ubyte
+
+    Produces a 3-band RGB GeoTIFF, with red levels incremented by 125,
+    from the single-band input.
 
     """
     import numpy as np
@@ -56,74 +80,34 @@ def calc(ctx, command, files, dtype):
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
             output = files[-1]
-            files = files[:-1]
 
-            with rasterio.open(files[0]) as first:
+            inputs = (
+                    [tuple(n.split('=')) for n in name] +
+                    [(None, n) for n in files[:-1]])
+
+            with rasterio.open(inputs[0][1]) as first:
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
                 kwargs['dtype'] = dtype
 
-            names = []
-            sources = []
-            for path in files:
+            ctxkwds = {}
+            for name, path in inputs:
                 with rasterio.open(path) as src:
-                    names.append(src.name)
                     # Using the class method instead of instance method.
                     # Latter raises
+                    #
                     # TypeError: astype() got an unexpected keyword argument 'copy'
-                    # Possibly something to do with the instance being a masked
+                    # 
+                    # possibly something to do with the instance being a masked
                     # array.
-                    sources.append(
-                        np.ndarray.astype(src.read(), 'float64', copy=False))
+                    ctxkwds[name or src.name] = np.ndarray.astype(
+                            src.read(), 'float64', copy=False)
 
-            #sources = np.ma.asanyarray([s for s in sources])
+            with parsnip.ctx(**ctxkwds):
+                res = parsnip.handleLine(command)
 
-            parts = command.split(';')
-            _prev = None
-
-            def cmd_sources(match):
-                text = match.group(1)
-                parts = text.split(',')
-                v = parts.pop(0)
-                if v in names:
-                    a = names.index(v)
-                s = 'sources[%d]' % a
-                if parts:
-                    s += '[%d]' % (int(parts.pop(0)) - 1)
-                return s
-
-            for part in filter(lambda p: p.strip(), parts):
-
-                # TODO: implement a real parser for calc expressions,
-                # perhaps using numexpr's parser as a guide, instead
-                # eval'ing any string.
-
-                # Translate '{}' to '_prev'.
-                cmd = re.sub(r'{}', '_prev', part)
-
-                cmd = re.sub(
-                        r'{(\d+),(\d+)}',
-                        lambda m: 'sources[%d][%d]' % (
-                            int(m.group(1))-1,
-                            int(m.group(2))-1),
-                        cmd)
-
-                cmd = re.sub(
-                        r'{(\d+)}',
-                        lambda m: 'sources[%d]' % (int(m.group(1))-1),
-                        cmd)
-
-                cmd = re.sub(r'{(.+)}', cmd_sources, cmd)
-
-                logger.debug("Translated cmd: %r", cmd)
-
-                res = eval(cmd)
-                _prev = res
-
-            if isinstance(res, tuple) or len(res.shape) == 3:
-                results = np.asanyarray([
-                            np.ndarray.astype(r, dtype, copy=False
-                            ) for r in res])
+            if len(res.shape) == 3:
+                results = np.ndarray.astype(res, dtype, copy=False)
             else:
                 results = np.asanyarray(
                     [np.ndarray.astype(res, dtype, copy=False)])

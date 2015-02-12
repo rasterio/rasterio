@@ -14,7 +14,7 @@ def test_err(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                '0.10*{1}.upper()', 'tests/data/shade.tif', outfile],
+                '(& 0.1 (ra 1))', 'tests/data/shade.tif', outfile],
                 catch_exceptions=False)
     assert result.exit_code == 1
 
@@ -23,7 +23,7 @@ def test_multiband_calc(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                '0.10*{1} + 125', 'tests/data/shade.tif', outfile],
+                '(+ 125 (* 0.1 (ra 1)))', 'tests/data/shade.tif', outfile],
                 catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
@@ -33,11 +33,13 @@ def test_multiband_calc(tmpdir):
         assert data.min() == 125
 
 
-def test_singleband_calc(tmpdir):
+def test_singleband_calc_byindex(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                '0.10*{1,1} + 125', 'tests/data/shade.tif', outfile],
+                    '(+ 125 (* 0.1 (ra 1 1)))',
+                    'tests/data/shade.tif',
+                    outfile],
                 catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
@@ -47,12 +49,12 @@ def test_singleband_calc(tmpdir):
         assert data.min() == 125
 
 
-def test_singleband_calc_by_name(tmpdir):
+def test_singleband_calc_byname(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '0.10*{tests/data/shade.tif,1} + 125',
-                    'tests/data/shade.tif', 
+                    '(+ 125 (* 0.1 (ra shade 1)))',
+                    '--name', 'shade=tests/data/shade.tif',
                     outfile],
                 catch_exceptions=False)
     assert result.exit_code == 0
@@ -69,7 +71,7 @@ def test_parts_calc(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '({1,1} + 125, {1,1}, {1,1})',
+                    '(list (+ (ra 1 1) 125) (ra 1 1) (ra 1 1))',
                     '--dtype', 'uint8',
                     'tests/data/shade.tif',
                     outfile],
@@ -89,7 +91,7 @@ def test_parts_calc_2(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '({1,1} + {1,2} + {1,3})/3',
+                    '(+ (+ (/ (ra 1 1) 3) (/ (ra 1 2) 3)) (/ (ra 1 3) 3))',
                     '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],
@@ -100,66 +102,13 @@ def test_parts_calc_2(tmpdir):
         assert src.meta['dtype'] == 'uint8'
         data = src.read()
         assert round(data.mean(), 1) == 60.3
-
-
-def test_parts_calc_tempval(tmpdir):
-    # Produce greyscale output from the RGB file.
-    outfile = str(tmpdir.join('out.tif'))
-    runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '{1,1}; {} + {1,2}; {} + {1,3}; {}; ({}/3)',
-                    '--dtype', 'uint8',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
-    assert result.exit_code == 0
-    with rasterio.open(outfile) as src:
-        assert src.count == 1
-        assert src.meta['dtype'] == 'uint8'
-        data = src.read()
-        assert round(data.mean(), 1) == 60.3
-
 
 
 def test_copy_rgb(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '{1}',
-                    '--dtype', 'uint8',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
-    assert result.exit_code == 0
-    with rasterio.open(outfile) as src:
-        assert src.count == 3
-        assert src.meta['dtype'] == 'uint8'
-        data = src.read()
-        assert round(data.mean(), 1) == 60.6
-
-
-def test_copy_rgb_tempval(tmpdir):
-    outfile = str(tmpdir.join('out.tif'))
-    runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '{1}; {}',
-                    '--dtype', 'uint8',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
-    assert result.exit_code == 0
-    with rasterio.open(outfile) as src:
-        assert src.count == 3
-        assert src.meta['dtype'] == 'uint8'
-        data = src.read()
-        assert round(data.mean(), 1) == 60.6
-
-
-def test_copy_rgb_by_name(tmpdir):
-    outfile = str(tmpdir.join('out.tif'))
-    runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '{tests/data/RGB.byte.tif}',
+                    '(ra 1)',
                     '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],
