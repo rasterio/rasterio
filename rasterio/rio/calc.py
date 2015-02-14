@@ -91,7 +91,7 @@ def calc(ctx, command, files, name, dtype):
                 kwargs['dtype'] = dtype
 
             ctxkwds = {}
-            for name, path in inputs:
+            for i, (name, path) in enumerate(inputs):
                 with rasterio.open(path) as src:
                     # Using the class method instead of instance method.
                     # Latter raises
@@ -100,11 +100,10 @@ def calc(ctx, command, files, name, dtype):
                     # 
                     # possibly something to do with the instance being a masked
                     # array.
-                    ctxkwds[name or src.name] = np.ndarray.astype(
+                    ctxkwds[name or '_i%d' % (i+1)] = np.ndarray.astype(
                             src.read(), 'float64', copy=False)
 
-            with parsnip.ctx(**ctxkwds):
-                res = parsnip.handleLine(command)
+            res = parsnip.eval(command, **ctxkwds)
 
             if len(res.shape) == 3:
                 results = np.ndarray.astype(res, dtype, copy=False)
