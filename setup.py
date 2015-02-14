@@ -170,7 +170,7 @@ inst_reqs = [
     'affine>=1.0',
     'cligj',
     'Numpy>=1.7',
-    'parsnip']
+    'snuggs']
 
 if sys.version_info < (3, 4):
     inst_reqs.append('enum34')

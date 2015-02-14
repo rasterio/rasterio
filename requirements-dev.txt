@@ -5,7 +5,7 @@ cython>=0.20
 delocate
 enum34
 numpy>=1.8.0
-git+git://github.com/mapbox/parsnip#egg=parsnip
+git+git://github.com/mapbox/snuggs#egg=snuggs
 pytest
 setuptools>=0.9.8
 wheel

@@ -8,7 +8,7 @@ import sys
 import warnings
 
 import click
-import parsnip
+import snuggs
 
 import rasterio
 from rasterio.rio.cli import cli
@@ -103,7 +103,7 @@ def calc(ctx, command, files, name, dtype):
                     ctxkwds[name or '_i%d' % (i+1)] = np.ndarray.astype(
                             src.read(), 'float64', copy=False)
 
-            res = parsnip.eval(command, **ctxkwds)
+            res = snuggs.eval(command, **ctxkwds)
 
             if len(res.shape) == 3:
                 results = np.ndarray.astype(res, dtype, copy=False)
