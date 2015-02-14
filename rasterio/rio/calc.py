@@ -40,14 +40,14 @@ def calc(ctx, command, files, name, dtype):
 
     Command syntax is lisp-like. An expression consists of an operator
     or function name and one or more strings, numbers, or expressions
-    enclosed in parentheses. Functions include ``ra`` (gets a raster
-    array) and ``list`` (makes a list of arrays).
+    enclosed in parentheses. Functions include ``read`` (gets a raster
+    array) and ``asarray`` (makes a 3-D array from 2-D arrays).
 
     \b
-        * (ra i) evaluates to the i-th input dataset (a 3-D array).
-        * (ra i j) evaluates to the j-th band of the i-th dataset (a 2-D
+        * (read i) evaluates to the i-th input dataset (a 3-D array).
+        * (read i j) evaluates to the j-th band of the i-th dataset (a 2-D
           array).
-        * (ra foo j) evaluates to the j-th band of a dataset named foo (see
+        * (take foo j) evaluates to the j-th band of a dataset named foo (see
           help on the --name option above).
         * Standard numpy array operators (+, -, *, /) are available.
         * When the final result is a list of arrays, a multi band output
@@ -58,14 +58,14 @@ def calc(ctx, command, files, name, dtype):
     Example:
 
     \b
-         $ rio calc "(+ (* (ra 1) 0.95) 2)" tests/data/RGB.byte.tif \\
+         $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif \\
          > /tmp/out.tif --dtype ubyte
 
     Produces a 3-band GeoTIFF with all values scaled by 0.95 and
     incremented by 2.
 
     \b
-        $ rio calc "(list (+ (ra 1) 125) (ra 1) (ra 1))" \\
+        $ rio calc "(asarray (+ 125 (read 1)) (read 1) (read 1))" \\
         > tests/data/shade.tif /tmp/out.tif --dtype ubyte
 
     Produces a 3-band RGB GeoTIFF, with red levels incremented by 125,
