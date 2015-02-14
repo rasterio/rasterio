@@ -1,9 +1,14 @@
 Changes
 =======
 
-Next
-----
-- 
+0.18.0 (2015-02-10)
+-------------------
+- New rio-rasterize command (#187).
+- New window_transform method (#215).
+- New sample method and rio-sample command (#251, #275).
+- New fillnodata function based on GDAL's rasterfill.cpp (#253).
+- Speedups for _features and _warp modules (#259).
+- Enhancements for rio-info: 'res', 'lnglat', and 'stats' (#269, #270).
 
 0.17.1 (2015-01-20)
 -------------------
