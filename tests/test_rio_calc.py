@@ -119,3 +119,21 @@ def test_copy_rgb(tmpdir):
         assert src.meta['dtype'] == 'uint8'
         data = src.read()
         assert round(data.mean(), 1) == 60.6
+
+
+def test_fillnodata(tmpdir):
+    outfile = str(tmpdir.join('out.tif'))
+    runner = CliRunner()
+    result = runner.invoke(calc, [
+                    '(asarray (fillnodata (band 1 1)) (fillnodata (band 1 2)) (fillnodata (band 1 3)))',
+                    '--dtype', 'uint8',
+                    'tests/data/RGB.byte.tif',
+                    outfile],
+                catch_exceptions=False)
+    assert result.exit_code == 0
+    # import subprocess; subprocess.call(['open', outfile])
+    with rasterio.open(outfile) as src:
+        assert src.count == 3
+        assert src.meta['dtype'] == 'uint8'
+        data = src.read()
+        assert round(data.mean(), 1) == 58.6

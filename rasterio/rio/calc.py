@@ -11,7 +11,14 @@ import click
 import snuggs
 
 import rasterio
+from rasterio.fill import fillnodata
 from rasterio.rio.cli import cli
+
+
+def get_band(inputs, d, i):
+    """Get a rasterio.Band object from calc's inputs"""
+    path = inputs[d] if d in dict(inputs) else inputs[int(d)-1][1]
+    return rasterio.band(rasterio.open(path), i)
 
 
 @cli.command(short_help="Raster data calculator.")
@@ -102,6 +109,10 @@ def calc(ctx, command, files, name, dtype):
                     # array.
                     ctxkwds[name or '_i%d' % (i+1)] = np.ndarray.astype(
                             src.read(), 'float64', copy=False)
+
+            # Extend snuggs.
+            snuggs.func_map['band'] = lambda d, i: get_band(inputs, d, i)
+            snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
 
             res = snuggs.eval(command, **ctxkwds)
 
