@@ -13,7 +13,6 @@ import snuggs
 import rasterio
 from rasterio.fill import fillnodata
 from rasterio.features import sieve
-
 from rasterio.rio.cli import cli
 
 

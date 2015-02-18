@@ -169,3 +169,18 @@ def test_sieve_band(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
+
+
+def test_sieve_read(tmpdir):
+    outfile = str(tmpdir.join('out.tif'))
+    runner = CliRunner()
+    result = runner.invoke(calc, [
+                    "(sieve (read 1 1 'uint8') 42)",
+                    '--dtype', 'uint8',
+                    'tests/data/shade.tif',
+                    outfile],
+                catch_exceptions=False)
+    assert result.exit_code == 0
+    with rasterio.open(outfile) as src:
+        assert src.count == 1
+        assert src.meta['dtype'] == 'uint8'
