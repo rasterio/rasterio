@@ -137,3 +137,20 @@ def test_fillnodata(tmpdir):
         assert src.meta['dtype'] == 'uint8'
         data = src.read()
         assert round(data.mean(), 1) == 58.6
+
+
+def test_fillnodata_map(tmpdir):
+    outfile = str(tmpdir.join('out.tif'))
+    runner = CliRunner()
+    result = runner.invoke(calc, [
+                    '(asarray (map fillnodata (bands 1)))',
+                    '--dtype', 'uint8',
+                    'tests/data/RGB.byte.tif',
+                    outfile],
+                catch_exceptions=False)
+    assert result.exit_code == 0
+    with rasterio.open(outfile) as src:
+        assert src.count == 3
+        assert src.meta['dtype'] == 'uint8'
+        data = src.read()
+        assert round(data.mean(), 1) == 58.6
