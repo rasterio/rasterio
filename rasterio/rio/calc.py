@@ -12,6 +12,8 @@ import snuggs
 
 import rasterio
 from rasterio.fill import fillnodata
+from rasterio.features import sieve
+
 from rasterio.rio.cli import cli
 
 
@@ -23,6 +25,14 @@ def get_bands(inputs, d, i=None):
     else:
         src = rasterio.open(path)
         return [rasterio.band(src, i) for i in src.indexes]
+
+
+def read_array(ix, subix=None, dtype=None):
+    """Change the type of a read array"""
+    arr = snuggs._ctx.lookup(ix, subix)
+    if dtype:
+        arr = arr.astype(dtype)
+    return arr
 
 
 @cli.command(short_help="Raster data calculator.")
@@ -115,9 +125,11 @@ def calc(ctx, command, files, name, dtype):
                         src.read(), 'float64', copy=False)
 
             # Extend snuggs.
+            snuggs.func_map['read'] = read_array
             snuggs.func_map['band'] = lambda d, i: get_bands(inputs, d, i)
             snuggs.func_map['bands'] = lambda d: get_bands(inputs, d)
             snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
+            snuggs.func_map['sieve'] = lambda *args: sieve(*args)
 
             res = snuggs.eval(command, **ctxkwds)
 

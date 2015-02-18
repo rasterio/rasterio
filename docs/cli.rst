@@ -91,7 +91,7 @@ calc
 
 The calc command reads files as arrays, evaluates lisp-like expressions in
 their context, and writes the result as a new file. Members of the numpy
-module and arithmetic and logical operators are surfaced as builtin functions
+module and arithmetic and logical operators are available builtin functions
 and operators. It is intended for simple calculations; any calculations
 requiring multiple steps is better done in Python using the Rasterio and Numpy
 APIs.
@@ -123,8 +123,9 @@ collects a sequence of 2-D arrays into a 3-D array for output.
     $ rio calc "(asarray (take a 1) (* (take a 2) (/ (mean (take a 1)) (mean (take a 2)))) (* (take a 3) (/ (mean (take a 1)) (mean (take a 3)))))" \
     > --name a=tests/data/RGB.byte.tif --dtype ubyte /tmp/out.rgb.tif
 
-The command above is also an example of a calculation that is a bit beyond the design of the calc command and something that could be done much more efficiently in
-Python.
+The command above is also an example of a calculation that is far beyond the
+design of the calc command and something that could be done much more
+efficiently in Python.
 
 info
 ----
