@@ -84,7 +84,7 @@ def get_minimum_int_dtype(values):
 
     min_value = values.min()
     max_value = values.max()
-    
+
     if min_value >= 0:
         if max_value <= 255:
             return uint8
