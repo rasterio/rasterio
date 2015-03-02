@@ -529,6 +529,17 @@ cdef int io_auto(image, void *hband, bint write):
                          "Must be float32, float64, int16, int32, uint8, "
                          "uint16, or uint32")
 
+# Mapping of data types to their ranges.
+dtype_range = {}
+for dtype in dtypes.dtype_rev:
+    if np.dtype(dtype).kind in ('i', 'u'):
+        info = np.iinfo(dtype)
+    elif np.dtype(dtype).kind in ('f', 'c'):
+        info = np.finfo(dtype)
+    else:
+        continue
+    dtype_range[dtype] = info.min, info.max
+
 
 cdef class RasterReader(_base.DatasetReader):
 
@@ -581,7 +592,11 @@ cdef class RasterReader(_base.DatasetReader):
             return type is forced if either `True` or `False`, but will
             be chosen if `None`.  For `masked=None` (default), the array
             will be the same type as `out` (if used), or will be masked
-            if any of the nodatavals are not `None`.
+            if any element of the dataset's nodatavals property is not
+            `None`. The `masked=True` option (whether explicit or 
+            implicit) will be cancelled and a warning logged if any 
+            element of the dataset's nodatavals property has a value
+            outside the range of the dataset's data type.
 
         boundless : bool, optional (default `False`)
             If `True`, windows that extend beyond the dataset's extent
@@ -653,8 +668,26 @@ cdef class RasterReader(_base.DatasetReader):
                     (out.shape, win_shape))
             if masked is None:
                 masked = hasattr(out, 'mask')
+
+        # By default we try to return a masked array if the dataset's
+        # nodata metadata allows. Meaning that nodata values are
+        # within the range of their band's data type (-9999.0 is
+        # outside the uint8 range, for example) or are NaN.
         if masked is None:
+            dt_range = dtype_range.get(dtype)
             masked = any([x is not None for x in nodatavals])
+            if dt_range and masked:
+                for ndv in nodatavals:
+                    if np.isnan(ndv):
+                        continue
+                    if ndv > dt_range[1] or ndv < dt_range[0]:
+                        masked = False
+                        log.warn(
+                            "Input file's nodata value, %s, is beyond "
+                            "the valid range of its data type, %s. "
+                            "Output will not be a masked array.")
+                        break
+
         if out is None:
             out = np.zeros(win_shape, dtype)
             for ndv, arr in zip(
