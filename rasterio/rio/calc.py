@@ -5,6 +5,7 @@ import math
 import os.path
 import re
 import sys
+import traceback
 import warnings
 
 import click
@@ -123,11 +124,16 @@ def calc(ctx, command, files, name, dtype):
                     ctxkwds[name or '_i%d' % (i+1)] = np.ndarray.astype(
                         src.read(), 'float64', copy=False)
 
+            def fnd():
+                result = fillnodata(*args)
+                import pdb; pdb.set_trace()
+                return result
+
             # Extend snuggs.
             snuggs.func_map['read'] = read_array
             snuggs.func_map['band'] = lambda d, i: get_bands(inputs, d, i)
             snuggs.func_map['bands'] = lambda d: get_bands(inputs, d)
-            snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
+            snuggs.func_map['fillnodata'] = fnd #lambda *args: fillnodata(*args)
             snuggs.func_map['sieve'] = lambda *args: sieve(*args)
 
             res = snuggs.eval(command, **ctxkwds)
@@ -143,6 +149,14 @@ def calc(ctx, command, files, name, dtype):
                 dst.write(results)
 
         sys.exit(0)
+    except snuggs.ExpressionError as err:
+        click.echo("Expression Error:")
+        click.echo('  %s' % err.text)
+        click.echo(' ' +  ' ' * err.offset + "^")
+        click.echo(err)
+        sys.exit(1)
     except Exception:
-        logger.exception("Failed. Exception caught")
+        t, v, tb = sys.exc_info()
+        for line in traceback.format_exception_only(t, v):
+            click.echo(line, nl=False)
         sys.exit(1)

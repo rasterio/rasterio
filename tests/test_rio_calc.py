@@ -143,7 +143,8 @@ def test_fillnodata_map(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '(asarray (map fillnodata (bands 1)))',
+#                    '(asarray (map fillnodata (bands 1)))',
+                    '(asarray (map fillnodata (read 1) (!= (read 1) 0)))',
                     '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],
