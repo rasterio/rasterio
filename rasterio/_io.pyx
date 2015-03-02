@@ -580,7 +580,7 @@ cdef class RasterReader(_base.DatasetReader):
 
 
     def read(self, indexes=None, out=None, window=None, masked=None,
-            boundless=False, masks=False):
+            boundless=False):
         """Read raster bands as a multidimensional array
 
         Parameters
