@@ -23,3 +23,18 @@ def guard_transform(transform):
         else:
             transform = Affine(*transform)
     return transform
+
+
+def from_origin(west, north, xsize, ysize):
+    """Return an Affine transformation for a georeferenced raster given
+    the coordinates of its upper left corner `west`, `north` and pixel
+    sizes `xsize`, `ysize`."""
+    return Affine.translation(west, north) * Affine.scale(xsize, -ysize)
+
+
+def from_bounds(west, south, east, north, width, height):
+    """Return an Affine transformation for a georeferenced raster given
+    its bounds `west`, `south`, `east`, `north` and its `width` and
+    `height` in number of pixels."""
+    return Affine.translation(west, north) * Affine.scale(
+            (east - west)/width, (south - north)/height)
