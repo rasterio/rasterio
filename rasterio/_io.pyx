@@ -576,6 +576,11 @@ cdef class RasterReader(_base.DatasetReader):
         example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
         of the raster dataset.
         """
+        warnings.warn(
+            "read_band() is deprecated and will be removed by Rasterio 1.0. "
+            "Please use read() instead.",
+            FutureWarning,
+            stacklevel=2)
         return self.read(bidx, out=out, window=window, masked=masked)
 
 
@@ -998,6 +1003,13 @@ cdef class RasterReader(_base.DatasetReader):
         """
         cdef void *hband
         cdef void *hmask
+
+        warnings.warn(
+            "read_mask() is deprecated and will be removed by Rasterio 1.0. "
+            "Please use read_masks() instead.",
+            FutureWarning,
+            stacklevel=2)
+
         if self._hds == NULL:
             raise ValueError("can't write closed raster file")
         hband = _gdal.GDALGetRasterBand(self._hds, 1)
