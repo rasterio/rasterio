@@ -633,6 +633,8 @@ cdef class RasterReader(_base.DatasetReader):
         preferentially used by callers.
         """
 
+        cdef void *hband = NULL
+
         return2d = False
         if indexes is None:
             indexes = self.indexes
@@ -689,8 +691,30 @@ cdef class RasterReader(_base.DatasetReader):
                     (out.shape, win_shape))
             if masked is None:
                 masked = hasattr(out, 'mask')
+
+        # Masking
+        # -------
+        #
+        # If masked is True, we read the GDAL mask bands
+        # using read_masks(), invert them and use them in constructing
+        # masked arrays.
+        #
+        # If masked is None, we check the GDAL mask flags using
+        # GDALGetMaskFlags. If GMF_ALL_VALID, we do not create a
+        # masked array. Else, we call read_masks() and process as
+        # above.
+
         if masked is None:
-            masked = any([x is not None for x in nodatavals])
+            mask_flags = [0]*self.count
+            for i, j in zip(range(self.count), self.indexes):
+                hband = _gdal.GDALGetRasterBand(self._hds, j)
+                mask_flags[i] = _gdal.GDALGetMaskFlags(hband)
+
+            masked = any([flag & 0x01 == 0 for flag in mask_flags])
+
+            log.debug("masked: %s", masked)
+            log.debug("mask_flags: %r", mask_flags)
+
         if out is None:
             out = np.zeros(win_shape, dtype)
             for ndv, arr in zip(
@@ -702,6 +726,15 @@ cdef class RasterReader(_base.DatasetReader):
         # the boundless flag if there's no given window.
         if not boundless or not window:
             out = self._read(indexes, out, window, dtype)
+
+            if masked:
+                mask = np.empty(out.shape, 'uint8')
+                mask = ~self._read(
+                    indexes, mask, window, 'uint8', masks=True).astype('bool')
+                kwargs = {'mask': mask}
+                if nodatavals:
+                    kwargs['fill_value'] = nodatavals[0]
+                out = np.ma.array(out, **kwargs)
 
         else:
             # Compute the overlap between the dataset and the boundless window.
@@ -718,9 +751,21 @@ cdef class RasterReader(_base.DatasetReader):
                 overlap_w = overlap[1][1] - overlap[1][0]
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
-                buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
+                buffer_shape = (
+                    int(overlap_h*scaling_h), int(overlap_w*scaling_w))
                 data = np.empty(win_shape[:-2] + buffer_shape, dtype)
                 data = self._read(indexes, data, overlap, dtype)
+
+                if masked:
+                    mask = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
+                    mask = ~self._read(
+                        indexes, mask, overlap, 'uint8', masks=True
+                        ).astype('bool')
+                    kwargs = {'mask': mask}
+                    if nodatavals:
+                        kwargs['fill_value'] = nodatavals[0]
+                    data = np.ma.array(data, **kwargs)
+
             else:
                 data = None
 
@@ -737,26 +782,30 @@ cdef class RasterReader(_base.DatasetReader):
                         out if len(out.shape) == 3 else [out],
                         data if len(data.shape) == 3 else [data]):
                     dst[roff:roff+data_h, coff:coff+data_w] = src
+                    if hasattr(dst, 'mask'):
+                        dst.mask[roff:roff+data_h, coff:coff+data_w] = src
 
-        # Masking the output. TODO: explain the logic better.
-        if masked:
-            if len(set(nodatavals)) == 1:
-                if nodatavals[0] is None:
-                    out = np.ma.masked_array(out, copy=False)
-                elif np.isnan(nodatavals[0]):
-                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
-                else:
-                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
-            else:
-                out = np.ma.masked_array(out, copy=False)
-                for aix in range(len(indexes)):
-                    if nodatavals[aix] is None:
-                        band_mask = False
-                    elif np.isnan(nodatavals[aix]):
-                        band_mask = np.isnan(out[aix])
-                    else:
-                        band_mask = out[aix] == nodatavals[aix]
-                    out[aix].mask = band_mask
+
+#        if masked:
+#
+#            if len(set(nodatavals)) == 1:
+#                if nodatavals[0] is None:
+#                    out = np.ma.masked_array(out, copy=False)
+#                elif np.isnan(nodatavals[0]):
+#                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
+#                else:
+#                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
+#            else:
+#                out = np.ma.masked_array(out, copy=False)
+#                for aix in range(len(indexes)):
+#                    if nodatavals[aix] is None:
+#                        band_mask = False
+#                    elif np.isnan(nodatavals[aix]):
+#                        band_mask = np.isnan(out[aix])
+#                    else:
+#                        band_mask = out[aix] == nodatavals[aix]
+#                    out[aix].mask = band_mask
+
         if return2d:
             out.shape = out.shape[1:]
 

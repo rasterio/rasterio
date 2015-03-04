@@ -130,16 +130,21 @@ def merge(ctx, files, driver, bounds, res, nodata):
                             out=data,
                             window=window,
                             boundless=True,
-                            masked=True)
+                            masked=False)
+                    mask = np.zeros_like(dest, 'uint8')
+                    mask = src.read_masks(
+                            out=mask,
+                            window=window,
+                            boundless=True)
                     np.copyto(dest, data,
                         where=np.logical_and(
-                        dest==nodataval, data.mask==False))
+                        dest==nodataval, mask>0))
 
             if dst.mode == 'r+':
                 data = dst.read(masked=True)
                 np.copyto(dest, data,
                     where=np.logical_and(
-                    dest==nodataval, data.mask==False))
+                    dest==nodataval, mask>0))
 
             dst.write(dest)
             dst.close()
