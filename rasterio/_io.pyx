@@ -661,18 +661,19 @@ cdef class RasterReader(_base.DatasetReader):
             # Change given nodatavals to the closest value that
             # can be represented by this band's data type to
             # match GDAL's strategy.
-            if np.dtype(dtype).kind in ('i', 'u'):
-                info = np.iinfo(dtype)
-                dt_min, dt_max = info.min, info.max
-            elif np.dtype(dtype).kind in ('f', 'c'):
-                info = np.finfo(dtype)
-                dt_min, dt_max = info.min, info.max
-            else:
-                dt_min, dt_max = False, True
-            if ndv < dt_min:
-                ndv = dt_min
-            elif ndv > dt_max:
-                ndv = dt_max
+            if ndv is not None:
+                if np.dtype(dtype).kind in ('i', 'u'):
+                    info = np.iinfo(dtype)
+                    dt_min, dt_max = info.min, info.max
+                elif np.dtype(dtype).kind in ('f', 'c'):
+                    info = np.finfo(dtype)
+                    dt_min, dt_max = info.min, info.max
+                else:
+                    dt_min, dt_max = False, True
+                if ndv < dt_min:
+                    ndv = dt_min
+                elif ndv > dt_max:
+                    ndv = dt_max
 
             nodatavals.append(ndv)
 
