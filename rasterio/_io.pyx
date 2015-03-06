@@ -563,7 +563,7 @@ cdef int io_auto(image, void *hband, bint write):
 
 cdef class RasterReader(_base.DatasetReader):
 
-    def read_band(self, bidx, out=None, window=None, masked=None):
+    def read_band(self, bidx, out=None, window=None, masked=True):
         """Read the `bidx` band into an `out` array if provided, 
         otherwise return a new array.
 
@@ -584,7 +584,7 @@ cdef class RasterReader(_base.DatasetReader):
         return self.read(bidx, out=out, window=window, masked=masked)
 
 
-    def read(self, indexes=None, out=None, window=None, masked=None,
+    def read(self, indexes=None, out=None, window=None, masked=True,
             boundless=False):
         """Read raster bands as a multidimensional array
 
@@ -612,12 +612,10 @@ cdef class RasterReader(_base.DatasetReader):
             a 2x2 window at the upper left of the raster dataset.
 
         masked : bool, optional
-            The return type will be either a regular NumPy array, or
-            a masked NumPy array depending on the `masked` argument. The
-            return type is forced if either `True` or `False`, but will
-            be chosen if `None`.  For `masked=None` (default), the array
-            will be the same type as `out` (if used), or will be masked
-            if any of the nodatavals are not `None`.
+            If `masked` is `True` (the default), the return value will
+            be a masked array. Otherwise, the return value will be a 
+            regular array. Masks will be exactly the inverse of the
+            GDAL RFC 15 conforming arrays returned by read_masks().
 
         boundless : bool, optional (default `False`)
             If `True`, windows that extend beyond the dataset's extent
@@ -711,30 +709,29 @@ cdef class RasterReader(_base.DatasetReader):
                 raise ValueError(
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
-            if masked is None:
-                masked = hasattr(out, 'mask')
+            #if masked is None:
+            #    masked = hasattr(out, 'mask')
 
         # Masking
         # -------
         #
-        # If masked is True, we read the GDAL mask bands
-        # using read_masks(), invert them and use them in constructing
-        # masked arrays.
-        #
-        # If masked is None, we check the GDAL mask flags using
-        # GDALGetMaskFlags. If GMF_ALL_VALID, we do not create a
-        # masked array. Else, we call read_masks() and process as
-        # above.
+        # If masked is True, we check the GDAL mask flags using
+        # GDALGetMaskFlags. If GMF_ALL_VALID for all bands, we do not
+        # call read_masks(), but pass `mask=False` to the masked array
+        # constructor. Else, we read the GDAL mask bands using
+        # read_masks(), invert them and use them in constructing masked
+        # arrays.
 
-        if masked is None:
+        if masked:
+
             mask_flags = [0]*self.count
             for i, j in zip(range(self.count), self.indexes):
                 hband = _gdal.GDALGetRasterBand(self._hds, j)
                 mask_flags[i] = _gdal.GDALGetMaskFlags(hband)
 
-            masked = any([flag & 0x01 == 0 for flag in mask_flags])
+            all_valid = all([flag & 0x01 == 1 for flag in mask_flags])
 
-            log.debug("masked: %s", masked)
+            log.debug("all_valid: %s", all_valid)
             log.debug("mask_flags: %r", mask_flags)
 
         if out is None:
@@ -750,9 +747,13 @@ cdef class RasterReader(_base.DatasetReader):
             out = self._read(indexes, out, window, dtype)
 
             if masked:
-                mask = np.empty(out.shape, 'uint8')
-                mask = ~self._read(
-                    indexes, mask, window, 'uint8', masks=True).astype('bool')
+                if all_valid:
+                    mask = np.ma.nomask
+                else:
+                    mask = np.empty(out.shape, 'uint8')
+                    mask = ~self._read(
+                        indexes, mask, window, 'uint8', masks=True
+                        ).astype('bool')
 
                 kwds = {'mask': mask}
                 # Set a fill value only if the read bands share a
@@ -783,13 +784,16 @@ cdef class RasterReader(_base.DatasetReader):
                 data = self._read(indexes, data, overlap, dtype)
 
                 if masked:
-                    mask = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
-                    mask = ~self._read(
-                        indexes, mask, overlap, 'uint8', masks=True
-                        ).astype('bool')
+                    if all_valid:
+                        mask = np.ma.nomask
+                    else:
+                        mask = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
+                        mask = ~self._read(
+                            indexes, mask, overlap, 'uint8', masks=True
+                            ).astype('bool')
                     data = np.ma.array(data, mask=mask)
 
-                    kwds = {'mask': np.zeros(out.shape, 'bool')}
+                    kwds = {'mask': np.ma.nomask}
                     # Set a fill value only if the read bands share a
                     # single nodata value.
                     if len(set(nodatavals)) == 1:

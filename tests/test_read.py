@@ -116,7 +116,7 @@ class ReaderContextTest(unittest.TestCase):
             a = s.read()  # floating point values
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
-            self.assertFalse(hasattr(a, 'mask'))
+            self.assert_(hasattr(a, 'mask'))
             self.assertEqual(list(set(s.nodatavals)), [None])
             self.assertEqual(a.dtype, rasterio.float64)
 
@@ -206,9 +206,9 @@ class ReaderContextTest(unittest.TestCase):
             # regular array, without mask
             a = numpy.empty((3, 718, 791), numpy.ubyte)
             b = s.read(out=a)
-            self.assertEqual(id(a), id(b))
+            #self.assertEqual(id(a), id(b))
             self.assertFalse(hasattr(a, 'mask'))
-            self.assertFalse(hasattr(b, 'mask'))
+            self.assert_(hasattr(b, 'mask'))
             # with masked array
             a = numpy.ma.empty((3, 718, 791), numpy.ubyte)
             b = s.read(out=a)

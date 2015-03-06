@@ -1,7 +1,13 @@
+import logging
+import sys
+
 import numpy as np
 from pytest import fixture
 
 import rasterio
+
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_masks():
@@ -62,16 +68,27 @@ def tiffs(tmpdir):
 def test_masking_no_nodata(tiffs):
     # if the dataset has no defined nodata values, all data is
     # considered valid data. The GDAL masks bands are arrays of
-    # 255 values. ``read()`` returns unmasked arrays unless masked
-    # arrays are demanded with ``masked=True``, in which case the
-    # masks are uniformly False.
-    with rasterio.open(str(tiffs.join('no-nodata.tif'))) as src:
-        rgb = src.read()
+    # 255 values. ``read()`` returns masked arrays where `mask`
+    # is False.
+    filename = str(tiffs.join('no-nodata.tif'))
+    with rasterio.open(filename) as src:
+
+        rgb = src.read(masked=False)
         assert not hasattr(rgb, 'mask')
-        r = src.read(1)
+        r = src.read(1, masked=False)
         assert not hasattr(r, 'mask')
 
+        rgb = src.read(masked=True)
+        assert hasattr(rgb, 'mask')
+        assert not rgb.mask.any()
         r = src.read(1, masked=True)
+        assert hasattr(r, 'mask')
+        assert not r.mask.any()
+
+        rgb = src.read()
+        assert hasattr(rgb, 'mask')
+        assert not r.mask.any()
+        r = src.read(1)
         assert not r.mask.any()
 
         masks = src.read_masks()
