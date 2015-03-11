@@ -371,7 +371,7 @@ cdef class DatasetReader(object):
     def index(self, x, y):
         """Returns the (row, col) index of the pixel containing (x, y)."""
         a, b, c, d, e, f, _, _, _ = self.affine
-        return int(round((y-f)/e)), int(round((x-c)/a))
+        return int(math.floor((y-f)/e)), int(math.floor((x-c)/a))
 
     def window(self, left, bottom, right, top):
         """Returns the window corresponding to the world bounding box."""

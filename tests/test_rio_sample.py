@@ -28,7 +28,7 @@ def test_sample_stdin():
         "[220650.0, 2719200.0]\n[220650.0, 2719200.0]",
         catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[28, 29, 27]\n[28, 29, 27]'
+    assert result.output.strip() == '[18, 25, 14]\n[18, 25, 14]'
 
 
 def test_sample_arg():
@@ -38,7 +38,7 @@ def test_sample_arg():
         ['tests/data/RGB.byte.tif', "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[28, 29, 27]'
+    assert result.output.strip() == '[18, 25, 14]'
 
 
 def test_sample_bidx():
@@ -48,7 +48,7 @@ def test_sample_bidx():
         ['tests/data/RGB.byte.tif', '--bidx', '1,2', "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[28, 29]'
+    assert result.output.strip() == '[18, 25]'
 
 
 def test_sample_bidx2():
@@ -58,7 +58,7 @@ def test_sample_bidx2():
         ['tests/data/RGB.byte.tif', '--bidx', '1..2', "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[28, 29]'
+    assert result.output.strip() == '[18, 25]'
 
 
 def test_sample_bidx3():
@@ -68,7 +68,7 @@ def test_sample_bidx3():
         ['tests/data/RGB.byte.tif', '--bidx', '..2', "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[28, 29]'
+    assert result.output.strip() == '[18, 25]'
 
 
 def test_sample_bidx4():
@@ -78,4 +78,4 @@ def test_sample_bidx4():
         ['tests/data/RGB.byte.tif', '--bidx', '3', "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[27]'
+    assert result.output.strip() == '[14]'

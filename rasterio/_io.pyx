@@ -682,21 +682,25 @@ cdef class RasterReader(_base.DatasetReader):
                 overlap_w = overlap[1][1] - overlap[1][0]
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
-                buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
+                buffer_shape = (
+                        int(round(overlap_h*scaling_h)),
+                        int(round(overlap_w*scaling_w)))
                 data = np.empty(win_shape[:-2] + buffer_shape, dtype)
                 data = self._read(indexes, data, overlap, dtype)
+
             else:
                 data = None
 
             if data is not None:
                 # Determine where to put the data in the output window.
-                data_h, data_w = data.shape[-2:]
+                data_h, data_w = buffer_shape
                 roff = 0
                 coff = 0
                 if window[0][0] < 0:
-                    roff = int(window_h*scaling_h) - data_h
+                    roff = int(round(window_h*scaling_h)) - data_h
                 if window[1][0] < 0:
-                    coff = int(window_w*scaling_w) - data_w
+                    coff = int(round(window_w*scaling_w)) - data_w
+
                 for dst, src in zip(
                         out if len(out.shape) == 3 else [out],
                         data if len(data.shape) == 3 else [data]):
@@ -865,6 +869,8 @@ cdef class RasterReader(_base.DatasetReader):
 
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
+
+        Values are from the nearest pixel. They are not interpolated.
 
         Parameters
         ----------

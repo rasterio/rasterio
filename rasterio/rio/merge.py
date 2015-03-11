@@ -92,9 +92,15 @@ def merge(ctx, files, driver, bounds, res, nodata):
                 kwargs['width'] = output_width
                 kwargs['height'] = output_height
 
+                logger.debug("Kwargs: %r", kwargs)
+                logger.debug("bounds: %r", bounds)
+                logger.debug("Res: %r", res)
+
                 dst = rasterio.open(output, 'w', **kwargs)
                 dest = np.zeros((first.count, output_height, output_width),
                         dtype=dtype)
+
+                logger.debug("In merge, dest shape: %r", dest.shape)
 
             if nodata is not None:
                 nodataval = nodata
@@ -119,27 +125,54 @@ def merge(ctx, files, driver, bounds, res, nodata):
             else:
                 nodataval = 0
 
+            dst_w, dst_s, dst_e, dst_n = dst.bounds
+
             for fname in reversed(files):
                 with rasterio.open(fname) as src:
                     # Real World (tm) use of boundless reads.
                     # This approach uses the maximum amount of memory to solve
                     # the problem. Making it more efficient is a TODO.
-                    window = src.window(*dst.bounds)
-                    data = np.zeros_like(dest)
-                    data = src.read(
-                            out=data,
-                            window=window,
-                            boundless=True,
+
+                    # 1. Compute spatial intersection of destination
+                    #    and source.
+                    src_w, src_s, src_e, src_n = src.bounds
+
+                    int_w = src_w if src_w > dst_w else dst_w
+                    int_s = src_s if src_s > dst_s else dst_s
+                    int_e = src_e if src_e < dst_e else dst_e
+                    int_n = src_n if src_n < dst_n else dst_n
+
+                    # 2. Compute the source window.
+                    src_window = src.window(int_w, int_s, int_e, int_n)
+
+                    # 3. Compute the destination window.
+                    dst_window = dst.window(int_w, int_s, int_e, int_n)
+
+                    # 4. Initialize temp array.
+                    temp = np.zeros(
+                            (first.count,) + tuple(b - a for a, b in dst_window),
+                            dtype=dtype)
+
+                    temp = src.read(
+                            out=temp,
+                            window=src_window,
+                            boundless=False,
                             masked=True)
-                    np.copyto(dest, data,
+
+                    # 5. Copy elements of temp into dest.
+                    roff, coff = dst.index(int_w, int_n)
+                    h, w = temp.shape[-2:]
+
+                    region = dest[:,roff:roff+h,coff:coff+w]
+                    np.copyto(region, temp,
                         where=np.logical_and(
-                        dest==nodataval, data.mask==False))
+                        region==nodataval, temp.mask==False))
 
             if dst.mode == 'r+':
-                data = dst.read(masked=True)
-                np.copyto(dest, data,
+                temp = dst.read(masked=True)
+                np.copyto(dest, temp,
                     where=np.logical_and(
-                    dest==nodataval, data.mask==False))
+                    dest==nodataval, temp.mask==False))
 
             dst.write(dest)
             dst.close()
