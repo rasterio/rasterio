@@ -111,6 +111,7 @@ cdef extern from "gdal.h" nogil:
     int GDALGetRasterColorInterpretation (void *hBand)
     int GDALSetRasterColorInterpretation (void *hBand, int)
 
+    int GDALGetMaskFlags (void *hBand)
     void *GDALGetMaskBand (void *hBand)
     int GDALCreateMaskBand (void *hDS, int flags)
 

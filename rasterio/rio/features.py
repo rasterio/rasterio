@@ -81,25 +81,25 @@ def shapes(
                 nodata_mask = None
                 if bands:
                     if sampling == 1:
-                        img = src.read_band(bidx)
+                        img = src.read(bidx, masked=False)
                         transform = src.transform
                     # Decimate the band.
                     else:
                         img = numpy.zeros(
                             (src.height//sampling, src.width//sampling),
                             dtype=src.dtypes[src.indexes.index(bidx)])
-                        img = src.read_band(bidx, img)
+                        img = src.read(bidx, img, masked=False)
                         transform = src.affine * Affine.scale(float(sampling))
                 if not bands or not with_nodata:
                     if sampling == 1:
-                        nodata_mask = src.read_mask()
+                        nodata_mask = src.read_masks(bidx)
                         transform = src.transform
                     # Decimate the mask.
                     else:
                         nodata_mask = numpy.zeros(
                             (src.height//sampling, src.width//sampling),
                             dtype=numpy.uint8)
-                        nodata_mask = src.read_mask(nodata_mask)
+                        nodata_mask = src.read_masks(bidx, nodata_mask)
                         transform = src.affine * Affine.scale(float(sampling))
 
                 bounds = src.bounds

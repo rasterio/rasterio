@@ -17,7 +17,7 @@ def test_stats():
             assert results[1] == 255
             assert np.isclose(results[2], 44.4344)
 
-            results2 = stats(src.read_band(1))
+            results2 = stats(src.read(1))
             assert np.allclose(np.array(results), np.array(results2))
 
 
@@ -39,6 +39,6 @@ def test_show():
                 pass
 
             try:
-                show(src.read_band(1))
+                show(src.read(1))
             except ImportError:
                 pass
