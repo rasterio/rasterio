@@ -1,6 +1,18 @@
 Changes
 =======
 
+0.19dev1 ()
+-----------
+- New rio-calc command (#175).
+- Added a file band shortcut to fillnodata() (#271).
+- Added fillnodata() to rio-calc functions (#277).
+- New approach to masking arrays on read that conforms more closely to GDAL's
+  RFC 15 (#282, #284, #285).
+- New read_masks() method (#284).
+- Deprecation of read_mask() and read_band (#284).
+- New affine transform factory functions from_origin(), from_bounds() (#287).
+- Improve correctness of indexing and rio-merge logic (#288, #290).
+
 0.18.0 (2015-02-10)
 -------------------
 - New rio-rasterize command (#187).
