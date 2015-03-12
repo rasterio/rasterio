@@ -5,7 +5,7 @@ import tempfile
 
 import numpy
 import rasterio
-from rasterio import Affine as A
+from rasterio import transform
 from rasterio.warp import reproject, RESAMPLING
 
 tempdir = '/tmp'
@@ -17,17 +17,15 @@ with rasterio.drivers():
     # with each pixel covering 15".
     rows, cols = src_shape = (512, 512)
     dpp = 1.0/240 # decimal degrees per pixel
-    # The following is equivalent to 
-    # A(dpp, 0, -cols*dpp/2, 0, -dpp, rows*dpp/2).
-    src_transform = A.translation(-cols*dpp/2, rows*dpp/2) * A.scale(dpp, -dpp)
+    west, south, east, north = -cols*dpp/2, -rows*dpp/2, cols*dpp/2, rows*dpp/2
+    src_transform = transform.from_bounds(west, south, east, north, cols, rows)
     src_crs = {'init': 'EPSG:4326'}
     source = numpy.ones(src_shape, numpy.uint8)*255
 
     # Prepare to reproject this rasters to a 1024 x 1024 dataset in
-    # Web Mercator (EPSG:3857) with origin at -8928592, 2999585.
+    # Web Mercator (EPSG:3857) with origin at -237481.5, 237536.4.
     dst_shape = (1024, 1024)
-    dst_transform = A.from_gdal(-237481.5, 425.0, 0.0, 237536.4, 0.0, -425.0)
-    dst_transform = dst_transform.to_gdal()
+    dst_transform = transform.from_origin(-237481.5, 237536.4, 425.0, 425.0)
     dst_crs = {'init': 'EPSG:3857'}
     destination = numpy.zeros(dst_shape, numpy.uint8)
 
@@ -59,4 +57,3 @@ with rasterio.drivers():
         dst.write_band(1, destination)
 
 info = subprocess.call(['open', tiffname])
-
