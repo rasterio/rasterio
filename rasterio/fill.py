@@ -24,7 +24,7 @@ def fillnodata(
     
     Parameters
     ----------
-    image : numpy ndarray
+    image : numpy ndarray or rasterio Band object
         The source  containing nodata holes.
     mask : numpy ndarray
         A mask band indicating which pixels to interpolate. Pixels to

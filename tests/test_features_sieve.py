@@ -139,3 +139,10 @@ def test_dtypes():
                 image = numpy.zeros((rows, cols), dtype=dtype)
                 image[2:5, 2:5] = test_value
                 sieved_image = ftrz.sieve(image, 2)
+
+
+def test_sieve_shade():
+    with rasterio.drivers():
+        with rasterio.open('tests/data/shade.tif') as src:
+            sieved_image = ftrz.sieve(rasterio.band(src, 1), 42)
+            assert sieved_image.shape == (1024, 1024)

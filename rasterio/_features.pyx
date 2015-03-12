@@ -173,11 +173,12 @@ def _sieve(image, size, output, mask, connectivity):
         in_band = in_mem_ds.band
     elif isinstance(image, tuple):
         rdr = image.ds
-        hband = rdr.band(image.bidx)
+        in_band = rdr.band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
     if isinstance(output, np.ndarray):
+        log.debug("Output array: %r", output)
         out_mem_ds = InMemoryRaster(output)
         out_band = out_mem_ds.band
     elif isinstance(output, tuple):
