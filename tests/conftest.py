@@ -1,10 +1,12 @@
 import functools
 import operator
 import os
+import shutil
 import sys
 
-import pytest
 from click.testing import CliRunner
+import py
+import pytest
 
 
 if sys.version_info > (3,):
@@ -27,3 +29,11 @@ def pytest_cmdline_main(config):
 @pytest.fixture(scope='function')
 def runner():
     return CliRunner()
+
+
+@pytest.fixture(scope='function')
+def data(tmpdir):
+    """A temporary directory containing a copy of the files in data."""
+    for filename in test_files:
+        shutil.copy(filename, str(tmpdir))
+    return tmpdir
