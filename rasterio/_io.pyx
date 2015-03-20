@@ -492,6 +492,37 @@ cdef int io_multi_cfloat64(
     return retval
 
 
+cdef int io_multi_mask(
+        void *hds,
+        int mode,
+        int xoff,
+        int yoff,
+        int width, 
+        int height,
+        np.uint8_t[:, :, :] buffer,
+        long[:] indexes,
+        int count):
+    cdef int i, j, retval=0
+    cdef void *hband
+    cdef void *hmask
+
+    for i in range(count):
+        j = indexes[i]
+        hband = _gdal.GDALGetRasterBand(hds, j)
+        if hband == NULL:
+            raise ValueError("Null band")
+        hmask = _gdal.GDALGetMaskBand(hband)
+        if hmask == NULL:
+            raise ValueError("Null mask band")
+        with nogil:
+            retval = _gdal.GDALRasterIO(
+                hmask, mode, xoff, yoff, width, height,
+                &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 1, 0, 0)
+            if retval:
+                break
+    return retval
+
+
 cdef int io_auto(image, void *hband, bint write):
     """
     Convenience function to handle IO with a GDAL band and a 2D numpy image
@@ -532,7 +563,7 @@ cdef int io_auto(image, void *hband, bint write):
 
 cdef class RasterReader(_base.DatasetReader):
 
-    def read_band(self, bidx, out=None, window=None, masked=None):
+    def read_band(self, bidx, out=None, window=None, masked=True):
         """Read the `bidx` band into an `out` array if provided, 
         otherwise return a new array.
 
@@ -545,10 +576,15 @@ cdef class RasterReader(_base.DatasetReader):
         example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
         of the raster dataset.
         """
+        warnings.warn(
+            "read_band() is deprecated and will be removed by Rasterio 1.0. "
+            "Please use read() instead.",
+            FutureWarning,
+            stacklevel=2)
         return self.read(bidx, out=out, window=window, masked=masked)
 
 
-    def read(self, indexes=None, out=None, window=None, masked=None,
+    def read(self, indexes=None, out=None, window=None, masked=True,
             boundless=False):
         """Read raster bands as a multidimensional array
 
@@ -576,12 +612,10 @@ cdef class RasterReader(_base.DatasetReader):
             a 2x2 window at the upper left of the raster dataset.
 
         masked : bool, optional
-            The return type will be either a regular NumPy array, or
-            a masked NumPy array depending on the `masked` argument. The
-            return type is forced if either `True` or `False`, but will
-            be chosen if `None`.  For `masked=None` (default), the array
-            will be the same type as `out` (if used), or will be masked
-            if any of the nodatavals are not `None`.
+            If `masked` is `True` (the default), the return value will
+            be a masked array. Otherwise, the return value will be a 
+            regular array. Masks will be exactly the inverse of the
+            GDAL RFC 15 conforming arrays returned by read_masks().
 
         boundless : bool, optional (default `False`)
             If `True`, windows that extend beyond the dataset's extent
@@ -596,6 +630,8 @@ cdef class RasterReader(_base.DatasetReader):
         use the optional `out` argument and the return value shall be
         preferentially used by callers.
         """
+
+        cdef void *hband = NULL
 
         return2d = False
         if indexes is None:
@@ -615,8 +651,30 @@ cdef class RasterReader(_base.DatasetReader):
             if bidx not in self.indexes:
                 raise IndexError("band index out of range")
             idx = self.indexes.index(bidx)
-            check_dtypes.add(self.dtypes[idx])
-            nodatavals.append(self._nodatavals[idx])
+
+            dtype = self.dtypes[idx]
+            check_dtypes.add(dtype)
+
+            ndv = self._nodatavals[idx]
+            # Change given nodatavals to the closest value that
+            # can be represented by this band's data type to
+            # match GDAL's strategy.
+            if ndv is not None:
+                if np.dtype(dtype).kind in ('i', 'u'):
+                    info = np.iinfo(dtype)
+                    dt_min, dt_max = info.min, info.max
+                elif np.dtype(dtype).kind in ('f', 'c'):
+                    info = np.finfo(dtype)
+                    dt_min, dt_max = info.min, info.max
+                else:
+                    dt_min, dt_max = False, True
+                if ndv < dt_min:
+                    ndv = dt_min
+                elif ndv > dt_max:
+                    ndv = dt_max
+
+            nodatavals.append(ndv)
+
         # Mixed dtype reads are not supported at this time.
         if len(check_dtypes) > 1:
             raise ValueError("more than one 'dtype' found")
@@ -651,14 +709,35 @@ cdef class RasterReader(_base.DatasetReader):
                 raise ValueError(
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
-            if masked is None:
-                masked = hasattr(out, 'mask')
-        if masked is None:
-            masked = any([x is not None for x in nodatavals])
+            #if masked is None:
+            #    masked = hasattr(out, 'mask')
+
+        # Masking
+        # -------
+        #
+        # If masked is True, we check the GDAL mask flags using
+        # GDALGetMaskFlags. If GMF_ALL_VALID for all bands, we do not
+        # call read_masks(), but pass `mask=False` to the masked array
+        # constructor. Else, we read the GDAL mask bands using
+        # read_masks(), invert them and use them in constructing masked
+        # arrays.
+
+        if masked:
+
+            mask_flags = [0]*self.count
+            for i, j in zip(range(self.count), self.indexes):
+                hband = _gdal.GDALGetRasterBand(self._hds, j)
+                mask_flags[i] = _gdal.GDALGetMaskFlags(hband)
+
+            all_valid = all([flag & 0x01 == 1 for flag in mask_flags])
+
+            log.debug("all_valid: %s", all_valid)
+            log.debug("mask_flags: %r", mask_flags)
+
         if out is None:
             out = np.zeros(win_shape, dtype)
             for ndv, arr in zip(
-                    self.nodatavals, out if len(win_shape) == 3 else [out]):
+                    nodatavals, out if len(out.shape) == 3 else [out]):
                 if ndv is not None:
                     arr.fill(ndv)
 
@@ -666,6 +745,155 @@ cdef class RasterReader(_base.DatasetReader):
         # the boundless flag if there's no given window.
         if not boundless or not window:
             out = self._read(indexes, out, window, dtype)
+
+            if masked:
+                if all_valid:
+                    mask = np.ma.nomask
+                else:
+                    mask = np.empty(out.shape, 'uint8')
+                    mask = ~self._read(
+                        indexes, mask, window, 'uint8', masks=True
+                        ).astype('bool')
+
+                kwds = {'mask': mask}
+                # Set a fill value only if the read bands share a
+                # single nodata value.
+                if len(set(nodatavals)) == 1:
+                    if nodatavals[0] is not None:
+                        kwds['fill_value'] = nodatavals[0]
+                out = np.ma.array(out, **kwds)
+
+        else:
+            # Compute the overlap between the dataset and the boundless window.
+            overlap = ((
+                max(min(window[0][0] or 0, self.height), 0),
+                max(min(window[0][1] or self.height, self.height), 0)), (
+                max(min(window[1][0] or 0, self.width), 0),
+                max(min(window[1][1] or self.width, self.width), 0)))
+
+            if overlap != ((0, 0), (0, 0)):
+                # Prepare a buffer.
+                window_h, window_w = win_shape[-2:]
+                overlap_h = overlap[0][1] - overlap[0][0]
+                overlap_w = overlap[1][1] - overlap[1][0]
+                scaling_h = float(out.shape[-2:][0])/window_h
+                scaling_w = float(out.shape[-2:][1])/window_w
+                buffer_shape = (
+                        int(round(overlap_h*scaling_h)),
+                        int(round(overlap_w*scaling_w)))
+                data = np.empty(win_shape[:-2] + buffer_shape, dtype)
+                data = self._read(indexes, data, overlap, dtype)
+
+            else:
+                data = None
+
+            if data is not None:
+                # Determine where to put the data in the output window.
+                data_h, data_w = buffer_shape
+                roff = 0
+                coff = 0
+                if window[0][0] < 0:
+                    roff = int(round(window_h*scaling_h)) - data_h
+                if window[1][0] < 0:
+                    coff = int(round(window_w*scaling_w)) - data_w
+
+                for dst, src in zip(
+                        out if len(out.shape) == 3 else [out],
+                        data if len(data.shape) == 3 else [data]):
+                    dst[roff:roff+data_h, coff:coff+data_w] = src
+
+        if return2d:
+            out.shape = out.shape[1:]
+
+        return out
+
+
+    def read_masks(self, indexes=None, out=None, window=None, boundless=False):
+        """Read raster band masks as a multidimensional array
+
+        Parameters
+        ----------
+        indexes : list of ints or a single int, optional
+            If `indexes` is a list, the result is a 3D array, but is
+            a 2D array if it is a band index number.
+
+        out: numpy ndarray, optional
+            As with Numpy ufuncs, this is an optional reference to an
+            output array with the same dimensions and shape into which
+            data will be placed.
+            
+            *Note*: the method's return value may be a view on this
+            array. In other words, `out` is likely to be an
+            incomplete representation of the method's results.
+
+        window : a pair (tuple) of pairs of ints, optional
+            The optional `window` argument is a 2 item tuple. The first
+            item is a tuple containing the indexes of the rows at which
+            the window starts and stops and the second is a tuple
+            containing the indexes of the columns at which the window
+            starts and stops. For example, ((0, 2), (0, 2)) defines
+            a 2x2 window at the upper left of the raster dataset.
+
+        boundless : bool, optional (default `False`)
+            If `True`, windows that extend beyond the dataset's extent
+            are permitted and partially or completely filled arrays will
+            be returned as appropriate.
+
+        Returns
+        -------
+        Numpy ndarray or a view on a Numpy ndarray
+
+        Note: as with Numpy ufuncs, an object is returned even if you
+        use the optional `out` argument and the return value shall be
+        preferentially used by callers.
+        """
+
+        return2d = False
+        if indexes is None:
+            indexes = self.indexes
+        elif isinstance(indexes, int):
+            indexes = [indexes]
+            return2d = True
+            if out is not None and out.ndim == 2:
+                out.shape = (1,) + out.shape
+        if not indexes:
+            raise ValueError("No indexes to read")
+
+        # Get the natural shape of the read window, boundless or not.
+        win_shape = (len(indexes),)
+        if window:
+            if boundless:
+                win_shape += (
+                        window[0][1]-window[0][0], window[1][1]-window[1][0])
+            else:
+                w = eval_window(window, self.height, self.width)
+                minr = min(max(w[0][0], 0), self.height)
+                maxr = max(0, min(w[0][1], self.height))
+                minc = min(max(w[1][0], 0), self.width)
+                maxc = max(0, min(w[1][1], self.width))
+                win_shape += (maxr - minr, maxc - minc)
+                window = ((minr, maxr), (minc, maxc))
+        else:
+            win_shape += self.shape
+        
+        dtype = 'uint8'
+
+        if out is not None:
+            if out.dtype != np.dtype(dtype):
+                raise ValueError(
+                    "the out array's dtype '%s' does not match '%s'"
+                    % (out.dtype, dtype))
+            if out.shape[0] != win_shape[0]:
+                raise ValueError(
+                    "'out' shape %s does not match window shape %s" %
+                    (out.shape, win_shape))
+        if out is None:
+            out = np.zeros(win_shape, 'uint8')
+
+        # We can jump straight to _read() in some cases. We can ignore
+        # the boundless flag if there's no given window.
+        if not boundless or not window:
+            out = self._read(indexes, out, window, dtype, masks=True)
 
         else:
             # Compute the overlap between the dataset and the boundless window.
@@ -683,8 +911,8 @@ cdef class RasterReader(_base.DatasetReader):
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
                 buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
-                data = np.empty(win_shape[:-2] + buffer_shape, dtype)
-                data = self._read(indexes, data, overlap, dtype)
+                data = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
+                data = self._read(indexes, data, overlap, dtype, masks=True)
             else:
                 data = None
 
@@ -702,32 +930,13 @@ cdef class RasterReader(_base.DatasetReader):
                         data if len(data.shape) == 3 else [data]):
                     dst[roff:roff+data_h, coff:coff+data_w] = src
 
-        # Masking the output. TODO: explain the logic better.
-        if masked:
-            if len(set(nodatavals)) == 1:
-                if nodatavals[0] is None:
-                    out = np.ma.masked_array(out, copy=False)
-                elif np.isnan(nodatavals[0]):
-                    out = np.ma.masked_where(np.isnan(out), out, copy=False)
-                else:
-                    out = np.ma.masked_equal(out, nodatavals[0], copy=False)
-            else:
-                out = np.ma.masked_array(out, copy=False)
-                for aix in range(len(indexes)):
-                    if nodatavals[aix] is None:
-                        band_mask = False
-                    elif np.isnan(nodatavals[aix]):
-                        band_mask = np.isnan(out[aix])
-                    else:
-                        band_mask = out[aix] == nodatavals[aix]
-                    out[aix].mask = band_mask
         if return2d:
             out.shape = out.shape[1:]
 
         return out
 
 
-    def _read(self, indexes, out, window, dtype):
+    def _read(self, indexes, out, window, dtype, masks=False):
         """Read raster bands as a multidimensional array
 
         If `indexes` is a list, the result is a 3D array, but
@@ -769,7 +978,11 @@ cdef class RasterReader(_base.DatasetReader):
         indexes_count = <int>indexes_arr.shape[0]
         gdt = dtypes.dtype_rev[dtype]
 
-        if gdt == 1:
+        if masks:
+            retval = io_multi_mask(
+                            self._hds, 0, xoff, yoff, width, height,
+                            out, indexes_arr, indexes_count)
+        elif gdt == 1:
             retval = io_multi_ubyte(
                             self._hds, 0, xoff, yoff, width, height,
                             out, indexes_arr, indexes_count)
@@ -822,7 +1035,7 @@ cdef class RasterReader(_base.DatasetReader):
         return out
 
 
-    def read_mask(self, out=None, window=None):
+    def read_mask(self, indexes=None, out=None, window=None, boundless=False):
         """Read the mask band into an `out` array if provided, 
         otherwise return a new array containing the dataset's
         valid data mask.
@@ -835,6 +1048,13 @@ cdef class RasterReader(_base.DatasetReader):
         """
         cdef void *hband
         cdef void *hmask
+
+        warnings.warn(
+            "read_mask() is deprecated and will be removed by Rasterio 1.0. "
+            "Please use read_masks() instead.",
+            FutureWarning,
+            stacklevel=2)
+
         if self._hds == NULL:
             raise ValueError("can't write closed raster file")
         hband = _gdal.GDALGetRasterBand(self._hds, 1)
@@ -859,12 +1079,15 @@ cdef class RasterReader(_base.DatasetReader):
             xoff = yoff = 0
             width = self.width
             height = self.height
-        retval = io_ubyte(
+
+        io_ubyte(
             hmask, 0, xoff, yoff, width, height, out)
         return out
 
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
+
+        Values are from the nearest pixel. They are not interpolated.
 
         Parameters
         ----------

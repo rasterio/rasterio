@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from rasterio.rio.calc import calc
 from rasterio.rio.cli import cli
 from rasterio.rio.bands import stack
 from rasterio.rio.features import shapes, rasterize

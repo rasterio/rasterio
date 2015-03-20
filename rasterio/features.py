@@ -127,7 +127,7 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     if np.dtype(image.dtype).name not in valid_dtypes:
         valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
                                      in valid_dtypes))
-        raise ValueError('image dtype must be one of: %' % valid_types_str)
+        raise ValueError('image dtype must be one of: %s' % valid_types_str)
 
     if size <= 0:
         raise ValueError('size must be greater than 0')
@@ -155,7 +155,10 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     
     out = out if out is not None else output
     if out is None:
-        out = np.zeros_like(image)
+        if isinstance(image, tuple):
+            out = np.zeros(image.shape, image.dtype)
+        else:
+            out = np.zeros_like(image)
     else:
         if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
             raise ValueError('output must match dtype of image')

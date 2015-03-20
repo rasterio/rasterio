@@ -8,6 +8,7 @@ from pytest import fixture
 
 import rasterio
 from rasterio.rio.merge import merge
+from rasterio.transform import Affine
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -245,3 +246,63 @@ def test_merge_float(test_data_dir_float):
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
         assert numpy.all(data == expected)
+
+
+# Test below comes from issue #288. There was an off-by-one error in
+# pasting image data into the canvas array.
+
+@fixture(scope='function')
+def tiffs(tmpdir):
+
+    data = numpy.ones((1, 1, 1), 'uint8')
+
+    kwargs = {'count': '1',
+              'driver': 'GTiff',
+              'dtype': 'uint8',
+              'height': 1,
+              'width': 1}
+
+    kwargs['transform'] = Affine( 1, 0, 1,
+                                  0,-1, 1)
+    with rasterio.open(str(tmpdir.join('a-sw.tif')), 'w', **kwargs) as r:
+        r.write(data * 40)
+
+    kwargs['transform'] = Affine( 1, 0, 2,
+                                  0,-1, 2)
+    with rasterio.open(str(tmpdir.join('b-ct.tif')), 'w', **kwargs) as r:
+        r.write(data * 60)
+
+    kwargs['transform'] = Affine( 2, 0, 3,
+                                  0,-2, 4)
+    with rasterio.open(str(tmpdir.join('c-ne.tif')), 'w', **kwargs) as r:
+        r.write(data * 90)
+
+    kwargs['transform'] = Affine( 2, 0, 2,
+                                  0,-2, 4)
+    with rasterio.open(str(tmpdir.join('d-ne.tif')), 'w', **kwargs) as r:
+        r.write(data * 120)
+
+    return tmpdir
+
+
+def test_merge_tiny(tiffs):
+    outputname = str(tiffs.join('merged.tif'))
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname])
+    assert result.exit_code == 0
+
+    # Output should be
+    #
+    # [[  0 120 120  90]
+    #  [  0 120 120  90]
+    #  [  0  60   0   0]
+    #  [ 40   0   0   0]]
+
+    with rasterio.open(outputname) as src:
+        data = src.read()
+        assert (data[0][0:2,1:3] == 120).all()
+        assert (data[0][0:2,3] == 90).all()
+        assert data[0][2][1] == 60
+        assert data[0][3][0] == 40

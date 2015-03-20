@@ -2,4 +2,5 @@ affine
 cligj
 enum34
 numpy>=1.8.0
+snuggs>=1.0
 setuptools

@@ -29,7 +29,7 @@ def show(source, cmap='gray'):
     tuple.
     """
     if isinstance(source, tuple):
-        arr = source[0].read_band(source[1])
+        arr = source[0].read(source[1])
     else:
         arr = source
     if plt is not None:
@@ -43,7 +43,7 @@ def stats(source):
     """Return a tuple with raster min, max, and mean.
     """
     if isinstance(source, tuple):
-        arr = source[0].read_band(source[1])
+        arr = source[0].read(source[1])
     else:
         arr = source
     return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
