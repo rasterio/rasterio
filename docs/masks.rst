@@ -147,7 +147,7 @@ masks we've read.
     >>> new_msk = (msk[0] & msk[1] & msk[2])
     >>> show(new_msk)
 
-.. image:: img/mask_bands_rgb.png
+.. image:: img/mask_conj.png
 
 Now we'll use `sieve()` to shake out the small buggy regions of the mask. I've
 found the right value for the ``size`` argument empirically.
@@ -158,7 +158,7 @@ found the right value for the ``size`` argument empirically.
     >>> sieved_msk = sieve(new_msk, size=800)
     >>> show(sieved_msk)
 
-.. image:: img/mask_bands_rgb.png
+.. image:: img/mask_sieved.png
 
 Last thing to do is write that sieved mask back to the dataset.
 
