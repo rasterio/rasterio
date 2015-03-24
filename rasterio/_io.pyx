@@ -33,7 +33,14 @@ else:
         def emit(self, record):
             pass
 
-    log.addHandler(NullHandler())
+log.addHandler(NullHandler())
+
+def in_dtype_range(value, dtype):
+    """Returns True if value is in the range of dtype, else False."""
+    infos = {
+            'c': np.finfo, 'f': np.finfo, 'i': np.iinfo, 'u': np.iinfo}
+    rng = infos[np.dtype(dtype).kind](dtype)
+    return rng.min <= value <= rng.max
 
 # Single band IO functions.
 
@@ -1112,7 +1119,6 @@ cdef class RasterReader(_base.DatasetReader):
 
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
-    # TODO: the r+ mode.
 
     def __init__(
             self, path, mode, driver=None,
@@ -1235,6 +1241,13 @@ cdef class RasterUpdater(RasterReader):
                 raise ValueError("NULL dataset")
 
             if self._init_nodata is not None:
+
+                if not in_dtype_range(self._init_nodata, self._init_dtype):
+                    raise ValueError(
+                        "Given nodata value, %s, is beyond the valid "
+                        "range of its data type, %s." % (
+                            self._init_nodata, self._init_dtype))
+
                 for i in range(self._count):
                     hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                     success = _gdal.GDALSetRasterNoDataValue(

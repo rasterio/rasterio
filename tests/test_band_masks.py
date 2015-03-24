@@ -48,13 +48,6 @@ def tiffs(tmpdir):
                 **kwds) as dst:
             dst.write(src.read(masked=False))
 
-        kwds['nodata'] = -1.0e20
-        with rasterio.open(
-                str(tmpdir.join('out-of-range-nodata.tif')), 'w',
-                **kwds) as dst:
-            dst.write(src.read(masked=False))
-
-        del kwds['nodata']
         with rasterio.open(
                 str(tmpdir.join('sidecar-masked.tif')), 'w',
                 **kwds) as dst:
@@ -93,21 +86,6 @@ def test_masking_no_nodata(tiffs):
 
         masks = src.read_masks()
         assert masks.all()
-
-
-def test_masking_out_of_range_nodata(tiffs):
-    # If the dataset has defined nodata values outside the range of the
-    # corresponding band data types (like -9999 for an 8-bit band), GDAL
-    # masks bands are computed using the nearest valid data type value
-    # (0 in the case above). ``read()`` returns masked arrays unless
-    # explicitly not requested with ``masked=False``.
-    with rasterio.open(str(tiffs.join('out-of-range-nodata.tif'))) as src:
-        rgb = src.read()
-        assert hasattr(rgb, 'mask')
-        r = src.read(1)
-        assert hasattr(r, 'mask')
-        masks = src.read_masks()
-        assert masks.any()
 
 
 def test_masking_sidecar_mask(tiffs):

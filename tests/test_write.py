@@ -1,9 +1,13 @@
 import logging
+import re
 import subprocess
 import sys
-import re
+
 import numpy
+import pytest
+
 import rasterio
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -205,6 +209,18 @@ def test_write_nodata(tmpdir):
         s.write_band(2, a)
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "NoData Value=0" in info
+
+
+def test_guard_nodata(tmpdir):
+    name = str(tmpdir.join("test_guard_nodata.tif"))
+    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    with pytest.raises(ValueError):
+        with rasterio.open(
+                name, 'w', 
+                driver='GTiff', width=100, height=100, count=2, 
+                dtype=a.dtype, nodata=-1) as s:
+            pass
+
 
 def test_write_lzw(tmpdir):
     name = str(tmpdir.join("test_write_lzw.tif"))
