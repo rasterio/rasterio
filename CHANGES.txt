@@ -1,8 +1,8 @@
 Changes
 =======
 
-0.19dev1 ()
------------
+0.19.0 (2015-03-25)
+-------------------
 - New rio-calc command (#175).
 - Added a file band shortcut to fillnodata() (#271).
 - Added fillnodata() to rio-calc functions (#277).
