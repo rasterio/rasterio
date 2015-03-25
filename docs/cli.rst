@@ -96,11 +96,11 @@ and operators. It is intended for simple calculations; any calculations
 requiring multiple steps is better done in Python using the Rasterio and Numpy
 APIs.
 
-Evaluation commonly casts values to ``float``, but this default output data
-type can be overridden using calc's ``--dtype`` option.
-
 Input files may have different numbers of bands but should have the same
-number of rows and columns.
+number of rows and columns. The output file will have the same number of rows
+and columns as the inputs and one band per element of the expression result.
+An expression involving arithmetic operations on N-D arrays will produce a
+N-D array and result in an N-band output file.
 
 The following produces a 3-band GeoTIFF with all values scaled by 0.95 and
 incremented by 2. In the expression, ``(read 1)`` evaluates to the first
@@ -108,8 +108,7 @@ input dataset (3 bands) as a 3-D array.
 
 .. code-block:: console
 
-    $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif \
-    > --dtype ubyte /tmp/out.tif
+    $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif /tmp/out.tif
 
 The following produces a 3-band GeoTIFF in which the first band is copied from
 the first band of the input and the next two bands are scaled (down) by the
@@ -121,11 +120,13 @@ collects a sequence of 2-D arrays into a 3-D array for output.
 .. code-block:: console
 
     $ rio calc "(asarray (take a 1) (* (take a 2) (/ (mean (take a 1)) (mean (take a 2)))) (* (take a 3) (/ (mean (take a 1)) (mean (take a 3)))))" \
-    > --name a=tests/data/RGB.byte.tif --dtype ubyte /tmp/out.rgb.tif
+    > --name a=tests/data/RGB.byte.tif /tmp/out.rgb.tif
 
 The command above is also an example of a calculation that is far beyond the
 design of the calc command and something that could be done much more
 efficiently in Python.
+
+Please see `calc.rst <calc.rst>`__ for more details.
 
 info
 ----

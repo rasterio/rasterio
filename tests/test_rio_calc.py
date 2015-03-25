@@ -28,7 +28,7 @@ def test_multiband_calc(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
-        assert src.meta['dtype'] == 'float64'
+        assert src.meta['dtype'] == 'uint8'
         data = src.read()
         assert data.min() == 125
 
@@ -44,7 +44,7 @@ def test_singleband_calc_byindex(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
-        assert src.meta['dtype'] == 'float64'
+        assert src.meta['dtype'] == 'uint8'
         data = src.read()
         assert data.min() == 125
 
@@ -60,7 +60,7 @@ def test_singleband_calc_byname(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
-        assert src.meta['dtype'] == 'float64'
+        assert src.meta['dtype'] == 'uint8'
         data = src.read()
         assert data.min() == 125
 
@@ -91,7 +91,7 @@ def test_parts_calc_2(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '(+ (+ (/ (read 1 1) 3) (/ (read 1 2) 3)) (/ (read 1 3) 3))',
+                    '(+ (+ (/ (read 1 1) 3.0) (/ (read 1 2) 3.0)) (/ (read 1 3) 3.0))',
                     '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],
@@ -143,7 +143,8 @@ def test_fillnodata_map(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '(asarray (map fillnodata (bands 1)))',
+#                    '(asarray (map fillnodata (bands 1)))',
+                    '(asarray (map fillnodata (read 1) (!= (read 1) 0)))',
                     '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],

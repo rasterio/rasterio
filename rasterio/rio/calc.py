@@ -5,6 +5,7 @@ import math
 import os.path
 import re
 import sys
+import traceback
 import warnings
 
 import click
@@ -49,7 +50,7 @@ def read_array(ix, subix=None, dtype=None):
 @click.option('--dtype',
               type=click.Choice(['ubyte', 'uint8', 'uint16', 'int16', 'uint32',
                                 'int32', 'float32', 'float64']),
-              default='float64',
+              default=None,
               help="Output data type (default: float64).")
 @click.pass_context
 def calc(ctx, command, files, name, dtype):
@@ -79,14 +80,14 @@ def calc(ctx, command, files, name, dtype):
 
     \b
          $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif \\
-         > /tmp/out.tif --dtype ubyte
+         > /tmp/out.tif
 
     Produces a 3-band GeoTIFF with all values scaled by 0.95 and
     incremented by 2.
 
     \b
         $ rio calc "(asarray (+ 125 (read 1)) (read 1) (read 1))" \\
-        > tests/data/shade.tif /tmp/out.tif --dtype ubyte
+        > tests/data/shade.tif /tmp/out.tif
 
     Produces a 3-band RGB GeoTIFF, with red levels incremented by 125,
     from the single-band input.
@@ -107,6 +108,7 @@ def calc(ctx, command, files, name, dtype):
             with rasterio.open(inputs[0][1]) as first:
                 kwargs = first.meta
                 kwargs['transform'] = kwargs.pop('affine')
+                dtype = dtype or first.meta['dtype']
                 kwargs['dtype'] = dtype
 
             ctxkwds = {}
@@ -120,8 +122,7 @@ def calc(ctx, command, files, name, dtype):
                     #
                     # possibly something to do with the instance being
                     # a masked array.
-                    ctxkwds[name or '_i%d' % (i+1)] = np.ndarray.astype(
-                        src.read(), 'float64', copy=False)
+                    ctxkwds[name or '_i%d' % (i+1)] = src.read()
 
             # Extend snuggs.
             snuggs.func_map['read'] = read_array
@@ -139,10 +140,19 @@ def calc(ctx, command, files, name, dtype):
                     [np.ndarray.astype(res, dtype, copy=False)])
 
             kwargs['count'] = results.shape[0]
+
             with rasterio.open(output, 'w', **kwargs) as dst:
                 dst.write(results)
 
         sys.exit(0)
-    except Exception:
-        logger.exception("Failed. Exception caught")
+    except snuggs.ExpressionError as err:
+        click.echo("Expression Error:")
+        click.echo('  %s' % err.text)
+        click.echo(' ' +  ' ' * err.offset + "^")
+        click.echo(err)
+        sys.exit(1)
+    except Exception as err:
+        t, v, tb = sys.exc_info()
+        for line in traceback.format_exception_only(t, v):
+            click.echo(line, nl=False)
         sys.exit(1)
