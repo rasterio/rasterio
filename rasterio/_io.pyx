@@ -570,7 +570,7 @@ cdef int io_auto(image, void *hband, bint write):
 
 cdef class RasterReader(_base.DatasetReader):
 
-    def read_band(self, bidx, out=None, window=None, masked=True):
+    def read_band(self, bidx, out=None, window=None, masked=False):
         """Read the `bidx` band into an `out` array if provided, 
         otherwise return a new array.
 
@@ -591,7 +591,7 @@ cdef class RasterReader(_base.DatasetReader):
         return self.read(bidx, out=out, window=window, masked=masked)
 
 
-    def read(self, indexes=None, out=None, window=None, masked=True,
+    def read(self, indexes=None, out=None, window=None, masked=False,
             boundless=False):
         """Read raster bands as a multidimensional array
 
