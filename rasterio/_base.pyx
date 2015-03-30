@@ -395,7 +395,10 @@ cdef class DatasetReader(object):
             'count': self.count,
             'crs': self.crs,
             'transform': self.affine.to_gdal(),
-            'affine': self.affine }
+            'affine': self.affine,
+            'blockxsize': self.block_shapes[0][1],
+            'blockysize': self.block_shapes[0][0],
+            'tiled': self.block_shapes[0][1] != self.width }
         self._read = True
         return m
 
