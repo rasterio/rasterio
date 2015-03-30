@@ -1,8 +1,8 @@
 Changes
 =======
 
-Maint next
-----------
+0.19.1 (2015-03-30)
+-------------------
 - Add missing blockxsize, blockysize, tiled keywords (#301).
 
 0.19.0 (2015-03-25)
