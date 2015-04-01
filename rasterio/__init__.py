@@ -14,6 +14,10 @@ from rasterio.dtypes import (
 from rasterio.five import string_types
 from rasterio.transform import Affine, guard_transform
 
+# These modules are imported from the Cython extensions, but are also import
+# here to help tools like cx_Freeze find them automatically
+from rasterio import _err, coords, enums
+
 # Classes in rasterio._io are imported below just before we need them.
 
 __all__ = [
