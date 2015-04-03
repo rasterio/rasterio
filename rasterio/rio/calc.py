@@ -52,8 +52,11 @@ def read_array(ix, subix=None, dtype=None):
                                 'int32', 'float32', 'float64']),
               default=None,
               help="Output data type (default: float64).")
+@click.option('--masked/--raw',
+              default=True,
+              help="Evaluate expressions using masked arrays")
 @click.pass_context
-def calc(ctx, command, files, name, dtype):
+def calc(ctx, command, files, name, dtype, masked):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -122,7 +125,7 @@ def calc(ctx, command, files, name, dtype):
                     #
                     # possibly something to do with the instance being
                     # a masked array.
-                    ctxkwds[name or '_i%d' % (i+1)] = src.read()
+                    ctxkwds[name or '_i%d' % (i+1)] = src.read(masked=masked)
 
             # Extend snuggs.
             snuggs.func_map['read'] = read_array

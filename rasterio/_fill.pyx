@@ -24,7 +24,7 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
     cdef char **alg_options = NULL
 
     if isinstance(image, np.ndarray):
-        # copy numpy ndarray into an in-memory dataset
+        # copy numpy ndarray into an in-memory dataset.
         image_dataset = _gdal.GDALCreate(
             memdriver,
             "image",
@@ -35,9 +35,6 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
             NULL)
         image_band = _gdal.GDALGetRasterBand(image_dataset, 1)
         _io.io_auto(image, image_band, True)
-    elif isinstance(image, tuple):
-        rdr = image.ds
-        image_band = rdr.band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
