@@ -27,6 +27,11 @@ def test_sieve():
         sieved_image = ftrz.sieve(image, 101)
         assert not sieved_image.any()
 
+    # Invalid size value should fail
+    for invalid_size in (0, 45.1234, image.size + 1):
+        with pytest.raises(ValueError):
+            sieved_image = ftrz.sieve(image, invalid_size)
+
 
 def test_sieve_connectivity():
     """Test proper behavior of connectivity"""
@@ -46,6 +51,10 @@ def test_sieve_connectivity():
     sieved_image = ftrz.sieve(image, 54, connectivity=8)
     assert numpy.array_equal(sieved_image, image)
 
+    # Invalid connectivity value should fail
+    with pytest.raises(ValueError):
+        ftrz.sieve(image, 54, connectivity=12)
+
 
 def test_sieve_output():
     """Test proper behavior of output image, if passed into sieve"""
@@ -63,6 +72,11 @@ def test_sieve_output():
 
         # Output of different dtype should fail
         output = numpy.zeros(shape, dtype=rasterio.int32)
+        with pytest.raises(ValueError):
+            ftrz.sieve(image, 100, output)
+
+        # Output of a different shape should fail
+        output = numpy.zeros((21, 21), dtype=rasterio.ubyte)
         with pytest.raises(ValueError):
             ftrz.sieve(image, 100, output)
 
@@ -92,9 +106,8 @@ def test_sieve_mask():
         truth[7:10, 7:10] = 1
         assert numpy.array_equal(sieved_image, truth)
 
-        # mask of other type than rasterio.bool_ should fail
-        mask = numpy.zeros(shape, dtype=rasterio.uint8)
         with pytest.raises(ValueError):
+            mask = numpy.ones((21, 21), dtype=rasterio.bool_)
             ftrz.sieve(image, 100, mask=mask)
 
 
@@ -138,7 +151,31 @@ def test_dtypes():
             with pytest.raises(ValueError):
                 image = numpy.zeros((rows, cols), dtype=dtype)
                 image[2:5, 2:5] = test_value
-                sieved_image = ftrz.sieve(image, 2)
+                ftrz.sieve(image, 2)
+
+        # Test mask types
+        image = numpy.zeros((rows, cols), dtype='uint8')
+        image.fill(255)
+
+        supported_mask_types = (
+            ('bool', 1),
+            ('uint8', 255)
+        )
+        for dtype, mask_value in supported_mask_types:
+            mask = numpy.zeros((rows, cols), dtype=dtype)
+            mask[2:5, 2:5] = mask_value
+            sieved_image = ftrz.sieve(image, 2, mask=mask)
+            assert numpy.array_equal(image, sieved_image)
+
+        unsupported_mask_types = (
+            ('int8', -127),
+            ('int16', -32768)
+        )
+        for dtype, mask_value in unsupported_mask_types:
+            with pytest.raises(ValueError):
+                mask = numpy.zeros((rows, cols), dtype=dtype)
+                mask[2:5, 2:5] = mask_value
+                ftrz.sieve(image, 2, mask=mask)
 
 
 def test_sieve_shade():

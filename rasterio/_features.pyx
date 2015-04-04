@@ -29,8 +29,8 @@ def _shapes(image, mask, connectivity, transform):
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object
-        Values of False will be excluded from feature generation
-        Must be of type rasterio.bool_
+        Values of False or 0 will be excluded from feature generation
+        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
         Use 4 or 8 pixel connectivity for grouping pixels into features
     transform : Affine transformation
@@ -150,8 +150,8 @@ def _sieve(image, size, output, mask, connectivity):
     output : numpy ndarray
         Array of same shape and data type as `image` in which to store results.
     mask : numpy ndarray or rasterio Band object
-        Values of False will be excluded from feature generation.
-        Must be of type rasterio.bool_.
+        Values of False or 0 will be excluded from feature generation.
+        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int
         Use 4 or 8 pixel connectivity for grouping pixels into features.
 
