@@ -34,19 +34,22 @@ warnings.simplefilter('default')
 @use_rs_opt
 @geojson_type_feature_opt(True)
 @geojson_type_bbox_opt(False)
-@click.option('--bands/--mask', default=True,
+@click.option('--band/--mask', default=True,
               help="Extract shapes from one of the dataset bands or from "
                    "its nodata mask")
-@click.option('--bidx', type=int, default=1,
+@click.option('--bidx', 'bandidx', type=int, default=None,
               help="Index of the source band")
 @click.option('--sampling', type=int, default=1,
               help="Inverse of the sampling fraction")
 @click.option('--with-nodata/--without-nodata', default=False,
               help="Include or do not include (the default) nodata regions.")
+@click.option('--as-mask/--not-as-mask', default=False,
+              help="Interpret a band as a mask and output only one class of "
+                   "valid data shapes.")
 @click.pass_context
 def shapes(
         ctx, input, precision, indent, compact, projection, sequence,
-        use_rs, geojson_type, bands, bidx, sampling, with_nodata):
+        use_rs, geojson_type, band, bandidx, sampling, with_nodata, as_mask):
     """Writes features of a dataset out as GeoJSON. It's intended for
     use with single-band rasters and reads from the first band.
     """
@@ -64,6 +67,8 @@ def shapes(
         dump_kwds['separators'] = (',', ':')
     stdout = click.get_text_stream('stdout')
 
+    bidx = 1 if bandidx is None and band else bandidx
+
     # This is the generator for (feature, bbox) pairs.
     class Collection(object):
 
@@ -78,11 +83,11 @@ def shapes(
         def __call__(self):
             with rasterio.open(input) as src:
                 img = None
-                nodata_mask = None
-                if bands:
+                msk = None
+                if band:
                     if sampling == 1:
                         img = src.read(bidx, masked=False)
-                        transform = src.transform
+                        transform = src.affine
                     # Decimate the band.
                     else:
                         img = numpy.zeros(
@@ -90,16 +95,23 @@ def shapes(
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read(bidx, img, masked=False)
                         transform = src.affine * Affine.scale(float(sampling))
-                if not bands or not with_nodata:
+                    if as_mask:
+                        msk = img
+                        img = None
+                if not band or not with_nodata:
                     if sampling == 1:
-                        nodata_mask = src.read_masks(bidx)
-                        transform = src.transform
+                        msk = src.read_masks(bidx)
+                        if bidx is None:
+                            msk = numpy.logical_or.reduce(msk).astype('uint8')
+                        transform = src.affine
                     # Decimate the mask.
                     else:
-                        nodata_mask = numpy.zeros(
+                        msk = numpy.zeros(
                             (src.height//sampling, src.width//sampling),
                             dtype=numpy.uint8)
-                        nodata_mask = src.read_masks(bidx, nodata_mask)
+                        msk = src.read_masks(bidx, msk)
+                        if bidx is None:
+                            msk = numpy.logical_or.reduce(msk)
                         transform = src.affine * Affine.scale(float(sampling))
 
                 bounds = src.bounds
@@ -116,10 +128,11 @@ def shapes(
 
                 kwargs = {'transform': transform}
                 # Default is to exclude nodata features.
-                if nodata_mask is not None:
-                    kwargs['mask'] = (nodata_mask==255)
+                if msk is not None:
+                    kwargs['mask'] = (msk>0)
                 if img is None:
-                    img = nodata_mask
+                    img = msk
+
                 for g, i in rasterio.features.shapes(img, **kwargs):
                     if projection == 'geographic':
                         g = rasterio.warp.transform_geom(
@@ -129,7 +142,8 @@ def shapes(
                     yield {
                         'type': 'Feature',
                         'id': str(i),
-                        'properties': {'val': i},
+                        'properties': {
+                            'val': i, 'filename': os.path.basename(src.name)},
                         'bbox': [min(xs), min(ys), max(xs), max(ys)],
                         'geometry': g }
 

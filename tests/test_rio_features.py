@@ -122,7 +122,7 @@ def test_shapes_indent(runner):
     result = runner.invoke(features.shapes, ['tests/data/shade.tif', '--indent', '2'])
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('\n') == 70139
+    assert result.output.count('\n') == 70371
 
 
 def test_shapes_compact(runner):
@@ -152,6 +152,14 @@ def test_shapes_precision(runner):
 
 def test_shapes_mask(runner):
     result = runner.invoke(features.shapes, ['tests/data/RGB.byte.tif', '--mask'])
+    assert result.exit_code == 0
+    assert result.output.count('"FeatureCollection"') == 1
+    assert result.output.count('"Feature"') == 7
+
+
+def test_shapes_band1_as_mask(runner):
+    result = runner.invoke(features.shapes,
+        ['tests/data/RGB.byte.tif', '--band', '--bidx', '1', '--as-mask'])
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 9
