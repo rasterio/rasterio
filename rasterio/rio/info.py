@@ -72,8 +72,12 @@ def env(ctx, key):
               help="Output extra information.")
 @click.option('--bidx', type=int, default=1,
               help="Input file band index (default: 1).")
+@click.option('--masked/--raw',
+              default=True,
+              help="Evaluate expressions using masked arrays")
 @click.pass_context
-def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx):
+def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
+        masked):
     """Print metadata about the dataset as JSON.
 
     Optionally print a single metadata item as a string.
@@ -98,11 +102,12 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx):
                 if verbose:
                     stats = [{'min': float(b.min()),
                               'max': float(b.max()),
-                              'mean': float(b.mean())} for b in src.read()]
+                              'mean': float(b.mean())} for b in src.read(
+                                  masked=masked)]
                     info['stats'] = stats
                 if aspect == 'meta':
                     if meta_member == 'stats':
-                        band = src.read(bidx)
+                        band = src.read(bidx, masked=masked)
                         click.echo('%f %f %f' % (
                             float(band.min()),
                             float(band.max()),

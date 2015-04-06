@@ -30,4 +30,4 @@ def test_read_out_shape_resample_up():
         out = numpy.zeros((7180, 7910), dtype=rasterio.ubyte)
         data = s.read(1, out=out, masked=True)
         assert data.shape == (7180, 7910)
-        assert data.mean() == s.read(1).mean()
+        assert data.mean() == s.read(1, masked=True).mean()

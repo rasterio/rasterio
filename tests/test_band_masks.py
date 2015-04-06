@@ -78,10 +78,10 @@ def test_masking_no_nodata(tiffs):
         assert hasattr(r, 'mask')
         assert not r.mask.any()
 
-        rgb = src.read()
+        rgb = src.read(masked=True)
         assert hasattr(rgb, 'mask')
         assert not r.mask.any()
-        r = src.read(1)
+        r = src.read(1, masked=True)
         assert not r.mask.any()
 
         masks = src.read_masks()
@@ -92,9 +92,9 @@ def test_masking_sidecar_mask(tiffs):
     # If the dataset has a .msk sidecar mask band file, all masks will
     # be derived from that file.
     with rasterio.open(str(tiffs.join('sidecar-masked.tif'))) as src:
-        rgb = src.read()
+        rgb = src.read(masked=True)
         assert rgb.mask.all()
-        r = src.read(1)
+        r = src.read(1, masked=True)
         assert r.mask.all()
         masks = src.read_masks()
         assert not masks.any()
