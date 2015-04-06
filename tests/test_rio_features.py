@@ -232,6 +232,18 @@ def test_rasterize(tmpdir, runner):
         assert (data == 0).sum() == 55
         assert (data == 1).sum() == 145
 
+    # Test that src_crs is written into new output
+    output = str(tmpdir.join('test4.tif'))
+    result = runner.invoke(features.rasterize,
+                           [output,
+                            '--dimensions', 20, 10,
+                            '--src_crs', 'EPSG:3857'
+                           ],
+                           input=TEST_MERC_FEATURECOLLECTION)
+    assert result.exit_code == 0
+    with rasterio.open(output) as out:
+        assert out.crs['init'].lower() == 'epsg:3857'
+
 
 def test_rasterize_existing_output(tmpdir, runner):
     output = str(tmpdir.join('test.tif'))
@@ -266,6 +278,14 @@ def test_rasterize_existing_output(tmpdir, runner):
         assert (data == 1).sum() == 125
         assert (data == 2).sum() == 20
 
+    # Confirm that a different src_crs is rejected, even if a geographic crs
+    result = runner.invoke(features.rasterize,
+                           [output,
+                            '--res', 0.5,
+                            '--src_crs', 'EPSG:4269'
+                            ], input=TEST_FEATURES)
+    assert result.exit_code == 2
+
 
 def test_rasterize_like(tmpdir, runner):
     output = str(tmpdir.join('test.tif'))
@@ -284,6 +304,15 @@ def test_rasterize_like(tmpdir, runner):
     output = str(tmpdir.join('test2.tif'))
     result = runner.invoke(features.rasterize,
                            [output, '--like', 'foo.tif'], input=TEST_FEATURES)
+    assert result.exit_code == 2
+
+    # Test that src_crs different than --like raster crs breaks
+    output = str(tmpdir.join('test3.tif'))
+    result = runner.invoke(features.rasterize,
+                           [output,
+                            '--like', 'tests/data/shade.tif',
+                            '--src_crs', 'EPSG:4326'],
+                           input=TEST_FEATURES)
     assert result.exit_code == 2
 
 
@@ -319,6 +348,7 @@ def test_rasterize_property_value(tmpdir, runner):
         assert (data == 0).sum() == 55
         assert (data == 15).sum() == 145
 
+
 def test_rasterize_out_of_bounds(tmpdir, runner):
     output = str(tmpdir.join('test.tif'))
 
@@ -326,18 +356,14 @@ def test_rasterize_out_of_bounds(tmpdir, runner):
     result = runner.invoke(features.rasterize,
                            [output, '--like', 'tests/data/shade.tif'],
                            input=TEST_FEATURES)
-    assert result.exit_code == 2
-
-    # Test out of bounds of existing output raster (first have to create one)
-    result = runner.invoke(features.rasterize,
-                           [output,
-                            '--res', 1000,
-                            '--property', 'val',
-                            '--src_crs', 'EPSG:3857'
-                           ],
-                           input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 0
+    assert 'outside bounds' in result.output
     assert os.path.exists(output)
+    with rasterio.open(output) as out:
+        data = out.read_band(1, masked=False)
+        assert data.sum() == 0
 
+    # Confirm that this does not fail when out of bounds for existing raster
     result = runner.invoke(features.rasterize, [output], input=TEST_FEATURES)
-    assert result.exit_code == 2
+    assert result.exit_code == 0
+    assert 'outside bounds' in result.output
