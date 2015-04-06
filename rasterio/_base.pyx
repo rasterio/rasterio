@@ -712,3 +712,29 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     _gdal.OSRDestroySpatialReference(src)
     _gdal.OSRDestroySpatialReference(dst)
     return retval
+
+
+def is_geographic_crs(crs):
+    cdef void *osr_crs = _osr_from_crs(crs)
+    cdef int retval = _gdal.OSRIsGeographic(osr_crs)
+    _gdal.OSRDestroySpatialReference(osr_crs)
+
+    return retval == 1
+
+
+def is_projected_crs(crs):
+    cdef void *osr_crs = _osr_from_crs(crs)
+    cdef int retval = _gdal.OSRIsProjected(osr_crs)
+    _gdal.OSRDestroySpatialReference(osr_crs)
+
+    return retval == 1
+
+
+def is_same_crs(crs1, crs2):
+    cdef void *osr_crs1 = _osr_from_crs(crs1)
+    cdef void *osr_crs2 = _osr_from_crs(crs2)
+    cdef int retval = _gdal.OSRIsSame(osr_crs1, osr_crs2)
+    _gdal.OSRDestroySpatialReference(osr_crs1)
+    _gdal.OSRDestroySpatialReference(osr_crs2)
+
+    return retval == 1

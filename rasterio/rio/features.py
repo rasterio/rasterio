@@ -165,7 +165,7 @@ def shapes(
               'reference system. Pixels assumed to be square if this option is '
               'used once, otherwise use: '
               '--res pixel_width --res pixel_height')
-@click.option('--src_crs', default='EPSG:4326',
+@click.option('--src_crs', default=None, #'EPSG:4326'
               help='Source coordinate reference system.  Limited to EPSG '
               'codes for now.  Used as output coordinate system if output does '
               'not exist or --like option is not used. Default: EPSG:4326')
@@ -197,24 +197,22 @@ def rasterize(
 
     If the output raster exists, rio-rasterize will rasterize feature values
     into all bands of that raster.  The GeoJSON is assumed to be in the same
-    coordinate reference system as the output.
+    coordinate reference system as the output unless --src_crs is provided.
 
     --default_value or property values when using --property must be using a
     data type valid for the data type of that raster.
 
 
     If a template raster is provided using the --like option, the affine
-    transform, coordinate reference system, and data type from that raster will
-    be used to create the output.
+    transform and data type from that raster will be used to create the output.
+    The GeoJSON is assumed to be in the same coordinate reference system unless
+    --src_crs is provided.
 
     --default_value or property values when using --property must be using a
     data type valid for the data type of that raster.
 
-    --driver, --bounds, --dimensions, --res, and --src_crs are ignored when
-    output exists or --like raster is provided
-
-    The GeoJSON must be within the bounds of the existing output or --like
-    raster, or an error will be raised.
+    --driver, --bounds, --dimensions, and --res are ignored when output exists
+    or --like raster is provided
 
 
     If the output does not exist and --like raster is not provided, the input
@@ -233,7 +231,7 @@ def rasterize(
     added in the future.
     """
 
-    import numpy as np
+    from rasterio._base import is_geographic_crs, is_same_crs
     from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds
 
@@ -242,6 +240,8 @@ def rasterize(
     files = list(files)
     output = files.pop()
     input = click.open_file(files.pop(0) if files else '-')
+    has_src_crs = src_crs is not None
+    src_crs = src_crs or 'EPSG:4326'
 
     # If values are actually meant to be integers, we need to cast them
     # as such or rasterize creates floating point outputs
@@ -278,10 +278,15 @@ def rasterize(
 
         if os.path.exists(output):
             with rasterio.open(output, 'r+') as out:
-                if disjoint_bounds(geojson_bounds, out.bounds):
-                    raise click.BadParameter('GeoJSON outside bounds of '
+                if has_src_crs and not is_same_crs(src_crs, out.crs):
+                    raise click.BadParameter('GeoJSON does not match crs of '
                                              'existing output raster',
-                                             param=input, param_hint='input')
+                                             param='input', param_hint='input')
+
+                if disjoint_bounds(geojson_bounds, out.bounds):
+                    warnings.warn('GeoJSON outside bounds of existing output '
+                                  'raster.  Are they in different coordinate '
+                                  'reference systems?')
 
                 meta = out.meta.copy()
 
@@ -305,10 +310,16 @@ def rasterize(
         else:
             if like is not None:
                 template_ds = rasterio.open(like)
+
+                if has_src_crs and not is_same_crs(src_crs, template_ds.crs):
+                    raise click.BadParameter('GeoJSON does not match crs of '
+                                             '--like raster',
+                                             param='input', param_hint='input')
+
                 if disjoint_bounds(geojson_bounds, template_ds.bounds):
-                    raise click.BadParameter('GeoJSON outside bounds of '
-                                             '--like raster', param=input,
-                                             param_hint='input')
+                    warnings.warn('GeoJSON outside bounds of --like raster. '
+                                  'Are they in different coordinate reference '
+                                  'systems?')
 
                 kwargs = template_ds.meta.copy()
                 kwargs['count'] = 1
@@ -317,11 +328,12 @@ def rasterize(
             else:
                 bounds = bounds or geojson_bounds
 
-                if src_crs == 'EPSG:4326':
+                if is_geographic_crs(src_crs):
                     if (bounds[0] < -180 or bounds[2] > 180 or
                         bounds[1] < -80 or bounds[3] > 80):
                         raise click.BadParameter(
-                            'Bounds are beyond the valid extent for EPSG:4326.',
+                            'Bounds are beyond the valid extent for geographic '
+                            'coordinates.',
                             ctx, param=bounds, param_hint='--bounds')
 
                 if dimensions:
