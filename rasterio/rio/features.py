@@ -165,7 +165,7 @@ def shapes(
               'reference system. Pixels assumed to be square if this option is '
               'used once, otherwise use: '
               '--res pixel_width --res pixel_height')
-@click.option('--src_crs', default=None, #'EPSG:4326'
+@click.option('--src_crs', default=None,
               help='Source coordinate reference system.  Limited to EPSG '
               'codes for now.  Used as output coordinate system if output does '
               'not exist or --like option is not used. Default: EPSG:4326')
