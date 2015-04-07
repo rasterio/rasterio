@@ -132,7 +132,9 @@ def bounds(ctx, input, precision, indent, compact, projection, sequence,
                             [xs[0], ys[1]],
                             [xs[0], ys[0]] ]]},
                     'properties': {
-                        'id': str(i), 'title': path} }
+                        'id': str(i),
+                        'title': path,
+                        'filename': os.path.basename(path)} }
 
                 self._xs.extend(bbox[::2])
                 self._ys.extend(bbox[1::2])
