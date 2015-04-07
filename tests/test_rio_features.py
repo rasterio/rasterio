@@ -157,6 +157,15 @@ def test_shapes_mask(runner):
     assert result.output.count('"Feature"') == 7
 
 
+def test_shapes_mask_decimated(runner):
+    result = runner.invoke(
+        features.shapes, 
+        ['tests/data/RGB.byte.tif', '--mask', '--sampling', '10'])
+    assert result.exit_code == 0
+    assert result.output.count('"FeatureCollection"') == 1
+    assert result.output.count('"Feature"') == 1
+
+
 def test_shapes_band1_as_mask(runner):
     result = runner.invoke(features.shapes,
         ['tests/data/RGB.byte.tif', '--band', '--bidx', '1', '--as-mask'])
@@ -205,7 +214,7 @@ def test_rasterize(tmpdir, runner):
         assert out.count == 1
         assert out.meta['width'] == 20
         assert out.meta['height'] == 10
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 55
         assert (data == 1).sum() == 145
 
@@ -222,7 +231,7 @@ def test_rasterize(tmpdir, runner):
         assert out.count == 1
         assert out.meta['width'] == 40
         assert out.meta['height'] == 20
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 748
         assert (data == 1).sum() == 52
 
@@ -236,7 +245,7 @@ def test_rasterize(tmpdir, runner):
         assert out.count == 1
         assert out.meta['width'] == 20
         assert out.meta['height'] == 10
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 55
         assert (data == 1).sum() == 145
 
@@ -269,7 +278,7 @@ def test_rasterize_existing_output(tmpdir, runner):
 
     with rasterio.open(output) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 55
         assert (data == 1).sum() == 125
         assert (data == 2).sum() == 20
@@ -284,7 +293,7 @@ def test_rasterize_like(tmpdir, runner):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 548576
         assert (data == 1).sum() == 500000
 
@@ -309,7 +318,7 @@ def test_rasterize_property_value(tmpdir, runner):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 50
         assert (data == 2).sum() == 25
         assert (data == 3).sum() == 25
@@ -323,7 +332,7 @@ def test_rasterize_property_value(tmpdir, runner):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         assert (data == 0).sum() == 55
         assert (data == 15).sum() == 145
 

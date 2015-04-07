@@ -23,7 +23,7 @@ warnings.simplefilter('default')
 
 
 # Shapes command.
-@cli.command(short_help="Write the shapes of features.")
+@cli.command(short_help="Write shapes extracted from bands or masks.")
 @click.argument('input', type=click.Path(exists=True))
 @precision_opt
 @indent_opt
@@ -35,12 +35,12 @@ warnings.simplefilter('default')
 @geojson_type_feature_opt(True)
 @geojson_type_bbox_opt(False)
 @click.option('--band/--mask', default=True,
-              help="Extract shapes from one of the dataset bands or from "
-                   "its nodata mask")
+              help="Choose to extract from a band (the default) or a mask.")
 @click.option('--bidx', 'bandidx', type=int, default=None,
-              help="Index of the source band")
+              help="Index of the band or mask that is the source of shapes.")
 @click.option('--sampling', type=int, default=1,
-              help="Inverse of the sampling fraction")
+              help="Inverse of the sampling fraction; "
+                   "a value of 10 decimates.")
 @click.option('--with-nodata/--without-nodata', default=False,
               help="Include or do not include (the default) nodata regions.")
 @click.option('--as-mask/--not-as-mask', default=False,
@@ -50,8 +50,33 @@ warnings.simplefilter('default')
 def shapes(
         ctx, input, precision, indent, compact, projection, sequence,
         use_rs, geojson_type, band, bandidx, sampling, with_nodata, as_mask):
-    """Writes features of a dataset out as GeoJSON. It's intended for
-    use with single-band rasters and reads from the first band.
+    """Extracts shapes from one band or mask of a dataset and writes
+    them out as GeoJSON. Unless otherwise specified, the shapes will be
+    transformed to WGS 84 coordinates.
+
+    The default action of this command is to extract shapes from the
+    first band of the input dataset. The shapes are polygons bounding
+    contiguous regions (or features) of the same raster value. This
+    command performs poorly for int16 or float type datasets.
+
+    Bands other than the first can be specified using the `--bidx`
+    option:
+
+      $ rio shapes --bidx 3 tests/data/RGB.byte.tif
+
+    The valid data footprint of a dataset's i-th band can be extracted
+    by using the `--mask` and `--bidx` options:
+
+      $ rio shapes --mask --bidx 1 tests/data/RGB.byte.tif
+
+    Omitting the `--bidx` option results in a footprint extracted from
+    the conjunction of all band masks. This is generally smaller than
+    any individual band's footprint.
+
+    A dataset band may be analyzed as though it were a binary mask with
+    the `--as-mask` option:
+
+      $ rio shapes --as-mask --bidx 1 tests/data/RGB.byte.tif
     """
     # These import numpy, which we don't want to do unless it's needed.
     import numpy
@@ -96,8 +121,10 @@ def shapes(
                         img = src.read(bidx, img, masked=False)
                         transform = src.affine * Affine.scale(float(sampling))
                     if as_mask:
-                        msk = img
-                        img = None
+                        tmp = numpy.ones_like(img, 'uint8') * 255
+                        tmp[img == 0] = 0
+                        img = tmp
+                        msk = tmp
                 if not band or not with_nodata:
                     if sampling == 1:
                         msk = src.read_masks(bidx)
@@ -106,12 +133,15 @@ def shapes(
                         transform = src.affine
                     # Decimate the mask.
                     else:
-                        msk = numpy.zeros(
-                            (src.height//sampling, src.width//sampling),
-                            dtype=numpy.uint8)
+                        msk_shape = src.height//sampling, src.width//sampling
+                        if bidx is None:
+                            msk = numpy.zeros(
+                                (src.count,) + msk_shape, 'uint8')
+                        else:
+                            msk = numpy.zeros(msk_shape, 'uint8')
                         msk = src.read_masks(bidx, msk)
                         if bidx is None:
-                            msk = numpy.logical_or.reduce(msk)
+                            msk = numpy.logical_or.reduce(msk).astype('uint8')
                         transform = src.affine * Affine.scale(float(sampling))
 
                 bounds = src.bounds
@@ -129,7 +159,7 @@ def shapes(
                 kwargs = {'transform': transform}
                 # Default is to exclude nodata features.
                 if msk is not None:
-                    kwargs['mask'] = (msk>0)
+                    kwargs['mask'] = msk #(msk > 0)
                 if img is None:
                     img = msk
 
@@ -143,15 +173,17 @@ def shapes(
                         'type': 'Feature',
                         'id': str(i),
                         'properties': {
-                            'val': i, 'filename': os.path.basename(src.name)},
+                            'val': i, 'filename': os.path.basename(src.name)
+                        },
                         'bbox': [min(xs), min(ys), max(xs), max(ys)],
-                        'geometry': g }
+                        'geometry': g
+                    }
 
     if not sequence:
         geojson_type = 'collection'
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+        with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
             write_features(
                 stdout, Collection(), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
@@ -176,17 +208,19 @@ def shapes(
               help='Output dataset width, height in number of pixels.')
 @click.option('--res', multiple=True, type=float, default=None,
               help='Output dataset resolution in units of coordinate '
-              'reference system. Pixels assumed to be square if this option is '
-              'used once, otherwise use: '
+              'reference system. Pixels assumed to be square if this option '
+              'is used once, otherwise use: '
               '--res pixel_width --res pixel_height')
 @click.option('--src_crs', default='EPSG:4326',
               help='Source coordinate reference system.  Limited to EPSG '
-              'codes for now.  Used as output coordinate system if output does '
-              'not exist or --like option is not used. Default: EPSG:4326')
+              'codes for now.  Used as output coordinate system if output '
+              'does not exist or --like option is not used. '
+              'Default: EPSG:4326')
 @click.option('--all_touched', is_flag=True, default=False)
 @click.option('--default_value', type=float, default=1, help='Default value '
               'for rasterized pixels')
-@click.option('--fill', type=float, default=0, help='Fill value for all pixels '
+@click.option('--fill', type=float, default=0,
+              help='Fill value for allpixels '
               'not overlapping features.  Will be evaluated as NoData pixels '
               'for output.  Default: 0')
 @click.option('--property', type=str, default=None, help='Property in '
@@ -333,9 +367,10 @@ def rasterize(
 
                 if src_crs == 'EPSG:4326':
                     if (bounds[0] < -180 or bounds[2] > 180 or
-                        bounds[1] < -80 or bounds[3] > 80):
+                            bounds[1] < -80 or bounds[3] > 80):
                         raise click.BadParameter(
-                            'Bounds are beyond the valid extent for EPSG:4326.',
+                            "Bounds are beyond the valid extent for "
+                            "EPSG:4326.",
                             ctx, param=bounds, param_hint='--bounds')
 
                 if dimensions:
