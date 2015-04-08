@@ -619,8 +619,8 @@ cdef class RasterReader(_base.DatasetReader):
             a 2x2 window at the upper left of the raster dataset.
 
         masked : bool, optional
-            If `masked` is `True` (the default), the return value will
-            be a masked array. Otherwise, the return value will be a 
+            If `masked` is `True` the return value will be a masked
+            array. Otherwise (the default) the return value will be a 
             regular array. Masks will be exactly the inverse of the
             GDAL RFC 15 conforming arrays returned by read_masks().
 

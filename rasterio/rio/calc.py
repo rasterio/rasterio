@@ -52,9 +52,10 @@ def read_array(ix, subix=None, dtype=None):
                                 'int32', 'float32', 'float64']),
               default=None,
               help="Output data type (default: float64).")
-@click.option('--masked/--raw',
+@click.option('--masked/--not-masked',
               default=True,
-              help="Evaluate expressions using masked arrays")
+              help="Evaluate expressions using masked arrays (the default) "
+                   "or ordinary numpy arrays.")
 @click.pass_context
 def calc(ctx, command, files, name, dtype, masked):
     """A raster data calculator

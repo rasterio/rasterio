@@ -4,7 +4,6 @@ import logging
 from math import ceil, floor
 import os
 import sys
-import warnings
 
 import click
 from cligj import (
@@ -19,7 +18,6 @@ from rasterio.rio.cli import cli, coords, write_features
 
 
 logger = logging.getLogger('rio')
-warnings.simplefilter('default')
 
 
 # Shapes command.
@@ -332,9 +330,10 @@ def rasterize(
                                              param='input', param_hint='input')
 
                 if disjoint_bounds(geojson_bounds, out.bounds):
-                    warnings.warn('GeoJSON outside bounds of existing output '
-                                  'raster.  Are they in different coordinate '
-                                  'reference systems?')
+                    click.echo("GeoJSON outside bounds of existing output "
+                               "raster. Are they in different coordinate "
+                               "reference systems?",
+                               err=True)
 
                 meta = out.meta.copy()
 
@@ -365,9 +364,10 @@ def rasterize(
                                              param='input', param_hint='input')
 
                 if disjoint_bounds(geojson_bounds, template_ds.bounds):
-                    warnings.warn('GeoJSON outside bounds of --like raster. '
-                                  'Are they in different coordinate reference '
-                                  'systems?')
+                    click.echo("GeoJSON outside bounds of --like raster. "
+                               "Are they in different coordinate reference "
+                               "systems?",
+                               err=True)
 
                 kwargs = template_ds.meta.copy()
                 kwargs['count'] = 1

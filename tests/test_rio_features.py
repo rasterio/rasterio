@@ -10,7 +10,7 @@ import rasterio
 from rasterio.rio import features
 
 
-# logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 TEST_FEATURES = """{
     "geometry": {
@@ -320,7 +320,7 @@ def test_rasterize_like(tmpdir, runner):
     # Test invalid like raster
     output = str(tmpdir.join('test2.tif'))
     result = runner.invoke(features.rasterize,
-                           [output, '--like', 'foo.tif'], input=TEST_FEATURES)
+                           [output, '--like', str(tmpdir.join('foo.tif'))], input=TEST_FEATURES)
     assert result.exit_code == 2
 
     # Test that src_crs different than --like raster crs breaks

@@ -72,9 +72,10 @@ def env(ctx, key):
               help="Output extra information.")
 @click.option('--bidx', type=int, default=1,
               help="Input file band index (default: 1).")
-@click.option('--masked/--raw',
+@click.option('--masked/--not-masked',
               default=True,
-              help="Evaluate expressions using masked arrays")
+              help="Evaluate expressions using masked arrays (the default) "
+                   "or ordinary numpy arrays.")
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         masked):
@@ -102,8 +103,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                 if verbose:
                     stats = [{'min': float(b.min()),
                               'max': float(b.max()),
-                              'mean': float(b.mean())} for b in src.read(
-                                  masked=masked)]
+                              'mean': float(b.mean())
+                              } for b in src.read(masked=masked)]
                     info['stats'] = stats
                 if aspect == 'meta':
                     if meta_member == 'stats':
