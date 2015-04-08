@@ -7,7 +7,7 @@ echo ""
 
 echo "2. rio calc mult: 0.95 * a"
 echo "--------------------------"
-time rio calc "(* 0.95 (read 1))" tests/data/RGB.byte.tif out_rio.tif
+time rio calc "(* (read 1) 0.95)" tests/data/RGB.byte.tif out_rio.tif
 echo ""
 
 echo "3. gdal_calc.py mult add: 0.95 * a + 10"
@@ -17,5 +17,5 @@ echo ""
 
 echo "4. rio calc mult add: 0.95 * a + 10"
 echo "-----------------------------------"
-time rio calc "(+ (* 0.95 (read 1)) 10)" tests/data/RGB.byte.tif out_rio.tif
+time rio calc "(+ (* (read 1) 0.95) 10)" tests/data/RGB.byte.tif out_rio.tif
 echo ""

@@ -29,7 +29,7 @@ def test_multiband_calc(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data.min() == 125
         assert data.data[0][0][0] == 255
         assert data.mask[0][0][0]
@@ -47,7 +47,7 @@ def test_singleband_calc_byindex(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data.min() == 125
 
 
@@ -63,7 +63,7 @@ def test_singleband_calc_byname(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data.min() == 125
 
 
@@ -81,7 +81,7 @@ def test_parts_calc(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data[0].min() == 125
         assert data[1].min() == 0
         assert data[2].min() == 0
@@ -100,7 +100,7 @@ def test_parts_calc_2(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert round(data.mean(), 1) == 60.3
 
 
@@ -116,7 +116,7 @@ def test_copy_rgb(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert round(data.mean(), 1) == 60.6
 
 
@@ -133,7 +133,7 @@ def test_fillnodata(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert round(data.mean(), 1) == 60.6
 
 
@@ -149,7 +149,7 @@ def test_fillnodata_map(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert round(data.mean(), 1) == 60.6
 
 

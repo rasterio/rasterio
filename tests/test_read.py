@@ -92,7 +92,7 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_basic(self):
         with rasterio.open('tests/data/shade.tif') as s:
-            a = s.read()  # Gray
+            a = s.read(masked=True)  # Gray
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 1024, 1024))
             self.assertTrue(hasattr(a, 'mask'))
@@ -101,7 +101,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.dtype, rasterio.ubyte)
             self.assertEqual(a.sum((1, 2)).tolist(), [0])
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = s.read()  # RGB
+            a = s.read(masked=True)  # RGB
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 718, 791))
             self.assertTrue(hasattr(a, 'mask'))
@@ -113,7 +113,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(list(set(s.nodatavals)), [0])
             self.assertEqual(a.dtype, rasterio.ubyte)
         with rasterio.open('tests/data/float.tif') as s:
-            a = s.read()  # floating point values
+            a = s.read(masked=True)  # floating point values
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
             self.assert_(hasattr(a, 'mask'))
@@ -161,7 +161,7 @@ class ReaderContextTest(unittest.TestCase):
             # correct format
             self.assertRaises(ValueError, s.read, window=(300, 320, 320, 330))
             # window with 1 nodata on band 3
-            a = s.read(window=((300, 320), (320, 330)))
+            a = s.read(window=((300, 320), (320, 330)), masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 20, 10))
             self.assertTrue(hasattr(a, 'mask'))
@@ -171,7 +171,7 @@ class ReaderContextTest(unittest.TestCase):
                                'ec8fb3659f40c4a209027231bef12bdb',
                                '5a9c12aebc126ec6f27604babd67a4e2'])
             # window without any missing data, but still is masked result
-            a = s.read(window=((310, 330), (320, 330)))
+            a = s.read(window=((310, 330), (320, 330)), masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 20, 10))
             self.assertTrue(hasattr(a, 'mask'))
@@ -206,9 +206,8 @@ class ReaderContextTest(unittest.TestCase):
             # regular array, without mask
             a = numpy.empty((3, 718, 791), numpy.ubyte)
             b = s.read(out=a)
-            #self.assertEqual(id(a), id(b))
             self.assertFalse(hasattr(a, 'mask'))
-            self.assert_(hasattr(b, 'mask'))
+            self.assertFalse(hasattr(b, 'mask'))
             # with masked array
             a = numpy.ma.empty((3, 718, 791), numpy.ubyte)
             b = s.read(out=a)
@@ -237,7 +236,7 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_nan_nodata(self):
         with rasterio.open('tests/data/float_nan.tif') as s:
-            a = s.read()
+            a = s.read(masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
             self.assertTrue(hasattr(a, 'mask'))
@@ -249,7 +248,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertFalse(hasattr(a, 'mask'))
             self.assertTrue(numpy.isnan(a).any())
             # Window does not contain a nodatavalue, result is still masked
-            a = s.read(window=((0, 2), (0, 2)))
+            a = s.read(window=((0, 2), (0, 2)), masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 2))
             self.assertTrue(hasattr(a, 'mask'))
