@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.20.0 (2015-04-08)
+-------------------
+- Switch read() default to masked=False (#300, #317).
+- Fix documentation of masking throughout module (#305).
+- Remove option for in place nodata filling (#309).
+- Enhancements for valid data footprint extraction in rio-shapes (#316, #318).
+
 0.19.1 (2015-03-30)
 -------------------
 - Add missing blockxsize, blockysize, tiled keywords (#301).
