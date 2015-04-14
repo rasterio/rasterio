@@ -2,9 +2,7 @@ import logging
 import os
 import re
 import sys
-
-import click
-from click.testing import CliRunner
+import numpy
 
 import rasterio
 from rasterio.rio import features
@@ -31,6 +29,24 @@ TEST_FEATURES = """{
     "type": "Feature"
 }"""
 
+TEST_MERC_FEATURES = """{
+  "geometry": {
+      "coordinates": [
+          [
+              [-11858134, 4808920],
+              [-11868134, 4804143],
+              [-11853357, 4804143],
+              [-11840000, 4812000],
+              [-11858134, 4808920]
+          ]
+      ],
+      "type": "Polygon"
+  },
+  "properties": {
+      "val": 10
+  },
+  "type": "Feature"
+}"""
 
 # > rio shapes tests/data/shade.tif --mask --sampling 500 --projected --precision 0
 TEST_MERC_FEATURECOLLECTION = """{
@@ -78,11 +94,128 @@ TEST_MERC_FEATURECOLLECTION = """{
 }"""
 
 
-def test_err():
-    runner = CliRunner()
+def test_extract(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+
+    with rasterio.open('tests/data/shade.tif') as src:
+        src_data = src.read(1, masked=True)
+
+        result = runner.invoke(
+            features.extract,
+            ['tests/data/shade.tif', output],
+            input=TEST_MERC_FEATURES
+        )
+        assert result.exit_code == 0
+        assert os.path.exists(output)
+
+        masked_count = 0
+        with rasterio.open(output) as out:
+            assert out.count == src.count
+            assert out.shape == src.shape
+            out_data = out.read(1, masked=True)
+
+            # Make sure that pixels with 0 value were converted to mask
+            masked_count = (src_data == 0).sum() - (out_data == 0).sum()
+            assert masked_count == 79743
+            assert out_data.mask.sum() - src_data.mask.sum() == masked_count
+
+        # Test using --all_touched option
+        result = runner.invoke(
+            features.extract,
+            ['tests/data/shade.tif', output, '--all_touched'],
+            input=TEST_MERC_FEATURES
+        )
+        assert result.exit_code == 0
+        with rasterio.open(output) as out:
+            out_data = out.read(1, masked=True)
+
+            # Make sure that more pixels with 0 value were converted to mask
+            masked_count2 = (src_data == 0).sum() - (out_data == 0).sum()
+            assert masked_count2 > 0 and masked_count > masked_count2
+            assert out_data.mask.sum() - src_data.mask.sum() == masked_count2
+
+        # Test using --invert option
+        result = runner.invoke(
+            features.extract,
+            ['tests/data/shade.tif', output, '--invert'],
+            input=TEST_MERC_FEATURES
+        )
+        assert result.exit_code == 0
+        with rasterio.open(output) as out:
+            out_data = out.read(1, masked=True)
+            # Areas that were masked when not inverted should now be 0
+            assert (out_data == 0).sum() == masked_count
+
+    # Test with feature collection
     result = runner.invoke(
-        features.shapes, ['tests/data/shade.tif', '--bidx', '4'])
-    assert result.exit_code == 1
+        features.extract,
+        ['tests/data/shade.tif', output],
+        input=TEST_MERC_FEATURECOLLECTION
+    )
+    assert result.exit_code == 0
+
+    # GeoJSON as second parameter should fail
+    result = runner.invoke(
+        features.extract,
+        ['tests/data/shade.tif', 'bogus.json', output]
+    )
+    assert result.exit_code == 2
+
+    # Invalid GeoJSON should fail
+    result = runner.invoke(
+        features.extract,
+        ['tests/data/shade.tif', output],
+        input='{"bogus": "value"}'
+    )
+    assert result.exit_code == 2
+
+
+def test_extract_crop(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+
+    with rasterio.open('tests/data/shade.tif') as src:
+
+        result = runner.invoke(
+            features.extract,
+            ['tests/data/shade.tif', output, '--crop'],
+            input=TEST_MERC_FEATURES
+        )
+        assert result.exit_code == 0
+        assert os.path.exists(output)
+        with rasterio.open(output) as out:
+            assert out.shape[1] == src.shape[1]
+            assert out.shape[0] < src.shape[0]
+            assert out.shape[0] == 823
+
+    # Adding invert option after crop should be ignored
+    result = runner.invoke(
+        features.extract,
+        ['tests/data/shade.tif', output, '--crop', '--invert'],
+        input=TEST_MERC_FEATURES
+    )
+    assert result.exit_code == 0
+    assert 'Invert option ignored' in result.output
+
+
+def test_extract_out_of_bounds(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    # Crop with out of bounds raster should
+    result = runner.invoke(
+        features.extract,
+        ['tests/data/shade.tif', output],
+        input=TEST_FEATURES
+    )
+    assert result.exit_code == 0
+    assert 'outside bounds' in result.output
+
+    # Crop with out of bounds raster should fail
+    result = runner.invoke(
+        features.extract,
+        ['tests/data/shade.tif', output, '--crop'],
+        input=TEST_FEATURES
+    )
+    assert result.exit_code == 2
+    assert 'not allowed' in result.output
 
 
 def test_shapes(runner):
@@ -90,6 +223,11 @@ def test_shapes(runner):
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 232
+
+    # Invalid band index should fail
+    result = runner.invoke(
+        features.shapes, ['tests/data/shade.tif', '--bidx', '4'])
+    assert result.exit_code == 1
 
 
 def test_shapes_sequence(runner):

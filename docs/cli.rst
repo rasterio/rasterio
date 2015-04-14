@@ -19,6 +19,7 @@ Rasterio's new command line interface is a program named "rio".
     Commands:
       bounds     Write bounding boxes to stdout as GeoJSON.
       env        Print information about the rio environment.
+      extract    Extract raster using features.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
       merge      Merge a stack of raster datasets.
@@ -127,6 +128,38 @@ design of the calc command and something that could be done much more
 efficiently in Python.
 
 Please see `calc.rst <calc.rst>`__ for more details.
+
+
+extract
+-------
+
+New in 0.21
+
+The extract command extracts pixels from all bands of a raster using features
+(masking out all areas not covered by features) and optionally crops the output
+raster to the extent of the features.  Features are assumed to be in the same
+coordinate reference system as the input raster.
+
+A common use case is extracting raster data by political or other boundaries.
+
+.. code-block:: console
+
+    $ rio extract input.tif output.tif < input.geojson
+
+GeoJSON features may be provided using stdin or specified directly as first
+argument.
+
+.. code-block:: console
+
+    $ rio rasterize input.geojson input.tif output.tif --crop
+
+The feature mask can be inverted to mask out pixels covered by features and
+extract pixels not covered by features.
+
+.. code-block:: console
+
+    $ rio rasterize input.geojson input.tif output.tif --invert
+
 
 info
 ----

@@ -13,7 +13,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
-    eval_window, window_shape, window_index, tastes_like_gdal)
+    crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
@@ -697,13 +697,12 @@ cdef class RasterReader(_base.DatasetReader):
                 win_shape += (
                         window[0][1]-window[0][0], window[1][1]-window[1][0])
             else:
-                w = eval_window(window, self.height, self.width)
-                minr = min(max(w[0][0], 0), self.height)
-                maxr = max(0, min(w[0][1], self.height))
-                minc = min(max(w[1][0], 0), self.width)
-                maxc = max(0, min(w[1][1], self.width))
-                win_shape += (maxr - minr, maxc - minc)
-                window = ((minr, maxr), (minc, maxc))
+                window = crop_window(
+                    eval_window(window, self.height, self.width),
+                    self.height, self.width
+                )
+                (r_start, r_stop), (c_start, c_stop) = window
+                win_shape += (r_stop - r_start, c_stop - c_start)
         else:
             win_shape += self.shape
 

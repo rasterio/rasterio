@@ -4,7 +4,7 @@ import numpy
 import pytest
 
 import rasterio
-from rasterio.features import shapes, rasterize
+from rasterio.features import shapes, rasterize, geometry_mask
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -159,3 +159,23 @@ def test_rasterize_geometries_symmetric():
         s = shapes(truth, transform=transform)
         result = rasterize(s, out_shape=(rows, cols), transform=transform)
         assert numpy.array_equal(result, truth)
+
+
+def test_geometry_mask():
+    rows = cols = 10
+    transform = (1.0, 0.0, 0.0, 0.0, -1.0, 0.0)
+    truth = numpy.zeros((rows, cols), dtype=rasterio.bool_)
+    truth[2:5, 2:5] = True
+    with rasterio.drivers():
+        s = shapes((truth * 10).astype(rasterio.ubyte), transform=transform)
+        # Strip out values returned from shapes, and only keep first shape
+        geoms = [next(s)[0]]
+
+        # Regular mask should be the inverse of truth raster
+        mask = geometry_mask(geoms, out_shape=(rows, cols), transform=transform)
+        assert numpy.array_equal(mask, numpy.invert(truth))
+
+        # Inverted mask should be the same as the truth raster
+        mask = geometry_mask(geoms, out_shape=(rows, cols), transform=transform,
+                             invert=True)
+        assert numpy.array_equal(mask, truth)

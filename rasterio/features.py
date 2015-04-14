@@ -22,6 +22,49 @@ class NullHandler(logging.Handler):
 log.addHandler(NullHandler())
 
 
+def geometry_mask(
+        geometries,
+        out_shape,
+        transform,
+        all_touched=False,
+        invert=False):
+    """Create a mask from shapes.  By default, mask is intended for use as a
+    numpy mask, where pixels that overlap shapes are False.
+
+    Parameters
+    ----------
+    geometries : iterable over geometries (GeoJSON-like objects)
+    out_shape : tuple or list
+        Shape of output numpy ndarray.
+    transform : Affine transformation object
+        Transformation from pixel coordinates of `image` to the
+        coordinate system of the input `shapes`. See the `transform`
+        property of dataset objects.
+    all_touched : boolean, optional
+        If True, all pixels touched by geometries will be burned in.  If
+        false, only pixels whose center is within the polygon or that
+        are selected by Brezenhams line algorithm will be burned in.
+    invert: boolean, optional
+        If True, mask will be True for pixels that overlap shapes.
+        False by default.
+
+    Returns
+    -------
+    out : numpy ndarray of type 'bool'
+        Result
+    """
+
+    fill, mask_value = (0, 1) if invert else (1, 0)
+
+    return rasterize(
+        geometries,
+        out_shape=out_shape,
+        transform=transform,
+        all_touched=all_touched,
+        fill=fill,
+        default_value=mask_value).astype('bool')
+
+
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     """
     Return a generator of (polygon, value) for each each set of adjacent pixels
@@ -187,7 +230,7 @@ def rasterize(
     Parameters
     ----------
     shapes : iterable of (geometry, value) pairs or iterable over
-        geometries `geometry` can either be an object that implements
+        geometries. `geometry` can either be an object that implements
         the geo interface or GeoJSON-like object.
     out_shape : tuple or list
         Shape of output numpy ndarray.
@@ -205,11 +248,11 @@ def rasterize(
     all_touched : boolean, optional
         If True, all pixels touched by geometries will be burned in.  If
         false, only pixels whose center is within the polygon or that
-        are selected by brezenhams line algorithm will be burned in.
+        are selected by Brezenhams line algorithm will be burned in.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
-        Used as data type for results, if `output` is not provided.
+        Used as data type for results, if `out` is not provided.
 
     Returns
     -------
