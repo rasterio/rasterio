@@ -19,9 +19,9 @@ Rasterio's new command line interface is a program named "rio".
     Commands:
       bounds     Write bounding boxes to stdout as GeoJSON.
       env        Print information about the rio environment.
-      extract    Extract raster using features.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
+      mask       Mask in raster using features.
       merge      Merge a stack of raster datasets.
       rasterize  Rasterize features.
       sample     Sample a dataset.
@@ -130,35 +130,35 @@ efficiently in Python.
 Please see `calc.rst <calc.rst>`__ for more details.
 
 
-extract
--------
+mask
+----
 
 New in 0.21
 
-The extract command extracts pixels from all bands of a raster using features
+The mask command masks in pixels from all bands of a raster using features
 (masking out all areas not covered by features) and optionally crops the output
 raster to the extent of the features.  Features are assumed to be in the same
 coordinate reference system as the input raster.
 
-A common use case is extracting raster data by political or other boundaries.
+A common use case is masking in raster data by political or other boundaries.
 
 .. code-block:: console
 
-    $ rio extract input.tif output.tif < input.geojson
+    $ rio mask input.tif output.tif --geojson-file input.geojson
 
 GeoJSON features may be provided using stdin or specified directly as first
-argument.
+argument, and output can be cropped to the extent of the features.
 
 .. code-block:: console
 
-    $ rio rasterize input.geojson input.tif output.tif --crop
+    $ rio mask input.tif output.tif --crop --geojson-file - < input.geojson
 
 The feature mask can be inverted to mask out pixels covered by features and
-extract pixels not covered by features.
+keep pixels not covered by features.
 
 .. code-block:: console
 
-    $ rio rasterize input.geojson input.tif output.tif --invert
+    $ rio mask input.tif output.tif --invert --geojson-file input.geojson
 
 
 info

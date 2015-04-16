@@ -94,15 +94,15 @@ TEST_MERC_FEATURECOLLECTION = """{
 }"""
 
 
-def test_extract(runner, tmpdir):
+def test_mask(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
 
     with rasterio.open('tests/data/shade.tif') as src:
         src_data = src.read(1, masked=True)
 
         result = runner.invoke(
-            features.extract,
-            ['tests/data/shade.tif', output],
+            features.mask,
+            ['tests/data/shade.tif', output, '--geojson-file', '-'],
             input=TEST_MERC_FEATURES
         )
         assert result.exit_code == 0
@@ -119,10 +119,14 @@ def test_extract(runner, tmpdir):
             assert masked_count == 79743
             assert out_data.mask.sum() - src_data.mask.sum() == masked_count
 
-        # Test using --all_touched option
+        # Test using --all-touched option
         result = runner.invoke(
-            features.extract,
-            ['tests/data/shade.tif', output, '--all_touched'],
+            features.mask,
+            [
+                'tests/data/shade.tif', output,
+                '--all-touched',
+                '--geojson-file', '-'
+            ],
             input=TEST_MERC_FEATURES
         )
         assert result.exit_code == 0
@@ -136,8 +140,12 @@ def test_extract(runner, tmpdir):
 
         # Test using --invert option
         result = runner.invoke(
-            features.extract,
-            ['tests/data/shade.tif', output, '--invert'],
+            features.mask,
+            [
+                'tests/data/shade.tif', output,
+                '--invert',
+                '--geojson-file', '-'
+            ],
             input=TEST_MERC_FEATURES
         )
         assert result.exit_code == 0
@@ -148,36 +156,56 @@ def test_extract(runner, tmpdir):
 
     # Test with feature collection
     result = runner.invoke(
-        features.extract,
-        ['tests/data/shade.tif', output],
+        features.mask,
+        ['tests/data/shade.tif', output, '--geojson-file', '-'],
         input=TEST_MERC_FEATURECOLLECTION
     )
     assert result.exit_code == 0
 
-    # GeoJSON as second parameter should fail
+    # Missing GeoJSON should make copy of input to output
+    output2 = str(tmpdir.join('test2.tif'))
     result = runner.invoke(
-        features.extract,
-        ['tests/data/shade.tif', 'bogus.json', output]
+        features.mask,
+        ['tests/data/shade.tif', output2]
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(output2)
+    with rasterio.open('tests/data/shade.tif') as src:
+        with rasterio.open(output2) as out:
+            src_data = src.read(1, masked=True)
+            out_data = out.read(1, masked=True)
+            assert numpy.array_equal(src_data, out_data)
+
+    # Invalid JSON should fail
+    result = runner.invoke(
+        features.mask,
+        ['tests/data/shade.tif', output, '--geojson-file', '-'],
+        input='{bogus: value}'
     )
     assert result.exit_code == 2
+    assert 'GeoJSON could not be read' in result.output
 
-    # Invalid GeoJSON should fail
     result = runner.invoke(
-        features.extract,
-        ['tests/data/shade.tif', output],
+        features.mask,
+        ['tests/data/shade.tif', output, '--geojson-file', '-'],
         input='{"bogus": "value"}'
     )
     assert result.exit_code == 2
+    assert 'Invalid GeoJSON' in result.output
 
 
-def test_extract_crop(runner, tmpdir):
+def test_mask_crop(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
 
     with rasterio.open('tests/data/shade.tif') as src:
 
         result = runner.invoke(
-            features.extract,
-            ['tests/data/shade.tif', output, '--crop'],
+            features.mask,
+            [
+                'tests/data/shade.tif', output,
+                '--crop',
+                '--geojson-file', '-'
+            ],
             input=TEST_MERC_FEATURES
         )
         assert result.exit_code == 0
@@ -189,20 +217,25 @@ def test_extract_crop(runner, tmpdir):
 
     # Adding invert option after crop should be ignored
     result = runner.invoke(
-        features.extract,
-        ['tests/data/shade.tif', output, '--crop', '--invert'],
+        features.mask,
+        [
+            'tests/data/shade.tif', output,
+            '--crop',
+            '--invert',
+            '--geojson-file', '-'
+        ],
         input=TEST_MERC_FEATURES
     )
     assert result.exit_code == 0
     assert 'Invert option ignored' in result.output
 
 
-def test_extract_out_of_bounds(runner, tmpdir):
+def test_mask_out_of_bounds(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     # Crop with out of bounds raster should
     result = runner.invoke(
-        features.extract,
-        ['tests/data/shade.tif', output],
+        features.mask,
+        ['tests/data/shade.tif', output, '--geojson-file', '-'],
         input=TEST_FEATURES
     )
     assert result.exit_code == 0
@@ -210,8 +243,12 @@ def test_extract_out_of_bounds(runner, tmpdir):
 
     # Crop with out of bounds raster should fail
     result = runner.invoke(
-        features.extract,
-        ['tests/data/shade.tif', output, '--crop'],
+        features.mask,
+        [
+            'tests/data/shade.tif', output,
+            '--crop',
+            '--geojson-file', '-'
+        ],
         input=TEST_FEATURES
     )
     assert result.exit_code == 2
@@ -335,7 +372,7 @@ def test_rasterize_err(tmpdir, runner):
     # Test invalid CRS value
     result = runner.invoke(features.rasterize, [output,
                                                 '--res', 1,
-                                                '--src_crs', 'BOGUS'],
+                                                '--src-crs', 'BOGUS'],
                            input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 2
 
@@ -387,12 +424,12 @@ def test_rasterize(tmpdir, runner):
         assert (data == 0).sum() == 55
         assert (data == 1).sum() == 145
 
-    # Test that src_crs is written into new output
+    # Test that src-crs is written into new output
     output = str(tmpdir.join('test4.tif'))
     result = runner.invoke(features.rasterize,
                            [output,
                             '--dimensions', 20, 10,
-                            '--src_crs', 'EPSG:3857'
+                            '--src-crs', 'EPSG:3857'
                            ],
                            input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 0
@@ -423,7 +460,7 @@ def test_rasterize_existing_output(tmpdir, runner):
         "type": "Feature"
     }"""
 
-    result = runner.invoke(features.rasterize, [output, '--default_value', 2],
+    result = runner.invoke(features.rasterize, [output, '--default-value', 2],
                            input=geojson)
 
     with rasterio.open(output) as out:
@@ -433,11 +470,11 @@ def test_rasterize_existing_output(tmpdir, runner):
         assert (data == 1).sum() == 125
         assert (data == 2).sum() == 20
 
-    # Confirm that a different src_crs is rejected, even if a geographic crs
+    # Confirm that a different src-crs is rejected, even if a geographic crs
     result = runner.invoke(features.rasterize,
                            [output,
                             '--res', 0.5,
-                            '--src_crs', 'EPSG:4269'
+                            '--src-crs', 'EPSG:4269'
                             ], input=TEST_FEATURES)
     assert result.exit_code == 2
 
@@ -461,12 +498,12 @@ def test_rasterize_like(tmpdir, runner):
                            [output, '--like', str(tmpdir.join('foo.tif'))], input=TEST_FEATURES)
     assert result.exit_code == 2
 
-    # Test that src_crs different than --like raster crs breaks
+    # Test that src-crs different than --like raster crs breaks
     output = str(tmpdir.join('test3.tif'))
     result = runner.invoke(features.rasterize,
                            [output,
                             '--like', 'tests/data/shade.tif',
-                            '--src_crs', 'EPSG:4326'],
+                            '--src-crs', 'EPSG:4326'],
                            input=TEST_FEATURES)
     assert result.exit_code == 2
 
@@ -478,7 +515,7 @@ def test_rasterize_property_value(tmpdir, runner):
                            [output,
                             '--res', 1000,
                             '--property', 'val',
-                            '--src_crs', 'EPSG:3857'
+                            '--src-crs', 'EPSG:3857'
                            ],
                            input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 0
