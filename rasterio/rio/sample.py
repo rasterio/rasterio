@@ -14,7 +14,7 @@ warnings.simplefilter('default')
 
 @cli.command(short_help="Sample a dataset.")
 @click.argument('files', nargs=-1, required=True, metavar='FILE "[x, y]"')
-@click.option('--bidx', default=None, help="Indexes of input file bands.")
+@click.option('-b', '--bidx', default=None, help="Indexes of input file bands.")
 @click.pass_context
 def sample(ctx, files, bidx):
     """Sample a dataset at one or more points

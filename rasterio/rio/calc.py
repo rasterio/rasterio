@@ -1,15 +1,12 @@
 # Calc command.
 
 import logging
-import math
-import os.path
-import re
 import sys
 import traceback
-import warnings
 
 import click
 import snuggs
+from cligj import files_inout_arg
 
 import rasterio
 from rasterio.fill import fillnodata
@@ -37,17 +34,12 @@ def read_array(ix, subix=None, dtype=None):
 
 @cli.command(short_help="Raster data calculator.")
 @click.argument('command')
-@click.argument(
-    'files',
-    nargs=-1,
-    type=click.Path(resolve_path=False),
-    required=True,
-    metavar="INPUTS... OUTPUT")
-@click.option('--name', multiple=True,
+@files_inout_arg
+@click.option('-nm', '--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
                    'name for use in commands like '
                    '"a=tests/data/RGB.byte.tif".')
-@click.option('--dtype',
+@click.option('-dt', '--dtype',
               type=click.Choice(['ubyte', 'uint8', 'uint16', 'int16', 'uint32',
                                 'int32', 'float32', 'float64']),
               default=None,

@@ -400,7 +400,7 @@ following.
 
 .. code-block:: console
 
-    $ echo "[-78.0, 23.0]" | rio transform - --dst_crs EPSG:32618 --precision 2
+    $ echo "[-78.0, 23.0]" | rio transform - --dst-crs EPSG:32618 --precision 2
     [192457.13, 2546667.68]
 
 To transform a longitude, latitude bounding box to the coordinate system of
@@ -408,7 +408,7 @@ a raster dataset, do the following.
 
 .. code-block:: console
 
-    $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst_crs tests/data/RGB.byte.tif --precision 2
+    $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst-crs tests/data/RGB.byte.tif --precision 2
     [192457.13, 2546667.68, 399086.97, 2765319.94]
 
 Suggestions for other commands are welcome!

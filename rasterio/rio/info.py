@@ -2,8 +2,6 @@
 
 import json
 import logging
-import os.path
-import pprint
 import sys
 
 import click
@@ -32,7 +30,7 @@ def env(ctx, key):
 
 
 @cli.command(short_help="Print information about a data file.")
-@click.argument('input', type=click.Path(exists=True))
+@click.argument('INPUT', type=click.Path(exists=True))
 @click.option('--meta', 'aspect', flag_value='meta', default=True,
               help="Show data file structure (default).")
 @click.option('--tags', 'aspect', flag_value='tags',
@@ -42,26 +40,26 @@ def env(ctx, key):
               help="Indentation level for pretty printed output")
 # Options to pick out a single metadata item and print it as
 # a string.
-@click.option('--count', 'meta_member', flag_value='count',
+@click.option('-ct', '--count', 'meta_member', flag_value='count',
               help="Print the count of bands.")
-@click.option('--dtype', 'meta_member', flag_value='dtype',
+@click.option('-dt', '--dtype', 'meta_member', flag_value='dtype',
               help="Print the dtype name.")
-@click.option('--nodata', 'meta_member', flag_value='nodata',
+@click.option('-nd', '--nodata', 'meta_member', flag_value='nodata',
               help="Print the nodata value.")
 @click.option('-f', '--format', '--driver', 'meta_member', flag_value='driver',
               help="Print the format driver.")
-@click.option('--shape', 'meta_member', flag_value='shape',
+@click.option('-shp', '--shape', 'meta_member', flag_value='shape',
               help="Print the (height, width) shape.")
-@click.option('--height', 'meta_member', flag_value='height',
+@click.option('-h', '--height', 'meta_member', flag_value='height',
               help="Print the height (number of rows).")
-@click.option('--width', 'meta_member', flag_value='width',
+@click.option('-w', '--width', 'meta_member', flag_value='width',
               help="Print the width (number of columns).")
-@click.option('--crs', 'meta_member', flag_value='crs',
+@click.option('-c', '--crs', 'meta_member', flag_value='crs',
               help="Print the CRS as a PROJ.4 string.")
-@click.option('--bounds', 'meta_member', flag_value='bounds',
+@click.option('-bd', '--bounds', 'meta_member', flag_value='bounds',
               help="Print the boundary coordinates "
                    "(left, bottom, right, top).")
-@click.option('--res', 'meta_member', flag_value='res',
+@click.option('-r', '--res', 'meta_member', flag_value='res',
               help="Print pixel width and height.")
 @click.option('--lnglat', 'meta_member', flag_value='lnglat',
               help="Print longitude and latitude at center.")
@@ -70,7 +68,7 @@ def env(ctx, key):
                    "(use --bidx).")
 @click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
               help="Output extra information.")
-@click.option('--bidx', type=int, default=1,
+@click.option('-b', '--bidx', type=int, default=1,
               help="Input file band index (default: 1).")
 @click.option('--masked/--not-masked',
               default=True,

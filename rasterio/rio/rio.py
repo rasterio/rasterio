@@ -30,8 +30,9 @@ warnings.simplefilter('default')
 
 # Insp command.
 @cli.command(short_help="Open a data file and start an interpreter.")
-@click.argument('input', type=click.Path(exists=True))
+@click.argument('INPUT', type=click.Path(exists=True))
 @click.option(
+    '-m',
     '--mode',
     type=click.Choice(['r', 'r+']),
     default='r',
@@ -61,7 +62,7 @@ def insp(ctx, input, mode):
 @cli.command(short_help="Write bounding boxes to stdout as GeoJSON.")
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
-@click.argument('input', nargs=-1, type=click.Path(exists=True))
+@click.argument('INPUT', nargs=-1, type=click.Path(exists=True))
 @precision_opt
 @indent_opt
 @compact_opt
@@ -156,9 +157,9 @@ def bounds(ctx, input, precision, indent, compact, projection, sequence,
 
 # Transform command.
 @cli.command(short_help="Transform coordinates.")
-@click.argument('input', default='-', required=False)
-@click.option('--src_crs', default='EPSG:4326', help="Source CRS.")
-@click.option('--dst_crs', default='EPSG:4326', help="Destination CRS.")
+@click.argument('INPUT', default='-', required=False)
+@click.option('--src-crs', '--src_crs', default='EPSG:4326', help="Source CRS.")
+@click.option('--dst-crs', '--dst_crs', default='EPSG:4326', help="Destination CRS.")
 @precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):

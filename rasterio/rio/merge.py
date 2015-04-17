@@ -17,11 +17,11 @@ from rasterio.transform import Affine
 @cli.command(short_help="Merge a stack of raster datasets.")
 @files_inout_arg
 @format_opt
-@click.option('--bounds', nargs=4, type=float, default=None,
+@click.option('-bd', '--bounds', nargs=4, type=float, default=None,
               help="Output bounds: left, bottom, right, top.")
-@click.option('--res', nargs=2, type=float, default=None,
+@click.option('-r', '--res', nargs=2, type=float, default=None,
               help="Output dataset resolution: pixel width, pixel height")
-@click.option('--nodata', '-n', type=float, default=None,
+@click.option('-nd', '--nodata', type=float, default=None,
               help="Override nodata values defined in input datasets")
 @click.pass_context
 def merge(ctx, files, driver, bounds, res, nodata):

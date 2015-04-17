@@ -1,5 +1,4 @@
 import logging
-import os.path
 import sys
 
 import click
@@ -26,9 +25,9 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 @cli.command(short_help="Stack a number of bands into a multiband dataset.")
 @files_inout_arg
 @format_opt
-@click.option('--bidx', multiple=True,
+@click.option('-b', '--bidx', multiple=True,
               help="Indexes of input file bands.")
-@click.option('--photometric', default=None,
+@click.option('-p', '--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
 @click.pass_context

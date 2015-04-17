@@ -137,7 +137,7 @@ def test_transform_point():
     runner = CliRunner()
     result = runner.invoke(
         rio.transform,
-        ['--dst_crs', 'EPSG:32618', '--precision', '2'],
+        ['--dst-crs', 'EPSG:32618', '--precision', '2'],
         "[-78.0, 23.0]", catch_exceptions=False)
     assert result.exit_code == 0
     assert result.output.strip() == '[192457.13, 2546667.68]'
@@ -147,7 +147,7 @@ def test_transform_point_dst_file():
     runner = CliRunner()
     result = runner.invoke(
         rio.transform,
-        ['--dst_crs', 'tests/data/RGB.byte.tif', '--precision', '2'],
+        ['--dst-crs', 'tests/data/RGB.byte.tif', '--precision', '2'],
         "[-78.0, 23.0]")
     assert result.exit_code == 0
     assert result.output.strip() == '[192457.13, 2546667.68]'
@@ -157,7 +157,7 @@ def test_transform_point_src_file():
     runner = CliRunner()
     result = runner.invoke(
         rio.transform,
-        ['--src_crs', 'tests/data/RGB.byte.tif', '--precision', '2'],
+        ['--src-crs', 'tests/data/RGB.byte.tif', '--precision', '2'],
         "[192457.13, 2546667.68]")
     assert result.exit_code == 0
     assert result.output.strip() == '[-78.0, 23.0]'
@@ -167,7 +167,7 @@ def test_transform_point_2():
     runner = CliRunner()
     result = runner.invoke(
         rio.transform,
-        ['[-78.0, 23.0]', '--dst_crs', 'EPSG:32618', '--precision', '2'])
+        ['[-78.0, 23.0]', '--dst-crs', 'EPSG:32618', '--precision', '2'])
     assert result.exit_code == 0
     assert result.output.strip() == '[192457.13, 2546667.68]'
 
@@ -176,7 +176,7 @@ def test_transform_point_multi():
     runner = CliRunner()
     result = runner.invoke(
         rio.transform,
-        ['--dst_crs', 'EPSG:32618', '--precision', '2'],
+        ['--dst-crs', 'EPSG:32618', '--precision', '2'],
         "[-78.0, 23.0]\n[-78.0, 23.0]", catch_exceptions=False)
     assert result.exit_code == 0
     assert result.output.strip() == '[192457.13, 2546667.68]\n[192457.13, 2546667.68]'
