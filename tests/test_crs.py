@@ -5,6 +5,7 @@ import sys
 
 import rasterio
 from rasterio import crs
+from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -56,6 +57,15 @@ def test_write_3857(tmpdir):
     AUTHORITY["EPSG","3857"]]""" in info.decode('utf-8')
 
 
+def test_from_epsg():
+    crs_dict = crs.from_epsg(4326)
+    assert crs_dict['init'].lower() == 'epsg:4326'
+
+    # Test with invalid EPSG code
+    with pytest.raises(ValueError):
+        assert crs.from_epsg(0)
+
+
 def test_bare_parameters():
     """ Make sure that bare parameters (e.g., no_defs) are handled properly,
     even if they come in with key=True.  This covers interaction with pyproj,
@@ -64,3 +74,47 @@ def test_bare_parameters():
     # Example produced by pyproj
     crs_dict = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert crs_dict.get('no_defs', False) is True
+
+    crs_dict = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=False +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert crs_dict.get('no_defs', True) is False
+
+
+def test_is_geographic():
+    assert is_geographic_crs({'init': 'EPSG:4326'}) is True
+    assert is_geographic_crs({'init': 'EPSG:3857'}) is False
+
+    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    assert is_geographic_crs(wgs84_crs) is True
+
+    nad27_crs = crs.from_string('+proj=longlat +ellps=clrk66 +datum=NAD27 +no_defs')
+    assert is_geographic_crs(nad27_crs) is True
+
+    lcc_crs = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert is_geographic_crs(lcc_crs) is False
+
+
+def test_is_projected():
+    assert is_projected_crs({'init': 'EPSG:3857'}) is True
+    assert is_projected_crs({'init': 'EPSG:4326'}) is False
+
+    lcc_crs = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert is_projected_crs(lcc_crs) is True
+
+    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    assert is_projected_crs(wgs84_crs) is False
+
+
+def test_is_same_crs():
+    crs1 = {'init': 'EPSG:4326'}
+    crs2 = {'init': 'EPSG:3857'}
+
+    assert is_same_crs(crs1, crs1) is True
+    assert is_same_crs(crs1, crs2) is False
+
+    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    assert is_same_crs(crs1, wgs84_crs) is True
+
+    # Make sure that same projection with different parameter are not equal
+    lcc_crs1 = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    lcc_crs2 = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=45 +lat_0=0')
+    assert is_same_crs(lcc_crs1, lcc_crs2) is False

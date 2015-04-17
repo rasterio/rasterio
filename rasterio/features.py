@@ -34,8 +34,8 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
-        Values of False will be excluded from feature generation
-        Must be of type rasterio.bool_
+        Values of False or 0 will be excluded from feature generation
+        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
     transform : Affine transformation, optional
@@ -67,8 +67,8 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
         raise ValueError('image dtype must be one of: %s'
                          % (', '.join(valid_dtypes)))
 
-    if mask is not None and np.dtype(mask.dtype) != np.dtype(rasterio.bool_):
-        raise ValueError("Mask must be dtype rasterio.bool_")
+    if mask is not None and np.dtype(mask.dtype).name not in ('bool', 'uint8'):
+        raise ValueError("Mask must be dtype rasterio.bool_ or rasterio.uint8")
 
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
@@ -99,8 +99,8 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     output : older alias for `out`, will be removed before 1.0.
     output : numpy ndarray, optional
     mask : numpy ndarray or rasterio Band object, optional
-        Values of False will be excluded from feature generation
-        Must be of type rasterio.bool_
+        Values of False or 0 will be excluded from feature generation
+        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
 
@@ -140,8 +140,9 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
         raise ValueError('connectivity must be 4 or 8')
 
     if mask is not None:
-        if np.dtype(mask.dtype) != np.dtype(rasterio.bool_):
-            raise ValueError('Mask must be dtype rasterio.bool_')
+        if np.dtype(mask.dtype) not in ('bool', 'uint8'):
+            raise ValueError('Mask must be dtype rasterio.bool_ or '
+                             'rasterio.uint8')
         elif mask.shape != image.shape:
             raise ValueError('mask shape must be same as image shape')
 
@@ -161,9 +162,9 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
             out = np.zeros_like(image)
     else:
         if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
-            raise ValueError('output must match dtype of image')
+            raise ValueError('out raster must match dtype of image')
         elif out.shape != image.shape:
-            raise ValueError('mask shape must be same as image shape')
+            raise ValueError('out raster shape must be same as image shape')
 
     with rasterio.drivers():
         _sieve(image, size, out, mask, connectivity)

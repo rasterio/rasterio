@@ -29,8 +29,10 @@ def test_multiband_calc(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data.min() == 125
+        assert data.data[0][0][0] == 255
+        assert data.mask[0][0][0]
 
 
 def test_singleband_calc_byindex(tmpdir):
@@ -45,7 +47,7 @@ def test_singleband_calc_byindex(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data.min() == 125
 
 
@@ -61,7 +63,7 @@ def test_singleband_calc_byname(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data.min() == 125
 
 
@@ -72,7 +74,6 @@ def test_parts_calc(tmpdir):
     runner = CliRunner()
     result = runner.invoke(calc, [
                     '(asarray (+ (read 1 1) 125) (read 1 1) (read 1 1))',
-                    '--dtype', 'uint8',
                     'tests/data/shade.tif',
                     outfile],
                 catch_exceptions=False)
@@ -80,7 +81,7 @@ def test_parts_calc(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert data[0].min() == 125
         assert data[1].min() == 0
         assert data[2].min() == 0
@@ -92,7 +93,6 @@ def test_parts_calc_2(tmpdir):
     runner = CliRunner()
     result = runner.invoke(calc, [
                     '(+ (+ (/ (read 1 1) 3.0) (/ (read 1 2) 3.0)) (/ (read 1 3) 3.0))',
-                    '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],
                 catch_exceptions=False)
@@ -100,7 +100,7 @@ def test_parts_calc_2(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert round(data.mean(), 1) == 60.3
 
 
@@ -109,7 +109,6 @@ def test_copy_rgb(tmpdir):
     runner = CliRunner()
     result = runner.invoke(calc, [
                     '(read 1)',
-                    '--dtype', 'uint8',
                     'tests/data/RGB.byte.tif',
                     outfile],
                 catch_exceptions=False)
@@ -117,7 +116,7 @@ def test_copy_rgb(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
+        data = src.read(masked=True)
         assert round(data.mean(), 1) == 60.6
 
 
@@ -125,8 +124,7 @@ def test_fillnodata(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-                    '(asarray (fillnodata (band 1 1)) (fillnodata (band 1 2)) (fillnodata (band 1 3)))',
-                    '--dtype', 'uint8',
+                    '(asarray (fillnodata (read 1 1)) (fillnodata (read 1 2)) (fillnodata (read 1 3)))',
                     'tests/data/RGB.byte.tif',
                     outfile],
                 catch_exceptions=False)
@@ -135,17 +133,15 @@ def test_fillnodata(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
-        assert round(data.mean(), 1) == 58.6
+        data = src.read(masked=True)
+        assert round(data.mean(), 1) == 60.6
 
 
 def test_fillnodata_map(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
     result = runner.invoke(calc, [
-#                    '(asarray (map fillnodata (bands 1)))',
-                    '(asarray (map fillnodata (read 1) (!= (read 1) 0)))',
-                    '--dtype', 'uint8',
+                    '(asarray (map fillnodata (read 1)))',
                     'tests/data/RGB.byte.tif',
                     outfile],
                 catch_exceptions=False)
@@ -153,8 +149,8 @@ def test_fillnodata_map(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
-        data = src.read()
-        assert round(data.mean(), 1) == 58.6
+        data = src.read(masked=True)
+        assert round(data.mean(), 1) == 60.6
 
 
 def test_sieve_band(tmpdir):
@@ -162,7 +158,6 @@ def test_sieve_band(tmpdir):
     runner = CliRunner()
     result = runner.invoke(calc, [
                     '(sieve (band 1 1) 42)',
-                    '--dtype', 'uint8',
                     'tests/data/shade.tif',
                     outfile],
                 catch_exceptions=False)
@@ -177,7 +172,6 @@ def test_sieve_read(tmpdir):
     runner = CliRunner()
     result = runner.invoke(calc, [
                     "(sieve (read 1 1 'uint8') 42)",
-                    '--dtype', 'uint8',
                     'tests/data/shade.tif',
                     outfile],
                 catch_exceptions=False)

@@ -13,9 +13,9 @@ def test_stats():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             results = stats((src, 1))
-            assert results[0] == 1
+            assert results[0] == 0
             assert results[1] == 255
-            assert np.isclose(results[2], 44.4344)
+            assert np.isclose(results[2], 29.9477)
 
             results2 = stats(src.read(1))
             assert np.allclose(np.array(results), np.array(results2))

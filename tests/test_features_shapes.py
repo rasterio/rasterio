@@ -62,11 +62,20 @@ def test_shapes_connectivity():
     image[5:11, 5:11] = 1
     image[11, 11] = 1
 
+    shapes = ftrz.shapes(image, connectivity=4)
+    shape, val = next(shapes)
+    assert len(shape['coordinates'][0]) == 5
+
     shapes = ftrz.shapes(image, connectivity=8)
     shape, val = next(shapes)
     assert len(shape['coordinates'][0]) == 9
     # Note: geometry is not technically valid at this point, it has a self
     # intersection at 11,11
+
+    # Test invalid connectivity
+    with pytest.raises(ValueError):
+        shapes = ftrz.shapes(image, connectivity=12)
+        next(shapes)
 
 
 def test_shapes_dtype():
@@ -107,4 +116,29 @@ def test_shapes_dtype():
                 image = numpy.zeros((rows, cols), dtype=dtype)
                 image[2:5, 2:5] = test_value
                 shapes = ftrz.shapes(image)
-                shape, value = next(shapes)
+                next(shapes)
+
+        # Test mask types
+        image = numpy.zeros((rows, cols), dtype='uint8')
+        image.fill(255)
+        supported_mask_types = (
+            ('bool', 1),
+            ('uint8', 255)
+        )
+        for dtype, mask_value in supported_mask_types:
+            mask = numpy.zeros((rows, cols), dtype=dtype)
+            mask[2:5, 2:5] = mask_value
+            shapes = ftrz.shapes(image, mask=mask)
+            shape, value = next(shapes)
+            assert value == 255
+
+        unsupported_mask_types = (
+            ('int8', -127),
+            ('int16', -32768)
+        )
+        for dtype, mask_value in unsupported_mask_types:
+            with pytest.raises(ValueError):
+                mask = numpy.zeros((rows, cols), dtype=dtype)
+                mask[2:5, 2:5] = mask_value
+                shapes = ftrz.shapes(image, mask=mask)
+                next(shapes)
