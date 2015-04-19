@@ -87,7 +87,7 @@ cdef extern from "gdal.h" nogil:
     int GDALSetRasterNoDataValue(void *band, double value)
     int GDALDatasetRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int count, int *bmap, int poff, int loff, int boff)
     int GDALRasterIO(void *band, int, int xoff, int yoff, int xsize, int ysize, void *buffer, int width, int height, int, int poff, int loff)
-
+    int GDALFillRaster(void *band, double rvalue, double ivalue)
     int GDALSetRasterNoDataValue(void *band, double value)
 
     void * GDALCreate(void *driver, const char *filename, int width, int height, int nbands, GDALDataType dtype, const char **options)

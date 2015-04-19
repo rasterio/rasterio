@@ -1377,12 +1377,15 @@ cdef class RasterUpdater(RasterReader):
 
     def set_nodatavals(self, vals):
         cdef void *hband = NULL
-        cdef double val
+        cdef double nodataval
+        cdef int success
+
         for i, val in zip(self.indexes, vals):
             hband = _gdal.GDALGetRasterBand(self._hds, i)
-            success = _gdal.GDALSetRasterNoDataValue(hband, val)
+            nodataval = val
+            success = _gdal.GDALSetRasterNoDataValue(hband, nodataval)
             if success:
-                raise ValueError("Invalid nodata values")
+                raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
 
     property nodatavals:
@@ -1602,7 +1605,7 @@ cdef class RasterUpdater(RasterReader):
         _gdal.GDALSetRasterColorTable(hBand, hTable)
         _gdal.GDALDestroyColorTable(hTable)
 
-    def write_mask(self, src, window=None):
+    def write_mask(self, mask, window=None):
         """Write the valid data mask src array into the dataset's band
         mask.
 
@@ -1625,6 +1628,7 @@ cdef class RasterUpdater(RasterReader):
         if hmask == NULL:
             raise ValueError("NULL band mask")
         log.debug("Created mask band")
+
         if window:
             window = eval_window(window, self.height, self.width)
             yoff = window[0][0]
@@ -1635,14 +1639,19 @@ cdef class RasterUpdater(RasterReader):
             xoff = yoff = 0
             width = self.width
             height = self.height
-        if src.dtype == np.bool:
-            array = 255 * src.astype(np.uint8)
+        
+        if mask is True:
+            _gdal.GDALFillRaster(hmask, 255, 0)
+        elif mask is False:
+            _gdal.GDALFillRaster(hmask, 0, 0)
+        elif mask.dtype == np.bool:
+            array = 255 * mask.astype(np.uint8)
             retval = io_ubyte(
                 hmask, 1, xoff, yoff, width, height, array)
         else:
             retval = io_ubyte(
-                hmask, 1, xoff, yoff, width, height, src)
-
+                hmask, 1, xoff, yoff, width, height, mask)
+        
 
 cdef class InMemoryRaster:
     """
@@ -1883,13 +1892,14 @@ def writer(path, mode, **kwargs):
         fname = name_b
         with cpl_errs:
             hds = _gdal.GDALOpen(fname, 0)
-        if hds == NULL:
-            raise ValueError("NULL dataset")
-        drv = _gdal.GDALGetDatasetDriver(hds)
-        drv_name = _gdal.GDALGetDriverShortName(drv)
-        drv_name_b = drv_name
-        driver = drv_name_b.decode('utf-8')
-        _gdal.GDALClose(hds)
+            if hds == NULL:
+                raise ValueError("NULL dataset")
+            drv = _gdal.GDALGetDatasetDriver(hds)
+            drv_name = _gdal.GDALGetDriverShortName(drv)
+            drv_name_b = drv_name
+            driver = drv_name_b.decode('utf-8')
+            _gdal.GDALClose(hds)
+
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
         else:

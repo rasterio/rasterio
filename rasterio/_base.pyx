@@ -276,8 +276,9 @@ cdef class DatasetReader(object):
 
     def get_nodatavals(self):
         cdef void *hband = NULL
-        cdef object val
+        cdef double nodataval
         cdef int success
+
         if not self._nodatavals:
             if self._hds == NULL:
                 raise ValueError("can't read closed raster file")
@@ -285,7 +286,8 @@ cdef class DatasetReader(object):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 if hband == NULL:
                     raise ValueError("Null band")
-                val = _gdal.GDALGetRasterNoDataValue(hband, &success)
+                nodataval = _gdal.GDALGetRasterNoDataValue(hband, &success)
+                val = nodataval
                 if not success:
                     val = None
                 self._nodatavals.append(val)

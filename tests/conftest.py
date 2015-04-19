@@ -32,8 +32,9 @@ def runner():
 
 
 @pytest.fixture(scope='function')
-def data(tmpdir):
+def data():
     """A temporary directory containing a copy of the files in data."""
+    tmpdir = py.test.ensuretemp('tests/data')
     for filename in test_files:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
