@@ -102,19 +102,20 @@ copy of the test data opened using rio-insp in "r+" (update) mode.
     Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
     >>>
 
-To mark that all pixels of all bands are invalid, you'd do this.
+To mark that all pixels of all bands are valid (i.e., to override nodata
+metadata values that can't be unset), you'd do this.
 
 .. code-block::
 
-    >>> src.write_mask(np.zeros(src.shape, dtype=bool))
-    >>> src.read_masks(1).any()
-    False
+    >>> src.write_mask(True)
+    >>> src.read_masks(1).all()
+    True
 
-No data values have been altered, nor have the dataset's nodata values been
-changed. A new band has been added to the dataset to store the valid data mask.
-By default it is saved to a "sidecar" GeoTIFF alongside the dataset file. When
-such a .msk GeoTIFF exists, Rasterio will ignore the nodata metadata values
-and return mask arrays based on the .msk file.
+No data have been altered, nor have the dataset's nodata values been changed.
+A new band has been added to the dataset to store the valid data mask.  By
+default it is saved to a "sidecar" GeoTIFF alongside the dataset file. When
+such a .msk GeoTIFF exists, Rasterio will ignore the nodata metadata values and
+return mask arrays based on the .msk file.
 
 .. code-block:: console
 
