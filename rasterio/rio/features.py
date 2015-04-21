@@ -1,9 +1,9 @@
-import functools
 import json
 import logging
-from math import ceil, floor
+from math import ceil
 import os
 import sys
+import shutil
 
 import click
 from cligj import (
@@ -18,6 +18,138 @@ from rasterio.rio.cli import cli, coords, write_features
 
 
 logger = logging.getLogger('rio')
+
+
+# Mask command
+@cli.command(short_help='Mask in raster using features.')
+@click.argument('INPUT', type=click.Path(exists=True, resolve_path=True))
+@click.argument('OUTPUT', type=click.Path(resolve_path=True))
+@click.option('-j', '--geojson-mask', 'geojson_mask',
+              type=click.Path(), default=None,
+              help='GeoJSON file to use for masking raster.  Use "-" to read '
+                   'from stdin.  If not provided, original raster will be '
+                   'returned')
+@format_opt
+@click.option('-a', '--all', 'all_touched', is_flag=True, default=False,
+              help='Use all pixels touched by features for masking, '
+                   'otherwise use only pixels whose center is within the '
+                   'polygon or that are selected by Bresenhams line algorithm')
+@click.option('--crop', is_flag=True, default=False,
+              help='Crop output raster to the extent of the geometries. '
+                   'GeoJSON must overlap input raster to use --crop')
+@click.option('-i', '--invert', is_flag=True, default=False,
+              help='Inverts the mask, so that areas covered by features are'
+                   'masked out and areas not covered are retained.  Ignored '
+                   'if using --crop')
+@click.pass_context
+def mask(
+        ctx,
+        input,
+        output,
+        geojson_mask,
+        driver,
+        all_touched,
+        crop,
+        invert):
+
+    """Masks in raster using GeoJSON features (masks out all areas not covered
+    by features), and optionally crops the output raster to the extent of the
+    features.  Features are assumed to be in the same coordinate reference
+    system as the input raster.
+
+    GeoJSON must be the first input file or provided from stdin:
+
+    > rio mask input.tif output.tif --geojson-mask features.json
+
+    > rio mask input.tif output.tif --geojson-mask - < features.json
+
+    If the output raster exists, it will be completely overwritten with the
+    results of this operation.
+
+    The result is always equal to or within the bounds of the input raster.
+
+    --crop and --invert options are mutually exclusive.
+
+    --crop option is not valid if features are completely outside extent of
+    input raster.
+    """
+
+    from rasterio.features import geometry_mask
+    from rasterio.features import bounds as calculate_bounds
+
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+
+    if geojson_mask is None:
+        click.echo('No GeoJSON provided, INPUT will be copied to OUTPUT',
+                   err=True)
+        shutil.copy(input, output)
+        return
+
+    if crop and invert:
+        click.echo('Invert option ignored when using --crop', err=True)
+        invert = False
+
+    with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+        try:
+            geojson = json.loads(click.open_file(geojson_mask).read())
+        except ValueError:
+            raise click.BadParameter('GeoJSON could not be read from  '
+                                     '--geojson-mask or stdin',
+                                     param_hint='--geojson-mask')
+
+        if 'features' in geojson:
+            geometries = (f['geometry'] for f in geojson['features'])
+        elif 'geometry' in geojson:
+            geometries = (geojson['geometry'], )
+        else:
+            raise click.BadParameter('Invalid GeoJSON', param=input,
+                                     param_hint='input')
+        bounds = geojson.get('bbox', calculate_bounds(geojson))
+
+        with rasterio.open(input) as src:
+            disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
+
+            if crop:
+                if disjoint_bounds:
+                    raise click.BadParameter('not allowed for GeoJSON outside '
+                                             'the extent of the input raster',
+                                             param=crop, param_hint='--crop')
+
+                window = src.window(*bounds)
+                transform = src.window_transform(window)
+                (r1, r2), (c1, c2) = window
+                mask_shape = (r2 - r1, c2 - c1)
+            else:
+                if disjoint_bounds:
+                    click.echo('GeoJSON outside bounds of existing output '
+                               'raster. Are they in different coordinate '
+                               'reference systems?',
+                               err=True)
+
+                window = None
+                transform = src.affine
+                mask_shape = src.shape
+
+            mask = geometry_mask(
+                geometries,
+                out_shape=mask_shape,
+                transform=transform,
+                all_touched=all_touched,
+                invert=invert)
+
+            meta = src.meta.copy()
+            meta.update({
+                'driver': driver,
+                'height': mask.shape[0],
+                'width': mask.shape[1],
+                'transform': transform
+            })
+
+            with rasterio.open(output, 'w', **meta) as out:
+                for bidx in range(1, src.count + 1):
+                    img = src.read(bidx, masked=True, window=window)
+                    img.mask = img.mask | mask
+                    out.write_band(bidx, img.filled(src.nodatavals[bidx-1]))
 
 
 # Shapes command.
@@ -204,23 +336,23 @@ def shapes(
               help='Output bounds: left, bottom, right, top.')
 @click.option('--dimensions', nargs=2, type=int, default=None,
               help='Output dataset width, height in number of pixels.')
-@click.option('--res', multiple=True, type=float, default=None,
+@click.option('-r', '--res', multiple=True, type=float, default=None,
               help='Output dataset resolution in units of coordinate '
               'reference system. Pixels assumed to be square if this option '
               'is used once, otherwise use: '
               '--res pixel_width --res pixel_height')
-@click.option('--src_crs', default=None,
+@click.option('--src-crs', '--src_crs', 'src_crs', default=None,
               help='Source coordinate reference system.  Limited to EPSG '
               'codes for now.  Used as output coordinate system if output '
               'does not exist or --like option is not used. '
               'Default: EPSG:4326')
-@click.option('--all_touched', is_flag=True, default=False)
-@click.option('--default_value', type=float, default=1, help='Default value '
-              'for rasterized pixels')
+@click.option('-a', '--all', '--all_touched', 'all_touched', is_flag=True,
+              default=False, help='Rasterize all pixels touched by features')
+@click.option('--default-value', '--default_value', 'default_value',
+              type=float, default=1, help='Default value for rasterized pixels')
 @click.option('--fill', type=float, default=0,
-              help='Fill value for allpixels '
-              'not overlapping features.  Will be evaluated as NoData pixels '
-              'for output.  Default: 0')
+              help='Fill value for all pixels not overlapping features.  Will '
+              'be evaluated as NoData pixels for output.  Default: 0')
 @click.option('--property', type=str, default=None, help='Property in '
               'GeoJSON features to use for rasterized values.  Any features '
               'that lack this property will be given --default_value instead.')
@@ -243,7 +375,7 @@ def rasterize(
 
     If the output raster exists, rio-rasterize will rasterize feature values
     into all bands of that raster.  The GeoJSON is assumed to be in the same
-    coordinate reference system as the output unless --src_crs is provided.
+    coordinate reference system as the output unless --src-crs is provided.
 
     --default_value or property values when using --property must be using a
     data type valid for the data type of that raster.
@@ -252,7 +384,7 @@ def rasterize(
     If a template raster is provided using the --like option, the affine
     transform and data type from that raster will be used to create the output.
     The GeoJSON is assumed to be in the same coordinate reference system unless
-    --src_crs is provided.
+    --src-crs is provided.
 
     --default_value or property values when using --property must be using a
     data type valid for the data type of that raster.
@@ -303,12 +435,6 @@ def rasterize(
                 return feature['properties'].get(property, default_value)
             return default_value
 
-        def disjoint_bounds(bounds1, bounds2):
-            return (bounds1[0] > bounds2[2] or
-                    bounds1[2] < bounds2[0] or
-                    bounds1[1] > bounds2[3] or
-                    bounds1[3] < bounds2[1])
-
         geojson = json.loads(input.read())
         if 'features' in geojson:
             geometries = []
@@ -329,7 +455,7 @@ def rasterize(
                                              'existing output raster',
                                              param='input', param_hint='input')
 
-                if disjoint_bounds(geojson_bounds, out.bounds):
+                if _disjoint_bounds(geojson_bounds, out.bounds):
                     click.echo("GeoJSON outside bounds of existing output "
                                "raster. Are they in different coordinate "
                                "reference systems?",
@@ -363,7 +489,7 @@ def rasterize(
                                              '--like raster',
                                              param='input', param_hint='input')
 
-                if disjoint_bounds(geojson_bounds, template_ds.bounds):
+                if _disjoint_bounds(geojson_bounds, template_ds.bounds):
                     click.echo("GeoJSON outside bounds of --like raster. "
                                "Are they in different coordinate reference "
                                "systems?",
@@ -436,3 +562,8 @@ def rasterize(
 
             with rasterio.open(output, 'w', **kwargs) as out:
                 out.write_band(1, result)
+
+
+def _disjoint_bounds(bounds1, bounds2):
+    return (bounds1[0] > bounds2[2] or bounds1[2] < bounds2[0] or
+            bounds1[1] > bounds2[3] or bounds1[3] < bounds2[1])

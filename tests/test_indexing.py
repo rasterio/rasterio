@@ -20,8 +20,7 @@ def test_window_no_exception():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
         left -= 1000.0
-        eps = 1.0e-8
-        assert src.window(left, bottom, right, top) == (
+        assert src.window(left, bottom, right, top, boundless=True) == (
                 (0, src.height), (-4, src.width))
 
 
