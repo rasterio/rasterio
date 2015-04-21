@@ -102,7 +102,7 @@ def test_mask(runner, tmpdir):
 
         result = runner.invoke(
             features.mask,
-            ['tests/data/shade.tif', output, '--geojson-file', '-'],
+            ['tests/data/shade.tif', output, '--geojson-mask', '-'],
             input=TEST_MERC_FEATURES
         )
         assert result.exit_code == 0
@@ -124,8 +124,8 @@ def test_mask(runner, tmpdir):
             features.mask,
             [
                 'tests/data/shade.tif', output,
-                '--all-touched',
-                '--geojson-file', '-'
+                '--all',
+                '--geojson-mask', '-'
             ],
             input=TEST_MERC_FEATURES
         )
@@ -144,7 +144,7 @@ def test_mask(runner, tmpdir):
             [
                 'tests/data/shade.tif', output,
                 '--invert',
-                '--geojson-file', '-'
+                '--geojson-mask', '-'
             ],
             input=TEST_MERC_FEATURES
         )
@@ -157,7 +157,7 @@ def test_mask(runner, tmpdir):
     # Test with feature collection
     result = runner.invoke(
         features.mask,
-        ['tests/data/shade.tif', output, '--geojson-file', '-'],
+        ['tests/data/shade.tif', output, '--geojson-mask', '-'],
         input=TEST_MERC_FEATURECOLLECTION
     )
     assert result.exit_code == 0
@@ -179,7 +179,7 @@ def test_mask(runner, tmpdir):
     # Invalid JSON should fail
     result = runner.invoke(
         features.mask,
-        ['tests/data/shade.tif', output, '--geojson-file', '-'],
+        ['tests/data/shade.tif', output, '--geojson-mask', '-'],
         input='{bogus: value}'
     )
     assert result.exit_code == 2
@@ -187,7 +187,7 @@ def test_mask(runner, tmpdir):
 
     result = runner.invoke(
         features.mask,
-        ['tests/data/shade.tif', output, '--geojson-file', '-'],
+        ['tests/data/shade.tif', output, '--geojson-mask', '-'],
         input='{"bogus": "value"}'
     )
     assert result.exit_code == 2
@@ -204,7 +204,7 @@ def test_mask_crop(runner, tmpdir):
             [
                 'tests/data/shade.tif', output,
                 '--crop',
-                '--geojson-file', '-'
+                '--geojson-mask', '-'
             ],
             input=TEST_MERC_FEATURES
         )
@@ -222,7 +222,7 @@ def test_mask_crop(runner, tmpdir):
             'tests/data/shade.tif', output,
             '--crop',
             '--invert',
-            '--geojson-file', '-'
+            '--geojson-mask', '-'
         ],
         input=TEST_MERC_FEATURES
     )
@@ -235,7 +235,7 @@ def test_mask_out_of_bounds(runner, tmpdir):
     # Crop with out of bounds raster should
     result = runner.invoke(
         features.mask,
-        ['tests/data/shade.tif', output, '--geojson-file', '-'],
+        ['tests/data/shade.tif', output, '--geojson-mask', '-'],
         input=TEST_FEATURES
     )
     assert result.exit_code == 0
@@ -247,7 +247,7 @@ def test_mask_out_of_bounds(runner, tmpdir):
         [
             'tests/data/shade.tif', output,
             '--crop',
-            '--geojson-file', '-'
+            '--geojson-mask', '-'
         ],
         input=TEST_FEATURES
     )

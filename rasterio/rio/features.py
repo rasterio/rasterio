@@ -24,17 +24,17 @@ logger = logging.getLogger('rio')
 @cli.command(short_help='Mask in raster using features.')
 @click.argument('INPUT', type=click.Path(exists=True, resolve_path=True))
 @click.argument('OUTPUT', type=click.Path(resolve_path=True))
-@click.option('-j', '--geojson-file', 'geojson_file',
+@click.option('-j', '--geojson-mask', 'geojson_mask',
               type=click.Path(), default=None,
               help='GeoJSON file to use for masking raster.  Use "-" to read '
                    'from stdin.  If not provided, original raster will be '
                    'returned')
 @format_opt
-@click.option('-a', '--all-touched', 'all_touched', is_flag=True, default=False,
+@click.option('-a', '--all', 'all_touched', is_flag=True, default=False,
               help='Use all pixels touched by features for masking, '
                    'otherwise use only pixels whose center is within the '
                    'polygon or that are selected by Bresenhams line algorithm')
-@click.option('-c', '--crop', is_flag=True, default=False,
+@click.option('--crop', is_flag=True, default=False,
               help='Crop output raster to the extent of the geometries. '
                    'GeoJSON must overlap input raster to use --crop')
 @click.option('-i', '--invert', is_flag=True, default=False,
@@ -46,7 +46,7 @@ def mask(
         ctx,
         input,
         output,
-        geojson_file,
+        geojson_mask,
         driver,
         all_touched,
         crop,
@@ -59,9 +59,9 @@ def mask(
 
     GeoJSON must be the first input file or provided from stdin:
 
-    > rio mask input.tif output.tif --geojson-file features.json
+    > rio mask input.tif output.tif --geojson-mask features.json
 
-    > rio mask input.tif output.tif --geojson-file - < features.json
+    > rio mask input.tif output.tif --geojson-mask - < features.json
 
     If the output raster exists, it will be completely overwritten with the
     results of this operation.
@@ -79,7 +79,7 @@ def mask(
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
-    if geojson_file is None:
+    if geojson_mask is None:
         click.echo('No GeoJSON provided, INPUT will be copied to OUTPUT',
                    err=True)
         shutil.copy(input, output)
@@ -91,11 +91,11 @@ def mask(
 
     with rasterio.drivers(CPL_DEBUG=verbosity > 2):
         try:
-            geojson = json.loads(click.open_file(geojson_file).read())
+            geojson = json.loads(click.open_file(geojson_mask).read())
         except ValueError:
             raise click.BadParameter('GeoJSON could not be read from  '
-                                     '--geojson-file or stdin',
-                                     param_hint='--geojson-file')
+                                     '--geojson-mask or stdin',
+                                     param_hint='--geojson-mask')
 
         if 'features' in geojson:
             geometries = (f['geometry'] for f in geojson['features'])
@@ -328,33 +328,32 @@ def shapes(
 @cli.command(short_help='Rasterize features.')
 @files_inout_arg
 @format_opt
-@click.option('-l', '--like', type=click.Path(exists=True),
+@click.option('--like', type=click.Path(exists=True),
               help='Raster dataset to use as a template for obtaining affine '
               'transform (bounds and resolution), crs, data type, and driver '
               'used to create the output.  Only a single band will be output.')
-@click.option('-b', '--bounds', nargs=4, type=float, default=None,
+@click.option('--bounds', nargs=4, type=float, default=None,
               help='Output bounds: left, bottom, right, top.')
-@click.option('-dm', '--dimensions', nargs=2, type=int, default=None,
+@click.option('--dimensions', nargs=2, type=int, default=None,
               help='Output dataset width, height in number of pixels.')
 @click.option('-r', '--res', multiple=True, type=float, default=None,
               help='Output dataset resolution in units of coordinate '
               'reference system. Pixels assumed to be square if this option '
               'is used once, otherwise use: '
               '--res pixel_width --res pixel_height')
-@click.option('-crs', '--src-crs', '--src_crs', 'src_crs', default=None,
+@click.option('--src-crs', '--src_crs', 'src_crs', default=None,
               help='Source coordinate reference system.  Limited to EPSG '
               'codes for now.  Used as output coordinate system if output '
               'does not exist or --like option is not used. '
               'Default: EPSG:4326')
-@click.option('-a', '--all-touched', '--all_touched', 'all_touched',
-              is_flag=True, default=False,
-              help='Rasterize all pixels touched by features')
-@click.option('-d', '--default-value', '--default_value', 'default_value',
+@click.option('-a', '--all', '--all_touched', 'all_touched', is_flag=True,
+              default=False, help='Rasterize all pixels touched by features')
+@click.option('--default-value', '--default_value', 'default_value',
               type=float, default=1, help='Default value for rasterized pixels')
-@click.option('-fl', '--fill', type=float, default=0,
+@click.option('--fill', type=float, default=0,
               help='Fill value for all pixels not overlapping features.  Will '
-               'be evaluated as NoData pixels for output.  Default: 0')
-@click.option('-p', '--property', type=str, default=None, help='Property in '
+              'be evaluated as NoData pixels for output.  Default: 0')
+@click.option('--property', type=str, default=None, help='Property in '
               'GeoJSON features to use for rasterized values.  Any features '
               'that lack this property will be given --default_value instead.')
 @click.pass_context

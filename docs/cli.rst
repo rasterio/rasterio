@@ -144,21 +144,21 @@ A common use case is masking in raster data by political or other boundaries.
 
 .. code-block:: console
 
-    $ rio mask input.tif output.tif --geojson-file input.geojson
+    $ rio mask input.tif output.tif --geojson-mask input.geojson
 
 GeoJSON features may be provided using stdin or specified directly as first
 argument, and output can be cropped to the extent of the features.
 
 .. code-block:: console
 
-    $ rio mask input.tif output.tif --crop --geojson-file - < input.geojson
+    $ rio mask input.tif output.tif --crop --geojson-mask - < input.geojson
 
 The feature mask can be inverted to mask out pixels covered by features and
 keep pixels not covered by features.
 
 .. code-block:: console
 
-    $ rio mask input.tif output.tif --invert --geojson-file input.geojson
+    $ rio mask input.tif output.tif --invert --geojson-mask input.geojson
 
 
 info
