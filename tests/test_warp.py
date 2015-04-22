@@ -35,6 +35,8 @@ def test_reproject():
             source = src.read_band(1)
         dst_transform = affine.Affine.from_gdal(
             -8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
+
+        # Test using dictionary style CRS
         dst_crs = dict(
             proj='merc',
             a=6378137,
@@ -48,23 +50,45 @@ def test_reproject():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        destin = numpy.empty(src.shape, dtype=numpy.uint8)
+        out1 = numpy.empty(src.shape, dtype=numpy.uint8)
         reproject(
             source,
-            destin,
+            out1,
             src_transform=src.transform,
             src_crs=src.crs,
             dst_transform=dst_transform,
             dst_crs=dst_crs,
             resampling=RESAMPLING.nearest)
-    assert destin.any()
-    try:
-        import matplotlib.pyplot as plt
-        plt.imshow(destin)
-        plt.gray()
-        plt.savefig('test_reproject.png')
-    except:
-        pass
+        assert out1.any()
+
+        # Test using EPSG code
+        dst_crs = {'init': 'EPSG:3857'}
+        out2 = numpy.empty(src.shape, dtype=numpy.uint8)
+        reproject(
+            source,
+            out2,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_transform,
+            dst_crs=dst_crs,
+            resampling=RESAMPLING.nearest)
+        assert out2.any()
+
+        # Both results should be identical because projection parameters are equivalent
+        assert numpy.array_equal(out1, out2)
+
+        # Test using EPSG code not appropriate for the transform, should return blank image
+        dst_crs = {'init': 'EPSG:32619'}
+        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_transform,
+            dst_crs=dst_crs,
+            resampling=RESAMPLING.nearest)
+        assert not out.any()
 
 
 def test_reproject_multi():

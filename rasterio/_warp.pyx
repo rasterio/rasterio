@@ -183,7 +183,7 @@ def _reproject(
     cdef char *srcwkt = NULL
     cdef char *dstwkt= NULL
     cdef const char *proj_c
-    cdef void *osr
+    cdef void *osr = NULL
     cdef char **warp_extras
     cdef char *key_c
     cdef char *val_c
@@ -216,19 +216,7 @@ def _reproject(
             gt[i] = src_transform[i]
         retval = _gdal.GDALSetGeoTransform(hdsin, gt)
         log.debug("Set transform on temp source dataset: %d", retval)
-        osr = _gdal.OSRNewSpatialReference(NULL)
-        if osr == NULL:
-            raise ValueError("Null spatial reference")
-        params = []
-        for k, v in src_crs.items():
-            if v is True or (k == 'no_defs' and v):
-                params.append("+%s" % k)
-            else:
-                params.append("+%s=%s" % (k, v))
-        proj = " ".join(params)
-        proj_b = proj.encode()
-        proj_c = proj_b
-        _gdal.OSRImportFromProj4(osr, proj_c)
+        osr = _base._osr_from_crs(src_crs)
         _gdal.OSRExportToWkt(osr, &srcwkt)
         _gdal.GDALSetProjection(hdsin, srcwkt)
         _gdal.CPLFree(srcwkt)
@@ -297,20 +285,7 @@ def _reproject(
             gt[i] = dst_transform[i]
         retval = _gdal.GDALSetGeoTransform(hdsout, gt)
         log.debug("Set transform on temp destination dataset: %d", retval)
-        osr = _gdal.OSRNewSpatialReference(NULL)
-        if osr == NULL:
-            raise ValueError("Null spatial reference")
-        params = []
-        for k, v in dst_crs.items():
-            if v is True or (k == 'no_defs' and v):
-                params.append("+%s" % k)
-            else:
-                params.append("+%s=%s" % (k, v))
-        proj = " ".join(params)
-        log.debug("Proj4 string: %s", proj)
-        proj_b = proj.encode()
-        proj_c = proj_b
-        _gdal.OSRImportFromProj4(osr, proj_c)
+        osr = _base._osr_from_crs(dst_crs)
         _gdal.OSRExportToWkt(osr, &dstwkt)
         retval = _gdal.GDALSetProjection(hdsout, dstwkt)
         log.debug("Setting Projection: %d", retval)
