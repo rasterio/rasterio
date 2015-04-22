@@ -375,11 +375,15 @@ cdef class DatasetReader(object):
         a, b, c, d, e, f, _, _, _ = self.affine
         return int(math.floor((y-f)/e)), int(math.floor((x-c)/a))
 
-    def window(self, left, bottom, right, top):
-        """Returns the window corresponding to the world bounding box."""
-        ul = self.index(left, top)
-        lr = self.index(right, bottom)
-        return tuple(zip(ul, lr))
+    def window(self, left, bottom, right, top, boundless=False):
+        """Returns the window corresponding to the world bounding box.
+        If boundless is False, window is limited to extent of this dataset."""
+
+        window = tuple(zip(self.index(left, top), self.index(right, bottom)))
+        if boundless:
+            return window
+        else:
+            return crop_window(window, self.height, self.width)
 
     def window_transform(self, window):
         """Returns the affine transform for a dataset window."""
@@ -567,6 +571,16 @@ cdef class DatasetReader(object):
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
 # ((row_start, row_stop), (col_start, col_stop))
+
+cpdef crop_window(object window, int height, int width):
+    """Returns a window cropped to fall within height and width."""
+    cdef int r_start, r_stop, c_start, c_stop
+    (r_start, r_stop), (c_start, c_stop) = window
+    return (
+        (min(max(r_start, 0), height), max(0, min(r_stop, height))),
+        (min(max(c_start, 0), width), max(0, min(c_stop, width)))
+    )
+
 
 cpdef eval_window(object window, int height, int width):
     """Evaluates a window tuple that might contain negative values
