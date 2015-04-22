@@ -246,7 +246,9 @@ def shapes(
                 else:
                     transform = src.affine * Affine.scale(float(sampling))
 
-                # Get source mask if needed.
+                # Most of the time, we'll use the valid data mask.
+                # We skip reading it if we're extracting every possible
+                # feature (even invalid data features) from a band.
                 if not band or (band and not as_mask and not with_nodata):
                     if sampling == 1:
                         msk = src.read_masks(bidx)
@@ -266,6 +268,7 @@ def shapes(
                     # Possibly overidden below.
                     img = msk
 
+                # Read the band data unless the --mask option is given.
                 if band:
                     if sampling == 1:
                         img = src.read(bidx, masked=False)
@@ -275,7 +278,10 @@ def shapes(
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read(bidx, img, masked=False)
 
-                # Get the source mask if needed.
+                # If --as-mask option was given, convert the image
+                # to a binary image. This reduces the number of shape
+                # categories to 2 and likely reduces the number of
+                # shapes.
                 if as_mask:
                     tmp = numpy.ones_like(img, 'uint8') * 255
                     tmp[img == 0] = 0
@@ -283,6 +289,7 @@ def shapes(
                     if not with_nodata:
                         msk = tmp
 
+                # Transform the raster bounds.
                 bounds = src.bounds
                 xs = [bounds[0], bounds[2]]
                 ys = [bounds[1], bounds[3]]
@@ -295,11 +302,12 @@ def shapes(
                 self._xs = xs
                 self._ys = ys
 
+                # Prepare keyword arguments for shapes().
                 kwargs = {'transform': transform}
-                # Default is to exclude nodata features.
                 if not with_nodata:
                     kwargs['mask'] = msk
 
+                # Yield GeoJSON features.
                 for g, i in rasterio.features.shapes(img, **kwargs):
                     if projection == 'geographic':
                         g = rasterio.warp.transform_geom(
