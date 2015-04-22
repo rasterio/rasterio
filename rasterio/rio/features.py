@@ -107,40 +107,49 @@ def shapes(
             with rasterio.open(input) as src:
                 img = None
                 msk = None
-                if band:
-                    if sampling == 1:
-                        img = src.read(bidx, masked=False)
-                        transform = src.affine
-                    # Decimate the band.
-                    else:
-                        img = numpy.zeros(
-                            (src.height//sampling, src.width//sampling),
-                            dtype=src.dtypes[src.indexes.index(bidx)])
-                        img = src.read(bidx, img, masked=False)
-                        transform = src.affine * Affine.scale(float(sampling))
-                    if as_mask:
-                        tmp = numpy.ones_like(img, 'uint8') * 255
-                        tmp[img == 0] = 0
-                        img = tmp
-                        msk = tmp
-                if not band or not with_nodata:
+
+                # Adjust transforms.
+                if sampling == 1:
+                    transform = src.affine
+                else:
+                    transform = src.affine * Affine.scale(float(sampling))
+
+                # Get source mask if needed.
+                if not band or (band and not as_mask and not with_nodata):
                     if sampling == 1:
                         msk = src.read_masks(bidx)
-                        if bidx is None:
-                            msk = numpy.logical_or.reduce(msk).astype('uint8')
-                        transform = src.affine
-                    # Decimate the mask.
                     else:
-                        msk_shape = src.height//sampling, src.width//sampling
+                        msk_shape = (
+                            src.height//sampling, src.width//sampling)
                         if bidx is None:
                             msk = numpy.zeros(
                                 (src.count,) + msk_shape, 'uint8')
                         else:
                             msk = numpy.zeros(msk_shape, 'uint8')
                         msk = src.read_masks(bidx, msk)
-                        if bidx is None:
-                            msk = numpy.logical_or.reduce(msk).astype('uint8')
-                        transform = src.affine * Affine.scale(float(sampling))
+
+                    if bidx is None:
+                        msk = numpy.logical_or.reduce(msk).astype('uint8')
+
+                    # Possibly overidden below.
+                    img = msk
+
+                if band:
+                    if sampling == 1:
+                        img = src.read(bidx, masked=False)
+                    else:
+                        img = numpy.zeros(
+                            (src.height//sampling, src.width//sampling),
+                            dtype=src.dtypes[src.indexes.index(bidx)])
+                        img = src.read(bidx, img, masked=False)
+
+                # Get the source mask if needed.
+                if as_mask:
+                    tmp = numpy.ones_like(img, 'uint8') * 255
+                    tmp[img == 0] = 0
+                    img = tmp
+                    if not with_nodata:
+                        msk = tmp
 
                 bounds = src.bounds
                 xs = [bounds[0], bounds[2]]
@@ -156,10 +165,8 @@ def shapes(
 
                 kwargs = {'transform': transform}
                 # Default is to exclude nodata features.
-                if msk is not None:
-                    kwargs['mask'] = msk #(msk > 0)
-                if img is None:
-                    img = msk
+                if not with_nodata:
+                    kwargs['mask'] = msk
 
                 for g, i in rasterio.features.shapes(img, **kwargs):
                     if projection == 'geographic':
