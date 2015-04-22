@@ -1395,8 +1395,21 @@ cdef class RasterUpdater(RasterReader):
             return self.get_nodatavals()
 
         def __set__(self, value):
+            warnings.warn(
+                "nodatavals.__set__() is deprecated and will be removed by "
+                "Rasterio 1.0. Please use nodata.__set__() instead.",
+                FutureWarning,
+                stacklevel=2)
             self.set_nodatavals(value)
 
+    property nodata:
+        """The dataset's single nodata value."""
+
+        def __get__(self):
+            return self.nodatavals[0]
+
+        def __set__(self, value):
+            self.set_nodatavals([value for old_val in self.nodatavals])
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.

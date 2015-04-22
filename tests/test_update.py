@@ -56,7 +56,7 @@ def test_update_spatial_epsg(data):
 def test_update_nodatavals(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
-        f.nodatavals = [255, 255, 255]
+        f.nodata = 255
     with rasterio.open(tiffname) as f:
         assert f.nodatavals == [255, 255, 255]
 
@@ -66,7 +66,7 @@ def test_update_nodatavals_error(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
         try:
-            f.nodatavals = [None, None, None]
+            f.nodata = None
         except TypeError:
             pass
 

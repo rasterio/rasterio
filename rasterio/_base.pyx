@@ -294,8 +294,15 @@ cdef class DatasetReader(object):
         return self._nodatavals
 
     property nodatavals:
+        """Nodata values for each band."""
+
         def __get__(self):
             return self.get_nodatavals()
+
+    property nodata:
+        """The dataset's single nodata value."""
+        def __get__(self):
+            return self.nodatavals[0]
 
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's block windows and their
@@ -395,7 +402,7 @@ cdef class DatasetReader(object):
         m = {
             'driver': self.driver,
             'dtype': self.dtypes[0],
-            'nodata': self.nodatavals[0],
+            'nodata': self.nodata,
             'width': self.width,
             'height': self.height,
             'count': self.count,

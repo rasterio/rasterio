@@ -13,6 +13,7 @@ def test_nodata(tmpdir):
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             with rasterio.open(dst_path, 'w', **src.meta) as dst:
+                assert dst.nodata == 0.0
                 assert dst.meta['nodata'] == 0.0
                 assert dst.nodatavals == [0.0, 0.0, 0.0]
     info = subprocess.check_output([
@@ -31,6 +32,7 @@ def test_set_nodata(tmpdir):
             meta = src.meta
             meta['nodata'] = 42
             with rasterio.open(dst_path, 'w', **meta) as dst:
+                assert dst.nodata == 42
                 assert dst.meta['nodata'] == 42
                 assert dst.nodatavals == [42, 42, 42]
     info = subprocess.check_output([
@@ -41,6 +43,3 @@ def test_set_nodata(tmpdir):
     assert re.search(pattern, info, re.DOTALL) is not None
     pattern = b'Band 2.*?NoData Value=42'
     assert re.search(pattern, info, re.DOTALL) is not None
-
-
-
