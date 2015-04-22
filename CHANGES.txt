@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.21.0 (2015-04-22)
+-------------------
+- New rio-mask command (#323).
+- Masking bug fix for rio-shapes (#335).
+- Addition of single valued nodata property to be used instead of nodatavals
+  (#329).
+
 0.20.0 (2015-04-08)
 -------------------
 - Switch read() default to masked=False (#300, #317).
