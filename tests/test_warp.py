@@ -3,7 +3,7 @@ import logging
 import subprocess
 import sys
 
-import affine
+from affine import Affine
 import numpy
 
 import rasterio
@@ -11,6 +11,9 @@ from rasterio.warp import reproject, RESAMPLING, transform_geom, transform
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
 
 
 def test_transform():
@@ -28,15 +31,11 @@ def test_transform():
     assert numpy.allclose(numpy.array(UTM33_result), numpy.array(UTM33_points))
 
 
-def test_reproject():
-    """Ndarry to ndarray"""
+def test_reproject_ndarray():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             source = src.read_band(1)
-        dst_transform = affine.Affine.from_gdal(
-            -8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
 
-        # Test using dictionary style CRS
         dst_crs = dict(
             proj='merc',
             a=6378137,
@@ -50,34 +49,42 @@ def test_reproject():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        out1 = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape, dtype=numpy.uint8)
         reproject(
             source,
-            out1,
+            out,
             src_transform=src.transform,
             src_crs=src.crs,
-            dst_transform=dst_transform,
+            dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=RESAMPLING.nearest)
-        assert out1.any()
+        assert (out > 0).sum() == 438146
 
-        # Test using EPSG code
+
+def test_reproject_epsg():
+    with rasterio.drivers():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            source = src.read_band(1)
+
         dst_crs = {'init': 'EPSG:3857'}
-        out2 = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape, dtype=numpy.uint8)
         reproject(
             source,
-            out2,
+            out,
             src_transform=src.transform,
             src_crs=src.crs,
-            dst_transform=dst_transform,
+            dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=RESAMPLING.nearest)
-        assert out2.any()
+        assert (out > 0).sum() == 438146
 
-        # Both results should be identical because projection parameters are equivalent
-        assert numpy.array_equal(out1, out2)
 
-        # Test using EPSG code not appropriate for the transform, should return blank image
+def test_reproject_out_of_bounds():
+    # using EPSG code not appropriate for the transform should return blank image
+    with rasterio.drivers():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            source = src.read_band(1)
+
         dst_crs = {'init': 'EPSG:32619'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)
         reproject(
@@ -85,7 +92,7 @@ def test_reproject():
             out,
             src_transform=src.transform,
             src_crs=src.crs,
-            dst_transform=dst_transform,
+            dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=RESAMPLING.nearest)
         assert not out.any()
@@ -96,8 +103,6 @@ def test_reproject_multi():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             source = src.read()
-        dst_transform = affine.Affine.from_gdal(
-            -8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
             proj='merc',
             a=6378137,
@@ -117,24 +122,15 @@ def test_reproject_multi():
             destin,
             src_transform=src.transform,
             src_crs=src.crs,
-            dst_transform=dst_transform,
+            dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=RESAMPLING.nearest)
     assert destin.any()
-    try:
-        import matplotlib.pyplot as plt
-        plt.imshow(destin)
-        plt.gray()
-        plt.savefig('test_reproject.png')
-    except:
-        pass
 
 
 def test_warp_from_file():
     """File to ndarray"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        dst_transform = affine.Affine.from_gdal(
-            -8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
             proj='merc',
             a=6378137,
@@ -152,24 +148,15 @@ def test_warp_from_file():
         reproject(
             rasterio.band(src, 1),
             destin,
-            dst_transform=dst_transform,
+            dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs)
     assert destin.any()
-    try:
-        import matplotlib.pyplot as plt
-        plt.imshow(destin)
-        plt.gray()
-        plt.savefig('test_warp_from_filereproject.png')
-    except:
-        pass
 
 
 def test_warp_from_to_file(tmpdir):
     """File to file"""
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        dst_transform = affine.Affine.from_gdal(
-            -8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
             proj='merc',
             a=6378137,
@@ -185,20 +172,17 @@ def test_warp_from_to_file(tmpdir):
             no_defs=True)
         kwargs = src.meta.copy()
         kwargs.update(
-            transform=dst_transform,
+            transform=DST_TRANSFORM,
             crs=dst_crs)
         with rasterio.open(tiffname, 'w', **kwargs) as dst:
             for i in (1, 2, 3):
                 reproject(rasterio.band(src, i), rasterio.band(dst, i))
-    # subprocess.call(['open', tiffname])
 
 
 def test_warp_from_to_file_multi(tmpdir):
     """File to file"""
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        dst_transform = affine.Affine.from_gdal(
-            -8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
         dst_crs = dict(
             proj='merc',
             a=6378137,
@@ -214,7 +198,7 @@ def test_warp_from_to_file_multi(tmpdir):
             no_defs=True)
         kwargs = src.meta.copy()
         kwargs.update(
-            transform=dst_transform,
+            transform=DST_TRANSFORM,
             crs=dst_crs)
         with rasterio.open(tiffname, 'w', **kwargs) as dst:
             for i in (1, 2, 3):
@@ -222,7 +206,6 @@ def test_warp_from_to_file_multi(tmpdir):
                     rasterio.band(src, i),
                     rasterio.band(dst, i),
                     num_threads=2)
-    # subprocess.call(['open', tiffname])
 
 
 def test_transform_geom():
