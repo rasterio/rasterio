@@ -12,6 +12,7 @@ from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_)
 from rasterio.five import string_types
+from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 
 # These modules are imported from the Cython extensions, but are also import
@@ -165,18 +166,3 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans[2] -= pad_width*padded_trans[0]
     padded_trans[5] -= pad_width*padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
-
-
-def default_gtiff_profile(**kwds):
-    """Return a mapping suitable for writing new GeoTIFF datasets."""
-    profile = {
-        'driver': 'GTiff',
-        'interleave': 'band',
-        'tiled': True,
-        'blockxsize': 256,
-        'blockysize': 256,
-        'compress': 'lzw',
-        'nodata': 0,
-        'dtype': uint8 }
-    profile.update(**kwds)
-    return profile
