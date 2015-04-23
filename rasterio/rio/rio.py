@@ -16,7 +16,7 @@ from cligj import (
     geojson_type_feature_opt, geojson_type_bbox_opt)
 
 import rasterio
-from rasterio.rio.cli import cli, write_features
+from rasterio.rio.cli import cli, write_features, file_in_arg
 
 
 warnings.simplefilter('default')
@@ -30,7 +30,7 @@ warnings.simplefilter('default')
 
 # Insp command.
 @cli.command(short_help="Open a data file and start an interpreter.")
-@click.argument('INPUT', type=click.Path(exists=True))
+@file_in_arg
 @click.option(
     '-m',
     '--mode',

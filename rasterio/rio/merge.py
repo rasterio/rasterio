@@ -10,18 +10,17 @@ import click
 from cligj import files_inout_arg, format_opt
 
 import rasterio
-from rasterio.rio.cli import cli
+from rasterio.rio.cli import cli, bounds_opt
 from rasterio.transform import Affine
 
 
 @cli.command(short_help="Merge a stack of raster datasets.")
 @files_inout_arg
 @format_opt
-@click.option('-bd', '--bounds', nargs=4, type=float, default=None,
-              help="Output bounds: left, bottom, right, top.")
+@bounds_opt
 @click.option('-r', '--res', nargs=2, type=float, default=None,
               help="Output dataset resolution: pixel width, pixel height")
-@click.option('-nd', '--nodata', type=float, default=None,
+@click.option('--nodata', type=float, default=None,
               help="Override nodata values defined in input datasets")
 @click.pass_context
 def merge(ctx, files, driver, bounds, res, nodata):

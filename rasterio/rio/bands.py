@@ -7,7 +7,7 @@ from cligj import files_inout_arg, format_opt
 import rasterio
 
 from rasterio.five import zip_longest
-from rasterio.rio.cli import cli
+from rasterio.rio.cli import cli, bidx_mult_opt
 
 
 PHOTOMETRIC_CHOICES = [val.lower() for val in [
@@ -25,9 +25,8 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 @cli.command(short_help="Stack a number of bands into a multiband dataset.")
 @files_inout_arg
 @format_opt
-@click.option('-b', '--bidx', multiple=True,
-              help="Indexes of input file bands.")
-@click.option('-p', '--photometric', default=None,
+@bidx_mult_opt
+@click.option('--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
 @click.pass_context
