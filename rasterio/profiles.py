@@ -13,7 +13,15 @@ class Profile:
     defaults = {}
 
     def __call__(self, **kwargs):
-        """Return a mapping suitable for writing new GeoTIFF datasets."""
+        """Returns a mapping of keyword args for writing a new datasets.
+
+        Example:
+
+            profile = SomeProfile()
+            with rasterio.open('foo.tif', 'w', **profile()) as dst:
+                # Write data ...
+
+        """
         if kwargs.get('driver', self.driver) != self.driver:
             raise ValueError(
                 "Overriding this profile's driver is not allowed.")
