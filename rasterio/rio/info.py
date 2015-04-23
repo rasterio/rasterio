@@ -30,7 +30,6 @@ def env(ctx, key):
 
 
 @cli.command(short_help="Print information about a data file.")
-# @click.argument('INPUT', type=click.Path(exists=True))
 @file_in_arg
 @click.option('--meta', 'aspect', flag_value='meta', default=True,
               help="Show data file structure (default).")
