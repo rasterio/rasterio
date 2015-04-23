@@ -12,6 +12,7 @@ from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_)
 from rasterio.five import string_types
+from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 
 # These modules are imported from the Cython extensions, but are also import
