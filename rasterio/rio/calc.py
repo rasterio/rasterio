@@ -1,20 +1,17 @@
 # Calc command.
 
 import logging
-import math
-import os.path
-import re
 import sys
 import traceback
-import warnings
 
 import click
 import snuggs
+from cligj import files_inout_arg
 
 import rasterio
 from rasterio.fill import fillnodata
 from rasterio.features import sieve
-from rasterio.rio.cli import cli
+from rasterio.rio.cli import cli, dtype_opt, masked_opt
 
 
 def get_bands(inputs, d, i=None):
@@ -37,25 +34,13 @@ def read_array(ix, subix=None, dtype=None):
 
 @cli.command(short_help="Raster data calculator.")
 @click.argument('command')
-@click.argument(
-    'files',
-    nargs=-1,
-    type=click.Path(resolve_path=False),
-    required=True,
-    metavar="INPUTS... OUTPUT")
+@files_inout_arg
 @click.option('--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
                    'name for use in commands like '
                    '"a=tests/data/RGB.byte.tif".')
-@click.option('--dtype',
-              type=click.Choice(['ubyte', 'uint8', 'uint16', 'int16', 'uint32',
-                                'int32', 'float32', 'float64']),
-              default=None,
-              help="Output data type (default: float64).")
-@click.option('--masked/--not-masked',
-              default=True,
-              help="Evaluate expressions using masked arrays (the default) "
-                   "or ordinary numpy arrays.")
+@dtype_opt
+@masked_opt
 @click.pass_context
 def calc(ctx, command, files, name, dtype, masked):
     """A raster data calculator

@@ -2,15 +2,13 @@
 
 import json
 import logging
-import os.path
-import pprint
 import sys
 
 import click
 
 import rasterio
 import rasterio.crs
-from rasterio.rio.cli import cli
+from rasterio.rio.cli import cli, bidx_opt, file_in_arg, masked_opt
 
 
 @cli.command(short_help="Print information about the rio environment.")
@@ -32,7 +30,7 @@ def env(ctx, key):
 
 
 @cli.command(short_help="Print information about a data file.")
-@click.argument('input', type=click.Path(exists=True))
+@file_in_arg
 @click.option('--meta', 'aspect', flag_value='meta', default=True,
               help="Show data file structure (default).")
 @click.option('--tags', 'aspect', flag_value='tags',
@@ -44,7 +42,7 @@ def env(ctx, key):
 # a string.
 @click.option('--count', 'meta_member', flag_value='count',
               help="Print the count of bands.")
-@click.option('--dtype', 'meta_member', flag_value='dtype',
+@click.option('-t', '--dtype', 'meta_member', flag_value='dtype',
               help="Print the dtype name.")
 @click.option('--nodata', 'meta_member', flag_value='nodata',
               help="Print the nodata value.")
@@ -61,7 +59,7 @@ def env(ctx, key):
 @click.option('--bounds', 'meta_member', flag_value='bounds',
               help="Print the boundary coordinates "
                    "(left, bottom, right, top).")
-@click.option('--res', 'meta_member', flag_value='res',
+@click.option('-r', '--res', 'meta_member', flag_value='res',
               help="Print pixel width and height.")
 @click.option('--lnglat', 'meta_member', flag_value='lnglat',
               help="Print longitude and latitude at center.")
@@ -70,12 +68,8 @@ def env(ctx, key):
                    "(use --bidx).")
 @click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
               help="Output extra information.")
-@click.option('--bidx', type=int, default=1,
-              help="Input file band index (default: 1).")
-@click.option('--masked/--not-masked',
-              default=True,
-              help="Evaluate expressions using masked arrays (the default) "
-                   "or ordinary numpy arrays.")
+@bidx_opt
+@masked_opt
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         masked):

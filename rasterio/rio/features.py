@@ -14,26 +14,35 @@ from cligj import (
 
 import rasterio
 from rasterio.transform import Affine
-from rasterio.rio.cli import cli, coords, write_features
+from rasterio.rio.cli import (
+    cli, coords, write_features, file_in_arg, file_out_arg, like_file_opt,
+    bounds_opt, resolution_opt)
 
 
 logger = logging.getLogger('rio')
 
 
+# Common options used below
+all_touched_opt = click.option(
+    '-a', '--all', '--all_touched', 'all_touched',
+    is_flag=True,
+    default=False,
+    help='Use all pixels touched by features, otherwise (default) use only '
+         'pixels whose center is within the polygon or that are selected by '
+         'Bresenhams line algorithm')
+
+
 # Mask command
 @cli.command(short_help='Mask in raster using features.')
-@click.argument('INPUT', type=click.Path(exists=True, resolve_path=True))
-@click.argument('OUTPUT', type=click.Path(resolve_path=True))
+@file_in_arg
+@file_out_arg
 @click.option('-j', '--geojson-mask', 'geojson_mask',
               type=click.Path(), default=None,
               help='GeoJSON file to use for masking raster.  Use "-" to read '
                    'from stdin.  If not provided, original raster will be '
                    'returned')
 @format_opt
-@click.option('-a', '--all', 'all_touched', is_flag=True, default=False,
-              help='Use all pixels touched by features for masking, '
-                   'otherwise use only pixels whose center is within the '
-                   'polygon or that are selected by Bresenhams line algorithm')
+@all_touched_opt
 @click.option('--crop', is_flag=True, default=False,
               help='Crop output raster to the extent of the geometries. '
                    'GeoJSON must overlap input raster to use --crop')
@@ -343,26 +352,17 @@ def shapes(
 @cli.command(short_help='Rasterize features.')
 @files_inout_arg
 @format_opt
-@click.option('--like', type=click.Path(exists=True),
-              help='Raster dataset to use as a template for obtaining affine '
-              'transform (bounds and resolution), crs, data type, and driver '
-              'used to create the output.  Only a single band will be output.')
-@click.option('--bounds', nargs=4, type=float, default=None,
-              help='Output bounds: left, bottom, right, top.')
+@like_file_opt
+@bounds_opt
 @click.option('--dimensions', nargs=2, type=int, default=None,
               help='Output dataset width, height in number of pixels.')
-@click.option('-r', '--res', multiple=True, type=float, default=None,
-              help='Output dataset resolution in units of coordinate '
-              'reference system. Pixels assumed to be square if this option '
-              'is used once, otherwise use: '
-              '--res pixel_width --res pixel_height')
+@resolution_opt
 @click.option('--src-crs', '--src_crs', 'src_crs', default=None,
               help='Source coordinate reference system.  Limited to EPSG '
               'codes for now.  Used as output coordinate system if output '
               'does not exist or --like option is not used. '
               'Default: EPSG:4326')
-@click.option('-a', '--all', '--all_touched', 'all_touched', is_flag=True,
-              default=False, help='Rasterize all pixels touched by features')
+@all_touched_opt
 @click.option('--default-value', '--default_value', 'default_value',
               type=float, default=1, help='Default value for rasterized pixels')
 @click.option('--fill', type=float, default=0,
@@ -398,6 +398,8 @@ def rasterize(
 
     If a template raster is provided using the --like option, the affine
     transform and data type from that raster will be used to create the output.
+    Only a single band will be output.
+
     The GeoJSON is assumed to be in the same coordinate reference system unless
     --src-crs is provided.
 
