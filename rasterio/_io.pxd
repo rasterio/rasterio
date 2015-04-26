@@ -61,6 +61,8 @@ ctypedef np.int32_t DTYPE_INT32_t
 ctypedef np.float32_t DTYPE_FLOAT32_t
 ctypedef np.float64_t DTYPE_FLOAT64_t
 
+cdef bint in_dtype_range(value, dtype)
+
 cdef int io_ubyte(
         void *hband, 
         int mode, 
