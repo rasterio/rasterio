@@ -16,6 +16,7 @@ def test_read_boundless_natural_extent():
         assert abs(data[0].mean() - src.read(1).mean()) < 0.0001
         assert data.any()
 
+
 def test_read_boundless_beyond():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         data = src.read(window=((-200, -100), (-200, -100)), boundless=True)
@@ -49,3 +50,22 @@ def test_read_boundless_resample():
         assert data.shape == (3, 800, 800)
         assert data.any()
         assert data[0,798,798] == 13
+
+
+def test_read_boundless_masked_no_overlap():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        data = src.read(
+            window=((-200, -100), (-200, -100)), boundless=True, masked=True)
+        assert data.shape == (3, 100, 100)
+        assert data.mask.all()
+
+
+def test_read_boundless_masked_overlap():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        data = src.read(
+            window=((-200, 200), (-200, 200)), boundless=True, masked=True)
+        assert data.shape == (3, 400, 400)
+        assert data.mask.any()
+        assert not data.mask.all()
+        assert data.mask[0,399,399] == False
+        assert data.mask[0,0,0] == True

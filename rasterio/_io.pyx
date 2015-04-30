@@ -323,11 +323,12 @@ cdef int io_multi_cint16(
     cdef int i, j, k
     cdef np.int16_t real, imag
 
-    buf = np.empty(
+    buf = np.zeros(
             (out.shape[0], 2*out.shape[2]*out.shape[1]), 
             dtype=np.int16)
     cdef np.int16_t[:, :] buf_view = buf
 
+    
     with nogil:
         bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
         for i in range(count):
@@ -715,8 +716,6 @@ cdef class RasterReader(_base.DatasetReader):
                 raise ValueError(
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
-            #if masked is None:
-            #    masked = hasattr(out, 'mask')
 
         # Masking
         # -------
@@ -790,8 +789,25 @@ cdef class RasterReader(_base.DatasetReader):
                 data = np.empty(win_shape[:-2] + buffer_shape, dtype)
                 data = self._read(indexes, data, overlap, dtype)
 
+                if masked:
+                    mask = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
+                    mask = ~self._read(
+                        indexes, mask, overlap, 'uint8', masks=True
+                        ).astype('bool')
+                    kwds = {'mask': mask}
+                    if len(set(nodatavals)) == 1:
+                        if nodatavals[0] is not None:
+                            kwds['fill_value'] = nodatavals[0]
+                    data = np.ma.array(data, **kwds)
+
             else:
                 data = None
+                if masked:
+                    kwds = {'mask': True}
+                    if len(set(nodatavals)) == 1:
+                        if nodatavals[0] is not None:
+                            kwds['fill_value'] = nodatavals[0]
+                    out = np.ma.array(out, **kwds)
 
             if data is not None:
                 # Determine where to put the data in the output window.
@@ -807,6 +823,19 @@ cdef class RasterReader(_base.DatasetReader):
                         out if len(out.shape) == 3 else [out],
                         data if len(data.shape) == 3 else [data]):
                     dst[roff:roff+data_h, coff:coff+data_w] = src
+
+                if masked:
+                    if not hasattr(out, 'mask'):
+                        kwds = {'mask': True}
+                        if len(set(nodatavals)) == 1:
+                            if nodatavals[0] is not None:
+                                kwds['fill_value'] = nodatavals[0]
+                        out = np.ma.array(out, **kwds)
+
+                    for dst, src in zip(
+                            out.mask if len(out.shape) == 3 else [out.mask],
+                            data.mask if len(data.shape) == 3 else [data.mask]):
+                        dst[roff:roff+data_h, coff:coff+data_w] = src
 
         if return2d:
             out.shape = out.shape[1:]

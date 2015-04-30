@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.22.0 (?)
+----------
+- Return masked arrays in the boundless read case (#338).
+
 0.21.0 (2015-04-22)
 -------------------
 - New rio-mask command (#323).
