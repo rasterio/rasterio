@@ -16,7 +16,7 @@ import rasterio
 from rasterio.transform import Affine
 from rasterio.rio.cli import (
     cli, coords, write_features, file_in_arg, file_out_arg, like_file_opt,
-    bounds_opt, resolution_opt)
+    bounds_opt, resolution_opt, output_opt, resolve_inout)
 
 
 logger = logging.getLogger('rio')
@@ -34,8 +34,8 @@ all_touched_opt = click.option(
 
 # Mask command
 @cli.command(short_help='Mask in raster using features.')
-@file_in_arg
-@file_out_arg
+@files_inout_arg
+@output_opt
 @click.option('-j', '--geojson-mask', 'geojson_mask',
               type=click.Path(), default=None,
               help='GeoJSON file to use for masking raster.  Use "-" to read '
@@ -53,7 +53,7 @@ all_touched_opt = click.option(
 @click.pass_context
 def mask(
         ctx,
-        input,
+        files,
         output,
         geojson_mask,
         driver,
@@ -87,6 +87,9 @@ def mask(
     from rasterio.features import bounds as calculate_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+
+    output, files = resolve_inout(files=files, output=output)
+    input = files[0]
 
     if geojson_mask is None:
         click.echo('No GeoJSON provided, INPUT will be copied to OUTPUT',
@@ -164,6 +167,7 @@ def mask(
 # Shapes command.
 @cli.command(short_help="Write shapes extracted from bands or masks.")
 @click.argument('input', type=click.Path(exists=True))
+@output_opt
 @precision_opt
 @indent_opt
 @compact_opt
@@ -187,7 +191,7 @@ def mask(
                    "valid data shapes.")
 @click.pass_context
 def shapes(
-        ctx, input, precision, indent, compact, projection, sequence,
+        ctx, input, output, precision, indent, compact, projection, sequence,
         use_rs, geojson_type, band, bandidx, sampling, with_nodata, as_mask):
     """Extracts shapes from one band or mask of a dataset and writes
     them out as GeoJSON. Unless otherwise specified, the shapes will be
@@ -229,7 +233,9 @@ def shapes(
         dump_kwds['indent'] = indent
     if compact:
         dump_kwds['separators'] = (',', ':')
-    stdout = click.get_text_stream('stdout')
+
+    stdout = click.open_file(
+        output, 'w') if output else click.get_text_stream('stdout')
 
     bidx = 1 if bandidx is None and band else bandidx
 
@@ -351,6 +357,7 @@ def shapes(
 # Rasterize command.
 @cli.command(short_help='Rasterize features.')
 @files_inout_arg
+@output_opt
 @format_opt
 @like_file_opt
 @bounds_opt
@@ -375,6 +382,7 @@ def shapes(
 def rasterize(
         ctx,
         files,
+        output,
         driver,
         like,
         bounds,
@@ -432,9 +440,9 @@ def rasterize(
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
-    files = list(files)
-    output = files.pop()
+    output, files = resolve_inout(files=files, output=output)
     input = click.open_file(files.pop(0) if files else '-')
+
     has_src_crs = src_crs is not None
     src_crs = src_crs or 'EPSG:4326'
 

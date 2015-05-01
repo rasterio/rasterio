@@ -78,6 +78,14 @@ masked_opt = click.option(
     help="Evaluate expressions using masked arrays (the default) or ordinary "
          "numpy arrays.")
 
+output_opt = click.option(
+    '-o', '--output',
+    default=None,
+    type=click.Path(resolve_path=True),
+    help="Path to output file (optional alternative to a positional arg "
+         "for some commands).")
+
+
 resolution_opt = click.option(
     '-r', '--res',
     multiple=True, type=float, default=None,
@@ -122,9 +130,6 @@ Registry of command line options (also see cligj options):
 --with-nodata/--without-nodata: include nodata regions or not.  In rio-shapes.
 -v, --tell-me-more, --verbose
 """
-
-
-
 
 
 def coords(obj):
@@ -183,3 +188,14 @@ def write_features(
                 'features': features},
                 **dump_kwds))
         fobj.write('\n')
+
+
+def resolve_inout(input=None, output=None, files=None):
+    """Resolves inputs and outputs from standard args and options.
+    
+    Returns `output_filename, [input_filename0, ...]`."""
+    resolved_output = output or (files[-1] if files else None)
+    resolved_inputs = (
+        [input] if input else [] + 
+        list(files[:-1 if not output else None]) if files else [])
+    return resolved_output, resolved_inputs
