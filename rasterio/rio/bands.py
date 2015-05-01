@@ -7,7 +7,7 @@ from cligj import files_inout_arg, format_opt
 import rasterio
 
 from rasterio.five import zip_longest
-from rasterio.rio.cli import cli, bidx_mult_opt
+from rasterio.rio.cli import cli, bidx_mult_opt, output_opt, resolve_inout
 
 
 PHOTOMETRIC_CHOICES = [val.lower() for val in [
@@ -24,13 +24,14 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 # Stack command.
 @cli.command(short_help="Stack a number of bands into a multiband dataset.")
 @files_inout_arg
+@output_opt
 @format_opt
 @bidx_mult_opt
 @click.option('--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
 @click.pass_context
-def stack(ctx, files, driver, bidx, photometric):
+def stack(ctx, files, output, driver, bidx, photometric):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
 
@@ -68,8 +69,7 @@ def stack(ctx, files, driver, bidx, photometric):
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            output = files[-1]
-            files = files[:-1]
+            output, files = resolve_inout(files=files, output=output)
             output_count = 0
             indexes = []
             for path, item in zip_longest(files, bidx, fillvalue=None):

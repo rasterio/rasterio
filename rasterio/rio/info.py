@@ -80,6 +80,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
+
     try:
         with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode) as src:

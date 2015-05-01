@@ -11,7 +11,8 @@ from cligj import files_inout_arg
 import rasterio
 from rasterio.fill import fillnodata
 from rasterio.features import sieve
-from rasterio.rio.cli import cli, dtype_opt, masked_opt
+from rasterio.rio.cli import (
+    cli, dtype_opt, masked_opt, output_opt, resolve_inout)
 
 
 def get_bands(inputs, d, i=None):
@@ -35,6 +36,7 @@ def read_array(ix, subix=None, dtype=None):
 @cli.command(short_help="Raster data calculator.")
 @click.argument('command')
 @files_inout_arg
+@output_opt
 @click.option('--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
                    'name for use in commands like '
@@ -42,7 +44,7 @@ def read_array(ix, subix=None, dtype=None):
 @dtype_opt
 @masked_opt
 @click.pass_context
-def calc(ctx, command, files, name, dtype, masked):
+def calc(ctx, command, files, output, name, dtype, masked):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -89,10 +91,10 @@ def calc(ctx, command, files, name, dtype, masked):
 
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity > 2):
-            output = files[-1]
+            output, files = resolve_inout(files=files, output=output)
 
             inputs = ([tuple(n.split('=')) for n in name] +
-                      [(None, n) for n in files[:-1]])
+                      [(None, n) for n in files])
 
             with rasterio.open(inputs[0][1]) as first:
                 kwargs = first.meta

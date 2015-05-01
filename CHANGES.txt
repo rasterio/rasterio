@@ -1,9 +1,10 @@
 Changes
 =======
 
-0.22.0 (?)
-----------
+0.22.0 (2015-05-01)
+-------------------
 - Return masked arrays in the boundless read case (#338).
+- Add -o/--output option to rio-calc,merge,stack,mask,shapes,rasterize (#333).
 
 0.21.0 (2015-04-22)
 -------------------

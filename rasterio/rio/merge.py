@@ -10,12 +10,13 @@ import click
 from cligj import files_inout_arg, format_opt
 
 import rasterio
-from rasterio.rio.cli import cli, bounds_opt
+from rasterio.rio.cli import cli, bounds_opt, output_opt, resolve_inout
 from rasterio.transform import Affine
 
 
 @cli.command(short_help="Merge a stack of raster datasets.")
 @files_inout_arg
+@output_opt
 @format_opt
 @bounds_opt
 @click.option('-r', '--res', nargs=2, type=float, default=None,
@@ -23,7 +24,7 @@ from rasterio.transform import Affine
 @click.option('--nodata', type=float, default=None,
               help="Override nodata values defined in input datasets")
 @click.pass_context
-def merge(ctx, files, driver, bounds, res, nodata):
+def merge(ctx, files, output, driver, bounds, res, nodata):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -44,8 +45,7 @@ def merge(ctx, files, driver, bounds, res, nodata):
 
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            output = files[-1]
-            files = files[:-1]
+            output, files = resolve_inout(files=files, output=output)
 
             with rasterio.open(files[0]) as first:
                 first_res = first.res
