@@ -1,10 +1,10 @@
 #!/usr/bin/env python
+# main: loader of all the command entry points.
 
-from rasterio.rio.calc import calc
+from pkg_resources import iter_entry_points
+
 from rasterio.rio.cli import cli
-from rasterio.rio.bands import stack
-from rasterio.rio.features import mask, shapes, rasterize
-from rasterio.rio.info import env, info
-from rasterio.rio.merge import merge
-from rasterio.rio.rio import bounds, insp, transform
-from rasterio.rio.sample import sample
+
+
+for entry_point in iter_entry_points('rasterio.rio_commands'):
+    cli = entry_point.load()

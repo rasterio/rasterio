@@ -364,7 +364,10 @@ def _reproject(
 
         eErr = oWarper.Initialize(psWOptions)
         if eErr == 0:
-            _, rows, cols = destination.shape
+
+            log.debug("Destination shape: %r", destination.shape)
+
+            rows, cols = destination.shape[-2:]
             log.debug(
                 "Chunk and warp window: %d, %d, %d, %d",
                 0, 0, cols, rows)
