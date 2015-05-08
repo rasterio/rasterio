@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.23.0 (?)
+----------
+- Redesign CLI as dynamically loaded entry points (#346).
+
 0.22.0 (2015-05-01)
 -------------------
 - Return masked arrays in the boundless read case (#338).
