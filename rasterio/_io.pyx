@@ -1945,3 +1945,18 @@ def writer(path, mode, **kwargs):
             return RasterUpdater(path, mode)
         else:
             return IndirectRasterUpdater(path, mode)
+
+
+def virtual_file_to_buffer(filename):
+    """Read content of a virtual file into a Python bytes buffer."""
+    cdef unsigned char *buff = NULL
+    cdef const char *cfilename = NULL
+    cdef _gdal.vsi_l_offset buff_len = 0
+     
+    filename_b = filename if not isinstance(filename, string_types) else filename.encode('utf-8')
+    cfilename = filename_b
+    buff = _gdal.VSIGetMemFileBuffer(cfilename, &buff_len, 0)
+    n = buff_len
+    log.debug("Buffer length: %d bytes", n)
+    cdef np.uint8_t[:] buff_view = <np.uint8_t[:n]>buff
+    return buff_view

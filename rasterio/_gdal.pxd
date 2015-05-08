@@ -17,6 +17,12 @@ cdef extern from "cpl_string.h":
     char ** CSLSetNameValue (char **list, char *name, char *val)
     void    CSLDestroy (char **list)
 
+cdef extern from "cpl_vsi.h":
+    ctypedef int vsi_l_offset
+    unsigned char * VSIGetMemFileBuffer (const char *filename,
+                                         vsi_l_offset *data_len,
+                                         int take_ownership)
+
 cdef extern from "ogr_srs_api.h":
     void *  OCTNewCoordinateTransformation (void *source, void *dest)
     void    OCTDestroyCoordinateTransformation (void *source)

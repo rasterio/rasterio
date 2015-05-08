@@ -203,6 +203,20 @@ setup_args = dict(
     entry_points='''
         [console_scripts]
         rio=rasterio.rio.main:cli
+        
+        [rasterio.rio_commands]
+        bounds=rasterio.rio.rio:bounds
+        calc=rasterio.rio.calc:calc
+        env=rasterio.rio.info:env
+        info=rasterio.rio.info:info
+        insp=rasterio.rio.rio:insp
+        mask=rasterio.rio.features:mask
+        merge=rasterio.rio.merge:merge
+        rasterize=rasterio.rio.features:rasterize
+        sample=rasterio.rio.sample:sample
+        shapes=rasterio.rio.features:shapes
+        stack=rasterio.rio.bands:stack
+        transform=rasterio.rio.rio:transform
     ''',
     include_package_data=True,
     ext_modules=ext_modules,
