@@ -24,7 +24,7 @@ from rasterio.rio.cli import cli
 for entry_point in iter_entry_points('rasterio.rio_commands'):
     try:
         entry_point.load()
-    except ImportError:
+    except Exception:
         # Catch this so a busted plugin doesn't take down the CLI.
         # Handled by registering a stub that does nothing other than
         # explain the error.
