@@ -3,7 +3,6 @@
 import sys
 import traceback
 
-from click.formatting import HelpFormatter
 from pkg_resources import iter_entry_points
 
 from rasterio.rio.cli import BrokenCommand, cli
