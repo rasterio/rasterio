@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import sys
 import traceback
 
@@ -45,10 +46,13 @@ class RioGroup(click.Group):
 
             help = cmd.short_help or ''
 
-            # Stick a dagger at the end of broken subcommand names.
+            # Mark broken subcommands with a pile of poop.
             name = cmd.name
             if isinstance(cmd, BrokenCommand):
-                name += u'\u2020'
+                if os.environ.get('RIO_HONESTLY'):
+                    name += u'\U0001F4A9'
+                else:
+                    name += u'\u2020'
 
             rows.append((name, help))
 
@@ -144,8 +148,10 @@ Registry of command line options (also see cligj options):
 --as-mask/--not-as-mask: interpret band as mask or not.  In rio-shapes
 --band/--mask: use band or mask.  In rio-shapes
 --bbox:
--b, --bidx: band index(es) (singular or multiple value versions).  In rio-info, rio-sample, rio-shapes, rio-stack (different usages)
---bounds: bounds in world coordinates.  In rio-info, rio-rasterize (different usages)
+-b, --bidx: band index(es) (singular or multiple value versions).
+    In rio-info, rio-sample, rio-shapes, rio-stack (different usages)
+--bounds: bounds in world coordinates.
+    In rio-info, rio-rasterize (different usages)
 --count: count of bands.  In rio-info
 --crop: Crop raster to extent of features.  In rio-mask
 --crs: CRS of input raster.  In rio-info
@@ -158,16 +164,20 @@ Registry of command line options (also see cligj options):
 -i, --invert: Invert mask created from features: In rio-mask
 -j, --geojson-mask: GeoJSON for masking raster.  In rio-mask
 --lnglat: geograhpic coordinates of center of raster.  In rio-info
---masked/--not-masked: read masked data from source file.  In rio-calc, rio-info
+--masked/--not-masked: read masked data from source file.
+    In rio-calc, rio-info
 -m, --mode: output file mode (r, r+).  In rio-insp
 --name: input file name alias.  In rio-calc
 --nodata: nodata value.  In rio-info, rio-merge (different usages)
 --photometric: photometric interpretation.  In rio-stack
 --property: GeoJSON property to use as values for rasterize.  In rio-rasterize
--r, --res: output resolution.  In rio-info, rio-rasterize (different usages.  TODO: try to combine usages, prefer rio-rasterize version)
+-r, --res: output resolution.
+    In rio-info, rio-rasterize (different usages.  TODO: try to combine
+    usages, prefer rio-rasterize version)
 --sampling: Inverse of sampling fraction.  In rio-shapes
 --shape: shape (width, height) of band.  In rio-info
---src-crs: source CRS.  In rio-insp, rio-rasterize (different usages.  TODO: consolidate usages)
+--src-crs: source CRS.
+    In rio-insp, rio-rasterize (different usages.  TODO: consolidate usages)
 --stats: print raster stats.  In rio-inf
 -t, --dtype: data type.  In rio-calc, rio-info (different usages)
 --width: width of raster.  In rio-info
@@ -217,7 +227,7 @@ def write_features(
                         'bbox': bbox,
                         'features': [feat]}, **dump_kwds))
             fobj.write('\n')
-    # Aggregate all features into a single object expressed as 
+    # Aggregate all features into a single object expressed as
     # bbox or collection.
     else:
         features = list(collection())
@@ -228,7 +238,7 @@ def write_features(
         else:
             fobj.write(json.dumps({
                 'bbox': collection.bbox,
-                'type': 'FeatureCollection', 
+                'type': 'FeatureCollection',
                 'features': features},
                 **dump_kwds))
         fobj.write('\n')
@@ -236,10 +246,10 @@ def write_features(
 
 def resolve_inout(input=None, output=None, files=None):
     """Resolves inputs and outputs from standard args and options.
-    
+
     Returns `output_filename, [input_filename0, ...]`."""
     resolved_output = output or (files[-1] if files else None)
     resolved_inputs = (
-        [input] if input else [] + 
+        [input] if input else [] +
         list(files[:-1 if not output else None]) if files else [])
     return resolved_output, resolved_inputs
