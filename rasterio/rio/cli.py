@@ -1,6 +1,9 @@
+"""Rasterio's command line interface core."""
+
 import json
 import logging
 import sys
+import traceback
 
 import click
 from cligj import verbose_opt, quiet_opt
@@ -13,8 +16,49 @@ def configure_logging(verbosity):
     logging.basicConfig(stream=sys.stderr, level=log_level)
 
 
+class BrokenCommand(click.Command):
+    """A dummy command that provides help for broken plugins."""
+
+    def __init__(self, name):
+        click.Command.__init__(self, name)
+        self.help = (
+            "Warning: entry point could not be loaded. Contact "
+            "its author for help.\n\n\b\n"
+            + traceback.format_exc())
+        self.short_help = (
+            "Warning: could not load plugin. See `rio %s --help`." % self.name)
+
+
+class RioGroup(click.Group):
+    """Custom formatting for the commands of broken plugins."""
+
+    def format_commands(self, ctx, formatter):
+        """Extra format methods for multi methods that adds all the commands
+        after the options.
+        """
+        rows = []
+        for subcommand in self.list_commands(ctx):
+            cmd = self.get_command(ctx, subcommand)
+            # What is this, the tool lied about a command.  Ignore it
+            if cmd is None:
+                continue
+
+            help = cmd.short_help or ''
+
+            # Stick a dagger at the end of broken subcommand names.
+            name = cmd.name
+            if isinstance(cmd, BrokenCommand):
+                name += u'\u2020'
+
+            rows.append((name, help))
+
+        if rows:
+            with formatter.section('Commands'):
+                formatter.write_dl(rows)
+
+
 # The CLI command group.
-@click.group(help="Rasterio command line interface.")
+@click.group(help="Rasterio command line interface.", cls=RioGroup)
 @verbose_opt
 @quiet_opt
 @click.version_option(version=rasterio.__version__, message='%(version)s')

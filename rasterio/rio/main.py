@@ -3,9 +3,10 @@
 import sys
 import traceback
 
+from click.formatting import HelpFormatter
 from pkg_resources import iter_entry_points
 
-from rasterio.rio.cli import cli
+from rasterio.rio.cli import BrokenCommand, cli
 
 
 # Find and load all entry points in the rasterio.rio_commands group.
@@ -26,15 +27,7 @@ for entry_point in iter_entry_points('rasterio.rio_commands'):
         entry_point.load()
     except Exception:
         # Catch this so a busted plugin doesn't take down the CLI.
-        # Handled by registering a stub that does nothing other than
-        # explain the error.
-        msg = (
-            "Warning: plugin module could not be loaded. Contact "
-            "its author for help.\n\n\b\n"
-            + traceback.format_exc())
-        short_msg = (
-            "Warning: plugin module could not be loaded. See "
-            "`rio %s --help` for details." % entry_point.name)
-        @cli.command(entry_point.name, help=msg, short_help=short_msg)
-        def cmd_stub():
-            sys.exit(0)
+        # Handled by registering a dummy command that does nothing
+        # other than explain the error.
+        cli.add_command(
+            BrokenCommand(entry_point.name))
