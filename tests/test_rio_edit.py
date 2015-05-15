@@ -1,9 +1,14 @@
 import json
+import logging
+import sys
 
 from click.testing import CliRunner
 
 import rasterio
 from rasterio.rio.edit import edit
+
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_edit_nodata(data):

@@ -14,6 +14,6 @@ install:
   - "pip install coveralls"
   - "pip install -e ."
 script: 
-  - py.test --cov rasterio --cov-report term-missing
+  - py.test -s --cov rasterio --cov-report term-missing
 after_success:
   - coveralls
