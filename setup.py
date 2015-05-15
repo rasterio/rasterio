@@ -207,6 +207,7 @@ setup_args = dict(
         [rasterio.rio_commands]
         bounds=rasterio.rio.rio:bounds
         calc=rasterio.rio.calc:calc
+        edit=rasterio.rio.edit:edit
         env=rasterio.rio.info:env
         info=rasterio.rio.info:info
         insp=rasterio.rio.rio:insp
