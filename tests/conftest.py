@@ -22,7 +22,7 @@ def pytest_cmdline_main(config):
     if reduce(operator.and_, map(os.path.exists, test_files)):
         print("Test data present.")
     else:
-        print("Test data not present. See download directions in tests/README.txt")
+        print("Test data not present. See download directions in tests/data/README.rst")
         sys.exit(1)
 
 
