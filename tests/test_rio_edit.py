@@ -32,7 +32,7 @@ def test_edit_crs_epsg(data):
 def test_edit_crs_proj4(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(edit, [inputfile, '--crs', '+init=EPSG:32618'])
+    result = runner.invoke(edit, [inputfile, '--crs', '+init=epsg:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
