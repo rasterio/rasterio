@@ -240,10 +240,10 @@ You can download a binary distribution of GDAL from `here
 <http://www.gisinternals.com/release.php>`_.  You will also need to download
 the compiled libraries and headers (include files).
 
-When building from source on Windows, it is important to note that gdal-config
-only exists on UNIX platforms.  The setup.py scripts uses gdal-config discover
-the places to include files and libraries that rasterio needs to compile its
-C extensions.  On Windows, these paths need to be provided by the user.
+When building from source on Windows, it is important to know that setup.py
+cannot rely on gdal-config, which is only present on UNIX systems, to discover 
+the locations of header files and libraries that rasterio needs to compile its 
+C extensions. On Windows, these paths need to be provided by the user. 
 You will need to find the include files and the library files for gdal and 
 use setup.py as follows.
 
