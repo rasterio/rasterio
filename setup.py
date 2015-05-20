@@ -30,7 +30,8 @@ def check_output(cmd):
     # since subprocess.check_output doesn't exist in 2.6
     # we wrap it here.
     try:
-        return subprocess.check_output(cmd)
+        out = subprocess.check_output(cmd)
+        return out.decode('utf')
     except AttributeError:
         # For some reasone check_output doesn't exist
         # So fall back on Popen
