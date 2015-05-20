@@ -35,7 +35,7 @@ else:
 
 log.addHandler(NullHandler())
 
-def in_dtype_range(value, dtype):
+cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
             'c': np.finfo, 'f': np.finfo, 'i': np.iinfo, 'u': np.iinfo}
@@ -537,36 +537,71 @@ cdef int io_auto(image, void *hband, bint write):
 
     :param image: a numpy 2D image
     :param hband: an instance of GDALGetRasterBand
-    :param write: 1 (True) uses write mode, 0 (False) uses read
+    :param write: 1 (True) uses write mode (writes image into band),
+                  0 (False) uses read mode (reads band into image)
     :return: the return value from the data-type specific IO function
     """
 
-    if not len(image.shape) == 2:
-        raise ValueError("Specified image must have 2 dimensions")
-
-    cdef int width = image.shape[1]
-    cdef int height = image.shape[0]
-
+    cdef int ndims = len(image.shape)
+    cdef int height = image.shape[-2]
+    cdef int width = image.shape[-1]
+    cdef int count
+    cdef long[:] indexes
     dtype_name = image.dtype.name
 
-    if dtype_name == "float32":
-        return io_float32(hband, write, 0, 0, width, height, image)
-    elif dtype_name == "float64":
-        return io_float64(hband, write, 0, 0, width, height, image)
-    elif dtype_name == "uint8":
-        return io_ubyte(hband, write, 0, 0, width, height, image)
-    elif dtype_name == "int16":
-        return io_int16(hband, write, 0, 0, width, height, image)
-    elif dtype_name == "int32":
-        return io_int32(hband, write, 0, 0, width, height, image)
-    elif dtype_name == "uint16":
-        return io_uint16(hband, write, 0, 0, width, height, image)
-    elif dtype_name == "uint32":
-        return io_uint32(hband, write, 0, 0, width, height, image)
+    if ndims == 2:
+        if dtype_name == "float32":
+            return io_float32(hband, write, 0, 0, width, height, image)
+        elif dtype_name == "float64":
+            return io_float64(hband, write, 0, 0, width, height, image)
+        elif dtype_name == "uint8":
+            return io_ubyte(hband, write, 0, 0, width, height, image)
+        elif dtype_name == "int16":
+            return io_int16(hband, write, 0, 0, width, height, image)
+        elif dtype_name == "int32":
+            return io_int32(hband, write, 0, 0, width, height, image)
+        elif dtype_name == "uint16":
+            return io_uint16(hband, write, 0, 0, width, height, image)
+        elif dtype_name == "uint32":
+            return io_uint32(hband, write, 0, 0, width, height, image)
+        else:
+            raise ValueError("Image dtype is not supported for this function."
+                             "Must be float32, float64, int16, int32, uint8, "
+                             "uint16, or uint32")
+    elif ndims == 3:
+        count = image.shape[0]
+        indexes = np.arange(1, count + 1)
+
+        dtype_name = image.dtype.name
+
+        if dtype_name == "float32":
+            return io_multi_float32(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        elif dtype_name == "float64":
+            return io_multi_float64(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        elif dtype_name == "uint8":
+            return io_multi_ubyte(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        elif dtype_name == "int16":
+            return io_multi_int16(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        elif dtype_name == "int32":
+            return io_multi_int32(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        elif dtype_name == "uint16":
+            return io_multi_uint16(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        elif dtype_name == "uint32":
+            return io_multi_uint32(hband, write, 0, 0, width, height, image,
+                                    indexes, count)
+        else:
+            raise ValueError("Image dtype is not supported for this function."
+                             "Must be float32, float64, int16, int32, uint8, "
+                             "uint16, or uint32")
+
     else:
-        raise ValueError("Image dtype is not supported for this function."
-                         "Must be float32, float64, int16, int32, uint8, "
-                         "uint16, or uint32")
+        raise ValueError("Specified image must have 2 or 3 dimensions")
 
 
 cdef class RasterReader(_base.DatasetReader):

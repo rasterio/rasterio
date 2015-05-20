@@ -45,7 +45,7 @@ def copy_data_tree(datadir, destdir):
         pass
     shutil.copytree(datadir, destdir)
 
-# Parse the version from the fiona module.
+# Parse the version from the rasterio module.
 with open('rasterio/__init__.py') as f:
     for line in f:
         if line.find("__version__") >= 0:
@@ -96,7 +96,11 @@ try:
             extra_link_args.append(item)
 
 except Exception as e:
-    log.warning("Failed to get options via gdal-config: %s", str(e))
+    if os.name == "nt":
+        log.info(("Building on Windows requires extra options to setup.py to locate needed GDAL files.\n"
+                 "More information is available in the README."))
+    else:
+        log.warning("Failed to get options via gdal-config: %s", str(e))
 
 
 # Conditionally copy the GDAL data. To be used in conjunction with

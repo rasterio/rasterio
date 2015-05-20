@@ -156,11 +156,16 @@ def _transform_geom(
 
 def _reproject(
         source, destination,
-        src_transform=None, src_crs=None, 
-        dst_transform=None, dst_crs=None,
-        resampling=RESAMPLING.nearest, 
+        src_transform=None,
+        src_crs=None,
+        src_nodata=None,
+        dst_transform=None,
+        dst_crs=None,
+        dst_nodata=None,
+        resampling=RESAMPLING.nearest,
         **kwargs):
-    """Reproject a source raster to a destination.
+    """
+    Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
     system definitions and affine transformation parameters are required
@@ -169,25 +174,73 @@ def _reproject(
     If the source and destination are rasterio Bands, shorthand for
     bands of datasets on disk, the coordinate reference systems and
     transforms will be read from the appropriate datasets.
+
+    Parameters
+    ------------
+    source: ndarray or rasterio Band
+        Source raster.
+    destination: ndarray or rasterio Band
+        Target raster.
+    src_transform: affine transform object, optional
+        Source affine transformation.  Required if source and destination
+        are ndarrays.  Will be derived from source if it is a rasterio Band.
+    src_crs: dict, optional
+        Source coordinate reference system, in rasterio dict format.
+        Required if source and destination are ndarrays.
+        Will be derived from source if it is a rasterio Band.
+        Example: {'init': 'EPSG:4326'}
+    src_nodata: int or float, optional
+        The source nodata value.  Pixels with this value will not be used
+        for interpolation.  If not set, it will be default to the
+        nodata value of the source image if a masked ndarray or rasterio band,
+        if available.  Must be provided if dst_nodata is not None.
+    dst_transform: affine transform object, optional
+        Target affine transformation.  Required if source and destination
+        are ndarrays.  Will be derived from target if it is a rasterio Band.
+    dst_crs: dict, optional
+        Target coordinate reference system.  Required if source and destination
+        are ndarrays.  Will be derived from target if it is a rasterio Band.
+    dst_nodata: int or float, optional
+        The nodata value used to initialize the destination; it will remain
+        in all areas not covered by the reprojected source.  Defaults to the
+        nodata value of the destination image (if set), the value of
+        src_nodata, or 0 (gdal default).
+    resampling: int
+        Resampling method to use.  One of the following:
+            RESAMPLING.nearest,
+            RESAMPLING.bilinear,
+            RESAMPLING.cubic,
+            RESAMPLING.cubic_spline,
+            RESAMPLING.lanczos,
+            RESAMPLING.average,
+            RESAMPLING.mode
+    kwargs:  dict, optional
+        Additional arguments passed to transformation function.
+
+    Returns
+    ---------
+    out: None
+        Output is written to destination.
     """
-    cdef int retval=0, rows, cols
-    cdef void *hrdriver
-    cdef void *hdsin
-    cdef void *hdsout
-    cdef void *hbandin
-    cdef void *hbandout
+
+    cdef int retval=0, rows, cols, src_count
+    cdef void *hrdriver = NULL
+    cdef void *hdsin = NULL
+    cdef void *hdsout = NULL
+    cdef void *hbandin = NULL
+    cdef void *hbandout = NULL
     cdef _io.RasterReader rdr
     cdef _io.RasterUpdater udr
     cdef _io.GDALAccess GA
     cdef double gt[6]
     cdef char *srcwkt = NULL
     cdef char *dstwkt= NULL
-    cdef const char *proj_c
+    cdef const char *proj_c = NULL
     cdef void *osr = NULL
-    cdef char **warp_extras
-    cdef char *key_c
-    cdef char *val_c
-    cdef const char* pszWarpThreads
+    cdef char **warp_extras = NULL
+    cdef char *key_c = NULL
+    cdef char *val_c = NULL
+    cdef const char* pszWarpThread = NULL
 
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
@@ -200,6 +253,10 @@ def _reproject(
         rows = source.shape[1]
         cols = source.shape[2]
         dtype = np.dtype(source.dtype).name
+        if src_nodata is None and hasattr(source, 'fill_value'):
+            # source is a masked array
+            src_nodata = source.fill_value
+
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
             raise ValueError("NULL driver for 'MEM'")
@@ -224,34 +281,7 @@ def _reproject(
         log.debug("Set CRS on temp source dataset: %s", srcwkt)
         
         # Copy arrays to the dataset.
-        #hbandin = _gdal.GDALGetRasterBand(hdsin, 1)
-        #if hbandin == NULL:
-        #    raise ValueError("NULL input band")
-        #log.debug("Got temp source band")
-        indexes = np.array(range(1, src_count+1))
-        if dtype == dtypes.ubyte:
-            retval = _io.io_multi_ubyte(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        elif dtype == dtypes.uint16:
-            retval = _io.io_multi_uint16(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        elif dtype == dtypes.int16:
-            retval = _io.io_multi_int16(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        elif dtype == dtypes.uint32:
-            retval = _io.io_multi_uint32(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        elif dtype == dtypes.int32:
-            retval = _io.io_multi_int32(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        elif dtype == dtypes.float32:
-            retval = _io.io_multi_float32(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        elif dtype == dtypes.float64:
-            retval = _io.io_multi_float64(
-                hdsin, 1, 0, 0, cols, rows, source, indexes, src_count)
-        else:
-            raise ValueError("Invalid dtype")
+        retval = _io.io_auto(source, hdsin, 1)
         # TODO: handle errors (by retval).
         log.debug("Wrote array to temp source dataset")
     
@@ -260,6 +290,8 @@ def _reproject(
         rdr = source.ds
         hdsin = rdr._hds
         src_count = 1
+        if src_nodata is None:
+            src_nodata = rdr.nodata
     else:
         raise ValueError("Invalid source")
     
@@ -292,10 +324,15 @@ def _reproject(
         _gdal.CPLFree(dstwkt)
         _gdal.OSRDestroySpatialReference(osr)
         log.debug("Set CRS on temp destination dataset: %s", dstwkt)
+        if dst_nodata is None and hasattr(destination, "fill_value"):
+            # destination is a masked array
+            dst_nodata = destination.fill_value
 
     elif isinstance(destination, tuple):
         udr = destination.ds
         hdsout = udr._hds
+        if dst_nodata is None:
+            dst_nodata = udr.nodata
     else:
         raise ValueError("Invalid destination")
     
@@ -313,8 +350,12 @@ def _reproject(
         log.debug("Created transformer")
 
         psWOptions = _gdal.GDALCreateWarpOptions()
-        
+
+        # Note: warp_extras is pointed to different memory locations on every
+        # call to CSLSetNameValue call below, but needs to be set here to
+        # get the defaults
         warp_extras = psWOptions.papszWarpOptions
+
         for k, v in kwargs.items():
             k, v = k.upper(), str(v).upper()
             key_b = k.encode('utf-8')
@@ -322,6 +363,7 @@ def _reproject(
             key_c = key_b
             val_c = val_b
             warp_extras = _gdal.CSLSetNameValue(warp_extras, key_c, val_c)
+            log.debug("Setting warp option  %s: %s" % (k, v))
         
         pszWarpThreads = _gdal.CSLFetchNameValue(warp_extras, "NUM_THREADS")
         if pszWarpThreads == NULL:
@@ -333,6 +375,54 @@ def _reproject(
         log.debug("Created warp options")
     
         psWOptions.eResampleAlg = <_gdal.GDALResampleAlg>resampling
+
+        # Set src_nodata and dst_nodata
+        if src_nodata is None and dst_nodata is not None:
+            raise ValueError("src_nodata must be provided because dst_nodata "
+                             "is not None")
+        log.debug("src_nodata: %s" % src_nodata)
+
+        if dst_nodata is None:
+            if src_nodata is not None:
+                dst_nodata = src_nodata
+            else:
+                dst_nodata = 0  # GDAL default
+        log.debug("dst_nodata: %s" % dst_nodata)
+
+        # Validate nodata values
+        if src_nodata is not None:
+            if not _io.in_dtype_range(src_nodata, source.dtype):
+                raise ValueError("src_nodata must be in valid range for "
+                                "source dtype")
+
+            psWOptions.padfSrcNoDataReal = <double*>_gdal.CPLMalloc(
+                src_count * sizeof(double))
+            psWOptions.padfSrcNoDataImag = <double*>_gdal.CPLMalloc(
+                src_count * sizeof(double))
+            for i in range(src_count):
+                psWOptions.padfSrcNoDataReal[i] = src_nodata
+                psWOptions.padfSrcNoDataImag[i] = 0.0
+            warp_extras = _gdal.CSLSetNameValue(
+                warp_extras, "UNIFIED_SRC_NODATA", "YES")
+
+
+        if dst_nodata is not None and not _io.in_dtype_range(
+                dst_nodata, destination.dtype):
+            raise ValueError("dst_nodata must be in valid range for "
+                             "destination dtype")
+
+        psWOptions.padfDstNoDataReal = <double*>_gdal.CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfDstNoDataImag = <double*>_gdal.CPLMalloc(src_count * sizeof(double))
+        for i in range(src_count):
+            psWOptions.padfDstNoDataReal[i] = dst_nodata
+            psWOptions.padfDstNoDataImag[i] = 0.0
+        warp_extras = _gdal.CSLSetNameValue(
+            warp_extras, "INIT_DEST", "NO_DATA")
+
+        # Important: set back into struct or values set above are lost
+        # This is because CSLSetNameValue returns a new list each time
+        psWOptions.papszWarpOptions = warp_extras
+
         # TODO: Approximate transformations.
         #if maxerror > 0.0:
         #    psWOptions.pTransformerArg = _gdal.GDALCreateApproxTransformer(
@@ -360,7 +450,7 @@ def _reproject(
                 psWOptions.panDstBands[i] = i+1
         log.debug("Set transformer options")
 
-        # TODO: Src nodata and alpha band.
+        # TODO: alpha band.
 
         eErr = oWarper.Initialize(psWOptions)
         if eErr == 0:
@@ -378,6 +468,7 @@ def _reproject(
     except Exception:
         log.exception(
             "Caught exception in warping. Source not reprojected.")
+        raise
     
     else:
         reprojected = True
@@ -394,44 +485,9 @@ def _reproject(
                 _gdal.GDALClose(hdsin)
 
     if reprojected and isinstance(destination, np.ndarray):
-        try:
-            dtype = np.dtype(destination.dtype).name
-            _, rows, cols = destination.shape
-            indexes = np.array(range(1, src_count+1))
-            if dtype == dtypes.ubyte:
-                retval = _io.io_multi_ubyte(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            elif dtype == dtypes.uint16:
-                retval = _io.io_multi_uint16(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            elif dtype == dtypes.int16:
-                retval = _io.io_multi_int16(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            elif dtype == dtypes.uint32:
-                retval = _io.io_multi_uint32(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            elif dtype == dtypes.int32:
-                retval = _io.io_multi_int32(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            elif dtype == dtypes.float32:
-                retval = _io.io_multi_float32(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            elif dtype == dtypes.float64:
-                retval = _io.io_multi_float64(
-                    hdsout, 0, 0, 0, cols, rows,
-                    destination, indexes, src_count)
-            else:
-                raise ValueError("Invalid dtype")
-            # TODO: handle errors (by retval).
-        except Exception:
-            raise
-        finally:
-            if hdsout != NULL:
-                _gdal.GDALClose(hdsout)
+        retval = _io.io_auto(destination, hdsout, 0)
+        # TODO: handle errors (by retval).
+
+        if hdsout != NULL:
+            _gdal.GDALClose(hdsout)
 
