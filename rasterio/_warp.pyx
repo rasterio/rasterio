@@ -190,7 +190,8 @@ def _reproject(
         Will be derived from source if it is a rasterio Band.
         Example: {'init': 'EPSG:4326'}
     src_nodata: int or float, optional
-        The source nodata value.  If not set, it will be default to the
+        The source nodata value.  Pixels with this value will not be used
+        for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
         if available.  Must be provided if dst_nodata is not None.
     dst_transform: affine transform object, optional
