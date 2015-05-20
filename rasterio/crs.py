@@ -10,6 +10,7 @@
 #   {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
 #
 
+from rasterio._base import is_geographic_crs, is_projected_crs
 from rasterio.five import string_types
 
 def to_string(crs):

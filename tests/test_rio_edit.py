@@ -5,10 +5,17 @@ import sys
 from click.testing import CliRunner
 
 import rasterio
-from rasterio.rio.edit import edit
+from rasterio.rio.info import edit
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+def test_edit_nodata_err(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(edit, [inputfile, '--nodata', '-1'])
+    assert result.exit_code == 2
 
 
 def test_edit_nodata(data):
@@ -18,6 +25,13 @@ def test_edit_nodata(data):
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.nodata == 255.0
+
+
+def test_edit_crs_err(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(edit, [inputfile, '--crs', 'LOL:WUT'])
+    assert result.exit_code == 2
 
 
 def test_edit_crs_epsg(data):
@@ -46,6 +60,20 @@ def test_edit_crs_obj(data):
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
+
+
+def test_edit_transform_err_not_json(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(edit, [inputfile, '--transform', 'LOL'])
+    assert result.exit_code == 2
+
+
+def test_edit_transform_err_bad_array(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(edit, [inputfile, '--transform', '[1,2]'])
+    assert result.exit_code == 2
 
 
 def test_edit_transform_affine(data):
