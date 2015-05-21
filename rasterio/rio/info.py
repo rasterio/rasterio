@@ -36,8 +36,16 @@ def edit(ctx, input, nodata, crs, transform, tags):
 
       [101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]
     """
+    import numpy as np
+
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
+
+    def in_dtype_range(value, dtype):
+        infos = {'c': np.finfo, 'f': np.finfo, 'i': np.iinfo,
+                 'u': np.iinfo}
+        rng = infos[np.dtype(dtype).kind](dtype)
+        return rng.min <= value <= rng.max
 
     with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
         with rasterio.open(input, 'r+') as dst:
@@ -45,7 +53,6 @@ def edit(ctx, input, nodata, crs, transform, tags):
             # Update nodata.
             if nodata is not None:
 
-                from rasterio._io import in_dtype_range
                 dtype = dst.dtypes[0]
                 if not in_dtype_range(nodata, dtype):
                     raise click.BadParameter(
@@ -54,7 +61,6 @@ def edit(ctx, input, nodata, crs, transform, tags):
                         param=nodata, param_hint='nodata')
 
                 dst.nodata = nodata
-
 
             # Update CRS. Value might be a PROJ.4 string or a JSON
             # encoded dict.
