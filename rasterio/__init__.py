@@ -3,6 +3,7 @@
 from collections import namedtuple
 import logging
 import os
+import re
 import warnings
 
 from rasterio._base import eval_window, window_shape, window_index
@@ -90,11 +91,13 @@ def open(
     if driver and not isinstance(driver, string_types):
         raise TypeError("invalid driver: %r" % driver)
     if mode in ('r', 'r+'):
-        if not os.path.exists(path):
-            raise IOError("no such file or directory: %r" % path)
+        m = re.search('file=(.*),?', path)
+        fpath = m.group(1) if m else path
+        if not os.path.exists(fpath):
+            raise IOError("no such file or directory: %r" % fpath)
     if transform:
         transform = guard_transform(transform)
-
+    
     if mode == 'r':
         from rasterio._io import RasterReader
         s = RasterReader(path)
