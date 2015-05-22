@@ -89,12 +89,9 @@ def open(
         raise TypeError("invalid mode: %r" % mode)
     if driver and not isinstance(driver, string_types):
         raise TypeError("invalid driver: %r" % driver)
-    if mode in ('r', 'r+'):
-        if not os.path.exists(path):
-            raise IOError("no such file or directory: %r" % path)
     if transform:
         transform = guard_transform(transform)
-
+    
     if mode == 'r':
         from rasterio._io import RasterReader
         s = RasterReader(path)
