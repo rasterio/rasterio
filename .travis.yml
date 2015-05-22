@@ -10,10 +10,10 @@ before_install:
 install:
   - pip install --install-option="--no-cython-compile" cython
   - "pip install -r requirements-dev.txt"
-  - "pip install pytest"
+  - "pip install pytest pytest-cov"
   - "pip install coveralls"
   - "pip install -e ."
 script: 
-  - coverage run --source=rasterio --omit='*.pxd,*.pyx,*/tests/*,*/docs/*,*/examples/*,*/benchmarks/*,*/rio/main.py,*/rio/__init__.py' -m py.test
+  - py.test --cov rasterio --cov-report term-missing
 after_success:
   - coveralls
