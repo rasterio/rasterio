@@ -109,7 +109,7 @@ except Exception as e:
 if os.environ.get('PACKAGE_DATA'):
     destdir = 'rasterio/gdal_data'
     if gdal_output[2]:
-        log.info("Copying gdal data from %s" % gdal_ouput[2])
+        log.info("Copying gdal data from %s" % gdal_output[2])
         copy_data_tree(gdal_output[2], destdir)
     else:
         # check to see if GDAL_DATA is defined
