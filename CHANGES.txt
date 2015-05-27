@@ -1,8 +1,17 @@
 Changes
 =======
 
-0.23.0 (?)
-----------
+0.24.0 (2015-05-27)
+-------------------
+- New rio-edit-info command (#358).
+- Add option to package GDAL data in distributions (#362).
+- Remove check that the path given to `rasterio.open()` in read mode is an
+  existing file, turning on some non-file formats (#364).
+- Addition of a `window_bounds()` method to dataset objects (#366).
+- Delegation of command exiting to Click (#367).
+
+0.23.0 (2015-05-08)
+-------------------
 - Redesign CLI as dynamically loaded entry points (#346).
 
 0.22.0 (2015-05-01)

@@ -1,17 +1,21 @@
 Authors
 =======
 
-Joshua Arnott https://github.com/snorfalorpagus
 Sean Gillies <sean@mapbox.com>
-Brendan Ward https://github.com/brendan-ward
-Asger Skovbo Petersen https://github.com/AsgerPetersen
-James Seppi https://github.com/jseppi
-Chrisophe Gohlke https://github.com/cgohlke
-Robin Wilson https://github.com/robintw
-Mike Toews https://github.com/mwtoews
-Amit Kapadia https://github.com/kapadia
-Alessandro Amici https://github.com/alexamici
-Johan Van de Wauw https://github.com/johanvdw
-Martijn Visser https://github.com/visr
+Brendan Ward <bcward@consbio.org>
+Ryan Grout <rgrout@continuum.io>
+Mike Toews <mwtoews@gmail.com>
+AsgerPetersen <asgerpetersen@gmail.com>
+Alessandro Amici <alexamici@gmail.com>
+Joshua Arnott <josh@snorfalorpagus.net>
+Amit Kapadia <amit@planet.com>
+Johan Van de Wauw <johan.vandewauw@gmail.com>
+Robin Wilson <robin@rtwilson.com>
+James Seppi <james.seppi@gmail.com>
+Etienne B. Racine <etiennebr@gmail.com>
+cgohlke <cgohlke@uci.edu>
+Kevin Wurster <wursterk@gmail.com>
+Aldo Culquicondor <alculquicondor@gmail.com>
+Martijn Visser <mgvisser@gmail.com>
 
 See also https://github.com/mapbox/rasterio/graphs/contributors.
