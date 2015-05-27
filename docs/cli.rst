@@ -130,6 +130,41 @@ efficiently in Python.
 Please see `calc.rst <calc.rst>`__ for more details.
 
 
+edit-info
+---------
+
+New in 0.24
+
+The edit-info command allows you edit a raster dataset's metadata, namely
+
+- coordinate reference system
+- affine transformation matrix
+- nodata value
+- tags
+
+A TIFF created by spatially-unaware image processing software like Photoshop
+or Imagemagick can be turned into a GeoTIFF by editing these metadata items.
+
+You can set or change a dataset's coordinate reference system to, e.g., 
+EPSG:3857 (Web Mercator),
+
+.. code-block:: console
+
+    $ rio edit-info --crs EPSG:3857 example.tif
+
+set its `affine transformation matrix <https://github.com/mapbox/rasterio/blob/master/docs/georeferencing.rst#coordinate-transformation>`__,
+
+.. code-block:: console
+
+    $ rio edit-info --transform "[300.0, 0.0, 101985.0, 0.0, -300.0, 2826915.0]"
+
+or set its nodata value to, e.g., `0`:
+
+.. code-block:: console
+
+    $ rio edit-info --nodata 0 example.tif
+
+
 mask
 ----
 
