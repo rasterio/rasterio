@@ -119,7 +119,6 @@ def stack(ctx, files, output, driver, bidx, photometric):
                             dst.write(data, range(dst_idx, dst_idx+len(index)))
                             dst_idx += len(index)
 
-        sys.exit(0)
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()

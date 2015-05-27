@@ -135,15 +135,14 @@ def calc(ctx, command, files, output, name, dtype, masked):
             with rasterio.open(output, 'w', **kwargs) as dst:
                 dst.write(results)
 
-        sys.exit(0)
     except snuggs.ExpressionError as err:
         click.echo("Expression Error:")
         click.echo('  %s' % err.text)
         click.echo(' ' +  ' ' * err.offset + "^")
         click.echo(err)
-        sys.exit(1)
+        raise click.Abort()
     except Exception as err:
         t, v, tb = sys.exc_info()
         for line in traceback.format_exception_only(t, v):
             click.echo(line, nl=False)
-        sys.exit(1)
+        raise click.Abort()

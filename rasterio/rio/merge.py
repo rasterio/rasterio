@@ -176,7 +176,6 @@ def merge(ctx, files, output, driver, bounds, res, nodata):
             dst.write(dest)
             dst.close()
 
-        sys.exit(0)
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()

@@ -52,10 +52,9 @@ def insp(ctx, input, mode):
                         rasterio.__version__,
                         '.'.join(map(str, sys.version_info[:3]))),
                     src)
-        sys.exit(0)
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
 
 
 # Bounds command.
@@ -149,10 +148,10 @@ def bounds(ctx, input, precision, indent, compact, projection, sequence,
                 stdout, col, sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
-        sys.exit(0)
+
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
 
 
 # Transform command.
@@ -199,7 +198,6 @@ def transform(ctx, input, src_crs, dst_crs, precision):
                 result[1::2] = ys
                 print(json.dumps(result))
 
-        sys.exit(0)
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()

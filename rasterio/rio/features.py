@@ -348,10 +348,9 @@ def shapes(
                 stdout, Collection(), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
-        sys.exit(0)
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
 
 
 # Rasterize command.

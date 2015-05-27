@@ -88,7 +88,7 @@ def sample(ctx, files, bidx):
                             (json.loads(line) for line in points),
                             indexes=indexes):
                     click.echo(json.dumps(vals.tolist()))
-        sys.exit(0)
+
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
