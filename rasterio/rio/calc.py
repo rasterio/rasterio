@@ -18,11 +18,9 @@ from rasterio.rio.cli import (
 def get_bands(inputs, d, i=None):
     """Get a rasterio.Band object from calc's inputs"""
     path = inputs[d] if d in dict(inputs) else inputs[int(d)-1][1]
-    if i:
-        return rasterio.band(rasterio.open(path), i)
-    else:
-        src = rasterio.open(path)
-        return [rasterio.band(src, i) for i in src.indexes]
+    src = rasterio.open(path)
+    return (rasterio.band(src, i) if i else 
+            [rasterio.band(src, i) for i in src.indexes])
 
 
 def read_array(ix, subix=None, dtype=None):
@@ -141,8 +139,8 @@ def calc(ctx, command, files, output, name, dtype, masked):
         click.echo(' ' +  ' ' * err.offset + "^")
         click.echo(err)
         raise click.Abort()
-    except Exception as err:
-        t, v, tb = sys.exc_info()
-        for line in traceback.format_exception_only(t, v):
-            click.echo(line, nl=False)
-        raise click.Abort()
+    #except Exception as err:
+    #    t, v, tb = sys.exc_info()
+    #    for line in traceback.format_exception_only(t, v):
+    #        click.echo(line, nl=False)
+    #    raise click.Abort()
