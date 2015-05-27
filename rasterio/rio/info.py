@@ -210,9 +210,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     else:
                         click.echo(json.dumps(info, indent=indent))
                 elif aspect == 'tags':
-                    click.echo(json.dumps(src.tags(ns=namespace), 
+                    click.echo(json.dumps(src.tags(ns=namespace),
                                             indent=indent))
-        sys.exit(0)
     except Exception:
-        logger.exception("Failed. Exception caught")
-        sys.exit(1)
+        logger.exception("Exception caught during processing")
+        raise click.Abort()

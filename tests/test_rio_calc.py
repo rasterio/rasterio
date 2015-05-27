@@ -129,7 +129,6 @@ def test_fillnodata(tmpdir):
                     outfile],
                 catch_exceptions=False)
     assert result.exit_code == 0
-    # import subprocess; subprocess.call(['open', outfile])
     with rasterio.open(outfile) as src:
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
