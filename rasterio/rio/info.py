@@ -179,8 +179,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode) as src:
                 info = src.meta
+                info['transform'] = info['affine'][:6]
                 del info['affine']
-                del info['transform']
                 info['shape'] = info['height'], info['width']
                 info['bounds'] = src.bounds
                 proj4 = rasterio.crs.to_string(src.crs)
