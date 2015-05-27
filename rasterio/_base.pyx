@@ -397,6 +397,13 @@ cdef class DatasetReader(object):
         (r, _), (c, _) = window
         return self.affine * Affine.translation(c or 0, r or 0)
 
+    def window_bounds(self, window):
+        """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
+        ((row_min, row_max), (col_min, col_max)) = window
+        x_min, y_min = (col_min, row_max) * self.affine
+        x_max, y_max = (col_max, row_min) * self.affine
+        return x_min, y_min, x_max, y_max
+
     @property
     def meta(self):
         m = {
