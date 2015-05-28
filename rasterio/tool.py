@@ -2,7 +2,6 @@
 import code
 import collections
 import logging
-import sys
 
 try:
     import matplotlib.pyplot as plt
