@@ -54,6 +54,7 @@ def main(banner, dataset):
     import IPython
 
     locals = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
+    IPython.InteractiveShell.banner1 = banner
     IPython.start_ipython(argv=[], user_ns=locals)
 
     return 0
