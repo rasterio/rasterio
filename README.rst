@@ -252,6 +252,11 @@ setup.py as follows.
     $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
     $ python setup.py install
 
+We have had success compiling code using the same version of Microsoft's
+Visual Studio used to compile the targeted version of Python (more info on
+versions used `here
+<https://docs.python.org/devguide/setup.html#windows>`__.).
+
 Note: The GDAL dll (gdal111.dll) and gdal-data directory need to be in your
 Windows PATH otherwise rasterio will fail to work.
 
@@ -263,6 +268,12 @@ From the repo directory, run py.test
 .. code-block:: console
 
     $ py.test
+
+
+Note: some tests do not succeed on Windows (see
+`#66
+<https://github.com/mapbox/rasterio/issues/66>`__.).
+
 
 Documentation
 -------------
