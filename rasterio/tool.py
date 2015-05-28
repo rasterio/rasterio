@@ -50,9 +50,10 @@ def stats(source):
 
 
 def main(banner, dataset):
-    """ Main entry point for use with interpreter """
-    code.interact(
-        banner,
-        local=dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt))
+    """ Main entry point for use with IPython interpreter """
+    import IPython
+
+    locals = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
+    IPython.start_ipython(argv=[], user_ns=locals)
 
     return 0
