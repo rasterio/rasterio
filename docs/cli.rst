@@ -1,7 +1,7 @@
 Command Line Interface
 ======================
 
-Rasterio's new command line interface is a program named "rio".
+Rasterio's command line interface is a program named "rio".
 
 .. code-block:: console
 
