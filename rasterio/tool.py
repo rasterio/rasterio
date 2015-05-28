@@ -50,11 +50,15 @@ def stats(source):
 
 
 def main(banner, dataset):
-    """ Main entry point for use with IPython interpreter """
-    import IPython
+    """ Main entry point for use with python interpreter """
 
-    locals = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
-    IPython.InteractiveShell.banner1 = banner
-    IPython.start_ipython(argv=[], user_ns=locals)
+    local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
+    try:
+        import IPython
+    except ImportError:
+        code.interact(banner, local=local)
+    else:
+        IPython.InteractiveShell.banner1 = banner
+        IPython.start_ipython(argv=[], user_ns=local)
 
     return 0
