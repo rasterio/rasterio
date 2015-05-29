@@ -38,7 +38,16 @@ log.addHandler(NullHandler())
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
-            'c': np.finfo, 'f': np.finfo, 'i': np.iinfo, 'u': np.iinfo}
+        'c': np.finfo,
+        'f': np.finfo,
+        'i': np.iinfo,
+        'u': np.iinfo,
+        # Cython 0.22 returns dtype.kind as an int and will not cast to a char
+        99: np.finfo,
+        102: np.finfo,
+        105: np.iinfo,
+        117: np.iinfo
+    }
     rng = infos[np.dtype(dtype).kind](dtype)
     return rng.min <= value <= rng.max
 
