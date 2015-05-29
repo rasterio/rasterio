@@ -31,7 +31,10 @@ warnings.simplefilter('default')
 # Insp command.
 @cli.command(short_help="Open a data file and start an interpreter.")
 @file_in_arg
-@click.option('--ipython/--no-ipython', default=True)
+@click.option(
+    '--ipython/--no-ipython',
+    default=True,
+    help='Use IPython as interpreter.')
 @click.option(
     '-m',
     '--mode',
