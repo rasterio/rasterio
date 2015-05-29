@@ -48,16 +48,18 @@ def stats(source):
     return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
 
 
-def main(banner, dataset):
+def main(banner, dataset, ipython):
     """ Main entry point for use with python interpreter """
-
-    local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
     try:
         import IPython
     except ImportError:
-        code.interact(banner, local=local)
-    else:
+        ipython = False
+
+    local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
+    if ipython:
         IPython.InteractiveShell.banner1 = banner
         IPython.start_ipython(argv=[], user_ns=local)
+    else:
+        code.interact(banner, local=local)
 
     return 0
