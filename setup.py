@@ -125,6 +125,7 @@ if os.environ.get('PACKAGE_DATA'):
         copy_data_tree(projdatadir, 'rasterio/proj_data')
 
 ext_options = dict(
+    extra_compile_args=['-Wno-unused-parameter', '-Wno-unused-function'],
     include_dirs=include_dirs,
     library_dirs=library_dirs,
     libraries=libraries,
