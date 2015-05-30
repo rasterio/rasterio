@@ -34,7 +34,7 @@ warnings.simplefilter('default')
 @click.option(
     '--ipython/--no-ipython',
     default=True,
-    help='Use IPython as interpreter.')
+    help='Use IPython as interpreter (default: True).')
 @click.option(
     '-m',
     '--mode',
