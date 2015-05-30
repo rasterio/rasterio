@@ -2,21 +2,20 @@ import json
 import logging
 from math import ceil
 import os
-import sys
 import shutil
 
 import click
+import cligj
 from cligj import (
     precision_opt, indent_opt, compact_opt, projection_geographic_opt,
-    projection_projected_opt, sequence_opt, use_rs_opt,
-    geojson_type_feature_opt, geojson_type_bbox_opt, files_inout_arg,
-    format_opt)
+    projection_mercator_opt, projection_projected_opt, sequence_opt,
+    use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
+    files_inout_arg, format_opt, geojson_type_collection_opt)
 
+from .helpers import coords, resolve_inout, write_features
+from . import options
 import rasterio
 from rasterio.transform import Affine
-from rasterio.rio.cli import (
-    cli, coords, write_features, file_in_arg, file_out_arg, like_file_opt,
-    bounds_opt, resolution_opt, output_opt, resolve_inout)
 
 
 logger = logging.getLogger('rio')
@@ -33,9 +32,9 @@ all_touched_opt = click.option(
 
 
 # Mask command
-@cli.command(short_help='Mask in raster using features.')
-@files_inout_arg
-@output_opt
+@click.command(short_help='Mask in raster using features.')
+@cligj.files_inout_arg
+@options.output_opt
 @click.option('-j', '--geojson-mask', 'geojson_mask',
               type=click.Path(), default=None,
               help='GeoJSON file to use for masking raster.  Use "-" to read '
@@ -165,9 +164,9 @@ def mask(
 
 
 # Shapes command.
-@cli.command(short_help="Write shapes extracted from bands or masks.")
+@click.command(short_help="Write shapes extracted from bands or masks.")
 @click.argument('input', type=click.Path(exists=True))
-@output_opt
+@options.output_opt
 @precision_opt
 @indent_opt
 @compact_opt
@@ -354,15 +353,15 @@ def shapes(
 
 
 # Rasterize command.
-@cli.command(short_help='Rasterize features.')
+@click.command(short_help='Rasterize features.')
 @files_inout_arg
-@output_opt
+@options.output_opt
 @format_opt
-@like_file_opt
-@bounds_opt
+@options.like_file_opt
+@options.bounds_opt
 @click.option('--dimensions', nargs=2, type=int, default=None,
               help='Output dataset width, height in number of pixels.')
-@resolution_opt
+@options.resolution_opt
 @click.option('--src-crs', '--src_crs', 'src_crs', default=None,
               help='Source coordinate reference system.  Limited to EPSG '
               'codes for now.  Used as output coordinate system if output '
@@ -586,6 +585,103 @@ def rasterize(
 
             with rasterio.open(output, 'w', **kwargs) as out:
                 out.write_band(1, result)
+
+
+# Bounds command.
+@click.command(short_help="Write bounding boxes to stdout as GeoJSON.")
+# One or more files, the bounds of each are a feature in the collection
+# object or feature sequence.
+@click.argument('INPUT', nargs=-1, type=click.Path(exists=True))
+@precision_opt
+@indent_opt
+@compact_opt
+@projection_geographic_opt
+@projection_projected_opt
+@projection_mercator_opt
+@sequence_opt
+@use_rs_opt
+@geojson_type_collection_opt(True)
+@geojson_type_feature_opt(False)
+@geojson_type_bbox_opt(False)
+@click.pass_context
+def bounds(ctx, input, precision, indent, compact, projection, sequence,
+        use_rs, geojson_type):
+    """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
+    geojsonio
+
+      $ rio bounds *.tif | geojsonio
+
+    """
+    import rasterio.warp
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    logger = logging.getLogger('rio')
+    dump_kwds = {'sort_keys': True}
+    if indent:
+        dump_kwds['indent'] = indent
+    if compact:
+        dump_kwds['separators'] = (',', ':')
+    stdout = click.get_text_stream('stdout')
+
+    # This is the generator for (feature, bbox) pairs.
+    class Collection(object):
+
+        def __init__(self):
+            self._xs = []
+            self._ys = []
+
+        @property
+        def bbox(self):
+            return min(self._xs), min(self._ys), max(self._xs), max(self._ys)
+
+        def __call__(self):
+            for i, path in enumerate(input):
+                with rasterio.open(path) as src:
+                    bounds = src.bounds
+                    xs = [bounds[0], bounds[2]]
+                    ys = [bounds[1], bounds[3]]
+                    if projection == 'geographic':
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': 'epsg:4326'}, xs, ys)
+                    if projection == 'mercator':
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': 'epsg:3857'}, xs, ys)
+                if precision >= 0:
+                    xs = [round(v, precision) for v in xs]
+                    ys = [round(v, precision) for v in ys]
+                bbox = [min(xs), min(ys), max(xs), max(ys)]
+
+                yield {
+                    'type': 'Feature',
+                    'bbox': bbox,
+                    'geometry': {
+                        'type': 'Polygon',
+                        'coordinates': [[
+                            [xs[0], ys[0]],
+                            [xs[1], ys[0]],
+                            [xs[1], ys[1]],
+                            [xs[0], ys[1]],
+                            [xs[0], ys[0]] ]]},
+                    'properties': {
+                        'id': str(i),
+                        'title': path,
+                        'filename': os.path.basename(path)} }
+
+                self._xs.extend(bbox[::2])
+                self._ys.extend(bbox[1::2])
+
+    col = Collection()
+    # Use the generator defined above as input to the generic output
+    # writing function.
+    try:
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            write_features(
+                stdout, col, sequence=sequence,
+                geojson_type=geojson_type, use_rs=use_rs,
+                **dump_kwds)
+
+    except Exception:
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
 
 
 def _disjoint_bounds(bounds1, bounds2):

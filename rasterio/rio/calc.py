@@ -1,18 +1,16 @@
 # Calc command.
 
 import logging
-import sys
-import traceback
 
 import click
 import snuggs
 from cligj import files_inout_arg
 
+from .helpers import resolve_inout
+from . import options
 import rasterio
 from rasterio.fill import fillnodata
 from rasterio.features import sieve
-from rasterio.rio.cli import (
-    cli, dtype_opt, masked_opt, output_opt, resolve_inout)
 
 
 def get_bands(inputs, d, i=None):
@@ -31,16 +29,16 @@ def read_array(ix, subix=None, dtype=None):
     return arr
 
 
-@cli.command(short_help="Raster data calculator.")
+@click.command(short_help="Raster data calculator.")
 @click.argument('command')
 @files_inout_arg
-@output_opt
+@options.output_opt
 @click.option('--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
                    'name for use in commands like '
                    '"a=tests/data/RGB.byte.tif".')
-@dtype_opt
-@masked_opt
+@options.dtype_opt
+@options.masked_opt
 @click.pass_context
 def calc(ctx, command, files, output, name, dtype, masked):
     """A raster data calculator

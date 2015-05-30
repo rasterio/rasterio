@@ -1,24 +1,25 @@
 # Merge command.
 
+
 import logging
 import math
 import os.path
-import sys
 import warnings
 
 import click
 from cligj import files_inout_arg, format_opt
 
+from .helpers import resolve_inout
+from . import options
 import rasterio
-from rasterio.rio.cli import cli, bounds_opt, output_opt, resolve_inout
 from rasterio.transform import Affine
 
 
-@cli.command(short_help="Merge a stack of raster datasets.")
+@click.command(short_help="Merge a stack of raster datasets.")
 @files_inout_arg
-@output_opt
+@options.output_opt
 @format_opt
-@bounds_opt
+@options.bounds_opt
 @click.option('-r', '--res', nargs=2, type=float, default=None,
               help="Output dataset resolution: pixel width, pixel height")
 @click.option('--nodata', type=float, default=None,
