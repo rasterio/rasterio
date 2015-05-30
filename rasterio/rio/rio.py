@@ -32,13 +32,21 @@ warnings.simplefilter('default')
 @cli.command(short_help="Open a data file and start an interpreter.")
 @file_in_arg
 @click.option(
+    '--ipython/--no-ipython',
+    default=True,
+    help='Use IPython as interpreter (default: True).')
+@click.option(
     '-m',
     '--mode',
     type=click.Choice(['r', 'r+']),
     default='r',
     help="File mode (default 'r').")
 @click.pass_context
-def insp(ctx, input, mode):
+def insp(ctx, input, mode, ipython):
+    """ Open the input file in a Python interpreter.
+
+    IPython will be used as the default interpreter, if available.
+    """
     import rasterio.tool
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
@@ -51,7 +59,7 @@ def insp(ctx, input, mode):
                     'for more information.' %  (
                         rasterio.__version__,
                         '.'.join(map(str, sys.version_info[:3]))),
-                    src)
+                    src, ipython)
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()
