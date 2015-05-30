@@ -43,6 +43,10 @@ warnings.simplefilter('default')
     help="File mode (default 'r').")
 @click.pass_context
 def insp(ctx, input, mode, ipython):
+    """ Open the input file in a Python interpreter.
+
+    IPython will be used as the default interpreter, if available.
+    """
     import rasterio.tool
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
