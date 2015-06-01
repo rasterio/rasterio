@@ -245,7 +245,9 @@ setup_args = dict(
     include_package_data=True,
     ext_modules=ext_modules,
     zip_safe=False,
-    install_requires=inst_reqs)
+    install_requires=inst_reqs,
+    extras_require={
+        'ipython': ['ipython>=2.0']})
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}
