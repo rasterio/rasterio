@@ -223,10 +223,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 # Insp command.
 @click.command(short_help="Open a data file and start an interpreter.")
 @options.file_in_arg
-@click.option(
-    '--ipython/--no-ipython',
-    default=True,
-    help='Use IPython as interpreter (default: True).')
+@click.option('--ipython', 'interpreter', flag_value='ipython',
+              help="Use IPython as interpreter.")
 @click.option(
     '-m',
     '--mode',
@@ -234,7 +232,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     default='r',
     help="File mode (default 'r').")
 @click.pass_context
-def insp(ctx, input, mode, ipython):
+def insp(ctx, input, mode, interpreter):
     """ Open the input file in a Python interpreter.
 
     IPython will be used as the default interpreter, if available.
@@ -251,7 +249,7 @@ def insp(ctx, input, mode, ipython):
                     'for more information.' %  (
                         rasterio.__version__,
                         '.'.join(map(str, sys.version_info[:3]))),
-                    src, ipython)
+                    src, interpreter)
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()

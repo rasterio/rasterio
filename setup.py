@@ -125,11 +125,15 @@ if os.environ.get('PACKAGE_DATA'):
         copy_data_tree(projdatadir, 'rasterio/proj_data')
 
 ext_options = dict(
-    extra_compile_args=['-Wno-unused-parameter', '-Wno-unused-function'],
     include_dirs=include_dirs,
     library_dirs=library_dirs,
     libraries=libraries,
     extra_link_args=extra_link_args)
+
+if not os.name == "nt":
+    # These options fail on Windows if using Visual Studio
+    ext_options['extra_compile_args'] = ['-Wno-unused-parameter',
+                                         '-Wno-unused-function']
 
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
@@ -245,7 +249,9 @@ setup_args = dict(
     include_package_data=True,
     ext_modules=ext_modules,
     zip_safe=False,
-    install_requires=inst_reqs)
+    install_requires=inst_reqs,
+    extras_require={
+        'ipython': ['ipython>=2.0']})
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}

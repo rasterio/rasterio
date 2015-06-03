@@ -48,18 +48,16 @@ def stats(source):
     return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
 
 
-def main(banner, dataset, ipython):
+def main(banner, dataset, alt_interpreter=None):
     """ Main entry point for use with python interpreter """
-    try:
-        import IPython
-    except ImportError:
-        ipython = False
-
     local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
-    if ipython:
+    if not alt_interpreter:
+        code.interact(banner, local=local)
+    elif alt_interpreter == 'ipython':
+        import IPython
         IPython.InteractiveShell.banner1 = banner
         IPython.start_ipython(argv=[], user_ns=local)
     else:
-        code.interact(banner, local=local)
+        raise ValueError("Unsupported interpreter '%s'" % alt_interpreter)
 
     return 0
