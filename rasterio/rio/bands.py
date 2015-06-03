@@ -1,13 +1,12 @@
 import logging
-import sys
 
 import click
 from cligj import files_inout_arg, format_opt
 
+from .helpers import resolve_inout
+from . import options
 import rasterio
-
 from rasterio.five import zip_longest
-from rasterio.rio.cli import cli, bidx_mult_opt, output_opt, resolve_inout
 
 
 PHOTOMETRIC_CHOICES = [val.lower() for val in [
@@ -22,11 +21,11 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 
 
 # Stack command.
-@cli.command(short_help="Stack a number of bands into a multiband dataset.")
+@click.command(short_help="Stack a number of bands into a multiband dataset.")
 @files_inout_arg
-@output_opt
+@options.output_opt
 @format_opt
-@bidx_mult_opt
+@options.bidx_mult_opt
 @click.option('--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
@@ -63,7 +62,6 @@ def stack(ctx, files, output, driver, bidx, photometric):
       rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. -o stacked.tif
 
     """
-    import numpy as np
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 2
     logger = logging.getLogger('rio')

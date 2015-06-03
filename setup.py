@@ -195,7 +195,7 @@ with open('README.rst') as f:
 # Runtime requirements.
 inst_reqs = [
     'affine>=1.0',
-    'cligj',
+    'cligj>=0.2.0',
     'Numpy>=1.7',
     'snuggs>=1.3.1']
 
@@ -229,22 +229,22 @@ setup_args = dict(
     packages=['rasterio', 'rasterio.rio'],
     entry_points='''
         [console_scripts]
-        rio=rasterio.rio.main:cli
-        
+        rio=rasterio.rio.main:main_group
+
         [rasterio.rio_commands]
-        bounds=rasterio.rio.rio:bounds
+        bounds=rasterio.rio.features:bounds
         calc=rasterio.rio.calc:calc
         edit-info=rasterio.rio.info:edit
         env=rasterio.rio.info:env
         info=rasterio.rio.info:info
-        insp=rasterio.rio.rio:insp
+        insp=rasterio.rio.info:insp
         mask=rasterio.rio.features:mask
         merge=rasterio.rio.merge:merge
         rasterize=rasterio.rio.features:rasterize
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.features:shapes
         stack=rasterio.rio.bands:stack
-        transform=rasterio.rio.rio:transform
+        transform=rasterio.rio.info:transform
     ''',
     include_package_data=True,
     ext_modules=ext_modules,

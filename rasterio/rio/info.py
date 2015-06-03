@@ -1,19 +1,22 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
+
 import json
 import logging
+import os
 import sys
 
 import click
+from cligj import precision_opt
 
+from . import options
 import rasterio
 import rasterio.crs
-from rasterio.rio.cli import cli, bidx_opt, file_in_arg, masked_opt
 from rasterio.transform import guard_transform
 
 
-@cli.command('edit-info', short_help="Edit dataset metadata.")
-@file_in_arg
+@click.command('edit-info', short_help="Edit dataset metadata.")
+@options.file_in_arg
 @click.option('--nodata', type=float, default=None,
               help="New nodata value")
 @click.option('--crs', help="New coordinate reference system")
@@ -105,7 +108,7 @@ def edit(ctx, input, nodata, crs, transform, tags):
                 dst.update_tags(**tags)
 
 
-@cli.command(short_help="Print information about the rio environment.")
+@click.command(short_help="Print information about the rio environment.")
 @click.option('--formats', 'key', flag_value='formats', default=True,
               help="Enumerate the available formats.")
 @click.pass_context
@@ -123,8 +126,8 @@ def env(ctx, key):
             stdout.write('\n')
 
 
-@cli.command(short_help="Print information about a data file.")
-@file_in_arg
+@click.command(short_help="Print information about a data file.")
+@options.file_in_arg
 @click.option('--meta', 'aspect', flag_value='meta', default=True,
               help="Show data file structure (default).")
 @click.option('--tags', 'aspect', flag_value='tags',
@@ -162,8 +165,8 @@ def env(ctx, key):
                    "(use --bidx).")
 @click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
               help="Output extra information.")
-@bidx_opt
-@masked_opt
+@options.bidx_opt
+@options.masked_opt
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         masked):
@@ -212,6 +215,90 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                 elif aspect == 'tags':
                     click.echo(json.dumps(src.tags(ns=namespace),
                                             indent=indent))
+    except Exception:
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
+
+
+# Insp command.
+@click.command(short_help="Open a data file and start an interpreter.")
+@options.file_in_arg
+@click.option('--ipython', 'interpreter', flag_value='ipython',
+              help="Use IPython as interpreter.")
+@click.option(
+    '-m',
+    '--mode',
+    type=click.Choice(['r', 'r+']),
+    default='r',
+    help="File mode (default 'r').")
+@click.pass_context
+def insp(ctx, input, mode, interpreter):
+    """ Open the input file in a Python interpreter.
+
+    IPython will be used as the default interpreter, if available.
+    """
+    import rasterio.tool
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    logger = logging.getLogger('rio')
+    try:
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            with rasterio.open(input, mode) as src:
+                rasterio.tool.main(
+                    "Rasterio %s Interactive Inspector (Python %s)\n"
+                    'Type "src.meta", "src.read_band(1)", or "help(src)" '
+                    'for more information.' %  (
+                        rasterio.__version__,
+                        '.'.join(map(str, sys.version_info[:3]))),
+                    src, interpreter)
+    except Exception:
+        logger.exception("Exception caught during processing")
+        raise click.Abort()
+
+
+# Transform command.
+@click.command(short_help="Transform coordinates.")
+@click.argument('INPUT', default='-', required=False)
+@click.option('--src-crs', '--src_crs', default='EPSG:4326', help="Source CRS.")
+@click.option('--dst-crs', '--dst_crs', default='EPSG:4326', help="Destination CRS.")
+@precision_opt
+@click.pass_context
+def transform(ctx, input, src_crs, dst_crs, precision):
+    import rasterio.warp
+
+    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    logger = logging.getLogger('rio')
+
+    # Handle the case of file, stream, or string input.
+    try:
+        src = click.open_file(input).readlines()
+    except IOError:
+        src = [input]
+
+    try:
+        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+            if src_crs.startswith('EPSG'):
+                src_crs = {'init': src_crs}
+            elif os.path.exists(src_crs):
+                with rasterio.open(src_crs) as f:
+                    src_crs = f.crs
+            if dst_crs.startswith('EPSG'):
+                dst_crs = {'init': dst_crs}
+            elif os.path.exists(dst_crs):
+                with rasterio.open(dst_crs) as f:
+                    dst_crs = f.crs
+            for line in src:
+                coords = json.loads(line)
+                xs = coords[::2]
+                ys = coords[1::2]
+                xs, ys = rasterio.warp.transform(src_crs, dst_crs, xs, ys)
+                if precision >= 0:
+                    xs = [round(v, precision) for v in xs]
+                    ys = [round(v, precision) for v in ys]
+                result = [0]*len(coords)
+                result[::2] = xs
+                result[1::2] = ys
+                print(json.dumps(result))
+
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()

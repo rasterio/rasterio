@@ -1,1 +1,3 @@
-# module of CLI commands.
+"""
+Rasterio commandline interface components
+"""

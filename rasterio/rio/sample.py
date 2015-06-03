@@ -1,18 +1,16 @@
 import json
 import logging
-import sys
 import warnings
 
 import click
 
 import rasterio
-from rasterio.rio.cli import cli
 
 
 warnings.simplefilter('default')
 
 
-@cli.command(short_help="Sample a dataset.")
+@click.command(short_help="Sample a dataset.")
 @click.argument('files', nargs=-1, required=True, metavar='FILE "[x, y]"')
 @click.option('-b', '--bidx', default=None, help="Indexes of input file bands.")
 @click.pass_context
