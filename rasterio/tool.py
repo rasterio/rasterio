@@ -58,6 +58,6 @@ def main(banner, dataset, alt_interpreter=None):
         IPython.InteractiveShell.banner1 = banner
         IPython.start_ipython(argv=[], user_ns=local)
     else:
-        raise ValueError("Unsupported interpreter '%s'" % interpreter)
+        raise ValueError("Unsupported interpreter '%s'" % alt_interpreter)
 
     return 0
