@@ -159,7 +159,7 @@ set its `affine transformation matrix <https://github.com/mapbox/rasterio/blob/m
 
 .. code-block:: console
 
-    $ rio edit-info --transform "[300.0, 0.0, 101985.0, 0.0, -300.0, 2826915.0]"
+    $ rio edit-info --transform "[300.0, 0.0, 101985.0, 0.0, -300.0, 2826915.0]" example.tif
 
 or set its nodata value to, e.g., `0`:
 
