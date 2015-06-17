@@ -204,12 +204,13 @@ Windows
 Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are available `here
 <http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__.
 
-To install rasterio, simply download both binaries and something like this:
+To install rasterio, simply download both binaries for your system and run something like this:
 
 .. code-block:: console
-   c:\temp>pip install wheel
-   c:\temp>pip install GDAL-1.11.2-cp27-none-win32.whl
-   c:\temp>pip install rasterio-0.24.0-cp27-none-win32.whl
+
+    c:\temp> pip install wheel
+    c:\temp> install GDAL-1.11.2-cp27-none-win32.whl
+    c:\temp> install rasterio-0.24.0-cp27-none-win32.whl
 
 Installing from the source distribution
 ---------------------------------------
