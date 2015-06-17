@@ -201,10 +201,11 @@ release.
 Windows
 -------
 
-Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are available `here
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__.
+Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are available from his website.
 
-To install rasterio, simply download both binaries for your system and run something like this:
+To install rasterio, simply download both binaries for your system (`rasterio
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like this from the downloads folder:
 
 .. code-block:: console
 
