@@ -209,7 +209,7 @@ To install rasterio, simply download both binaries for your system (`rasterio
 
 .. code-block:: console
 
-    $ pip install wheel
+    $ pip install -U pip 
     $ pip install GDAL-1.11.2-cp27-none-win32.whl
     $ pip install rasterio-0.24.0-cp27-none-win32.whl
 
