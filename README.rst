@@ -179,8 +179,11 @@ click), enum34, numpy.
 
 Development also requires (see requirements-dev.txt) Cython and other packages.
 
-Rasterio binaries for OS X
---------------------------
+Installing from binaries
+---------------------------------------
+
+OS X
+----
 
 Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
 for OS X versions 10.7+ starting with Rasterio version 0.17. To install, just
@@ -194,6 +197,21 @@ you must build from a source distribution (see below).
 
 Binary wheels for other operating systems will be available in a future
 release.
+
+Windows
+-------
+
+Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are available from his website.
+
+To install rasterio, simply download both binaries for your system (`rasterio
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like this from the downloads folder:
+
+.. code-block:: console
+
+    $ pip install -U pip 
+    $ pip install GDAL-1.11.2-cp27-none-win32.whl
+    $ pip install rasterio-0.24.0-cp27-none-win32.whl
 
 Installing from the source distribution
 ---------------------------------------
@@ -232,9 +250,6 @@ For a Homebrew based Python environment, do the following.
 
 Windows
 -------
-
-Windows binary packages created by Christoph Gohlke are available `here
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__.
 
 You can download a binary distribution of GDAL from `here
 <http://www.gisinternals.com/release.php>`__.  You will also need to download
