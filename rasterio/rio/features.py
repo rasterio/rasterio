@@ -1,3 +1,5 @@
+import IPython
+
 import json
 import logging
 from math import ceil
@@ -16,6 +18,8 @@ from .helpers import coords, resolve_inout, write_features
 from . import options
 import rasterio
 from rasterio.transform import Affine
+import rasterio.warp
+from rasterio.coords import BoundingBox
 
 
 logger = logging.getLogger('rio')
@@ -62,8 +66,7 @@ def mask(
 
     """Masks in raster using GeoJSON features (masks out all areas not covered
     by features), and optionally crops the output raster to the extent of the
-    features.  Features are assumed to be in the same coordinate reference
-    system as the input raster.
+    features.
 
     GeoJSON must be the first input file or provided from stdin:
 
@@ -116,10 +119,31 @@ def mask(
             raise click.BadParameter('Invalid GeoJSON', param=input,
                                      param_hint='input')
         bounds = geojson.get('bbox', calculate_bounds(geojson))
-
+        
         with rasterio.open(input) as src:
+            
+            # Assuming GeoJSON bounds are in epsg:4326
+            wgs84 = {'init': 'epsg:4326'}
+            
+            if src.crs != wgs84:
+                
+                # Transform input bounds and geometries to src projection
+                x, y = bounds[0::2], bounds[1::2]
+                (left, right), (bottom, top) = rasterio.warp.transform(wgs84, src.crs, x, y)
+                bounds = BoundingBox(left, bottom, right, top)
+                
+                def transform(feature):
+                    x, y = zip(*feature.get('coordinates')[0])
+                    feature['coordinates'] = [
+                        zip(*rasterio.warp.transform(wgs84, src.crs, x, y))
+                    ]
+                    
+                    return feature
+                
+                geometries = map(transform, geometries)
+            
             disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
-
+            
             if crop:
                 if disjoint_bounds:
                     raise click.BadParameter('not allowed for GeoJSON outside '
@@ -133,14 +157,13 @@ def mask(
             else:
                 if disjoint_bounds:
                     click.echo('GeoJSON outside bounds of existing output '
-                               'raster. Are they in different coordinate '
-                               'reference systems?',
+                               'raster.',
                                err=True)
 
                 window = None
                 transform = src.affine
                 mask_shape = src.shape
-
+            
             mask = geometry_mask(
                 geometries,
                 out_shape=mask_shape,
@@ -160,6 +183,7 @@ def mask(
                 for bidx in range(1, src.count + 1):
                     img = src.read(bidx, masked=True, window=window)
                     img.mask = img.mask | mask
+                    
                     out.write_band(bidx, img.filled(src.nodatavals[bidx-1]))
 
 
