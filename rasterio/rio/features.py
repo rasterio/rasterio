@@ -117,7 +117,7 @@ def mask(
             raise click.BadParameter('Invalid GeoJSON', param=input,
                                      param_hint='input')
         bounds = geojson.get('bbox', calculate_bounds(geojson))
-        
+
         with rasterio.open(input) as src:
             
             # Determine the projection of the GeoJSON mask
@@ -134,7 +134,7 @@ def mask(
             geometries = map(lambda g: rasterio.warp.transform_geom(from_crs, src.crs, g), geometries)
             
             disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
-            
+
             if crop:
                 if disjoint_bounds:
                     raise click.BadParameter('not allowed for GeoJSON outside '
@@ -154,7 +154,7 @@ def mask(
                 window = None
                 transform = src.affine
                 mask_shape = src.shape
-            
+
             mask = geometry_mask(
                 geometries,
                 out_shape=mask_shape,
@@ -174,7 +174,6 @@ def mask(
                 for bidx in range(1, src.count + 1):
                     img = src.read(bidx, masked=True, window=window)
                     img.mask = img.mask | mask
-                    
                     out.write_band(bidx, img.filled(src.nodatavals[bidx-1]))
 
 
