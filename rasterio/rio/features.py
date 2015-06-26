@@ -122,25 +122,27 @@ def mask(
         
         with rasterio.open(input) as src:
             
-            # Assuming GeoJSON bounds are in epsg:4326
-            wgs84 = {'init': 'epsg:4326'}
+            # Determine the projection of the GeoJSON mask
+            if geojson.get('crs', {}).get('type') == 'name':
+                from_crs = geojson.get('crs').get('properties').get('name')
+            else:
+                from_crs = {'init': 'epsg:4326'}
             
-            if src.crs != wgs84:
+            # Transform input bounds and geometries to the src projection
+            x, y = bounds[0::2], bounds[1::2]
+            (left, right), (bottom, top) = rasterio.warp.transform(from_crs, src.crs, x, y)
+            bounds = BoundingBox(left, bottom, right, top)
+            
+            def transform(feature):
+                x, y = zip(*feature.get('coordinates')[0])
+                feature['coordinates'] = [
+                    zip(*rasterio.warp.transform(from_crs, src.crs, x, y))
+                ]
                 
-                # Transform input bounds and geometries to src projection
-                x, y = bounds[0::2], bounds[1::2]
-                (left, right), (bottom, top) = rasterio.warp.transform(wgs84, src.crs, x, y)
-                bounds = BoundingBox(left, bottom, right, top)
-                
-                def transform(feature):
-                    x, y = zip(*feature.get('coordinates')[0])
-                    feature['coordinates'] = [
-                        zip(*rasterio.warp.transform(wgs84, src.crs, x, y))
-                    ]
-                    
-                    return feature
-                
-                geometries = map(transform, geometries)
+                return feature
+            
+            # TODO: Use Rasterio's facility for this. I can't find it ...
+            geometries = map(transform, geometries)
             
             disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
             
