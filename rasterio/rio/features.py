@@ -133,16 +133,7 @@ def mask(
             (left, right), (bottom, top) = rasterio.warp.transform(from_crs, src.crs, x, y)
             bounds = BoundingBox(left, bottom, right, top)
             
-            def transform(feature):
-                x, y = zip(*feature.get('coordinates')[0])
-                feature['coordinates'] = [
-                    zip(*rasterio.warp.transform(from_crs, src.crs, x, y))
-                ]
-                
-                return feature
-            
-            # TODO: Use Rasterio's facility for this. I can't find it ...
-            geometries = map(transform, geometries)
+            geometries = map(lambda g: rasterio.warp.transform_geom(from_crs, src.crs, g), geometries)
             
             disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
             
