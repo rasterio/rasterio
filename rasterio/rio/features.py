@@ -1,5 +1,3 @@
-import IPython
-
 import json
 import logging
 from math import ceil
