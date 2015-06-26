@@ -21,6 +21,7 @@ from rasterio.coords import BoundingBox
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp
+from rasterio.sample import sample_gen
 
 
 log = logging.getLogger('rasterio')
@@ -1182,12 +1183,12 @@ cdef class RasterReader(_base.DatasetReader):
         Iterable, yielding dataset values for the specified `indexes`
         as an ndarray.
         """
-        for x, y in xy:
-            r, c = self.index(x, y)
-            window = ((r, r+1), (c, c+1))
-            data = self.read(
-                    indexes, window=window, masked=False, boundless=True)
-            yield data[:,0,0]
+        # In https://github.com/mapbox/rasterio/issues/378 a user has
+        # found what looks to be a Cython generator bug. Until that can
+        # be confirmed and fixed, the workaround is a pure Python 
+        # generator implemented in sample.py.
+        return sample_gen(self, xy, indexes)
+
 
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
