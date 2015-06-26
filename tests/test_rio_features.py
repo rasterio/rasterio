@@ -30,6 +30,12 @@ TEST_FEATURES = """{
 }"""
 
 TEST_MERC_FEATURES = """{
+  "crs": {
+      "type": "name",
+      "properties": {
+          "name": "EPSG:3857"
+      }
+  },
   "geometry": {
       "coordinates": [
           [
@@ -51,6 +57,12 @@ TEST_MERC_FEATURES = """{
 # > rio shapes tests/data/shade.tif --mask --sampling 500 --projected --precision 0
 TEST_MERC_FEATURECOLLECTION = """{
     "bbox": [-11858135.0, 4803914.0, -11848351.0, 4813698.0],
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:EPSG::3857"
+        }
+    },
     "features": [{
         "bbox": [-11853357.504145855, 4808920.97837715,
                  -11848580.189878704, 4813698.2926443005],

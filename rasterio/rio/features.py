@@ -16,6 +16,8 @@ from .helpers import coords, resolve_inout, write_features
 from . import options
 import rasterio
 from rasterio.transform import Affine
+import rasterio.warp
+from rasterio.coords import BoundingBox
 
 
 logger = logging.getLogger('rio')
@@ -62,8 +64,7 @@ def mask(
 
     """Masks in raster using GeoJSON features (masks out all areas not covered
     by features), and optionally crops the output raster to the extent of the
-    features.  Features are assumed to be in the same coordinate reference
-    system as the input raster.
+    features.
 
     GeoJSON must be the first input file or provided from stdin:
 
@@ -118,6 +119,20 @@ def mask(
         bounds = geojson.get('bbox', calculate_bounds(geojson))
 
         with rasterio.open(input) as src:
+            
+            # Determine the projection of the GeoJSON mask
+            if geojson.get('crs', {}).get('type') == 'name':
+                from_crs = geojson.get('crs').get('properties').get('name')
+            else:
+                from_crs = {'init': 'epsg:4326'}
+            
+            # Transform input bounds and geometries to the src projection
+            x, y = bounds[0::2], bounds[1::2]
+            (left, right), (bottom, top) = rasterio.warp.transform(from_crs, src.crs, x, y)
+            bounds = BoundingBox(left, bottom, right, top)
+            
+            geometries = map(lambda g: rasterio.warp.transform_geom(from_crs, src.crs, g), geometries)
+            
             disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
 
             if crop:
@@ -133,8 +148,7 @@ def mask(
             else:
                 if disjoint_bounds:
                     click.echo('GeoJSON outside bounds of existing output '
-                               'raster. Are they in different coordinate '
-                               'reference systems?',
+                               'raster.',
                                err=True)
 
                 window = None
