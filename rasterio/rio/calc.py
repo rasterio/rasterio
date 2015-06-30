@@ -120,6 +120,9 @@ def calc(ctx, command, files, output, name, dtype, masked):
 
             res = snuggs.eval(command, **ctxkwds)
 
+            if type(res) is np.ma.core.MaskedArray:
+                res = res.filled(kwargs['nodata'])
+
             if len(res.shape) == 3:
                 results = np.ndarray.astype(res, dtype, copy=False)
             else:
