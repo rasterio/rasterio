@@ -12,7 +12,7 @@ from cligj import (
     use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
     files_inout_arg, format_opt, geojson_type_collection_opt)
 
-from .helpers import coords, resolve_inout, write_features
+from .helpers import coords, resolve_inout, write_features, to_lower
 from . import options
 import rasterio
 from rasterio.transform import Affine
@@ -598,7 +598,7 @@ def rasterize(
 @projection_geographic_opt
 @projection_projected_opt
 @projection_mercator_opt
-@click.option('--dst_crs', default=None, metavar="EPSG:NNNN", help="Destination CRS.")
+@click.option('--dst-crs', default='epsg:4326', metavar="EPSG:NNNN", callback=to_lower, help="Destination CRS.")
 @sequence_opt
 @use_rs_opt
 @geojson_type_collection_opt(True)
@@ -640,15 +640,12 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                     bounds = src.bounds
                     xs = [bounds[0], bounds[2]]
                     ys = [bounds[1], bounds[3]]
-                    if dst_crs:
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': dst_crs}, xs, ys)
-                    elif projection == 'geographic':
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:4326'}, xs, ys)
-                    elif projection == 'mercator':
+                    if projection == 'mercator':
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:3857'}, xs, ys)
+                    else:
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': dst_crs}, xs, ys)
 
                 if precision >= 0:
                     xs = [round(v, precision) for v in xs]
@@ -692,3 +689,4 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
 def _disjoint_bounds(bounds1, bounds2):
     return (bounds1[0] > bounds2[2] or bounds1[2] < bounds2[0] or
             bounds1[1] > bounds2[3] or bounds1[3] < bounds2[1])
+
