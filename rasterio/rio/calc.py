@@ -1,5 +1,6 @@
 # Calc command.
 
+from distutils.version import LooseVersion
 import logging
 
 import click
@@ -120,7 +121,8 @@ def calc(ctx, command, files, output, name, dtype, masked):
 
             res = snuggs.eval(command, **ctxkwds)
 
-            if type(res) is np.ma.core.MaskedArray:
+            if (isinstance(res, np.ma.core.MaskedArray) and
+                    tuple(LooseVersion(np.__version__).version) < (1, 9, 0)):
                 res = res.filled(kwargs['nodata'])
 
             if len(res.shape) == 3:
@@ -140,8 +142,3 @@ def calc(ctx, command, files, output, name, dtype, masked):
         click.echo(' ' +  ' ' * err.offset + "^")
         click.echo(err)
         raise click.Abort()
-    #except Exception as err:
-    #    t, v, tb = sys.exc_info()
-    #    for line in traceback.format_exception_only(t, v):
-    #        click.echo(line, nl=False)
-    #    raise click.Abort()
