@@ -598,7 +598,7 @@ def rasterize(
 @projection_geographic_opt
 @projection_projected_opt
 @projection_mercator_opt
-@click.option('--dst-crs', default='epsg:4326', metavar="EPSG:NNNN", callback=to_lower, help="Destination CRS.")
+@click.option('--dst-crs', default='', metavar="EPSG:NNNN", callback=to_lower, help="Output in specified coordinates.")
 @sequence_opt
 @use_rs_opt
 @geojson_type_collection_opt(True)
@@ -640,12 +640,15 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                     bounds = src.bounds
                     xs = [bounds[0], bounds[2]]
                     ys = [bounds[1], bounds[3]]
-                    if projection == 'mercator':
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:3857'}, xs, ys)
-                    else:
+                    if dst_crs:
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': dst_crs}, xs, ys)
+                    elif projection == 'mercator':
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': 'epsg:3857'}, xs, ys)
+                    elif projection == 'geographic':
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': 'epsg:4326'}, xs, ys)
 
                 if precision >= 0:
                     xs = [round(v, precision) for v in xs]
