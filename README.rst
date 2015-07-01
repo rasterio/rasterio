@@ -39,7 +39,7 @@ band.  This new band is then written to a new single band TIFF.
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             b, g, r = src.read()
         
-        # Combine arrays in place. Expecting that the sum will 
+        # Combine arrays in place. Expecting that the sum will
         # temporarily exceed the 8-bit integer range, initialize it as
         # 16-bit. Adding other arrays to it in-place converts those
         # arrays "up" and preserves the type of the total array.
@@ -50,17 +50,17 @@ band.  This new band is then written to a new single band TIFF.
         total /= 3
 
         # Write the product as a raster band to a new 8-bit file. For
-        # keyword arguments, we start with the meta attributes of the
-        # source file, but then change the band count to 1, set the
+        # the new file's profile, we start with the meta attributes of
+        # the source file, but then change the band count to 1, set the
         # dtype to uint8, and specify LZW compression.
 
-        kwargs = src.meta
-        kwargs.update(
+        profile = src.meta
+        profile.update(
             dtype=rasterio.uint8,
             count=1,
             compress='lzw')
         
-        with rasterio.open('example-total.tif', 'w', **kwargs) as dst:
+        with rasterio.open('example-total.tif', 'w', **profile) as dst:
             dst.write_band(1, total.astype(rasterio.uint8))
 
     # At the end of the ``with rasterio.drivers()`` block, context
