@@ -73,3 +73,7 @@ def resolve_inout(input=None, output=None, files=None):
         [input] if input else [] +
         list(files[:-1 if not output else None]) if files else [])
     return resolved_output, resolved_inputs
+
+
+def to_lower(ctx, param, value):
+    return value.lower()

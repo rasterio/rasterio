@@ -12,7 +12,7 @@ from cligj import (
     use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
     files_inout_arg, format_opt, geojson_type_collection_opt)
 
-from .helpers import coords, resolve_inout, write_features
+from .helpers import coords, resolve_inout, write_features, to_lower
 from . import options
 import rasterio
 from rasterio.transform import Affine
@@ -598,19 +598,22 @@ def rasterize(
 @projection_geographic_opt
 @projection_projected_opt
 @projection_mercator_opt
+@click.option('--dst-crs', default='', metavar="EPSG:NNNN", callback=to_lower, help="Output in specified coordinates.")
 @sequence_opt
 @use_rs_opt
 @geojson_type_collection_opt(True)
 @geojson_type_feature_opt(False)
 @geojson_type_bbox_opt(False)
 @click.pass_context
-def bounds(ctx, input, precision, indent, compact, projection, sequence,
-        use_rs, geojson_type):
+def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
+        sequence, use_rs, geojson_type):
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
     geojsonio
 
       $ rio bounds *.tif | geojsonio
-
+    
+    If a destination crs is passed via dst_crs, it takes precedence over
+    the projection parameter.
     """
     import rasterio.warp
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
@@ -639,12 +642,16 @@ def bounds(ctx, input, precision, indent, compact, projection, sequence,
                     bounds = src.bounds
                     xs = [bounds[0], bounds[2]]
                     ys = [bounds[1], bounds[3]]
-                    if projection == 'geographic':
+                    if dst_crs:
                         xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:4326'}, xs, ys)
-                    if projection == 'mercator':
+                            src.crs, {'init': dst_crs}, xs, ys)
+                    elif projection == 'mercator':
                         xs, ys = rasterio.warp.transform(
                             src.crs, {'init': 'epsg:3857'}, xs, ys)
+                    elif projection == 'geographic':
+                        xs, ys = rasterio.warp.transform(
+                            src.crs, {'init': 'epsg:4326'}, xs, ys)
+
                 if precision >= 0:
                     xs = [round(v, precision) for v in xs]
                     ys = [round(v, precision) for v in ys]
@@ -687,3 +694,4 @@ def bounds(ctx, input, precision, indent, compact, projection, sequence,
 def _disjoint_bounds(bounds1, bounds2):
     return (bounds1[0] > bounds2[2] or bounds1[2] < bounds2[0] or
             bounds1[1] > bounds2[3] or bounds1[3] < bounds2[1])
+

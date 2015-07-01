@@ -386,6 +386,19 @@ def test_bounds_obj_bbox_projected():
     assert result.output.strip() == '[101985.0, 2611485.0, 339315.0, 2826915.0]'
 
 
+def test_bounds_crs_bbox():
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'bounds',
+        'tests/data/RGB.byte.tif',
+        '--bbox',
+        '--dst-crs', 'EPSG:32618',
+        '--precision', '3'
+    ])
+    assert result.exit_code == 0
+    assert result.output.strip() == '[101985.0, 2611485.0, 339315.0, 2826915.0]'
+
+
 def test_bounds_seq():
     runner = CliRunner()
     result = runner.invoke(main_group, [
