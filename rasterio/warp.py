@@ -81,7 +81,7 @@ def transform_geom(
         precision)
 
 
-def transform_bounds(left, bottom, right, top, src_crs, dst_crs, densify_pts=21):
+def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21):
     """
     Transforms bounds from src_crs to dst_crs, optionally densifying the edges
     (to account for nonlinear transformations along these edges) and extracting
@@ -91,13 +91,13 @@ def transform_bounds(left, bottom, right, top, src_crs, dst_crs, densify_pts=21)
 
     Parameters
     ----------
-    left, bottom, right, top: float
-        Bounding coordinates in src_crs, from the bounds property of a raster.
     src_crs: dict
         Source coordinate reference system, in rasterio dict format.
         Example: {'init': 'EPSG:4326'}
     dst_crs: dict
         Target coordinate reference system.
+    left, bottom, right, top: float
+        Bounding coordinates in src_crs, from the bounds property of a raster.
     densify_pts: uint, optional
         Number of points to add to each edge to account for nonlinear
         edges produced by the transform process.  Large numbers will produce
@@ -230,14 +230,14 @@ def reproject(
 
 
 def calculate_default_transform(
+        src_crs,
+        dst_crs,
         left,
         bottom,
         right,
         top,
         width,
         height,
-        src_crs,
-        dst_crs,
         resolution=None,
         densify_pts=21):
     """
@@ -257,13 +257,13 @@ def calculate_default_transform(
 
     Parameters
     ----------
-    left, bottom, right, top: float
-        Bounding coordinates in src_crs, from the bounds property of a raster.
     src_crs: dict
         Source coordinate reference system, in rasterio dict format.
         Example: {'init': 'EPSG:4326'}
     dst_crs: dict
         Target coordinate reference system.
+    left, bottom, right, top: float
+        Bounding coordinates in src_crs, from the bounds property of a raster.
     resolution: tuple (x resolution, y resolution) or float, optional
         Target resolution, in units of target coordinate reference system.
     densify_pts: uint, optional
@@ -277,7 +277,7 @@ def calculate_default_transform(
     """
 
     xmin, ymin, xmax, ymax = transform_bounds(
-        left, bottom, right, top, src_crs, dst_crs, densify_pts)
+        src_crs, dst_crs, left, bottom, right, top, densify_pts)
 
     x_dif = xmax - xmin
     y_dif = ymax - ymin
