@@ -30,7 +30,7 @@ class ReprojectParams(object):
 
         with rasterio.drivers():
             dt, dw, dh = calculate_default_transform(
-                left, bottom, right, top, width, height, src_crs, dst_crs)
+                src_crs, dst_crs, width, height, left, bottom, right, top)
             self.dst_transform = dt
             self.dst_width = dw
             self.dst_height = dh
@@ -68,7 +68,7 @@ def test_transform_bounds():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             l, b, r, t = src.bounds
             assert numpy.allclose(
-                transform_bounds(l, b, r, t, src.crs, {'init': 'EPSG:4326'}),
+                transform_bounds(src.crs, {'init': 'EPSG:4326'}, l, b, r, t),
                 (
                     -78.95864996545055, 23.564991210854686,
                     -76.57492370013823, 25.550873767433984
@@ -83,9 +83,9 @@ def test_transform_bounds_densify():
     dst_crs = {'init': 'EPSG:32610'}
     assert numpy.allclose(
         transform_bounds(
-            -120, 40, -80, 64,
             src_crs,
             dst_crs,
+            -120, 40, -80, 64,
             densify_pts=0
         ),
         (
@@ -96,9 +96,9 @@ def test_transform_bounds_densify():
 
     assert numpy.allclose(
         transform_bounds(
-            -120, 40, -80, 64,
             src_crs,
             dst_crs,
+            -120, 40, -80, 64,
             densify_pts=100
         ),
         (
@@ -114,7 +114,7 @@ def test_transform_bounds_no_change():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             l, b, r, t = src.bounds
             assert numpy.allclose(
-                transform_bounds(l, b, r, t, src.crs, src.crs),
+                transform_bounds(src.crs, src.crs, l, b, r, t),
                 src.bounds
             )
 
@@ -122,9 +122,9 @@ def test_transform_bounds_no_change():
 def test_transform_bounds_densify_out_of_bounds():
     with pytest.raises(ValueError):
         transform_bounds(
-            -120, 40, -80, 64,
             {'init': 'EPSG:4326'},
             {'init': 'EPSG:32610'},
+            -120, 40, -80, 64,
             densify_pts=-10
         )
 
@@ -139,7 +139,7 @@ def test_calculate_default_transform():
             l, b, r, t = src.bounds
             wgs84_crs = {'init': 'EPSG:4326'}
             dst_transform, width, height = calculate_default_transform(
-                l, b, r, t, src.width, src.height, src.crs, wgs84_crs)
+                src.crs, wgs84_crs, src.width, src.height, l, b, r, t)
 
             assert dst_transform.almost_equals(target_transform)
             assert width == 824
@@ -156,8 +156,8 @@ def test_calculate_default_transform_single_resolution():
                 0.0, -target_resolution, 25.550873767433984
             )
             dst_transform, width, height = calculate_default_transform(
-                l, b, r, t, src.width, src.height, src.crs,
-                {'init': 'EPSG:4326'}, resolution=target_resolution
+                src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+                l, b, r, t, resolution=target_resolution
             )
 
             assert dst_transform.almost_equals(target_transform)
@@ -176,8 +176,8 @@ def test_calculate_default_transform_multiple_resolutions():
             )
 
             dst_transform, width, height = calculate_default_transform(
-                l, b, r, t, src.width, src.height, src.crs,
-                {'init': 'EPSG:4326'}, resolution=target_resolution
+                src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+                l, b, r, t, resolution=target_resolution
             )
 
             assert dst_transform.almost_equals(target_transform)
