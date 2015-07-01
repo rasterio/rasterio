@@ -611,7 +611,9 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     geojsonio
 
       $ rio bounds *.tif | geojsonio
-
+    
+    If a destination crs is passed via dst_crs, it takes precedence over
+    the projection parameter.
     """
     import rasterio.warp
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
