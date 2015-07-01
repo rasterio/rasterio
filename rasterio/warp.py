@@ -232,12 +232,12 @@ def reproject(
 def calculate_default_transform(
         src_crs,
         dst_crs,
+        width,
+        height,
         left,
         bottom,
         right,
         top,
-        width,
-        height,
         resolution=None,
         densify_pts=21):
     """

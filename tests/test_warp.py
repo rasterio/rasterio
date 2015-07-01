@@ -30,7 +30,7 @@ class ReprojectParams(object):
 
         with rasterio.drivers():
             dt, dw, dh = calculate_default_transform(
-                src_crs, dst_crs, left, bottom, right, top, width, height)
+                src_crs, dst_crs, width, height, left, bottom, right, top)
             self.dst_transform = dt
             self.dst_width = dw
             self.dst_height = dh
@@ -139,7 +139,7 @@ def test_calculate_default_transform():
             l, b, r, t = src.bounds
             wgs84_crs = {'init': 'EPSG:4326'}
             dst_transform, width, height = calculate_default_transform(
-                src.crs, wgs84_crs, l, b, r, t, src.width, src.height)
+                src.crs, wgs84_crs, src.width, src.height, l, b, r, t)
 
             assert dst_transform.almost_equals(target_transform)
             assert width == 824
@@ -156,8 +156,8 @@ def test_calculate_default_transform_single_resolution():
                 0.0, -target_resolution, 25.550873767433984
             )
             dst_transform, width, height = calculate_default_transform(
-                src.crs, {'init': 'EPSG:4326'}, l, b, r, t, src.width,
-                src.height, resolution=target_resolution
+                src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+                l, b, r, t, resolution=target_resolution
             )
 
             assert dst_transform.almost_equals(target_transform)
@@ -176,8 +176,8 @@ def test_calculate_default_transform_multiple_resolutions():
             )
 
             dst_transform, width, height = calculate_default_transform(
-                src.crs, {'init': 'EPSG:4326'}, l, b, r, t, src.width,
-                src.height, resolution=target_resolution
+                src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+                l, b, r, t, resolution=target_resolution
             )
 
             assert dst_transform.almost_equals(target_transform)
