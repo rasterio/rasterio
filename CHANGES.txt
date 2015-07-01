@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.24.1 (2015-06-30)
+-------------------
+- Improve safety of the sample() generator (#378).
+- Provide array masking features missing from Numpy<1.9 (#380, #389).
+- Guard against attempts to write RGBA colormap entries to TIFFs, which the
+  format can not support (#394, #395).
+
 0.24.0 (2015-05-27)
 -------------------
 - New rio-edit-info command (#358).
