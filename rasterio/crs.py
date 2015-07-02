@@ -44,7 +44,13 @@ def from_string(prjs):
 
     Bare parameters like "+no_defs" are given a value of ``True``. All keys
     are checked against the ``all_proj_keys`` list.
+
+    EPSG:XXXX is also allowed.
     """
+
+    if 'EPSG:' in prjs.upper():
+        return from_epsg(prjs.split(':')[1])
+
     parts = [o.lstrip('+') for o in prjs.strip().split()]
 
     def parse(v):

@@ -136,10 +136,9 @@ def test_calculate_default_transform():
     )
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            l, b, r, t = src.bounds
             wgs84_crs = {'init': 'EPSG:4326'}
             dst_transform, width, height = calculate_default_transform(
-                src.crs, wgs84_crs, src.width, src.height, l, b, r, t)
+                src.crs, wgs84_crs, src.width, src.height, *src.bounds)
 
             assert dst_transform.almost_equals(target_transform)
             assert width == 824
@@ -157,7 +156,7 @@ def test_calculate_default_transform_single_resolution():
             )
             dst_transform, width, height = calculate_default_transform(
                 src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
-                l, b, r, t, resolution=target_resolution
+                *src.bounds, resolution=target_resolution
             )
 
             assert dst_transform.almost_equals(target_transform)
@@ -168,7 +167,6 @@ def test_calculate_default_transform_single_resolution():
 def test_calculate_default_transform_multiple_resolutions():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            l, b, r, t = src.bounds
             target_resolution = (0.2, 0.1)
             target_transform = Affine(
                 target_resolution[0], 0.0, -78.95864996545055,
@@ -177,7 +175,7 @@ def test_calculate_default_transform_multiple_resolutions():
 
             dst_transform, width, height = calculate_default_transform(
                 src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
-                l, b, r, t, resolution=target_resolution
+                *src.bounds, resolution=target_resolution
             )
 
             assert dst_transform.almost_equals(target_transform)

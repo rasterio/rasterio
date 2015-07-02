@@ -105,6 +105,11 @@ bounds_opt = click.option(
     nargs=4, type=float, default=None,
     help='Output bounds: left, bottom, right, top.')
 
+dimensions_opt = click.option(
+    '--dimensions',
+    nargs=2, type=int, default=None,
+    help='Output dataset width, height in number of pixels.')
+
 dtype_opt = click.option(
     '-t', '--dtype',
     type=click.Choice([

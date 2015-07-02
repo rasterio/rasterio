@@ -363,8 +363,7 @@ def shapes(
 @format_opt
 @options.like_file_opt
 @options.bounds_opt
-@click.option('--dimensions', nargs=2, type=int, default=None,
-              help='Output dataset width, height in number of pixels.')
+@options.dimensions_opt
 @options.resolution_opt
 @click.option('--src-crs', '--src_crs', 'src_crs', default=None,
               help='Source coordinate reference system.  Limited to EPSG '

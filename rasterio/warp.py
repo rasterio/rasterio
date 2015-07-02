@@ -262,6 +262,10 @@ def calculate_default_transform(
         Example: {'init': 'EPSG:4326'}
     dst_crs: dict
         Target coordinate reference system.
+    width: int
+        Source raster width.
+    height: int
+        Source raster height.
     left, bottom, right, top: float
         Bounding coordinates in src_crs, from the bounds property of a raster.
     resolution: tuple (x resolution, y resolution) or float, optional
