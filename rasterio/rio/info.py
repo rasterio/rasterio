@@ -15,16 +15,81 @@ import rasterio.crs
 from rasterio.transform import guard_transform
 
 
+def like_dataset(ctx, param, value):
+    """Copy a dataset's meta property to the command context for access
+    from other callbacks."""
+    if ctx.obj is None:
+        ctx.obj = {}
+    if value:
+        with rasterio.open(value) as src:
+            metadata = src.meta
+            ctx.obj['like'] = metadata
+
+
+def nodata_handler(ctx, param, value):
+    """Get nodata value from a template file or command line."""
+    if ctx.obj and ctx.obj.get('like'):
+        value = ctx.obj.get('like')['nodata']
+    elif value:
+        value = float(value)
+    return value
+
+
+def transform_handler(ctx, param, value):
+    """Get transform value from a template file or command line."""
+    if ctx.obj and ctx.obj.get('like'):
+        value = ctx.obj.get('like')['affine']
+    elif value:
+        try:
+            value = json.loads(value)
+        except ValueError:
+            pass
+        try:
+            value = guard_transform(value)
+        except:
+            raise click.BadParameter(
+                "'%s' is not recognized as an Affine or GDAL "
+                "geotransform array." % value,
+                param=param, param_hint='transform')
+    return value
+
+
+def crs_handler(ctx, param, value):
+    """Get crs value from a template file or command line."""
+    if ctx.obj and ctx.obj.get('like'):
+        value = ctx.obj.get('like')['crs']
+    elif value:
+        try:
+            value = json.loads(value)
+        except ValueError:
+            pass
+        if not (rasterio.crs.is_geographic_crs(value) or
+                rasterio.crs.is_projected_crs(value)):
+            raise click.BadParameter(
+                "'%s' is not a recognized CRS." % value,
+                param=param, param_hint='crs')
+    return value
+
+
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
-@click.option('--nodata', type=float, default=None,
+@click.option('--nodata', callback=nodata_handler, default=None,
               help="New nodata value")
-@click.option('--crs', help="New coordinate reference system")
-@click.option('--transform', help="New affine transform matrix")
+@click.option('--crs', callback=crs_handler,
+              help="New coordinate reference system")
+@click.option('--transform', callback=transform_handler,
+              help="New affine transform matrix")
 @click.option('--tag', 'tags', multiple=True, metavar='KEY=VAL',
               help="New tag.")
+@click.option(
+    '--like',
+    type=click.Path(exists=True),
+    callback=like_dataset,
+    is_eager=True,
+    help="Raster dataset to use as a template for obtaining affine "
+         "transform (bounds and resolution), crs, and nodata values.")
 @click.pass_context
-def edit(ctx, input, nodata, crs, transform, tags):
+def edit(ctx, input, nodata, crs, transform, tags, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -51,58 +116,24 @@ def edit(ctx, input, nodata, crs, transform, tags):
         return rng.min <= value <= rng.max
 
     with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
+
         with rasterio.open(input, 'r+') as dst:
 
-            # Update nodata.
-            if nodata is not None:
-
+            if nodata:
                 dtype = dst.dtypes[0]
                 if not in_dtype_range(nodata, dtype):
                     raise click.BadParameter(
                         "outside the range of the file's "
                         "data type (%s)." % dtype,
                         param=nodata, param_hint='nodata')
-
                 dst.nodata = nodata
 
-            # Update CRS. Value might be a PROJ.4 string or a JSON
-            # encoded dict.
             if crs:
-                new_crs = crs.strip()
-                try:
-                    new_crs = json.loads(crs)
-                except ValueError:
-                    pass
+                dst.crs = crs
 
-                if not (rasterio.crs.is_geographic_crs(new_crs) or 
-                        rasterio.crs.is_projected_crs(new_crs)):
-                    raise click.BadParameter(
-                        "'%s' is not a recognized CRS." % crs,
-                        param=crs, param_hint='crs')
-
-                dst.crs = new_crs
-
-            # Update transform. Value might be a JSON encoded
-            # Affine object or a GDAL geotransform array.
             if transform:
-                try:
-                    transform_obj = json.loads(transform)
-                except ValueError:
-                    raise click.BadParameter(
-                        "'%s' is not a JSON array." % transform,
-                        param=transform, param_hint='transform')
+                dst.transform = transform
 
-                try:
-                    transform_obj = guard_transform(transform_obj)
-                except:
-                    raise click.BadParameter(
-                        "'%s' is not recognized as an Affine or GDAL "
-                        "geotransform array." % transform,
-                        param=transform, param_hint='transform')
-
-                dst.transform = transform_obj
-
-            # Update tags.
             if tags:
                 tags = dict(p.split('=') for p in tags)
                 dst.update_tags(**tags)
@@ -169,7 +200,7 @@ def env(ctx, key):
 @options.masked_opt
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
-        masked):
+         masked):
     """Print metadata about the dataset as JSON.
 
     Optionally print a single metadata item as a string.
@@ -213,8 +244,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     else:
                         click.echo(json.dumps(info, indent=indent))
                 elif aspect == 'tags':
-                    click.echo(json.dumps(src.tags(ns=namespace),
-                                            indent=indent))
+                    click.echo(
+                        json.dumps(src.tags(ns=namespace), indent=indent))
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()
@@ -241,12 +272,12 @@ def insp(ctx, input, mode, interpreter):
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
             with rasterio.open(input, mode) as src:
                 rasterio.tool.main(
-                    "Rasterio %s Interactive Inspector (Python %s)\n"
+                    'Rasterio %s Interactive Inspector (Python %s)\n'
                     'Type "src.meta", "src.read_band(1)", or "help(src)" '
-                    'for more information.' %  (
+                    'for more information.' % (
                         rasterio.__version__,
                         '.'.join(map(str, sys.version_info[:3]))),
                     src, interpreter)
@@ -258,8 +289,10 @@ def insp(ctx, input, mode, interpreter):
 # Transform command.
 @click.command(short_help="Transform coordinates.")
 @click.argument('INPUT', default='-', required=False)
-@click.option('--src-crs', '--src_crs', default='EPSG:4326', help="Source CRS.")
-@click.option('--dst-crs', '--dst_crs', default='EPSG:4326', help="Destination CRS.")
+@click.option('--src-crs', '--src_crs', default='EPSG:4326',
+              help="Source CRS.")
+@click.option('--dst-crs', '--dst_crs', default='EPSG:4326',
+              help="Destination CRS.")
 @precision_opt
 @click.pass_context
 def transform(ctx, input, src_crs, dst_crs, precision):
@@ -275,7 +308,7 @@ def transform(ctx, input, src_crs, dst_crs, precision):
         src = [input]
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
             if src_crs.startswith('EPSG'):
                 src_crs = {'init': src_crs}
             elif os.path.exists(src_crs):

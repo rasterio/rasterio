@@ -2,6 +2,7 @@ import json
 import logging
 import sys
 
+from click import Context
 from click.testing import CliRunner
 
 import rasterio
@@ -110,6 +111,62 @@ def test_edit_tags(data):
     with rasterio.open(inputfile) as src:
         assert src.tags()['lol'] == '1'
         assert src.tags()['wut'] == '2'
+
+
+class MockContext:
+
+    def __init__(self):
+        self.obj = {}
+
+
+class MockOption:
+
+    def __init__(self, name):
+        self.name = name
+
+
+def test_like_dataset_callback(data):
+    ctx = MockContext()
+    info.like_dataset(ctx, 'like', str(data.join('RGB.byte.tif')))
+    assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+
+
+def test_transform_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'affine': 'foo'}
+    assert info.transform_handler(ctx, MockOption('transform'), None) == 'foo'
+
+
+def test_nodata_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': -1}
+    assert info.nodata_handler(ctx, MockOption('nodata'), None) == -1
+
+
+def test_crs_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'crs': 'foo'}
+    assert info.crs_handler(ctx, MockOption('crs'), None) == 'foo'
+
+
+def test_edit_crs_like(data):
+    runner = CliRunner()
+
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--crs', '?'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32618'}
+
 
 def test_env():
     runner = CliRunner()
