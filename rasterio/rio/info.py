@@ -28,7 +28,7 @@ def like_dataset(ctx, param, value):
 
 def nodata_handler(ctx, param, value):
     """Get nodata value from a template file or command line."""
-    if ctx.obj and ctx.obj.get('like'):
+    if value and ctx.obj and ctx.obj.get('like'):
         value = ctx.obj.get('like')['nodata']
     elif value:
         value = float(value)
@@ -37,7 +37,7 @@ def nodata_handler(ctx, param, value):
 
 def transform_handler(ctx, param, value):
     """Get transform value from a template file or command line."""
-    if ctx.obj and ctx.obj.get('like'):
+    if value and ctx.obj and ctx.obj.get('like'):
         value = ctx.obj.get('like')['affine']
     elif value:
         try:
@@ -56,7 +56,7 @@ def transform_handler(ctx, param, value):
 
 def crs_handler(ctx, param, value):
     """Get crs value from a template file or command line."""
-    if ctx.obj and ctx.obj.get('like'):
+    if value and ctx.obj and ctx.obj.get('like'):
         value = ctx.obj.get('like')['crs']
     elif value:
         try:

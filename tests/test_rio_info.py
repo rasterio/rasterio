@@ -131,22 +131,43 @@ def test_like_dataset_callback(data):
     assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
 
 
+def test_transform_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'affine': 'foo'}
+    assert info.transform_handler(ctx, MockOption('transform'), None) is None
+
+
 def test_transform_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'affine': 'foo'}
-    assert info.transform_handler(ctx, MockOption('transform'), None) == 'foo'
+    assert info.transform_handler(ctx, MockOption('transform'), '?') == 'foo'
+
+
+def test_nodata_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': -1}
+    assert info.nodata_handler(ctx, MockOption('nodata'), None) is None
 
 
 def test_nodata_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'nodata': -1}
-    assert info.nodata_handler(ctx, MockOption('nodata'), None) == -1
+    assert info.nodata_handler(ctx, MockOption('nodata'), '?') == -1
+
+
+def test_crs_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'crs': 'foo'}
+    assert info.crs_handler(ctx, MockOption('crs'), None) is None
 
 
 def test_crs_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'crs': 'foo'}
-    assert info.crs_handler(ctx, MockOption('crs'), None) == 'foo'
+    assert info.crs_handler(ctx, MockOption('crs'), '?') == 'foo'
 
 
 def test_edit_crs_like(data):
@@ -270,7 +291,8 @@ def test_mo_info():
 
 def test_info_stats():
     runner = CliRunner()
-    result = runner.invoke(info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
+    result = runner.invoke(
+        info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
     assert result.exit_code == 0
     assert '"max": 255.0' in result.output
     assert '"min": 1.0' in result.output
@@ -279,7 +301,8 @@ def test_info_stats():
 
 def test_info_stats_only():
     runner = CliRunner()
-    result = runner.invoke(info.info, ['tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
+    result = runner.invoke(
+        info.info, ['tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.startswith('1.000000 255.000000 66.02')
 
@@ -345,8 +368,8 @@ def test_transform_point_multi():
         '--precision', '2'
     ], "[-78.0, 23.0]\n[-78.0, 23.0]", catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[192457.13, 2546667.68]\n[192457.13, 2546667.68]'
-
+    assert result.output.strip() == (
+        '[192457.13, 2546667.68]\n[192457.13, 2546667.68]')
 
 
 def test_bounds_defaults():
@@ -427,7 +450,8 @@ def test_bounds_obj_bbox_mercator():
         '--precision', '3'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[-8782900.033, 2700489.278, -8527010.472, 2943560.235]'
+    assert result.output.strip() == (
+        '[-8782900.033, 2700489.278, -8527010.472, 2943560.235]')
 
 
 def test_bounds_obj_bbox_projected():
@@ -440,7 +464,8 @@ def test_bounds_obj_bbox_projected():
         '--precision', '3'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[101985.0, 2611485.0, 339315.0, 2826915.0]'
+    assert result.output.strip() == (
+        '[101985.0, 2611485.0, 339315.0, 2826915.0]')
 
 
 def test_bounds_crs_bbox():
@@ -453,7 +478,8 @@ def test_bounds_crs_bbox():
         '--precision', '3'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[101985.0, 2611485.0, 339315.0, 2826915.0]'
+    assert result.output.strip() == (
+        '[101985.0, 2611485.0, 339315.0, 2826915.0]')
 
 
 def test_bounds_seq():
@@ -476,7 +502,8 @@ def test_bounds_seq():
         '--precision', '2'
     ])
     assert result.exit_code == 0
-    assert result.output == '[-78.9, 23.56, -76.6, 25.55]\n[-78.9, 23.56, -76.6, 25.55]\n'
+    assert result.output == (
+        '[-78.9, 23.56, -76.6, 25.55]\n[-78.9, 23.56, -76.6, 25.55]\n')
     assert '\x1e' not in result.output
 
 
@@ -492,7 +519,8 @@ def test_bounds_seq_rs():
         '--precision', '2'
     ])
     assert result.exit_code == 0
-    assert result.output == '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n'
+    assert result.output == (
+        '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n')
 
 
 def test_insp():
