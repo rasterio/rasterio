@@ -87,7 +87,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata):
                 output_width = int(math.ceil((bounds[2]-bounds[0])/res[0]))
                 output_height = int(math.ceil((bounds[3]-bounds[1])/res[1]))
 
-                kwargs['driver'] == driver
+                kwargs['driver'] = driver
                 kwargs['transform'] = output_transform
                 kwargs['width'] = output_width
                 kwargs['height'] = output_height
