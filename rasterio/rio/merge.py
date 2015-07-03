@@ -24,8 +24,9 @@ from rasterio.transform import Affine
               help="Output dataset resolution: pixel width, pixel height")
 @click.option('--nodata', type=float, default=None,
               help="Override nodata values defined in input datasets")
+@options.creation_options
 @click.pass_context
-def merge(ctx, files, output, driver, bounds, res, nodata):
+def merge(ctx, files, output, driver, bounds, res, nodata, creation_options):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -51,6 +52,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata):
             with rasterio.open(files[0]) as first:
                 first_res = first.res
                 kwargs = first.meta
+                kwargs.update(**creation_options)
                 kwargs.pop('affine')
                 nodataval = first.nodatavals[0]
                 dtype = first.dtypes[0]
@@ -87,7 +89,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata):
                 output_width = int(math.ceil((bounds[2]-bounds[0])/res[0]))
                 output_height = int(math.ceil((bounds[3]-bounds[1])/res[1]))
 
-                kwargs['driver'] == driver
+                kwargs['driver'] = driver
                 kwargs['transform'] = output_transform
                 kwargs['width'] = output_width
                 kwargs['height'] = output_height

@@ -49,6 +49,35 @@ Registry of common rio CLI options.  See cligj for more options.
 import click
 
 
+def _cb_key_val(ctx, param, value):
+
+    """
+    click callback to validate `--opt KEY1=VAL1 --opt KEY2=VAL2` and collect
+    in a dictionary like the one below, which is what the CLI function receives.
+    If no value or `None` is received then an empty dictionary is returned.
+
+        {
+            'KEY1': 'VAL1',
+            'KEY2': 'VAL2'
+        }
+
+    Note: `==VAL` breaks this as `str.split('=', 1)` is used.
+    """
+
+    if not value:
+        return {}
+    else:
+        out = {}
+        for pair in value:
+            if '=' not in pair:
+                raise click.BadParameter("Invalid syntax for KEY=VAL arg: {}".format(pair))
+            else:
+                k, v = pair.split('=', 1)
+                out[k] = v
+
+        return out
+
+
 # Singular input file
 file_in_arg = click.argument(
     'INPUT',
@@ -112,3 +141,10 @@ resolution_opt = click.option(
          'reference system. Pixels assumed to be square if this option '
          'is used once, otherwise use: '
          '--res pixel_width --res pixel_height')
+
+
+creation_options = click.option(
+    '--co', 'creation_options', metavar='NAME=VALUE', multiple=True, callback=_cb_key_val,
+    help="Driver specific creation options.  See the documentation for the selected output "
+         "driver for more information."
+)
