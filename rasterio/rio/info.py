@@ -15,7 +15,33 @@ import rasterio.crs
 from rasterio.transform import guard_transform
 
 
-def like_dataset(ctx, param, value):
+# Handlers for info module options.
+
+def all_handler(ctx, param, value):
+    """Get tags from a template file or command line."""
+    if ctx.obj and ctx.obj.get('like'):
+        value = ctx.obj.get('like')
+    return value
+
+
+def crs_handler(ctx, param, value):
+    """Get crs value from a template file or command line."""
+    if value and ctx.obj and ctx.obj.get('like'):
+        value = ctx.obj.get('like')['crs']
+    elif value:
+        try:
+            value = json.loads(value)
+        except ValueError:
+            pass
+        if not (rasterio.crs.is_geographic_crs(value) or
+                rasterio.crs.is_projected_crs(value)):
+            raise click.BadParameter(
+                "'%s' is not a recognized CRS." % value,
+                param=param, param_hint='crs')
+    return value
+
+
+def like_handler(ctx, param, value):
     """Copy a dataset's meta property to the command context for access
     from other callbacks."""
     if ctx.obj is None:
@@ -24,6 +50,8 @@ def like_dataset(ctx, param, value):
         with rasterio.open(value) as src:
             metadata = src.meta
             ctx.obj['like'] = metadata
+            ctx.obj['like']['transform'] = metadata['affine']
+            ctx.obj['like']['tags'] = src.tags()
 
 
 def nodata_handler(ctx, param, value):
@@ -32,6 +60,15 @@ def nodata_handler(ctx, param, value):
         value = ctx.obj.get('like')['nodata']
     elif value:
         value = float(value)
+    return value
+
+
+def tags_handler(ctx, param, value):
+    """Get tags from a template file or command line."""
+    if value and ctx.obj and ctx.obj.get('like'):
+        value = ctx.obj.get('like')['tags']
+    elif value:
+        value = dict(p.split('=') for p in value)
     return value
 
 
@@ -54,22 +91,7 @@ def transform_handler(ctx, param, value):
     return value
 
 
-def crs_handler(ctx, param, value):
-    """Get crs value from a template file or command line."""
-    if value and ctx.obj and ctx.obj.get('like'):
-        value = ctx.obj.get('like')['crs']
-    elif value:
-        try:
-            value = json.loads(value)
-        except ValueError:
-            pass
-        if not (rasterio.crs.is_geographic_crs(value) or
-                rasterio.crs.is_projected_crs(value)):
-            raise click.BadParameter(
-                "'%s' is not a recognized CRS." % value,
-                param=param, param_hint='crs')
-    return value
-
+# The edit-info command.
 
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
@@ -79,17 +101,20 @@ def crs_handler(ctx, param, value):
               help="New coordinate reference system")
 @click.option('--transform', callback=transform_handler,
               help="New affine transform matrix")
-@click.option('--tag', 'tags', multiple=True, metavar='KEY=VAL',
-              help="New tag.")
+@click.option('--tag', 'tags', callback=tags_handler, multiple=True,
+              metavar='KEY=VAL', help="New tag.")
+@click.option('--all', 'allmd', callback=all_handler, flag_value='all',
+              default=False,
+              help="Copy all metadata items from the template file.")
 @click.option(
     '--like',
     type=click.Path(exists=True),
-    callback=like_dataset,
+    callback=like_handler,
     is_eager=True,
     help="Raster dataset to use as a template for obtaining affine "
          "transform (bounds and resolution), crs, and nodata values.")
 @click.pass_context
-def edit(ctx, input, nodata, crs, transform, tags, like):
+def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -103,6 +128,13 @@ def edit(ctx, input, nodata, crs, transform, tags, like):
     or JSON-encoded GDAL geotransform arrays like
 
       [101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]
+
+    Metadata items may also be read from an existing dataset using a
+    combination of the --like, --crs, --nodata, --transform, and --all
+    options.
+
+      rio-edit-info example.tif --all --like template.tif
+
     """
     import numpy as np
 
@@ -118,6 +150,12 @@ def edit(ctx, input, nodata, crs, transform, tags, like):
     with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
 
         with rasterio.open(input, 'r+') as dst:
+
+            if allmd:
+                nodata = allmd['nodata']
+                crs = allmd['crs']
+                transform = allmd['transform']
+                tags = allmd['tags']
 
             if nodata:
                 dtype = dst.dtypes[0]
@@ -135,7 +173,6 @@ def edit(ctx, input, nodata, crs, transform, tags, like):
                 dst.transform = transform
 
             if tags:
-                tags = dict(p.split('=') for p in tags)
                 dst.update_tags(**tags)
 
 

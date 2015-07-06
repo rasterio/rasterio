@@ -127,8 +127,19 @@ class MockOption:
 
 def test_like_dataset_callback(data):
     ctx = MockContext()
-    info.like_dataset(ctx, 'like', str(data.join('RGB.byte.tif')))
+    info.like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
     assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+
+
+def test_all_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'affine': 'foo'}
+    assert info.all_handler(ctx, None, None) == {'affine': 'foo'}
+
+
+def test_all_callback_None(data):
+    ctx = MockContext()
+    assert info.all_handler(ctx, None, None) is None
 
 
 def test_transform_callback_pass(data):
@@ -170,6 +181,12 @@ def test_crs_callback(data):
     assert info.crs_handler(ctx, MockOption('crs'), '?') == 'foo'
 
 
+def test_tags_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
+    assert info.tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
+
+
 def test_edit_crs_like(data):
     runner = CliRunner()
 
@@ -184,6 +201,25 @@ def test_edit_crs_like(data):
     templatefile = 'tests/data/RGB.byte.tif'
     result = runner.invoke(info.edit, [
         inputfile, '--like', templatefile, '--crs', '?'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32618'}
+
+
+def test_edit_all_like(data):
+    runner = CliRunner()
+
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--all'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
