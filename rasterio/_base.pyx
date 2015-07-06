@@ -422,6 +422,18 @@ cdef class DatasetReader(object):
         self._read = True
         return m
 
+
+    @property
+    def profile(self):
+        m = self.meta
+        m.update(self.tags(ns='rio_creation_kwds'))
+        m.update(
+            blockxsize=self.block_shapes[0][1],
+            blockysize=self.block_shapes[0][0],
+            tiled=self.block_shapes[0][1] != self.width)
+        return m
+
+
     def lnglat(self):
         w, s, e, n = self.bounds
         cx = (w + e)/2.0

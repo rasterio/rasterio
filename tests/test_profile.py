@@ -77,3 +77,13 @@ def test_profile_overlay():
     assert kwds['tiled']
     assert kwds['compress'] == 'lzw'
     assert kwds['count'] == 3
+
+
+def test_dataset_profile_property(data):
+    tiffile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(tiffile, 'r+') as src:
+        src.update_tags(ns='rio_creation_kwds', foo='bar')
+        assert src.profile['blockxsize'] == 791
+        assert src.profile['blockysize'] == 3
+        assert src.profile['tiled'] == False
+        assert src.profile['foo'] == 'bar'
