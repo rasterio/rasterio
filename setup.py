@@ -240,6 +240,7 @@ setup_args = dict(
         insp=rasterio.rio.info:insp
         mask=rasterio.rio.features:mask
         merge=rasterio.rio.merge:merge
+        pyramid=rasterio.rio.pyramid:pyramid
         rasterize=rasterio.rio.features:rasterize
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.features:shapes
