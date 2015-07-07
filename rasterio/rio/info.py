@@ -17,28 +17,38 @@ from rasterio.transform import guard_transform
 
 # Handlers for info module options.
 
+def from_like_context(ctx, param, value):
+    """Return the value for an option from the context if the option 
+    or `--all` is given, else return None."""
+    if ctx.obj and ctx.obj.get('like') and (
+            value == 'like' or ctx.obj.get('all_like')):
+        return ctx.obj['like'][param.name]
+    else:
+        return None
+
+
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
     if ctx.obj and ctx.obj.get('like'):
+        ctx.obj['all_like'] = value
         value = ctx.obj.get('like')
     return value
 
 
 def crs_handler(ctx, param, value):
     """Get crs value from a template file or command line."""
-    if value and ctx.obj and ctx.obj.get('like'):
-        value = ctx.obj.get('like')['crs']
-    elif value:
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value:
         try:
-            value = json.loads(value)
+            retval = json.loads(value)
         except ValueError:
-            pass
-        if not (rasterio.crs.is_geographic_crs(value) or
-                rasterio.crs.is_projected_crs(value)):
+            retval = value
+        if not (rasterio.crs.is_geographic_crs(retval) or
+                rasterio.crs.is_projected_crs(retval)):
             raise click.BadParameter(
-                "'%s' is not a recognized CRS." % value,
+                "'%s' is not a recognized CRS." % retval,
                 param=param, param_hint='crs')
-    return value
+    return retval
 
 
 def like_handler(ctx, param, value):
@@ -56,39 +66,46 @@ def like_handler(ctx, param, value):
 
 def nodata_handler(ctx, param, value):
     """Get nodata value from a template file or command line."""
-    if value and ctx.obj and ctx.obj.get('like'):
-        value = ctx.obj.get('like')['nodata']
-    elif value:
-        value = float(value)
-    return value
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value is not None:
+        try:
+            retval = float(value)
+        except:
+            raise click.BadParameter(
+                "%s is not a number." % repr(value),
+                param=param, param_hint='nodata')
+    return retval
 
 
 def tags_handler(ctx, param, value):
     """Get tags from a template file or command line."""
-    if value and ctx.obj and ctx.obj.get('like'):
-        value = ctx.obj.get('like')['tags']
-    elif value:
-        value = dict(p.split('=') for p in value)
-    return value
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value:
+        try:
+            retval = dict(p.split('=') for p in value)
+        except:
+            raise click.BadParameter(
+                "'%s' contains a malformed tag." % value,
+                param=param, param_hint='transform')
+    return retval
 
 
 def transform_handler(ctx, param, value):
     """Get transform value from a template file or command line."""
-    if value and ctx.obj and ctx.obj.get('like'):
-        value = ctx.obj.get('like')['affine']
-    elif value:
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value:
         try:
             value = json.loads(value)
         except ValueError:
             pass
         try:
-            value = guard_transform(value)
+            retval = guard_transform(value)
         except:
             raise click.BadParameter(
                 "'%s' is not recognized as an Affine or GDAL "
                 "geotransform array." % value,
                 param=param, param_hint='transform')
-    return value
+    return retval
 
 
 # The edit-info command.
@@ -97,14 +114,14 @@ def transform_handler(ctx, param, value):
 @options.file_in_arg
 @click.option('--nodata', callback=nodata_handler, default=None,
               help="New nodata value")
-@click.option('--crs', callback=crs_handler,
+@click.option('--crs', callback=crs_handler, default=None,
               help="New coordinate reference system")
 @click.option('--transform', callback=transform_handler,
               help="New affine transform matrix")
 @click.option('--tag', 'tags', callback=tags_handler, multiple=True,
               metavar='KEY=VAL', help="New tag.")
-@click.option('--all', 'allmd', callback=all_handler, flag_value='all',
-              default=False,
+@click.option('--all', 'allmd', callback=all_handler, flag_value='like',
+              is_eager=True, default=False,
               help="Copy all metadata items from the template file.")
 @click.option(
     '--like',
@@ -118,22 +135,32 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
-    CRS may be either a PROJ.4 or EPSG:nnnn string, or a JSON-encoded
-    PROJ.4 object.
+    The coordinate reference system may be either a PROJ.4 or EPSG:nnnn
+    string,
+    
+      --crs 'EPSG:4326'
+    
+    or a JSON text-encoded PROJ.4 object.
 
-    Transforms are either JSON-encoded Affine objects (preferred) like
+      --crs '{"proj": "utm", "zone": 18, ...}'
 
-      [300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]
+    Transforms are either JSON-encoded Affine objects (preferred),
 
-    or JSON-encoded GDAL geotransform arrays like
+      --transform '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
 
-      [101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]
+    or JSON text-encoded GDAL geotransform arrays.
+
+      --transform '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'
 
     Metadata items may also be read from an existing dataset using a
-    combination of the --like, --crs, --nodata, --transform, and --all
-    options.
+    combination of the --like option with at least one of --all,
+    `--crs like`, `--nodata like`, and `--transform like`.
 
-      rio-edit-info example.tif --all --like template.tif
+      rio edit-info example.tif --like template.tif --all
+
+    To get just the transform from the template:
+
+      rio edit-info example.tif --like template.tif --transform like
 
     """
     import numpy as np

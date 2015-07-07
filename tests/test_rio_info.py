@@ -2,8 +2,10 @@ import json
 import logging
 import sys
 
+import click
 from click import Context
 from click.testing import CliRunner
+import pytest
 
 import rasterio
 from rasterio.rio import info
@@ -133,8 +135,8 @@ def test_like_dataset_callback(data):
 
 def test_all_callback(data):
     ctx = MockContext()
-    ctx.obj['like'] = {'affine': 'foo'}
-    assert info.all_handler(ctx, None, None) == {'affine': 'foo'}
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.all_handler(ctx, None, None) == {'transform': 'foo'}
 
 
 def test_all_callback_None(data):
@@ -145,14 +147,28 @@ def test_all_callback_None(data):
 def test_transform_callback_pass(data):
     """Always return None if the value is None"""
     ctx = MockContext()
-    ctx.obj['like'] = {'affine': 'foo'}
+    ctx.obj['like'] = {'transform': 'foo'}
     assert info.transform_handler(ctx, MockOption('transform'), None) is None
+
+
+def test_transform_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    with pytest.raises(click.BadParameter):
+        info.transform_handler(ctx, MockOption('transform'), '?')
 
 
 def test_transform_callback(data):
     ctx = MockContext()
-    ctx.obj['like'] = {'affine': 'foo'}
-    assert info.transform_handler(ctx, MockOption('transform'), '?') == 'foo'
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
+
+
+def test_nodata_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': 'lolwut'}
+    with pytest.raises(click.BadParameter):
+        info.nodata_handler(ctx, MockOption('nodata'), 'lolwut')
 
 
 def test_nodata_callback_pass(data):
@@ -162,10 +178,15 @@ def test_nodata_callback_pass(data):
     assert info.nodata_handler(ctx, MockOption('nodata'), None) is None
 
 
+def test_nodata_callback_0(data):
+    ctx = MockContext()
+    assert info.nodata_handler(ctx, MockOption('nodata'), '0') == 0.0
+
+
 def test_nodata_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'nodata': -1}
-    assert info.nodata_handler(ctx, MockOption('nodata'), '?') == -1
+    assert info.nodata_handler(ctx, MockOption('nodata'), 'like') == -1.0
 
 
 def test_crs_callback_pass(data):
@@ -178,13 +199,20 @@ def test_crs_callback_pass(data):
 def test_crs_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'crs': 'foo'}
-    assert info.crs_handler(ctx, MockOption('crs'), '?') == 'foo'
+    assert info.crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
+
+
+def test_tags_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
+    with pytest.raises(click.BadParameter):
+        info.tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
 
 
 def test_tags_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    assert info.tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
+    assert info.tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
 
 
 def test_edit_crs_like(data):
@@ -193,17 +221,20 @@ def test_edit_crs_like(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
         dst.crs = {'init': 'epsg:32617'}
+        dst.nodata = 1.0
 
     # Double check.
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 1.0
 
     templatefile = 'tests/data/RGB.byte.tif'
     result = runner.invoke(info.edit, [
-        inputfile, '--like', templatefile, '--crs', '?'])
+        inputfile, '--like', templatefile, '--crs', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
+        assert src.nodata == 1.0
 
 
 def test_edit_all_like(data):
