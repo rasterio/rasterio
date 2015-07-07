@@ -1754,6 +1754,7 @@ cdef class RasterUpdater(RasterReader):
         """Build overviews at one or more decimation factors for all
         bands of the dataset."""
         cdef int *factors_c = NULL
+        cdef const char *resampling_c = NULL
 
         if self._hds == NULL:
             raise ValueError("can't write closed raster file")
@@ -1765,7 +1766,9 @@ cdef class RasterUpdater(RasterReader):
                 factors_c[i] = factor
 
         with cpl_errs:
-            err = _gdal.GDALBuildOverviews(self._hds, resampling.value,
+            resampling_b = resampling.value.encode('utf-8')
+            resampling_c = resampling_b
+            err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
                 len(factors), factors_c, 0, NULL, NULL, NULL)
 
         if factors_c != NULL:
