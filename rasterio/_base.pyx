@@ -406,6 +406,7 @@ cdef class DatasetReader(object):
 
     @property
     def meta(self):
+        """The basic metadata of this dataset."""
         m = {
             'driver': self.driver,
             'dtype': self.dtypes[0],
@@ -421,6 +422,23 @@ cdef class DatasetReader(object):
             'tiled': self.block_shapes[0][1] != self.width }
         self._read = True
         return m
+
+
+    property profile:
+        """Basic metadata and creation options of this dataset.
+
+        May be passed as keyword arguments to `rasterio.open()` to
+        create a clone of this dataset.
+        """
+        def __get__(self):
+            m = self.meta
+            m.update(self.tags(ns='rio_creation_kwds'))
+            m.update(
+                blockxsize=self.block_shapes[0][1],
+                blockysize=self.block_shapes[0][0],
+                tiled=self.block_shapes[0][1] != self.width)
+            return m
+
 
     def lnglat(self):
         w, s, e, n = self.bounds
