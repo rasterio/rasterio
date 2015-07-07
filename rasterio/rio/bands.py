@@ -29,8 +29,9 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 @click.option('--photometric', default=None,
               type=click.Choice(PHOTOMETRIC_CHOICES),
               help="Photometric interpretation")
+@options.creation_options
 @click.pass_context
-def stack(ctx, files, output, driver, bidx, photometric):
+def stack(ctx, files, output, driver, bidx, photometric, creation_options):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
 
@@ -95,6 +96,7 @@ def stack(ctx, files, output, driver, bidx, photometric):
 
             with rasterio.open(files[0]) as first:
                 kwargs = first.meta
+                kwargs.update(**creation_options)
                 kwargs['transform'] = kwargs.pop('affine')
 
             kwargs.update(

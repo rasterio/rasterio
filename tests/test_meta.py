@@ -3,26 +3,23 @@
 import rasterio
 
 
-def test_blocksize_rgb(tmpdir):
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        kwds = src.meta
-        assert kwds['blockxsize'] == 791
-        assert kwds['blockysize'] == 3
-        assert kwds['tiled'] is False
-
-def test_blocksize_shade(tmpdir):
-    with rasterio.open('tests/data/shade.tif') as src:
-        kwds = src.meta
-        assert kwds['blockxsize'] == 1024
-        assert kwds['blockysize'] == 8
-        assert kwds['tiled'] is False
-
 def test_copy_meta(tmpdir):
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         kwds = src.meta
     with rasterio.open(
             str(tmpdir.join('test_copy_meta.tif')), 'w', **kwds) as dst:
         assert dst.meta['count'] == 3
-        assert dst.meta['blockxsize'] == 791
-        assert dst.meta['blockysize'] == 3
-        assert dst.meta['tiled'] is False
+
+
+def test_blacklisted_keys(tmpdir):
+    # Some keys were removed from .meta when they were found to clash with
+    # creation options.
+    # https://github.com/mapbox/rasterio/issues/402
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        kwds = src.meta
+    with rasterio.open(
+            str(tmpdir.join('test_copy_meta.tif')), 'w', **kwds) as dst:
+        keys = map(lambda x: x.lower(), dst.meta.keys())
+        assert 'blockxsize' not in keys
+        assert 'blockysize' not in keys
+        assert 'tiled' not in keys

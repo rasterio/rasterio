@@ -40,8 +40,9 @@ def read_array(ix, subix=None, dtype=None):
                    '"a=tests/data/RGB.byte.tif".')
 @options.dtype_opt
 @options.masked_opt
+@options.creation_options
 @click.pass_context
-def calc(ctx, command, files, output, name, dtype, masked):
+def calc(ctx, command, files, output, name, dtype, masked, creation_options):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -95,6 +96,7 @@ def calc(ctx, command, files, output, name, dtype, masked):
 
             with rasterio.open(inputs[0][1]) as first:
                 kwargs = first.meta
+                kwargs.update(**creation_options)
                 kwargs['transform'] = kwargs.pop('affine')
                 dtype = dtype or first.meta['dtype']
                 kwargs['dtype'] = dtype

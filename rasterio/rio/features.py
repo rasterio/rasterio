@@ -49,6 +49,7 @@ all_touched_opt = click.option(
               help='Inverts the mask, so that areas covered by features are'
                    'masked out and areas not covered are retained.  Ignored '
                    'if using --crop')
+@options.creation_options
 @click.pass_context
 def mask(
         ctx,
@@ -58,7 +59,8 @@ def mask(
         driver,
         all_touched,
         crop,
-        invert):
+        invert,
+        creation_options):
 
     """Masks in raster using GeoJSON features (masks out all areas not covered
     by features), and optionally crops the output raster to the extent of the
@@ -102,9 +104,10 @@ def mask(
 
     with rasterio.drivers(CPL_DEBUG=verbosity > 2):
         try:
-            geojson = json.loads(click.open_file(geojson_mask).read())
+            with click.open_file(geojson_mask) as f:
+                geojson = json.loads(f.read())
         except ValueError:
-            raise click.BadParameter('GeoJSON could not be read from  '
+            raise click.BadParameter('GeoJSON could not be read from '
                                      '--geojson-mask or stdin',
                                      param_hint='--geojson-mask')
 
@@ -149,6 +152,7 @@ def mask(
                 invert=invert)
 
             meta = src.meta.copy()
+            meta.update(**creation_options)
             meta.update({
                 'driver': driver,
                 'height': mask.shape[0],
@@ -376,6 +380,7 @@ def shapes(
 @click.option('--property', type=str, default=None, help='Property in '
               'GeoJSON features to use for rasterized values.  Any features '
               'that lack this property will be given --default_value instead.')
+@options.creation_options
 @click.pass_context
 def rasterize(
         ctx,
@@ -390,7 +395,8 @@ def rasterize(
         all_touched,
         default_value,
         fill,
-        property):
+        property,
+        creation_options):
 
     """Rasterize GeoJSON into a new or existing raster.
 
@@ -439,7 +445,6 @@ def rasterize(
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
     output, files = resolve_inout(files=files, output=output)
-    input = click.open_file(files.pop(0) if files else '-')
 
     has_src_crs = src_crs is not None
     src_crs = src_crs or 'EPSG:4326'
@@ -458,7 +463,8 @@ def rasterize(
                 return feature['properties'].get(property, default_value)
             return default_value
 
-        geojson = json.loads(input.read())
+        with click.open_file(files.pop(0) if files else '-') as gj_f:
+            geojson = json.loads(gj_f.read())
         if 'features' in geojson:
             geometries = []
             for f in geojson['features']:
@@ -568,6 +574,7 @@ def rasterize(
                                         bounds[3]),
                     'driver': driver
                 }
+                kwargs.update(**creation_options)
 
             result = rasterize(
                 geometries,
@@ -598,7 +605,9 @@ def rasterize(
 @projection_geographic_opt
 @projection_projected_opt
 @projection_mercator_opt
-@click.option('--dst-crs', default='', metavar="EPSG:NNNN", callback=to_lower, help="Output in specified coordinates.")
+@click.option(
+    '--dst-crs', default='', metavar="EPSG:NNNN", callback=to_lower,
+    help="Output in specified coordinates.")
 @sequence_opt
 @use_rs_opt
 @geojson_type_collection_opt(True)
@@ -606,7 +615,7 @@ def rasterize(
 @geojson_type_bbox_opt(False)
 @click.pass_context
 def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
-        sequence, use_rs, geojson_type):
+           sequence, use_rs, geojson_type):
     """Write bounding boxes to stdout as GeoJSON for use with, e.g.,
     geojsonio
 
