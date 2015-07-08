@@ -29,7 +29,7 @@ def from_like_context(ctx, param, value):
 
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
-    if ctx.obj and ctx.obj.get('like'):
+    if ctx.obj and ctx.obj.get('like') and value is not None:
         ctx.obj['all_like'] = value
         value = ctx.obj.get('like')
     return value
@@ -43,8 +43,7 @@ def crs_handler(ctx, param, value):
             retval = json.loads(value)
         except ValueError:
             retval = value
-        if not (rasterio.crs.is_geographic_crs(retval) or
-                rasterio.crs.is_projected_crs(retval)):
+        if not rasterio.crs.is_valid_crs(retval):
             raise click.BadParameter(
                 "'%s' is not a recognized CRS." % retval,
                 param=param, param_hint='crs')

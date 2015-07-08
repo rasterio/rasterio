@@ -133,10 +133,16 @@ def test_like_dataset_callback(data):
     assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
 
 
+def test_all_callback_pass(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.all_handler(ctx, None, None) == None
+
+
 def test_all_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert info.all_handler(ctx, None, None) == {'transform': 'foo'}
+    assert info.all_handler(ctx, None, True) == {'transform': 'foo'}
 
 
 def test_all_callback_None(data):

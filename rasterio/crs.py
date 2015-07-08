@@ -10,8 +10,13 @@
 #   {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
 #
 
-from rasterio._base import is_geographic_crs, is_projected_crs
+from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
 from rasterio.five import string_types
+
+
+def is_valid_crs(crs):
+    return is_geographic_crs(crs) or is_projected_crs(crs)
+
 
 def to_string(crs):
     """Turn a parameter mapping into a more conventional PROJ.4 string.
@@ -24,14 +29,15 @@ def to_string(crs):
     items = []
     for k, v in sorted(filter(
             lambda x: x[0] in all_proj_keys and x[1] is not False and (
-                isinstance(x[1], (bool, int, float)) or 
+                isinstance(x[1], (bool, int, float)) or
                 isinstance(x[1], string_types)),
-            crs.items() )):
+            crs.items())):
         items.append(
             "+" + "=".join(
                 map(str, filter(
-                    lambda y: (y or y == 0) and y is not True, (k, v)))) )
+                    lambda y: (y or y == 0) and y is not True, (k, v)))))
     return " ".join(items)
+
 
 def from_string(prjs):
     """Turn a PROJ.4 string into a mapping of parameters.
@@ -40,6 +46,7 @@ def from_string(prjs):
     are checked against the ``all_proj_keys`` list.
     """
     parts = [o.lstrip('+') for o in prjs.strip().split()]
+
     def parse(v):
         if v in ('True', 'true'):
             return True
@@ -54,10 +61,13 @@ def from_string(prjs):
                 return float(v)
             except ValueError:
                 return v
+
     items = map(
         lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
-        (p.split('=') for p in parts) )
-    return dict((k,v) for k, v in items if k in all_proj_keys)
+        (p.split('=') for p in parts))
+
+    return dict((k, v) for k, v in items if k in all_proj_keys)
+
 
 def from_epsg(code):
     """Given an integer code, returns an EPSG-like mapping.
@@ -183,5 +193,5 @@ _param_data = """
 
 _lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
 all_proj_keys = list(
-    set(line.split()[0].lstrip("+").strip() for line in _lines) 
+    set(line.split()[0].lstrip("+").strip() for line in _lines)
     ) + ['no_mayo']

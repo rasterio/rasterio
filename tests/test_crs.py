@@ -5,9 +5,12 @@ import sys
 
 import rasterio
 from rasterio import crs
-from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
+from rasterio.crs import (
+    is_geographic_crs, is_projected_crs, is_same_crs, is_valid_crs)
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
 
 # When possible, Rasterio gives you the CRS in the form of an EPSG code.
 def test_read_epsg(tmpdir):
@@ -118,3 +121,15 @@ def test_is_same_crs():
     lcc_crs1 = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     lcc_crs2 = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=45 +lat_0=0')
     assert is_same_crs(lcc_crs1, lcc_crs2) is False
+
+
+def test_to_string():
+    assert crs.to_string({'init': 'EPSG:4326'}) == "+init=EPSG:4326"
+
+
+def test_is_valid_false():
+    assert not is_valid_crs('EPSG:432600')
+
+
+def test_is_valid():
+    assert is_valid_crs('EPSG:4326')
