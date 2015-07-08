@@ -20,8 +20,7 @@ from rasterio.transform import Affine
 @options.output_opt
 @format_opt
 @options.bounds_opt
-@click.option('-r', '--res', nargs=2, type=float, default=None,
-              help="Output dataset resolution: pixel width, pixel height")
+@options.resolution_opt
 @click.option('--nodata', type=float, default=None,
               help="Override nodata values defined in input datasets")
 @options.creation_options

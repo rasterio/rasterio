@@ -488,7 +488,13 @@ Or provide output bounds (in source crs) and resolution:
 
 .. code-block:: console
 
-    $ rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 22 -76 24 --res 0.1
+    $ rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 22 -76 24 --res 0.1 0.1
+
+Other options are available, see:
+
+.. code-block:: console
+
+    $ rio warp --help
 
 
 Suggestions for other commands are welcome!

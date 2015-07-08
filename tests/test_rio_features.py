@@ -365,13 +365,13 @@ def test_rasterize_err(tmpdir, runner):
     assert result.exit_code == 2
 
     # Test invalid CRS for bounds
-    result = runner.invoke(features.rasterize, [output, '--res', 1],
+    result = runner.invoke(features.rasterize, [output, '--res', 1, 1],
                            input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 2
 
     # Test invalid CRS value
     result = runner.invoke(features.rasterize, [output,
-                                                '--res', 1,
+                                                '--res', 1, 1,
                                                 '--src-crs', 'BOGUS'],
                            input=TEST_MERC_FEATURECOLLECTION)
     assert result.exit_code == 2
@@ -413,7 +413,7 @@ def test_rasterize(tmpdir, runner):
     # Test resolution
     output = str(tmpdir.join('test3.tif'))
     result = runner.invoke(features.rasterize,
-                           [output, '--res', 0.5], input=TEST_FEATURES)
+                           [output, '--res', 0.5, 0.5], input=TEST_FEATURES)
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
@@ -440,7 +440,7 @@ def test_rasterize(tmpdir, runner):
 def test_rasterize_existing_output(tmpdir, runner):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(features.rasterize,
-                           [output, '--res', 0.5], input=TEST_FEATURES)
+                           [output, '--res', 0.5, 0.5], input=TEST_FEATURES)
     assert result.exit_code == 0
     assert os.path.exists(output)
 
@@ -473,7 +473,7 @@ def test_rasterize_existing_output(tmpdir, runner):
     # Confirm that a different src-crs is rejected, even if a geographic crs
     result = runner.invoke(features.rasterize,
                            [output,
-                            '--res', 0.5,
+                            '--res', 0.5, 0.5,
                             '--src-crs', 'EPSG:4269'
                             ], input=TEST_FEATURES)
     assert result.exit_code == 2
@@ -513,7 +513,7 @@ def test_rasterize_property_value(tmpdir, runner):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(features.rasterize,
                            [output,
-                            '--res', 1000,
+                            '--res', 1000, 1000,
                             '--property', 'val',
                             '--src-crs', 'EPSG:3857'
                            ],
@@ -530,7 +530,7 @@ def test_rasterize_property_value(tmpdir, runner):
     # Test feature property values
     output = str(tmpdir.join('test2.tif'))
     result = runner.invoke(features.rasterize,
-                           [output, '--res', 0.5, '--property', 'val'],
+                           [output, '--res', 0.5, 0.5, '--property', 'val'],
                            input=TEST_FEATURES)
     assert result.exit_code == 0
     assert os.path.exists(output)

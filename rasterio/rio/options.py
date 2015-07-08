@@ -138,18 +138,18 @@ output_opt = click.option(
     help="Path to output file (optional alternative to a positional arg "
          "for some commands).")
 
-
 resolution_opt = click.option(
     '-r', '--res',
-    multiple=True, type=float, default=None,
-    help='Output dataset resolution in units of coordinate '
-         'reference system. Pixels assumed to be square if this option '
-         'is used once, otherwise use: '
-         '--res pixel_width --res pixel_height')
-
+    nargs=2,
+    type=float,
+    default=None,
+    help="Output dataset resolution: pixel width, pixel height")
 
 creation_options = click.option(
-    '--co', 'creation_options', metavar='NAME=VALUE', multiple=True, callback=_cb_key_val,
-    help="Driver specific creation options.  See the documentation for the selected output "
-         "driver for more information."
-)
+    '--co', 'creation_options',
+    metavar='NAME=VALUE',
+    multiple=True,
+    callback=_cb_key_val,
+    help="Driver specific creation options."
+         "See the documentation for the selected output driver for "
+         "more information.")
