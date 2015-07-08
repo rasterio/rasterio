@@ -183,7 +183,7 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
                 transform = allmd['transform']
                 tags = allmd['tags']
 
-            if nodata:
+            if nodata is not None:
                 dtype = dst.dtypes[0]
                 if not in_dtype_range(nodata, dtype):
                     raise click.BadParameter(

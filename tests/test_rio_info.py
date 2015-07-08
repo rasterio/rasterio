@@ -224,6 +224,54 @@ def test_tags_callback(data):
 def test_edit_crs_like(data):
     runner = CliRunner()
 
+    # Set up the file to be edited.
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+        dst.nodata = 1.0
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 1.0
+
+    # The test.
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--crs', 'like'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32618'}
+        assert src.nodata == 1.0
+
+
+def test_edit_nodata_like(data):
+    runner = CliRunner()
+
+    # Set up the file to be edited.
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+        dst.nodata = 1.0
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 1.0
+
+    # The test.
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--nodata', 'like'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 0.0
+
+
+def test_edit_all_like(data):
+    runner = CliRunner()
+
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
         dst.crs = {'init': 'epsg:32617'}
@@ -236,30 +284,11 @@ def test_edit_crs_like(data):
 
     templatefile = 'tests/data/RGB.byte.tif'
     result = runner.invoke(info.edit, [
-        inputfile, '--like', templatefile, '--crs', 'like'])
-    assert result.exit_code == 0
-    with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
-        assert src.nodata == 1.0
-
-
-def test_edit_all_like(data):
-    runner = CliRunner()
-
-    inputfile = str(data.join('RGB.byte.tif'))
-    with rasterio.open(inputfile, 'r+') as dst:
-        dst.crs = {'init': 'epsg:32617'}
-
-    # Double check.
-    with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32617'}
-
-    templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(info.edit, [
         inputfile, '--like', templatefile, '--all'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
+        assert src.nodata == 0.0
 
 
 def test_env():
