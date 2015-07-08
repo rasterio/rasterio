@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Manage overviews of a dataset."""
 
 import logging
