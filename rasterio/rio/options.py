@@ -103,7 +103,7 @@ bidx_mult_opt = click.option(
 bounds_opt = click.option(
     '--bounds',
     nargs=4, type=float, default=None,
-    help='Output bounds: left, bottom, right, top.')
+    help='Output bounds: left bottom right top.')
 
 dimensions_opt = click.option(
     '--dimensions',

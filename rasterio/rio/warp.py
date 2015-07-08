@@ -53,13 +53,30 @@ def warp(
     be used for the output.  In this case --dst-crs, --bounds, --res, and
     --dimensions options are ignored.
 
+      rio warp input.tif output.tif --like template.tif
+
+    The output coordinate reference system may be either a PROJ.4 or EPSG:nnnn
+    string,
+
+      --dst-crs EPSG:4326
+      --dst-crs '+proj=longlat +ellps=WGS84 +datum=WGS84'
+
+    or a JSON text-encoded PROJ.4 object.
+      --dst-crs '{"proj": "utm", "zone": 18, ...}'
+
     If --dimensions are provided, --res and --bounds are ignored.  Resolution
-    is calculated based on the relationship between the source raster bounds
-    and dimensions, and may produce rectangular rather than square pixels.
+    is calculated based on the relationship between the raster bounds in the
+    target coordinate system and the dimensions, and may produce rectangular
+    rather than square pixels.
+
+      rio warp input.tif output.tif --dimensions 100 200 --dst-crs EPSG:4326
 
     If --bounds are provided, --res is required if --dst-crs is provided
     (defaults to source raster resolution otherwise).  Bounds are in the source
     coordinate reference system.
+
+      rio warp input.tif output.tif --bounds -78 22 -76 24 --dst-crs EPSG:4326
+        --res 0.1
     """
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
@@ -86,6 +103,12 @@ def warp(
                     dst_width = template_ds.width
 
             elif dst_crs:
+                try:
+                    dst_crs = crs.from_string(dst_crs)
+                except ValueError:
+                    raise click.BadParameter('invalid crs format',
+                                             param=dst_crs, param_hint=dst_crs)
+
                 if dimensions:
                     # Calculate resolution appropriate for dimensions in target
                     dst_width, dst_height = dimensions
@@ -110,7 +133,6 @@ def warp(
                     dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
 
                 else:
-                    dst_crs = crs.from_string(dst_crs)
                     dst_transform, dst_width, dst_height = calculate_default_transform(
                         src.crs, dst_crs, src.width, src.height, *src.bounds,
                         resolution=res)

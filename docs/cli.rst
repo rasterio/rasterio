@@ -326,7 +326,7 @@ raster.
 The resulting file will have an upper left coordinate determined by the bounds
 of the GeoJSON (in EPSG:4326, which is the default), with a
 pixel size of approximately 30 arc seconds.  Pixels whose center is within the
-polygon or that are selected by brezenhams line algorithm will be burned in
+polygon or that are selected by Bresenham's line algorithm will be burned in
 with a default value of 1.
 
 It is possible to rasterize into an existing raster and use an alternative
@@ -448,5 +448,47 @@ a raster dataset, do the following.
 
     $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst-crs tests/data/RGB.byte.tif --precision 2
     [192457.13, 2546667.68, 399086.97, 2765319.94]
+
+
+warp
+----
+
+New in 0.25
+
+The warp command warps (reprojects) a raster based on parameters that can be
+obtained from a template raster, or input directly.  The output is always
+overwritten.
+
+
+To copy coordinate reference system, transform, and dimensions from a template
+raster, do the following:
+
+.. code-block:: console
+
+    $ rio warp input.tif output.tif --like template.tif
+
+You can specify an output coordinate system using a PROJ.4 or EPSG:nnnn string,
+or a JSON text-encoded PROJ.4 object:
+
+.. code-block:: console
+
+    $ rio warp input.tif output.tif --dst-crs EPSG:4326
+
+    $ rio warp input.tif output.tif --dst-crs '+proj=longlat +ellps=WGS84 +datum=WGS84'
+
+You can also specify dimensions, which will automatically calculate appropriate
+resolution based on the relationship between the bounds in the target crs and
+these dimensions:
+
+.. code-block:: console
+
+    $ rio warp input.tif output.tif --dst-crs EPSG:4326 --dimensions 100 200
+
+Or provide output bounds (in source crs) and resolution:
+
+.. code-block:: console
+
+    $ rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 22 -76 24 --res 0.1
+
 
 Suggestions for other commands are welcome!
