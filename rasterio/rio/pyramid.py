@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 """Manage overviews of a dataset."""
 
 import logging
@@ -21,12 +21,13 @@ def build_handler(ctx, param, value):
             else:
                 value = [int(v) for v in value.split(',')]
         except Exception as exc:
-            raise click.BadParameter("must match 'n,n,n,…' or 'n^n..n'.")
+            raise click.BadParameter(u"must match 'n,n,n,…' or 'n^n..n'.")
     return value
+
 
 @click.command('pyramid', short_help="Construct overviews in an existing dataset.")
 @options.file_in_arg
-@click.option('--build', callback=build_handler, metavar="f1,f2,…|b^min..max",
+@click.option('--build', callback=build_handler, metavar=u"f1,f2,…|b^min..max",
               help="A sequence of decimation factors specied as "
                    "comma-separated list of numbers or a base and range of "
                    "exponents.")
