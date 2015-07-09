@@ -140,10 +140,11 @@ output_opt = click.option(
 
 resolution_opt = click.option(
     '-r', '--res',
-    nargs=2,
-    type=float,
-    default=None,
-    help="Output dataset resolution: pixel width, pixel height")
+    multiple=True, type=float, default=None,
+    help='Output dataset resolution in units of coordinate '
+         'reference system. Pixels assumed to be square if this option '
+         'is used once, otherwise use: '
+         '--res pixel_width --res pixel_height')
 
 creation_options = click.option(
     '--co', 'creation_options',

@@ -38,11 +38,18 @@ def merge(ctx, files, output, driver, bounds, res, nodata, creation_options):
     Geospatial bounds and resolution of a new output file in the
     units of the input file coordinate reference system may be provided
     and are otherwise taken from the first input file.
+
+    Note: --res changed from 2 parameters in 0.25.
+      --res 0.1 0.1  => --res 0.1 (square)
+      --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)
     """
     import numpy as np
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
+
+    if len(res) == 1:
+        res = (res[0], res[0])
 
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):

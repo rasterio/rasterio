@@ -2,6 +2,7 @@ import logging
 import pytest
 import subprocess
 import sys
+import json
 
 import rasterio
 from rasterio import crs
@@ -60,6 +61,16 @@ def test_write_3857(tmpdir):
     AUTHORITY["EPSG","3857"]]""" in info.decode('utf-8')
 
 
+def test_from_proj4_json():
+    json_str = '{"proj": "longlat", "ellps": "WGS84", "datum": "WGS84"}'
+    crs_dict = crs.from_string(json_str)
+    assert crs_dict == json.loads(json_str)
+
+    # Test with invalid JSON code
+    with pytest.raises(ValueError):
+        assert crs.from_string('{foo: bar}')
+
+
 def test_from_epsg():
     crs_dict = crs.from_epsg(4326)
     assert crs_dict['init'].lower() == 'epsg:4326'
@@ -67,6 +78,15 @@ def test_from_epsg():
     # Test with invalid EPSG code
     with pytest.raises(ValueError):
         assert crs.from_epsg(0)
+
+
+def test_from_epsg_string():
+    crs_dict = crs.from_string('epsg:4326')
+    assert crs_dict['init'].lower() == 'epsg:4326'
+
+    # Test with invalid EPSG code
+    with pytest.raises(ValueError):
+        assert crs.from_string('epsg:xyz')
 
 
 def test_bare_parameters():

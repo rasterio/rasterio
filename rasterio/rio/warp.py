@@ -23,7 +23,6 @@ logger = logging.getLogger('rio')
               help='Target coordinate reference system.  Default: EPSG:4326')
 @options.dimensions_opt
 @options.bounds_opt
-#TODO: flag for bounds in target
 @options.resolution_opt
 @click.option('--resampling', type=click.Choice(['nearest', 'bilinear', 'cubic',
                 'cubic_spline','lanczos', 'average', 'mode']),
@@ -76,7 +75,7 @@ def warp(
     coordinate reference system.
 
       rio warp input.tif output.tif --bounds -78 22 -76 24 --dst-crs EPSG:4326
-        --res 0.1 0.1
+        --res 0.1
     """
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
@@ -85,6 +84,9 @@ def warp(
     if not len(res):
         # Click sets this as an empty tuple if not provided
         res = None
+    else:
+        # Expand one value to two if needed
+        res = (res[0], res[0]) if len(res) == 1 else res
 
     with rasterio.drivers(CPL_DEBUG=verbosity > 2):
         with rasterio.open(input) as src:

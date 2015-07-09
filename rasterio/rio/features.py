@@ -551,6 +551,9 @@ def rasterize(
                             'pixel dimensions are required',
                             ctx, param=res, param_hint='--res')
 
+                    elif len(res) == 1:
+                        res = (res[0], res[0])
+
                     width = max(int(ceil((bounds[2] - bounds[0]) /
                                 float(res[0]))), 1)
                     height = max(int(ceil((bounds[3] - bounds[1]) /

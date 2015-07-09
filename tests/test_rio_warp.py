@@ -50,7 +50,7 @@ def test_warp_no_reproject_res(runner, tmpdir):
     srcname = 'tests/data/shade.tif'
     outputname = str(tmpdir.join('test.tif'))
     result = runner.invoke(warp.warp, [srcname, outputname,
-                                       '--res', 30, 30])
+                                       '--res', 30])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
 
@@ -86,7 +86,7 @@ def test_warp_no_reproject_bounds_res(runner, tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     out_bounds = [-11850000, 4810000, -11849000, 4812000]
     result = runner.invoke(warp.warp,[srcname, outputname,
-                                      '--res', 30, 30,
+                                      '--res', 30,
                                       '--bounds', ] + out_bounds)
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -118,6 +118,14 @@ def test_warp_reproject_dst_crs(runner, tmpdir):
                                   [-78.95864996545055, 23.564424693996177,
                                    -76.57259451863895, 25.550873767433984])
 
+def test_warp_reproject_dst_crs_error(runner, tmpdir):
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(warp.warp, [srcname, outputname,
+                                       '--dst-crs', '{foo: bar}'])
+    assert result.exit_code == 2
+    assert 'invalid crs format' in result.output
+
 
 def test_warp_reproject_dst_crs_proj4(runner, tmpdir):
     proj4 = '+proj=longlat +ellps=WGS84 +datum=WGS84'
@@ -137,7 +145,7 @@ def test_warp_reproject_res(runner, tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     result = runner.invoke(warp.warp, [srcname, outputname,
                                        '--dst-crs', 'EPSG:4326',
-                                       '--res', 0.01, 0.01])
+                                       '--res', 0.01])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
 
@@ -182,7 +190,7 @@ def test_warp_reproject_bounds_res(runner, tmpdir):
     out_bounds = [-11850000, 4810000, -11849000, 4812000]
     result = runner.invoke(warp.warp, [srcname, outputname,
                                        '--dst-crs', 'EPSG:4326',
-                                       '--res', 0.001, 0.001, '--bounds', ]
+                                       '--res', 0.001, '--bounds', ]
                                        + out_bounds)
     assert result.exit_code == 0
     assert os.path.exists(outputname)
