@@ -2,7 +2,10 @@ import json
 import logging
 import sys
 
+import click
+from click import Context
 from click.testing import CliRunner
+import pytest
 
 import rasterio
 from rasterio.rio import info
@@ -111,6 +114,183 @@ def test_edit_tags(data):
         assert src.tags()['lol'] == '1'
         assert src.tags()['wut'] == '2'
 
+
+class MockContext:
+
+    def __init__(self):
+        self.obj = {}
+
+
+class MockOption:
+
+    def __init__(self, name):
+        self.name = name
+
+
+def test_like_dataset_callback(data):
+    ctx = MockContext()
+    info.like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
+    assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+
+
+def test_all_callback_pass(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.all_handler(ctx, None, None) == None
+
+
+def test_all_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.all_handler(ctx, None, True) == {'transform': 'foo'}
+
+
+def test_all_callback_None(data):
+    ctx = MockContext()
+    assert info.all_handler(ctx, None, None) is None
+
+
+def test_transform_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.transform_handler(ctx, MockOption('transform'), None) is None
+
+
+def test_transform_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    with pytest.raises(click.BadParameter):
+        info.transform_handler(ctx, MockOption('transform'), '?')
+
+
+def test_transform_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'transform': 'foo'}
+    assert info.transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
+
+
+def test_nodata_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': 'lolwut'}
+    with pytest.raises(click.BadParameter):
+        info.nodata_handler(ctx, MockOption('nodata'), 'lolwut')
+
+
+def test_nodata_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': -1}
+    assert info.nodata_handler(ctx, MockOption('nodata'), None) is None
+
+
+def test_nodata_callback_0(data):
+    ctx = MockContext()
+    assert info.nodata_handler(ctx, MockOption('nodata'), '0') == 0.0
+
+
+def test_nodata_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': -1}
+    assert info.nodata_handler(ctx, MockOption('nodata'), 'like') == -1.0
+
+
+def test_crs_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'crs': 'foo'}
+    assert info.crs_handler(ctx, MockOption('crs'), None) is None
+
+
+def test_crs_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'crs': 'foo'}
+    assert info.crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
+
+
+def test_tags_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
+    with pytest.raises(click.BadParameter):
+        info.tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
+
+
+def test_tags_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
+    assert info.tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
+
+
+def test_edit_crs_like(data):
+    runner = CliRunner()
+
+    # Set up the file to be edited.
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+        dst.nodata = 1.0
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 1.0
+
+    # The test.
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--crs', 'like'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32618'}
+        assert src.nodata == 1.0
+
+
+def test_edit_nodata_like(data):
+    runner = CliRunner()
+
+    # Set up the file to be edited.
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+        dst.nodata = 1.0
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 1.0
+
+    # The test.
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--nodata', 'like'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 0.0
+
+
+def test_edit_all_like(data):
+    runner = CliRunner()
+
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as dst:
+        dst.crs = {'init': 'epsg:32617'}
+        dst.nodata = 1.0
+
+    # Double check.
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32617'}
+        assert src.nodata == 1.0
+
+    templatefile = 'tests/data/RGB.byte.tif'
+    result = runner.invoke(info.edit, [
+        inputfile, '--like', templatefile, '--all'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == {'init': 'epsg:32618'}
+        assert src.nodata == 0.0
+
+
 def test_env():
     runner = CliRunner()
     result = runner.invoke(main_group, [
@@ -213,7 +393,8 @@ def test_mo_info():
 
 def test_info_stats():
     runner = CliRunner()
-    result = runner.invoke(info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
+    result = runner.invoke(
+        info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
     assert result.exit_code == 0
     assert '"max": 255.0' in result.output
     assert '"min": 1.0' in result.output
@@ -222,7 +403,8 @@ def test_info_stats():
 
 def test_info_stats_only():
     runner = CliRunner()
-    result = runner.invoke(info.info, ['tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
+    result = runner.invoke(
+        info.info, ['tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.startswith('1.000000 255.000000 66.02')
 
@@ -288,8 +470,8 @@ def test_transform_point_multi():
         '--precision', '2'
     ], "[-78.0, 23.0]\n[-78.0, 23.0]", catch_exceptions=False)
     assert result.exit_code == 0
-    assert result.output.strip() == '[192457.13, 2546667.68]\n[192457.13, 2546667.68]'
-
+    assert result.output.strip() == (
+        '[192457.13, 2546667.68]\n[192457.13, 2546667.68]')
 
 
 def test_bounds_defaults():
@@ -370,7 +552,8 @@ def test_bounds_obj_bbox_mercator():
         '--precision', '3'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[-8782900.033, 2700489.278, -8527010.472, 2943560.235]'
+    assert result.output.strip() == (
+        '[-8782900.033, 2700489.278, -8527010.472, 2943560.235]')
 
 
 def test_bounds_obj_bbox_projected():
@@ -383,7 +566,8 @@ def test_bounds_obj_bbox_projected():
         '--precision', '3'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[101985.0, 2611485.0, 339315.0, 2826915.0]'
+    assert result.output.strip() == (
+        '[101985.0, 2611485.0, 339315.0, 2826915.0]')
 
 
 def test_bounds_crs_bbox():
@@ -396,7 +580,8 @@ def test_bounds_crs_bbox():
         '--precision', '3'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[101985.0, 2611485.0, 339315.0, 2826915.0]'
+    assert result.output.strip() == (
+        '[101985.0, 2611485.0, 339315.0, 2826915.0]')
 
 
 def test_bounds_seq():
@@ -419,7 +604,8 @@ def test_bounds_seq():
         '--precision', '2'
     ])
     assert result.exit_code == 0
-    assert result.output == '[-78.9, 23.56, -76.6, 25.55]\n[-78.9, 23.56, -76.6, 25.55]\n'
+    assert result.output == (
+        '[-78.9, 23.56, -76.6, 25.55]\n[-78.9, 23.56, -76.6, 25.55]\n')
     assert '\x1e' not in result.output
 
 
@@ -435,7 +621,8 @@ def test_bounds_seq_rs():
         '--precision', '2'
     ])
     assert result.exit_code == 0
-    assert result.output == '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n'
+    assert result.output == (
+        '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n')
 
 
 def test_insp():
