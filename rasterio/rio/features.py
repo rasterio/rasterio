@@ -259,10 +259,14 @@ def shapes(
                 msk = None
 
                 # Adjust transforms.
-                if sampling == 1:
-                    transform = src.affine
-                else:
-                    transform = src.affine * Affine.scale(float(sampling))
+                transform = src.affine
+                if sampling > 1:
+                    # Decimation of the raster produces a georeferencing
+                    # shift that we correct with a translation.
+                    transform *= Affine.translation(
+                                    src.width%sampling, src.height%sampling)
+                    # And follow by scaling.
+                    transform *= Affine.scale(float(sampling))
 
                 # Most of the time, we'll use the valid data mask.
                 # We skip reading it if we're extracting every possible
