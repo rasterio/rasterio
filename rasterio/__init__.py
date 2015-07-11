@@ -89,9 +89,13 @@ def open(
         raise TypeError("invalid mode: %r" % mode)
     if driver and not isinstance(driver, string_types):
         raise TypeError("invalid driver: %r" % driver)
+
     if transform:
         transform = guard_transform(transform)
-    
+    elif 'affine' in kwargs:
+        affine = kwargs.pop('affine')
+        transform = guard_transform(affine)
+
     if mode == 'r':
         from rasterio._io import RasterReader
         s = RasterReader(path)
