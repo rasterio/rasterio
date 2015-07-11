@@ -20,16 +20,18 @@ logger = logging.getLogger('rio')
 @format_opt
 @options.like_file_opt
 @click.option('--dst-crs', default=None,
-              help='Target coordinate reference system.  Default: EPSG:4326')
+              help='Target coordinate reference system.')
 @options.dimensions_opt
 @options.bounds_opt
 @options.resolution_opt
 @click.option('--resampling', type=click.Choice(['nearest', 'bilinear', 'cubic',
                 'cubic_spline','lanczos', 'average', 'mode']),
-              default='nearest', help='Resampling method')
+              default='nearest', help='Resampling method (default: nearest).')
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
+@options.creation_options
 @click.pass_context
+# TODO: add NODATA options and support for existing output rasters
 def warp(
         ctx,
         input,
@@ -41,41 +43,49 @@ def warp(
         bounds,
         res,
         resampling,
-        threads):
+        threads,
+        creation_options):
     """
     Warp a raster dataset.
 
-    The output is always overwritten.
+    Currently, the output is always overwritten.  This will be changed in a
+    later version.
 
     If a template raster is provided using the --like option, the coordinate
     reference system, affine transform, and dimensions of that raster will
     be used for the output.  In this case --dst-crs, --bounds, --res, and
     --dimensions options are ignored.
 
-      rio warp input.tif output.tif --like template.tif
+    \b
+        $ rio warp input.tif output.tif --like template.tif
 
     The output coordinate reference system may be either a PROJ.4 or EPSG:nnnn
     string,
 
-      --dst-crs EPSG:4326
-      --dst-crs '+proj=longlat +ellps=WGS84 +datum=WGS84'
+    \b
+        --dst-crs EPSG:4326
+        --dst-crs '+proj=longlat +ellps=WGS84 +datum=WGS84'
 
     or a JSON text-encoded PROJ.4 object.
-      --dst-crs '{"proj": "utm", "zone": 18, ...}'
+
+    \b
+        --dst-crs '{"proj": "utm", "zone": 18, ...}'
 
     If --dimensions are provided, --res and --bounds are ignored.  Resolution
     is calculated based on the relationship between the raster bounds in the
     target coordinate system and the dimensions, and may produce rectangular
     rather than square pixels.
 
-      rio warp input.tif output.tif --dimensions 100 200 --dst-crs EPSG:4326
+    \b
+        $ rio warp input.tif output.tif --dimensions 100 200 --dst-crs EPSG:4326
 
     If --bounds are provided, --res is required if --dst-crs is provided
     (defaults to source raster resolution otherwise).  Bounds are in the source
     coordinate reference system.
 
-      rio warp input.tif output.tif --bounds -78 22 -76 24 --dst-crs EPSG:4326
-        --res 0.1
+    \b
+        $ rio warp input.tif output.tif --bounds -78 22 -76 24 --dst-crs \\
+          EPSG:4326 --res 0.1
     """
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
@@ -180,9 +190,10 @@ def warp(
                 'height': dst_height
             })
 
+            out_kwargs.update(**creation_options)
+
             with rasterio.open(output, 'w', **out_kwargs) as dst:
                 for i in range(1, src.count + 1):
-                    click.echo('Warping band {0}...'.format(i))
 
                     reproject(
                         source=rasterio.band(src, i),

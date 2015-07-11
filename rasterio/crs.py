@@ -10,6 +10,7 @@
 #   {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
 #
 
+import json
 from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
 from rasterio.five import string_types
 
