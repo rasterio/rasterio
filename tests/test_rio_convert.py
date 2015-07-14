@@ -5,7 +5,7 @@ import click
 from click.testing import CliRunner
 
 import rasterio
-from rasterio.rio.translate import convert
+from rasterio.rio.convert import convert
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
