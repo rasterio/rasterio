@@ -591,8 +591,8 @@ cdef class DatasetReader(object):
         factors = []
         for i in range(num_overviews):
             hovband = _gdal.GDALGetOverview(hband, i)
+            # Compute the overview factor only from the xsize (width).
             xsize = _gdal.GDALGetRasterBandXSize(hovband)
-            ysize = _gdal.GDALGetRasterBandYSize(hovband)
             factors.append(int(round(float(self.width)/float(xsize))))
         return factors
 

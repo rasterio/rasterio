@@ -1765,14 +1765,14 @@ cdef class RasterUpdater(RasterReader):
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
 
-        with cpl_errs:
-            resampling_b = resampling.value.encode('utf-8')
-            resampling_c = resampling_b
-            err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
-                len(factors), factors_c, 0, NULL, NULL, NULL)
+            with cpl_errs:
+                resampling_b = resampling.value.encode('utf-8')
+                resampling_c = resampling_b
+                err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
+                    len(factors), factors_c, 0, NULL, NULL, NULL)
 
-        if factors_c != NULL:
-            _gdal.CPLFree(factors_c)
+            if factors_c != NULL:
+                _gdal.CPLFree(factors_c)
 
 
 cdef class InMemoryRaster:

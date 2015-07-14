@@ -2,6 +2,7 @@
 """Manage overviews of a dataset."""
 
 import logging
+import operator
 
 import click
 
@@ -25,7 +26,7 @@ def build_handler(ctx, param, value):
     return value
 
 
-@click.command('pyramid', short_help="Construct overviews in an existing dataset.")
+@click.command('overview', short_help="Construct overviews in an existing dataset.")
 @options.file_in_arg
 @click.option('--build', callback=build_handler, metavar=u"f1,f2,…|b^min..max",
               help="A sequence of decimation factors specied as "
@@ -33,11 +34,13 @@ def build_handler(ctx, param, value):
                    "exponents.")
 @click.option('--ls', help="Print the overviews for each band.",
               is_flag=True, default=False)
+@click.option('--rebuild', help="Reconstruct existing overviews.",
+              is_flag=True, default=False)
 @click.option('--resampling', help="Resampling algorithm.",
               type=click.Choice([item.name for item in Resampling]),
               default='nearest', show_default=True)
 @click.pass_context
-def pyramid(ctx, input, build, ls, resampling):
+def overview(ctx, input, build, ls, rebuild, resampling):
     """Construct overviews in an existing dataset.
 
     A pyramid of overviews computed once and stored in the dataset can
@@ -69,9 +72,29 @@ def pyramid(ctx, input, build, ls, resampling):
         with rasterio.open(input, 'r+') as dst:
 
             if ls:
+                resampling_method = dst.tags(
+                    ns='rio_overview').get('resampling') or 'unknown'
+
+                click.echo("Overview factors:")
                 for idx in dst.indexes:
-                    listing = ','.join([str(v) for v in dst.overviews(idx)])
-                    click.echo(
-                        "Band %d: %s" % (idx, listing))
+                    click.echo("  Band %d: %s (method: '%s')" % (
+                        idx, dst.overviews(idx) or 'None', resampling_method))
+
+            elif rebuild:
+                # Build the same overviews for all bands.
+                factors = reduce(
+                    operator.or_,
+                    [set(dst.overviews(i)) for i in dst.indexes])
+
+                # Attempt to recover the resampling method from dataset tags.
+                resampling_method = dst.tags(
+                    ns='rio_overview').get('resampling') or resampling
+
+                dst.build_overviews(
+                    list(factors), Resampling[resampling_method])
+
             elif build:
                 dst.build_overviews(build, Resampling[resampling])
+
+                # Save the resampling method to a tag.
+                dst.update_tags(ns='rio_overview', resampling=resampling)
