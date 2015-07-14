@@ -10,6 +10,7 @@
 #   {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
 #
 
+import json
 from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
 from rasterio.five import string_types
 
@@ -44,7 +45,22 @@ def from_string(prjs):
 
     Bare parameters like "+no_defs" are given a value of ``True``. All keys
     are checked against the ``all_proj_keys`` list.
+
+    EPSG:nnnn is allowed.
+
+    JSON text-encoded strings are allowed.
     """
+
+    if '{' in prjs:
+        # may be json, try to decode it
+        try:
+            return json.loads(prjs, strict=False)
+        except ValueError:
+            raise ValueError('crs appears to be JSON but is not valid')
+
+    if 'EPSG:' in prjs.upper():
+        return from_epsg(prjs.split(':')[1])
+
     parts = [o.lstrip('+') for o in prjs.strip().split()]
 
     def parse(v):

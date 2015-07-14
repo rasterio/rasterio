@@ -103,7 +103,12 @@ bidx_mult_opt = click.option(
 bounds_opt = click.option(
     '--bounds',
     nargs=4, type=float, default=None,
-    help='Output bounds: left, bottom, right, top.')
+    help='Output bounds: left bottom right top.')
+
+dimensions_opt = click.option(
+    '--dimensions',
+    nargs=2, type=int, default=None,
+    help='Output dataset width, height in number of pixels.')
 
 dtype_opt = click.option(
     '-t', '--dtype',
@@ -133,7 +138,6 @@ output_opt = click.option(
     help="Path to output file (optional alternative to a positional arg "
          "for some commands).")
 
-
 resolution_opt = click.option(
     '-r', '--res',
     multiple=True, type=float, default=None,
@@ -142,9 +146,11 @@ resolution_opt = click.option(
          'is used once, otherwise use: '
          '--res pixel_width --res pixel_height')
 
-
 creation_options = click.option(
-    '--co', 'creation_options', metavar='NAME=VALUE', multiple=True, callback=_cb_key_val,
-    help="Driver specific creation options.  See the documentation for the selected output "
-         "driver for more information."
-)
+    '--co', 'creation_options',
+    metavar='NAME=VALUE',
+    multiple=True,
+    callback=_cb_key_val,
+    help="Driver specific creation options."
+         "See the documentation for the selected output driver for "
+         "more information.")

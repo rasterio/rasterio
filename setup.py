@@ -244,6 +244,7 @@ setup_args = dict(
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.features:shapes
         stack=rasterio.rio.bands:stack
+        warp=rasterio.rio.warp:warp
         transform=rasterio.rio.info:transform
     ''',
     include_package_data=True,

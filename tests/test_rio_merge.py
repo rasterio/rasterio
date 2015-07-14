@@ -329,3 +329,23 @@ def test_merge_tiny_output_opt(tiffs):
         assert (data[0][0:2,3] == 90).all()
         assert data[0][2][1] == 60
         assert data[0][3][0] == 40
+
+
+def test_merge_tiny_res(tiffs):
+    outputname = str(tiffs.join('merged.tif'))
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname, '--res', 2])
+    assert result.exit_code == 0
+
+    # Output should be
+    # [[[120  90]
+    #   [  0   0]]]
+
+    with rasterio.open(outputname) as src:
+        data = src.read()
+        print(data)
+        assert data[0, 0, 0] == 120
+        assert data[0, 0, 1] == 90
+        assert (data[0, 1, 0:1] == 0).all()
