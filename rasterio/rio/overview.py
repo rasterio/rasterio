@@ -1,6 +1,7 @@
 # coding: utf-8
 """Manage overviews of a dataset."""
 
+from functools import reduce
 import logging
 import operator
 
