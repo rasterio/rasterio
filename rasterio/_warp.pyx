@@ -8,6 +8,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
+from rasterio.errors import RasterioDriverRegistrationError
 
 
 cdef extern from "gdalwarper.h" nogil:
@@ -259,7 +260,10 @@ def _reproject(
 
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
-            raise ValueError("NULL driver for 'MEM'")
+            raise RasterioDriverRegistrationError(
+                "'MEM' driver not found. Check that this call is contained "
+                "in a `with rasterio.drivers()` or `with rasterio.open()` "
+                "block.")
 
         hdsin = _gdal.GDALCreate(
                     hrdriver, "input", cols, rows, 
@@ -301,9 +305,14 @@ def _reproject(
             destination = destination.reshape(1, *destination.shape)
         if destination.shape[0] != src_count:
             raise ValueError("Destination's shape is invalid")
+
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
-            raise ValueError("NULL driver for 'MEM'")
+            raise RasterioDriverRegistrationError(
+                "'MEM' driver not found. Check that this call is contained "
+                "in a `with rasterio.drivers()` or `with rasterio.open()` "
+                "block.")
+
         _, rows, cols = destination.shape
         hdsout = _gdal.GDALCreate(
                         hrdriver, "output", cols, rows, src_count, 
