@@ -339,7 +339,7 @@ def insp(ctx, input, mode, interpreter):
             with rasterio.open(input, mode) as src:
                 rasterio.tool.main(
                     'Rasterio %s Interactive Inspector (Python %s)\n'
-                    'Type "src.meta", "src.read_band(1)", or "help(src)" '
+                    'Type "src.meta", "src.read(1)", or "help(src)" '
                     'for more information.' % (
                         rasterio.__version__,
                         '.'.join(map(str, sys.version_info[:3]))),
