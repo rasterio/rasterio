@@ -64,7 +64,13 @@ cdef extern from "gdal.h" nogil:
     int GDALGetRasterXSize(void *ds)
     int GDALGetRasterYSize(void *ds)
     int GDALGetRasterCount(void *ds)
+
     void * GDALGetRasterBand(void *ds, int num)
+    void * GDALGetOverview(void *hband, int num)
+
+    int GDALGetRasterBandXSize(void *hband)
+    int GDALGetRasterBandYSize(void *hband)
+
     int GDALSetGeoTransform	(void *ds, double *transform)
     int GDALSetProjection(void *ds, const char *wkt)
 
@@ -124,6 +130,9 @@ cdef extern from "gdal.h" nogil:
     int GDALGetMaskFlags (void *hBand)
     void *GDALGetMaskBand (void *hBand)
     int GDALCreateMaskBand (void *hDS, int flags)
+
+    int GDALGetOverviewCount (void *hBand)
+    int GDALBuildOverviews (void *hDS, const char *resampling, int nOverviews, int *overviews, int nBands, int *bands, void *progress_func, void *progress_data)
 
 cdef extern from "gdalwarper.h":
 
