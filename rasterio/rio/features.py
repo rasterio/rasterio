@@ -192,10 +192,12 @@ def mask(
 @click.option('--as-mask/--not-as-mask', default=False,
               help="Interpret a band as a mask and output only one class of "
                    "valid data shapes.")
+@click.option('--color', metavar='#rrggbb', help="Feature stroke/fill color")
 @click.pass_context
 def shapes(
         ctx, input, output, precision, indent, compact, projection, sequence,
-        use_rs, geojson_type, band, bandidx, sampling, with_nodata, as_mask):
+        use_rs, geojson_type, band, bandidx, sampling, with_nodata, as_mask,
+        color):
     """Extracts shapes from one band or mask of a dataset and writes
     them out as GeoJSON. Unless otherwise specified, the shapes will be
     transformed to WGS 84 coordinates.
@@ -329,6 +331,14 @@ def shapes(
                 if not with_nodata:
                     kwargs['mask'] = msk
 
+                feature_base = {
+                    'type': 'Feature',
+                    'properties': {
+                        'filename': os.path.basename(src.name)}}
+                if color:
+                    feature_base['properties']['fill'] = color
+                    feature_base['properties']['stroke'] = color
+
                 # Yield GeoJSON features.
                 for g, i in rasterio.features.shapes(img, **kwargs):
                     if projection == 'geographic':
@@ -336,15 +346,10 @@ def shapes(
                             src.crs, 'EPSG:4326', g,
                             antimeridian_cutting=True, precision=precision)
                     xs, ys = zip(*coords(g))
-                    yield {
-                        'type': 'Feature',
-                        'id': str(i),
-                        'properties': {
-                            'val': i, 'filename': os.path.basename(src.name)
-                        },
-                        'bbox': [min(xs), min(ys), max(xs), max(ys)],
-                        'geometry': g
-                    }
+                    ftr = feature_base.copy()
+                    ftr.update(id=str(i), bbox=[min(xs), min(ys), max(xs), max(ys)], geometry=g)
+                    ftr['properties'].update(val=i)
+                    yield ftr
 
     if not sequence:
         geojson_type = 'collection'

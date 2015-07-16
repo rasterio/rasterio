@@ -349,6 +349,14 @@ def test_shapes_band1_as_mask(runner):
     assert result.output.count('"Feature"') == 9
 
 
+def test_shapes_color(runner):
+    result = runner.invoke(features.shapes, ['tests/data/RGB.byte.tif', '--mask', '--color', '#999999'])
+    assert result.exit_code == 0
+    assert result.output.count('"FeatureCollection"') == 1
+    assert result.output.count('"Feature"') == 7
+    assert result.output.count('#999999') == 14
+
+
 def test_rasterize_err(tmpdir, runner):
     output = str(tmpdir.join('test.tif'))
     # Test invalid stdin
