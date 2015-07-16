@@ -598,6 +598,20 @@ cdef class DatasetReader(object):
     def kwds(self):
         return self.tags(ns='rio_creation_kwds')
 
+
+    # Overviews.
+    def overviews(self, bidx):
+        cdef void *hovband = NULL
+        cdef void *hband = self.band(bidx)
+        num_overviews = _gdal.GDALGetOverviewCount(hband)
+        factors = []
+        for i in range(num_overviews):
+            hovband = _gdal.GDALGetOverview(hband, i)
+            # Compute the overview factor only from the xsize (width).
+            xsize = _gdal.GDALGetRasterBandXSize(hovband)
+            factors.append(int(round(float(self.width)/float(xsize))))
+        return factors
+
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
 # ((row_start, row_stop), (col_start, col_stop))

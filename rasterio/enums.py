@@ -1,5 +1,6 @@
 
-from enum import IntEnum
+from enum import Enum, IntEnum
+
 
 class ColorInterp(IntEnum):
     undefined=0
@@ -17,3 +18,13 @@ class ColorInterp(IntEnum):
     magenta=11
     yellow=12
     black=13
+
+
+class Resampling(Enum):
+    nearest='NEAREST'
+    gauss='GAUSS'
+    cubic='CUBIC'
+    average='AVERAGE',
+    mode='MODE'
+    average_magphase='AVERAGE_MAGPHASE'
+    none='NONE'

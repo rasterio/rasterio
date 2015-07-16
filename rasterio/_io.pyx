@@ -20,7 +20,7 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, Resampling
 from rasterio.sample import sample_gen
 
 
@@ -1749,7 +1749,31 @@ cdef class RasterUpdater(RasterReader):
         else:
             retval = io_ubyte(
                 hmask, 1, xoff, yoff, width, height, mask)
-        
+
+    def build_overviews(self, factors, resampling=Resampling.nearest):
+        """Build overviews at one or more decimation factors for all
+        bands of the dataset."""
+        cdef int *factors_c = NULL
+        cdef const char *resampling_c = NULL
+
+        if self._hds == NULL:
+            raise ValueError("can't write closed raster file")
+
+        # Allocate arrays.
+        if factors:
+            factors_c = <int *>_gdal.CPLMalloc(len(factors)*sizeof(int))
+            for i, factor in enumerate(factors):
+                factors_c[i] = factor
+
+            with cpl_errs:
+                resampling_b = resampling.value.encode('utf-8')
+                resampling_c = resampling_b
+                err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
+                    len(factors), factors_c, 0, NULL, NULL, NULL)
+
+            if factors_c != NULL:
+                _gdal.CPLFree(factors_c)
+
 
 cdef class InMemoryRaster:
     """
