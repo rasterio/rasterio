@@ -116,7 +116,7 @@ dtype_opt = click.option(
         'ubyte', 'uint8', 'uint16', 'int16', 'uint32', 'int32',
         'float32', 'float64']),
     default=None,
-    help="Output data type (default: float64).")
+    help="Output data type.")
 
 like_file_opt = click.option(
     '--like',
