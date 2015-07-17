@@ -61,11 +61,15 @@ def convert(
     logger = logging.getLogger('rio')
 
     with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+
         outputfile, files = resolve_inout(files=files, output=output)
         inputfile = files[0]
 
         with rasterio.open(inputfile) as src:
-            profile = src.meta
+
+            # Use the input file's profile, updated by CLI
+            # options, as the profile for the output file.
+            profile = src.profile
 
             if 'affine' in profile:
                 profile['transform'] = profile.pop('affine')
@@ -77,7 +81,6 @@ def convert(
                 profile['dtype'] = dtype
             dst_dtype = profile['dtype']
 
-            # Update profile with command line creation options.
             profile.update(**creation_options)
 
             with rasterio.open(outputfile, 'w', **profile) as dst:
@@ -85,15 +88,18 @@ def convert(
                 data = src.read()
 
                 if scale_ratio:
-                    # Add a very small epsilon to 
-                    data = data.astype('float64', casting='unsafe')
+                    # Cast to float64 before multiplying.
+                    data = data.astype('float64', casting='unsafe', copy=False)
                     np.multiply(
                         data, scale_ratio, out=data, casting='unsafe')
 
                 if scale_offset:
+                    # My understanding of copy=False is that this is a
+                    # no-op if the array was cast for multiplication.
+                    data = data.astype('float64', casting='unsafe', copy=False)
                     np.add(
                         data, scale_offset, out=data, casting='unsafe')
 
+                # Cast to the output dtype and write.
                 result = data.astype(dst_dtype, casting='unsafe', copy=False)
-
                 dst.write(result)
