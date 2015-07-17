@@ -5,7 +5,7 @@ Rasterio's command line interface is a program named "rio".
 
 .. code-block:: console
 
-    $ rio
+    $ rio --help
     Usage: rio [OPTIONS] COMMAND [ARGS]...
 
       Rasterio command line interface.
@@ -19,19 +19,22 @@ Rasterio's command line interface is a program named "rio".
     Commands:
       bounds     Write bounding boxes to stdout as GeoJSON.
       calc       Raster data calculator.
+      convert    Copy and convert raster dataset.
       edit-info  Edit dataset metadata.
       env        Print information about the rio environment.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
       mask       Mask in raster using features.
       merge      Merge a stack of raster datasets.
+      overview   Construct overviews in an existing dataset.
       rasterize  Rasterize features.
       sample     Sample a dataset.
       shapes     Write shapes extracted from bands or masks.
       stack      Stack a number of bands into a multiband dataset.
       transform  Transform coordinates.
+      warp       Warp a raster dataset.
 
-It is developed using `Click <http://click.pocoo.org/3/>`__.
+It is developed using `Click <http://click.pocoo.org/>`__.
 
 Commands are shown below. See ``--help`` of individual commands for more
 details.
