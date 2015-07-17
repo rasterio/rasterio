@@ -385,8 +385,8 @@ cdef class DatasetReader(object):
     def window(self, left, bottom, right, top, boundless=False):
         """Returns the window corresponding to the world bounding box.
         If boundless is False, window is limited to extent of this dataset."""
-
-        window = tuple(zip(self.index(left, top), self.index(right, bottom)))
+        EPS = 1.0e-8
+        window = tuple(zip(self.index(left + EPS, top - EPS), self.index(right + EPS, bottom - EPS)))
         if boundless:
             return window
         else:
