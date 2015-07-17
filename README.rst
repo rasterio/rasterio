@@ -21,30 +21,29 @@ Example
 
 Here's a simple example of the basic features rasterio provides. Three bands
 are read from an image and summed to produce something like a panchromatic
-band.  This new band is then written to a new single band TIFF. 
+band.  This new band is then written to a new single band TIFF.
 
 .. code-block:: python
 
     import numpy
     import rasterio
     import subprocess
-    
+
     # Register GDAL format drivers and configuration options with a
     # context manager.
-    
-    with rasterio.drivers(CPL_DEBUG=True):
-        
+    with rasterio.drivers():
+
         # Read raster bands directly to Numpy arrays.
         #
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            b, g, r = src.read()
-        
+            r, g, b = src.read()
+
         # Combine arrays in place. Expecting that the sum will
         # temporarily exceed the 8-bit integer range, initialize it as
-        # 16-bit. Adding other arrays to it in-place converts those
-        # arrays "up" and preserves the type of the total array.
-
-        total = numpy.zeros(r.shape, dtype=rasterio.uint16)
+        # a 64-bit float (the numpy default) array. Adding other
+        # arrays to it in-place converts those arrays "up" and
+        # preserves the type of the total array.
+        total = numpy.zeros(r.shape)
         for band in r, g, b:
             total += band
         total /= 3
@@ -53,35 +52,23 @@ band.  This new band is then written to a new single band TIFF.
         # the new file's profile, we start with the meta attributes of
         # the source file, but then change the band count to 1, set the
         # dtype to uint8, and specify LZW compression.
-
-        profile = src.meta
+        profile = src.profile
         profile.update(
             dtype=rasterio.uint8,
             count=1,
             compress='lzw')
-        
+
         with rasterio.open('example-total.tif', 'w', **profile) as dst:
-            dst.write_band(1, total.astype(rasterio.uint8))
+            dst.write(total.astype(rasterio.uint8), 1)
 
     # At the end of the ``with rasterio.drivers()`` block, context
     # manager exits and all drivers are de-registered.
 
-    # Dump out gdalinfo's report card and open the image.
-    
-    info = subprocess.check_output(
-        ['gdalinfo', '-stats', 'example-total.tif'])
-    print(info)
-    subprocess.call(['open', 'example-total.tif'])
+The output:
 
 .. image:: http://farm6.staticflickr.com/5501/11393054644_74f54484d9_z_d.jpg
    :width: 640
    :height: 581
-
-The rasterio.drivers() function and context manager are new in 0.5. The example
-above shows the way to use it to register and de-register drivers in
-a deterministic and efficient way. Code written for rasterio 0.4 will continue
-to work: opened raster datasets may manage the global driver registry if no
-other manager is present.
 
 API Overview
 ============
@@ -89,9 +76,8 @@ API Overview
 Simple access is provided to properties of a geospatial raster file.
 
 .. code-block:: python
-    
-    with rasterio.drivers():
 
+    with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             print(src.width, src.height)
             print(src.crs)
@@ -107,18 +93,17 @@ Simple access is provided to properties of a geospatial raster file.
     # 3
     # [1, 2, 3]
 
-Rasterio also affords conversion of GeoTIFFs to other formats.
+A dataset also provides methods for getting extended array slices given
+georeferenced coordinates and vice versa.
+
 
 .. code-block:: python
     
     with rasterio.drivers():
-
-        rasterio.copy(
-            'example-total.tif',
-            'example-total.jpg', 
-            driver='JPEG')
-    
-    subprocess.call(['open', 'example-total.jpg'])
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            print src.window(**src.window_bounds(((100, 200), (100, 200))))
+    # Output:
+    # ((100, 200), (100, 200))
 
 Rasterio CLI
 ============
@@ -180,7 +165,7 @@ click), enum34, numpy.
 Development also requires (see requirements-dev.txt) Cython and other packages.
 
 Installing from binaries
----------------------------------------
+------------------------
 
 OS X
 ----
@@ -201,11 +186,13 @@ release.
 Windows
 -------
 
-Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are available from his website.
+Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are
+available from his website.
 
 To install rasterio, simply download both binaries for your system (`rasterio
 <http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like this from the downloads folder:
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like
+this from the downloads folder:
 
 .. code-block:: console
 

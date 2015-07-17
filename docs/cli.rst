@@ -133,6 +133,41 @@ efficiently in Python.
 Please see `calc.rst <calc.rst>`__ for more details.
 
 
+convert
+-------
+
+New in 0.25
+
+Like ``gdal_translate``, rio-convert copies and converts raster datasets to
+other data types and formats. 
+
+Data values may be linearly scaled when copying by using the ``--scale-ratio``
+and ``--scale-offset`` options. Destination raster values are calculated as
+
+.. code-block:: python
+
+    dst = scale_ratio * src + scale_offset
+
+For example, to scale uint16 data with an actual range of 0-4095 to 0-255
+as uint8:
+
+.. code-block:: console
+
+    $ rio convert in16.tif out8.tif --dtype uint8 --scale-ratio 0.0625
+
+Format specific creation options may also be passed using --co. To tile a
+new GeoTIFF output file, add the following.
+
+.. code-block:: console
+
+    --co tiled=true --co blockxsize=256 --co blockysize=256
+
+To compress it using the LZW method, add
+
+.. code-block:: console
+
+    --co compress=LZW
+
 edit-info
 ---------
 
@@ -310,6 +345,36 @@ datasets.
 .. code-block:: console
 
     $ rio merge rasterio/tests/data/R*.tif merged.tif
+
+overview
+--------
+
+New in 0.25
+
+A pyramid of overviews computed once and stored in the dataset using
+rio-overview can improve performance in some applications.
+
+The decimation levels at which to build overviews can be specified as a
+comma separated list
+
+.. code-block:: console
+
+    $ rio pyramid --build 2,4,8,16
+
+or a base and range of exponents.
+
+.. code-block:: console
+
+    $ rio pyramid --build 2^1..4
+
+Note that overviews can not currently be removed and are not automatically
+updated when the dataset's primary bands are modified.
+
+Information about existing overviews can be printed using the --ls option.
+
+.. code-block:: console
+
+    $ rio pyramid --ls
 
 rasterize
 ---------

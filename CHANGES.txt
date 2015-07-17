@@ -1,6 +1,26 @@
 Changes
 =======
 
+0.25.0 (2015-07-17)
+-------------------
+- New rio-warp command (#264, #404).
+- Add driver-specific creation options (`--co`) to many commands (#379, #403).
+- Add support for arbitrary CRS output to rio-bounds (#385, #392).
+- Add support for getting values from template files in rio-edit-info with a
+  `--like` option (#387, #399).
+- New rio-overview command (#388, #408).
+- Fix rounding error in extracting shapes from decimated data (#391).
+- Remove creation options from meta property and move them to new profile
+  property (#405, #406).
+- Fix for bug in passing affine keyword argument to open() in 'w' mode (#411).
+- New rio-convert command (#414, #417), a replacement for gdal_translate 
+  with more features to come by 1.0.
+- Improved error messages when seeking a driver when none are registered 
+  (#415).
+- Replace read_band() with read() in the rio-insp banner (#418).
+- Fix an indexing error that prevented window() and window_bounds() from 
+  round-tripping properly (#419).
+
 0.24.1 (2015-06-30)
 -------------------
 - Improve safety of the sample() generator (#378).
@@ -9,7 +29,7 @@ Changes
   format can not support (#394, #395).
 
 0.24.0 (2015-05-27)
--------------------
+-------------------#408).
 - New rio-edit-info command (#358).
 - Add option to package GDAL data in distributions (#362).
 - Remove check that the path given to `rasterio.open()` in read mode is an
