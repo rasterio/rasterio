@@ -50,11 +50,11 @@ def overview(ctx, input, build, ls, rebuild, resampling):
     The decimation levels at which to build overviews can be specified as
     a comma separated list
 
-      rio pyramid --build 2,4,8,16
+      rio overview --build 2,4,8,16
 
     or a base and range of exponents.
 
-      rio pyramid --build 2^1..4
+      rio overview --build 2^1..4
 
     Note that overviews can not currently be removed and are not 
     automatically updated when the dataset's primary bands are
@@ -63,7 +63,7 @@ def overview(ctx, input, build, ls, rebuild, resampling):
     Information about existing overviews can be printed using the --ls
     option.
 
-      rio pyramid --ls
+      rio overview --ls
 
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
