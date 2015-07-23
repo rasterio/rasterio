@@ -39,12 +39,13 @@ It is developed using `Click <http://click.pocoo.org/>`__.
 Commands are shown below. See ``--help`` of individual commands for more
 details.
 
+
 bounds
 ------
 
-New in 0.10.
+Added in 0.10.
 
-The bounds command writes the bounding boxes of raster datasets to GeoJSON for
+The ``bounds`` command writes the bounding boxes of raster datasets to GeoJSON for
 use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
 
 .. code-block:: console
@@ -93,10 +94,13 @@ use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
 Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing 
 ``rio bounds tests/data/RGB.byte.tif | geojsonio``.
 
+
 calc
 ----
 
-The calc command reads files as arrays, evaluates lisp-like expressions in
+Added in 0.19
+
+The ``calc`` command reads files as arrays, evaluates lisp-like expressions in
 their context, and writes the result as a new file. Members of the numpy
 module and arithmetic and logical operators are available builtin functions
 and operators. It is intended for simple calculations; any calculations
@@ -139,10 +143,10 @@ Please see `calc.rst <calc.rst>`__ for more details.
 convert
 -------
 
-New in 0.25
+Added in 0.25
 
-Like ``gdal_translate``, rio-convert copies and converts raster datasets to
-other data types and formats. 
+The ``convert`` command copies and converts raster datasets to other data types
+and formats (similar to ``gdal_translate``).
 
 Data values may be linearly scaled when copying by using the ``--scale-ratio``
 and ``--scale-offset`` options. Destination raster values are calculated as
@@ -158,7 +162,7 @@ as uint8:
 
     $ rio convert in16.tif out8.tif --dtype uint8 --scale-ratio 0.0625
 
-Format specific creation options may also be passed using --co. To tile a
+Format specific creation options may also be passed using ``--co``. To tile a
 new GeoTIFF output file, add the following.
 
 .. code-block:: console
@@ -171,12 +175,13 @@ To compress it using the LZW method, add
 
     --co compress=LZW
 
+
 edit-info
 ---------
 
-New in 0.24
+Added in 0.24
 
-The edit-info command allows you edit a raster dataset's metadata, namely
+The ``edit-info`` command allows you edit a raster dataset's metadata, namely
 
 - coordinate reference system
 - affine transformation matrix
@@ -186,8 +191,8 @@ The edit-info command allows you edit a raster dataset's metadata, namely
 A TIFF created by spatially-unaware image processing software like Photoshop
 or Imagemagick can be turned into a GeoTIFF by editing these metadata items.
 
-You can set or change a dataset's coordinate reference system to, e.g., 
-EPSG:3857 (Web Mercator),
+For example, you can set or change a dataset's coordinate reference system to
+Web Mercator (EPSG:3857),
 
 .. code-block:: console
 
@@ -209,9 +214,9 @@ or set its nodata value to, e.g., `0`:
 mask
 ----
 
-New in 0.21
+Added in 0.21
 
-The mask command masks in pixels from all bands of a raster using features
+The ``mask`` command masks in pixels from all bands of a raster using features
 (masking out all areas not covered by features) and optionally crops the output
 raster to the extent of the features.  Features are assumed to be in the same
 coordinate reference system as the input raster.
@@ -240,7 +245,9 @@ keep pixels not covered by features.
 info
 ----
 
-Rio's info command prints structured information about a dataset.
+Added in 0.13
+
+The ``info`` command prints structured information about a dataset.
 
 .. code-block:: console
 
@@ -273,7 +280,7 @@ Rio's info command prints structured information about a dataset.
       "nodata": 0.0
     }
 
-More information, such as band statistics, can be had using the `--verbose`
+More information, such as band statistics, can be had using the ``--verbose``
 option.
 
 .. code-block:: console
@@ -324,10 +331,11 @@ option.
       "nodata": 0.0
     }
 
+
 insp
 ----
 
-The insp command opens a dataset and an interpreter.
+The ``insp`` command opens a dataset and an interpreter.
 
 .. code-block:: console
 
@@ -339,36 +347,40 @@ The insp command opens a dataset and an interpreter.
     >>> print src.bounds
     BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)
 
+
 merge
 -----
 
-The merge command can be used to flatten a stack of identically structured
+Added in 0.12.1
+
+The ``merge`` command can be used to flatten a stack of identically structured
 datasets.
 
 .. code-block:: console
 
     $ rio merge rasterio/tests/data/R*.tif merged.tif
 
+
 overview
 --------
 
 New in 0.25
 
-A pyramid of overviews computed once and stored in the dataset using
-rio-overview can improve performance in some applications.
+The ``overview`` command creates overviews stored in the dataset, which can
+improve performance in some applications.
 
 The decimation levels at which to build overviews can be specified as a
 comma separated list
 
 .. code-block:: console
 
-    $ rio pyramid --build 2,4,8,16
+    $ rio overview --build 2,4,8,16
 
 or a base and range of exponents.
 
 .. code-block:: console
 
-    $ rio pyramid --build 2^1..4
+    $ rio overview --build 2^1..4
 
 Note that overviews can not currently be removed and are not automatically
 updated when the dataset's primary bands are modified.
@@ -377,14 +389,15 @@ Information about existing overviews can be printed using the --ls option.
 
 .. code-block:: console
 
-    $ rio pyramid --ls
+    $ rio overview --ls
+
 
 rasterize
 ---------
 
 New in 0.18.
 
-The rasterize command rasterizes GeoJSON features into a new or existing
+The ``rasterize`` command rasterizes GeoJSON features into a new or existing
 raster.
 
 .. code-block:: console
@@ -425,6 +438,7 @@ Other options are available, see:
 
     $ rio rasterize --help
 
+
 sample
 ------
 
@@ -442,13 +456,14 @@ values at that position to stdout.
 
 The output of the transform command (see below) makes good input for sample.
 
+
 shapes
 ------
 
 New in 0.11.
 
-The shapes command extracts and writes features of a specified dataset band out
-as GeoJSON.
+The ``shapes`` command extracts and writes features of a specified dataset band
+out as GeoJSON.
 
 .. code-block:: console
 
@@ -465,15 +480,16 @@ data region.
 
 See http://bl.ocks.org/anonymous/raw/ef244954b719dba97926/.
 
+
 stack
 -----
 
 New in 0.15.
 
-The rio-stack command stack a number of bands from one or more input files into
+The ``stack`` command stacks a number of bands from one or more input files into
 a multiband dataset. Input datasets must be of a kind: same data type,
 dimensions, etc. The output is cloned from the first input. By default,
-rio-stack will take all bands from each input and write them in same order to
+``stack`` will take all bands from each input and write them in same order to
 the output. Optionally, bands for each input may be specified using a simple
 syntax:
 
@@ -492,12 +508,13 @@ Examples using the Rasterio testing dataset that produce a copy of it.
     $ rio stack RGB.byte.tif --bidx 1..3 stacked.tif
     $ rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. stacked.tif
 
+
 transform
 ---------
 
 New in 0.10.
 
-The transform command reads a JSON array of coordinates, interleaved, and
+The ``transform`` command reads a JSON array of coordinates, interleaved, and
 writes another array of transformed coordinates to stdout.
 
 To transform a longitude, latitude point (EPSG:4326 is the default) to 
@@ -523,10 +540,9 @@ warp
 
 New in 0.25
 
-The warp command warps (reprojects) a raster based on parameters that can be
+The ``warp`` command warps (reprojects) a raster based on parameters that can be
 obtained from a template raster, or input directly.  The output is always
 overwritten.
-
 
 To copy coordinate reference system, transform, and dimensions from a template
 raster, do the following:
@@ -564,5 +580,8 @@ Other options are available, see:
 
     $ rio warp --help
 
+
+Other commands?
+---------------
 
 Suggestions for other commands are welcome!
