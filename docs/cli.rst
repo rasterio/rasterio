@@ -39,6 +39,23 @@ It is developed using `Click <http://click.pocoo.org/>`__.
 Commands are shown below. See ``--help`` of individual commands for more
 details.
 
+creation options
+----------------
+
+For commands that create new datasets, format specific creation options may
+also be passed using ``--co``. For example, to tile a new GeoTIFF output file,
+add the following.
+
+.. code-block:: console
+
+    --co tiled=true --co blockxsize=256 --co blockysize=256
+
+To compress it using the LZW method, add
+
+.. code-block:: console
+
+    --co compress=LZW
+
 
 bounds
 ------
@@ -162,18 +179,7 @@ as uint8:
 
     $ rio convert in16.tif out8.tif --dtype uint8 --scale-ratio 0.0625
 
-Format specific creation options may also be passed using ``--co``. To tile a
-new GeoTIFF output file, add the following.
-
-.. code-block:: console
-
-    --co tiled=true --co blockxsize=256 --co blockysize=256
-
-To compress it using the LZW method, add
-
-.. code-block:: console
-
-    --co compress=LZW
+You can use `--rgb` as shorthand for `--co photometric=rgb`.
 
 
 edit-info
@@ -486,8 +492,8 @@ stack
 
 New in 0.15.
 
-The ``stack`` command stacks a number of bands from one or more input files into
-a multiband dataset. Input datasets must be of a kind: same data type,
+The ``stack`` command stacks a number of bands from one or more input files
+into a multiband dataset. Input datasets must be of a kind: same data type,
 dimensions, etc. The output is cloned from the first input. By default,
 ``stack`` will take all bands from each input and write them in same order to
 the output. Optionally, bands for each input may be specified using a simple
@@ -507,6 +513,8 @@ Examples using the Rasterio testing dataset that produce a copy of it.
     $ rio stack RGB.byte.tif --bidx 1,2,3 stacked.tif
     $ rio stack RGB.byte.tif --bidx 1..3 stacked.tif
     $ rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. stacked.tif
+
+You can use `--rgb` as shorthand for `--co photometric=rgb`.
 
 
 transform

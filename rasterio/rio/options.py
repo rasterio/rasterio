@@ -154,3 +154,9 @@ creation_options = click.option(
     help="Driver specific creation options."
          "See the documentation for the selected output driver for "
          "more information.")
+
+rgb_opt = click.option(
+    '--rgb', 'photometric', 
+    flag_value='rgb',
+    default=False,
+    help="Set RGB photometric interpretation")
