@@ -54,7 +54,7 @@ def test_stack_single_slice(tmpdir):
         [
             'tests/data/RGB.byte.tif', '--bidx', '1',
             'tests/data/RGB.byte.tif', '--bidx', '2..',
-            '--photometric', 'rgb',
+            '--rgb',
             outputname])
     assert result.exit_code == 0
     with rasterio.open(outputname) as out:

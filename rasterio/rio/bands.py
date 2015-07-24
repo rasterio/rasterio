@@ -26,9 +26,8 @@ PHOTOMETRIC_CHOICES = [val.lower() for val in [
 @options.output_opt
 @format_opt
 @options.bidx_mult_opt
-@click.option('--photometric', default=None,
-              type=click.Choice(PHOTOMETRIC_CHOICES),
-              help="Photometric interpretation")
+@click.option('--rgb', 'photometric', flag_value='rgb', default=False,
+              help="Set RGB photometric interpretation")
 @options.creation_options
 @click.pass_context
 def stack(ctx, files, output, driver, bidx, photometric, creation_options):
