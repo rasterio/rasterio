@@ -9,25 +9,13 @@ import rasterio
 from rasterio.five import zip_longest
 
 
-PHOTOMETRIC_CHOICES = [val.lower() for val in [
-    'MINISBLACK',
-    'MINISWHITE',
-    'RGB',
-    'CMYK',
-    'YCBCR',
-    'CIELAB',
-    'ICCLAB',
-    'ITULAB']]
-
-
 # Stack command.
 @click.command(short_help="Stack a number of bands into a multiband dataset.")
 @files_inout_arg
 @options.output_opt
 @format_opt
 @options.bidx_mult_opt
-@click.option('--rgb', 'photometric', flag_value='rgb', default=False,
-              help="Set RGB photometric interpretation")
+@options.rgb_opt
 @options.creation_options
 @click.pass_context
 def stack(ctx, files, output, driver, bidx, photometric, creation_options):

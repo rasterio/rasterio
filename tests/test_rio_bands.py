@@ -5,10 +5,6 @@ import rasterio
 from rasterio.rio import bands
 
 
-def test_photometic_choices():
-    assert len(bands.PHOTOMETRIC_CHOICES) == 8
-
-
 def test_stack(tmpdir):
     outputname = str(tmpdir.join('stacked.tif'))
     runner = CliRunner()

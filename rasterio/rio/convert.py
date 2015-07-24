@@ -29,11 +29,12 @@ warnings.simplefilter('default')
               help="Source to destination scaling ratio.")
 @click.option('--scale-offset', type=float, default=None,
               help="Source to destination scaling offset.")
+@options.rgb_opt
 @options.creation_options
 @click.pass_context
 def convert(
         ctx, files, output, driver, dtype, scale_ratio, scale_offset,
-        creation_options):
+        photometric, creation_options):
     """Copy and convert raster datasets to other data types and formats.
 
     Data values may be linearly scaled when copying by using the
@@ -82,6 +83,9 @@ def convert(
             dst_dtype = profile['dtype']
 
             profile.update(**creation_options)
+
+            if photometric:
+                kwargs['photometric'] = photometric
 
             with rasterio.open(outputfile, 'w', **profile) as dst:
 
