@@ -581,6 +581,30 @@ Other options are available, see:
     $ rio warp --help
 
 
+Rio Plugins
+-----------
+
+Rio uses ``click-plugins`` to provide the ability to create additional
+subcommands using plugins developed outside rasterio.  This is ideal for
+commands that require additional dependencies beyond those used by rasterio, or
+that provide functionality beyond the intended scope of rasterio.
+
+For example, `rio-mbtiles <https://github.com/mapbox/rio-mbtiles>`__ provides
+a command ``rio mbtiles`` to export a raster to an MBTiles file.
+
+See `click-plugins <https://github.com/click-contrib/click-plugins>`__ for more
+information on how to build these plugins in general.
+
+In order to use these plugins with rio, add the commands to the
+``rasterio.rio_plugins'`` entry point in your ``setup.py`` file, as described
+`here <https://github.com/click-contrib/click-plugins#developing-plugins>`__
+
+See the
+`plugin registry <https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry>`__
+for a list of available plugins.
+
+
+
 Other commands?
 ---------------
 
