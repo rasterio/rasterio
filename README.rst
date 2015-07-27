@@ -149,6 +149,18 @@ using Python.
     >>> b.min(), b.max(), b.mean()
     (1, 255, 44.434478650699106)
 
+Rio Plugins
+-----------
+
+Rio provides the ability to create additional subcommands using plugins.  See
+`cli.rst <https://github.com/mapbox/rasterio/blob/master/docs/cli.rst#rio-plugins>`__
+for more information on building plugins.
+
+See the
+`plugin registry <https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry>`__
+for a list of available plugins.
+
+
 Installation
 ============
 
