@@ -8,8 +8,8 @@ from pkg_resources import iter_entry_points
 import sys
 
 import click
+from click_plugins import with_plugins
 import cligj
-import cligj.plugins
 
 import rasterio
 
@@ -19,9 +19,9 @@ def configure_logging(verbosity):
     logging.basicConfig(stream=sys.stderr, level=log_level)
 
 
-@cligj.plugins.group(plugins=(
-        ep for ep in list(iter_entry_points('rasterio.rio_commands')) +
-                     list(iter_entry_points('rasterio.rio_plugins'))))
+@with_plugins(ep for ep in list(iter_entry_points('rasterio.rio_commands')) +
+              list(iter_entry_points('rasterio.rio_plugins')))
+@click.group()
 @cligj.verbose_opt
 @cligj.quiet_opt
 @click.version_option(version=rasterio.__version__, message='%(version)s')
