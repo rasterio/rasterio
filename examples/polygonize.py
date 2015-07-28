@@ -1,10 +1,12 @@
 import pprint
 
 import rasterio
-import rasterio._features as ftrz
+from rasterio.features import shapes
 
-with rasterio.open('box.png') as src:
-    image = src.read_band(1)
+with rasterio.open('tests/data/shade.tif') as src:
+    image = src.read(1)
 
+# Print the first two shapes...
 pprint.pprint(
-    list(ftrz.polygonize(image)))
+    list(shapes(image))[:2]
+)
