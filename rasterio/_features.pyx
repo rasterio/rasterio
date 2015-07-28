@@ -67,7 +67,7 @@ def _shapes(image, mask, connectivity, transform):
     if is_float:
         fieldtp = 2
 
-    if isinstance(image, np.ndarray):
+    if dtypes.is_ndarray(image):
         mem_ds = InMemoryRaster(image, transform)
         hband = mem_ds.band
     elif isinstance(image, tuple):
@@ -76,7 +76,7 @@ def _shapes(image, mask, connectivity, transform):
     else:
         raise ValueError("Invalid source image")
 
-    if isinstance(mask, np.ndarray):
+    if dtypes.is_ndarray(mask):
         # A boolean mask must be converted to uint8 for GDAL
         mask_ds = InMemoryRaster(mask.astype('uint8'), transform)
         hmaskband = mask_ds.band
@@ -168,7 +168,7 @@ def _sieve(image, size, output, mask, connectivity):
     cdef _io.RasterUpdater udr
     cdef _io.RasterReader mask_reader
 
-    if isinstance(image, np.ndarray):
+    if dtypes.is_ndarray(image):
         in_mem_ds = InMemoryRaster(image)
         in_band = in_mem_ds.band
     elif isinstance(image, tuple):
@@ -177,7 +177,7 @@ def _sieve(image, size, output, mask, connectivity):
     else:
         raise ValueError("Invalid source image")
 
-    if isinstance(output, np.ndarray):
+    if dtypes.is_ndarray(output):
         log.debug("Output array: %r", output)
         out_mem_ds = InMemoryRaster(output)
         out_band = out_mem_ds.band
@@ -187,7 +187,7 @@ def _sieve(image, size, output, mask, connectivity):
     else:
         raise ValueError("Invalid output image")
 
-    if isinstance(mask, np.ndarray):
+    if dtypes.is_ndarray(mask):
         # A boolean mask must be converted to uint8 for GDAL
         mask_mem_ds = InMemoryRaster(mask.astype('uint8'))
         mask_band = mask_mem_ds.band

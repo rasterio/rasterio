@@ -246,7 +246,7 @@ def _reproject(
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
     # be copied to the MEM dataset.
-    if isinstance(source, np.ndarray):
+    if dtypes.is_ndarray(source):
         # Convert 2D single-band arrays to 3D multi-band.
         if len(source.shape) == 2:
             source = source.reshape(1, *source.shape)
@@ -300,7 +300,7 @@ def _reproject(
         raise ValueError("Invalid source")
     
     # Next, do the same for the destination raster.
-    if isinstance(destination, np.ndarray):
+    if dtypes.is_ndarray(destination):
         if len(destination.shape) == 2:
             destination = destination.reshape(1, *destination.shape)
         if destination.shape[0] != src_count:
@@ -489,11 +489,11 @@ def _reproject(
         #    _gdal.GDALDestroyApproxTransformer(psWOptions.pTransformerArg)
         if psWOptions != NULL:
             _gdal.GDALDestroyWarpOptions(psWOptions)
-        if isinstance(source, np.ndarray):
+        if dtypes.is_ndarray(source):
             if hdsin != NULL:
                 _gdal.GDALClose(hdsin)
 
-    if reprojected and isinstance(destination, np.ndarray):
+    if reprojected and dtypes.is_ndarray(destination):
         retval = _io.io_auto(destination, hdsout, 0)
         # TODO: handle errors (by retval).
 
