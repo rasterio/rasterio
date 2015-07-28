@@ -96,3 +96,9 @@ def get_minimum_int_dtype(values):
         return int16
     elif min_value >= -2147483648 and max_value <= 2147483647:
         return int32
+
+
+def is_ndarray(array):
+    import numpy
+
+    return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')

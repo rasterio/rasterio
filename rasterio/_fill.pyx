@@ -23,7 +23,7 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
     cdef _io.RasterReader mrdr
     cdef char **alg_options = NULL
 
-    if isinstance(image, np.ndarray):
+    if dtypes.is_ndarray(image):
         # copy numpy ndarray into an in-memory dataset.
         image_dataset = _gdal.GDALCreate(
             memdriver,
@@ -38,7 +38,7 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
     else:
         raise ValueError("Invalid source image")
 
-    if isinstance(mask, np.ndarray):
+    if dtypes.is_ndarray(mask):
         mask_cast = mask.astype('uint8')
         mask_dataset = _gdal.GDALCreate(
             memdriver,
