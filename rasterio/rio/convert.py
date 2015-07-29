@@ -82,10 +82,10 @@ def convert(
                 profile['dtype'] = dtype
             dst_dtype = profile['dtype']
 
-            profile.update(**creation_options)
-
             if photometric:
-                kwargs['photometric'] = photometric
+                creation_options['photometric'] = photometric
+
+            profile.update(**creation_options)
 
             with rasterio.open(outputfile, 'w', **profile) as dst:
 
