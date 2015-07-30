@@ -24,7 +24,7 @@ class Resampling(Enum):
     nearest='NEAREST'
     gauss='GAUSS'
     cubic='CUBIC'
-    average='AVERAGE',
+    average='AVERAGE'
     mode='MODE'
     average_magphase='AVERAGE_MAGPHASE'
     none='NONE'
