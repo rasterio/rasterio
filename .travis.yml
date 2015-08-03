@@ -11,12 +11,13 @@ install:
 - pip install -U pip
 - pip install wheel
 - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
+- pip install --use-wheel --no-index --find-links=/tmp/wheelhouse cython numpy
 - pip wheel --wheel-dir=/tmp/wheelhouse .
-- ls /tmp/wheelhouse
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse .
 script:
 - py.test --cov rasterio --cov-report term-missing
 after_success:
+- ls /tmp/wheelhouse
 - coveralls
 env:
   global:
