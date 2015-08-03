@@ -12,14 +12,19 @@ install:
 - pip install wheel
 - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -r requirements-dev.txt
-- pip wheel --wheel-dir=/tmp/wheelhouse .
-- pip install --use-wheel --no-index --find-links=/tmp/wheelhouse .
+- pip wheel --wheel-dir=/tmp/wheelhouse -e .
+- pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -e .
 script:
 - py.test --cov rasterio --cov-report term-missing
 after_success:
 - ls /tmp/wheelhouse
 - coveralls
-env:
-  global:
-  - secure: Y0xrKBKfvtdLrmNctU9F+nwBy8biYpzVti0wI+9hbcl4dsPLtvUuU9qF8fbP8BBjNRNJoLo2gnEhG+pz6MjoS+kL5ya5qCd6obrI21wVTT3zBEnDYGSIrWjzGB8uoBdPxnSN6y7jTZbCfCpYBipPSqhLn9l946gR4iDZzlz3KkM=
-  - secure: yyCxK6M0084z0KQePyNEouQAbGfMehYD9KpVpkHgqWQ/VCtWSv+6QvM+Xb8CkzG13/JlZ0D1kAVjWzBGoXFB7GpXrjaunWBMbn6LMDbjh21mVlTrYGY2BZC5Ihy+B5IaxNf+tbmY78xzttyao2aXu4aK8x3WPfSkgjJq7rxbI4o=
+- tar -C /tmp -czvf rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz wheelhouse
+deploy:
+  provider: releases
+  api_key:
+    secure: uP/hy8LRdDnN6XHSLChmKYdW9CdIy8pqvUyXFPgTDY/mlItMUdDNdP95bitzn/rNNXnOkCGsARqzRCLeGI3jB0nEGuAzY6fGWYt2igjfMOhpdDG6o3LcaoP4mITuFfe5/kCQeUb8WB3QK6c2cL7nEEPzoSniqZQ6MsxHIvUW7ts=
+  file: rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz
+  on:
+    repo: mapbox/rasterio
+    branch: travis-wheels
