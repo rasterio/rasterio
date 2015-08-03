@@ -9,11 +9,21 @@ before_install:
   - sudo apt-get install -y libgdal1h gdal-bin libgdal-dev
 install:
   - pip install --install-option="--no-cython-compile" cython
-  - "pip install -r requirements-dev.txt"
-  - "pip install pytest pytest-cov"
-  - "pip install coveralls"
-  - "pip install -e ."
+  - pip install -r requirements-dev.txt
+  - pip install -e .
 script: 
   - py.test --cov rasterio --cov-report term-missing
 after_success:
   - coveralls
+before_deploy:
+  - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
+  - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements.txt
+  - pip wheel --wheel-dir=/tmp/wheelhouse .
+  - tar -C /tmp -czvf rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz wheelhouse
+deploy:
+  provider: releases
+  api_key:
+    secure: uP/hy8LRdDnN6XHSLChmKYdW9CdIy8pqvUyXFPgTDY/mlItMUdDNdP95bitzn/rNNXnOkCGsARqzRCLeGI3jB0nEGuAzY6fGWYt2igjfMOhpdDG6o3LcaoP4mITuFfe5/kCQeUb8WB3QK6c2cL7nEEPzoSniqZQ6MsxHIvUW7ts=
+  file: rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz
+  on:
+    tags: true
