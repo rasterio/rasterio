@@ -19,6 +19,7 @@ script:
 after_success:
 - ls /tmp/wheelhouse
 - coveralls
+before_deploy:
 - tar -C /tmp -czvf rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz wheelhouse
 deploy:
   provider: releases
@@ -26,5 +27,4 @@ deploy:
     secure: uP/hy8LRdDnN6XHSLChmKYdW9CdIy8pqvUyXFPgTDY/mlItMUdDNdP95bitzn/rNNXnOkCGsARqzRCLeGI3jB0nEGuAzY6fGWYt2igjfMOhpdDG6o3LcaoP4mITuFfe5/kCQeUb8WB3QK6c2cL7nEEPzoSniqZQ6MsxHIvUW7ts=
   file: rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz
   on:
-    repo: mapbox/rasterio
-    branch: travis-wheels
+    tags: true
