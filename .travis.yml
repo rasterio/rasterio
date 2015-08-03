@@ -11,7 +11,7 @@ install:
 - pip install -U pip
 - pip install wheel
 - curl https://github.com/mapbox/rasterio/releases/download/release-test/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz > wheelhouse.tar.gz
-- tar xzvf wheelhouse.tar.gz -C /tmp
+- tar -xzvf wheelhouse.tar.gz -C /tmp
 - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -r requirements-dev.txt
 - pip wheel --wheel-dir=/tmp/wheelhouse -e .
