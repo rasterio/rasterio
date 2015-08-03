@@ -10,6 +10,8 @@ before_install:
 install:
 - pip install -U pip
 - pip install wheel
+- curl https://github.com/mapbox/rasterio/releases/download/release-test/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz > wheelhouse.tar.gz
+- tar xzvf wheelhouse.tar.gz -C /tmp
 - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -r requirements-dev.txt
 - pip wheel --wheel-dir=/tmp/wheelhouse -e .
@@ -17,9 +19,9 @@ install:
 script:
 - py.test --cov rasterio --cov-report term-missing
 after_success:
-- ls /tmp/wheelhouse
 - coveralls
 before_deploy:
+- pip wheel --wheel-dir=/tmp/wheelhouse .
 - tar -C /tmp -czvf rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz wheelhouse
 deploy:
   provider: releases
