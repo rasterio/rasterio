@@ -11,7 +11,7 @@ install:
 - pip install -U pip
 - pip install wheel
 - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
-- pip install --use-wheel --no-index --find-links=/tmp/wheelhouse cython numpy
+- pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -r requirements-dev.txt
 - pip wheel --wheel-dir=/tmp/wheelhouse .
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse .
 script:
