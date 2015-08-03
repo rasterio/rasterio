@@ -16,6 +16,7 @@ script:
 after_success:
   - coveralls
 before_deploy:
+  - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
   - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements.txt
   - pip wheel --wheel-dir=/tmp/wheelhouse .
   - tar -C /tmp -czvf rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz wheelhouse
