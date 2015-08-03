@@ -14,7 +14,6 @@ install:
 - tar -xzvf wheelhouse.tar.gz -C /tmp
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -r requirements-dev.txt
 - ./travis-ci/update_dep_wheels.sh
-- pip wheel --wheel-dir=/tmp/wheelhouse -e .
 - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse -e .
 script:
 - py.test --cov rasterio --cov-report term-missing

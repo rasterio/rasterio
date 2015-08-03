@@ -11,4 +11,5 @@ else
     echo "Building all dev wheels..."
     pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
     pip install --pre --use-wheel --no-index --find-links=/tmp/wheelhouse -r requirements-dev.txt
+    pip wheel --wheel-dir=/tmp/wheelhouse .
 fi
