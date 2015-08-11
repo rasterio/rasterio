@@ -1136,7 +1136,7 @@ cdef class RasterReader(_base.DatasetReader):
             stacklevel=2)
 
         if self._hds == NULL:
-            raise ValueError("can't write closed raster file")
+            raise ValueError("can't read closed raster file")
         hband = _gdal.GDALGetRasterBand(self._hds, 1)
         if hband == NULL:
             raise ValueError("NULL band mask")

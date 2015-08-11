@@ -257,6 +257,9 @@ def env(ctx, key):
 @click.option('--stats', 'meta_member', flag_value='stats',
               help="Print statistics (min, max, mean) of a single band "
                    "(use --bidx).")
+@click.option('--checksum', 'meta_member', flag_value='checksum',
+              help="Print integer checksum of a single band "
+                   "(use --bidx).")
 @click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
               help="Output extra information.")
 @options.bidx_opt
@@ -292,6 +295,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                               'mean': float(b.mean())
                               } for b in src.read(masked=masked)]
                     info['stats'] = stats
+                    info['checksum'] = [src.checksum(i) for i in src.indexes]
                 if aspect == 'meta':
                     if meta_member == 'stats':
                         band = src.read(bidx, masked=masked)
@@ -299,6 +303,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                             float(band.min()),
                             float(band.max()),
                             float(band.mean())))
+                    elif meta_member == 'checksum':
+                        click.echo(str(src.checksum(bidx)))
                     elif meta_member:
                         if isinstance(info[meta_member], (list, tuple)):
                             click.echo(" ".join(map(str, info[meta_member])))
