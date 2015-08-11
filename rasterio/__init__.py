@@ -23,7 +23,7 @@ from rasterio import _err, coords, enums
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'pad']
-__version__ = "0.25.0"
+__version__ = "0.26a1"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):

@@ -1684,9 +1684,9 @@ cdef class RasterUpdater(RasterReader):
         for i, rgba in colormap.items():
 
             if len(rgba) == 4 and self.driver in ('GTiff'):
-                raise ValueError(
-                    "Format '%s' doesn't support 4 component colormap entries"
-                    % self.driver)
+                warnings.warn(
+                    "This format doesn't support alpha in colormap entries. "
+                    "The value will be ignored.")
 
             elif len(rgba) == 3:
                 rgba = tuple(rgba) + (255,)

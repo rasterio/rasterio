@@ -2,24 +2,28 @@ import logging
 import pytest
 import subprocess
 import sys
+import warnings
 
 import rasterio
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
-def test_write_colormap_err(tmpdir):
+def test_write_colormap_warn(tmpdir, recwarn):
 
     with rasterio.drivers():
 
         with rasterio.open('tests/data/shade.tif') as src:
-            meta = src.meta
+            profile = src.meta
 
         tiffname = str(tmpdir.join('foo.tif'))
 
-        with rasterio.open(tiffname, 'w', **meta) as dst:
-            with pytest.raises(ValueError):
-                dst.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 0)})
+        with rasterio.open(tiffname, 'w', **profile) as dst:
+            dst.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 0)})
+
+        w = recwarn.pop(UserWarning)
+        assert "The value will be ignored" in str(w.message)
 
 
 def test_write_colormap(tmpdir):
