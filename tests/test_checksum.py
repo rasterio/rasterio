@@ -21,6 +21,14 @@ def test_checksum_band_window_min():
         assert checksums == [0, 0, 0]
 
 
+def test_checksum_band_window_quarter():
+    """A quarter window's checksum is different from the full image's"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        window = ((0, src.height//2), (0, src.width//2))
+        checksums = [src.checksum(i, window=window) for i in src.indexes]
+        assert checksums != [25420, 29131, 37860]
+
+
 def test_checksum_band_window_too_tall():
     """Windows get truncated to maximum extent"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
