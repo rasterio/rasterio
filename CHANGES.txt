@@ -1,6 +1,22 @@
 Changes
 =======
 
+0.26.0 (2015-08-11)
+-------------------
+- Add dependency on click-plugins, a new project that takes over the plugin
+  duties formerly assigned to cligj (#426).
+- Change rio-stack's --photometric=RGB option to --rgb (#429). Other 
+  photometric interpretations should be assigned using the --co option 
+  added in 0.25.0.
+- Allow for ndarray-like objects (like xray arrays), not just numpy arrays,
+  in warp() and elsewhere (#436).
+- Add --rgb flag to rio-convert (#439).
+- Fixed resampling algorithm enumeration bug (#441).
+- Colormap handling was made too strict in 0.24.1 and has been made more
+  forgiving. Callers are now warned when alpha values will be ignored instead
+  of receiving exceptions (#444).
+- Add a .gitignore (#445). Better late than never!
+
 0.25.0 (2015-07-17)
 -------------------
 - New rio-warp command (#264, #404).
