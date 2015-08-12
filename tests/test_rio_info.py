@@ -641,3 +641,19 @@ def test_insp_err():
         'tests'
     ])
     assert result.exit_code == 1
+
+
+def test_info_checksums():
+    runner = CliRunner()
+    result = runner.invoke(
+        info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
+    assert result.exit_code == 0
+    assert '"checksum": [25420, 29131, 37860]' in result.output
+
+
+def test_info_checksums_only():
+    runner = CliRunner()
+    result = runner.invoke(
+        info.info, ['tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
+    assert result.exit_code == 0
+    assert result.output.strip() == '29131'

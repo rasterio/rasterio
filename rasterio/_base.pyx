@@ -598,7 +598,6 @@ cdef class DatasetReader(object):
     def kwds(self):
         return self.tags(ns='rio_creation_kwds')
 
-
     # Overviews.
     def overviews(self, bidx):
         cdef void *hovband = NULL
@@ -611,6 +610,40 @@ cdef class DatasetReader(object):
             xsize = _gdal.GDALGetRasterBandXSize(hovband)
             factors.append(int(round(float(self.width)/float(xsize))))
         return factors
+
+    def checksum(self, bidx, window=None):
+        """Compute an integer checksum for the stored band
+
+        Parameters
+        ----------
+        bidx : int
+            The band's index (1-indexed).
+        window: tuple, optional
+            A window of the band. Default is the entire extent of the band.
+
+        Returns
+        -------
+        An int.
+        """
+        cdef void *hband = NULL
+        cdef int xoff, yoff, width, height
+        if self._hds == NULL:
+            raise ValueError("can't read closed raster file")
+        hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+        if hband == NULL:
+            raise ValueError("NULL band")
+        if not window:
+            xoff = yoff = 0
+            width, height = self.width, self.height
+        else:
+            window = eval_window(window, self.height, self.width)
+            window = crop_window(window, self.height, self.width)
+            xoff = window[1][0]
+            width = window[1][1] - xoff
+            yoff = window[0][0]
+            height = window[0][1] - yoff
+        return _gdal.GDALChecksumImage(hband, xoff, yoff, width, height)
+
 
 # Window utils
 # A window is a 2D ndarray indexer in the form of a tuple:
