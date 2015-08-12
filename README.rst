@@ -283,10 +283,41 @@ From the repo directory, run py.test
 
     $ py.test
 
-
 Note: some tests do not succeed on Windows (see
 `#66
 <https://github.com/mapbox/rasterio/issues/66>`__.).
+
+
+Downstream testing
+------------------
+
+If your project depends on Rasterio and uses Travis-CI, you can speed up your
+builds by fetching Rasterio and its dependencies as a set of wheels from 
+GitHub as done in `rio-plugin-example 
+<https://github.com/sgillies/rio-plugin-example/blob/master/.travis.yml>`__.
+
+.. code-block:: yaml
+
+    language: python
+    env:
+      - RASTERIO_VERSION=0.26
+    python:
+      - "2.7"
+      - "3.4"
+    cache:
+      directories:
+        - $HOME/.pip-cache/
+        - $HOME/wheelhouse
+    before_install:
+      - sudo add-apt-repository -y ppa:ubuntugis/ppa
+      - sudo apt-get update -qq
+      - sudo apt-get install -y libgdal1h gdal-bin
+      - curl -L https://github.com/mapbox/rasterio/releases/download/$RASTERIO_VERSION/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz > /tmp/wheelhouse.tar.gz
+      - tar -xzvf /tmp/wheelhouse.tar.gz -C $HOME
+    install:
+      - pip install --use-wheel --find-links=$HOME/wheelhouse -e .[test] --cache-dir $HOME/.pip-cache
+    script: 
+      - py.test
 
 
 Documentation
