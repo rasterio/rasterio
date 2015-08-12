@@ -626,16 +626,18 @@ cdef class DatasetReader(object):
         An int.
         """
         cdef void *hband = NULL
-        cdef xoff, yoff, width, height
+        cdef int xoff, yoff, width, height
         if self._hds == NULL:
             raise ValueError("can't read closed raster file")
         hband = _gdal.GDALGetRasterBand(self._hds, bidx)
         if hband == NULL:
-            raise ValueError("NULL band mask")
+            raise ValueError("NULL band")
         if not window:
             xoff = yoff = 0
             width, height = self.width, self.height
         else:
+            window = eval_window(window, self.height, self.width)
+            window = crop_window(window, self.height, self.width)
             xoff = window[1][0]
             width = window[1][1] - xoff
             yoff = window[0][0]
