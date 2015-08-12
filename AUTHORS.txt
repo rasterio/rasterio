@@ -16,9 +16,10 @@ Johan Van de Wauw <johan.vandewauw@gmail.com>
 James Seppi <james.seppi@gmail.com>
 Jacques Tardie <hi@jacquestardie.org>
 Etienne B. Racine <etiennebr@gmail.com>
-cgohlke <cgohlke@uci.edu>
+Christoph Gohlke <cgohlke@uci.edu>
 Martijn Visser <mgvisser@gmail.com>
 Aldo Culquicondor <alculquicondor@gmail.com>
 Robin Wilson <robin@rtwilson.com>
+Patrick Young <patrick.young@digitalglobe.com>
 
 See also https://github.com/mapbox/rasterio/graphs/contributors.

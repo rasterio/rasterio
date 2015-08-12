@@ -16,6 +16,8 @@ Changes
   forgiving. Callers are now warned when alpha values will be ignored instead
   of receiving exceptions (#444).
 - Add a .gitignore (#445). Better late than never!
+- Add a checksum() method to base dataset class and checksums to output of
+  rio-info (#449).
 
 0.25.0 (2015-07-17)
 -------------------
