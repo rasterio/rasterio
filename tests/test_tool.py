@@ -53,7 +53,7 @@ def test_show_hist():
         # Return because plotting causes the tests to block until the plot
         # window is closed.
         return
-    with rasterio.open('testsdata/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
             show_hist((src, 1), bins=256)
         except ImportError:
