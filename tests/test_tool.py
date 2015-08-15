@@ -6,7 +6,7 @@ except ImportError:
     plt = None
 
 import rasterio
-from rasterio.tool import show, stats
+from rasterio.tool import show, show_hist, stats
 
 
 def test_stats():
@@ -42,3 +42,24 @@ def test_show():
                 show(src.read(1))
             except ImportError:
                 pass
+
+
+def test_show_hist():
+    """
+    This test only verifies that code up to the point of plotting with
+    matplotlib works correctly.  Tests do not exercise matplotlib.
+    """
+    if plt:
+        # Return because plotting causes the tests to block until the plot
+        # window is closed.
+        return
+    with rasterio.open('testsdata/RGB.byte.tif') as src:
+        try:
+            show_hist((src, 1), bins=256)
+        except ImportError:
+            pass
+
+        try:
+            show_hist(src.read(), bins=256)
+        except ImportError:
+            pass
