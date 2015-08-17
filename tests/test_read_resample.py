@@ -10,16 +10,17 @@ import rasterio
 
 def test_read_out_shape_resample_down():
     with rasterio.open('tests/data/RGB.byte.tif') as s:
-        out = numpy.zeros((7, 8), dtype=rasterio.ubyte)
+        out = numpy.zeros((8, 8), dtype=rasterio.ubyte)
         data = s.read(1, out=out)
         expected = numpy.array([
-            [  0,   8,   5,   7,   0,   0,   0,   0],
-            [  0,   6,  61,  15,  27,  15,  24, 128],
-            [  0,  20, 152,  23,  15,  19,  28,   0],
-            [  0,  17, 255,  25, 255,  22,  32,   0],
-            [  9,   7,  14,  16,  19,  18,  36,   0],
-            [  6,  27,  43, 207,  38,  31,  73,   0],
-            [  0,   0,   0,   0,  74,  23,   0,   0]], dtype=numpy.uint8)
+            [  0,   0,  20,  15,   0,   0,   0,   0],
+            [  0,   6, 193,   9, 255, 127,  23,  39],
+            [  0,   7,  27, 255, 193,  14,  28,  34],
+            [  0,  31,  29,  44,  14,  22,  43,   0],
+            [  0,   9,  69,  49,  17,  22, 255,   0],
+            [ 11,   7,  13,  25,  13,  29,  33,   0],
+            [  8,  10,  88,  27,  20,  33,  25,   0],
+            [  0,   0,   0,   0,  98,  23,   0,   0]], dtype=numpy.uint8)
         assert (data == expected).all() # all True.
 
 
