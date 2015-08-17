@@ -86,7 +86,12 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     else:
         colors = ('red', 'green', 'blue', 'violet', 'gold', 'saddlebrown')
 
-    labels = (str(i + 1) for i in range(len(arr)))
+    # If a rasterio.Band() is given make sure the proper index is displayed
+    # in the legend.
+    if isinstance(source, (tuple, rasterio.Band)):
+        labels = [str(source[1])]
+    else:
+        labels = (str(i + 1) for i in range(len(arr)))
 
     # This loop should add a single plot each band in the input array,
     # regardless of if the number of bands exceeds the number of colors.
@@ -95,10 +100,10 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     # The goal is to provide a curated set of colors for working with
     # smaller datasets and let matplotlib define additional colors when
     # working with larger datasets.
-    for band, color, label in zip_longest(arr, colors[:len(arr)], labels):
+    for bnd, color, label in zip_longest(arr, colors[:len(arr)], labels):
 
         plt.hist(
-            band.flatten(),
+            bnd.flatten(),
             bins=bins,
             alpha=0.5,
             color=color,
