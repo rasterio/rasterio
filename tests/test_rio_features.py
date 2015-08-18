@@ -310,10 +310,10 @@ def test_shapes_compact(runner):
 
 def test_shapes_sampling(runner):
     result = runner.invoke(
-        features.shapes, ['tests/data/shade.tif', '--sampling', '10'])
+        features.shapes, ['tests/data/shade.tif', '--sampling', '11'])
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 124
+    assert result.output.count('"Feature"') == 117
 
 
 def test_shapes_precision(runner):
