@@ -12,7 +12,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.transform import Affine
-from rasterio.merge import merge as merge_tool
+from rasterio.tools.merge import merge as merge_tool
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
