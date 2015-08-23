@@ -12,7 +12,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.transform import Affine
-from rasterio.features import merge as rmerge
+from rasterio.merge import merge as merge_tool
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
@@ -47,13 +47,23 @@ def merge(ctx, files, output, driver, bounds, res, nodata, creation_options):
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
 
-    if len(res) == 1:
-        res = (res[0], res[0])
     output, files = resolve_inout(files=files, output=output)
 
     try:
-        rmerge(files, output, driver, bounds=bounds, res=res, nodata=nodata,
-               verbosity=verbosity, **creation_options)
+        sources = [rasterio.open(f) for f in files]
+        dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
+                                            nodata=nodata)
+        kwargs = sources[0].meta
+        kwargs.update(**creation_options)
+        kwargs.pop('affine')
+        kwargs['transform'] = output_transform
+        kwargs['height'] = dest.shape[1]
+        kwargs['width'] = dest.shape[2]
+        kwargs['driver'] = driver
+
+        dst = rasterio.open(output, 'w', **kwargs)
+        dst.write(dest)
+        dst.close()
     except:
         logger.exception("Exception caught during processing")
         raise click.Abort()
