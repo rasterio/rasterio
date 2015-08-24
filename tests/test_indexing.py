@@ -49,3 +49,28 @@ def test_window_bounds_roundtrip():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert ((100, 200), (100, 200)) == src.window(
             *src.window_bounds(((100, 200), (100, 200))))
+
+
+def test_window_full_cover():
+
+    def bound_covers(bounds1, bounds2):
+        """Does bounds1 cover bounds2?
+        """
+        if bounds1[0] <= bounds2[0] and bounds1[1] <= bounds2[1] and \
+           bounds1[2] >= bounds2[2] and bounds1[3] >= bounds2[3]:
+            return True
+        else:
+            return False
+
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        bounds = list(src.window_bounds(((100, 200), (100, 200))))
+        bounds[1] = bounds[1] - 10.0  # extend south
+        bounds[2] = bounds[2] + 10.0  # extend east
+
+        win = src.window(*bounds)
+        bounds_calc = list(src.window_bounds(win))
+        assert not bound_covers(bounds_calc, bounds)
+
+        win2 = src.window(*bounds, full_cover=True)
+        bounds_calc2 = list(src.window_bounds(win2))
+        assert bound_covers(bounds_calc2, bounds)
