@@ -5,6 +5,7 @@ import numpy
 from click.testing import CliRunner
 
 import rasterio
+from rasterio.rio.main import main_group
 from rasterio.rio.convert import convert, clip
 
 
@@ -16,8 +17,8 @@ TEST_BBOX = [-11850000, 4804000, -11840000, 4808000]
 def test_clip_bounds(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        clip,
-        ['tests/data/shade.tif', output, '--bounds'] + TEST_BBOX
+        main_group,
+        ['clip', 'tests/data/shade.tif', output, '--bounds'] + TEST_BBOX
     )
     assert result.exit_code == 0
     assert os.path.exists(output)

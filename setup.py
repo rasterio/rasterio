@@ -235,7 +235,7 @@ setup_args = dict(
         [rasterio.rio_commands]
         bounds=rasterio.rio.features:bounds
         calc=rasterio.rio.calc:calc
-        clip=rasterio.rio.features:clip
+        clip=rasterio.rio.convert:clip
         convert=rasterio.rio.convert:convert
         edit-info=rasterio.rio.info:edit
         env=rasterio.rio.info:env
