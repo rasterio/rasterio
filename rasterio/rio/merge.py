@@ -12,7 +12,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.transform import Affine
-from rasterio.tools.merge import merge as merge_tool
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
@@ -44,6 +43,8 @@ def merge(ctx, files, output, driver, bounds, res, nodata, creation_options):
       --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)
     """
 
+    from rasterio.tools.merge import merge as merge_tool
+
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
 
@@ -53,15 +54,15 @@ def merge(ctx, files, output, driver, bounds, res, nodata, creation_options):
         sources = [rasterio.open(f) for f in files]
         dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
                                             nodata=nodata)
-        kwargs = sources[0].meta
-        kwargs.update(**creation_options)
-        kwargs.pop('affine')
-        kwargs['transform'] = output_transform
-        kwargs['height'] = dest.shape[1]
-        kwargs['width'] = dest.shape[2]
-        kwargs['driver'] = driver
+        profile = sources[0].profile
+        profile.pop('affine')
+        profile['transform'] = output_transform
+        profile['height'] = dest.shape[1]
+        profile['width'] = dest.shape[2]
+        profile['driver'] = driver
+        profile.update(**creation_options)
 
-        dst = rasterio.open(output, 'w', **kwargs)
+        dst = rasterio.open(output, 'w', **profile)
         dst.write(dest)
         dst.close()
     except:
