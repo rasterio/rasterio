@@ -40,6 +40,7 @@ def open(
         crs=None, transform=None,
         dtype=None,
         nodata=None,
+        vfs=None,
         **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
     or "w" (write) and return a ``Reader`` or ``Updater`` object.
@@ -80,6 +81,11 @@ def open(
             a negative number i.e. -1 * pixel height
     f: Y coordinate of the top left corner of the top left pixel 
 
+    A virtual filesystem can be specified. The ``vfs`` parameter may be
+    an Apache Commons VFS style string beginning with "zip://" or
+    "tar://"". In this case, the ``path`` must be an absolute path
+    within that container.
+
     Finally, additional kwargs are passed to GDAL as driver-specific
     dataset creation parameters.
     """
@@ -89,6 +95,10 @@ def open(
         raise TypeError("invalid mode: %r" % mode)
     if driver and not isinstance(driver, string_types):
         raise TypeError("invalid driver: %r" % driver)
+    if vfs and not isinstance(vfs, string_types):
+        raise TypeError("invalid vfs: %r" % vfs)
+
+    path, vsi, archive = parse_paths(path, vfs)
 
     if transform:
         transform = guard_transform(transform)
@@ -98,6 +108,7 @@ def open(
 
     if mode == 'r':
         from rasterio._io import RasterReader
+        path = vsi_path(path, vsi=vsi, archive=archive)
         s = RasterReader(path)
     elif mode == 'r+':
         from rasterio._io import writer
@@ -167,3 +178,29 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans[2] -= pad_width*padded_trans[0]
     padded_trans[5] -= pad_width*padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
+
+
+def parse_paths(path, vfs=None):
+    archive = vsi = None
+    if vfs:
+        parts = vfs.split("://")
+        vsi = parts.pop(0) if parts else None
+        archive = parts.pop(0) if parts else None
+    else:
+        parts = path.split("://")
+        path = parts.pop() if parts else None
+        vsi = parts.pop() if parts else None
+    return path, vsi, archive
+
+
+def vsi_path(path, vsi=None, archive=None):
+    # If a VSF and archive file are specified, we convert the path to
+    # a GDAL VSI path (see cpl_vsi.h).
+    if vsi:
+        if archive:
+            result = "/vsi%s/%s%s" % (vsi, archive, path)
+        else:
+            result = "/vsi%s/%s" % (vsi, path)
+    else:
+        result = path
+    return result

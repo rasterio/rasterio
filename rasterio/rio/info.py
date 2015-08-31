@@ -264,9 +264,10 @@ def env(ctx, key):
               help="Output extra information.")
 @options.bidx_opt
 @options.masked_opt
+@options.vfs_opt
 @click.pass_context
 def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
-         masked):
+         masked, vfs):
     """Print metadata about the dataset as JSON.
 
     Optionally print a single metadata item as a string.
@@ -274,10 +275,12 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
-
+    open_opts = {}
+    if vfs:
+        open_opts['vfs'] = vfs
     try:
         with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
-            with rasterio.open(input, mode) as src:
+            with rasterio.open(input, mode, **open_opts) as src:
                 info = src.meta
                 info['transform'] = info['affine'][:6]
                 del info['affine']

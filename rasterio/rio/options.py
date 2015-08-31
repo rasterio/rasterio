@@ -40,6 +40,7 @@ Registry of common rio CLI options.  See cligj for more options.
 --width: width of raster.  In rio-info
 --with-nodata/--without-nodata: include nodata regions or not.  In rio-shapes.
 -v, --tell-me-more, --verbose
+--vfs: virtual file system.
 """
 
 
@@ -159,4 +160,11 @@ rgb_opt = click.option(
     '--rgb', 'photometric', 
     flag_value='rgb',
     default=False,
-    help="Set RGB photometric interpretation")
+    help="Set RGB photometric interpretation.")
+
+
+vfs_opt = click.option(
+    '--vfs', 'vfs',
+    default=None,
+    help="Use a zip:// or tar:// archive as a virtual file system "
+         "('r' mode only).")
