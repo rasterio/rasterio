@@ -56,11 +56,8 @@ def test_window_full_cover():
     def bound_covers(bounds1, bounds2):
         """Does bounds1 cover bounds2?
         """
-        if bounds1[0] <= bounds2[0] and bounds1[1] <= bounds2[1] and \
-           bounds1[2] >= bounds2[2] and bounds1[3] >= bounds2[3]:
-            return True
-        else:
-            return False
+        return (bounds1[0] <= bounds2[0] and bounds1[1] <= bounds2[1] and
+                bounds1[2] >= bounds2[2] and bounds1[3] >= bounds2[3])
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         bounds = list(src.window_bounds(((100, 200), (100, 200))))
