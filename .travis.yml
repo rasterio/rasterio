@@ -11,6 +11,7 @@ addons:
   apt:
     packages:
     - libgdal1h
+    - gdal-bin
     - libgdal-dev
     - libatlas-dev
     - libatlas-base-dev
