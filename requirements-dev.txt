@@ -1,7 +1,7 @@
 affine
 cligj
 coveralls>=0.4
-cython==0.22
+cython>=0.23.1
 delocate
 enum34
 numpy>=1.8.0
