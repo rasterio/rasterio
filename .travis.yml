@@ -1,16 +1,36 @@
 language: python
+sudo: false
+cache:
+  directories:
+    - ~/.cache/pip
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+addons:
+  apt:
+    packages:
+    - libgdal1h
+    - gdal-bin
+    - libgdal-dev
+    - libatlas-dev
+    - libatlas-base-dev
+    - liblapack-dev
+    - gfortran
+    - libgmp-dev
+    - libmpfr-dev
 python:
   - "2.7"
   - "3.3"
   - "3.4"
 before_install:
-  - sudo add-apt-repository -y ppa:ubuntugis/ppa
-  - sudo apt-get update -qq
-  - sudo apt-get install -y libgdal1h gdal-bin libgdal-dev
+  - pip install -U pip
+  - pip install wheel
 install:
-  - pip install --install-option="--no-cython-compile" cython==0.22
-  - pip install -r requirements-dev.txt
-  - pip install -e .
+  - "pip wheel -r requirements-dev.txt"
+  - "pip install -r requirements-dev.txt"
+  - "pip install coveralls"
+  - "pip install -e ."
 script: 
   - py.test --cov rasterio --cov-report term-missing
 after_success:
