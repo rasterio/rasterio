@@ -11,14 +11,10 @@ addons:
   apt:
     packages:
     - libgdal1h
-    - gdal-bin
     - libgdal-dev
     - libatlas-dev
     - libatlas-base-dev
-    - liblapack-dev
     - gfortran
-    - libgmp-dev
-    - libmpfr-dev
 python:
   - "2.7"
   - "3.3"
