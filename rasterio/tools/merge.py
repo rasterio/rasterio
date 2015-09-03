@@ -8,7 +8,7 @@ from rasterio._base import get_index, get_window
 from rasterio.transform import Affine
 
 
-def merge(sources, bounds=(), res=(), nodata=None):
+def merge(sources, bounds=None, res=None, nodata=None):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
