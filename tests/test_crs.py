@@ -89,6 +89,15 @@ def test_from_epsg_string():
         assert crs.from_string('epsg:xyz')
 
 
+def test_from_string():
+    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    assert wgs84_crs == {'no_defs': True, 'ellps': 'WGS84', 'datum': 'WGS84', 'proj': 'longlat'}
+
+    # Make sure this doesn't get handled using the from_epsg() even though 'epsg' is in the string
+    epsg_init_crs = crs.from_string('+units=m +init=epsg:26911 +no_defs=True')
+    assert epsg_init_crs == {'units': 'm', 'init': 'epsg:26911', 'no_defs': True}
+
+
 def test_bare_parameters():
     """ Make sure that bare parameters (e.g., no_defs) are handled properly,
     even if they come in with key=True.  This covers interaction with pyproj,
