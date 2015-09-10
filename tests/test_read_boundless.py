@@ -69,3 +69,11 @@ def test_read_boundless_masked_overlap():
         assert not data.mask.all()
         assert data.mask[0,399,399] == False
         assert data.mask[0,0,0] == True
+
+
+def test_read_boundless_zero_stop():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        data = src.read(
+            window=((-200, 0), (-200, 0)), boundless=True, masked=True)
+        assert data.shape == (3, 200, 200)
+        assert data.mask.all()
