@@ -24,7 +24,7 @@ def test_window_no_exception():
                 (0, src.height), (-4, src.width))
 
 
-def test_index():
+def test_index_values():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.index(101985.0, 2826915.0) == (0, 0)
         assert src.index(101985.0+400.0, 2826915.0) == (0, 1)
@@ -41,8 +41,8 @@ def test_window():
                                                           (0, src.width))
         assert src.index(left+400, top-400) == (1, 1)
         assert src.index(left+dx+eps, top-dy-eps) == (1, 1)
-        assert src.window(left, top-400, left+400, top) == ((0, 1), (0, 1))
-        assert src.window(left, top-2*dy-eps, left+2*dx+eps, top) == ((0, 2), (0, 2))
+        assert src.window(left, top-400, left+400, top) == ((0, 2), (0, 2))
+        assert src.window(left, top-2*dy-eps, left+2*dx-eps, top) == ((0, 2), (0, 2))
 
 
 def test_window_bounds_roundtrip():
@@ -66,8 +66,4 @@ def test_window_full_cover():
 
         win = src.window(*bounds)
         bounds_calc = list(src.window_bounds(win))
-        assert not bound_covers(bounds_calc, bounds)
-
-        win2 = src.window(*bounds, full_cover=True)
-        bounds_calc2 = list(src.window_bounds(win2))
-        assert bound_covers(bounds_calc2, bounds)
+        assert bound_covers(bounds_calc, bounds)
