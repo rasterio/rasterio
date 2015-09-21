@@ -330,8 +330,11 @@ def shapes(
                 if not with_nodata:
                     kwargs['mask'] = msk
 
+                src_basename = os.path.basename(src.name)
+
                 # Yield GeoJSON features.
-                for g, i in rasterio.features.shapes(img, **kwargs):
+                for i, (g, val) in enumerate(
+                        rasterio.features.shapes(img, **kwargs)):
                     if projection == 'geographic':
                         g = rasterio.warp.transform_geom(
                             src.crs, 'EPSG:4326', g,
@@ -339,9 +342,9 @@ def shapes(
                     xs, ys = zip(*coords(g))
                     yield {
                         'type': 'Feature',
-                        'id': str(i),
+                        'id': "{0}:{1}".format(src_basename, i),
                         'properties': {
-                            'val': i, 'filename': os.path.basename(src.name)
+                            'val': val, 'filename': src_basename
                         },
                         'bbox': [min(xs), min(ys), max(xs), max(ys)],
                         'geometry': g
