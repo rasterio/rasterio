@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- Ensure local uniqueness of the rio-shapes feature ids (#479).
+
 0.26.0 (2015-08-11)
 -------------------
 - Add dependency on click-plugins, a new project that takes over the plugin
