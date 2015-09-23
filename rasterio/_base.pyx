@@ -698,7 +698,7 @@ cpdef eval_window(object window, int height, int width):
     return (r_start, r_stop), (c_start, c_stop)
 
 
-def get_index(x, y, affine):
+def get_index(x, y, affine, op=math.floor):
     """
     Returns the (row, col) index of the pixel containing (x, y) given a
     coordinate reference system.
@@ -711,6 +711,8 @@ def get_index(x, y, affine):
         y value in coordinate reference system
     affine : tuple
         Coefficients mapping pixel coordinates to coordinate reference system.
+    op : function
+        Function to convert fractional pixels to whole numbers (floor, ceiling, round)
 
     Returns
     -------
@@ -720,8 +722,8 @@ def get_index(x, y, affine):
         col index
     """
 
-    row = int(math.floor((y - affine[5]) / affine[4]))
-    col = int(math.floor((x - affine[2]) / affine[0]))
+    row = int(op((y - affine[5]) / affine[4]))
+    col = int(op((x - affine[2]) / affine[0]))
 
     return row, col
 
@@ -746,8 +748,8 @@ def get_window(left, bottom, right, top, affine):
     """
 
     EPS = 1.0e-8
-    window_start = get_index(left + EPS, top - EPS, affine)
-    window_stop = get_index(right + EPS, bottom - EPS, affine)
+    window_start = get_index(left + EPS, top - EPS, affine, op=math.floor)
+    window_stop = get_index(right - EPS, bottom + EPS, affine, op=math.ceil)
     window = tuple(zip(window_start, window_stop))
 
     return window

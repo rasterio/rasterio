@@ -24,7 +24,7 @@ def test_clip_bounds(runner, tmpdir):
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert out.shape == (419, 173)
+        assert out.shape == (420, 173)
 
 
 def test_clip_like(runner, tmpdir):
