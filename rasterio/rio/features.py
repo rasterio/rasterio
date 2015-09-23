@@ -3,6 +3,7 @@ import logging
 from math import ceil
 import os
 import shutil
+import re
 
 import click
 import cligj
@@ -16,7 +17,7 @@ from .helpers import coords, resolve_inout, write_features, to_lower
 from . import options
 import rasterio
 from rasterio.transform import Affine
-
+from rasterio.coords import disjoint_bounds
 
 logger = logging.getLogger('rio')
 
@@ -121,10 +122,10 @@ def mask(
         bounds = geojson.get('bbox', calculate_bounds(geojson))
 
         with rasterio.open(input) as src:
-            disjoint_bounds = _disjoint_bounds(bounds, src.bounds)
+            has_disjoint_bounds = disjoint_bounds(bounds, src.bounds)
 
             if crop:
-                if disjoint_bounds:
+                if has_disjoint_bounds:
                     raise click.BadParameter('not allowed for GeoJSON outside '
                                              'the extent of the input raster',
                                              param=crop, param_hint='--crop')
@@ -134,7 +135,7 @@ def mask(
                 (r1, r2), (c1, c2) = window
                 mask_shape = (r2 - r1, c2 - c1)
             else:
-                if disjoint_bounds:
+                if has_disjoint_bounds:
                     click.echo('GeoJSON outside bounds of existing output '
                                'raster. Are they in different coordinate '
                                'reference systems?',
@@ -329,8 +330,11 @@ def shapes(
                 if not with_nodata:
                     kwargs['mask'] = msk
 
+                src_basename = os.path.basename(src.name)
+
                 # Yield GeoJSON features.
-                for g, i in rasterio.features.shapes(img, **kwargs):
+                for i, (g, val) in enumerate(
+                        rasterio.features.shapes(img, **kwargs)):
                     if projection == 'geographic':
                         g = rasterio.warp.transform_geom(
                             src.crs, 'EPSG:4326', g,
@@ -338,9 +342,9 @@ def shapes(
                     xs, ys = zip(*coords(g))
                     yield {
                         'type': 'Feature',
-                        'id': str(i),
+                        'id': "{0}:{1}".format(src_basename, i),
                         'properties': {
-                            'val': i, 'filename': os.path.basename(src.name)
+                            'val': val, 'filename': src_basename
                         },
                         'bbox': [min(xs), min(ys), max(xs), max(ys)],
                         'geometry': g
@@ -487,7 +491,7 @@ def rasterize(
                                              'existing output raster',
                                              param='input', param_hint='input')
 
-                if _disjoint_bounds(geojson_bounds, out.bounds):
+                if disjoint_bounds(geojson_bounds, out.bounds):
                     click.echo("GeoJSON outside bounds of existing output "
                                "raster. Are they in different coordinate "
                                "reference systems?",
@@ -521,7 +525,7 @@ def rasterize(
                                              '--like raster',
                                              param='input', param_hint='input')
 
-                if _disjoint_bounds(geojson_bounds, template_ds.bounds):
+                if disjoint_bounds(geojson_bounds, template_ds.bounds):
                     click.echo("GeoJSON outside bounds of --like raster. "
                                "Are they in different coordinate reference "
                                "systems?",
@@ -702,9 +706,3 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()
-
-
-def _disjoint_bounds(bounds1, bounds2):
-    return (bounds1[0] > bounds2[2] or bounds1[2] < bounds2[0] or
-            bounds1[1] > bounds2[3] or bounds1[3] < bounds2[1])
-

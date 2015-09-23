@@ -1,14 +1,75 @@
 import sys
 import os
 import logging
-import click
+import numpy
 from click.testing import CliRunner
 
 import rasterio
-from rasterio.rio.convert import convert
+from rasterio.rio.main import main_group
+from rasterio.rio.convert import convert, clip
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+TEST_BBOX = [-11850000, 4804000, -11840000, 4808000]
+
+
+def test_clip_bounds(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        main_group,
+        ['clip', 'tests/data/shade.tif', output, '--bounds'] + TEST_BBOX
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+
+    with rasterio.open(output) as out:
+        assert out.shape == (419, 173)
+
+
+def test_clip_like(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        clip,
+        ['tests/data/shade.tif', output, '--like', 'tests/data/shade.tif']
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+
+    with rasterio.open('tests/data/shade.tif') as template_ds:
+        with rasterio.open(output) as out:
+            assert out.shape == template_ds.shape
+            assert numpy.allclose(out.bounds, template_ds.bounds)
+
+
+def test_clip_missing_params(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        clip,
+        ['tests/data/shade.tif', output]
+    )
+    assert result.exit_code == 2
+    assert '--bounds or --like required' in result.output
+
+
+def test_clip_bounds_disjunct(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        clip,
+        ['tests/data/shade.tif', output, '--bounds'] + [0, 0, 10, 10]
+    )
+    assert result.exit_code == 2
+    assert '--bounds' in result.output
+
+
+def test_clip_like_disjunct(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        clip,
+        ['tests/data/shade.tif', output, '--like', 'tests/data/RGB.byte.tif']
+    )
+    assert result.exit_code == 2
+    assert '--like' in result.output
 
 
 # Tests: format and type conversion, --format and --dtype

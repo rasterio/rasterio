@@ -95,6 +95,7 @@ def test_merge_warn(test_data_dir_1):
     runner = CliRunner()
     result = runner.invoke(merge, inputs + [outputname] + ['--nodata', '-1'])
     assert result.exit_code == 0
+    assert os.path.exists(outputname)
     assert "using the --nodata option for better results" in result.output
 
 

@@ -19,6 +19,7 @@ Rasterio's command line interface is a program named "rio".
     Commands:
       bounds     Write bounding boxes to stdout as GeoJSON.
       calc       Raster data calculator.
+      clip       Clip a raster to given bounds.
       convert    Copy and convert raster dataset.
       edit-info  Edit dataset metadata.
       env        Print information about the rio environment.
@@ -155,6 +156,31 @@ design of the calc command and something that could be done much more
 efficiently in Python.
 
 Please see `calc.rst <calc.rst>`__ for more details.
+
+
+clip
+----
+
+Added in 0.27
+
+The ``clip`` command clips a raster using bounds input directly or from a
+template raster.
+
+.. code-block:: console
+
+    $ rio clip input.tif output.tif --bounds xmin ymin xmax ymax
+    $ rio clip input.tif output.tif --like template.tif
+
+If using ``--bounds``, values must be in coordinate reference system of input.
+If using ``--like``, bounds will automatically be transformed to match the
+coordinate reference system of the input.
+
+It can also be combined to read bounds of a feature dataset using Fiona:
+
+.. code-block:: console
+
+    $ rio clip input.tif output.tif --bounds $(fio info features.shp --bounds)
+
 
 
 convert

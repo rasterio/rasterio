@@ -379,17 +379,13 @@ cdef class DatasetReader(object):
 
     def index(self, x, y, op=math.floor):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        a, b, c, d, e, f, _, _, _ = self.affine
-        return int(op((y-f)/e)), int(op((x-c)/a))
+        return get_index(x, y, self.affine)
 
     def window(self, left, bottom, right, top, boundless=False):
         """Returns the window corresponding to the world bounding box.
         If boundless is False, window is limited to extent of this dataset."""
-        EPS = 1.0e-8
-        # Ensure window results in bounds that fully cover specified bound args
-        window = tuple(zip(self.index(left + EPS, top - EPS),
-                           self.index(right - EPS, bottom + EPS, op=math.ceil)))
 
+        window = get_window(left, bottom, right, top, self.affine)
         if boundless:
             return window
         else:
@@ -700,6 +696,61 @@ cpdef eval_window(object window, int height, int width):
         raise ValueError(
             "invalid window: col range (%d, %d)" % (c_start, c_stop))
     return (r_start, r_stop), (c_start, c_stop)
+
+
+def get_index(x, y, affine):
+    """
+    Returns the (row, col) index of the pixel containing (x, y) given a
+    coordinate reference system.
+
+    Parameters
+    ----------
+    x : float
+        x value in coordinate reference system
+    y : float
+        y value in coordinate reference system
+    affine : tuple
+        Coefficients mapping pixel coordinates to coordinate reference system.
+
+    Returns
+    -------
+    row : int
+        row index
+    col : int
+        col index
+    """
+
+    row = int(math.floor((y - affine[5]) / affine[4]))
+    col = int(math.floor((x - affine[2]) / affine[0]))
+
+    return row, col
+
+
+def get_window(left, bottom, right, top, affine):
+    """
+    Returns a window tuple given coordinate bounds and the coordinate reference
+    system.
+
+    Parameters
+    ----------
+    left : float
+        Left edge of window
+    bottom : float
+        Bottom edge of window
+    right : float
+        Right edge of window
+    top : float
+        top edge of window
+    affine : tuple
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    """
+
+    EPS = 1.0e-8
+    window_start = get_index(left + EPS, top - EPS, affine)
+    window_stop = get_index(right + EPS, bottom - EPS, affine)
+    window = tuple(zip(window_start, window_stop))
+
+    return window
 
 
 def window_shape(window, height=-1, width=-1):
