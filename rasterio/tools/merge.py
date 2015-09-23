@@ -105,7 +105,7 @@ def merge(sources, bounds=None, res=None, nodata=None):
 
     dst_w, dst_s, dst_e, dst_n = bounds
 
-    for src in reversed(sources):
+    for src in sources:
         # Real World (tm) use of boundless reads.
         # This approach uses the maximum amount of memory to solve the problem.
         # Making it more efficient is a TODO.
