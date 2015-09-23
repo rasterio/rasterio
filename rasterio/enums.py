@@ -28,3 +28,20 @@ class Resampling(Enum):
     mode='MODE'
     average_magphase='AVERAGE_MAGPHASE'
     none='NONE'
+
+
+class Compression(Enum):
+    jpeg='JPEG'
+    lzw='LZW'
+    packbits='PACKBITS'
+    deflate='DEFLATE'
+    ccittrle='CCITTRLE'
+    ccittfax3='CCITTFAX3'
+    ccittfax4='CCITTFAX4'
+    lzma='LZMA'
+    none='NONE'
+
+
+class Interleaving(Enum):
+    pixel='PIXEL'
+    band='BAND'

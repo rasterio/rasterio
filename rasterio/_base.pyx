@@ -15,7 +15,7 @@ from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, Compression, Interleaving
 
 
 log = logging.getLogger('rasterio')
@@ -420,6 +420,21 @@ cdef class DatasetReader(object):
         self._read = True
         return m
 
+    @property
+    def compression(self):
+        val = self.tags(ns='IMAGE_STRUCTURE').get('COMPRESSION')
+        if val:
+            return Compression(val)
+        else:
+            return None
+
+    @property
+    def interleaving(self):
+        val = self.tags(ns='IMAGE_STRUCTURE').get('INTERLEAVE')
+        if val:
+            return Interleaving(val)
+        else:
+            return None
 
     property profile:
         """Basic metadata and creation options of this dataset.
@@ -434,8 +449,11 @@ cdef class DatasetReader(object):
                 blockxsize=self.block_shapes[0][1],
                 blockysize=self.block_shapes[0][0],
                 tiled=self.block_shapes[0][1] != self.width)
+            if self.compression:
+                m['compress'] = self.compression.name
+            if self.interleaving:
+                m['interleave'] = self.interleaving.name
             return m
-
 
     def lnglat(self):
         w, s, e, n = self.bounds
