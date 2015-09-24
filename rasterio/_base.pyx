@@ -277,7 +277,7 @@ cdef class DatasetReader(object):
     def get_nodatavals(self):
         cdef void *hband = NULL
         cdef double nodataval
-        cdef int success
+        cdef int success = 0
 
         if not self._nodatavals:
             if self._hds == NULL:
@@ -286,11 +286,23 @@ cdef class DatasetReader(object):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 if hband == NULL:
                     raise ValueError("Null band")
+                dtype = dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)]
                 nodataval = _gdal.GDALGetRasterNoDataValue(hband, &success)
                 val = nodataval
-                if not success:
+                # GDALGetRasterNoDataValue() has two ways of telling you that
+                # there's no nodata value. The success flag might come back
+                # 0 (FALSE). Even if it comes back 1 (TRUE), you still need
+                # to check that the return value is within the range of the
+                # data type. If so, the band has a nodata value. If not,
+                # there's no nodata value.
+                if (success == 0 or
+                        val < dtypes.dtype_ranges[dtype][0] or
+                        val > dtypes.dtype_ranges[dtype][1]):
                     val = None
+                log.debug("Nodata success: %d", success)
+                log.debug("Nodata value: %f", nodataval)
                 self._nodatavals.append(val)
+
         return self._nodatavals
 
     property nodatavals:
@@ -698,7 +710,7 @@ cpdef eval_window(object window, int height, int width):
     return (r_start, r_stop), (c_start, c_stop)
 
 
-def get_index(x, y, affine, op=math.floor):
+def get_index(x, y, affine, op=math.floor, precision=6):
     """
     Returns the (row, col) index of the pixel containing (x, y) given a
     coordinate reference system.
@@ -712,7 +724,10 @@ def get_index(x, y, affine, op=math.floor):
     affine : tuple
         Coefficients mapping pixel coordinates to coordinate reference system.
     op : function
-        Function to convert fractional pixels to whole numbers (floor, ceiling, round)
+        Function to convert fractional pixels to whole numbers (floor, ceiling,
+        round)
+    precision : int
+        Decimal places of precision in indexing, as in `round()`.
 
     Returns
     -------
@@ -721,14 +736,16 @@ def get_index(x, y, affine, op=math.floor):
     col : int
         col index
     """
-
-    row = int(op((y - affine[5]) / affine[4]))
-    col = int(op((x - affine[2]) / affine[0]))
-
+    # Use an epsilon, magnitude determined by the precision parameter
+    # and sign determined by the op function: positive for floor, negative
+    # for ceil.
+    eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
+    row = int(op((y - eps - affine[5]) / affine[4]))
+    col = int(op((x + eps - affine[2]) / affine[0]))
     return row, col
 
 
-def get_window(left, bottom, right, top, affine):
+def get_window(left, bottom, right, top, affine, precision=6):
     """
     Returns a window tuple given coordinate bounds and the coordinate reference
     system.
@@ -745,13 +762,14 @@ def get_window(left, bottom, right, top, affine):
         top edge of window
     affine : tuple
         Coefficients mapping pixel coordinates to coordinate reference system.
+    precision : int
+        Decimal places of precision in indexing, as in `round()`.
     """
-
-    EPS = 1.0e-8
-    window_start = get_index(left + EPS, top - EPS, affine, op=math.floor)
-    window_stop = get_index(right - EPS, bottom + EPS, affine, op=math.ceil)
+    window_start = get_index(
+        left, top, affine, op=math.floor, precision=precision)
+    window_stop = get_index(
+        right, bottom, affine, op=math.ceil, precision=precision)
     window = tuple(zip(window_start, window_stop))
-
     return window
 
 

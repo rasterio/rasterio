@@ -131,11 +131,22 @@ def test_merge_output_exists(tmpdir):
         assert out.count == 3
 
 
-def test_merge_output_exists_without_nodata(test_data_dir_2):
+def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
+    """Fails without -f or --force-overwrite"""
     runner = CliRunner()
     result = runner.invoke(
         merge,
         [str(test_data_dir_2.join('a.tif')),
+            str(test_data_dir_2.join('b.tif'))])
+    assert result.exit_code == 1
+
+
+def test_merge_output_exists_without_nodata(test_data_dir_2):
+    """Succeeds with -f"""
+    runner = CliRunner()
+    result = runner.invoke(
+        merge,
+        ['-f', str(test_data_dir_2.join('a.tif')),
             str(test_data_dir_2.join('b.tif'))])
     assert result.exit_code == 0
 

@@ -1,3 +1,4 @@
+import logging
 import math
 import warnings
 
@@ -6,6 +7,9 @@ import numpy as np
 import rasterio
 from rasterio._base import get_index, get_window
 from rasterio.transform import Affine
+
+
+logger = logging.getLogger('rasterio')
 
 
 def merge(sources, bounds=None, res=None, nodata=None):
@@ -61,7 +65,10 @@ def merge(sources, bounds=None, res=None, nodata=None):
            xs.extend([left, right])
            ys.extend([bottom, top])
         bounds = min(xs), min(ys), max(xs), max(ys)
+
+    logger.debug("Output bounds: %r", bounds)
     output_transform = Affine.translation(bounds[0], bounds[3])
+    logger.debug("Output transform, before scaling: %r", output_transform)
 
     # Resolution/pixel size.
     if not res:
@@ -71,10 +78,12 @@ def merge(sources, bounds=None, res=None, nodata=None):
     elif len(res) == 1:
         res = (res[0], res[0])
     output_transform *= Affine.scale(res[0], -res[1])
+    logger.debug("Output transform, after scaling: %r", output_transform)
 
     # Dataset shape.
-    output_width = int(math.ceil((bounds[2] - bounds[0]) / res[0]))
-    output_height = int(math.ceil((bounds[3] - bounds[1]) / res[1]))
+    output_width = int(round((bounds[2] - bounds[0]) / res[0]))
+    output_height = int(round((bounds[3] - bounds[1]) / res[1]))
+    logger.debug("Output width: %d, height: %d", output_width, output_height)
 
     # create destination array
     dest = np.zeros((first.count, output_height, output_width),
@@ -82,6 +91,7 @@ def merge(sources, bounds=None, res=None, nodata=None):
 
     if nodata is not None:
         nodataval = nodata 
+        logger.debug("Set nodataval: %r", nodataval)
 
     if nodataval is not None:
         # Only fill if the nodataval is within dtype's range.
@@ -119,24 +129,38 @@ def merge(sources, bounds=None, res=None, nodata=None):
         int_n = src_n if src_n < dst_n else dst_n
 
         # 2. Compute the source window.
-        src_window = src.window(int_w, int_s, int_e, int_n)
+        src_window = get_window(
+            int_w, int_s, int_e, int_n, src.affine, precision=6)
+        logger.debug("Src %s window: %r", src.name, src_window)
 
         # 3. Compute the destination window.
-        dst_window = get_window(int_w, int_s, int_e, int_n, output_transform)
+        dst_window = get_window(
+            int_w, int_s, int_e, int_n, output_transform, precision=6)
+        logger.debug("Dst window: %r", dst_window)
 
         # 4. Initialize temp array.
-        tsize = (first.count,) + tuple(b - a for a, b in dst_window)
-        temp = np.zeros(tsize, dtype=dtype)
+        tcount = first.count
+        trows, tcols = tuple(b - a for a, b in dst_window)
 
+        # Our destination window's ceiling is very often too big by one.
+        if trows == output_height + 1:
+            trows -= 1
+        if tcols == output_width + 1:
+            tcols -= 1
+
+        temp_shape = (tcount, trows, tcols)
+        logger.debug("Temp shape: %r", temp_shape)
+
+        temp = np.zeros(temp_shape, dtype=dtype)
         temp = src.read(out=temp, window=src_window, boundless=False,
                         masked=True)
 
         # 5. Copy elements of temp into dest.
-        roff, coff = get_index(int_w, int_n, output_transform)
-        h, w = temp.shape[-2:]
+        roff, coff = dst_window[0][0], dst_window[1][0] #get_index(int_w, int_n, output_transform, precision=6)
 
-        region = dest[:,roff:roff+h,coff:coff+w]
-        np.copyto(region, temp,
-                  where=np.logical_and(region==nodataval, temp.mask==False))
+        region = dest[:,roff:roff+trows,coff:coff+tcols]
+        np.copyto(
+            region, temp,
+            where=np.logical_and(region==nodataval, temp.mask==False))
 
     return dest, output_transform
