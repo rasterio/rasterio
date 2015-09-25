@@ -343,12 +343,12 @@ def test_merge_tiny_output_opt(tiffs):
         assert data[0][3][0] == 40
 
 
-def test_merge_tiny_res(tiffs):
+def test_merge_tiny_res_bounds(tiffs):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname, '--res', 2])
+    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
     assert result.exit_code == 0
 
     # Output should be
