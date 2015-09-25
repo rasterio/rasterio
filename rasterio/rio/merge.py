@@ -26,10 +26,13 @@ from rasterio.transform import Affine
               type=bool, default=False,
               help="Do not prompt for confirmation before overwriting output "
                    "file")
+@click.option('--precision', type=int, default=7,
+              help="Number of decimal places of precision in alignment of "
+                   "pixels")
 @options.creation_options
 @click.pass_context
 def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
-        creation_options):
+        precision, creation_options):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -62,7 +65,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
 
     sources = [rasterio.open(f) for f in files]
     dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
-                                        nodata=nodata)
+                                        nodata=nodata, precision=precision)
 
     profile = sources[0].profile
     profile.pop('affine')

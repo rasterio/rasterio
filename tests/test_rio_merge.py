@@ -362,3 +362,40 @@ def test_merge_tiny_res(tiffs):
         assert data[0, 0, 1] == 90
         assert data[0, 1, 0] == 40
         assert data[0, 1, 1] == 0
+
+
+def test_merge_tiny_res_high_precision(tiffs):
+    outputname = str(tiffs.join('merged.tif'))
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--precision', 15])
+    assert result.exit_code == 0
+
+    # Output should be
+    # [[[120  90]
+    #   [ 40   0]]]
+
+    with rasterio.open(outputname) as src:
+        data = src.read()
+        print(data)
+        assert data[0, 0, 0] == 120
+        assert data[0, 0, 1] == 90
+        assert data[0, 1, 0] == 40
+        assert data[0, 1, 1] == 0
+
+
+def test_merge_rgb(tmpdir):
+    """Get back original image"""
+    outputname = str(tmpdir.join('merged.tif'))
+    inputs = [
+        'tests/data/rgb1.tif',
+        'tests/data/rgb2.tif',
+        'tests/data/rgb3.tif',
+        'tests/data/rgb4.tif']
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname])
+    assert result.exit_code == 0
+
+    with rasterio.open(outputname) as src:
+        assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
