@@ -1,9 +1,21 @@
 Changes
 =======
 
-Next
-----
+0.27.0 (2015-09-25)
+-------------------
 - Ensure local uniqueness of the rio-shapes feature ids (#479).
+- Surface compression and interleaving as dataset properties and in rio-info
+  (#481). In the module, these are enums (`enums.Compression` and 
+  `enums.Interleaving`); the values of the enums correspond to GDAL terms
+  (i.e, "DEFLATE") and the names are what surface in the CLI ("deflate").
+- Change get_window() and DatasetReader.window() to return a window guaranteed
+  to cover the input bounding box (#464, #485).
+- Bug fix for improperly computed transforms of output file in tools.merge and
+  rio-merge (#485).
+- More robust determination of dataset nodata values. In particular, the 
+  absence of a nodata value is much more clear: dataset.nodata should never
+  return an out of range value when there is no nodata value, it should always
+  return `None` (#485).
 
 0.26.0 (2015-08-11)
 -------------------
