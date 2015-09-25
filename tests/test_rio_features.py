@@ -213,7 +213,7 @@ def test_mask_crop(runner, tmpdir):
         with rasterio.open(output) as out:
             assert out.shape[1] == src.shape[1]
             assert out.shape[0] < src.shape[0]
-            assert out.shape[0] == 823
+            assert out.shape[0] == 824
 
     # Adding invert option after crop should be ignored
     result = runner.invoke(

@@ -30,12 +30,12 @@ def test_data_dir_1(tmpdir):
 
     with rasterio.drivers():
 
-        with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
             dst.write_band(1, data)
 
-        with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
             dst.write_band(1, data)
@@ -58,12 +58,12 @@ def test_data_dir_2(tmpdir):
 
     with rasterio.drivers():
 
-        with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
             dst.write_band(1, data)
 
-        with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
             dst.write_band(1, data)
@@ -131,11 +131,22 @@ def test_merge_output_exists(tmpdir):
         assert out.count == 3
 
 
-def test_merge_output_exists_without_nodata(test_data_dir_2):
+def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
+    """Fails without -f or --force-overwrite"""
     runner = CliRunner()
     result = runner.invoke(
         merge,
         [str(test_data_dir_2.join('a.tif')),
+            str(test_data_dir_2.join('b.tif'))])
+    assert result.exit_code == 1
+
+
+def test_merge_output_exists_without_nodata(test_data_dir_2):
+    """Succeeds with -f"""
+    runner = CliRunner()
+    result = runner.invoke(
+        merge,
+        ['-f', str(test_data_dir_2.join('a.tif')),
             str(test_data_dir_2.join('b.tif'))])
     assert result.exit_code == 0
 
@@ -174,12 +185,12 @@ def test_data_dir_overlapping(tmpdir):
     }
 
     with rasterio.drivers():
-        with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             dst.write_band(1, data)
 
         kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
-        with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
             dst.write_band(1, data)
 
@@ -220,12 +231,12 @@ def test_data_dir_float(tmpdir):
     }
 
     with rasterio.drivers():
-        with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.float64)
             data[0:6, 0:6] = 255
             dst.write_band(1, data)
 
-        with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
+        with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.float64)
             data[4:8, 4:8] = 254
             dst.write_band(1, data)
@@ -296,15 +307,15 @@ def test_merge_tiny(tiffs):
 
     # Output should be
     #
-    # [[  0 120 120  90]
-    #  [  0 120 120  90]
+    # [[  0 120  90  90]
+    #  [  0 120  90  90]
     #  [  0  60   0   0]
     #  [ 40   0   0   0]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
-        assert (data[0][0:2,1:3] == 120).all()
-        assert (data[0][0:2,3] == 90).all()
+        assert (data[0][0:2,1] == 120).all()
+        assert (data[0][0:2,2:4] == 90).all()
         assert data[0][2][1] == 60
         assert data[0][3][0] == 40
 
@@ -319,34 +330,72 @@ def test_merge_tiny_output_opt(tiffs):
 
     # Output should be
     #
-    # [[  0 120 120  90]
-    #  [  0 120 120  90]
+    # [[  0 120  90  90]
+    #  [  0 120  90  90]
     #  [  0  60   0   0]
     #  [ 40   0   0   0]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
-        assert (data[0][0:2,1:3] == 120).all()
-        assert (data[0][0:2,3] == 90).all()
+        assert (data[0][0:2,1] == 120).all()
+        assert (data[0][0:2,2:4] == 90).all()
         assert data[0][2][1] == 60
         assert data[0][3][0] == 40
 
 
-def test_merge_tiny_res(tiffs):
+def test_merge_tiny_res_bounds(tiffs):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname, '--res', 2])
+    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
     assert result.exit_code == 0
 
     # Output should be
     # [[[120  90]
-    #   [  0   0]]]
+    #   [ 40   0]]]
 
     with rasterio.open(outputname) as src:
         data = src.read()
         print(data)
         assert data[0, 0, 0] == 120
         assert data[0, 0, 1] == 90
-        assert (data[0, 1, 0:1] == 0).all()
+        assert data[0, 1, 0] == 40
+        assert data[0, 1, 1] == 0
+
+
+def test_merge_tiny_res_high_precision(tiffs):
+    outputname = str(tiffs.join('merged.tif'))
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--precision', 15])
+    assert result.exit_code == 0
+
+    # Output should be
+    # [[[120  90]
+    #   [ 40   0]]]
+
+    with rasterio.open(outputname) as src:
+        data = src.read()
+        print(data)
+        assert data[0, 0, 0] == 120
+        assert data[0, 0, 1] == 90
+        assert data[0, 1, 0] == 40
+        assert data[0, 1, 1] == 0
+
+
+def test_merge_rgb(tmpdir):
+    """Get back original image"""
+    outputname = str(tmpdir.join('merged.tif'))
+    inputs = [
+        'tests/data/rgb1.tif',
+        'tests/data/rgb2.tif',
+        'tests/data/rgb3.tif',
+        'tests/data/rgb4.tif']
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname])
+    assert result.exit_code == 0
+
+    with rasterio.open(outputname) as src:
+        assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
