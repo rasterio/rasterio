@@ -2,11 +2,18 @@ language: python
 sudo: false
 cache:
   directories:
+    - $GDALINST
     - ~/.cache/pip
 env:
   global:
     - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+    - GDALINST=$HOME/gdalinstall
+    - GDALBUILD=$HOME/gdalbuild
+  matrix:
+    - GDALVERSION = "1.9.2"
+    - GDALVERSION = "1.11.2"
+      #- GDALVERSION = "2.0.1"
 addons:
   apt:
     packages:
@@ -23,9 +30,13 @@ python:
 before_install:
   - pip install -U pip
   - pip install wheel
+  - . ./scripts/travis_gdal_install.sh
+  - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
+  - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 install:
   - "pip wheel -r requirements-dev.txt"
   - "pip install -r requirements-dev.txt"
+  - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
   - "pip install coveralls"
   - "pip install -e ."
 script: 
