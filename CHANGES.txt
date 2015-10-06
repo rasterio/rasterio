@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.28.0 (2015-10-06)
+-------------------
+- Ensure that tools module is packaged (#489, #490).
+
 0.27.0 (2015-09-25)
 -------------------
 - Ensure local uniqueness of the rio-shapes feature ids (#479).
