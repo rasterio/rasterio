@@ -5,6 +5,7 @@ Changes
 -------------------
 - Ensure that tools module is packaged (#489, #490). The rio-merge command was
   broken in 0.27.0 and is restored to working order in version 0.28.0.
+- Add `precision` keyword argument to `index()` method (#492).
 
 0.27.0 (2015-09-25)
 -------------------
