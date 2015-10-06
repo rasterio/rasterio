@@ -389,9 +389,9 @@ cdef class DatasetReader(object):
             row += self.height
         return c+a*col, f+e*row
 
-    def index(self, x, y, op=math.floor):
+    def index(self, x, y, op=math.floor, precision=6):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        return get_index(x, y, self.affine)
+        return get_index(x, y, self.affine, op=op, precision=precision)
 
     def window(self, left, bottom, right, top, boundless=False):
         """Returns the window corresponding to the world bounding box.
