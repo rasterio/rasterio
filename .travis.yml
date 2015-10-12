@@ -26,10 +26,11 @@ before_install:
 install:
   - "pip wheel -r requirements-dev.txt"
   - "pip install -r requirements-dev.txt"
+  - "pip install pytest-xdist"
   - "pip install coveralls"
   - "pip install -e ."
 script: 
-  - py.test --cov rasterio --cov-report term-missing
+  - py.test -n 2 --cov rasterio --cov-report term-missing
 after_success:
   - coveralls
 before_deploy:
