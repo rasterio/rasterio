@@ -816,10 +816,10 @@ cdef class RasterReader(_base.DatasetReader):
         else:
             # Compute the overlap between the dataset and the boundless window.
             overlap = ((
-                max(min(window[0][0] or 0, self.height), 0),
-                max(min(window[0][1] or self.height, self.height), 0)), (
-                max(min(window[1][0] or 0, self.width), 0),
-                max(min(window[1][1] or self.width, self.width), 0)))
+                max(min(window[0][0], self.height), 0),
+                max(min(window[0][1], self.height), 0)), (
+                max(min(window[1][0], self.width), 0),
+                max(min(window[1][1], self.width), 0)))
 
             if overlap != ((0, 0), (0, 0)):
                 # Prepare a buffer.
@@ -978,10 +978,10 @@ cdef class RasterReader(_base.DatasetReader):
         else:
             # Compute the overlap between the dataset and the boundless window.
             overlap = ((
-                max(min(window[0][0] or 0, self.height), 0),
-                max(min(window[0][1] or self.height, self.height), 0)), (
-                max(min(window[1][0] or 0, self.width), 0),
-                max(min(window[1][1] or self.width, self.width), 0)))
+                max(min(window[0][0], self.height), 0),
+                max(min(window[0][1], self.height), 0)), (
+                max(min(window[1][0], self.width), 0),
+                max(min(window[1][1], self.width), 0)))
 
             if overlap != ((0, 0), (0, 0)):
                 # Prepare a buffer.

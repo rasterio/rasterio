@@ -227,7 +227,7 @@ setup_args = dict(
     url='https://github.com/mapbox/rasterio',
     license='BSD',
     package_dir={'': '.'},
-    packages=['rasterio', 'rasterio.rio'],
+    packages=['rasterio', 'rasterio.rio', 'rasterio.tools'],
     entry_points='''
         [console_scripts]
         rio=rasterio.rio.main:main_group

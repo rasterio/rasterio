@@ -15,7 +15,7 @@ from rasterio._err import cpl_errs
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, Compression, Interleaving
 
 
 log = logging.getLogger('rasterio')
@@ -277,7 +277,7 @@ cdef class DatasetReader(object):
     def get_nodatavals(self):
         cdef void *hband = NULL
         cdef double nodataval
-        cdef int success
+        cdef int success = 0
 
         if not self._nodatavals:
             if self._hds == NULL:
@@ -286,11 +286,23 @@ cdef class DatasetReader(object):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 if hband == NULL:
                     raise ValueError("Null band")
+                dtype = dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)]
                 nodataval = _gdal.GDALGetRasterNoDataValue(hband, &success)
                 val = nodataval
-                if not success:
+                # GDALGetRasterNoDataValue() has two ways of telling you that
+                # there's no nodata value. The success flag might come back
+                # 0 (FALSE). Even if it comes back 1 (TRUE), you still need
+                # to check that the return value is within the range of the
+                # data type. If so, the band has a nodata value. If not,
+                # there's no nodata value.
+                if (success == 0 or
+                        val < dtypes.dtype_ranges[dtype][0] or
+                        val > dtypes.dtype_ranges[dtype][1]):
                     val = None
+                log.debug("Nodata success: %d", success)
+                log.debug("Nodata value: %f", nodataval)
                 self._nodatavals.append(val)
+
         return self._nodatavals
 
     property nodatavals:
@@ -377,16 +389,15 @@ cdef class DatasetReader(object):
             row += self.height
         return c+a*col, f+e*row
 
-    def index(self, x, y):
+    def index(self, x, y, op=math.floor, precision=6):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        a, b, c, d, e, f, _, _, _ = self.affine
-        return int(math.floor((y-f)/e)), int(math.floor((x-c)/a))
+        return get_index(x, y, self.affine, op=op, precision=precision)
 
     def window(self, left, bottom, right, top, boundless=False):
         """Returns the window corresponding to the world bounding box.
         If boundless is False, window is limited to extent of this dataset."""
-        EPS = 1.0e-8
-        window = tuple(zip(self.index(left + EPS, top - EPS), self.index(right + EPS, bottom - EPS)))
+
+        window = get_window(left, bottom, right, top, self.affine)
         if boundless:
             return window
         else:
@@ -421,6 +432,21 @@ cdef class DatasetReader(object):
         self._read = True
         return m
 
+    @property
+    def compression(self):
+        val = self.tags(ns='IMAGE_STRUCTURE').get('COMPRESSION')
+        if val:
+            return Compression(val)
+        else:
+            return None
+
+    @property
+    def interleaving(self):
+        val = self.tags(ns='IMAGE_STRUCTURE').get('INTERLEAVE')
+        if val:
+            return Interleaving(val)
+        else:
+            return None
 
     property profile:
         """Basic metadata and creation options of this dataset.
@@ -435,8 +461,11 @@ cdef class DatasetReader(object):
                 blockxsize=self.block_shapes[0][1],
                 blockysize=self.block_shapes[0][0],
                 tiled=self.block_shapes[0][1] != self.width)
+            if self.compression:
+                m['compress'] = self.compression.name
+            if self.interleaving:
+                m['interleave'] = self.interleaving.name
             return m
-
 
     def lnglat(self):
         w, s, e, n = self.bounds
@@ -697,6 +726,69 @@ cpdef eval_window(object window, int height, int width):
         raise ValueError(
             "invalid window: col range (%d, %d)" % (c_start, c_stop))
     return (r_start, r_stop), (c_start, c_stop)
+
+
+def get_index(x, y, affine, op=math.floor, precision=6):
+    """
+    Returns the (row, col) index of the pixel containing (x, y) given a
+    coordinate reference system.
+
+    Parameters
+    ----------
+    x : float
+        x value in coordinate reference system
+    y : float
+        y value in coordinate reference system
+    affine : tuple
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    op : function
+        Function to convert fractional pixels to whole numbers (floor, ceiling,
+        round)
+    precision : int
+        Decimal places of precision in indexing, as in `round()`.
+
+    Returns
+    -------
+    row : int
+        row index
+    col : int
+        col index
+    """
+    # Use an epsilon, magnitude determined by the precision parameter
+    # and sign determined by the op function: positive for floor, negative
+    # for ceil.
+    eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
+    row = int(op((y - eps - affine[5]) / affine[4]))
+    col = int(op((x + eps - affine[2]) / affine[0]))
+    return row, col
+
+
+def get_window(left, bottom, right, top, affine, precision=6):
+    """
+    Returns a window tuple given coordinate bounds and the coordinate reference
+    system.
+
+    Parameters
+    ----------
+    left : float
+        Left edge of window
+    bottom : float
+        Bottom edge of window
+    right : float
+        Right edge of window
+    top : float
+        top edge of window
+    affine : tuple
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    precision : int
+        Decimal places of precision in indexing, as in `round()`.
+    """
+    window_start = get_index(
+        left, top, affine, op=math.floor, precision=precision)
+    window_stop = get_index(
+        right, bottom, affine, op=math.ceil, precision=precision)
+    window = tuple(zip(window_start, window_stop))
+    return window
 
 
 def window_shape(window, height=-1, width=-1):

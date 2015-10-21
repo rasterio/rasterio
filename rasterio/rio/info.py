@@ -281,7 +281,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     try:
         with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode, **open_opts) as src:
-                info = src.meta
+                info = src.profile
                 info['transform'] = info['affine'][:6]
                 del info['affine']
                 info['shape'] = info['height'], info['width']

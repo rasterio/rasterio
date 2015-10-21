@@ -58,6 +58,16 @@ typename_fwd = {
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
+dtype_ranges = {
+    'uint8': (0, 255),
+    'uint16': (0, 65535),
+    'int16': (-32768, 32767),
+    'uint32': (0, 4294967295),
+    'int32': (-2147483648, 2147483647),
+    'float32': (-3.4028235e+38, 3.4028235e+38),
+    'float64': (-1.7976931348623157e+308, 1.7976931348623157e+308)}
+
+
 def _gdal_typename(dt):
     try:
         return typename_fwd[dtype_rev[dt]]

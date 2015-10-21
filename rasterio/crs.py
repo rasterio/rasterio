@@ -58,7 +58,7 @@ def from_string(prjs):
         except ValueError:
             raise ValueError('crs appears to be JSON but is not valid')
 
-    if 'EPSG:' in prjs.upper():
+    if prjs.strip().upper().startswith('EPSG:'):
         return from_epsg(prjs.split(':')[1])
 
     parts = [o.lstrip('+') for o in prjs.strip().split()]

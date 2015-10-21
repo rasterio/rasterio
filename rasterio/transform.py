@@ -2,6 +2,7 @@ import warnings
 
 from affine import Affine
 
+
 IDENTITY = Affine.identity()
 
 
@@ -38,3 +39,11 @@ def from_bounds(west, south, east, north, width, height):
     `height` in number of pixels."""
     return Affine.translation(west, north) * Affine.scale(
             (east - west)/width, (south - north)/height)
+
+
+def array_bounds(height, width, transform):
+    """Return the `west, south, east, north` bounds of an array given
+    its height, width, and an affine transform."""
+    w, n = transform.xoff, transform.yoff
+    e, s = transform * (width, height)
+    return w, s, e, n
