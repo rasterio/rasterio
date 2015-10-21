@@ -39,7 +39,8 @@ install:
   - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
   - "pip install coveralls"
   - "pip install -e ."
-script: 
+  - python -c "import numpy; print numpy.__version__"
+script:
   - py.test --cov rasterio --cov-report term-missing
 after_success:
   - coveralls
