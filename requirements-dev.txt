@@ -4,7 +4,7 @@ coveralls>=0.4
 cython>=0.23.1
 delocate
 enum34
-numpy>=1.8.0
+numpy>=1.8, <1.10
 snuggs>=1.2
 pytest
 pytest-cov
