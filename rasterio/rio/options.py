@@ -46,8 +46,11 @@ Registry of common rio CLI options.  See cligj for more options.
 
 # TODO: move file_in_arg and file_out_arg to cligj
 
+import os.path
 
 import click
+
+from rasterio import parse_paths, vsi_path
 
 
 def _cb_key_val(ctx, param, value):
@@ -79,10 +82,34 @@ def _cb_key_val(ctx, param, value):
         return out
 
 
+def vfs_handler(ctx, param, value):
+    if value:
+        path, vsi, archive = parse_paths(None, value)
+        if not vsi in ('gzip', 'zip', 'tar'):
+            raise click.BadParameter(
+                "VFS type {0} is unknown".format(vsi))
+        if not os.path.exists(archive):
+            raise click.BadParameter(
+                "VFS archive {0} does not exist".format(archive))
+        value = "{0}://{1}".format(vsi, os.path.abspath(archive))
+    return value
+
+
+def file_in_handler(ctx, param, value):
+    vfs = (ctx.obj and ctx.obj.get('vfs'))
+    if vfs:
+        path, vsi, archive = parse_paths(value, vfs)
+        path = vsi_path(path, vsi, archive)
+    else:
+        if not os.path.exists(value):
+            raise click.BadParameter(
+                "Input file {0} does not exist".format(value))
+        path = os.path.abspath(value)
+    return path
+
+
 # Singular input file
-file_in_arg = click.argument(
-    'INPUT',
-    type=click.Path(exists=True, resolve_path=True))
+file_in_arg = click.argument('INPUT', callback=file_in_handler)
 
 # Singular output file
 file_out_arg = click.argument(
@@ -166,5 +193,6 @@ rgb_opt = click.option(
 vfs_opt = click.option(
     '--vfs', 'vfs',
     default=None,
+    callback=vfs_handler,
     help="Use a zip:// or tar:// archive as a virtual file system "
          "('r' mode only).")

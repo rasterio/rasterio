@@ -99,6 +99,7 @@ def open(
         raise TypeError("invalid vfs: %r" % vfs)
 
     path, vsi, archive = parse_paths(path, vfs)
+    path = vsi_path(path, vsi=vsi, archive=archive)
 
     if transform:
         transform = guard_transform(transform)
@@ -108,7 +109,6 @@ def open(
 
     if mode == 'r':
         from rasterio._io import RasterReader
-        path = vsi_path(path, vsi=vsi, archive=archive)
         s = RasterReader(path)
     elif mode == 'r+':
         from rasterio._io import writer
@@ -197,10 +197,11 @@ def vsi_path(path, vsi=None, archive=None):
     # If a VSF and archive file are specified, we convert the path to
     # a GDAL VSI path (see cpl_vsi.h).
     if vsi:
+        path = path.strip(os.path.sep)
         if archive:
-            result = "/vsi%s/%s%s" % (vsi, archive, path)
+            result = os.path.sep.join(['/vsi{0}'.format(vsi), archive, path])
         else:
-            result = "/vsi%s/%s" % (vsi, path)
+            result = os.path.sep.join(['/vsi{0}'.format(vsi), path])
     else:
         result = path
     return result
