@@ -123,8 +123,9 @@ def calc(ctx, command, files, output, name, dtype, masked, creation_options):
 
             res = snuggs.eval(command, **ctxkwds)
 
-            if (isinstance(res, np.ma.core.MaskedArray) and
-                    tuple(LooseVersion(np.__version__).version) < (1, 9, 0)):
+            if (isinstance(res, np.ma.core.MaskedArray) and (
+                    tuple(LooseVersion(np.__version__).version) < (1, 9) or
+                    tuple(LooseVersion(np.__version__).version) > (1, 10))):
                 res = res.filled(kwargs['nodata'])
 
             if len(res.shape) == 3:
