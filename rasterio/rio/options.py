@@ -73,6 +73,8 @@ def _cb_key_val(ctx, param, value):
                 raise click.BadParameter("Invalid syntax for KEY=VAL arg: {}".format(pair))
             else:
                 k, v = pair.split('=', 1)
+                k = k.lower()
+                v = v.lower()
                 out[k] = v
 
         return out
