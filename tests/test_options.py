@@ -7,7 +7,7 @@ def test_cb_key_val():
 
     pairs = ['KEY=val', '1==']
     expected = {
-        'KEY': 'val',
+        'key': 'val',
         '1': '=',
     }
     assert options._cb_key_val(None, None, pairs) == expected

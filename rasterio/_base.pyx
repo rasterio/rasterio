@@ -448,6 +448,10 @@ cdef class DatasetReader(object):
         else:
             return None
 
+    @property
+    def is_tiled(self):
+        return self.block_shapes[0][1] != self.width
+
     property profile:
         """Basic metadata and creation options of this dataset.
 
@@ -457,10 +461,13 @@ cdef class DatasetReader(object):
         def __get__(self):
             m = self.meta
             m.update(self.tags(ns='rio_creation_kwds'))
-            m.update(
-                blockxsize=self.block_shapes[0][1],
-                blockysize=self.block_shapes[0][0],
-                tiled=self.block_shapes[0][1] != self.width)
+            if self.is_tiled:
+                m.update(
+                    blockxsize=self.block_shapes[0][1],
+                    blockysize=self.block_shapes[0][0],
+                    tiled=True)
+            else:
+                m.update(tiled=False)
             if self.compression:
                 m['compress'] = self.compression.name
             if self.interleaving:
