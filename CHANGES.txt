@@ -1,6 +1,15 @@
 Changes
 =======
 
+0.29.0 (2015-10-22)
+-------------------
+- Fill masked arrays in rio-calc when using Numpy 1.10.x as well as with 1.8.x
+  (#500).
+- When a raster dataset is not tiled, blockxszie and blockysize items are no
+  longer included in its `profile` property. This prevents meaningless block
+  size parameters from stripped, not tiled, datasets from being used when
+  creating new datasets (#503).
+
 0.28.0 (2015-10-06)
 -------------------
 - Ensure that tools module is packaged (#489, #490). The rio-merge command was
