@@ -1,12 +1,11 @@
 affine
 cligj
-coveralls>=0.4
-cython>=0.23.1
+cython>=0.23.4
 delocate
 enum34
 numpy>=1.8
 snuggs>=1.2
 pytest
-pytest-cov
+pytest-cov>=2.2.0
 setuptools>=0.9.8
 wheel

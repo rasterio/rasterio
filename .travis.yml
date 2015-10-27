@@ -10,6 +10,7 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
+    - CYTHON_COVERAGE=1
   matrix:
     - GDALVERSION = "1.9.2"
     - GDALVERSION = "1.11.2"
@@ -37,7 +38,7 @@ install:
   - "pip wheel -r requirements-dev.txt"
   - "pip install -r requirements-dev.txt"
   - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
-  - "pip install coveralls"
+  - "pip install coveralls>=1.1"
   - "pip install -e ."
 script:
   - py.test --cov rasterio --cov-report term-missing
