@@ -12,7 +12,6 @@ cdef class GeomBuilder:
     cpdef _buildPolygon(self)
     cpdef _buildMultiPolygon(self)
     cdef build(self, void *geom)
-    cpdef build_wkb(self, object wkb)
 
 
 cdef class OGRGeomBuilder:

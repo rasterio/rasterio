@@ -1,6 +1,5 @@
 
 import logging
-import json
 import numpy as np
 cimport numpy as np
 from rasterio._io cimport InMemoryRaster
@@ -62,10 +61,16 @@ def _shapes(image, mask, connectivity, transform):
     cdef InMemoryRaster mem_ds = None
     cdef InMemoryRaster mask_ds = None
     cdef bint is_float = np.dtype(image.dtype).kind == 'f'
-    cdef int fieldtp = 0
+    cdef int fieldtp = 2 if is_float else 0
 
-    if is_float:
-        fieldtp = 2
+    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
+
+    if np.dtype(image.dtype).name not in valid_dtypes:
+        raise ValueError('image dtype must be one of: %s'
+                         % (', '.join(valid_dtypes)))
+
+    if connectivity not in (4, 8):
+        raise ValueError("Connectivity Option must be 4 or 8")
 
     if dtypes.is_ndarray(image):
         mem_ds = InMemoryRaster(image, transform)
@@ -76,17 +81,22 @@ def _shapes(image, mask, connectivity, transform):
     else:
         raise ValueError("Invalid source image")
 
-    if dtypes.is_ndarray(mask):
-        # A boolean mask must be converted to uint8 for GDAL
-        mask_ds = InMemoryRaster(mask.astype('uint8'), transform)
-        hmaskband = mask_ds.band
-    elif isinstance(mask, tuple):
+    if mask is not None:
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
-        mrdr = mask.ds
-        hmaskband = mrdr.band(mask.bidx)
-    else:
-        hmaskband = NULL
+
+        if np.dtype(mask.dtype).name not in ('bool', 'uint8'):
+            raise ValueError("Mask must be dtype rasterio.bool_ or "
+                             "rasterio.uint8")
+
+        if dtypes.is_ndarray(mask):
+            # A boolean mask must be converted to uint8 for GDAL
+            mask_ds = InMemoryRaster(mask.astype('uint8'), transform)
+            hmaskband = mask_ds.band
+
+        elif isinstance(mask, tuple):
+            mrdr = mask.ds
+            hmaskband = mrdr.band(mask.bidx)
 
     # Create an in-memory feature store.
     hfdriver = _ogr.OGRGetDriverByName("Memory")
@@ -133,7 +143,7 @@ def _shapes(image, mask, connectivity, transform):
         _gdal.CSLDestroy(options)
 
 
-def _sieve(image, size, output, mask, connectivity):
+def _sieve(image, size, out, mask, connectivity):
     """
     Replaces small polygons in `image` with the value of their largest
     neighbor.  Polygons are found for each set of neighboring pixels of the
@@ -147,7 +157,7 @@ def _sieve(image, size, output, mask, connectivity):
         rasterio.uint16, or rasterio.float32.
     size : int
         minimum polygon size (number of pixels) to retain.
-    output : numpy ndarray
+    out : numpy ndarray
         Array of same shape and data type as `image` in which to store results.
     mask : numpy ndarray or rasterio Band object
         Values of False or 0 will be excluded from feature generation.
@@ -168,6 +178,29 @@ def _sieve(image, size, output, mask, connectivity):
     cdef _io.RasterUpdater udr
     cdef _io.RasterReader mask_reader
 
+    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
+
+    if np.dtype(image.dtype).name not in valid_dtypes:
+        valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
+                                     in valid_dtypes))
+        raise ValueError('image dtype must be one of: %s' % valid_types_str)
+
+    if size <= 0:
+        raise ValueError('size must be greater than 0')
+    elif type(size) == float:
+        raise ValueError('size must be an integer number of pixels')
+    elif size > (image.shape[0] * image.shape[1]):
+        raise ValueError('size must be smaller than size of image')
+
+    if connectivity not in (4, 8):
+        raise ValueError('connectivity must be 4 or 8')
+
+    if out.shape != image.shape:
+        raise ValueError('out raster shape must be same as image shape')
+
+    if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
+        raise ValueError('out raster must match dtype of image')
+
     if dtypes.is_ndarray(image):
         in_mem_ds = InMemoryRaster(image)
         in_band = in_mem_ds.band
@@ -177,27 +210,32 @@ def _sieve(image, size, output, mask, connectivity):
     else:
         raise ValueError("Invalid source image")
 
-    if dtypes.is_ndarray(output):
-        log.debug("Output array: %r", output)
-        out_mem_ds = InMemoryRaster(output)
+    if dtypes.is_ndarray(out):
+        log.debug("out array: %r", out)
+        out_mem_ds = InMemoryRaster(out)
         out_band = out_mem_ds.band
-    elif isinstance(output, tuple):
-        udr = output.ds
-        out_band = udr.band(output.bidx)
+    elif isinstance(out, tuple):
+        udr = out.ds
+        out_band = udr.band(out.bidx)
     else:
-        raise ValueError("Invalid output image")
+        raise ValueError("Invalid out image")
 
-    if dtypes.is_ndarray(mask):
-        # A boolean mask must be converted to uint8 for GDAL
-        mask_mem_ds = InMemoryRaster(mask.astype('uint8'))
-        mask_band = mask_mem_ds.band
-    elif isinstance(mask, tuple):
+    if mask is not None:
         if mask.shape != image.shape:
             raise ValueError("Mask must have same shape as image")
-        mask_reader = mask.ds
-        mask_band = mask_reader.band(mask.bidx)
-    else:
-        mask_band = NULL
+
+        if np.dtype(mask.dtype) not in ('bool', 'uint8'):
+            raise ValueError("Mask must be dtype rasterio.bool_ or "
+                             "rasterio.uint8")
+
+        if dtypes.is_ndarray(mask):
+            # A boolean mask must be converted to uint8 for GDAL
+            mask_mem_ds = InMemoryRaster(mask.astype('uint8'))
+            mask_band = mask_mem_ds.band
+
+        elif isinstance(mask, tuple):
+            mask_reader = mask.ds
+            mask_band = mask_reader.band(mask.bidx)
 
     _gdal.GDALSieveFilter(
         in_band,
@@ -210,8 +248,8 @@ def _sieve(image, size, output, mask, connectivity):
         NULL
     )
 
-    # Read from out_band into output
-    _io.io_auto(output, out_band, False)
+    # Read from out_band into out
+    _io.io_auto(out, out_band, False)
 
     if in_mem_ds is not None:
         in_mem_ds.close()
@@ -238,7 +276,7 @@ def _rasterize(shapes, image, transform, all_touched):
     all_touched : boolean, optional
         If True, all pixels touched by geometries will be burned in.
         If false, only pixels whose center is within the polygon or
-        that are selected by brezenhams line algorithm will be burned
+        that are selected by Bresenham's line algorithm will be burned
         in.
     """
 
@@ -310,24 +348,21 @@ def _bounds(geometry):
     TODO: add to Fiona.
     """
 
-    try:  
-        if 'features' in geometry:
-            xmins = []
-            ymins = []
-            xmaxs = []
-            ymaxs = []
-            for feature in geometry['features']:
-                xmin, ymin, xmax, ymax = _bounds(feature['geometry'])
-                xmins.append(xmin)
-                ymins.append(ymin)
-                xmaxs.append(xmax)
-                ymaxs.append(ymax)
-            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
-        else:
-            xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
-            return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
-    except (KeyError, TypeError):
-        return None
+    if 'features' in geometry:
+        xmins = []
+        ymins = []
+        xmaxs = []
+        ymaxs = []
+        for feature in geometry['features']:
+            xmin, ymin, xmax, ymax = _bounds(feature['geometry'])
+            xmins.append(xmin)
+            ymins.append(ymin)
+            xmaxs.append(xmax)
+            ymaxs.append(ymax)
+        return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+    else:
+        xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
+        return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
 
 
 # Mapping of OGR integer geometry types to GeoJSON type names.
@@ -358,16 +393,6 @@ GEOJSON2OGR_GEOMETRY_TYPES = dict(
 
 
 # Geometry related functions and classes follow.
-
-cdef void * _createOgrGeomFromWKB(object wkb) except NULL:
-    """Make an OGR geometry from a WKB string"""
-
-    geom_type = bytearray(wkb)[1]
-    cdef unsigned char *buffer = wkb
-    cdef void *cogr_geometry = _ogr.OGR_G_CreateGeometry(geom_type)
-    if cogr_geometry != NULL:
-        _ogr.OGR_G_ImportFromWkb(cogr_geometry, buffer, len(wkb))
-    return cogr_geometry
 
 
 cdef _deleteOgrGeom(void *cogr_geometry):
@@ -444,15 +469,6 @@ cdef class GeomBuilder:
         self.ndims = _ogr.OGR_G_GetCoordinateDimension(geom)
         self.geom = geom
         return getattr(self, '_build' + self.geomtypename)()
-
-    cpdef build_wkb(self, object wkb):
-        """Builds a GeoJSON object from a Well-Known Binary format (WKB)."""
-        # The only other method anyone needs to call
-        cdef object data = wkb
-        cdef void *cogr_geometry = _createOgrGeomFromWKB(data)
-        result = self.build(cogr_geometry)
-        _deleteOgrGeom(cogr_geometry)
-        return result
 
 
 cdef class OGRGeomBuilder:

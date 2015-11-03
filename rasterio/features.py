@@ -10,7 +10,7 @@ import numpy as np
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.transform import IDENTITY, guard_transform
-from rasterio.dtypes import get_minimum_int_dtype
+from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 
 
 log = logging.getLogger('rasterio')
@@ -104,18 +104,6 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
     """
 
-    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
-
-    if np.dtype(image.dtype).name not in valid_dtypes:
-        raise ValueError('image dtype must be one of: %s'
-                         % (', '.join(valid_dtypes)))
-
-    if mask is not None and np.dtype(mask.dtype).name not in ('bool', 'uint8'):
-        raise ValueError("Mask must be dtype rasterio.bool_ or rasterio.uint8")
-
-    if connectivity not in (4, 8):
-        raise ValueError("Connectivity Option must be 4 or 8")
-
     transform = guard_transform(transform)
 
     with rasterio.drivers():
@@ -165,49 +153,18 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
 
     """
 
-    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
-
-    if np.dtype(image.dtype).name not in valid_dtypes:
-        valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
-                                     in valid_dtypes))
-        raise ValueError('image dtype must be one of: %s' % valid_types_str)
-
-    if size <= 0:
-        raise ValueError('size must be greater than 0')
-    elif type(size) == float:
-        raise ValueError('size must be an integer number of pixels')
-    elif size > (image.shape[0] * image.shape[1]):
-        raise ValueError('size must be smaller than size of image')
-
-    if connectivity not in (4, 8):
-        raise ValueError('connectivity must be 4 or 8')
-
-    if mask is not None:
-        if np.dtype(mask.dtype) not in ('bool', 'uint8'):
-            raise ValueError('Mask must be dtype rasterio.bool_ or '
-                             'rasterio.uint8')
-        elif mask.shape != image.shape:
-            raise ValueError('mask shape must be same as image shape')
-
     # Start moving users over to 'out'.
     if output is not None:
         warnings.warn(
             "The 'output' keyword arg has been superceded by 'out' "
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
-            stacklevel=2)
+            stacklevel=2)  # pragma: no cover
     
     out = out if out is not None else output
+
     if out is None:
-        if isinstance(image, tuple):
-            out = np.zeros(image.shape, image.dtype)
-        else:
-            out = np.zeros_like(image)
-    else:
-        if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
-            raise ValueError('out raster must match dtype of image')
-        elif out.shape != image.shape:
-            raise ValueError('out raster shape must be same as image shape')
+        out = np.zeros(image.shape, image.dtype)
 
     with rasterio.drivers():
         _sieve(image, size, out, mask, connectivity)
@@ -268,97 +225,92 @@ def rasterize(
 
     """
 
-    valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32',
-                    'float64')
+    valid_dtypes = (
+        'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
+    )
 
-    def get_valid_dtype(values):
-        values_dtype = values.dtype
-        if values_dtype.kind == 'i':
-            values_dtype = np.dtype(get_minimum_int_dtype(values))
-        if values_dtype.name in valid_dtypes:
-            return values_dtype
-        return None
+    def format_invalid_dtype(param):
+        return '{0} dtype must be one of: {1}'.format(
+            param, ', '.join(valid_dtypes)
+        )
 
-    def can_cast_dtype(values, dtype):
-        if values.dtype.name == np.dtype(dtype).name:
-            return True
-        elif values.dtype.kind == 'f':
-            return np.allclose(values, values.astype(dtype))
-        else:
-            return np.array_equal(values, values.astype(dtype))
+    def format_cast_error(param, dtype):
+        return '{0} cannot be cast to specified dtype: {1}'.format(param, dtype)
+
 
     if fill != 0:
         fill_array = np.array([fill])
-        if get_valid_dtype(fill_array) is None:
-            raise ValueError('fill must be one of these types: %s'
-                             % (', '.join(valid_dtypes)))
-        elif dtype is not None and not can_cast_dtype(fill_array, dtype):
-            raise ValueError('fill value cannot be cast to specified dtype')
+        if not validate_dtype(fill_array, valid_dtypes):
+            raise ValueError(format_invalid_dtype('fill'))
+
+        if dtype is not None and not can_cast_dtype(fill_array, dtype):
+            raise ValueError(format_cast_error('fill', dtype))
 
     if default_value != 1:
         default_value_array = np.array([default_value])
-        if get_valid_dtype(default_value_array) is None:
-            raise ValueError('default_value must be one of these types: %s'
-                             % (', '.join(valid_dtypes)))
-        elif dtype is not None and not can_cast_dtype(default_value_array,
-                                                      dtype):
-            raise ValueError('default_value cannot be cast to specified dtype')
+        if not validate_dtype(default_value_array, valid_dtypes):
+            raise ValueError(format_invalid_dtype('default_value'))
+
+        if dtype is not None and not can_cast_dtype(default_value_array, dtype):
+            raise ValueError(format_cast_error('default_vaue', dtype))
+
+    if dtype is not None and np.dtype(dtype).name not in valid_dtypes:
+        raise ValueError(format_invalid_dtype('dtype'))
+
 
     valid_shapes = []
     shape_values = []
     for index, item in enumerate(shapes):
-        try:
-            if isinstance(item, (tuple, list)):
-                geom, value = item
-            else:
-                geom = item
-                value = default_value
-            geom = getattr(geom, '__geo_interface__', None) or geom
-            if (not isinstance(geom, dict) or
-                'type' not in geom or 'coordinates' not in geom):
-                raise ValueError(
-                    'Object %r at index %d is not a geometry object' %
-                    (geom, index))
+        if isinstance(item, (tuple, list)):
+            geom, value = item
+        else:
+            geom = item
+            value = default_value
+        geom = getattr(geom, '__geo_interface__', None) or geom
+
+        #not isinstance(geom, dict) or
+        if 'type' in geom or 'coordinates' in geom:
             valid_shapes.append((geom, value))
             shape_values.append(value)
-        except Exception:
-            log.exception('Exception caught, skipping shape %d', index)
+
+        else:
+            raise ValueError(
+                'Invalid geometry object at index {0}'.format(index)
+            )
 
     if not valid_shapes:
-        raise ValueError('No valid shapes found for rasterize.  Shapes must be '
-                         'valid geometry objects')
+        raise ValueError('No valid geometry objects found for rasterize')
 
     shape_values = np.array(shape_values)
-    values_dtype = get_valid_dtype(shape_values)
-    if values_dtype is None:
-        raise ValueError('shape values must be one of these dtypes: %s' %
-                         (', '.join(valid_dtypes)))
+
+    if not validate_dtype(shape_values, valid_dtypes):
+        raise ValueError(format_invalid_dtype('shape values'))
 
     if dtype is None:
-        dtype = values_dtype
-    elif np.dtype(dtype).name not in valid_dtypes:
-        raise ValueError('dtype must be one of: %s' % (', '.join(valid_dtypes)))
+        dtype = get_minimum_dtype(np.append(shape_values, fill))
+
     elif not can_cast_dtype(shape_values, dtype):
-        raise ValueError('shape values could not be cast to specified dtype')
+        raise ValueError(format_cast_error('shape values', dtype))
 
     if output is not None:
         warnings.warn(
             "The 'output' keyword arg has been superceded by 'out' "
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
-            stacklevel=2)
+            stacklevel=2) # pragma: no cover
+
     out = out if out is not None else output
     if out is not None:
         if np.dtype(out.dtype).name not in valid_dtypes:
-            raise ValueError('Output image dtype must be one of: %s'
-                             % (', '.join(valid_dtypes)))
+            raise ValueError(format_invalid_dtype('out'))
+
         if not can_cast_dtype(shape_values, out.dtype):
-            raise ValueError('shape values cannot be cast to dtype of output '
-                             'image')
+            raise ValueError(format_cast_error('shape values', out.dtype.name))
 
     elif out_shape is not None:
         out = np.empty(out_shape, dtype=dtype)
         out.fill(fill)
+
     else:
         raise ValueError('Either an output shape or image must be provided')
 
