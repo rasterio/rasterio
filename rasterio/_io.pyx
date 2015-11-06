@@ -1298,6 +1298,13 @@ cdef class RasterUpdater(RasterReader):
                     continue
                 kwds.append((k.lower(), v))
                 k, v = k.upper(), str(v).upper()
+
+                # Guard against block size that exceed image size.
+                if k == 'BLOCKXSIZE' and int(v) > self.width:
+                    raise ValueError("blockxsize exceeds raster width.")
+                if k == 'BLOCKYSIZE' and int(v) > self.height:
+                    raise ValueError("blockysize exceeds raster height.")
+
                 key_b = k.encode('utf-8')
                 val_b = v.encode('utf-8')
                 key_c = key_b
@@ -1310,6 +1317,7 @@ cdef class RasterUpdater(RasterReader):
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
                 gdal_dtype, options)
+
             if self._hds == NULL:
                 raise ValueError("NULL dataset")
 

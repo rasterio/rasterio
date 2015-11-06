@@ -1,14 +1,15 @@
 import logging
 import os.path
-import unittest
 import shutil
 import subprocess
 import sys
 import tempfile
+import unittest
 
 import numpy
 
 import rasterio
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -120,4 +121,3 @@ class WindowWriteTest(unittest.TestCase):
             "Minimum=0.000, Maximum=127.000, "
             "Mean=31.750, StdDev=54.993" in info.decode('utf-8'),
             info)
-
