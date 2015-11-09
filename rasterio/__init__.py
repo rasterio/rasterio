@@ -23,7 +23,7 @@ from rasterio import _err, coords, enums
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'pad']
-__version__ = "0.28.0"
+__version__ = "0.29.0"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
@@ -40,7 +40,6 @@ def open(
         crs=None, transform=None,
         dtype=None,
         nodata=None,
-        vfs=None,
         **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
     or "w" (write) and return a ``Reader`` or ``Updater`` object.
@@ -95,11 +94,6 @@ def open(
         raise TypeError("invalid mode: %r" % mode)
     if driver and not isinstance(driver, string_types):
         raise TypeError("invalid driver: %r" % driver)
-    if vfs and not isinstance(vfs, string_types):
-        raise TypeError("invalid vfs: %r" % vfs)
-
-    path, vsi, archive = parse_paths(path, vfs)
-    path = vsi_path(path, vsi=vsi, archive=archive)
 
     if transform:
         transform = guard_transform(transform)
@@ -180,28 +174,81 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     return padded_array, Affine(*padded_trans[:6])
 
 
-def parse_paths(path, vfs=None):
-    archive = vsi = None
-    if vfs:
-        parts = vfs.split("://")
-        vsi = parts.pop(0) if parts else None
-        archive = parts.pop(0) if parts else None
-    else:
-        parts = path.split("://")
-        path = parts.pop() if parts else None
-        vsi = parts.pop() if parts else None
-    return path, vsi, archive
+def get_data_window(arr, nodata=None):
+    """
+    Returns a window for the non-nodata pixels within the input array.
+
+    Parameters
+    ----------
+    arr: numpy ndarray, <= 3 dimensions
+    nodata: number
+        If None, will either return a full window if arr is not a masked
+        array, or will use the mask to determine non-nodata pixels.
+        If provided, it must be a number within the valid range of the dtype
+        of the input array.
+
+    Returns
+    -------
+    ((row_start, row_stop), (col_start, col_stop))
+
+    """
+
+    from rasterio._io import get_data_window
+    return get_data_window(arr, nodata)
 
 
-def vsi_path(path, vsi=None, archive=None):
-    # If a VSF and archive file are specified, we convert the path to
-    # a GDAL VSI path (see cpl_vsi.h).
-    if vsi:
-        path = path.strip(os.path.sep)
-        if archive:
-            result = os.path.sep.join(['/vsi{0}'.format(vsi), archive, path])
-        else:
-            result = os.path.sep.join(['/vsi{0}'.format(vsi), path])
-    else:
-        result = path
-    return result
+def window_union(windows):
+    """
+    Union windows and return the outermost extent they cover.
+
+    Parameters
+    ----------
+    windows: list-like of window objects
+        ((row_start, row_stop), (col_start, col_stop))
+
+    Returns
+    -------
+    ((row_start, row_stop), (col_start, col_stop))
+    """
+
+    from rasterio._io import window_union
+    return window_union(windows)
+
+
+def window_intersection(windows):
+    """
+    Intersect windows and return the innermost extent they cover.
+
+    Will raise ValueError if windows do not intersect.
+
+    Parameters
+    ----------
+    windows: list-like of window objects
+        ((row_start, row_stop), (col_start, col_stop))
+
+    Returns
+    -------
+    ((row_start, row_stop), (col_start, col_stop))
+    """
+
+    from rasterio._io import window_intersection
+    return window_intersection(windows)
+
+
+def windows_intersect(windows):
+    """
+    Test if windows intersect.
+
+    Parameters
+    ----------
+    windows: list-like of window objects
+        ((row_start, row_stop), (col_start, col_stop))
+
+    Returns
+    -------
+    boolean:
+        True if all windows intersect.
+    """
+
+    from rasterio._io import windows_intersect
+    return windows_intersect(windows)

@@ -79,11 +79,26 @@ def test_profile_overlay():
     assert kwds['count'] == 3
 
 
-def test_dataset_profile_property(data):
+def test_dataset_profile_property_tiled(data):
+    """An tiled dataset's profile has block sizes"""
+    with rasterio.open('tests/data/shade.tif') as src:
+        assert src.profile['blockxsize'] == 256
+        assert src.profile['blockysize'] == 256
+        assert src.profile['tiled'] == True
+
+
+def test_dataset_profile_property_untiled(data):
+    """An untiled dataset's profile has no block sizes"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        assert 'blockxsize' not in src.profile
+        assert 'blockysize' not in src.profile
+        assert src.profile['tiled'] == False
+
+
+def test_dataset_profile_creation_kwds(data):
+    """Updated creation keyword tags appear in profile"""
     tiffile = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffile, 'r+') as src:
         src.update_tags(ns='rio_creation_kwds', foo='bar')
-        assert src.profile['blockxsize'] == 791
-        assert src.profile['blockysize'] == 3
         assert src.profile['tiled'] == False
         assert src.profile['foo'] == 'bar'

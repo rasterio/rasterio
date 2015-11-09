@@ -26,9 +26,8 @@ def configure_logging(verbosity):
 @cligj.verbose_opt
 @cligj.quiet_opt
 @click.version_option(version=rasterio.__version__, message='%(version)s')
-@options.vfs_opt
 @click.pass_context
-def main_group(ctx, verbose, quiet, vfs):
+def main_group(ctx, verbose, quiet):
 
     """
     Rasterio command line interface.
@@ -38,4 +37,3 @@ def main_group(ctx, verbose, quiet, vfs):
     configure_logging(verbosity)
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
-    ctx.obj['vfs'] = vfs

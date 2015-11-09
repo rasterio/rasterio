@@ -13,7 +13,8 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
-    crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
+    crop_window, eval_window, window_shape, window_index, tastes_like_gdal,
+    parse_paths)
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
@@ -1249,8 +1250,7 @@ cdef class RasterUpdater(RasterReader):
         cdef void *drv = NULL
         cdef void *hband = NULL
         cdef int success
-        name_b = self.name.encode('utf-8')
-        cdef const char *fname = name_b
+
 
         # Is there not a driver manager already?
         if driver_count() == 0 and not self.env:
@@ -1259,7 +1259,16 @@ cdef class RasterUpdater(RasterReader):
         else:
             self.env = GDALEnv(False)
         self.env.start()
-        
+
+        path, scheme, archive = parse_paths(self.name)
+        if scheme and scheme != 'file':
+            raise TypeError(
+                "VFS '{0}' datasets can not be created or updated.".format(
+                    scheme))
+
+        name_b = self.name.encode('utf-8')
+        cdef const char *fname = name_b
+
         kwds = []
 
         if self.mode == 'w':
@@ -2002,6 +2011,12 @@ def writer(path, mode, **kwargs):
     cdef const char *drv_name = NULL
     cdef const char *fname = NULL
 
+    path, scheme, archive = parse_paths(path)
+    if scheme and scheme != 'file':
+        raise TypeError(
+            "VFS '{0}' datasets can not be created or updated.".format(
+                scheme))
+
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':
             return RasterUpdater(path, mode, **kwargs)
@@ -2041,3 +2056,133 @@ def virtual_file_to_buffer(filename):
     log.debug("Buffer length: %d bytes", n)
     cdef np.uint8_t[:] buff_view = <np.uint8_t[:n]>buff
     return buff_view
+
+
+def get_data_window(arr, nodata=None):
+    """
+    Returns a window for the non-nodata pixels within the input array.
+
+    Parameters
+    ----------
+    arr: numpy ndarray, <= 3 dimensions
+    nodata: number
+        If None, will either return a full window if arr is not a masked
+        array, or will use the mask to determine non-nodata pixels.
+        If provided, it must be a number within the valid range of the dtype
+        of the input array.
+
+    Returns
+    -------
+    ((row_start, row_stop), (col_start, col_stop))
+
+    """
+
+    num_dims = len(arr.shape)
+    if num_dims > 3:
+        raise ValueError('get_data_window input array must have no more than '
+                         '3 dimensions')
+
+    if nodata is None:
+        if not hasattr(arr, 'mask'):
+            return ((0, arr.shape[-2]), (0, arr.shape[-1]))
+    else:
+        arr = np.ma.masked_array(arr, arr == nodata)
+
+    if num_dims == 2:
+        data_rows, data_cols = np.where(arr.mask == False)
+    else:
+        data_rows, data_cols = np.where(
+            np.any(np.rollaxis(arr.mask, 0, 3) == False, axis=2)
+        )
+
+    if data_rows.size:
+        row_range = (data_rows.min(), data_rows.max() + 1)
+    else:
+        row_range = (0, 0)
+
+    if data_cols.size:
+        col_range = (data_cols.min(), data_cols.max() + 1)
+    else:
+        col_range = (0, 0)
+
+    return (row_range, col_range)
+
+
+def window_union(windows):
+    """
+    Union windows and return the outermost extent they cover.
+
+    Parameters
+    ----------
+    windows: list-like of window objects
+        ((row_start, row_stop), (col_start, col_stop))
+
+    Returns
+    -------
+    ((row_start, row_stop), (col_start, col_stop))
+    """
+
+
+    stacked = np.dstack(windows)
+    return (
+        (stacked[0, 0].min(), stacked[0, 1].max()),
+        (stacked[1, 0].min(), stacked[1, 1]. max())
+    )
+
+
+def window_intersection(windows):
+    """
+    Intersect windows and return the innermost extent they cover.
+
+    Will raise ValueError if windows do not intersect.
+
+    Parameters
+    ----------
+    windows: list-like of window objects
+        ((row_start, row_stop), (col_start, col_stop))
+
+    Returns
+    -------
+    ((row_start, row_stop), (col_start, col_stop))
+    """
+
+    if not windows_intersect(windows):
+        raise ValueError('windows do not intersect')
+
+    stacked = np.dstack(windows)
+    return (
+        (stacked[0, 0].max(), stacked[0, 1].min()),
+        (stacked[1, 0].max(), stacked[1, 1]. min())
+    )
+
+
+def windows_intersect(windows):
+    """
+    Test if windows intersect.
+
+    Parameters
+    ----------
+    windows: list-like of window objects
+        ((row_start, row_stop), (col_start, col_stop))
+
+    Returns
+    -------
+    boolean:
+        True if all windows intersect.
+    """
+
+    from itertools import combinations
+
+    def intersects(range1, range2):
+        return not (
+            range1[0] > range2[1] or range1[1] < range2[0]
+        )
+
+    windows = np.array(windows)
+
+    for i in (0, 1):
+        for c in combinations(windows[:, i], 2):
+            if not intersects(*c):
+                return False
+
+    return True

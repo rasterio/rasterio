@@ -4,6 +4,7 @@
 
 import logging
 import math
+import os
 import sys
 import warnings
 
@@ -28,6 +29,38 @@ else:
         def emit(self, record):
             pass
     log.addHandler(NullHandler())
+
+
+def parse_paths(url, vfs=None):
+    """Parse a file path or Apache VFS URL into its parts."""
+    archive = scheme = None
+    if vfs:
+        parts = vfs.split("://")
+        vsi = parts.pop(0) if parts else None
+        archive = parts.pop(0) if parts else None
+    else:
+        parts = url.split("://")
+        path = parts.pop() if parts else None
+        scheme = parts.pop() if parts else None
+        if scheme in ('gzip', 'zip', 'tar'):
+            parts = path.split('!')
+            path = parts.pop() if parts else None
+            archive = parts.pop() if parts else None
+    return path, scheme, archive
+
+
+def vsi_path(path, vsi=None, archive=None):
+    # If a VSF and archive file are specified, we convert the path to
+    # a GDAL VSI path (see cpl_vsi.h).
+    if vsi and vsi != 'file':
+        path = path.strip(os.path.sep)
+        if archive:
+            result = os.path.sep.join(['/vsi{0}'.format(vsi), archive, path])
+        else:
+            result = os.path.sep.join(['/vsi{0}'.format(vsi), path])
+    else:
+        result = path
+    return result
 
 
 cdef class DatasetReader(object):
@@ -62,7 +95,10 @@ cdef class DatasetReader(object):
             self.env = GDALEnv(False)
         self.env.start()
 
-        name_b = self.name.encode('utf-8')
+        path, vsi, archive = parse_paths(self.name)
+        path = vsi_path(path, vsi=vsi, archive=archive)
+
+        name_b = path.encode('utf-8')
         cdef const char *fname = name_b
         with cpl_errs:
             self._hds = _gdal.GDALOpen(fname, 0)
@@ -448,6 +484,10 @@ cdef class DatasetReader(object):
         else:
             return None
 
+    @property
+    def is_tiled(self):
+        return self.block_shapes[0][1] != self.width
+
     property profile:
         """Basic metadata and creation options of this dataset.
 
@@ -457,10 +497,13 @@ cdef class DatasetReader(object):
         def __get__(self):
             m = self.meta
             m.update(self.tags(ns='rio_creation_kwds'))
-            m.update(
-                blockxsize=self.block_shapes[0][1],
-                blockysize=self.block_shapes[0][0],
-                tiled=self.block_shapes[0][1] != self.width)
+            if self.is_tiled:
+                m.update(
+                    blockxsize=self.block_shapes[0][1],
+                    blockysize=self.block_shapes[0][0],
+                    tiled=True)
+            else:
+                m.update(tiled=False)
             if self.compression:
                 m['compress'] = self.compression.name
             if self.interleaving:

@@ -50,7 +50,7 @@ import os.path
 
 import click
 
-from rasterio import parse_paths, vsi_path
+from rasterio._base import parse_paths
 
 
 def _cb_key_val(ctx, param, value):
@@ -77,34 +77,27 @@ def _cb_key_val(ctx, param, value):
                 raise click.BadParameter("Invalid syntax for KEY=VAL arg: {}".format(pair))
             else:
                 k, v = pair.split('=', 1)
+                k = k.lower()
+                v = v.lower()
                 out[k] = v
-
         return out
 
 
-def vfs_handler(ctx, param, value):
-    if value:
-        path, vsi, archive = parse_paths(None, value)
-        if not vsi in ('gzip', 'zip', 'tar'):
-            raise click.BadParameter(
-                "VFS type {0} is unknown".format(vsi))
-        if not os.path.exists(archive):
-            raise click.BadParameter(
-                "VFS archive {0} does not exist".format(archive))
-        value = "{0}://{1}".format(vsi, os.path.abspath(archive))
-    return value
-
-
 def file_in_handler(ctx, param, value):
-    vfs = (ctx.obj and ctx.obj.get('vfs'))
-    if vfs:
-        path, vsi, archive = parse_paths(value, vfs)
-        path = vsi_path(path, vsi, archive)
+    """Normalize ordinary filesystem and VFS paths"""
+    path, scheme, archive = parse_paths(value)
+    if scheme and not scheme in ('file', 'gzip', 'zip', 'tar'):
+        raise click.BadParameter(
+            "VFS type {0} is unknown".format(scheme))
+    path_to_check = archive or path
+    if not os.path.exists(path_to_check):
+        raise click.BadParameter(
+            "Input file {0} does not exist".format(path_to_check))
+    if archive and scheme:
+        archive = os.path.abspath(archive)
+        path = "{0}://{1}!{2}".format(scheme, archive, path)
     else:
-        if not os.path.exists(value):
-            raise click.BadParameter(
-                "Input file {0} does not exist".format(value))
-        path = os.path.abspath(value)
+        path = os.path.abspath(path)
     return path
 
 
@@ -188,11 +181,3 @@ rgb_opt = click.option(
     flag_value='rgb',
     default=False,
     help="Set RGB photometric interpretation.")
-
-
-vfs_opt = click.option(
-    '--vfs', 'vfs',
-    default=None,
-    callback=vfs_handler,
-    help="Use a zip:// or tar:// archive as a virtual file system "
-         "('r' mode only).")

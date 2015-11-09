@@ -19,12 +19,10 @@ import sys
 from setuptools import setup
 from setuptools.extension import Extension
 
+
 logging.basicConfig()
 log = logging.getLogger()
 
-# python -W all setup.py ...
-if 'all' in sys.warnoptions:
-    log.level = logging.DEBUG
 
 def check_output(cmd):
     # since subprocess.check_output doesn't exist in 2.6
@@ -39,12 +37,18 @@ def check_output(cmd):
         out, err = p.communicate()
         return out
 
+
 def copy_data_tree(datadir, destdir):
     try:
         shutil.rmtree(destdir)
     except OSError:
         pass
     shutil.copytree(datadir, destdir)
+
+
+# python -W all setup.py ...
+if 'all' in sys.warnoptions:
+    log.level = logging.DEBUG
 
 # Parse the version from the rasterio module.
 with open('rasterio/__init__.py') as f:
@@ -135,6 +139,13 @@ if not os.name == "nt":
     ext_options['extra_compile_args'] = ['-Wno-unused-parameter',
                                          '-Wno-unused-function']
 
+cythonize_options = {}
+if os.environ.get('CYTHON_COVERAGE'):
+    cythonize_options['compiler_directives'] = {'linetrace': True}
+    cythonize_options['annotate'] = True
+    ext_options['define_macros'] = [('CYTHON_TRACE', '1'),
+                                    ('CYTHON_TRACE_NOGIL', '1')]
+
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
 # When building from a repo, Cython is required.
@@ -164,7 +175,7 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
-        ], quiet=True)
+        ], quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
@@ -193,12 +204,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = [
-    'affine>=1.0',
-    'cligj>=0.2.0',
-    'Numpy>=1.7',
-    'snuggs>=1.3.1',
-    'click-plugins']
+inst_reqs = ['affine', 'cligj', 'numpy', 'snuggs', 'click-plugins']
 
 if sys.version_info < (3, 4):
     inst_reqs.append('enum34')

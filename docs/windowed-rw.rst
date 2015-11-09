@@ -161,6 +161,55 @@ This example also demonstrates decimation.
    :width: 500
    :height: 300
 
+
+Data windows
+------------
+
+Sometimes it is desirable to crop off an outer boundary of NODATA values around
+a dataset:
+
+.. code-block:: python
+
+    from rasterio import get_data_window
+
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        window = get_data_window(src.read(1, masked=True))
+        # window = ((3, 714), (13, 770))
+
+        kwargs = src.meta.copy()
+        del kwargs['transform']
+        kwargs.update({
+            'height': window[0][1] - window[0][0],
+            'width': window[1][1] - window[1][0],
+            'affine': src.window_transform(window)
+        })
+
+        with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
+            dst.write(src.read(window=window))
+
+
+Window utilities
+----------------
+
+Basic union and intersection operations are available for windows, to streamline
+operations across dynamically created windows for a series of bands or datasets
+with the same full extent.
+
+.. code-block:: python
+
+    from rasterio import window_union, window_intersection
+
+    # Full window is ((0, 1000), (0, 500))
+    window1 = ((100, 500), (10, 500))
+    window2 = ((10, 150), (50, 250))
+
+    outer = window_union([window1, window2])
+    # outer = ((10, 500), (10, 500))
+
+    inner = window_intersection([window1, window2])
+    # inner = ((100, 150), (50, 250))
+
+
 Blocks
 ------
 
