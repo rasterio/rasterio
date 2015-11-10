@@ -5,9 +5,18 @@ import numpy as np
 from pytest import fixture
 
 import rasterio
+from rasterio.enums import MaskFlags
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+def test_mask_flags():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        for flags in src.mask_flags:
+            assert flags & MaskFlags.nodata
+            assert not flags & MaskFlags.per_dataset
+            assert not flags & MaskFlags.alpha
 
 
 def test_masks():
@@ -65,6 +74,10 @@ def test_masking_no_nodata(tiffs):
     # is False.
     filename = str(tiffs.join('no-nodata.tif'))
     with rasterio.open(filename) as src:
+        for flags in src.mask_flags:
+            assert flags & MaskFlags.all_valid
+            assert not flags & MaskFlags.alpha
+            assert not flags & MaskFlags.nodata
 
         rgb = src.read(masked=False)
         assert not hasattr(rgb, 'mask')
@@ -92,6 +105,10 @@ def test_masking_sidecar_mask(tiffs):
     # If the dataset has a .msk sidecar mask band file, all masks will
     # be derived from that file.
     with rasterio.open(str(tiffs.join('sidecar-masked.tif'))) as src:
+        for flags in src.mask_flags:
+            assert flags & MaskFlags.per_dataset
+            assert not flags & MaskFlags.alpha
+            assert not flags & MaskFlags.nodata
         rgb = src.read(masked=True)
         assert rgb.mask.all()
         r = src.read(1, masked=True)

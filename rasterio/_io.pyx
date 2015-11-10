@@ -20,7 +20,7 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
 
 
@@ -1059,6 +1059,14 @@ cdef class RasterReader(_base.DatasetReader):
         gdt = dtypes.dtype_rev[dtype]
 
         if masks:
+            # Warn if nodata attribute is shadowing an alpha band.
+            if self.count == 4 and self.colorinterp(4) == ColorInterp.alpha:
+                for flags in self.mask_flags:
+                    if flags & MaskFlags.nodata:
+                        log.warn(
+                            "The dataset's nodata attribute is shadowing "
+                            "the alpha band. All masks will be determined "
+                            "by the nodata attribute")
             retval = io_multi_mask(
                             self._hds, 0, xoff, yoff, width, height,
                             out, indexes_arr, indexes_count)

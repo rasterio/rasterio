@@ -316,6 +316,16 @@ cdef class DatasetReader(object):
         def __get__(self):
             return self.nodatavals[0]
 
+    property mask_flags:
+        """Mask flags for each band."""
+
+        def __get__(self):
+            flags = [0]*self.count
+            for i, j in zip(range(self.count), self.indexes):
+                hband = _gdal.GDALGetRasterBand(self._hds, j)
+                flags[i] = _gdal.GDALGetMaskFlags(hband)
+            return flags
+
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's block windows and their
         indexes.
