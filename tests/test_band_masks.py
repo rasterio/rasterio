@@ -2,14 +2,47 @@ import logging
 import sys
 
 import numpy as np
-from pytest import fixture
+import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.warnings import NodataShadowWarning
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
+
+
+
+@pytest.fixture(scope='function')
+def tiffs(tmpdir):
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        profile = src.profile
+
+        shadowed_profile = profile.copy()
+        shadowed_profile['count'] = 4
+        with rasterio.open(
+                str(tmpdir.join('shadowed.tif')), 'w',
+                **shadowed_profile) as dst:
+
+            for i, band in enumerate(src.read(masked=False), 1):
+                dst.write(band, i)
+            dst.write(band, 4)
+
+        del profile['nodata']
+        with rasterio.open(
+                str(tmpdir.join('no-nodata.tif')), 'w',
+                **profile) as dst:
+            dst.write(src.read(masked=False))
+
+        with rasterio.open(
+                str(tmpdir.join('sidecar-masked.tif')), 'w',
+                **profile) as dst:
+            dst.write(src.read(masked=False))
+            mask = np.zeros(src.shape, dtype='uint8')
+            dst.write_mask(mask)
+
+    return tmpdir
 
 def test_mask_flags():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -17,6 +50,41 @@ def test_mask_flags():
             assert flags & MaskFlags.nodata
             assert not flags & MaskFlags.per_dataset
             assert not flags & MaskFlags.alpha
+
+
+def test_mask_flags_sidecar(tiffs):
+    filename = str(tiffs.join('sidecar-masked.tif'))
+    with rasterio.open(filename) as src:
+        for flags in src.mask_flags:
+            assert not flags & MaskFlags.nodata
+            assert not flags & MaskFlags.alpha
+            assert flags & MaskFlags.per_dataset
+
+
+def test_mask_flags_shadow(tiffs):
+    filename = str(tiffs.join('shadowed.tif'))
+    with rasterio.open(filename) as src:
+        for flags in src.mask_flags:
+            assert flags & MaskFlags.nodata
+            assert not flags & MaskFlags.alpha
+            assert not flags & MaskFlags.per_dataset
+
+
+def test_warning_no():
+    """No shadow warning is raised"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        try:
+            rm, gm, bm = src.read_masks()
+        except NodataShadowWarning:
+            pytest.fail("Unexpecred NodataShadowWarning raised")
+
+
+def test_warning_shadow(tiffs):
+    """Shadow warning is raised"""
+    filename = str(tiffs.join('shadowed.tif'))
+    with rasterio.open(filename) as src:
+        with pytest.warns(NodataShadowWarning):
+            _ = src.read_masks()
 
 
 def test_masks():
@@ -44,27 +112,6 @@ def test_masked_none():
         assert (r.mask==~rm.astype('bool')).all()
         assert (g.mask==~gm.astype('bool')).all()
         assert (b.mask==~bm.astype('bool')).all()
-
-
-@fixture(scope='function')
-def tiffs(tmpdir):
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        kwds = src.meta
-        
-        del kwds['nodata']
-        with rasterio.open(
-                str(tmpdir.join('no-nodata.tif')), 'w',
-                **kwds) as dst:
-            dst.write(src.read(masked=False))
-
-        with rasterio.open(
-                str(tmpdir.join('sidecar-masked.tif')), 'w',
-                **kwds) as dst:
-            dst.write(src.read(masked=False))
-            mask = np.zeros(src.shape, dtype='uint8')
-            dst.write_mask(mask)
-
-    return tmpdir
 
 
 def test_masking_no_nodata(tiffs):

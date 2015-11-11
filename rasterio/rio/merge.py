@@ -3,7 +3,6 @@
 import logging
 import math
 import os.path
-import warnings
 
 import click
 from cligj import files_inout_arg, format_opt

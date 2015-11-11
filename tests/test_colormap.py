@@ -1,8 +1,6 @@
 import logging
-import pytest
 import subprocess
 import sys
-import warnings
 
 import rasterio
 
