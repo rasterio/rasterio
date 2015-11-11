@@ -122,13 +122,25 @@ def mask(
         bounds = geojson.get('bbox', calculate_bounds(geojson))
 
         with rasterio.open(input) as src:
-            has_disjoint_bounds = disjoint_bounds(bounds, src.bounds)
+            # If y pixel value is positive, then invert y dimension in bounds
+            invert_y = src.affine.e > 0
+
+            src_bounds = src.bounds
+            if invert_y:
+                src_bounds = [src.bounds[0], src.bounds[3],
+                              src.bounds[2], src.bounds[1]]
+
+            has_disjoint_bounds = disjoint_bounds(bounds, src_bounds)
 
             if crop:
                 if has_disjoint_bounds:
+
                     raise click.BadParameter('not allowed for GeoJSON outside '
                                              'the extent of the input raster',
                                              param=crop, param_hint='--crop')
+
+                if invert_y:
+                    bounds = (bounds[0], bounds[3], bounds[2], bounds[1])
 
                 window = src.window(*bounds)
                 transform = src.window_transform(window)
@@ -256,6 +268,9 @@ def shapes(
 
         def __call__(self):
             with rasterio.open(input) as src:
+                if bidx is not None and bidx > src.count:
+                    raise ValueError('bidx is out of range for raster')
+
                 img = None
                 msk = None
 
@@ -533,6 +548,12 @@ def rasterize(
 
                 kwargs = template_ds.meta.copy()
                 kwargs['count'] = 1
+
+                # DEPRECATED
+                # upgrade transform to affine object or we may get an invalid
+                # transform set on output
+                kwargs['transform'] = template_ds.affine
+
                 template_ds.close()
 
             else:
