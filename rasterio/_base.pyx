@@ -17,6 +17,7 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, Compression, Interleaving
+from rasterio.vfs import parse_path, vsi_path
 
 
 log = logging.getLogger('rasterio')
@@ -29,38 +30,6 @@ else:
         def emit(self, record):
             pass
     log.addHandler(NullHandler())
-
-
-def parse_paths(url, vfs=None):
-    """Parse a file path or Apache VFS URL into its parts."""
-    archive = scheme = None
-    if vfs:
-        parts = vfs.split("://")
-        vsi = parts.pop(0) if parts else None
-        archive = parts.pop(0) if parts else None
-    else:
-        parts = url.split("://")
-        path = parts.pop() if parts else None
-        scheme = parts.pop() if parts else None
-        if scheme in ('gzip', 'zip', 'tar'):
-            parts = path.split('!')
-            path = parts.pop() if parts else None
-            archive = parts.pop() if parts else None
-    return path, scheme, archive
-
-
-def vsi_path(path, vsi=None, archive=None):
-    # If a VSF and archive file are specified, we convert the path to
-    # a GDAL VSI path (see cpl_vsi.h).
-    if vsi and vsi != 'file':
-        path = path.strip(os.path.sep)
-        if archive:
-            result = os.path.sep.join(['/vsi{0}'.format(vsi), archive, path])
-        else:
-            result = os.path.sep.join(['/vsi{0}'.format(vsi), path])
-    else:
-        result = path
-    return result
 
 
 cdef class DatasetReader(object):
@@ -95,8 +64,8 @@ cdef class DatasetReader(object):
             self.env = GDALEnv(False)
         self.env.start()
 
-        path, vsi, archive = parse_paths(self.name)
-        path = vsi_path(path, vsi=vsi, archive=archive)
+        path, archive, scheme = parse_path(self.name)
+        path = vsi_path(path, archive=archive, scheme=scheme)
 
         name_b = path.encode('utf-8')
         cdef const char *fname = name_b

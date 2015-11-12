@@ -13,8 +13,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
-    crop_window, eval_window, window_shape, window_index, tastes_like_gdal,
-    parse_paths)
+    crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs
 from rasterio import dtypes
@@ -23,6 +22,7 @@ from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.sample import sample_gen
+from rasterio.vfs import parse_path
 
 
 log = logging.getLogger('rasterio')
@@ -1260,13 +1260,13 @@ cdef class RasterUpdater(RasterReader):
             self.env = GDALEnv(False)
         self.env.start()
 
-        path, scheme, archive = parse_paths(self.name)
+        path, archive, scheme = parse_path(self.name)
         if scheme and scheme != 'file':
             raise TypeError(
                 "VFS '{0}' datasets can not be created or updated.".format(
                     scheme))
 
-        name_b = self.name.encode('utf-8')
+        name_b = path.encode('utf-8')
         cdef const char *fname = name_b
 
         kwds = []
@@ -1278,8 +1278,8 @@ cdef class RasterUpdater(RasterReader):
                 raise ValueError("only GTiffs can be opened in 'w' mode")
 
             # Delete existing file, create.
-            if os.path.exists(self.name):
-                os.unlink(self.name)
+            if os.path.exists(path):
+                os.unlink(path)
             
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
@@ -2011,7 +2011,7 @@ def writer(path, mode, **kwargs):
     cdef const char *drv_name = NULL
     cdef const char *fname = NULL
 
-    path, scheme, archive = parse_paths(path)
+    path, archive, scheme = parse_path(path)
     if scheme and scheme != 'file':
         raise TypeError(
             "VFS '{0}' datasets can not be created or updated.".format(

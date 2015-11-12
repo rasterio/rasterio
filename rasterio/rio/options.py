@@ -50,7 +50,7 @@ import os.path
 
 import click
 
-from rasterio._base import parse_paths
+from rasterio.vfs import parse_path
 
 
 def _cb_key_val(ctx, param, value):
@@ -85,10 +85,10 @@ def _cb_key_val(ctx, param, value):
 
 def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
-    path, scheme, archive = parse_paths(value)
-    if scheme and not scheme in ('file', 'gzip', 'zip', 'tar'):
-        raise click.BadParameter(
-            "VFS type {0} is unknown".format(scheme))
+    try:
+        path, archive, scheme = parse_path(value)
+    except ValueError as exc:
+        raise click.BadParameter(exc.message)
     path_to_check = archive or path
     if not os.path.exists(path_to_check):
         raise click.BadParameter(
