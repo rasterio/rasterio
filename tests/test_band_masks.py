@@ -76,7 +76,7 @@ def test_warning_no():
         try:
             rm, gm, bm = src.read_masks()
         except NodataShadowWarning:
-            pytest.fail("Unexpecred NodataShadowWarning raised")
+            pytest.fail("Unexpected NodataShadowWarning raised")
 
 
 def test_warning_shadow(tiffs):
