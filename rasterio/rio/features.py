@@ -182,7 +182,7 @@ def mask(
 
 # Shapes command.
 @click.command(short_help="Write shapes extracted from bands or masks.")
-@click.argument('input', type=click.Path(exists=True))
+@options.file_in_arg
 @options.output_opt
 @precision_opt
 @indent_opt

@@ -24,6 +24,7 @@ from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
+from rasterio.vfs import parse_path
 from rasterio.warnings import NodataShadowWarning
 
 
@@ -1259,8 +1260,7 @@ cdef class RasterUpdater(RasterReader):
         cdef void *drv = NULL
         cdef void *hband = NULL
         cdef int success
-        name_b = self.name.encode('utf-8')
-        cdef const char *fname = name_b
+
 
         # Is there not a driver manager already?
         if driver_count() == 0 and not self.env:
@@ -1269,7 +1269,16 @@ cdef class RasterUpdater(RasterReader):
         else:
             self.env = GDALEnv(False)
         self.env.start()
-        
+
+        path, archive, scheme = parse_path(self.name)
+        if scheme and scheme != 'file':
+            raise TypeError(
+                "VFS '{0}' datasets can not be created or updated.".format(
+                    scheme))
+
+        name_b = path.encode('utf-8')
+        cdef const char *fname = name_b
+
         kwds = []
 
         if self.mode == 'w':
@@ -1279,8 +1288,8 @@ cdef class RasterUpdater(RasterReader):
                 raise ValueError("only GTiffs can be opened in 'w' mode")
 
             # Delete existing file, create.
-            if os.path.exists(self.name):
-                os.unlink(self.name)
+            if os.path.exists(path):
+                os.unlink(path)
             
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
@@ -2019,6 +2028,12 @@ def writer(path, mode, **kwargs):
     cdef void *drv = NULL
     cdef const char *drv_name = NULL
     cdef const char *fname = NULL
+
+    path, archive, scheme = parse_path(path)
+    if scheme and scheme != 'file':
+        raise TypeError(
+            "VFS '{0}' datasets can not be created or updated.".format(
+                scheme))
 
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':

@@ -40,13 +40,17 @@ Registry of common rio CLI options.  See cligj for more options.
 --width: width of raster.  In rio-info
 --with-nodata/--without-nodata: include nodata regions or not.  In rio-shapes.
 -v, --tell-me-more, --verbose
+--vfs: virtual file system.
 """
 
 
 # TODO: move file_in_arg and file_out_arg to cligj
 
+import os.path
 
 import click
+
+from rasterio.vfs import parse_path
 
 
 def _cb_key_val(ctx, param, value):
@@ -76,14 +80,29 @@ def _cb_key_val(ctx, param, value):
                 k = k.lower()
                 v = v.lower()
                 out[k] = v
-
         return out
 
 
+def file_in_handler(ctx, param, value):
+    """Normalize ordinary filesystem and VFS paths"""
+    try:
+        path, archive, scheme = parse_path(value)
+    except ValueError as exc:
+        raise click.BadParameter(str(exc))
+    path_to_check = archive or path
+    if not os.path.exists(path_to_check):
+        raise click.BadParameter(
+            "Input file {0} does not exist".format(path_to_check))
+    if archive and scheme:
+        archive = os.path.abspath(archive)
+        path = "{0}://{1}!{2}".format(scheme, archive, path)
+    else:
+        path = os.path.abspath(path)
+    return path
+
+
 # Singular input file
-file_in_arg = click.argument(
-    'INPUT',
-    type=click.Path(exists=True, resolve_path=True))
+file_in_arg = click.argument('INPUT', callback=file_in_handler)
 
 # Singular output file
 file_out_arg = click.argument(
@@ -161,4 +180,4 @@ rgb_opt = click.option(
     '--rgb', 'photometric', 
     flag_value='rgb',
     default=False,
-    help="Set RGB photometric interpretation")
+    help="Set RGB photometric interpretation.")

@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import logging
 import math
+import os
 import sys
 import warnings
 
@@ -18,6 +19,7 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, Compression, Interleaving
+from rasterio.vfs import parse_path, vsi_path
 
 
 log = logging.getLogger('rasterio')
@@ -64,7 +66,10 @@ cdef class DatasetReader(object):
             self.env = GDALEnv(False)
         self.env.start()
 
-        name_b = self.name.encode('utf-8')
+        path, archive, scheme = parse_path(self.name)
+        path = vsi_path(path, archive=archive, scheme=scheme)
+
+        name_b = path.encode('utf-8')
         cdef const char *fname = name_b
         with cpl_errs:
             self._hds = _gdal.GDALOpen(fname, 0)

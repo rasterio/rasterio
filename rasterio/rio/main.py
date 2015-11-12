@@ -11,6 +11,7 @@ import click
 from click_plugins import with_plugins
 import cligj
 
+from . import options
 import rasterio
 
 

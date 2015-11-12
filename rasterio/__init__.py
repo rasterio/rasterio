@@ -80,6 +80,11 @@ def open(
             a negative number i.e. -1 * pixel height
     f: Y coordinate of the top left corner of the top left pixel 
 
+    A virtual filesystem can be specified. The ``vfs`` parameter may be
+    an Apache Commons VFS style string beginning with "zip://" or
+    "tar://"". In this case, the ``path`` must be an absolute path
+    within that container.
+
     Finally, additional kwargs are passed to GDAL as driver-specific
     dataset creation parameters.
     """
