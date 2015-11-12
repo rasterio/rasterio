@@ -74,6 +74,7 @@ def _gdal_typename(dt):
     except KeyError:
         return typename_fwd[dtype_rev[dt().dtype.name]]
 
+
 def check_dtype(dt):
     if dt not in dtype_rev:
         try:
@@ -83,32 +84,105 @@ def check_dtype(dt):
     return True
 
 
-def get_minimum_int_dtype(values):
+def get_minimum_dtype(values):
     """
-    Uses range checking to determine the minimum integer data type required
+    Uses range checking to determine the minimum integer or floating point
+    data type required
     to represent values.
 
-    :param values: numpy array
-    :return: named data type that can be later used to create a numpy dtype
+    Parameters
+    ----------
+    values: list-like
+
+
+    Returns
+    -------
+    rasterio dtype string
     """
+
+    import numpy
+
+    if not is_ndarray(values):
+        values = numpy.array(values)
 
     min_value = values.min()
     max_value = values.max()
-    
-    if min_value >= 0:
-        if max_value <= 255:
-            return uint8
-        elif max_value <= 65535:
-            return uint16
-        elif max_value <= 4294967295:
-            return uint32
-    elif min_value >= -32768 and max_value <= 32767:
-        return int16
-    elif min_value >= -2147483648 and max_value <= 2147483647:
-        return int32
+
+    if values.dtype.kind == 'i':
+        if min_value >= 0:
+            if max_value <= 255:
+                return uint8
+            elif max_value <= 65535:
+                return uint16
+            elif max_value <= 4294967295:
+                return uint32
+        elif min_value >= -32768 and max_value <= 32767:
+            return int16
+        elif min_value >= -2147483648 and max_value <= 2147483647:
+            return int32
+
+    else:
+        if min_value >= -3.4028235e+38 and max_value <= 3.4028235e+38:
+            return float32
+        return float64
 
 
 def is_ndarray(array):
     import numpy
 
     return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
+
+
+def can_cast_dtype(values, dtype):
+    """
+    Tests if values can be cast to dtype without loss of information.
+
+    Parameters
+    ----------
+    values: list-like
+    dtype: numpy dtype or string
+
+    Returns
+    -------
+    boolean
+        True if values can be cast to data type.
+    """
+
+    import numpy
+
+    if not is_ndarray(values):
+        values = numpy.array(values)
+
+    if values.dtype.name == numpy.dtype(dtype).name:
+        return True
+
+    elif values.dtype.kind == 'f':
+        return numpy.allclose(values, values.astype(dtype))
+
+    else:
+        return numpy.array_equal(values, values.astype(dtype))
+
+
+def validate_dtype(values, valid_dtypes):
+    """
+    Tests if dtype of values is one of valid_dtypes.
+
+    Parameters
+    ----------
+    values: list-like
+    valid_dtypes: list-like
+        list of valid dtype strings, e.g., ('int16', 'int32')
+
+    Returns
+    -------
+    boolean:
+        True if dtype of values is one of valid_dtypes
+    """
+
+    import numpy
+
+    if not is_ndarray(values):
+        values = numpy.array(values)
+
+    return (values.dtype.name in valid_dtypes or
+            get_minimum_dtype(values) in valid_dtypes)

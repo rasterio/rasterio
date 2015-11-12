@@ -1,5 +1,7 @@
 # cython: boundscheck=False
 
+from __future__ import absolute_import
+
 import logging
 import math
 import os
@@ -20,9 +22,10 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
 from rasterio.vfs import parse_path
+from rasterio.warnings import NodataShadowWarning
 
 
 log = logging.getLogger('rasterio')
@@ -36,6 +39,7 @@ else:
             pass
 
 log.addHandler(NullHandler())
+
 
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
@@ -1060,6 +1064,12 @@ cdef class RasterReader(_base.DatasetReader):
         gdt = dtypes.dtype_rev[dtype]
 
         if masks:
+            # Warn if nodata attribute is shadowing an alpha band.
+            if self.count == 4 and self.colorinterp(4) == ColorInterp.alpha:
+                for flags in self.mask_flags:
+                    if flags & MaskFlags.nodata:
+                        warnings.warn(NodataShadowWarning())
+
             retval = io_multi_mask(
                             self._hds, 0, xoff, yoff, width, height,
                             out, indexes_arr, indexes_count)
@@ -1307,6 +1317,13 @@ cdef class RasterUpdater(RasterReader):
                     continue
                 kwds.append((k.lower(), v))
                 k, v = k.upper(), str(v).upper()
+
+                # Guard against block size that exceed image size.
+                if k == 'BLOCKXSIZE' and int(v) > self.width:
+                    raise ValueError("blockxsize exceeds raster width.")
+                if k == 'BLOCKYSIZE' and int(v) > self.height:
+                    raise ValueError("blockysize exceeds raster height.")
+
                 key_b = k.encode('utf-8')
                 val_b = v.encode('utf-8')
                 key_c = key_b
@@ -1319,6 +1336,7 @@ cdef class RasterUpdater(RasterReader):
             self._hds = _gdal.GDALCreate(
                 drv, fname, self.width, self.height, self._count,
                 gdal_dtype, options)
+
             if self._hds == NULL:
                 raise ValueError("NULL dataset")
 

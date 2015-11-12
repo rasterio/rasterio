@@ -60,14 +60,29 @@ def test_gtiff_profile_protected_driver():
 
 
 def test_open_with_profile(tmpdir):
-        tiffname = str(tmpdir.join('foo.tif'))
-        with rasterio.open(
-                tiffname,
-                'w',
-                **default_gtiff_profile(
-                    count=1, width=1, height=1)) as dst:
-            data = dst.read()
-            assert data.flatten().tolist() == [0]
+    tiffname = str(tmpdir.join('foo.tif'))
+    with rasterio.open(
+            tiffname,
+            'w',
+            **default_gtiff_profile(
+                count=1, width=256, height=256)) as dst:
+        data = dst.read()
+
+
+def test_blockxsize_guard(tmpdir):
+    """blockxsize can't be greater than image width."""
+    tiffname = str(tmpdir.join('foo.tif'))
+    with pytest.raises(ValueError):
+        _ = rasterio.open(tiffname, 'w', **default_gtiff_profile(
+                count=1, width=128, height=256))
+
+
+def test_blockysize_guard(tmpdir):
+    """blockysize can't be greater than image height."""
+    tiffname = str(tmpdir.join('foo.tif'))
+    with pytest.raises(ValueError):
+        _ = rasterio.open(tiffname, 'w', **default_gtiff_profile(
+                count=1, width=256, height=128))
 
 
 def test_profile_overlay():

@@ -1,6 +1,11 @@
 """Implementation of Apache VFS schemes and URLs"""
 
+import os
 
+
+# NB: As not to propagate fallacies of distributed computing, Rasterio
+# does not support HTTP or FTP URLs via GDAL's vsicurl handler. Only
+# the following local filesystem schemes are supported.
 SCHEMES = ['gzip', 'zip', 'tar']
 
 
@@ -21,7 +26,7 @@ def parse_path(path, vfs=None):
             archive = parts.pop() if parts else None
         elif scheme in (None, 'file'):
             pass
-        elif scheme not in SCHEMES:
+        else:
             raise ValueError("VFS scheme {0} is unknown".format(scheme))
     return path, archive, scheme
 
@@ -30,12 +35,9 @@ def vsi_path(path, archive=None, scheme=None):
     """Convert a parsed path to a GDAL VSI path."""
     # If a VSF and archive file are specified, we convert the path to
     # a GDAL VSI path (see cpl_vsi.h).
-    if vsi and vsi != 'file':
+    if scheme and scheme != 'file':
         path = path.strip(os.path.sep)
-        if archive:
-            result = os.path.sep.join(['/vsi{0}'.format(vsi), archive, path])
-        else:
-            result = os.path.sep.join(['/vsi{0}'.format(vsi), path])
+        result = os.path.sep.join(['/vsi{0}'.format(scheme), archive, path])
     else:
         result = path
     return result

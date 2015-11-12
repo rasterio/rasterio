@@ -333,8 +333,6 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 @click.pass_context
 def insp(ctx, input, mode, interpreter):
     """ Open the input file in a Python interpreter.
-
-    IPython will be used as the default interpreter, if available.
     """
     import rasterio.tool
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1

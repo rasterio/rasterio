@@ -5,7 +5,7 @@ delocate
 enum34
 numpy>=1.8
 snuggs>=1.2
-pytest
+pytest>=2.8.2
 pytest-cov>=2.2.0
 setuptools>=0.9.8
 wheel
