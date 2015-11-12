@@ -88,7 +88,7 @@ def file_in_handler(ctx, param, value):
     try:
         path, archive, scheme = parse_path(value)
     except ValueError as exc:
-        raise click.BadParameter(exc.message)
+        raise click.BadParameter(str(exc))
     path_to_check = archive or path
     if not os.path.exists(path_to_check):
         raise click.BadParameter(
