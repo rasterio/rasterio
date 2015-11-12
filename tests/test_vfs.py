@@ -23,6 +23,17 @@ def test_read_vfs_file():
         assert src.name == 'file://tests/data/RGB.byte.tif'
         assert src.count == 3
 
+def test_read_vfs_zip_cmp_array():
+    with rasterio.open(
+            'zip://tests/data/files.zip!/RGB.byte.tif') as src:
+        zip_arr = src.read()
+
+    with rasterio.open(
+            'file://tests/data/RGB.byte.tif') as src:
+        file_arr = src.read()
+
+    assert zip_arr.dumps() == file_arr.dumps()
+
 
 def test_read_vfs_none():
     with rasterio.open(
