@@ -1,13 +1,9 @@
 import json
 import logging
-import warnings
 
 import click
 
 import rasterio
-
-
-warnings.simplefilter('default')
 
 
 @click.command(short_help="Sample a dataset.")

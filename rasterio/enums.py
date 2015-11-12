@@ -45,3 +45,10 @@ class Compression(Enum):
 class Interleaving(Enum):
     pixel='PIXEL'
     band='BAND'
+
+
+class MaskFlags(IntEnum):
+    all_valid=1
+    per_dataset=2
+    alpha=4
+    nodata=8

@@ -5,6 +5,7 @@ See https://github.com/mapbox/rasterio/issues/293 for bug report.
 """
 
 import rasterio
+from rasterio.enums import MaskFlags
 
 
 def test_create_internal_mask(data):
@@ -22,6 +23,10 @@ def test_create_internal_mask(data):
     # Check that the mask was saved correctly.
     with rasterio.open(str(data.join('RGB.byte.tif'))) as src:
         assert (mask == src.read_mask()).all()
+        for flags in src.mask_flags:
+            assert flags & MaskFlags.per_dataset
+            assert not flags & MaskFlags.alpha
+            assert not flags & MaskFlags.nodata
 
 
 def test_create_sidecar_mask(data):
@@ -39,6 +44,10 @@ def test_create_sidecar_mask(data):
     # Check that the mask was saved correctly.
     with rasterio.open(str(data.join('RGB.byte.tif'))) as src:
         assert (mask == src.read_mask()).all()
+        for flags in src.mask_flags:
+            assert flags & MaskFlags.per_dataset
+            assert not flags & MaskFlags.alpha
+            assert not flags & MaskFlags.nodata
 
     # Check the .msk file, too.
     with rasterio.open(str(data.join('RGB.byte.tif.msk'))) as msk:

@@ -1,7 +1,6 @@
 """File translation command"""
 
 import logging
-import warnings
 
 import click
 from cligj import format_opt
@@ -11,9 +10,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.coords import disjoint_bounds
-
-
-warnings.simplefilter('default')
 
 
 # Clip command
