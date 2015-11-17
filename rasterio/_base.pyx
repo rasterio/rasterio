@@ -203,7 +203,11 @@ cdef class DatasetReader(object):
         if self._hds == NULL:
             raise ValueError("Null dataset")
         cdef double gt[6]
-        _gdal.GDALGetGeoTransform(self._hds, gt)
+        err = _gdal.GDALGetGeoTransform(self._hds, gt)
+        if err:
+            warnings.warn("GDALGetGeoTransform failed, default invalid "
+                          "transform will be returned.")
+
         transform = [0]*6
         for i in range(6):
             transform[i] = gt[i]

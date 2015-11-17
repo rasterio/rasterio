@@ -1453,7 +1453,9 @@ cdef class RasterUpdater(RasterReader):
         cdef double gt[6]
         for i in range(6):
             gt[i] = transform[i]
-        retval = _gdal.GDALSetGeoTransform(self._hds, gt)
+        err = _gdal.GDALSetGeoTransform(self._hds, gt)
+        if err:
+            raise ValueError("transform not set: %s" % transform)
         self._transform = transform
 
     property transform:

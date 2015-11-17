@@ -1,11 +1,24 @@
 Changes
 =======
 
+0.30.0 (2015-11-16)
+-------------------
+- Added window utilities: get_data_window(), window_union(),
+  window_intersection(), windows_intersect() (#496, #506).
+- Warn when an alpha band that might provide a dataset mask is shadowed by a
+  nodata attribute (#508, #523).
+- IPython is not the default interpeter for rio-insp and the documentation 
+  saying it is has been corrected (#518).
+- Guard against creating datasets with block sizes larger than the dataset
+  width and height. Such datasets are semi-broken and are likely to be 
+  mangled when read (#521).
+- Refactor of the `rasterio.features` tests (#522).
+
 0.29.0 (2015-10-22)
 -------------------
 - Fill masked arrays in rio-calc when using Numpy 1.10.x as well as with 1.8.x
   (#500).
-- When a raster dataset is not tiled, blockxszie and blockysize items are no
+- When a raster dataset is not tiled, blockxsize and blockysize items are no
   longer included in its `profile` property. This prevents meaningless block
   size parameters from stripped, not tiled, datasets from being used when
   creating new datasets (#503).
