@@ -52,11 +52,3 @@ class MaskFlags(IntEnum):
     per_dataset=2
     alpha=4
     nodata=8
-
-
-class GDALError(IntEnum):
-    none = 0,  # CE_None
-    debug = 1,  # CE_Debug
-    warning= 2,  # CE_Warning
-    failure = 3,  # CE_Failure
-    fatal = 4  # CE_Fatal

@@ -17,12 +17,12 @@ from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs
+from rasterio._err import cpl_errs, GDALError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp, MaskFlags, Resampling, GDALError
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
 from rasterio.vfs import parse_path
 from rasterio.warnings import NodataShadowWarning

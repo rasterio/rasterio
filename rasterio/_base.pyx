@@ -14,11 +14,11 @@ from libc.stdlib cimport malloc, free
 
 from rasterio cimport _gdal, _ogr
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs
+from rasterio._err import cpl_errs, GDALError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp, Compression, Interleaving, GDALError
+from rasterio.enums import ColorInterp, Compression, Interleaving
 from rasterio.vfs import parse_path, vsi_path
 
 
