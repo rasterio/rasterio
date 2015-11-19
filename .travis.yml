@@ -10,7 +10,6 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
-    - CYTHON_COVERAGE=1
   matrix:
     - GDALVERSION = "1.9.2"
     - GDALVERSION = "1.11.2"
