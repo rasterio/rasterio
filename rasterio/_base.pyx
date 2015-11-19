@@ -14,7 +14,7 @@ from libc.stdlib cimport malloc, free
 
 from rasterio cimport _gdal, _ogr
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs
+from rasterio._err import cpl_errs, GDALError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.transform import Affine
@@ -204,9 +204,13 @@ cdef class DatasetReader(object):
             raise ValueError("Null dataset")
         cdef double gt[6]
         err = _gdal.GDALGetGeoTransform(self._hds, gt)
-        if err:
-            warnings.warn("GDALGetGeoTransform failed, default invalid "
-                          "transform will be returned.")
+
+        if err == GDALError.failure:
+            warnings.warn(
+                "Dataset has no geotransform set.  Default transform "
+                "will be applied (Affine.identity())",
+                UserWarning
+            )
 
         transform = [0]*6
         for i in range(6):

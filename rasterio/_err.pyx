@@ -29,6 +29,9 @@ manager raises a more useful and informative error:
     ValueError: The PNG driver does not support update access to existing datasets.
 """
 
+from enums import IntEnum
+
+
 # CPL function declarations.
 cdef extern from "cpl_error.h":
     int CPLGetLastErrorNo()
@@ -68,3 +71,10 @@ cdef class GDALErrCtxManager:
 
 cpl_errs = GDALErrCtxManager()
 
+
+class GDALError(IntEnum):
+    none = 0,  # CE_None
+    debug = 1,  # CE_Debug
+    warning= 2,  # CE_Warning
+    failure = 3,  # CE_Failure
+    fatal = 4  # CE_Fatal

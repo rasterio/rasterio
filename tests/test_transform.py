@@ -1,3 +1,5 @@
+from affine import Affine
+import pytest
 import rasterio
 from rasterio import transform
 
@@ -74,3 +76,47 @@ def test_window_bounds():
 
             for e, a in zip(expected, actual):
                 assert round(e, 7) == round(a, 7)
+
+
+def test_affine_roundtrip(tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    out_affine = Affine(2, 0, 0, 0, -2, 0)
+
+    with rasterio.open(
+        output, 'w',
+        driver='GTiff',
+        count=1,
+        dtype=rasterio.uint8,
+        width=1,
+        height=1,
+        transform=out_affine
+    ) as out:
+        assert out.affine == out_affine
+
+    with rasterio.open(output) as out:
+        assert out.affine == out_affine
+
+
+def test_affine_identity(tmpdir):
+    """
+    Setting a transform with absolute values equivalent to Affine.identity()
+    should result in a warning (not captured here) and read with
+    affine that matches Affine.identity().
+    """
+
+    output = str(tmpdir.join('test.tif'))
+    out_affine = Affine(1, 0, 0, 0, -1, 0)
+
+    with rasterio.open(
+        output, 'w',
+        driver='GTiff',
+        count=1,
+        dtype=rasterio.uint8,
+        width=1,
+        height=1,
+        transform=out_affine
+    ) as out:
+        assert out.affine == out_affine
+
+    with rasterio.open(output) as out:
+        assert out.affine == Affine.identity()

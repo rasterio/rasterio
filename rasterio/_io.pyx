@@ -17,7 +17,7 @@ from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs
+from rasterio._err import cpl_errs, GDALError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.five import text_type, string_types
@@ -1450,6 +1450,14 @@ cdef class RasterUpdater(RasterReader):
     def write_transform(self, transform):
         if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
+
+        if [abs(v) for v in transform] == [0, 1, 0, 0, 0, 1]:
+            warnings.warn(
+                "Dataset uses default geotransform (Affine.identity). "
+                "No tranform will be written to the output by GDAL.",
+                UserWarning
+            )
+
         cdef double gt[6]
         for i in range(6):
             gt[i] = transform[i]
