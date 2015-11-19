@@ -3,7 +3,7 @@ cligj
 cython>=0.23.4
 delocate
 enum34
-numpy>=1.8
+numpy>=1.10
 snuggs>=1.2
 pytest>=2.8.2
 pytest-cov>=2.2.0
