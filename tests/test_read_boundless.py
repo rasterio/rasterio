@@ -84,3 +84,20 @@ def test_read_boundless_masks_zero_stop():
         data = src.read_masks(window=((-200, 0), (-200, 0)), boundless=True)
         assert data.shape == (3, 200, 200)
         assert data.min() == data.max() == src.nodata
+
+def test_read_boundless_noshift():
+    with rasterio.open('tests/data/rgb4.tif') as src:
+        # the read offsets should be determined by start col/row alone
+        # when col stop exceeds image width
+        c1 = src.read(boundless=True,
+                      window=((100, 101), (-1, src.shape[1])))[0, 0, 0:9]
+        c2 = src.read(boundless=True,
+                      window=((100, 101), (-1, src.shape[1] + 1)))[0, 0, 0:9]
+        assert numpy.array_equal(c1, c2)
+
+        # when row stop exceeds image height
+        r1 = src.read(boundless=True,
+                      window=((-1, src.shape[0]), (100, 101)))[0, 0, 0:9]
+        r2 = src.read(boundless=True,
+                      window=((-1, src.shape[0] + 1), (100, 101)))[0, 0, 0:9]
+        assert numpy.array_equal(r1, r2)
