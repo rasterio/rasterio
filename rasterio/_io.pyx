@@ -865,9 +865,9 @@ cdef class RasterReader(_base.DatasetReader):
                 roff = 0
                 coff = 0
                 if window[0][0] < 0:
-                    roff = (0 - window[0][0]) * scaling_h
+                    roff = -window[0][0] * scaling_h
                 if window[1][0] < 0:
-                    coff = (0 - window[1][0]) * scaling_w
+                    coff = -window[1][0] * scaling_w
 
                 for dst, src in zip(
                         out if len(out.shape) == 3 else [out],
