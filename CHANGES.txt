@@ -1,6 +1,18 @@
 Changes
 =======
 
+0.31.0 (2015-12-18)
+-------------------
+- Warn when rasters have no georeferencing and when the default identity
+  transform will be applied by GDAL (#524, #527).
+- Build OS X wheels using numpy>=1.10.2 (#529).
+- When reading image windows in previous versions, given a window with
+  ((row_start, row_stop), (col_start, col_stop)) if the stop index is greater
+  than the width/height the start index effectively shifts as well. This can
+  manifest itself in pixel misalignment if, e.g. you read block windows with
+  a bit of padding to avoid edge effects. Now the window offsets are determined
+  solely by row_start and col_start.(#532, #533).
+
 0.30.0 (2015-11-16)
 -------------------
 - Added window utilities: get_data_window(), window_union(),
