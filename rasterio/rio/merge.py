@@ -46,6 +46,8 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
     and are otherwise taken from the first input file.
 
     Note: --res changed from 2 parameters in 0.25.
+
+    \b
       --res 0.1 0.1  => --res 0.1 (square)
       --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)
     """
