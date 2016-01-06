@@ -76,8 +76,6 @@ Here is the program in examples/concurrent-cpu-bound.py.
                 with rasterio.open(outfile, 'w', **meta) as dst:
 
                     # Define a generator for data, window pairs.
-                    # We use the new read() method here to a 3D array with all
-                    # bands, but could also use read_band().
                     def jobs():
                         for ij, window in dst.block_windows():
                             data = src.read(window=window)

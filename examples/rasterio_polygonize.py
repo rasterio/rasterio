@@ -20,7 +20,7 @@ def main(raster_file, vector_file, driver, mask_value):
     with rasterio.drivers():
         
         with rasterio.open(raster_file) as src:
-            image = src.read_band(1)
+            image = src.read(1)
         
         if mask_value is not None:
             mask = image == mask_value

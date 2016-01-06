@@ -7,7 +7,7 @@ import rasterio
 with rasterio.drivers():
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        b, g, r = (src.read_band(k) for k in (1, 2, 3))
+        b, g, r = (src.read(k) for k in (1, 2, 3))
         meta = src.meta
 
     tmpfilename = os.path.join(tempfile.mkdtemp(), 'decimate.tif')

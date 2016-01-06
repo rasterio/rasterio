@@ -14,7 +14,7 @@ to bands using the ``write_colormap()`` method.
     with rasterio.drivers():
 
         with rasterio.open('tests/data/shade.tif') as src:
-            shade = src.read_band(1)
+            shade = src.read(1)
             meta = src.meta
 
         with rasterio.open('/tmp/colormap.tif', 'w', **meta) as dst:

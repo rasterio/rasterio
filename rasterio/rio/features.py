@@ -524,7 +524,7 @@ def rasterize(
                     fill = fill)
 
                 for bidx in range(1, meta['count'] + 1):
-                    data = out.read_band(bidx, masked=True)
+                    data = out.read(bidx, masked=True)
                     # Burn in any non-fill pixels, and update mask accordingly
                     ne = result != fill
                     data[ne] = result[ne]

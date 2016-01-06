@@ -117,7 +117,7 @@ using Python.
 
     $ rio insp tests/data/RGB.byte.tif
     Rasterio 0.10 Interactive Inspector (Python 3.4.1)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> src.name
     'tests/data/RGB.byte.tif'
     >>> src.closed

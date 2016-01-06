@@ -15,7 +15,7 @@ I'm going to use the rasterio interactive inspector in these examples below.
 
     $ rasterio.insp tests/data/RGB.byte.tif
     Rasterio 0.6 Interactive Inspector (Python 2.7.5)
-    Type "src.name", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.name", "src.read(1)", or "help(src)" for more information.
     >>> 
 
 Tags belong to namespaces. To get a copy of a dataset's tags from the default
