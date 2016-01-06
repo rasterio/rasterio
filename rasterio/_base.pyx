@@ -358,7 +358,7 @@ cdef class DatasetReader(object):
         indexes.
 
         The primary use of this function is to obtain windows to pass to
-        read_band() for highly efficient access to raster block data.
+        read() for highly efficient access to raster block data.
         """
         cdef int i, j
         block_shapes = self.block_shapes

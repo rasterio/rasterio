@@ -29,7 +29,7 @@ inverse relationship in the context of RGB.byte.tif.
 
     $ rio insp tests/data/RGB.byte.tif
     Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> src.shape
     (718, 791)
     >>> src.count
@@ -99,7 +99,7 @@ copy of the test data opened using rio-insp in "r+" (update) mode.
 
     $ rio insp copy.tif --mode r+
     Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>>
 
 To mark that all pixels of all bands are valid (i.e., to override nodata
@@ -132,7 +132,7 @@ as an RGB image (with the help of `numpy.dstack()`):
 
     $rio insp copy.tif --mode r+
     Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> msk = src.read_masks()
     >>> show(np.dstack(msk))
 
@@ -179,7 +179,7 @@ If you want, you can read dataset bands as numpy masked arrays.
 
     $ rio insp tests/data/RGB.byte.tif
     Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> blue = src.read(1, masked=True)
     >>> blue.mask
     array([[ True,  True,  True, ...,  True,  True,  True],

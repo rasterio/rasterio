@@ -23,7 +23,7 @@ The shapes of the foreground features can be extracted like this:
     from rasterio import features
 
     with rasterio.open('13547682814_f2e459f7a5_o_d.png') as src:
-        blue = src.read_band(3)
+        blue = src.read(3)
 
     mask = blue != 255
     shapes = features.shapes(blue, mask=mask)

@@ -16,7 +16,7 @@ Rasterio distribution root to see.
 .. code-block:: pycon
 
     Rasterio 0.9 Interactive Inspector (Python 3.4.1)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> src
     <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
     >>> src.crs

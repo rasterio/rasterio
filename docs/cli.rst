@@ -373,7 +373,7 @@ The ``insp`` command opens a dataset and an interpreter.
 
     $ rio insp tests/data/RGB.byte.tif
     Rasterio 0.18 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read_band(1)", or "help(src)" for more information.
+    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> print src.name
     tests/data/RGB.byte.tif
     >>> print src.bounds

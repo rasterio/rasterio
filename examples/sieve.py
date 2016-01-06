@@ -14,7 +14,7 @@ with rasterio.drivers():
     
     # Read a raster to be sieved.
     with rasterio.open('tests/data/shade.tif') as src:
-        shade = src.read_band(1)
+        shade = src.read(1)
     
     # Print the number of shapes in the source raster.
     print("Slope shapes: %d" % len(list(shapes(shade))))

@@ -67,7 +67,7 @@ test file.
 
     >>> import rasterio
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
-    ...     w = src.read_band(1, window=((0, 100), (0, 100)))
+    ...     w = src.read(1, window=((0, 100), (0, 100)))
     ...
     >>> print(w.shape)
     (100, 100)
@@ -104,7 +104,7 @@ Below, the window is scaled to one third of the source image.
 .. code-block:: python
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        b, g, r = (src.read_band(k) for k in (1, 2, 3))
+        b, g, r = (src.read(k) for k in (1, 2, 3))
     
     write_window = (30, 269), (50, 313)
     
@@ -144,7 +144,7 @@ destination dataset.
     read_window = (350, 410), (350, 450)
     
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        b, g, r = (src.read_band(k, window=read_window) for k in (1, 2, 3))
+        b, g, r = (src.read(k, window=read_window) for k in (1, 2, 3))
     
     write_window = (-240, None), (-400, None)
     
@@ -242,7 +242,7 @@ The block windows themselves can be had from the block_windows function.
     ...
 
 This function returns an iterator that yields a pair of values. The second is
-a window tuple that can be used in calls to read_band or write_band. The first
+a window tuple that can be used in calls to `read` or `write_band`. The first
 is the pair of row and column indexes of this block within all blocks of the
 dataset.
 
@@ -252,7 +252,7 @@ You may read windows of data from a file block-by-block like this.
 
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     for ji, window in src.block_windows(1):
-    ...         r = src.read_band(1, window=window)
+    ...         r = src.read(1, window=window)
     ...         print(r.shape)
     ...         break
     ...
@@ -266,7 +266,7 @@ it's a good idea to test this assumption in your code.
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     assert len(set(src.block_shapes)) == 1
     ...     for ji, window in src.block_windows(1):
-    ...         b, g, r = (src.read_band(k, window=window) for k in (1, 2, 3))
+    ...         b, g, r = (src.read(k, window=window) for k in (1, 2, 3))
     ...         print(ji, r.shape, g.shape, b.shape)
     ...         break
     ...

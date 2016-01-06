@@ -89,7 +89,7 @@ a file can be read like this:
 
 .. code-block:: pycon
 
-    >>> dataset.read_band(1)
+    >>> dataset.read(1)
     array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
@@ -106,7 +106,7 @@ elsewhere.
 .. code-block::
 
     >>> from matplotlib import pyplot
-    >>> pyplot.imshow(dataset.read_band(1), cmap='pink')
+    >>> pyplot.imshow(dataset.read(1), cmap='pink')
     <matplotlib.image.AxesImage object at 0x111195c10>
     >>> pyplot.show()
 
@@ -136,7 +136,7 @@ After it's closed, data can no longer be read.
 
 .. code-block:: pycon
 
-    >>> dataset.read_band(1)
+    >>> dataset.read(1)
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     ValueError: can't read closed raster file
