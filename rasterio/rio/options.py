@@ -50,6 +50,7 @@ import os.path
 
 import click
 
+import rasterio
 from rasterio.vfs import parse_path
 
 
@@ -99,6 +100,42 @@ def file_in_handler(ctx, param, value):
     else:
         path = os.path.abspath(path)
     return path
+
+
+def from_like_context(ctx, param, value):
+    """Return the value for an option from the context if the option 
+    or `--all` is given, else return None."""
+    if ctx.obj and ctx.obj.get('like') and (
+            value == 'like' or ctx.obj.get('all_like')):
+        return ctx.obj['like'][param.name]
+    else:
+        return None
+
+
+def like_handler(ctx, param, value):
+    """Copy a dataset's meta property to the command context for access
+    from other callbacks."""
+    if ctx.obj is None:
+        ctx.obj = {}
+    if value:
+        with rasterio.open(value) as src:
+            metadata = src.meta
+            ctx.obj['like'] = metadata
+            ctx.obj['like']['transform'] = metadata['affine']
+            ctx.obj['like']['tags'] = src.tags()
+
+
+def nodata_handler(ctx, param, value):
+    """Get nodata value from a template file or command line."""
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value is not None:
+        try:
+            retval = float(value)
+        except:
+            raise click.BadParameter(
+                "%s is not a number." % repr(value),
+                param=param, param_hint='nodata')
+    return retval
 
 
 # Singular input file
@@ -181,3 +218,20 @@ rgb_opt = click.option(
     flag_value='rgb',
     default=False,
     help="Set RGB photometric interpretation.")
+
+force_overwrite_opt = click.option(
+    '--force-overwrite', '-f', 'force_overwrite',
+    is_flag=True, type=bool, default=False,
+    help="Do not prompt for confirmation before overwriting output file.")
+
+nodata_opt = click.option(
+    '--nodata', callback=nodata_handler, default=None,
+    help="New nodata value.")
+
+like_opt = click.option(
+    '--like',
+    type=click.Path(exists=True),
+    callback=like_handler,
+    is_eager=True,
+    help="Raster dataset to use as a template for obtaining affine "
+         "transform (bounds and resolution), crs, and nodata values.")

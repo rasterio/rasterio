@@ -11,7 +11,7 @@ from cligj import (
     precision_opt, indent_opt, compact_opt, projection_geographic_opt,
     projection_mercator_opt, projection_projected_opt, sequence_opt,
     use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
-    files_inout_arg, format_opt, geojson_type_collection_opt)
+    format_opt, geojson_type_collection_opt)
 
 from .helpers import coords, resolve_inout, write_features, to_lower
 from . import options
@@ -23,6 +23,14 @@ logger = logging.getLogger('rio')
 
 
 # Common options used below
+
+# Unlike the version in cligj, this one doesn't require values.
+files_inout_arg = click.argument(
+    'files',
+    nargs=-1,
+    type=click.Path(resolve_path=True),
+    metavar="INPUTS... OUTPUT")
+
 all_touched_opt = click.option(
     '-a', '--all', '--all_touched', 'all_touched',
     is_flag=True,
@@ -50,6 +58,7 @@ all_touched_opt = click.option(
               help='Inverts the mask, so that areas covered by features are'
                    'masked out and areas not covered are retained.  Ignored '
                    'if using --crop')
+@options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
 def mask(
@@ -61,6 +70,7 @@ def mask(
         all_touched,
         crop,
         invert,
+        force_overwrite,
         creation_options):
 
     """Masks in raster using GeoJSON features (masks out all areas not covered
@@ -90,7 +100,8 @@ def mask(
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
-    output, files = resolve_inout(files=files, output=output)
+    output, files = resolve_inout(
+        files=files, output=output, force_overwrite=force_overwrite)
     input = files[0]
 
     if geojson_mask is None:
@@ -399,9 +410,10 @@ def shapes(
 @click.option('--fill', type=float, default=0,
               help='Fill value for all pixels not overlapping features.  Will '
               'be evaluated as NoData pixels for output.  Default: 0')
-@click.option('--property', type=str, default=None, help='Property in '
+@click.option('--property', 'prop', type=str, default=None, help='Property in '
               'GeoJSON features to use for rasterized values.  Any features '
               'that lack this property will be given --default_value instead.')
+@options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
 def rasterize(
@@ -417,7 +429,8 @@ def rasterize(
         all_touched,
         default_value,
         fill,
-        property,
+        prop,
+        force_overwrite,
         creation_options):
 
     """Rasterize GeoJSON into a new or existing raster.
@@ -466,7 +479,8 @@ def rasterize(
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
-    output, files = resolve_inout(files=files, output=output)
+    output, files = resolve_inout(
+        files=files, output=output, force_overwrite=force_overwrite)
 
     has_src_crs = src_crs is not None
     src_crs = src_crs or 'EPSG:4326'
@@ -481,8 +495,8 @@ def rasterize(
     with rasterio.drivers(CPL_DEBUG=verbosity > 2):
 
         def feature_value(feature):
-            if property and 'properties' in feature:
-                return feature['properties'].get(property, default_value)
+            if prop and 'properties' in feature:
+                return feature['properties'].get(prop, default_value)
             return default_value
 
         with click.open_file(files.pop(0) if files else '-') as gj_f:

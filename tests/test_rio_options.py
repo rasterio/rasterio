@@ -4,7 +4,7 @@ import uuid
 import click
 import pytest
 
-from rasterio.rio.options import file_in_handler
+from rasterio.rio.options import file_in_handler, like_handler, nodata_handler
 
 
 class MockContext:
@@ -61,3 +61,34 @@ def test_file_in_handler_with_vfs_file():
     ctx = MockContext()
     retval = file_in_handler(ctx, 'INPUT', 'file://tests/data/RGB.byte.tif')
     assert retval.endswith('tests/data/RGB.byte.tif')
+
+
+def test_like_dataset_callback(data):
+    ctx = MockContext()
+    like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
+    assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+
+
+def test_nodata_callback_err(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': 'lolwut'}
+    with pytest.raises(click.BadParameter):
+        nodata_handler(ctx, MockOption('nodata'), 'lolwut')
+
+
+def test_nodata_callback_pass(data):
+    """Always return None if the value is None"""
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': -1}
+    assert nodata_handler(ctx, MockOption('nodata'), None) is None
+
+
+def test_nodata_callback_0(data):
+    ctx = MockContext()
+    assert nodata_handler(ctx, MockOption('nodata'), '0') == 0.0
+
+
+def test_nodata_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'nodata': -1}
+    assert nodata_handler(ctx, MockOption('nodata'), 'like') == -1.0
