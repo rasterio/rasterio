@@ -150,7 +150,7 @@ bidx_opt = click.option(
     '-b', '--bidx',
     type=int,
     default=1,
-    help="Input file band index (default: 1)")
+    help="Input file band index (default: 1).")
 
 bidx_mult_opt = click.option(
     '-b', '--bidx',
@@ -193,8 +193,9 @@ output_opt = click.option(
     '-o', '--output',
     default=None,
     type=click.Path(resolve_path=True),
-    help="Path to output file (optional alternative to a positional arg "
-         "for some commands).")
+    help="Path to output file (optional alternative to a positional arg). "
+         "Existing files will be overwritten (`--force-overwrite` is "
+         "implied).")
 
 resolution_opt = click.option(
     '-r', '--res',
@@ -202,7 +203,7 @@ resolution_opt = click.option(
     help='Output dataset resolution in units of coordinate '
          'reference system. Pixels assumed to be square if this option '
          'is used once, otherwise use: '
-         '--res pixel_width --res pixel_height')
+         '--res pixel_width --res pixel_height.')
 
 creation_options = click.option(
     '--co', 'creation_options',
@@ -220,9 +221,9 @@ rgb_opt = click.option(
     help="Set RGB photometric interpretation.")
 
 force_overwrite_opt = click.option(
-    '--force-overwrite', '-f', 'force_overwrite',
+    '--force-overwrite', 'force_overwrite',
     is_flag=True, type=bool, default=False,
-    help="Do not prompt for confirmation before overwriting output file.")
+    help="Always overwrite an existing output file.")
 
 nodata_opt = click.option(
     '--nodata', callback=nodata_handler, default=None,

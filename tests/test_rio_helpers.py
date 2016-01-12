@@ -25,9 +25,9 @@ def test_fail_overwrite(tmpdir):
     """Unforced overwrite of existing file fails."""
     foo_tif = tmpdir.join('foo.tif')
     foo_tif.write("content")
-    with pytest.raises(FileOverwriteError):
+    with pytest.raises(FileOverwriteError) as excinfo:
         helpers.resolve_inout(files=[str(x) for x in tmpdir.listdir()])
-
+        assert "file exists and won't be overwritten without use of the " in str(excinfo.value)
 
 def test_force_overwrite(tmpdir):
     """Forced overwrite of existing file succeeds."""
