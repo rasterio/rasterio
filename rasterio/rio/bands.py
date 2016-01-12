@@ -16,9 +16,11 @@ from rasterio.five import zip_longest
 @format_opt
 @options.bidx_mult_opt
 @options.rgb_opt
+@options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
-def stack(ctx, files, output, driver, bidx, photometric, creation_options):
+def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
+          creation_options):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
 
@@ -55,7 +57,8 @@ def stack(ctx, files, output, driver, bidx, photometric, creation_options):
     logger = logging.getLogger('rio')
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity>2):
-            output, files = resolve_inout(files=files, output=output)
+            output, files = resolve_inout(files=files, output=output,
+                force_overwrite=force_overwrite)
             output_count = 0
             indexes = []
             for path, item in zip_longest(files, bidx, fillvalue=None):

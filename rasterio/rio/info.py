@@ -17,15 +17,6 @@ from rasterio.transform import guard_transform
 
 # Handlers for info module options.
 
-def from_like_context(ctx, param, value):
-    """Return the value for an option from the context if the option 
-    or `--all` is given, else return None."""
-    if ctx.obj and ctx.obj.get('like') and (
-            value == 'like' or ctx.obj.get('all_like')):
-        return ctx.obj['like'][param.name]
-    else:
-        return None
-
 
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
@@ -37,7 +28,7 @@ def all_handler(ctx, param, value):
 
 def crs_handler(ctx, param, value):
     """Get crs value from a template file or command line."""
-    retval = from_like_context(ctx, param, value)
+    retval = options.from_like_context(ctx, param, value)
     if retval is None and value:
         try:
             retval = json.loads(value)
@@ -50,35 +41,9 @@ def crs_handler(ctx, param, value):
     return retval
 
 
-def like_handler(ctx, param, value):
-    """Copy a dataset's meta property to the command context for access
-    from other callbacks."""
-    if ctx.obj is None:
-        ctx.obj = {}
-    if value:
-        with rasterio.open(value) as src:
-            metadata = src.meta
-            ctx.obj['like'] = metadata
-            ctx.obj['like']['transform'] = metadata['affine']
-            ctx.obj['like']['tags'] = src.tags()
-
-
-def nodata_handler(ctx, param, value):
-    """Get nodata value from a template file or command line."""
-    retval = from_like_context(ctx, param, value)
-    if retval is None and value is not None:
-        try:
-            retval = float(value)
-        except:
-            raise click.BadParameter(
-                "%s is not a number." % repr(value),
-                param=param, param_hint='nodata')
-    return retval
-
-
 def tags_handler(ctx, param, value):
     """Get tags from a template file or command line."""
-    retval = from_like_context(ctx, param, value)
+    retval = options.from_like_context(ctx, param, value)
     if retval is None and value:
         try:
             retval = dict(p.split('=') for p in value)
@@ -91,7 +56,7 @@ def tags_handler(ctx, param, value):
 
 def transform_handler(ctx, param, value):
     """Get transform value from a template file or command line."""
-    retval = from_like_context(ctx, param, value)
+    retval = options.from_like_context(ctx, param, value)
     if retval is None and value:
         try:
             value = json.loads(value)
@@ -111,8 +76,7 @@ def transform_handler(ctx, param, value):
 
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
-@click.option('--nodata', callback=nodata_handler, default=None,
-              help="New nodata value")
+@options.nodata_opt
 @click.option('--crs', callback=crs_handler, default=None,
               help="New coordinate reference system")
 @click.option('--transform', callback=transform_handler,
@@ -122,13 +86,7 @@ def transform_handler(ctx, param, value):
 @click.option('--all', 'allmd', callback=all_handler, flag_value='like',
               is_eager=True, default=False,
               help="Copy all metadata items from the template file.")
-@click.option(
-    '--like',
-    type=click.Path(exists=True),
-    callback=like_handler,
-    is_eager=True,
-    help="Raster dataset to use as a template for obtaining affine "
-         "transform (bounds and resolution), crs, and nodata values.")
+@options.like_opt
 @click.pass_context
 def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine

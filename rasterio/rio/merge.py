@@ -19,12 +19,8 @@ from rasterio.transform import Affine
 @format_opt
 @options.bounds_opt
 @options.resolution_opt
-@click.option('--nodata', type=float, default=None,
-              help="Override nodata values defined in input datasets")
-@click.option('--force-overwrite', '-f', 'force_overwrite', is_flag=True,
-              type=bool, default=False,
-              help="Do not prompt for confirmation before overwriting output "
-                   "file")
+@options.nodata_opt
+@options.force_overwrite_opt
 @click.option('--precision', type=int, default=7,
               help="Number of decimal places of precision in alignment of "
                    "pixels")
@@ -57,12 +53,8 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
 
-    output, files = resolve_inout(files=files, output=output)
-
-    if os.path.exists(output) and not force_overwrite:
-        raise click.ClickException(
-            "Output exists and won't be overwritten without the "
-            "`-f` option")
+    output, files = resolve_inout(
+        files=files, output=output, force_overwrite=force_overwrite)
 
     sources = [rasterio.open(f) for f in files]
     dest, output_transform = merge_tool(sources, bounds=bounds, res=res,

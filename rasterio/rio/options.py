@@ -50,6 +50,7 @@ import os.path
 
 import click
 
+import rasterio
 from rasterio.vfs import parse_path
 
 
@@ -101,6 +102,42 @@ def file_in_handler(ctx, param, value):
     return path
 
 
+def from_like_context(ctx, param, value):
+    """Return the value for an option from the context if the option 
+    or `--all` is given, else return None."""
+    if ctx.obj and ctx.obj.get('like') and (
+            value == 'like' or ctx.obj.get('all_like')):
+        return ctx.obj['like'][param.name]
+    else:
+        return None
+
+
+def like_handler(ctx, param, value):
+    """Copy a dataset's meta property to the command context for access
+    from other callbacks."""
+    if ctx.obj is None:
+        ctx.obj = {}
+    if value:
+        with rasterio.open(value) as src:
+            metadata = src.meta
+            ctx.obj['like'] = metadata
+            ctx.obj['like']['transform'] = metadata['affine']
+            ctx.obj['like']['tags'] = src.tags()
+
+
+def nodata_handler(ctx, param, value):
+    """Get nodata value from a template file or command line."""
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value is not None:
+        try:
+            retval = float(value)
+        except:
+            raise click.BadParameter(
+                "%s is not a number." % repr(value),
+                param=param, param_hint='nodata')
+    return retval
+
+
 # Singular input file
 file_in_arg = click.argument('INPUT', callback=file_in_handler)
 
@@ -113,7 +150,7 @@ bidx_opt = click.option(
     '-b', '--bidx',
     type=int,
     default=1,
-    help="Input file band index (default: 1)")
+    help="Input file band index (default: 1).")
 
 bidx_mult_opt = click.option(
     '-b', '--bidx',
@@ -156,8 +193,9 @@ output_opt = click.option(
     '-o', '--output',
     default=None,
     type=click.Path(resolve_path=True),
-    help="Path to output file (optional alternative to a positional arg "
-         "for some commands).")
+    help="Path to output file (optional alternative to a positional arg). "
+         "Existing files will be overwritten (`--force-overwrite` is "
+         "implied).")
 
 resolution_opt = click.option(
     '-r', '--res',
@@ -165,7 +203,7 @@ resolution_opt = click.option(
     help='Output dataset resolution in units of coordinate '
          'reference system. Pixels assumed to be square if this option '
          'is used once, otherwise use: '
-         '--res pixel_width --res pixel_height')
+         '--res pixel_width --res pixel_height.')
 
 creation_options = click.option(
     '--co', 'creation_options',
@@ -181,3 +219,20 @@ rgb_opt = click.option(
     flag_value='rgb',
     default=False,
     help="Set RGB photometric interpretation.")
+
+force_overwrite_opt = click.option(
+    '--force-overwrite', 'force_overwrite',
+    is_flag=True, type=bool, default=False,
+    help="Always overwrite an existing output file.")
+
+nodata_opt = click.option(
+    '--nodata', callback=nodata_handler, default=None,
+    help="New nodata value.")
+
+like_opt = click.option(
+    '--like',
+    type=click.Path(exists=True),
+    callback=like_handler,
+    is_eager=True,
+    help="Raster dataset to use as a template for obtaining affine "
+         "transform (bounds and resolution), crs, and nodata values.")

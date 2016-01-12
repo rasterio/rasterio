@@ -4,6 +4,9 @@ Helper objects used by multiple CLI commands.
 
 
 import json
+import os
+
+from rasterio.errors import FileOverwriteError
 
 
 def coords(obj):
@@ -64,11 +67,29 @@ def write_features(
         fobj.write('\n')
 
 
-def resolve_inout(input=None, output=None, files=None):
+def resolve_inout(input=None, output=None, files=None, force_overwrite=False):
     """Resolves inputs and outputs from standard args and options.
 
-    Returns `output_filename, [input_filename0, ...]`."""
+    :param input: a single input filename, optional.
+    :param output: a single output filename, optional.
+    :param files: a sequence of filenames in which the last is the
+        output filename.
+    :param force_overwrite: whether to force overwriting the output
+        file, bool.
+    :return: the resolved output filename and input filenames as a
+        tuple of length 2.
+
+    If provided, the :param:`output` file may be overwritten. An output
+    file extracted from :param:`files` will not be overwritten unless
+    :param:`force_overwrite` is `True`.
+    """
     resolved_output = output or (files[-1] if files else None)
+    force_overwrite = output is not None or force_overwrite
+    if not force_overwrite and resolved_output and os.path.exists(
+            resolved_output):
+        raise FileOverwriteError(
+            "file exists and won't be overwritten without use of the "
+            "`-f` or `-o` options.")
     resolved_inputs = (
         [input] if input else [] +
         list(files[:-1 if not output else None]) if files else [])
@@ -76,4 +97,5 @@ def resolve_inout(input=None, output=None, files=None):
 
 
 def to_lower(ctx, param, value):
+    """Click callback, converts values to lowercase."""
     return value.lower()

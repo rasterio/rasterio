@@ -608,7 +608,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
 
     result = runner.invoke(
         features.rasterize,
-        [output, '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1]],
+        ['-o', output, '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1]],
         input=json.dumps(basic_feature)
     )
 
@@ -733,7 +733,7 @@ def test_rasterize_missing_parameters(tmpdir, runner, basic_feature):
 
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize, [output], input=json.dumps(basic_feature)
+        features.rasterize, ['-o', output], input=json.dumps(basic_feature)
     )
 
     assert result.exit_code == 2

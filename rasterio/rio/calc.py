@@ -40,9 +40,11 @@ def read_array(ix, subix=None, dtype=None):
                    '"a=tests/data/RGB.byte.tif".')
 @options.dtype_opt
 @options.masked_opt
+@options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
-def calc(ctx, command, files, output, name, dtype, masked, creation_options):
+def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
+         creation_options):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -89,7 +91,8 @@ def calc(ctx, command, files, output, name, dtype, masked, creation_options):
 
     try:
         with rasterio.drivers(CPL_DEBUG=verbosity > 2):
-            output, files = resolve_inout(files=files, output=output)
+            output, files = resolve_inout(files=files, output=output,
+                force_overwrite=force_overwrite)
 
             inputs = ([tuple(n.split('=')) for n in name] +
                       [(None, n) for n in files])
