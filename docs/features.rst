@@ -72,7 +72,9 @@ image to be created.
                 transform=src.transform)
 
 The values for the input shapes are replaced with ``255`` in a generator
-expression. The resulting image, written to disk like this,
+expression. Areas not covered by input geometries are replaced with an
+optional ``fill`` value, which defaults to ``0``. The resulting image,
+written to disk like this,
 
 .. code-block:: python
 
