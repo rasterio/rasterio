@@ -54,7 +54,11 @@ cdef bint in_dtype_range(value, dtype):
         105: np.iinfo,
         117: np.iinfo
     }
-    rng = infos[np.dtype(dtype).kind](dtype)
+    key = np.dtype(dtype).kind
+    if np.isnan(value):
+        return key in ('c', 'f', 99, 102)
+
+    rng = infos[key](dtype)
     return rng.min <= value <= rng.max
 
 # Single band IO functions.

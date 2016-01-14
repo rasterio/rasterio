@@ -276,6 +276,33 @@ def test_reproject_nodata():
                                          params.dst_height - 4461)
 
 
+def test_reproject_nodata_nan():
+    params = default_reproject_params()
+    nodata = 215
+
+    with rasterio.drivers():
+        source = numpy.ones((params.width, params.height), dtype=numpy.float32)
+        out = numpy.zeros((params.dst_width, params.dst_height),
+                          dtype=source.dtype)
+        out.fill(120)  # Fill with arbitrary value
+
+        reproject(
+            source,
+            out,
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=numpy.nan,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=numpy.nan
+        )
+
+        assert (out == 1).sum() == 4461
+        assert numpy.isnan(out).sum() == (params.dst_width *
+                                         params.dst_height - 4461)
+
+
+
 def test_reproject_dst_nodata_default():
     """
     If nodata is not provided, destination will be filled with 0
