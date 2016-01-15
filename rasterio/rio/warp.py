@@ -135,8 +135,7 @@ def warp(
                         raise click.BadParameter('Required when using --bounds',
                             param='res', param_hint='res')
 
-                    xmin, ymin, xmax, ymax = transform_bounds(src.crs, dst_crs,
-                                                              *bounds)
+                    xmin, ymin, xmax, ymax = bounds
                     dst_transform = Affine(res[0], 0, xmin, 0, -res[1], ymax)
                     dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
                     dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)

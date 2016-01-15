@@ -148,7 +148,6 @@ def test_calculate_default_transform():
 def test_calculate_default_transform_single_resolution():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            l, b, r, t = src.bounds
             target_resolution = 0.1
             target_transform = Affine(
                 target_resolution, 0.0, -78.95864996545055,
