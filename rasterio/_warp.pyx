@@ -9,6 +9,7 @@ cimport numpy as np
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
 from rasterio.errors import RasterioDriverRegistrationError
+from rasterio._err import cpl_errs
 
 
 cdef extern from "gdalwarper.h" nogil:
@@ -348,150 +349,138 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
     cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
+    cdef int num_threads = int(kwargs.get('num_threads', 1))
     reprojected = False
 
-    try:
-        hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
-                                            hdsin, NULL, hdsout, NULL, 
-                                            1, 1000.0, 0)
-        if hTransformArg == NULL:
-            raise ValueError("NULL transformer")
-        log.debug("Created transformer")
+    hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
+                                        hdsin, NULL, hdsout, NULL, 
+                                        1, 1000.0, 0)
+    if hTransformArg == NULL:
+        raise ValueError("NULL transformer")
+    log.debug("Created transformer")
 
-        psWOptions = _gdal.GDALCreateWarpOptions()
+    psWOptions = _gdal.GDALCreateWarpOptions()
 
-        # Note: warp_extras is pointed to different memory locations on every
-        # call to CSLSetNameValue call below, but needs to be set here to
-        # get the defaults
-        warp_extras = psWOptions.papszWarpOptions
+    # Note: warp_extras is pointed to different memory locations on every
+    # call to CSLSetNameValue call below, but needs to be set here to
+    # get the defaults
+    warp_extras = psWOptions.papszWarpOptions
 
-        for k, v in kwargs.items():
-            k, v = k.upper(), str(v).upper()
-            key_b = k.encode('utf-8')
-            val_b = v.encode('utf-8')
-            key_c = key_b
-            val_c = val_b
-            warp_extras = _gdal.CSLSetNameValue(warp_extras, key_c, val_c)
-            log.debug("Setting warp option  %s: %s" % (k, v))
-        
-        pszWarpThreads = _gdal.CSLFetchNameValue(warp_extras, "NUM_THREADS")
-        if pszWarpThreads == NULL:
-            pszWarpThreads = _gdal.CPLGetConfigOption(
-                                "GDAL_NUM_THREADS", "1")
-            warp_extras = _gdal.CSLSetNameValue(
-                warp_extras, "NUM_THREADS", pszWarpThreads)
-
-        log.debug("Created warp options")
+    for k, v in kwargs.items():
+        k, v = k.upper(), str(v).upper()
+        key_b = k.encode('utf-8')
+        val_b = v.encode('utf-8')
+        key_c = key_b
+        val_c = val_b
+        warp_extras = _gdal.CSLSetNameValue(warp_extras, key_c, val_c)
+        log.debug("Setting warp option  %s: %s" % (k, v))
     
-        psWOptions.eResampleAlg = <_gdal.GDALResampleAlg>resampling
+    num_threads = kwargs.get('num_threads', 1)
 
-        # Set src_nodata and dst_nodata
-        if src_nodata is None and dst_nodata is not None:
-            raise ValueError("src_nodata must be provided because dst_nodata "
-                             "is not None")
-        log.debug("src_nodata: %s" % src_nodata)
+    #pszWarpThreads = _gdal.CSLFetchNameValue(warp_extras, "NUM_THREADS")
+    #if pszWarpThreads == NULL:
+    #    pszWarpThreads = _gdal.CPLGetConfigOption(
+    #                        "GDAL_NUM_THREADS", "1")
+    #    warp_extras = _gdal.CSLSetNameValue(
+    #        warp_extras, "NUM_THREADS", pszWarpThreads)
 
-        if dst_nodata is None:
-            if src_nodata is not None:
-                dst_nodata = src_nodata
-            else:
-                dst_nodata = 0  # GDAL default
-        log.debug("dst_nodata: %s" % dst_nodata)
+    log.debug("Created warp options")
 
-        # Validate nodata values
+    psWOptions.eResampleAlg = <_gdal.GDALResampleAlg>resampling
+
+    # Set src_nodata and dst_nodata
+    if src_nodata is None and dst_nodata is not None:
+        raise ValueError("src_nodata must be provided because dst_nodata "
+                         "is not None")
+    log.debug("src_nodata: %s" % src_nodata)
+
+    if dst_nodata is None:
         if src_nodata is not None:
-            if not _io.in_dtype_range(src_nodata, source.dtype):
-                raise ValueError("src_nodata must be in valid range for "
-                                "source dtype")
+            dst_nodata = src_nodata
+        else:
+            dst_nodata = 0  # GDAL default
+    log.debug("dst_nodata: %s" % dst_nodata)
 
-            psWOptions.padfSrcNoDataReal = <double*>_gdal.CPLMalloc(
-                src_count * sizeof(double))
-            psWOptions.padfSrcNoDataImag = <double*>_gdal.CPLMalloc(
-                src_count * sizeof(double))
-            for i in range(src_count):
-                psWOptions.padfSrcNoDataReal[i] = src_nodata
-                psWOptions.padfSrcNoDataImag[i] = 0.0
-            warp_extras = _gdal.CSLSetNameValue(
-                warp_extras, "UNIFIED_SRC_NODATA", "YES")
+    # Validate nodata values
+    if src_nodata is not None:
+        if not _io.in_dtype_range(src_nodata, source.dtype):
+            raise ValueError("src_nodata must be in valid range for "
+                            "source dtype")
 
-
-        if dst_nodata is not None and not _io.in_dtype_range(
-                dst_nodata, destination.dtype):
-            raise ValueError("dst_nodata must be in valid range for "
-                             "destination dtype")
-
-        psWOptions.padfDstNoDataReal = <double*>_gdal.CPLMalloc(src_count * sizeof(double))
-        psWOptions.padfDstNoDataImag = <double*>_gdal.CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfSrcNoDataReal = <double*>_gdal.CPLMalloc(
+            src_count * sizeof(double))
+        psWOptions.padfSrcNoDataImag = <double*>_gdal.CPLMalloc(
+            src_count * sizeof(double))
         for i in range(src_count):
-            psWOptions.padfDstNoDataReal[i] = dst_nodata
-            psWOptions.padfDstNoDataImag[i] = 0.0
+            psWOptions.padfSrcNoDataReal[i] = src_nodata
+            psWOptions.padfSrcNoDataImag[i] = 0.0
         warp_extras = _gdal.CSLSetNameValue(
-            warp_extras, "INIT_DEST", "NO_DATA")
+            warp_extras, "UNIFIED_SRC_NODATA", "YES")
 
-        # Important: set back into struct or values set above are lost
-        # This is because CSLSetNameValue returns a new list each time
-        psWOptions.papszWarpOptions = warp_extras
 
-        # TODO: Approximate transformations.
-        #if maxerror > 0.0:
-        #    psWOptions.pTransformerArg = _gdal.GDALCreateApproxTransformer(
-        #                                    _gdal.GDALGenImgProjTransform, 
-        #                                    hTransformArg, 
-        #                                    maxerror )
-        #    psWOptions.pfnTransformer = _gdal.GDALApproxTransform
-        #else:
-        psWOptions.pfnTransformer = _gdal.GDALGenImgProjTransform
-        psWOptions.pTransformerArg = hTransformArg
-        psWOptions.hSrcDS = hdsin
-        psWOptions.hDstDS = hdsout
-        psWOptions.nBandCount = src_count
-        psWOptions.panSrcBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
-        psWOptions.panDstBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
-        if isinstance(source, tuple):
-            psWOptions.panSrcBands[0] = source.bidx
-        else:
-            for i in range(src_count):
-                psWOptions.panSrcBands[i] = i+1
-        if isinstance(destination, tuple):
-            psWOptions.panDstBands[0] = destination.bidx
-        else:
-            for i in range(src_count):
-                psWOptions.panDstBands[i] = i+1
-        log.debug("Set transformer options")
+    if dst_nodata is not None and not _io.in_dtype_range(
+            dst_nodata, destination.dtype):
+        raise ValueError("dst_nodata must be in valid range for "
+                         "destination dtype")
 
-        # TODO: alpha band.
+    psWOptions.padfDstNoDataReal = <double*>_gdal.CPLMalloc(src_count * sizeof(double))
+    psWOptions.padfDstNoDataImag = <double*>_gdal.CPLMalloc(src_count * sizeof(double))
+    for i in range(src_count):
+        psWOptions.padfDstNoDataReal[i] = dst_nodata
+        psWOptions.padfDstNoDataImag[i] = 0.0
+    warp_extras = _gdal.CSLSetNameValue(
+        warp_extras, "INIT_DEST", "NO_DATA")
 
-        eErr = oWarper.Initialize(psWOptions)
-        if eErr == 0:
+    # Important: set back into struct or values set above are lost
+    # This is because CSLSetNameValue returns a new list each time
+    psWOptions.papszWarpOptions = warp_extras
 
-            log.debug("Destination shape: %r", destination.shape)
-
-            rows, cols = destination.shape[-2:]
-            log.debug(
-                "Chunk and warp window: %d, %d, %d, %d",
-                0, 0, cols, rows)
-            with nogil:
-                eErr = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
-            log.debug("Chunked and warped: %d", retval)
-    
-    except Exception:
-        log.exception(
-            "Caught exception in warping. Source not reprojected.")
-        raise
-    
+    psWOptions.pfnTransformer = _gdal.GDALGenImgProjTransform
+    psWOptions.pTransformerArg = hTransformArg
+    psWOptions.hSrcDS = hdsin
+    psWOptions.hDstDS = hdsout
+    psWOptions.nBandCount = src_count
+    psWOptions.panSrcBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
+    psWOptions.panDstBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
+    if isinstance(source, tuple):
+        psWOptions.panSrcBands[0] = source.bidx
     else:
-        reprojected = True
+        for i in range(src_count):
+            psWOptions.panSrcBands[i] = i+1
+    if isinstance(destination, tuple):
+        psWOptions.panDstBands[0] = destination.bidx
+    else:
+        for i in range(src_count):
+            psWOptions.panDstBands[i] = i+1
+    log.debug("Set transformer options")
 
-    finally:
-        if hTransformArg != NULL:
-            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
-        #if maxerror > 0.0:
-        #    _gdal.GDALDestroyApproxTransformer(psWOptions.pTransformerArg)
-        if psWOptions != NULL:
-            _gdal.GDALDestroyWarpOptions(psWOptions)
-        if dtypes.is_ndarray(source):
-            if hdsin != NULL:
-                _gdal.GDALClose(hdsin)
+    # TODO: alpha band.
+
+    if oWarper.Initialize(psWOptions):
+        raise RuntimeError("Failed to initialize warper.")
+
+    else:
+        rows, cols = destination.shape[-2:]
+        log.debug(
+            "Chunk and warp window: %d, %d, %d, %d.",
+            0, 0, cols, rows)
+
+        if num_threads > 1:
+            err_code = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+        else:
+            err_code = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+
+        log.debug("Chunked and warped: %d", err_code)
+
+        reprojected = not(err_code)
+
+    if hTransformArg != NULL:
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+    if psWOptions != NULL:
+        _gdal.GDALDestroyWarpOptions(psWOptions)
+    if dtypes.is_ndarray(source):
+        if hdsin != NULL:
+            _gdal.GDALClose(hdsin)
 
     if reprojected and dtypes.is_ndarray(destination):
         retval = _io.io_auto(destination, hdsout, 0)
@@ -499,4 +488,3 @@ def _reproject(
 
         if hdsout != NULL:
             _gdal.GDALClose(hdsout)
-
