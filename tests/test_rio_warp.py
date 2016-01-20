@@ -186,6 +186,17 @@ def test_warp_reproject_bounds_no_res(runner, tmpdir):
     assert result.exit_code == 2
 
 
+def test_warp_reproject_multi_bounds_fail(runner, tmpdir):
+    """Mixing --bounds and --x-dst-bounds fails."""
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    out_bounds = [-11850000, 4810000, -11849000, 4812000]
+    result = runner.invoke(warp.warp, [srcname, outputname,
+                                       '--dst-crs', 'EPSG:4326',
+                                       '--x-dst-bounds'] + out_bounds +
+                                       ['--bounds'] + out_bounds)
+    assert result.exit_code == 2
+
 
 def test_warp_reproject_bounds_crossup_fail(runner, tmpdir):
     """Crossed-up bounds raises click.BadParameter."""
