@@ -7,7 +7,7 @@ import numpy
 
 import rasterio
 from rasterio.warp import (
-    reproject, RESAMPLING, transform_geom, transform, transform_bounds,
+    reproject, Resampling, transform_geom, transform, transform_bounds,
     calculate_default_transform)
 
 
@@ -208,7 +208,7 @@ def test_reproject_ndarray():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
         assert (out > 0).sum() == 438146
 
 
@@ -226,7 +226,7 @@ def test_reproject_epsg():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
         assert (out > 0).sum() == 438146
 
 
@@ -245,7 +245,7 @@ def test_reproject_out_of_bounds():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
         assert not out.any()
 
 
@@ -418,7 +418,7 @@ def test_reproject_multi():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
     assert destin.any()
 
 

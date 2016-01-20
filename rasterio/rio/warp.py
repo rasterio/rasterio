@@ -3,23 +3,26 @@ from math import ceil
 import warnings
 
 import click
-from cligj import format_opt
+from cligj import files_inout_arg, format_opt
 
+from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
 from rasterio.transform import Affine
-from rasterio.warp import (reproject, RESAMPLING, calculate_default_transform,
+from rasterio.warp import (reproject, Resampling, calculate_default_transform,
    transform_bounds)
 
 
-MAX_OUTPUT_WIDTH = 50000
-MAX_OUTPUT_HEIGHT = 50000
-
-logger = logging.getLogger('rio')
+# Improper usage of rio-warp can lead to accidental creation of
+# extremely large datasets. We'll put a hard limit on the size of
+# datasets and raise a usage error if the limits are exceeded.
+MAX_OUTPUT_WIDTH = 100000
+MAX_OUTPUT_HEIGHT = 100000
 
 
 def bounds_handler(ctx, param, value):
+    """Warn about future usage changes."""
     if value:
         click.echo("Future Warning: "
             "the semantics of the `--bounds` option will change in Rasterio "
@@ -29,6 +32,7 @@ def bounds_handler(ctx, param, value):
 
 
 def x_dst_bounds_handler(ctx, param, value):
+    """Warn about future usage changes."""
     if value:
         click.echo("Future Warning: "
             "the `--x-dst-bounds` option will be removed in Rasterio version "
@@ -37,8 +41,8 @@ def x_dst_bounds_handler(ctx, param, value):
 
 
 @click.command(short_help='Warp a raster dataset.')
-@options.file_in_arg
-@options.file_out_arg
+@files_inout_arg
+@options.output_opt
 @format_opt
 @options.like_file_opt
 @click.option('--dst-crs', default=None,
@@ -61,45 +65,30 @@ def x_dst_bounds_handler(ctx, param, value):
          "(note: the semantics of this option will change to those of "
          "`--x-dst-bounds` in version 1.0).")
 @options.resolution_opt
-@click.option('--resampling', type=click.Choice(['nearest', 'bilinear', 'cubic',
-                'cubic_spline','lanczos', 'average', 'mode']),
-              default='nearest', help='Resampling method (default: nearest).')
+@click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
+              default='nearest', help="Resampling method.",
+              show_default=True)
 @click.option('--threads', type=int, default=2,
               help='Number of processing threads.')
+@options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
-# TODO: add NODATA options and support for existing output rasters
-def warp(
-        ctx,
-        input,
-        output,
-        driver,
-        like,
-        dst_crs,
-        dimensions,
-        src_bounds,
-        x_dst_bounds,
-        bounds,
-        res,
-        resampling,
-        threads,
-        creation_options):
+def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
+         x_dst_bounds, bounds, res, resampling, threads, force_overwrite,
+         creation_options):
     """
     Warp a raster dataset.
 
-    Currently, the output is always overwritten.  This will be changed in a
-    later version.
-
-    If a template raster is provided using the --like option, the coordinate
-    reference system, affine transform, and dimensions of that raster will
-    be used for the output.  In this case --dst-crs, --bounds, --res, and
-    --dimensions options are ignored.
+    If a template raster is provided using the --like option, the
+    coordinate reference system, affine transform, and dimensions of
+    that raster will be used for the output.  In this case --dst-crs,
+    --bounds, --res, and --dimensions options are ignored.
 
     \b
         $ rio warp input.tif output.tif --like template.tif
 
-    The output coordinate reference system may be either a PROJ.4 or EPSG:nnnn
-    string,
+    The output coordinate reference system may be either a PROJ.4 or
+    EPSG:nnnn string,
 
     \b
         --dst-crs EPSG:4326
@@ -110,13 +99,14 @@ def warp(
     \b
         --dst-crs '{"proj": "utm", "zone": 18, ...}'
 
-    If --dimensions are provided, --res and --bounds are ignored.  Resolution
-    is calculated based on the relationship between the raster bounds in the
-    target coordinate system and the dimensions, and may produce rectangular
-    rather than square pixels.
+    If --dimensions are provided, --res and --bounds are ignored.
+    Resolution is calculated based on the relationship between the
+    raster bounds in the target coordinate system and the dimensions,
+    and may produce rectangular rather than square pixels.
 
     \b
-        $ rio warp input.tif output.tif --dimensions 100 200 --dst-crs EPSG:4326
+        $ rio warp input.tif output.tif --dimensions 100 200 \\
+        > --dst-crs EPSG:4326
 
     If --bounds are provided, --res is required if --dst-crs is provided
     (defaults to source raster resolution otherwise).
@@ -128,7 +118,12 @@ def warp(
     """
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    resampling = getattr(RESAMPLING, resampling)  # get integer code for method
+    logger = logging.getLogger('rio')
+
+    output, files = resolve_inout(
+        files=files, output=output, force_overwrite=force_overwrite)
+
+    resampling = Resampling[resampling]  # get integer code for method
 
     if not len(res):
         # Click sets this as an empty tuple if not provided
@@ -138,7 +133,7 @@ def warp(
         res = (res[0], res[0]) if len(res) == 1 else res
 
     with rasterio.drivers(CPL_DEBUG=verbosity > 2):
-        with rasterio.open(input) as src:
+        with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.meta.copy()
             out_kwargs['driver'] = driver
@@ -166,7 +161,8 @@ def warp(
                                              param=dst_crs, param_hint=dst_crs)
 
                 if dimensions:
-                    # Calculate resolution appropriate for dimensions in target
+                    # Calculate resolution appropriate for dimensions
+                    # in target.
                     dst_width, dst_height = dimensions
                     xmin, ymin, xmax, ymax = transform_bounds(src.crs, dst_crs,
                                                               *src.bounds)
@@ -179,7 +175,8 @@ def warp(
 
                 elif src_bounds or dst_bounds:
                     if not res:
-                        raise click.BadParameter('Required when using --bounds',
+                        raise click.BadParameter(
+                            "Required when using --bounds.",
                             param='res', param_hint='res')
 
                     if src_bounds:
@@ -198,7 +195,7 @@ def warp(
                         resolution=res)
 
             elif dimensions:
-                # Same projection, different dimensions, calculate resolution
+                # Same projection, different dimensions, calculate resolution.
                 dst_crs = src.crs
                 dst_width, dst_height = dimensions
                 dst_transform = Affine(
@@ -209,8 +206,8 @@ def warp(
                 )
 
             elif src_bounds or dst_bounds:
-                # Same projection, different dimensions and possibly different
-                # resolution
+                # Same projection, different dimensions and possibly
+                # different resolution.
                 if not res:
                     res = (src.affine.a, -src.affine.e)
 
@@ -221,7 +218,7 @@ def warp(
                 dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
 
             elif res:
-                # Same projection, different resolution
+                # Same projection, different resolution.
                 dst_crs = src.crs
                 dst_transform = Affine(res[0], 0, l, 0, -res[1], t)
                 dst_width = max(int(ceil((r - l) / res[0])), 1)

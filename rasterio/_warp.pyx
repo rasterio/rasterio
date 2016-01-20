@@ -1,6 +1,7 @@
 # distutils: language = c++
 
-from collections import namedtuple
+from enum import IntEnum
+
 import logging
 
 import numpy as np
@@ -39,14 +40,19 @@ cdef extern from "gdalwarper.h" nogil:
                                 double dfProgressScale=1.0)
 
 
-RESAMPLING = namedtuple('RESAMPLING', [
-                'nearest', 
-                'bilinear', 
-                'cubic', 
-                'cubic_spline', 
-                'lanczos', 
-                'average', 
-                'mode'] )(*list(range(7)))
+class Resampling(IntEnum):
+    nearest=0
+    bilinear=1
+    cubic=2
+    cubic_spline=3
+    lanczos=4
+    average=5
+    mode=6
+    max=8
+    min=9
+    med=10
+    q1=11
+    q3=12
 
 
 cdef extern from "ogr_geometry.h" nogil:
@@ -56,9 +62,6 @@ cdef extern from "ogr_geometry.h" nogil:
 
     cdef cppclass OGRGeometryFactory:
         void * transformWithOptions(void *geom, void *ct, char **options)
-#            const OGRGeometry* poSrcGeom,
-#            OGRCoordinateTransformation *poCT,
-#            char** papszOptions
 
 
 cdef extern from "ogr_spatialref.h":
@@ -164,7 +167,7 @@ def _reproject(
         dst_transform=None,
         dst_crs=None,
         dst_nodata=None,
-        resampling=RESAMPLING.nearest,
+        resampling=Resampling.nearest,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -209,13 +212,13 @@ def _reproject(
         src_nodata, or 0 (gdal default).
     resampling: int
         Resampling method to use.  One of the following:
-            RESAMPLING.nearest,
-            RESAMPLING.bilinear,
-            RESAMPLING.cubic,
-            RESAMPLING.cubic_spline,
-            RESAMPLING.lanczos,
-            RESAMPLING.average,
-            RESAMPLING.mode
+            Resampling.nearest,
+            Resampling.bilinear,
+            Resampling.cubic,
+            Resampling.cubic_spline,
+            Resampling.lanczos,
+            Resampling.average,
+            Resampling.mode
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 
