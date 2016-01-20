@@ -243,6 +243,34 @@ def test_warp_reproject_src_bounds_res(runner, tmpdir):
             assert output.height == 14
 
 
+def test_warp_reproject_dst_bounds(runner, tmpdir):
+    """--x-dst-bounds option works."""
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    out_bounds = [-106.45036, 39.6138, -106.44136, 39.6278]
+    result = runner.invoke(
+        warp.warp, [srcname, outputname, '--dst-crs', 'EPSG:4326',
+                    '--res', 0.001, '--x-dst-bounds'] + out_bounds)
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+
+    with rasterio.open(srcname) as src:
+        with rasterio.open(outputname) as output:
+            assert output.crs == {'init': 'epsg:4326'}
+            assert numpy.allclose(output.bounds[0::3],
+                                  [-106.45036, 39.6278])
+            assert numpy.allclose([0.001, 0.001],
+                                  [output.affine.a, -output.affine.e])
+
+            # XXX: an extra row and column is produced in the dataset
+            # because we're using ceil instead of floor internally.
+            # Not necessarily a bug, but may change in the future.
+            assert numpy.allclose([output.bounds[2]-0.001, output.bounds[1]+0.001],
+                                  [-106.44136, 39.6138])
+            assert output.width == 10
+            assert output.height == 15
+
+
 def test_warp_reproject_like(runner, tmpdir):
     likename = str(tmpdir.join('like.tif'))
     kwargs = {
