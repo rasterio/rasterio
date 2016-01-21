@@ -1,12 +1,21 @@
 """Raster warping and reprojection"""
 
-from affine import Affine
+from __future__ import absolute_import
+
 from math import ceil
+import warnings
+
+from affine import Affine
 import numpy as np
 
 from rasterio._base import _transform
 from rasterio._warp import _transform_geom, _reproject, Resampling
 from rasterio.transform import guard_transform
+
+
+RESAMPLING = Resampling
+warnings.warn(
+    "RESAMPLING is deprecated, use Resampling instead.", DeprecationWarning)
 
 
 def transform(src_crs, dst_crs, xs, ys, zs=None):
