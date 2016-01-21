@@ -1,12 +1,21 @@
 """Raster warping and reprojection"""
 
-from affine import Affine
+from __future__ import absolute_import
+
 from math import ceil
+import warnings
+
+from affine import Affine
 import numpy as np
 
 from rasterio._base import _transform
-from rasterio._warp import _transform_geom, _reproject, RESAMPLING
+from rasterio._warp import _transform_geom, _reproject, Resampling
 from rasterio.transform import guard_transform
+
+
+RESAMPLING = Resampling
+warnings.warn(
+    "RESAMPLING is deprecated, use Resampling instead.", DeprecationWarning)
 
 
 def transform(src_crs, dst_crs, xs, ys, zs=None):
@@ -150,7 +159,7 @@ def reproject(
         dst_transform=None,
         dst_crs=None,
         dst_nodata=None,
-        resampling=RESAMPLING.nearest,
+        resampling=Resampling.nearest,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -195,13 +204,13 @@ def reproject(
         src_nodata, or 0 (GDAL default).
     resampling: int
         Resampling method to use.  One of the following:
-            RESAMPLING.nearest,
-            RESAMPLING.bilinear,
-            RESAMPLING.cubic,
-            RESAMPLING.cubic_spline,
-            RESAMPLING.lanczos,
-            RESAMPLING.average,
-            RESAMPLING.mode
+            Resampling.nearest,
+            Resampling.bilinear,
+            Resampling.cubic,
+            Resampling.cubic_spline,
+            Resampling.lanczos,
+            Resampling.average,
+            Resampling.mode
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 

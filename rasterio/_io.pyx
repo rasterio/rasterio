@@ -29,16 +29,6 @@ from rasterio.warnings import NodataShadowWarning
 
 
 log = logging.getLogger('rasterio')
-if 'all' in sys.warnoptions:
-    # show messages in console with: python -W all
-    logging.basicConfig()
-else:
-    # no handler messages shown
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-log.addHandler(NullHandler())
 
 
 cdef bint in_dtype_range(value, dtype):
