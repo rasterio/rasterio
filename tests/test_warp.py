@@ -553,10 +553,30 @@ def test_transform_geom():
         'EPSG:3373', 
         'EPSG:4326', 
         geom, 
-        antimeridian_cutting=True, 
+        antimeridian_cutting=True,
         antimeridian_offset=0)
     assert result['type'] == 'MultiPolygon'
     assert len(result['coordinates']) == 2
 
     result = transform_geom('EPSG:3373', 'EPSG:4326',  geom,  precision=1)
     assert int(result['coordinates'][0][0][0] * 10) == -1778
+
+
+def test_reproject_invalid_resampling():
+    # An invalid resampling number fails.
+    with rasterio.drivers():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            source = src.read_band(1)
+
+        dst_crs = {'init': 'EPSG:32619'}
+        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        with pytest.raises(TypeError) as exc_info:
+            reproject(
+                source,
+                out,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=DST_TRANSFORM,
+                dst_crs=dst_crs,
+                resampling=99)
+            assert "99 is not a supported value." in exc_info.value.message

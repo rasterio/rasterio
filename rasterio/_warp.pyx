@@ -168,6 +168,7 @@ def _reproject(
         dst_crs=None,
         dst_nodata=None,
         resampling=Resampling.nearest,
+        num_threads=1,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -219,6 +220,8 @@ def _reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
+    num_threads: int
+        Number of worker threads.
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 
@@ -352,11 +355,9 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
     cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
-    cdef int num_threads = int(kwargs.get('num_threads', 1))
-    reprojected = False
 
     hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
-                                        hdsin, NULL, hdsout, NULL, 
+                                        hdsin, NULL, hdsout, NULL,
                                         1, 1000.0, 0)
     if hTransformArg == NULL:
         raise ValueError("NULL transformer")
@@ -366,8 +367,11 @@ def _reproject(
 
     # Note: warp_extras is pointed to different memory locations on every
     # call to CSLSetNameValue call below, but needs to be set here to
-    # get the defaults
+    # get the defaults.
     warp_extras = psWOptions.papszWarpOptions
+
+    warp_extras = _gdal.CSLSetNameValue(
+        warp_extras, "NUM_THREADS", str(num_threads))
 
     for k, v in kwargs.items():
         k, v = k.upper(), str(v).upper()
@@ -377,15 +381,6 @@ def _reproject(
         val_c = val_b
         warp_extras = _gdal.CSLSetNameValue(warp_extras, key_c, val_c)
         log.debug("Setting warp option  %s: %s" % (k, v))
-    
-    num_threads = kwargs.get('num_threads', 1)
-
-    #pszWarpThreads = _gdal.CSLFetchNameValue(warp_extras, "NUM_THREADS")
-    #if pszWarpThreads == NULL:
-    #    pszWarpThreads = _gdal.CPLGetConfigOption(
-    #                        "GDAL_NUM_THREADS", "1")
-    #    warp_extras = _gdal.CSLSetNameValue(
-    #        warp_extras, "NUM_THREADS", pszWarpThreads)
 
     log.debug("Created warp options")
 
@@ -431,8 +426,7 @@ def _reproject(
     for i in range(src_count):
         psWOptions.padfDstNoDataReal[i] = dst_nodata
         psWOptions.padfDstNoDataImag[i] = 0.0
-    warp_extras = _gdal.CSLSetNameValue(
-        warp_extras, "INIT_DEST", "NO_DATA")
+    warp_extras = _gdal.CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -459,35 +453,37 @@ def _reproject(
 
     # TODO: alpha band.
 
-    if oWarper.Initialize(psWOptions):
-        raise RuntimeError("Failed to initialize warper.")
+    # Now that the transformer and warp options are set up, we init
+    # and run the warper.
+    try:
+        with cpl_errs:
+            oWarper.Initialize(psWOptions)
 
-    else:
         rows, cols = destination.shape[-2:]
         log.debug(
             "Chunk and warp window: %d, %d, %d, %d.",
             0, 0, cols, rows)
 
-        if num_threads > 1:
-            err_code = oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
-        else:
-            err_code = oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+        with cpl_errs:
+            if num_threads > 1:
+                oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+            else:
+                oWarper.ChunkAndWarpImage(0, 0, cols, rows)
 
-        log.debug("Chunked and warped: %d", err_code)
+        if dtypes.is_ndarray(destination):
+            retval = _io.io_auto(destination, hdsout, 0)
+            # TODO: handle errors (by retval).
 
-        reprojected = not(err_code)
+            if hdsout != NULL:
+                _gdal.GDALClose(hdsout)
 
-    if hTransformArg != NULL:
-        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
-    if psWOptions != NULL:
-        _gdal.GDALDestroyWarpOptions(psWOptions)
-    if dtypes.is_ndarray(source):
-        if hdsin != NULL:
-            _gdal.GDALClose(hdsin)
+    # Clean up transformer, warp options, and dataset handles.
+    finally:
 
-    if reprojected and dtypes.is_ndarray(destination):
-        retval = _io.io_auto(destination, hdsout, 0)
-        # TODO: handle errors (by retval).
-
-        if hdsout != NULL:
-            _gdal.GDALClose(hdsout)
+        if hTransformArg != NULL:
+            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        if psWOptions != NULL:
+            _gdal.GDALDestroyWarpOptions(psWOptions)
+        if dtypes.is_ndarray(source):
+            if hdsin != NULL:
+                _gdal.GDALClose(hdsin)
