@@ -370,8 +370,8 @@ def _reproject(
     # get the defaults.
     warp_extras = psWOptions.papszWarpOptions
 
-    warp_extras = _gdal.CSLSetNameValue(
-        warp_extras, "NUM_THREADS", str(num_threads))
+    val_b = str(num_threads).encode('utf-8')
+    warp_extras = _gdal.CSLSetNameValue(warp_extras, "NUM_THREADS", val_b)
 
     for k, v in kwargs.items():
         k, v = k.upper(), str(v).upper()
