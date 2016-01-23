@@ -13,6 +13,7 @@ import cligj
 
 from . import options
 import rasterio
+from rasterio import aws
 
 
 def configure_logging(verbosity):
@@ -37,3 +38,4 @@ def main_group(ctx, verbose, quiet):
     configure_logging(verbosity)
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
+    ctx.obj['aws_session'] = aws.Session()
