@@ -29,8 +29,11 @@ def test_session_env(monkeypatch):
     monkeypatch.undo()
 
 
-def test_session_config(tmpdir):
+def test_session_config(monkeypatch, tmpdir):
     """Create a session with config files."""
+    monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
+    monkeypatch.delenv('AWS_SECRET_ACCESS_KEY', raising=False)
+    monkeypatch.delenv('AWS_SESSION_TOKEN', raising=False)
     credentials = tmpdir.join('credentials')
     credentials.write(
         "[default]\n"
@@ -44,6 +47,7 @@ def test_session_config(tmpdir):
     assert s.aws_access_key_id == 'id'
     assert s.aws_secret_access_key == 'key'
     assert s.region_name == 'null-island-1'
+    monkeypatch.undo()
 
 
 def test_with_session():
