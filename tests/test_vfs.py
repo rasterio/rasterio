@@ -38,7 +38,7 @@ def test_parse_path_file():
 def test_parse_unknown_scheme():
     """Raise exception for unknown WFS scheme"""
     with pytest.raises(ValueError):
-        parse_path('http://foo.tif')
+        parse_path('gopher://foo.tif')
 
 
 def test_vsi_path_scheme():
