@@ -11,7 +11,6 @@ from cligj import precision_opt
 
 from . import options
 import rasterio
-from rasterio import aws
 import rasterio.crs
 from rasterio.transform import guard_transform
 
@@ -230,7 +229,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
     Optionally print a single metadata item as a string.
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    verbosity = ctx.obj.get('verbosity')
     aws_session = ctx.obj.get('aws_session')
 
     logger = logging.getLogger('rio')
