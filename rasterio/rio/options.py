@@ -97,9 +97,9 @@ def file_in_handler(ctx, param, value):
     if archive and scheme:
         archive = os.path.abspath(archive)
         path = "{0}://{1}!{2}".format(scheme, archive, path)
-    elif path and scheme.startswith('http'):
+    elif scheme and scheme.startswith('http'):
         path = "{0}://{1}".format(scheme, path)
-    elif path and scheme == 's3':
+    elif scheme == 's3':
         path = "{0}://{1}".format(scheme, path)
     else:
         path = os.path.abspath(path)
