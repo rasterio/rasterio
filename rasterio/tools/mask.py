@@ -9,24 +9,24 @@ def mask(raster, shapes, nodatavals=None, crop=True):
 
     Parameters
     ----------
-    source : rasterio RasterReader object
+    source: rasterio RasterReader object
         Raster to which the mask will be applied.
-    shapes : generator of (polygon, value)
+    shapes: generator of (polygon, value)
         Polygons are GeoJSON-like dicts specifying the boundaries of features
         in the raster to be kept. All data outside of specified polygons
         will be set to nodata.
-    nodatavals : list (opt)
+    nodatavals: list (opt)
         Value representing nodata within each raster band. If not set,
         defaults to the nodatavals for the input raster. If those values
         are not set, defaults to 0.
-    crop : bool (opt)
+    crop: bool (opt)
         Whether to crop the raster to the extent of the data. Defaults to True.
 
     Returns
     -------
-    masked : numpy ndarray
+    masked: numpy ndarray
         Data contained in raster after applying the mask.
-    out_transform : affine object
+    out_transform: affine object
         Information for mapping pixel coordinates in `masked` to another
         coordinate system.
     """
