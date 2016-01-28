@@ -22,21 +22,37 @@ Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 funcs = locals()
 
 
-def show(source, cmap='gray'):
-    """Show a raster using matplotlib.
-
-    The raster may be either an ndarray or a (dataset, bidx)
-    tuple.
+def show(source, cmap='gray', with_bounds=True):
     """
+    Display a raster or raster band using matplotlib.
+
+    Parameters
+    ----------
+    source : array-like or (raster dataset, bidx)
+        If array-like, should be of format compatible with
+        matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),
+        selects band `bidx` from raster.
+    cmap : str (opt)
+        Specifies the colormap to use in plotting. See
+        matplotlib.Colors.Colormap. Default is 'gray'.
+    with_bounds : bool (opt)
+        Whether to change the image extent to the spatial bounds of the image,
+        rather than pixel coordinates. Only works when source is
+        (raster dataset, bidx).
+    """
+
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         xs = source[0].res[0] / 2.
         ys = source[0].res[1] / 2.
-        extent = (source[0].bounds.left - xs, source[0].bounds.right - xs,
-                  source[0].bounds.bottom - ys, source[0].bounds.top - ys)
+        if with_bounds:
+            extent = (source[0].bounds.left - xs, source[0].bounds.right - xs,
+                      source[0].bounds.bottom - ys, source[0].bounds.top - ys)
+        else:
+            extent = None
     else:
         arr = source
-        extent = (-0.5, arr.shape[1] - 0.5, arr.shape[0] - 0.5, -0.5)
+        extent = None
     if plt is not None:
         plt.imshow(arr, cmap=cmap, extent=extent)
         plt.show()
