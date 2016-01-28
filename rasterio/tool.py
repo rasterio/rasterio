@@ -30,10 +30,15 @@ def show(source, cmap='gray'):
     """
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
+        xs = source[0].res[0] / 2.
+        ys = source[0].res[1] / 2.
+        extent = (source[0].bounds.left - xs, source[0].bounds.right - xs,
+                  source[0].bounds.bottom - ys, source[0].bounds.top - ys)
     else:
         arr = source
+        extent = (-0.5, arr.shape[1] - 0.5, arr.shape[0] - 0.5, -0.5)
     if plt is not None:
-        plt.imshow(arr, cmap=cmap)
+        plt.imshow(arr, cmap=cmap, extent=extent)
         plt.show()
     else:
         raise ImportError("matplotlib could not be imported")
