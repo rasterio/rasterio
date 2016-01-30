@@ -1,7 +1,6 @@
 # distutils: language = c++
 
 from enum import IntEnum
-
 import logging
 
 import numpy as np
@@ -9,8 +8,10 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio.errors import RasterioDriverRegistrationError
 from rasterio._err import cpl_errs
+from rasterio._io cimport InMemoryRaster
+from rasterio.errors import RasterioDriverRegistrationError
+from rasterio.transform import Affine, from_bounds
 
 
 cdef extern from "gdalwarper.h" nogil:
@@ -336,6 +337,7 @@ def _reproject(
         osr = _base._osr_from_crs(dst_crs)
         _gdal.OSRExportToWkt(osr, &dstwkt)
         retval = _gdal.GDALSetProjection(hdsout, dstwkt)
+        log.debug("Set CRS on temp destination dataset: %s", dstwkt)
         log.debug("Setting Projection: %d", retval)
         log.debug("Set CRS on temp destination dataset: %s", dstwkt)
         _gdal.CPLFree(dstwkt)
@@ -372,7 +374,8 @@ def _reproject(
 
     val_b = str(num_threads).encode('utf-8')
     warp_extras = _gdal.CSLSetNameValue(warp_extras, "NUM_THREADS", val_b)
-
+    log.debug("Setting NUM_THREADS option: %s", val_b)
+        
     for k, v in kwargs.items():
         k, v = k.upper(), str(v).upper()
         key_b = k.encode('utf-8')
@@ -466,6 +469,7 @@ def _reproject(
 
         with cpl_errs:
             if num_threads > 1:
+                log.debug("Executing multi warp with num_threads: %d", num_threads)
                 oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             else:
                 oWarper.ChunkAndWarpImage(0, 0, cols, rows)
@@ -487,3 +491,57 @@ def _reproject(
         if dtypes.is_ndarray(source):
             if hdsin != NULL:
                 _gdal.GDALClose(hdsin)
+
+
+def _calculate_default_transform(
+        src_crs, dst_crs, width, height, left, bottom, right, top,
+        resolution=None, densify_pts=21):
+    """Wraps GDAL's algorithm."""
+
+    cdef void *hTransformArg = NULL
+    cdef int npixels = 0
+    cdef int nlines = 0
+    cdef double extent[4]
+    cdef double geotransform[6]
+    cdef void *osr = NULL
+    cdef char *wkt = NULL
+    cdef InMemoryRaster temp = None
+
+    extent[:] = [0.0, 0.0, 0.0, 0.0]
+    geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # Make an in-memory raster dataset we can pass to 
+    # GDALCreateGenImgProjTransformer().
+    transform = from_bounds(left, bottom, right, top, width, height)
+    img = np.ones((height, width))
+
+    osr = _base._osr_from_crs(dst_crs)
+    _gdal.OSRExportToWkt(osr, &wkt)
+    _gdal.OSRDestroySpatialReference(osr)
+
+    with InMemoryRaster(img, transform=transform.to_gdal(), crs=src_crs) as temp:
+        hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
+            temp.dataset, NULL, NULL, wkt, 1, 1000.0, 0)
+        if hTransformArg == NULL:
+            raise ValueError("NULL transformer")
+        log.debug("Created transformer")
+
+        if (_gdal.GDALSuggestedWarpOutput2(
+            temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg, geotransform,
+            &npixels, &nlines, extent, 0)):
+            raise RuntimeError("Oh no!")
+
+    t = list(0 for i in range(6))
+    for i in range(6):
+        t[i] = geotransform[i]
+
+    dst_affine = Affine.from_gdal(*t)
+    dst_width = npixels
+    dst_height = nlines
+
+    if hTransformArg != NULL:
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+    if wkt != NULL:
+        _gdal.CPLFree(wkt)
+
+    return dst_affine, dst_width, dst_height

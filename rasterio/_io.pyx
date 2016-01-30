@@ -1828,7 +1828,7 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
 
-    def __cinit__(self, image, transform=None):
+    def __cinit__(self, image, transform=None, crs=None):
         """
         Create in-memory raster dataset, and populate its initial values with
         the values in image.
@@ -1843,6 +1843,8 @@ cdef class InMemoryRaster:
 
         cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
         cdef int i = 0  # avoids Cython warning in for loop below
+        cdef const char *srcwkt = NULL
+        cdef void *osr = NULL
 
         # Several GDAL operations require the array of band IDs as input
         self.band_ids[0] = 1
@@ -1866,6 +1868,17 @@ cdef class InMemoryRaster:
             err = _gdal.GDALSetGeoTransform(self.dataset, self.transform)
             if err:
                 raise ValueError("transform not set: %s" % transform)
+
+        # Set projection if specified (for use with 
+        # GDALSuggestedWarpOutput2()).
+        if crs:
+            osr = _base._osr_from_crs(crs)
+            _gdal.OSRExportToWkt(osr, &srcwkt)
+            _gdal.GDALSetProjection(self.dataset, srcwkt)
+            log.debug("Set CRS on temp source dataset: %s", srcwkt)
+            _gdal.CPLFree(srcwkt)
+            _gdal.OSRDestroySpatialReference(osr)
+
 
         self.band = _gdal.GDALGetRasterBand(self.dataset, 1)
         if self.band == NULL:

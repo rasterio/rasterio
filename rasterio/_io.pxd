@@ -51,6 +51,7 @@ cdef class InMemoryRaster:
     cdef double transform[6]
     cdef int band_ids[1]
     cdef np.ndarray _image
+    cdef object crs
 
 
 ctypedef np.uint8_t DTYPE_UBYTE_t

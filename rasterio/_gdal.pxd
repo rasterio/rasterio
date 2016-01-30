@@ -233,3 +233,5 @@ cdef extern from "gdal_alg.h":
 
     int GDALFillNodata(void *dst_band, void *mask_band, double max_search_distance, int deprecated, int smoothing_iterations, char **options, void *progress_func, void *progress_data)
     int GDALChecksumImage(void *band, int xoff, int yoff, int width, int height)
+
+    int GDALSuggestedWarpOutput2(void * hSrcDS, GDALTransformerFunc pfnRawTransformer, void * pTransformArg, double * padfGeoTransformOut, int * pnPixels, int * pnLines, double * padfExtent, int nOptions)
