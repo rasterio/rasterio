@@ -694,13 +694,16 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                 with rasterio.open(path) as src:
                     bounds = src.bounds
                     if dst_crs:
-                        bbox = bounds
+                        bbox = transform_bounds(src.crs,
+                                                dst_crs, *bounds)
                     elif projection == 'mercator':
                         bbox = transform_bounds(src.crs,
                                                 {'init': 'epsg:3857'}, *bounds)
                     elif projection == 'geographic':
                         bbox = transform_bounds(src.crs,
                                                 {'init': 'epsg:4326'}, *bounds)
+                    else:
+                        bbox = bounds
 
                 if precision >= 0:
                     bbox = [round(b, precision) for b in bbox]
