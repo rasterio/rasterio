@@ -18,6 +18,7 @@ from . import options
 import rasterio
 from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
+from rasterio.warp import transform_bounds
 
 logger = logging.getLogger('rio')
 
@@ -692,22 +693,17 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
             for i, path in enumerate(input):
                 with rasterio.open(path) as src:
                     bounds = src.bounds
-                    xs = [bounds[0], bounds[2]]
-                    ys = [bounds[1], bounds[3]]
                     if dst_crs:
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': dst_crs}, xs, ys)
+                        bbox = bounds
                     elif projection == 'mercator':
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:3857'}, xs, ys)
+                        bbox = transform_bounds(src.crs,
+                                                {'init': 'epsg:3857'}, *bounds)
                     elif projection == 'geographic':
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:4326'}, xs, ys)
+                        bbox = transform_bounds(src.crs,
+                                                {'init': 'epsg:4326'}, *bounds)
 
                 if precision >= 0:
-                    xs = [round(v, precision) for v in xs]
-                    ys = [round(v, precision) for v in ys]
-                bbox = [min(xs), min(ys), max(xs), max(ys)]
+                    bbox = [round(b, precision) for b in bbox]
 
                 yield {
                     'type': 'Feature',
@@ -715,11 +711,11 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                     'geometry': {
                         'type': 'Polygon',
                         'coordinates': [[
-                            [xs[0], ys[0]],
-                            [xs[1], ys[0]],
-                            [xs[1], ys[1]],
-                            [xs[0], ys[1]],
-                            [xs[0], ys[0]] ]]},
+                            [bbox[0], bbox[1]],
+                            [bbox[2], bbox[1]],
+                            [bbox[2], bbox[3]],
+                            [bbox[0], bbox[3]],
+                            [bbox[0], bbox[1]]]]},
                     'properties': {
                         'id': str(i),
                         'title': path,
