@@ -642,7 +642,7 @@ def rasterize(
 @click.command(short_help="Write bounding boxes to stdout as GeoJSON.")
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
-@click.argument('INPUT', nargs=-1, type=click.Path(exists=True))
+@click.argument('INPUT', nargs=-1, type=click.Path(exists=True), required=True)
 @precision_opt
 @indent_opt
 @compact_opt
