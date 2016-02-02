@@ -482,7 +482,7 @@ def test_bounds_obj_bbox():
         '--precision', '2'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[-78.9, 23.56, -76.6, 25.55]'
+    assert result.output.strip() == '[-78.96, 23.56, -76.57, 25.55]'
 
 
 def test_bounds_compact():
@@ -495,7 +495,7 @@ def test_bounds_compact():
         '--compact'
     ])
     assert result.exit_code == 0
-    assert result.output.strip() == '[-78.9,23.56,-76.6,25.55]'
+    assert result.output.strip() == '[-78.96,23.56,-76.57,25.55]'
 
 
 def test_bounds_indent():
@@ -522,7 +522,7 @@ def test_bounds_obj_bbox_mercator():
     ])
     assert result.exit_code == 0
     assert result.output.strip() == (
-        '[-8782900.033, 2700489.278, -8527010.472, 2943560.235]')
+        '[-8789636.708, 2700489.278, -8524281.514, 2943560.235]')
 
 
 def test_bounds_obj_bbox_projected():
@@ -574,7 +574,7 @@ def test_bounds_seq():
     ])
     assert result.exit_code == 0
     assert result.output == (
-        '[-78.9, 23.56, -76.6, 25.55]\n[-78.9, 23.56, -76.6, 25.55]\n')
+        '[-78.96, 23.56, -76.57, 25.55]\n[-78.96, 23.56, -76.57, 25.55]\n')
     assert '\x1e' not in result.output
 
 
@@ -591,8 +591,7 @@ def test_bounds_seq_rs():
     ])
     assert result.exit_code == 0
     assert result.output == (
-        '\x1e[-78.9, 23.56, -76.6, 25.55]\n\x1e[-78.9, 23.56, -76.6, 25.55]\n')
-
+        '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
 
 def test_insp():
     runner = CliRunner()
