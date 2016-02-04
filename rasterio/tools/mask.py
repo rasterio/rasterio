@@ -1,17 +1,19 @@
 from __future__ import absolute_import
 
 import rasterio
+from rasterio.features import geometry_mask
 
-def mask(raster, shapes, nodatavals=None, crop=True):
+def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
+         invert=False):
     """
     For all regions in the input raster outside of the regions defined by
     `shapes`, sets any data present to nodata.
 
     Parameters
     ----------
-    source: rasterio RasterReader object
+    raster: rasterio RasterReader object
         Raster to which the mask will be applied.
-    shapes: generator of (polygon, value)
+    shapes: list of polygons
         Polygons are GeoJSON-like dicts specifying the boundaries of features
         in the raster to be kept. All data outside of specified polygons
         will be set to nodata.
@@ -21,6 +23,13 @@ def mask(raster, shapes, nodatavals=None, crop=True):
         are not set, defaults to 0.
     crop: bool (opt)
         Whether to crop the raster to the extent of the data. Defaults to True.
+    all_touched: bool (opt)
+        Use all pixels touched by features. If False (default), use only
+        pixels whose center is within the polygon or that are selected by
+        Bresenhams line algorithm.
+    invert: bool (opt)
+        If True, mask will be True for pixels that overlap shapes.
+        False by default.
 
     Returns
     -------
@@ -31,6 +40,8 @@ def mask(raster, shapes, nodatavals=None, crop=True):
         coordinate system.
     """
 
+    if crop and invert:
+        invert = False
     # I'm not sure how good this no data handling will be generally
     if nodatavals is None:
         if raster.nodata is not None:
@@ -38,28 +49,39 @@ def mask(raster, shapes, nodatavals=None, crop=True):
         else:
             nodatavals = [0] * raster.count
 
-    # consume shapes twice, so convert to list
-    shapes = list(shapes)
-    all_bounds = [rasterio.features.bounds(shape[0]) for shape in shapes]
+    shapes = [shape for shape in shapes] 
+    all_bounds = [rasterio.features.bounds(shape) for shape in shapes]
     minxs, minys, maxxs, maxys = zip(*all_bounds)
     mask_bounds = (min(minxs), min(minys), max(maxxs), max(maxys))
 
-    if rasterio.coords.disjoint_bounds(raster.bounds, mask_bounds):
+    invert_y = raster.affine.e > 0
+    source_bounds = raster.bounds
+    if invert_y:
+        source_bounds = [source_bounds[0], source_bounds[3],
+                         source_bounds[2], source_bounds[1]]
+    if rasterio.coords.disjoint_bounds(source_bounds, mask_bounds):
         raise ValueError("Input shapes do not overlap raster.")
-
+    if invert_y:
+        mask_bounds = [mask_bounds[0], mask_bounds[3],
+                       mask_bounds[2], mask_bounds[1]]
     if crop:
         out_bounds = mask_bounds
+        window = raster.window(*out_bounds)
+        out_transform = raster.window_transform(window)
     else:
-        out_bounds = raster.bounds
-    window = raster.window(*out_bounds)
-    out_transform = raster.window_transform(window)
-    masked = raster.read(window=window)
-    out_shape = masked.shape[1:]
+        out_bounds = source_bounds
+        window = None
+        out_transform = raster.affine
 
-    shape_mask = rasterio.features.rasterize(shapes, transform=out_transform,
-                                             out_shape=out_shape)
-    shape_mask = shape_mask.astype("bool")
+    out_image = raster.read(window=window, masked=True)
+    out_shape = out_image.shape[1:]
+
+    # using rasterize instead of geometry_mask gets correct behavior
+    shape_mask = geometry_mask(shapes, transform=out_transform, invert=invert,
+                               out_shape=out_shape, all_touched=all_touched)
+    out_image.mask = out_image.mask | shape_mask
+
     for i in range(raster.count):
-        masked[i, ~shape_mask] = nodatavals[i]
+        out_image[i] = out_image[i].filled(nodatavals[i])
 
-    return masked, out_transform
+    return out_image, out_transform

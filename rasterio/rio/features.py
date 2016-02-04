@@ -95,7 +95,7 @@ def mask(
     input raster.
     """
 
-    from rasterio.features import geometry_mask
+    from rasterio.tools.mask import mask as mask_tool
     from rasterio.features import bounds as calculate_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
@@ -124,7 +124,7 @@ def mask(
                                      param_hint='--geojson-mask')
 
         if 'features' in geojson:
-            geometries = (f['geometry'] for f in geojson['features'])
+            geometries = [f['geometry'] for f in geojson['features']]
         elif 'geometry' in geojson:
             geometries = (geojson['geometry'], )
         else:
@@ -133,62 +133,34 @@ def mask(
         bounds = geojson.get('bbox', calculate_bounds(geojson))
 
         with rasterio.open(input) as src:
-            # If y pixel value is positive, then invert y dimension in bounds
-            invert_y = src.affine.e > 0
-
-            src_bounds = src.bounds
-            if invert_y:
-                src_bounds = [src.bounds[0], src.bounds[3],
-                              src.bounds[2], src.bounds[1]]
-
-            has_disjoint_bounds = disjoint_bounds(bounds, src_bounds)
-
-            if crop:
-                if has_disjoint_bounds:
-
-                    raise click.BadParameter('not allowed for GeoJSON outside '
-                                             'the extent of the input raster',
-                                             param=crop, param_hint='--crop')
-
-                if invert_y:
-                    bounds = (bounds[0], bounds[3], bounds[2], bounds[1])
-
-                window = src.window(*bounds)
-                transform = src.window_transform(window)
-                (r1, r2), (c1, c2) = window
-                mask_shape = (r2 - r1, c2 - c1)
-            else:
-                if has_disjoint_bounds:
-                    click.echo('GeoJSON outside bounds of existing output '
-                               'raster. Are they in different coordinate '
-                               'reference systems?',
-                               err=True)
-
-                window = None
-                transform = src.affine
-                mask_shape = src.shape
-
-            mask = geometry_mask(
-                geometries,
-                out_shape=mask_shape,
-                transform=transform,
-                all_touched=all_touched,
-                invert=invert)
+            try:
+                out_image, out_transform = mask_tool(src, geometries, crop=crop,
+                                                     all_touched=all_touched,
+                                                     invert=invert)
+            except ValueError as e:
+                if e.args[0] == "Input shapes do not overlap raster.":
+                    if crop:
+                        raise click.BadParameter('not allowed for GeoJSON '
+                                                 'outside the extent of the '
+                                                 'input raster',                                                                 param=crop,
+                                                 param_hint='--crop')
+                    else:
+                        click.echo('GeoJSON outside bounds of existing output '
+                                   'raster. Are they in different coordinate '
+                                   'reference systems?',
+                                   err=True)
 
             meta = src.meta.copy()
             meta.update(**creation_options)
             meta.update({
                 'driver': driver,
-                'height': mask.shape[0],
-                'width': mask.shape[1],
-                'transform': transform
+                'height': out_image.shape[1],
+                'width': out_image.shape[2],
+                'transform': out_transform
             })
 
             with rasterio.open(output, 'w', **meta) as out:
-                for bidx in range(1, src.count + 1):
-                    img = src.read(bidx, masked=True, window=window)
-                    img.mask = img.mask | mask
-                    out.write_band(bidx, img.filled(src.nodatavals[bidx-1]))
+                out.write(out_image)
 
 
 # Shapes command.
