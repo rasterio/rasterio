@@ -64,11 +64,9 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         mask_bounds = [mask_bounds[0], mask_bounds[3],
                        mask_bounds[2], mask_bounds[1]]
     if crop:
-        out_bounds = mask_bounds
-        window = raster.window(*out_bounds)
+        window = raster.window(*mask_bounds)
         out_transform = raster.window_transform(window)
     else:
-        out_bounds = source_bounds
         window = None
         out_transform = raster.affine
 
