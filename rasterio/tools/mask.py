@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import rasterio
 from rasterio.features import geometry_mask
 
-def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
+def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
          invert=False):
     """
     For all regions in the input raster outside of the regions defined by
@@ -17,10 +17,10 @@ def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
         Polygons are GeoJSON-like dicts specifying the boundaries of features
         in the raster to be kept. All data outside of specified polygons
         will be set to nodata.
-    nodatavals: list (opt)
+    nodata: int or float (opt)
         Value representing nodata within each raster band. If not set,
-        defaults to the nodatavals for the input raster. If those values
-        are not set, defaults to 0.
+        defaults to the nodata value for the input raster. If there is no
+        set nodata value for the raster, it defaults to 0.
     crop: bool (opt)
         Whether to crop the raster to the extent of the data. Defaults to True.
     all_touched: bool (opt)
@@ -43,11 +43,11 @@ def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
     # I'm not sure how good this no data handling will be generally
-    if nodatavals is None:
+    if nodata is None:
         if raster.nodata is not None:
-            nodatavals = raster.nodatavals
+            nodata = raster.nodata
         else:
-            nodatavals = [0] * raster.count
+            nodata = 0
 
     all_bounds = [rasterio.features.bounds(shape) for shape in shapes]
     minxs, minys, maxxs, maxys = zip(*all_bounds)
@@ -81,6 +81,6 @@ def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
     out_image.mask = out_image.mask | shape_mask
 
     for i in range(raster.count):
-        out_image[i] = out_image[i].filled(nodatavals[i])
+        out_image[i] = out_image[i].filled(nodata)
 
     return out_image, out_transform
