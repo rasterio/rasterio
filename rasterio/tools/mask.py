@@ -41,7 +41,7 @@ def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
     """
 
     if crop and invert:
-        invert = False
+        raise ValueError("crop and invert cannot both be True.")
     # I'm not sure how good this no data handling will be generally
     if nodatavals is None:
         if raster.nodata is not None:
@@ -49,7 +49,6 @@ def mask(raster, shapes, nodatavals=None, crop=False, all_touched=False,
         else:
             nodatavals = [0] * raster.count
 
-    shapes = [shape for shape in shapes] 
     all_bounds = [rasterio.features.bounds(shape) for shape in shapes]
     minxs, minys, maxxs, maxys = zip(*all_bounds)
     mask_bounds = (min(minxs), min(minys), max(maxxs), max(maxys))
