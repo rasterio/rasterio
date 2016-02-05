@@ -42,7 +42,6 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
 
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
-    # I'm not sure how good this no data handling will be generally
     if nodata is None:
         if raster.nodata is not None:
             nodata = raster.nodata
@@ -59,7 +58,12 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         source_bounds = [source_bounds[0], source_bounds[3],
                          source_bounds[2], source_bounds[1]]
     if rasterio.coords.disjoint_bounds(source_bounds, mask_bounds):
-        raise ValueError("Input shapes do not overlap raster.")
+        if crop:
+            raise ValueError("Input shapes do not overlap raster.")
+        else:
+            print("GeoJSON outside bounds of existing output " +
+                  "raster. Are they in different coordinate " +
+                  "reference systems?")
     if invert_y:
         mask_bounds = [mask_bounds[0], mask_bounds[3],
                        mask_bounds[2], mask_bounds[1]]
@@ -73,7 +77,6 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
     out_image = raster.read(window=window, masked=True)
     out_shape = out_image.shape[1:]
 
-    # using rasterize instead of geometry_mask gets correct behavior
     shape_mask = geometry_mask(shapes, transform=out_transform, invert=invert,
                                out_shape=out_shape, all_touched=all_touched)
     out_image.mask = out_image.mask | shape_mask

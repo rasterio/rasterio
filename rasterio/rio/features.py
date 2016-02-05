@@ -99,6 +99,7 @@ def mask(
     from rasterio.features import bounds as calculate_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    logger = logging.getLogger('rio')
 
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
@@ -138,17 +139,17 @@ def mask(
                                                      all_touched=all_touched,
                                                      invert=invert)
             except ValueError as e:
-                if e.args[0] == "Input shapes do not overlap raster.":
+                if e.args[0] == 'Input shapes do not overlap raster.':
                     if crop:
                         raise click.BadParameter('not allowed for GeoJSON '
                                                  'outside the extent of the '
                                                  'input raster',                                                                 param=crop,
                                                  param_hint='--crop')
-                    else:
-                        click.echo('GeoJSON outside bounds of existing output '
-                                   'raster. Are they in different coordinate '
-                                   'reference systems?',
-                                   err=True)
+#                    else:
+#                        click.echo('GeoJSON outside bounds of existing output '
+#                                   'raster. Are they in different coordinate '
+#                                   'reference systems?',
+#                                   err=True)
 
             meta = src.meta.copy()
             meta.update(**creation_options)
