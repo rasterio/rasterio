@@ -54,8 +54,9 @@ def show(source, cmap='gray', with_bounds=True):
         arr = source
         extent = None
     if plt is not None:
-        plt.imshow(arr, cmap=cmap, extent=extent)
-        plt.show()
+        imax = plt.imshow(arr, cmap=cmap, extent=extent)
+        fig = plt.gcf()
+        fig.show()
     else:
         raise ImportError("matplotlib could not be imported")
 
@@ -137,7 +138,8 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     plt.grid(True)
     plt.xlabel('DN')
     plt.ylabel('Frequency')
-    plt.show()
+    fig = plt.gcf()
+    fig.show()
 
 
 def main(banner, dataset, alt_interpreter=None):
