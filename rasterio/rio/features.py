@@ -2,8 +2,8 @@ import json
 import logging
 from math import ceil
 import os
-import shutil
 import re
+import shutil
 
 import click
 import cligj
@@ -135,9 +135,9 @@ def mask(
 
         with rasterio.open(input) as src:
             try:
-                out_image, out_transform = mask_tool(src, geometries, crop=crop,
-                                                     all_touched=all_touched,
-                                                     invert=invert)
+                out_image, out_transform = mask_tool(src, geometries,
+                                                     crop=crop, invert=invert,
+                                                     all_touched=all_touched)
             except ValueError as e:
                 if e.args[0] == 'Input shapes do not overlap raster.':
                     if crop:
@@ -145,11 +145,6 @@ def mask(
                                                  'outside the extent of the '
                                                  'input raster',                                                                 param=crop,
                                                  param_hint='--crop')
-#                    else:
-#                        click.echo('GeoJSON outside bounds of existing output '
-#                                   'raster. Are they in different coordinate '
-#                                   'reference systems?',
-#                                   err=True)
 
             meta = src.meta.copy()
             meta.update(**creation_options)

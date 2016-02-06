@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 
+import warnings
+
 import rasterio
 from rasterio.features import geometry_mask
+
 
 def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
          invert=False):
@@ -22,7 +25,8 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         defaults to the nodata value for the input raster. If there is no
         set nodata value for the raster, it defaults to 0.
     crop: bool (opt)
-        Whether to crop the raster to the extent of the data. Defaults to True.
+        Whether to crop the raster to the extent of the data. Defaults to
+        False.
     all_touched: bool (opt)
         Use all pixels touched by features. If False (default), use only
         pixels whose center is within the polygon or that are selected by
@@ -61,9 +65,9 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         if crop:
             raise ValueError("Input shapes do not overlap raster.")
         else:
-            print("GeoJSON outside bounds of existing output " +
-                  "raster. Are they in different coordinate " +
-                  "reference systems?")
+            warnings.warn("GeoJSON outside bounds of existing output " +
+                          "raster. Are they in different coordinate " +
+                          "reference systems?")
     if invert_y:
         mask_bounds = [mask_bounds[0], mask_bounds[3],
                        mask_bounds[2], mask_bounds[1]]
@@ -80,6 +84,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
     shape_mask = geometry_mask(shapes, transform=out_transform, invert=invert,
                                out_shape=out_shape, all_touched=all_touched)
     out_image.mask = out_image.mask | shape_mask
+    out_image.fill_value = nodata
 
     for i in range(raster.count):
         out_image[i] = out_image[i].filled(nodata)

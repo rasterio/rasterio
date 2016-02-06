@@ -169,6 +169,42 @@ def diagonal_image():
 
 
 @pytest.fixture()
+def basic_image_file(tmpdir, basic_image):
+    """
+    A basic raster file with a 10x10 array for testing sieve functions.
+    Contains data from pixelated_image.
+
+    Returns
+    -------
+
+    string
+        Filename of test raster file
+    """
+
+    from affine import Affine
+    import rasterio
+
+    image = basic_image
+
+    outfilename = str(tmpdir.join('basic_image.tif'))
+    kwargs = {
+        "crs": {'init': 'epsg:4326'},
+        "transform": Affine.identity(),
+        "count": 1,
+        "dtype": rasterio.uint8,
+        "driver": "GTiff",
+        "width": image.shape[1],
+        "height": image.shape[0],
+        "nodata": None
+    }
+    with rasterio.drivers():
+        with rasterio.open(outfilename, 'w', **kwargs) as out:
+            out.write_band(1, image)
+
+    return outfilename
+
+
+@pytest.fixture()
 def pixelated_image_file(tmpdir, pixelated_image):
     """
     A basic raster file with a 10x10 array for testing sieve functions.
