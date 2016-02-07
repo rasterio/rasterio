@@ -1448,7 +1448,7 @@ cdef class RasterUpdater(RasterReader):
         if [abs(v) for v in transform] == [0, 1, 0, 0, 0, 1]:
             warnings.warn(
                 "Dataset uses default geotransform (Affine.identity). "
-                "No tranform will be written to the output by GDAL.",
+                "No transform will be written to the output by GDAL.",
                 UserWarning
             )
 
