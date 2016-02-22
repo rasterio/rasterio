@@ -1,11 +1,28 @@
+"""
+Implementations of various common operations, like `show()` for displaying an
+array or with matplotlib, and `stats()` for computing min/max/avg.  Most can
+handle a numpy array or `rasterio.Band()`.  Primarily supports `$ rio insp`.
+"""
+
+
+from __future__ import absolute_import
 
 import code
 import collections
 import logging
+import warnings
 
 try:
     import matplotlib.pyplot as plt
 except ImportError:
+    plt = None
+except RuntimeError as e:
+    # Certain environment configurations can trigger a RuntimeError like:
+
+    # Trying to import matplotlibRuntimeError: Python is not installed as a
+    # framework. The Mac OS X backend will not be able to function correctly
+    # if Python is not installed as a framework. See the Python ...
+    warnings.warn(str(e), RuntimeWarning, stacklevel=2)
     plt = None
 
 import numpy
