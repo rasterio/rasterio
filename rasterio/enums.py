@@ -44,6 +44,7 @@ class Compression(Enum):
 
 class Interleaving(Enum):
     pixel='PIXEL'
+    line='LINE'
     band='BAND'
 
 

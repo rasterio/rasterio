@@ -7,7 +7,7 @@ import numpy
 
 import rasterio
 from rasterio.warp import (
-    reproject, RESAMPLING, transform_geom, transform, transform_bounds,
+    reproject, Resampling, transform_geom, transform, transform_bounds,
     calculate_default_transform)
 
 
@@ -148,7 +148,6 @@ def test_calculate_default_transform():
 def test_calculate_default_transform_single_resolution():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            l, b, r, t = src.bounds
             target_resolution = 0.1
             target_transform = Affine(
                 target_resolution, 0.0, -78.95864996545055,
@@ -209,7 +208,7 @@ def test_reproject_ndarray():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
         assert (out > 0).sum() == 438146
 
 
@@ -227,7 +226,7 @@ def test_reproject_epsg():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
         assert (out > 0).sum() == 438146
 
 
@@ -246,7 +245,7 @@ def test_reproject_out_of_bounds():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
         assert not out.any()
 
 
@@ -419,7 +418,7 @@ def test_reproject_multi():
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
     assert destin.any()
 
 
@@ -554,10 +553,30 @@ def test_transform_geom():
         'EPSG:3373', 
         'EPSG:4326', 
         geom, 
-        antimeridian_cutting=True, 
+        antimeridian_cutting=True,
         antimeridian_offset=0)
     assert result['type'] == 'MultiPolygon'
     assert len(result['coordinates']) == 2
 
     result = transform_geom('EPSG:3373', 'EPSG:4326',  geom,  precision=1)
     assert int(result['coordinates'][0][0][0] * 10) == -1778
+
+
+def test_reproject_invalid_resampling():
+    # An invalid resampling number fails.
+    with rasterio.drivers():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            source = src.read_band(1)
+
+        dst_crs = {'init': 'EPSG:32619'}
+        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        with pytest.raises(TypeError) as exc_info:
+            reproject(
+                source,
+                out,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=DST_TRANSFORM,
+                dst_crs=dst_crs,
+                resampling=99)
+            assert "99 is not a supported value." in exc_info.value.message

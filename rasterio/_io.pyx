@@ -29,16 +29,6 @@ from rasterio.warnings import NodataShadowWarning
 
 
 log = logging.getLogger('rasterio')
-if 'all' in sys.warnoptions:
-    # show messages in console with: python -W all
-    logging.basicConfig()
-else:
-    # no handler messages shown
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-log.addHandler(NullHandler())
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -1458,7 +1448,7 @@ cdef class RasterUpdater(RasterReader):
         if [abs(v) for v in transform] == [0, 1, 0, 0, 0, 1]:
             warnings.warn(
                 "Dataset uses default geotransform (Affine.identity). "
-                "No tranform will be written to the output by GDAL.",
+                "No transform will be written to the output by GDAL.",
                 UserWarning
             )
 
