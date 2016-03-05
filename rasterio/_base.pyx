@@ -329,6 +329,8 @@ cdef class DatasetReader(object):
     property nodata:
         """The dataset's single nodata value."""
         def __get__(self):
+            if self.count == 0:
+                return None
             return self.nodatavals[0]
 
     property mask_flags:
@@ -443,9 +445,13 @@ cdef class DatasetReader(object):
     @property
     def meta(self):
         """The basic metadata of this dataset."""
+        if self.count == 0:
+            dtype = 'uint8'
+        else:
+            dtype = self.dtypes[0]
         m = {
             'driver': self.driver,
-            'dtype': self.dtypes[0],
+            'dtype': dtype,
             'nodata': self.nodata,
             'width': self.width,
             'height': self.height,
