@@ -283,7 +283,7 @@ def shapes(
                     if bidx is None:
                         msk = numpy.logical_or.reduce(msk).astype('uint8')
 
-                    # Possibly overidden below.
+                    # Possibly overridden below.
                     img = msk
 
                 # Read the band data unless the --mask option is given.
