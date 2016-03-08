@@ -570,7 +570,7 @@ def test_reproject_invalid_resampling():
 
         dst_crs = {'init': 'EPSG:32619'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)
-        with pytest.raises(TypeError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             reproject(
                 source,
                 out,
@@ -579,4 +579,4 @@ def test_reproject_invalid_resampling():
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs,
                 resampling=99)
-            assert "99 is not a supported value." in exc_info.value.message
+            assert "99 is not a valid Resampling" in exc_info.value.message

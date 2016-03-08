@@ -220,6 +220,9 @@ def reproject(
         Output is written to destination.
     """
 
+    # Resampling guard.
+    _ = Resampling(resampling)
+
     if src_transform:
         src_transform = guard_transform(src_transform).to_gdal()
     if dst_transform:
@@ -297,7 +300,8 @@ def calculate_default_transform(
     size = float(width + height)
 
     if resolution is None:
-        # TODO: compare to gdalwarp default
+        # TODO: compare to gdalwarp default (see 
+        # _calculate_default_transform() in _warp.pyx.
         avg_resolution = (
             (x_dif / float(width)) * (float(width) / size) +
             (y_dif / float(height)) * (float(height) / size)

@@ -519,7 +519,8 @@ def _calculate_default_transform(
     _gdal.OSRExportToWkt(osr, &wkt)
     _gdal.OSRDestroySpatialReference(osr)
 
-    with InMemoryRaster(img, transform=transform.to_gdal(), crs=src_crs) as temp:
+    with InMemoryRaster(
+            img, transform=transform.to_gdal(), crs=src_crs) as temp:
         hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
             temp.dataset, NULL, NULL, wkt, 1, 1000.0, 0)
         if hTransformArg == NULL:
@@ -527,9 +528,11 @@ def _calculate_default_transform(
         log.debug("Created transformer")
 
         if (_gdal.GDALSuggestedWarpOutput2(
-            temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg, geotransform,
-            &npixels, &nlines, extent, 0)):
-            raise RuntimeError("Oh no!")
+                temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
+                geotransform, &npixels, &nlines, extent, 0)):
+            # TODO: Improve this error.
+            raise RuntimeError(
+                "Failed to compute a suggested warp output.")
 
     t = list(0 for i in range(6))
     for i in range(6):
