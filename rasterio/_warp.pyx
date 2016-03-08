@@ -287,9 +287,9 @@ def _reproject(
         osr = _base._osr_from_crs(src_crs)
         _gdal.OSRExportToWkt(osr, &srcwkt)
         _gdal.GDALSetProjection(hdsin, srcwkt)
+        log.debug("Set CRS on temp source dataset: %s", srcwkt)
         _gdal.CPLFree(srcwkt)
         _gdal.OSRDestroySpatialReference(osr)
-        log.debug("Set CRS on temp source dataset: %s", srcwkt)
         
         # Copy arrays to the dataset.
         retval = _io.io_auto(source, hdsin, 1)
@@ -337,9 +337,9 @@ def _reproject(
         _gdal.OSRExportToWkt(osr, &dstwkt)
         retval = _gdal.GDALSetProjection(hdsout, dstwkt)
         log.debug("Setting Projection: %d", retval)
+        log.debug("Set CRS on temp destination dataset: %s", dstwkt)
         _gdal.CPLFree(dstwkt)
         _gdal.OSRDestroySpatialReference(osr)
-        log.debug("Set CRS on temp destination dataset: %s", dstwkt)
         if dst_nodata is None and hasattr(destination, "fill_value"):
             # destination is a masked array
             dst_nodata = destination.fill_value
