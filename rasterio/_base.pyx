@@ -446,7 +446,7 @@ cdef class DatasetReader(object):
     def meta(self):
         """The basic metadata of this dataset."""
         if self.count == 0:
-            dtype = 'uint8'
+            dtype = 'float_'
         else:
             dtype = self.dtypes[0]
         m = {
