@@ -481,6 +481,8 @@ cdef class DatasetReader(object):
 
     @property
     def is_tiled(self):
+        if len(self.block_shapes) == 0:
+            return False
         return self.block_shapes[0][1] != self.width
 
     property profile:
