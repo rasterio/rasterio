@@ -910,6 +910,13 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             z[i] = zs[i]
 
     transform = _gdal.OCTNewCoordinateTransformation(src, dst)
+    if transform == NULL:
+        _gdal.CPLFree(x)
+        _gdal.CPLFree(y)
+        _gdal.CPLFree(z)
+        _gdal.OSRDestroySpatialReference(src)
+        _gdal.OSRDestroySpatialReference(dst)
+        raise ValueError("Cannot create coordinate transformer")
     res = _gdal.OCTTransform(transform, n, x, y, z)
     #if res:
     #    raise ValueError("Failed coordinate transformation")
