@@ -8,7 +8,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio._err import cpl_errs
+from rasterio._err import cpl_errs, GDALError
 from rasterio._io cimport InMemoryRaster
 from rasterio.errors import RasterioDriverRegistrationError
 from rasterio.transform import Affine, from_bounds
@@ -326,22 +326,29 @@ def _reproject(
                         hrdriver, "output", cols, rows, src_count, 
                         dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
         if hdsout == NULL:
-            raise ValueError("NULL output datasource")
+            raise ValueError("Failed to create temp destination dataset.")
         _gdal.GDALSetDescription(
             hdsout, "Temporary destination dataset for _reproject()")
-        log.debug("Created temp destination dataset")
+        log.debug("Created temp destination dataset.")
+
         for i in range(6):
             gt[i] = dst_transform[i]
-        retval = _gdal.GDALSetGeoTransform(hdsout, gt)
-        log.debug("Set transform on temp destination dataset: %d", retval)
+
+        if not GDALError.none == _gdal.GDALSetGeoTransform(hdsout, gt):
+            raise ValueError(
+                "Failed to set transform on temp destination dataset.")
+
         osr = _base._osr_from_crs(dst_crs)
         _gdal.OSRExportToWkt(osr, &dstwkt)
-        retval = _gdal.GDALSetProjection(hdsout, dstwkt)
-        log.debug("Set CRS on temp destination dataset: %s", dstwkt)
-        log.debug("Setting Projection: %d", retval)
-        log.debug("Set CRS on temp destination dataset: %s", dstwkt)
-        _gdal.CPLFree(dstwkt)
         _gdal.OSRDestroySpatialReference(osr)
+        log.debug("CRS for temp destination dataset: %s.", dstwkt)
+
+        if not GDALError.none == _gdal.GDALSetProjection(hdsout, dstwkt):
+            raise ValueError(
+                "Failed to set projection on temp destination dataset.")
+
+        _gdal.CPLFree(dstwkt)
+
         if dst_nodata is None and hasattr(destination, "fill_value"):
             # destination is a masked array
             dst_nodata = destination.fill_value
@@ -494,8 +501,7 @@ def _reproject(
 
 
 def _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top,
-        resolution=None, densify_pts=21):
+        src_crs, dst_crs, width, height, left, bottom, right, top, **kwargs):
     """Wraps GDAL's algorithm."""
 
     cdef void *hTransformArg = NULL
@@ -527,18 +533,16 @@ def _calculate_default_transform(
             raise ValueError("NULL transformer")
         log.debug("Created transformer")
 
-        if (_gdal.GDALSuggestedWarpOutput2(
+        # geotransform, npixels, and nlines are modified by the
+        # function called below.
+        if not GDALError.none == _gdal.GDALSuggestedWarpOutput2(
                 temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
-                geotransform, &npixels, &nlines, extent, 0)):
-            # TODO: Improve this error.
+                geotransform, &npixels, &nlines, extent, 0):
             raise RuntimeError(
                 "Failed to compute a suggested warp output.")
 
-    t = list(0 for i in range(6))
-    for i in range(6):
-        t[i] = geotransform[i]
-
-    dst_affine = Affine.from_gdal(*t)
+    # Convert those modified arguments to Python values.
+    dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
     dst_width = npixels
     dst_height = nlines
 
