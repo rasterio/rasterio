@@ -116,6 +116,7 @@ def _transform_geom(
                     <const OGRGeometry *>src_ogr_geom,
                     <OGRCoordinateTransformation *>transform,
                     options)
+    del factory
     g = _features.GeomBuilder().build(dst_ogr_geom)
 
     _ogr.OGR_G_DestroyGeometry(dst_ogr_geom)
@@ -363,7 +364,6 @@ def _reproject(
     
     cdef void *hTransformArg = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
-    cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
 
     hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
                                         hdsin, NULL, hdsout, NULL,
@@ -398,6 +398,9 @@ def _reproject(
 
     # Set src_nodata and dst_nodata
     if src_nodata is None and dst_nodata is not None:
+        psWOptions.papszWarpOptions = warp_extras
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
         raise ValueError("src_nodata must be provided because dst_nodata "
                          "is not None")
     log.debug("src_nodata: %s" % src_nodata)
@@ -412,6 +415,9 @@ def _reproject(
     # Validate nodata values
     if src_nodata is not None:
         if not _io.in_dtype_range(src_nodata, source.dtype):
+            psWOptions.papszWarpOptions = warp_extras
+            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+            _gdal.GDALDestroyWarpOptions(psWOptions)
             raise ValueError("src_nodata must be in valid range for "
                             "source dtype")
 
@@ -428,6 +434,9 @@ def _reproject(
 
     if dst_nodata is not None and not _io.in_dtype_range(
             dst_nodata, destination.dtype):
+        psWOptions.papszWarpOptions = warp_extras
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
         raise ValueError("dst_nodata must be in valid range for "
                          "destination dtype")
 
@@ -465,6 +474,7 @@ def _reproject(
 
     # Now that the transformer and warp options are set up, we init
     # and run the warper.
+    cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
     try:
         with cpl_errs:
             oWarper.Initialize(psWOptions)
@@ -490,11 +500,8 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-
-        if hTransformArg != NULL:
-            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
-        if psWOptions != NULL:
-            _gdal.GDALDestroyWarpOptions(psWOptions)
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
         if dtypes.is_ndarray(source):
             if hdsin != NULL:
                 _gdal.GDALClose(hdsin)
