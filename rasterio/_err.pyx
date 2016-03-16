@@ -66,14 +66,15 @@ cdef class GDALErrCtxManager:
         cdef int err_no = CPLGetLastErrorNo()
         cdef const char *msg = CPLGetLastErrorMsg()
         # TODO: warn for err_type 2?
-        if err_type > 0:
+        if err_type >= 3:
             raise exception_map[err_no](msg)
+
 
 cpl_errs = GDALErrCtxManager()
 
 
 class GDALError(IntEnum):
-    none = 0,  # CE_None
+    success = 0,  # CE_None
     debug = 1,  # CE_Debug
     warning= 2,  # CE_Warning
     failure = 3,  # CE_Failure
