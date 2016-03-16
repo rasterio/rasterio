@@ -131,9 +131,9 @@ def test_transform_bounds_densify_out_of_bounds():
 
 def test_calculate_default_transform():
     target_transform = Affine(
-        0.0028956983577810586, 0.0, -78.95864996545055,
-        0.0, -0.0028956983577810586, 25.550873767433984
-    )
+        0.0028535715391804096, 0.0, -78.95864996545055,
+        0.0, -0.0028535715391804096, 25.550873767433984)
+
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             wgs84_crs = {'init': 'EPSG:4326'}
@@ -141,8 +141,8 @@ def test_calculate_default_transform():
                 src.crs, wgs84_crs, src.width, src.height, *src.bounds)
 
             assert dst_transform.almost_equals(target_transform)
-            assert width == 824
-            assert height == 686
+            assert width == 835
+            assert height == 696
 
 
 def test_calculate_default_transform_single_resolution():
@@ -270,9 +270,9 @@ def test_reproject_nodata():
             dst_nodata=nodata
         )
 
-        assert (out == 1).sum() == 4461
+        assert (out == 1).sum() == 6215
         assert (out == nodata).sum() == (params.dst_width *
-                                         params.dst_height - 4461)
+                                         params.dst_height - 6215)
 
 
 def test_reproject_nodata_nan():
@@ -296,9 +296,9 @@ def test_reproject_nodata_nan():
             dst_nodata=numpy.nan
         )
 
-        assert (out == 1).sum() == 4461
+        assert (out == 1).sum() == 6215
         assert numpy.isnan(out).sum() == (params.dst_width *
-                                         params.dst_height - 4461)
+                                         params.dst_height - 6215)
 
 
 
@@ -325,9 +325,9 @@ def test_reproject_dst_nodata_default():
             dst_crs=params.dst_crs
         )
 
-        assert (out == 1).sum() == 4461
+        assert (out == 1).sum() == 6215
         assert (out == 0).sum() == (params.dst_width *
-                                    params.dst_height - 4461)
+                                    params.dst_height - 6215)
 
 
 def test_reproject_invalid_dst_nodata():

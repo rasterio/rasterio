@@ -114,11 +114,12 @@ def test_warp_reproject_dst_crs(runner, tmpdir):
         with rasterio.open(outputname) as output:
             assert output.count == src.count
             assert output.crs == {'init': 'epsg:4326'}
-            assert output.width == 824
-            assert output.height == 686
+            assert output.width == 835
+            assert output.height == 696
             assert numpy.allclose(output.bounds,
-                                  [-78.95864996545055, 23.564424693996177,
-                                   -76.57259451863895, 25.550873767433984])
+                                  [-78.95864996545055, 23.564787976164418,
+                                   -76.5759177302349, 25.550873767433984])
+
 
 def test_warp_reproject_dst_crs_error(runner, tmpdir):
     srcname = 'tests/data/RGB.byte.tif'
