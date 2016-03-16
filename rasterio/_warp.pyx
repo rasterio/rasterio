@@ -335,7 +335,7 @@ def _reproject(
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.none == _gdal.GDALSetGeoTransform(hdsout, gt):
+        if not GDALError.success == _gdal.GDALSetGeoTransform(hdsout, gt):
             raise ValueError(
                 "Failed to set transform on temp destination dataset.")
 
@@ -344,7 +344,7 @@ def _reproject(
         _gdal.OSRDestroySpatialReference(osr)
         log.debug("CRS for temp destination dataset: %s.", dstwkt)
 
-        if not GDALError.none == _gdal.GDALSetProjection(hdsout, dstwkt):
+        if not GDALError.success == _gdal.GDALSetProjection(hdsout, dstwkt):
             raise ValueError(
                 "Failed to set projection on temp destination dataset.")
 
@@ -526,7 +526,7 @@ def _calculate_default_transform(
     # Make an in-memory raster dataset we can pass to 
     # GDALCreateGenImgProjTransformer().
     transform = from_bounds(left, bottom, right, top, width, height)
-    img = np.ones((height, width))
+    img = np.empty((height, width))
 
     osr = _base._osr_from_crs(dst_crs)
     _gdal.OSRExportToWkt(osr, &wkt)
@@ -537,25 +537,28 @@ def _calculate_default_transform(
         hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
             temp.dataset, NULL, NULL, wkt, 1, 1000.0, 0)
         if hTransformArg == NULL:
+            if wkt != NULL:
+                _gdal.CPLFree(wkt)
             raise ValueError("NULL transformer")
         log.debug("Created transformer")
 
         # geotransform, npixels, and nlines are modified by the
         # function called below.
-        if not GDALError.none == _gdal.GDALSuggestedWarpOutput2(
-                temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
-                geotransform, &npixels, &nlines, extent, 0):
-            raise RuntimeError(
-                "Failed to compute a suggested warp output.")
+        try:
+            if not GDALError.success == _gdal.GDALSuggestedWarpOutput2(
+                    temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
+                    geotransform, &npixels, &nlines, extent, 0):
+                raise RuntimeError(
+                    "Failed to compute a suggested warp output.")
+        finally:
+            if wkt != NULL:
+                _gdal.CPLFree(wkt)
+            if hTransformArg != NULL:
+                _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
 
     # Convert those modified arguments to Python values.
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
     dst_width = npixels
     dst_height = nlines
-
-    if hTransformArg != NULL:
-        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
-    if wkt != NULL:
-        _gdal.CPLFree(wkt)
 
     return dst_affine, dst_width, dst_height

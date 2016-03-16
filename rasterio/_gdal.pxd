@@ -224,6 +224,9 @@ cdef extern from "gdal_alg.h":
                                  void* hDstDS, const char *pszDstWKT,
                                  int bGCPUseOK, double dfGCPErrorThreshold,
                                  int nOrder )
+    void *GDALCreateGenImgProjTransformer3(const char *pszSrcWKT,
+            const double *padfSrcGeoTransform, const char *pszDstWKT,
+            const double *padfDstGeoTransform)
     int GDALGenImgProjTransform(void *pTransformArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess )
     void GDALDestroyGenImgProjTransformer( void * )
 
