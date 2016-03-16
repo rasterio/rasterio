@@ -244,6 +244,14 @@ def reproject(
         **kwargs)
 
 
+def res_tuple(res):
+    try:
+        resolution = (float(res), float(res))
+    except TypeError:
+        resolution = (res[0], res[0]) if len(res) == 1 else res[0:2]
+    return resolution
+
+
 def calculate_default_transform(
         src_crs,
         dst_crs,
@@ -277,7 +285,7 @@ def calculate_default_transform(
         Source raster height.
     left, bottom, right, top: float
         Bounding coordinates in src_crs, from the bounds property of a raster.
-    resolution: tuple (x resolution, y resolution), optional
+    resolution: tuple (x resolution, y resolution) or float, optional
         Target resolution, in units of target coordinate reference system.
 
     Returns
@@ -294,6 +302,7 @@ def calculate_default_transform(
     # adjust the transform resolutions
     # adjust the width/height by the ratio of estimated:specified res (ceil'd)
     if resolution:
+        resolution = res_tuple(resolution)
         # Assume yres is provided as positive,
         # needs to be negative for north-up affine
         xres = resolution[0]
