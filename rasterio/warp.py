@@ -1,6 +1,7 @@
 """Raster warping and reprojection"""
 
 from __future__ import absolute_import
+from __future__ import division
 
 from math import ceil
 import warnings
@@ -8,8 +9,10 @@ import warnings
 from affine import Affine
 import numpy as np
 
+import rasterio
 from rasterio._base import _transform
-from rasterio._warp import _transform_geom, _reproject, Resampling
+from rasterio._warp import (_transform_geom, _reproject, Resampling,
+                            _calculate_default_transform)
 from rasterio.transform import guard_transform
 
 
@@ -250,8 +253,7 @@ def calculate_default_transform(
         bottom,
         right,
         top,
-        resolution=None,
-        densify_pts=21):
+        resolution=None):
     """
     Transforms bounds to destination coordinate system, calculates resolution
     if not provided, and returns destination transform and dimensions.
@@ -259,13 +261,8 @@ def calculate_default_transform(
 
     Destination transform is anchored from the left, top coordinate.
 
-    Destination width and height are calculated from the number of pixels on
-    each dimension required to fit the destination bounds.
-
-    If resolution is not provided, it is calculated using a weighted average
-    of the relative sizes of source width and height compared to the transformed
-    bounds (pixels are assumed to be square).
-
+    Destination width and height (and resolution if not provided), are
+    calculated using GDAL's method for suggest warp output.
 
     Parameters
     ----------
@@ -280,39 +277,35 @@ def calculate_default_transform(
         Source raster height.
     left, bottom, right, top: float
         Bounding coordinates in src_crs, from the bounds property of a raster.
-    resolution: tuple (x resolution, y resolution) or float, optional
+    resolution: tuple (x resolution, y resolution), optional
         Target resolution, in units of target coordinate reference system.
-    densify_pts: uint, optional
-        Number of points to add to each edge to account for nonlinear
-        edges produced by the transform process.  Large numbers will produce
-        worse performance.  Default: 21 (gdal default).
 
     Returns
     -------
     tuple of destination affine transform, width, and height
     """
+    with rasterio.drivers():
+        dst_affine, dst_width, dst_height = _calculate_default_transform(
+            src_crs, dst_crs,
+            width, height,
+            left, bottom, right, top)
 
-    xmin, ymin, xmax, ymax = transform_bounds(
-        src_crs, dst_crs, left, bottom, right, top, densify_pts)
+    # If resolution is specified, Keep upper-left anchored
+    # adjust the transform resolutions
+    # adjust the width/height by the ratio of estimated:specified res (ceil'd)
+    if resolution:
+        # Assume yres is provided as positive,
+        # needs to be negative for north-up affine
+        xres = resolution[0]
+        yres = -resolution[1]
 
-    x_dif = xmax - xmin
-    y_dif = ymax - ymin
-    size = float(width + height)
+        xratio = dst_affine.a / xres
+        yratio = dst_affine.e / yres
 
-    if resolution is None:
-        # TODO: compare to gdalwarp default (see 
-        # _calculate_default_transform() in _warp.pyx.
-        avg_resolution = (
-            (x_dif / float(width)) * (float(width) / size) +
-            (y_dif / float(height)) * (float(height) / size)
-        )
-        resolution = (avg_resolution, avg_resolution)
+        dst_affine = Affine(xres, dst_affine.b, dst_affine.c,
+                            dst_affine.d, yres, dst_affine.f)
 
-    elif not isinstance(resolution, (tuple, list)):
-        resolution = (resolution, resolution)
-
-    dst_affine = Affine(resolution[0], 0, xmin, 0, -resolution[1], ymax)
-    dst_width = max(int(ceil(x_dif / resolution[0])), 1)
-    dst_height = max(int(ceil(y_dif / resolution[1])), 1)
+        dst_width = ceil(dst_width * xratio)
+        dst_height = ceil(dst_height * yratio)
 
     return dst_affine, dst_width, dst_height
