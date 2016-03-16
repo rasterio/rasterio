@@ -120,3 +120,24 @@ def test_affine_identity(tmpdir):
 
     with rasterio.open(output) as out:
         assert out.affine == Affine.identity()
+
+
+def test_from_bounds_two():
+    width = 80
+    height = 80
+    left = -120
+    top = 70
+    right = -80.5
+    bottom = 30.5
+    tr = transform.from_bounds(left, bottom, right, top, width, height)
+    # pixelwidth, rotation, ULX, rotation, pixelheight, ULY
+    expected = Affine(0.49375, 0.0, -120.0, 0.0, -0.49375, 70.0)
+    assert [round(v, 7) for v in tr] == [round(v, 7) for v in expected]
+
+    # Round right and bottom
+    right = -80
+    bottom = 30
+    tr = transform.from_bounds(left, bottom, right, top, width, height)
+    # pixelwidth, rotation, ULX, rotation, pixelheight, ULY
+    expected = Affine(0.5, 0.0, -120.0, 0.0, -0.5, 70.0)
+    assert [round(v, 7) for v in tr] == [round(v, 7) for v in expected]
