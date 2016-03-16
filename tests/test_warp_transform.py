@@ -22,3 +22,17 @@ def test_indentity():
     assert res_height == height
     for res, exp in zip(res_transform, transform):
         assert round(res, 7) == round(exp, 7)
+
+
+def test_gdal_transform_notnull():
+    with rasterio.drivers():
+        dt, dw, dh = _calculate_default_transform(
+            src_crs={'init': 'EPSG:4326'},
+            dst_crs={'init': 'EPSG:32610'},
+            width=80,
+            height=80,
+            left=-120,
+            bottom=30,
+            right=-80,
+            top=70)
+    assert True
