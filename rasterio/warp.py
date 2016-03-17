@@ -244,14 +244,6 @@ def reproject(
         **kwargs)
 
 
-def res_tuple(res):
-    try:
-        resolution = (float(res), float(res))
-    except TypeError:
-        resolution = (res[0], res[0]) if len(res) == 1 else res[0:2]
-    return resolution
-
-
 def calculate_default_transform(
         src_crs,
         dst_crs,
@@ -302,11 +294,18 @@ def calculate_default_transform(
     # adjust the transform resolutions
     # adjust the width/height by the ratio of estimated:specified res (ceil'd)
     if resolution:
-        resolution = res_tuple(resolution)
+
+        # resolutions argument into tuple
+        try:
+            res = (float(resolution), float(resolution))
+        except TypeError:
+            res = (resolution[0], resolution[0]) \
+                if len(resolution) == 1 else resolution[0:2]
+
         # Assume yres is provided as positive,
         # needs to be negative for north-up affine
-        xres = resolution[0]
-        yres = -resolution[1]
+        xres = res[0]
+        yres = -res[1]
 
         xratio = dst_affine.a / xres
         yratio = dst_affine.e / yres
