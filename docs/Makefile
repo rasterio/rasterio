@@ -218,4 +218,4 @@ pseudoxml:
 
 .PHONY: apidocs
 apidocs:
-	sphinx-apidoc -f -o . ../rasterio
+	sphinx-apidoc -f -e -T -M -o . ../rasterio

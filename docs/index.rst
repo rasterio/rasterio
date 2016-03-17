@@ -28,12 +28,11 @@ And a quick example
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    python_manual
    cli
    api_docs
-   cookbook
    community
 
 

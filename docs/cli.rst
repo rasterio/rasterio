@@ -1,17 +1,20 @@
 ==================================
-Command Line Interface User Manual
+``rio`` Command Line User Manual
 ==================================
 
-Intro
-=====
+.. todo:: 
+ 
+    Introduce the command line interface main concepts, 
+    when you should and should not use the command line
 
 Design
 ======
 
+.. todo::
 
-.. toctree::
+    Overview of the general design pholosophy.
+    Uses click, subcommands, geojson
 
-    calc
 
 Commands
 ========
@@ -170,8 +173,9 @@ The command above is also an example of a calculation that is far beyond the
 design of the calc command and something that could be done much more
 efficiently in Python.
 
-Please see `calc.rst <calc.rst>`__ for more details.
+.. toctree::
 
+    calc
 
 clip
 ----
