@@ -2,4 +2,4 @@
 API Documentation
 =================
 
-.. automodule:: rasterio
+.. include:: rasterio.rst
