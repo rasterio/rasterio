@@ -1,12 +1,13 @@
 Datasets and ndarrays
 =====================
 
+
 Dataset objects provide read, read-write, and write access to raster data files
 and are obtained by calling ``rasterio.open()``. That function mimics Python's
 built-in ``open()`` and the dataset objects it returns mimic Python ``file``
 objects.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> import rasterio
     >>> dataset = rasterio.open('tests/data/RGB.byte.tif')
@@ -22,7 +23,7 @@ objects.
 If you attempt to access a nonexistent path, ``rasterio.open()`` does the same
 thing as ``open()``, raising an exception immediately.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> open('/lol/wut.tif')
     Traceback (most recent call last):
@@ -43,7 +44,7 @@ driver used. The ``height`` and ``width`` are the number of rows and columns of
 the raster dataset and ``shape`` is a ``height, width`` tuple as used by
 Numpy. The ``count`` attribute tells you the number of bands in the dataset.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> dataset.driver
     u'GTiff'
@@ -59,7 +60,7 @@ that their pixels map to regions of the Earth. A dataset has a coordinate
 reference system and an affine transformation matrix that maps pixel
 coordinates to coordinates in that reference system.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> dataset.crs
     {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
@@ -71,7 +72,7 @@ To get the ``x, y`` world coordinates for the upper left corner of any pixel,
 take the product of the affine transformation matrix and the tuple ``(col,
 row)``.  
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> col, row = 0, 0
     >>> src.affine * (col, row)
@@ -83,11 +84,24 @@ row)``.
 Reading data
 ------------
 
+.. todo::
+
+    drivers
+    vsi (link)
+    context manager
+    ndarray = [band, cols, rows]
+    tags
+    profile
+    crs
+    transforms
+    dtypes
+    block windows
+
 Datasets generally have one or more bands (or layers). Following the GDAL
 convention, these are indexed starting with the number 1. The first band of
 a file can be read like this:
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> dataset.read(1)
     array([[0, 0, 0, ..., 0, 0, 0],
@@ -103,7 +117,7 @@ that array at the Python prompt is just a summary; the GeoTIFF file that
 Rasterio uses for testing has 0 values in the corners, but has nonzero values
 elsewhere.
 
-.. code-block::
+.. code-block:: python
 
     >>> from matplotlib import pyplot
     >>> pyplot.imshow(dataset.read(1), cmap='pink')
@@ -115,7 +129,7 @@ elsewhere.
 The indexes, Numpy data types, and nodata values of all a dataset's bands can
 be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> for i, dtype, ndval in zip(src.indexes, src.dtypes, src.nodatavals):
     ...     print i, dtype, nodataval
@@ -126,7 +140,7 @@ be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
 
 To close a dataset, call its ``close()`` method.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> dataset.close()
     >>> dataset
@@ -134,7 +148,7 @@ To close a dataset, call its ``close()`` method.
 
 After it's closed, data can no longer be read.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> dataset.read(1)
     Traceback (most recent call last):
@@ -143,7 +157,7 @@ After it's closed, data can no longer be read.
 
 This is the same behavior as Python's ``file``.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> f = open('README.rst')
     >>> f.close()
@@ -157,7 +171,7 @@ and exit from runtime contexts created using a ``with`` statement. This
 ensures that files are closed no matter what exceptions may be raised within
 the the block.
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> with rasterio.open('tests/data/RGB.byte.tif', 'r') as one:
     ...     with rasterio.open('tests/data/RGB.byte.tif', 'r') as two:
@@ -170,14 +184,29 @@ the the block.
     <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
     <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
 
+Profile
+-------
+
 Writing data
 ------------
+
+.. todo::
+
+    ALL THE DETAILS
+    drivers
+    context manager
+    write 3d vs write 2d
+    profile.update
+    appending to existing data
+    transforms
+    dtypes
+    block windows
 
 Opening a file in writing mode is a little more complicated than opening
 a text file in Python. The dimensions of the raster dataset, the 
 data types, and the specific format must be specified.
 
-.. code-block:: pycon
+.. code-block:: python
 
    >>> with rasterio.oepn
 

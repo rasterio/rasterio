@@ -1,5 +1,20 @@
-Command Line Interface
-======================
+==================================
+Command Line Interface User Manual
+==================================
+
+Intro
+=====
+
+Design
+======
+
+
+.. toctree::
+
+    calc
+
+Commands
+========
 
 Rasterio's command line interface is a program named "rio".
 

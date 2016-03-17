@@ -1,5 +1,5 @@
 Georeferencing
-==============
+**************
 
 There are two parts to the georeferencing of raster datasets: the definition
 of the local, regional, or global system in which a raster's pixels are

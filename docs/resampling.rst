@@ -1,0 +1,2 @@
+Resampling Methods
+******************

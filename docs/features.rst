@@ -1,5 +1,5 @@
-Features
-========
+Vector Features
+***************
 
 Rasterio's ``features`` module provides functions to extract shapes of raster
 features and to create new features by "burning" shapes into rasters:

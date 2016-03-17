@@ -1,5 +1,5 @@
 Masks
-=====
+*****
 
 In using Rasterio, you'll encounter two different kinds of masks. One is the
 the valid data mask from GDAL, an unsigned byte array with the same number of
@@ -105,7 +105,7 @@ copy of the test data opened using rio-insp in "r+" (update) mode.
 To mark that all pixels of all bands are valid (i.e., to override nodata
 metadata values that can't be unset), you'd do this.
 
-.. code-block::
+.. code-block:: python
 
     >>> src.write_mask(True)
     >>> src.read_masks(1).all()

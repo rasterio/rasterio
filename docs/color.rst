@@ -1,5 +1,11 @@
+Color
+*****
+
+color interpretation
+--------------------
+
 Colormaps
-=========
+---------
 
 Writing colormaps
 -----------------

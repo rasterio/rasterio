@@ -1,0 +1,5 @@
+=================
+API Documentation
+=================
+
+.. automodule:: rasterio
