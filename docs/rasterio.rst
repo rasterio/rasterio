@@ -11,7 +11,6 @@ Subpackages
 
 .. toctree::
 
-    rasterio.rio
     rasterio.tools
 
 Submodules
@@ -26,7 +25,6 @@ Submodules
    rasterio.errors
    rasterio.features
    rasterio.fill
-   rasterio.five
    rasterio.profiles
    rasterio.sample
    rasterio.tool

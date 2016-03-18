@@ -9,3 +9,5 @@ pytest>=2.8.2
 pytest-cov>=2.2.0
 setuptools>=0.9.8
 wheel
+sphinx
+numpydoc
