@@ -1,6 +1,20 @@
 Reading Datasets
 =====================
 
+.. todo::
+
+    * use of context manager
+    * ndarray shape is (band, cols, rows)
+    * Discuss and/or link to topics
+        - supported formats, drivers
+        - vsi
+        - tags
+        - profile
+        - crs
+        - transforms
+        - dtypes
+        - block windows
+
 
 Dataset objects provide read, read-write, and write access to raster data files
 and are obtained by calling ``rasterio.open()``. That function mimics Python's
@@ -33,22 +47,6 @@ thing as ``open()``, raising an exception immediately.
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     IOError: no such file or directory: '/lol/wut.tif'
-
-Reading data
-------------
-
-.. todo::
-
-    drivers
-    vsi (link)
-    context manager
-    ndarray = [band, cols, rows]
-    tags
-    profile
-    crs
-    transforms
-    dtypes
-    block windows
 
 Datasets generally have one or more bands (or layers). Following the GDAL
 convention, these are indexed starting with the number 1. The first band of

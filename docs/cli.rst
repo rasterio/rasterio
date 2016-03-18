@@ -1,23 +1,13 @@
 ==================================
-``rio`` Command Line User Manual
+``rio`` Command Line User's Manual
 ==================================
 
 .. todo:: 
  
     Introduce the command line interface main concepts, 
-    when you should and should not use the command line
+    when you should and should not use the command line,
+    Overview of the general design pholosophy,
 
-Design
-======
-
-.. todo::
-
-    Overview of the general design pholosophy.
-    Uses click, subcommands, geojson
-
-
-Commands
-========
 
 Rasterio's command line interface is a program named "rio".
 
@@ -55,8 +45,11 @@ Rasterio's command line interface is a program named "rio".
 
 It is developed using `Click <http://click.pocoo.org/>`__.
 
+Commands
+========
 Commands are shown below. See ``--help`` of individual commands for more
 details.
+
 
 creation options
 ----------------

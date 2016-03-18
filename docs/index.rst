@@ -6,10 +6,19 @@
 Rasterio Documentation
 ======================
 
+.. warning::
+    This is not the official documentation. Not yet.
+    This is a draft and everything here is subject to change. 
+    
+    For now, please refer to https://github.com/mapbox/rasterio
+    for documentation.
+
 Rasterio is for Python programmers and command line users
 who want to read, write and manipulate geospatial raster datasets.
 
-Rasterio employs GDAL under the hood for file I/O and raster formatting. Its functions typically accept and return Numpy ndarrays. Rasterio is designed to make working with geospatial raster data more productive and more fun.
+Rasterio employs GDAL_ under the hood for file I/O and raster formatting.
+Its functions typically accept and return Numpy ndarrays.
+Rasterio is designed to make working with geospatial raster data more productive and more fun.
 
 You can download from pypi and todo quick link to install
 
@@ -24,6 +33,7 @@ And a quick example
     import rasterio
     with rasterio.open('data.tif') as src:
         array = src.read() 
+
 
 Contents:
 
@@ -44,3 +54,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. _GDAL: http://gdal.org/

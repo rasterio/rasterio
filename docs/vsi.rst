@@ -1,4 +1,6 @@
 Virtual Files
 *************
 
-Support for zip, s3, etc
+.. todo:: 
+
+    Support for URIs describing zip, s3, etc resources. Relationship to GDAL vsicurl et al.

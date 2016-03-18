@@ -1,12 +1,15 @@
-===============================
-Rasterio User Manual for Python
-===============================
+=================================
+``rasterio`` Python User's Manual
+=================================
 
 This user's manual is for Python developers who want a clean API for accessing raster data.
 
 .. todo::
 
-    What and what it does NOT do
+    What does it do, narrative examples
+
+    What it does NOT do
+
     For command line tools look to CLI users manual 
 
 .. toctree::
@@ -15,7 +18,7 @@ This user's manual is for Python developers who want a clean API for accessing r
     installation
     data_model
     reading
-    ndarrays
+    working_with_datasets
     writing
     topics
     osgeo_gdal_migration

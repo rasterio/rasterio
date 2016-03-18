@@ -1,6 +1,11 @@
 Data Model
 ==========
 
-Design Decisions
-Relationship to GDAL
+.. todo:: 
+
+    Datasets, Bands, Ndarrays
+
+    Design Decisions
+       
+    Relationship to GDAL
 
