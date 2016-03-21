@@ -2,8 +2,8 @@ import json
 import logging
 from math import ceil
 import os
-import shutil
 import re
+import shutil
 
 import click
 import cligj
@@ -18,6 +18,7 @@ from . import options
 import rasterio
 from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
+from rasterio.warp import transform_bounds
 
 logger = logging.getLogger('rio')
 
@@ -95,10 +96,11 @@ def mask(
     input raster.
     """
 
-    from rasterio.features import geometry_mask
+    from rasterio.tools.mask import mask as mask_tool
     from rasterio.features import bounds as calculate_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    logger = logging.getLogger('rio')
 
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
@@ -124,7 +126,7 @@ def mask(
                                      param_hint='--geojson-mask')
 
         if 'features' in geojson:
-            geometries = (f['geometry'] for f in geojson['features'])
+            geometries = [f['geometry'] for f in geojson['features']]
         elif 'geometry' in geojson:
             geometries = (geojson['geometry'], )
         else:
@@ -133,62 +135,29 @@ def mask(
         bounds = geojson.get('bbox', calculate_bounds(geojson))
 
         with rasterio.open(input) as src:
-            # If y pixel value is positive, then invert y dimension in bounds
-            invert_y = src.affine.e > 0
-
-            src_bounds = src.bounds
-            if invert_y:
-                src_bounds = [src.bounds[0], src.bounds[3],
-                              src.bounds[2], src.bounds[1]]
-
-            has_disjoint_bounds = disjoint_bounds(bounds, src_bounds)
-
-            if crop:
-                if has_disjoint_bounds:
-
-                    raise click.BadParameter('not allowed for GeoJSON outside '
-                                             'the extent of the input raster',
-                                             param=crop, param_hint='--crop')
-
-                if invert_y:
-                    bounds = (bounds[0], bounds[3], bounds[2], bounds[1])
-
-                window = src.window(*bounds)
-                transform = src.window_transform(window)
-                (r1, r2), (c1, c2) = window
-                mask_shape = (r2 - r1, c2 - c1)
-            else:
-                if has_disjoint_bounds:
-                    click.echo('GeoJSON outside bounds of existing output '
-                               'raster. Are they in different coordinate '
-                               'reference systems?',
-                               err=True)
-
-                window = None
-                transform = src.affine
-                mask_shape = src.shape
-
-            mask = geometry_mask(
-                geometries,
-                out_shape=mask_shape,
-                transform=transform,
-                all_touched=all_touched,
-                invert=invert)
+            try:
+                out_image, out_transform = mask_tool(src, geometries,
+                                                     crop=crop, invert=invert,
+                                                     all_touched=all_touched)
+            except ValueError as e:
+                if e.args[0] == 'Input shapes do not overlap raster.':
+                    if crop:
+                        raise click.BadParameter('not allowed for GeoJSON '
+                                                 'outside the extent of the '
+                                                 'input raster',                                                                 param=crop,
+                                                 param_hint='--crop')
 
             meta = src.meta.copy()
             meta.update(**creation_options)
             meta.update({
                 'driver': driver,
-                'height': mask.shape[0],
-                'width': mask.shape[1],
-                'transform': transform
+                'height': out_image.shape[1],
+                'width': out_image.shape[2],
+                'transform': out_transform
             })
 
             with rasterio.open(output, 'w', **meta) as out:
-                for bidx in range(1, src.count + 1):
-                    img = src.read(bidx, masked=True, window=window)
-                    img.mask = img.mask | mask
-                    out.write_band(bidx, img.filled(src.nodatavals[bidx-1]))
+                out.write(out_image)
 
 
 # Shapes command.
@@ -314,7 +283,7 @@ def shapes(
                     if bidx is None:
                         msk = numpy.logical_or.reduce(msk).astype('uint8')
 
-                    # Possibly overidden below.
+                    # Possibly overridden below.
                     img = msk
 
                 # Read the band data unless the --mask option is given.
@@ -641,7 +610,7 @@ def rasterize(
 @click.command(short_help="Write bounding boxes to stdout as GeoJSON.")
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
-@click.argument('INPUT', nargs=-1, type=click.Path(exists=True))
+@click.argument('INPUT', nargs=-1, type=click.Path(exists=True), required=True)
 @precision_opt
 @indent_opt
 @compact_opt
@@ -692,22 +661,20 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
             for i, path in enumerate(input):
                 with rasterio.open(path) as src:
                     bounds = src.bounds
-                    xs = [bounds[0], bounds[2]]
-                    ys = [bounds[1], bounds[3]]
                     if dst_crs:
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': dst_crs}, xs, ys)
+                        bbox = transform_bounds(src.crs,
+                                                dst_crs, *bounds)
                     elif projection == 'mercator':
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:3857'}, xs, ys)
+                        bbox = transform_bounds(src.crs,
+                                                {'init': 'epsg:3857'}, *bounds)
                     elif projection == 'geographic':
-                        xs, ys = rasterio.warp.transform(
-                            src.crs, {'init': 'epsg:4326'}, xs, ys)
+                        bbox = transform_bounds(src.crs,
+                                                {'init': 'epsg:4326'}, *bounds)
+                    else:
+                        bbox = bounds
 
                 if precision >= 0:
-                    xs = [round(v, precision) for v in xs]
-                    ys = [round(v, precision) for v in ys]
-                bbox = [min(xs), min(ys), max(xs), max(ys)]
+                    bbox = [round(b, precision) for b in bbox]
 
                 yield {
                     'type': 'Feature',
@@ -715,11 +682,11 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                     'geometry': {
                         'type': 'Polygon',
                         'coordinates': [[
-                            [xs[0], ys[0]],
-                            [xs[1], ys[0]],
-                            [xs[1], ys[1]],
-                            [xs[0], ys[1]],
-                            [xs[0], ys[0]] ]]},
+                            [bbox[0], bbox[1]],
+                            [bbox[2], bbox[1]],
+                            [bbox[2], bbox[3]],
+                            [bbox[0], bbox[3]],
+                            [bbox[0], bbox[1]]]]},
                     'properties': {
                         'id': str(i),
                         'title': path,

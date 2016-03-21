@@ -179,7 +179,7 @@ data types, and the specific format must be specified.
 
 .. code-block:: pycon
 
-   >>> with rasterio.oepn
+   >>> with rasterio.open
 
 Writing data mostly works as with a Python file. There are a few format-
 specific differences. TODO: details.

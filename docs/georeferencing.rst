@@ -42,7 +42,7 @@ argument.
 Coordinate Transformation
 -------------------------
 
-A dataset's pixel coordinate system has its orgin at the "upper left" (imagine
+A dataset's pixel coordinate system has its origin at the "upper left" (imagine
 it displayed on your screen). Column index increases to the right, and row 
 index increases downward. The mapping of these coordinates to "world"
 coordinates in the dataset's reference system is done with an affine

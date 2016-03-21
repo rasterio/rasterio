@@ -158,7 +158,7 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     # Start moving users over to 'out'.
     if output is not None:
         warnings.warn(
-            "The 'output' keyword arg has been superceded by 'out' "
+            "The 'output' keyword arg has been superseded by 'out' "
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
             stacklevel=2)  # pragma: no cover
@@ -296,7 +296,7 @@ def rasterize(
 
     if output is not None:
         warnings.warn(
-            "The 'output' keyword arg has been superceded by 'out' "
+            "The 'output' keyword arg has been superseded by 'out' "
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
             stacklevel=2) # pragma: no cover

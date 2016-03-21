@@ -20,6 +20,7 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs, GDALError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
+from rasterio.errors import RasterioDriverRegistrationError
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -29,16 +30,6 @@ from rasterio.warnings import NodataShadowWarning
 
 
 log = logging.getLogger('rasterio')
-if 'all' in sys.warnoptions:
-    # show messages in console with: python -W all
-    logging.basicConfig()
-else:
-    # no handler messages shown
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-log.addHandler(NullHandler())
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -1458,7 +1449,7 @@ cdef class RasterUpdater(RasterReader):
         if [abs(v) for v in transform] == [0, 1, 0, 0, 0, 1]:
             warnings.warn(
                 "Dataset uses default geotransform (Affine.identity). "
-                "No tranform will be written to the output by GDAL.",
+                "No transform will be written to the output by GDAL.",
                 UserWarning
             )
 
@@ -1838,7 +1829,7 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
 
-    def __cinit__(self, image, transform=None):
+    def __cinit__(self, image, transform=None, crs=None):
         """
         Create in-memory raster dataset, and populate its initial values with
         the values in image.
@@ -1851,11 +1842,17 @@ cdef class InMemoryRaster:
         self._image = image
         self.dataset = NULL
 
-        cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
         cdef int i = 0  # avoids Cython warning in for loop below
+        cdef const char *srcwkt = NULL
+        cdef void *osr = NULL
 
         # Several GDAL operations require the array of band IDs as input
         self.band_ids[0] = 1
+
+        cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
+        if memdriver == NULL:
+            raise RasterioDriverRegistrationError(
+                "MEM driver is not registered.")
 
         self.dataset = _gdal.GDALCreate(
             memdriver,
@@ -1876,6 +1873,17 @@ cdef class InMemoryRaster:
             err = _gdal.GDALSetGeoTransform(self.dataset, self.transform)
             if err:
                 raise ValueError("transform not set: %s" % transform)
+
+        # Set projection if specified (for use with 
+        # GDALSuggestedWarpOutput2()).
+        if crs:
+            osr = _base._osr_from_crs(crs)
+            _gdal.OSRExportToWkt(osr, &srcwkt)
+            _gdal.GDALSetProjection(self.dataset, srcwkt)
+            log.debug("Set CRS on temp source dataset: %s", srcwkt)
+            _gdal.CPLFree(srcwkt)
+            _gdal.OSRDestroySpatialReference(osr)
+
 
         self.band = _gdal.GDALGetRasterBand(self.dataset, 1)
         if self.band == NULL:
