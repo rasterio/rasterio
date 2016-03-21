@@ -1,11 +1,47 @@
 Color
 *****
 
-color interpretation
---------------------
+Color interpretation
+^^^^^^^^^^^^^^^^^^^^^
+
+Color interpretation of raster bands can be read from the dataset
+
+
+.. code-block:: python
+
+    >>> src.colorinterp(1)
+    <ColorInterp.red: 3>
+
+GDAL builds the color interpretation based on the driver and creation options.
+With the ``GTiff`` driver, rasters with exactly 3 bands of uint8 type will be RGB,
+4 bands of uint8 will be RGBA by default.
+
+You cannot set the color interpretation on existing data but you can
+specify a ``photometric`` string when writing a new raster.
+
+.. code:: python
+
+    >>> src.profile['dtype']
+    'uint16'
+    >>> src.colorinterp(2)
+    <ColorInterp.undefined: 0>
+    >>> profile = src.profile
+    >>> profile['photometric'] = "RGB"
+    >>> with rasterio.open("test.tif", 'w', **profile) as dst:
+            dst.write(src.read())
+
+And the resulting raster will be interpretted as RGB despite having uint16 bands
+
+.. code:: python
+
+    >>> src.profile['dtype']
+    'uint16'
+    >>> src.colorinterp(2)
+    <ColorInterp.green: 4>
+
 
 Colormaps
----------
+^^^^^^^^^
 
 Writing colormaps
 -----------------

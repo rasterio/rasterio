@@ -10,29 +10,34 @@ Community
 Who is using rasterio?
 ----------------------
 
-This study compares map algebra tools of the proprietary ESRI ArcPy library and the open source Rasterio library.
-https://github.com/alfalimajuliett/masters-thesis
+* `Mapbox`_ uses rasterio to process satellite imagery for it's global satellite base maps.
+* Mary Marek-Spartz's masters thesis compares the map algebra tools of the proprietary ESRI ArcPy library and the open source Rasterio library.  https://github.com/alfalimajuliett/masters-thesis
 
 Software built on rasterio
 --------------------------
 
+The following software projects use rasterio
+
+* pyimpute
+* rasterstats
 
 Rio plugins
 ------------
 
+In addition to the core ``rio`` commands, visit the `Rio plugin registry`_ for a list of external plugins. 
 
+ 
 Code of conduct
 ---------------
 
 .. include:: ../CODE_OF_CONDUCT.md
 
-Developers guide
------------------------
 
-.. todo::
+Who are the rasterio developers?
+--------------------------------
 
-    Everything developers need to know to get a dev environment running,
-    run tests, modify code and submit a successful PR.
+.. include:: ../AUTHORS.txt
 
-    Does this belong here? or a separate docs?
 
+.. _Mapbox: https://mapbox.com
+.. _Rio plugin registry: https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry
