@@ -317,7 +317,7 @@ option.
 
 .. code-block:: console
 
-    $ rio info tests/data/RGB.byte.tif --indent 2
+    $ rio info tests/data/RGB.byte.tif --indent 2 --verbose
     {
       "count": 3,
       "crs": "EPSG:32618",
