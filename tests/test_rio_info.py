@@ -9,6 +9,8 @@ import pytest
 
 import rasterio
 from rasterio.rio import info
+from rasterio.rio.edit_info import (edit, all_handler, crs_handler,
+                                    tags_handler, transform_handler)
 from rasterio.rio.main import main_group
 
 
@@ -18,14 +20,14 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_edit_nodata_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--nodata', '-1'])
+    result = runner.invoke(edit, [inputfile, '--nodata', '-1'])
     assert result.exit_code == 2
 
 
 def test_edit_nodata(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--nodata', '255'])
+    result = runner.invoke(edit, [inputfile, '--nodata', '255'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.nodata == 255.0
@@ -34,14 +36,14 @@ def test_edit_nodata(data):
 def test_edit_crs_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--crs', 'LOL:WUT'])
+    result = runner.invoke(edit, [inputfile, '--crs', 'LOL:WUT'])
     assert result.exit_code == 2
 
 
 def test_edit_crs_epsg(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--crs', 'EPSG:32618'])
+    result = runner.invoke(edit, [inputfile, '--crs', 'EPSG:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -50,7 +52,7 @@ def test_edit_crs_epsg(data):
 def test_edit_crs_proj4(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--crs', '+init=epsg:32618'])
+    result = runner.invoke(edit, [inputfile, '--crs', '+init=epsg:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -60,7 +62,7 @@ def test_edit_crs_obj(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
-        info.edit, [inputfile, '--crs', '{"init": "epsg:32618"}'])
+        edit, [inputfile, '--crs', '{"init": "epsg:32618"}'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -69,14 +71,14 @@ def test_edit_crs_obj(data):
 def test_edit_transform_err_not_json(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--transform', 'LOL'])
+    result = runner.invoke(edit, [inputfile, '--transform', 'LOL'])
     assert result.exit_code == 2
 
 
 def test_edit_transform_err_bad_array(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [inputfile, '--transform', '[1,2]'])
+    result = runner.invoke(edit, [inputfile, '--transform', '[1,2]'])
     assert result.exit_code == 2
 
 
@@ -84,7 +86,7 @@ def test_edit_transform_affine(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     input_t = '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
-    result = runner.invoke(info.edit, [inputfile, '--transform', input_t])
+    result = runner.invoke(edit, [inputfile, '--transform', input_t])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         for a, b in zip(src.affine, json.loads(input_t)):
@@ -95,7 +97,7 @@ def test_edit_transform_gdal(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     input_t = '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
-    result = runner.invoke(info.edit, [
+    result = runner.invoke(edit, [
         inputfile,
         '--transform', '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'])
     assert result.exit_code == 0
@@ -107,7 +109,7 @@ def test_edit_transform_gdal(data):
 def test_edit_tags(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(info.edit, [
+    result = runner.invoke(edit, [
         inputfile, '--tag', 'lol=1', '--tag', 'wut=2'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
@@ -130,64 +132,64 @@ class MockOption:
 def test_all_callback_pass(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert info.all_handler(ctx, None, None) == None
+    assert all_handler(ctx, None, None) == None
 
 
 def test_all_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert info.all_handler(ctx, None, True) == {'transform': 'foo'}
+    assert all_handler(ctx, None, True) == {'transform': 'foo'}
 
 
 def test_all_callback_None(data):
     ctx = MockContext()
-    assert info.all_handler(ctx, None, None) is None
+    assert all_handler(ctx, None, None) is None
 
 
 def test_transform_callback_pass(data):
     """Always return None if the value is None"""
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert info.transform_handler(ctx, MockOption('transform'), None) is None
+    assert transform_handler(ctx, MockOption('transform'), None) is None
 
 
 def test_transform_callback_err(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
     with pytest.raises(click.BadParameter):
-        info.transform_handler(ctx, MockOption('transform'), '?')
+        transform_handler(ctx, MockOption('transform'), '?')
 
 
 def test_transform_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert info.transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
+    assert transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
 
 
 def test_crs_callback_pass(data):
     """Always return None if the value is None"""
     ctx = MockContext()
     ctx.obj['like'] = {'crs': 'foo'}
-    assert info.crs_handler(ctx, MockOption('crs'), None) is None
+    assert crs_handler(ctx, MockOption('crs'), None) is None
 
 
 def test_crs_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'crs': 'foo'}
-    assert info.crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
+    assert crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
 
 
 def test_tags_callback_err(data):
     ctx = MockContext()
     ctx.obj['like'] = {'tags': {'foo': 'bar'}}
     with pytest.raises(click.BadParameter):
-        info.tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
+        tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
 
 
 def test_tags_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    assert info.tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
+    assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
 
 
 def test_edit_crs_like(data):
@@ -206,7 +208,7 @@ def test_edit_crs_like(data):
 
     # The test.
     templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(info.edit, [
+    result = runner.invoke(edit, [
         inputfile, '--like', templatefile, '--crs', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
@@ -230,7 +232,7 @@ def test_edit_nodata_like(data):
 
     # The test.
     templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(info.edit, [
+    result = runner.invoke(edit, [
         inputfile, '--like', templatefile, '--nodata', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
@@ -252,7 +254,7 @@ def test_edit_all_like(data):
         assert src.nodata == 1.0
 
     templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(info.edit, [
+    result = runner.invoke(edit, [
         inputfile, '--like', templatefile, '--all'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:

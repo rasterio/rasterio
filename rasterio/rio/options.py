@@ -103,7 +103,7 @@ def file_in_handler(ctx, param, value):
 
 
 def from_like_context(ctx, param, value):
-    """Return the value for an option from the context if the option 
+    """Return the value for an option from the context if the option
     or `--all` is given, else return None."""
     if ctx.obj and ctx.obj.get('like') and (
             value == 'like' or ctx.obj.get('all_like')):
@@ -215,7 +215,7 @@ creation_options = click.option(
          "more information.")
 
 rgb_opt = click.option(
-    '--rgb', 'photometric', 
+    '--rgb', 'photometric',
     flag_value='rgb',
     default=False,
     help="Set RGB photometric interpretation.")
@@ -236,3 +236,11 @@ like_opt = click.option(
     is_eager=True,
     help="Raster dataset to use as a template for obtaining affine "
          "transform (bounds and resolution), crs, and nodata values.")
+
+all_touched_opt = click.option(
+    '-a', '--all', '--all_touched', 'all_touched',
+    is_flag=True,
+    default=False,
+    help='Use all pixels touched by features, otherwise (default) use only '
+         'pixels whose center is within the polygon or that are selected by '
+         'Bresenhams line algorithm')

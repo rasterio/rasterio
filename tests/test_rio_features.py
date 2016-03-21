@@ -7,7 +7,9 @@ import json
 from affine import Affine
 
 import rasterio
-from rasterio.rio import features
+from rasterio.rio.mask import mask
+from rasterio.rio.shapes import shapes
+from rasterio.rio.rasterize import rasterize
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -21,7 +23,7 @@ def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -42,7 +44,7 @@ def test_mask_all_touched(runner, tmpdir, basic_feature, basic_image,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--all', '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -65,7 +67,7 @@ def test_mask_invert(runner, tmpdir, basic_feature, pixelated_image,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--invert', '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -80,12 +82,12 @@ def test_mask_invert(runner, tmpdir, basic_feature, pixelated_image,
 
 
 def test_mask_featurecollection(runner, tmpdir, basic_featurecollection,
-                                 basic_image_2x2, pixelated_image_file):
+                                basic_image_2x2, pixelated_image_file):
 
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--geojson-mask', '-'],
         input=json.dumps(basic_featurecollection)
     )
@@ -112,7 +114,7 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -129,7 +131,7 @@ def test_mask_no_geojson(runner, tmpdir, pixelated_image, pixelated_image_file):
 
     output = str(tmpdir.join('test.tif'))
 
-    result = runner.invoke(features.mask, [pixelated_image_file, output])
+    result = runner.invoke(mask, [pixelated_image_file, output])
     assert result.exit_code == 0
     assert os.path.exists(output)
 
@@ -147,7 +149,7 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
 
     # Using invalid JSON
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--geojson-mask', '-'],
         input='{bogus: value}'
     )
@@ -156,7 +158,7 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
 
     # Using invalid GeoJSON
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--geojson-mask', '-'],
         input='{"bogus": "value"}'
     )
@@ -186,14 +188,13 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
         with rasterio.open(outfilename, 'w', **kwargs) as out:
             out.write_band(1, image)
 
-
     output = str(tmpdir.join('test.tif'))
 
     truth = numpy.zeros((4, 3))
     truth[1:3, 0:2] = 1
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [outfilename, output, '--crop', '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -219,7 +220,7 @@ def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_fil
     truth[1:3, 0:2] = 1
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--crop', '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -246,7 +247,7 @@ def test_mask_crop_out_of_bounds(runner, tmpdir, basic_feature,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [pixelated_image_file, output, '--crop', '--geojson-mask', '-'],
         input=json.dumps(basic_feature)
     )
@@ -261,7 +262,7 @@ def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.mask,
+        mask,
         [
             pixelated_image_file, output,
             '--crop',
@@ -275,7 +276,7 @@ def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,
 
 
 def test_shapes(runner, pixelated_image_file):
-    result = runner.invoke(features.shapes, [pixelated_image_file])
+    result = runner.invoke(shapes, [pixelated_image_file])
 
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
@@ -287,7 +288,7 @@ def test_shapes(runner, pixelated_image_file):
 
 
 def test_shapes_invalid_bidx(runner, pixelated_image_file):
-    result = runner.invoke(features.shapes, [pixelated_image_file, '--bidx', 4])
+    result = runner.invoke(shapes, [pixelated_image_file, '--bidx', 4])
 
     assert result.exit_code == 1
     # Underlying exception message trapped by shapes
@@ -299,7 +300,7 @@ def test_shapes_sequence(runner, pixelated_image_file):
     inside a feature collection.
     """
 
-    result = runner.invoke(features.shapes, [pixelated_image_file, '--sequence'])
+    result = runner.invoke(shapes, [pixelated_image_file, '--sequence'])
 
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 0
@@ -311,14 +312,13 @@ def test_shapes_sequence_rs(runner, pixelated_image_file):
     """ --rs option should use the feature separator character. """
 
     result = runner.invoke(
-        features.shapes, [pixelated_image_file, '--sequence', '--rs']
+        shapes, [pixelated_image_file, '--sequence', '--rs']
     )
 
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 0
     assert result.output.count('"Feature"') == 4
     assert result.output.count(u'\u001e') == 4
-
 
 
 def test_shapes_with_nodata(runner, pixelated_image, pixelated_image_file):
@@ -333,7 +333,7 @@ def test_shapes_with_nodata(runner, pixelated_image, pixelated_image_file):
         out.write_band(1, pixelated_image)
 
     result = runner.invoke(
-        features.shapes, [pixelated_image_file, '--with-nodata']
+        shapes, [pixelated_image_file, '--with-nodata']
     )
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
@@ -346,7 +346,7 @@ def test_shapes_indent(runner, pixelated_image_file):
     """
 
     result = runner.invoke(
-        features.shapes, [pixelated_image_file, '--indent', 2]
+        shapes, [pixelated_image_file, '--indent', 2]
     )
 
     assert result.exit_code == 0
@@ -357,7 +357,7 @@ def test_shapes_indent(runner, pixelated_image_file):
 
 
 def test_shapes_compact(runner, pixelated_image_file):
-    result = runner.invoke(features.shapes, [pixelated_image_file, '--compact'])
+    result = runner.invoke(shapes, [pixelated_image_file, '--compact'])
 
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
@@ -369,7 +369,7 @@ def test_shapes_compact(runner, pixelated_image_file):
 def test_shapes_sampling(runner, pixelated_image_file):
     """ --sampling option should remove the single pixel features """
     result = runner.invoke(
-        features.shapes, [pixelated_image_file, '--sampling', 2]
+        shapes, [pixelated_image_file, '--sampling', 2]
     )
 
     assert result.exit_code == 0
@@ -381,7 +381,7 @@ def test_shapes_precision(runner, pixelated_image_file):
     """ Output numbers should have no more than 1 decimal place """
 
     result = runner.invoke(
-        features.shapes, [pixelated_image_file, '--precision', 1]
+        shapes, [pixelated_image_file, '--precision', 1]
     )
 
     assert result.exit_code == 0
@@ -400,7 +400,7 @@ def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write_band(1, pixelated_image)
 
-    result = runner.invoke(features.shapes, [pixelated_image_file, '--mask'])
+    result = runner.invoke(shapes, [pixelated_image_file, '--mask'])
 
     print(result.output)
     print(result.exception)
@@ -428,7 +428,7 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
         out.write_band(1, pixelated_image)
 
     result = runner.invoke(
-        features.shapes, [pixelated_image_file, '--mask', '--sampling', 5]
+        shapes, [pixelated_image_file, '--mask', '--sampling', 5]
     )
 
     assert result.exit_code == 0
@@ -453,7 +453,7 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
         out.write_band(1, pixelated_image)
 
     result = runner.invoke(
-        features.shapes,
+        shapes,
         [pixelated_image_file, '--band', '--bidx', '1', '--as-mask']
     )
 
@@ -469,7 +469,7 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
 def test_rasterize(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [output, '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1]],
         input=json.dumps(basic_feature)
     )
@@ -486,7 +486,7 @@ def test_rasterize(tmpdir, runner, basic_feature):
 def test_rasterize_bounds(tmpdir, runner, basic_feature, basic_image_2x2):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [
             output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
@@ -507,7 +507,7 @@ def test_rasterize_bounds(tmpdir, runner, basic_feature, basic_image_2x2):
 def test_rasterize_resolution(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [output, '--res', 0.15],
         input=json.dumps(basic_feature)
     )
@@ -524,7 +524,7 @@ def test_rasterize_resolution(tmpdir, runner, basic_feature):
 def test_rasterize_src_crs(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [
             output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
@@ -550,7 +550,7 @@ def test_rasterize_mismatched_src_crs(tmpdir, runner, basic_feature):
 
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [
             output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
@@ -566,7 +566,7 @@ def test_rasterize_mismatched_src_crs(tmpdir, runner, basic_feature):
 def test_rasterize_invalid_src_crs(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [
             output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
@@ -582,7 +582,7 @@ def test_rasterize_invalid_src_crs(tmpdir, runner, basic_feature):
 def test_rasterize_existing_output(tmpdir, runner, basic_feature):
     """
     Create a rasterized output, then rasterize additional pixels into it.
-    The final result should include rasterized pixels from both features.
+    The final result should include rasterized pixels from both
     """
 
     truth = numpy.zeros(DEFAULT_SHAPE)
@@ -591,7 +591,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
 
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [
             output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
@@ -607,7 +607,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
     basic_feature['geometry']['coordinates'] = coords.tolist()
 
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         ['-o', output, '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1]],
         input=json.dumps(basic_feature)
     )
@@ -624,7 +624,7 @@ def test_rasterize_like_raster(tmpdir, runner, basic_feature, basic_image_2x2,
     output = str(tmpdir.join('test.tif'))
 
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [output, '--like', pixelated_image_file],
         input=json.dumps(basic_feature)
     )
@@ -643,7 +643,7 @@ def test_rasterize_like_raster(tmpdir, runner, basic_feature, basic_image_2x2,
 def test_rasterize_invalid_like_raster(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [output, '--like', str(tmpdir.join('foo.tif'))],
         input=json.dumps(basic_feature)
     )
@@ -656,7 +656,7 @@ def test_rasterize_like_raster_src_crs_mismatch(tmpdir, runner, basic_feature,
                                                 pixelated_image_file):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [output, '--like', pixelated_image_file, '--src-crs', 'EPSG:3857'],
         input=json.dumps(basic_feature)
     )
@@ -668,7 +668,7 @@ def test_rasterize_like_raster_src_crs_mismatch(tmpdir, runner, basic_feature,
 def test_rasterize_property_value(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [
             output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
@@ -698,7 +698,7 @@ def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
 
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize,
+        rasterize,
         [output, '--like', pixelated_image_file],
         input=json.dumps(basic_feature)
     )
@@ -714,7 +714,7 @@ def test_rasterize_invalid_stdin(tmpdir, runner):
     """ Invalid value for stdin should fail with exception """
 
     output = str(tmpdir.join('test.tif'))
-    result = runner.invoke(features.rasterize, [output], input='BOGUS')
+    result = runner.invoke(rasterize, [output], input='BOGUS')
 
     assert result.exit_code == -1
 
@@ -722,7 +722,7 @@ def test_rasterize_invalid_stdin(tmpdir, runner):
 def test_rasterize_invalid_geojson(tmpdir, runner):
     """ Invalid GeoJSON should fail with error  """
     output = str(tmpdir.join('test.tif'))
-    result = runner.invoke(features.rasterize, [output], input='{"A": "B"}')
+    result = runner.invoke(rasterize, [output], input='{"A": "B"}')
 
     assert result.exit_code == 2
     assert 'Invalid GeoJSON' in result.output
@@ -733,7 +733,7 @@ def test_rasterize_missing_parameters(tmpdir, runner, basic_feature):
 
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        features.rasterize, ['-o', output], input=json.dumps(basic_feature)
+        rasterize, ['-o', output], input=json.dumps(basic_feature)
     )
 
     assert result.exit_code == 2
