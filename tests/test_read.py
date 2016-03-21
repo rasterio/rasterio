@@ -252,3 +252,10 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 2))
             self.assertTrue(hasattr(a, 'mask'))
+
+    def test_read_no_band(self):
+        with rasterio.open('tests/data/no_band.h5') as s:
+            self.assertEqual(s.count, 0)
+            self.assertEqual(s.meta['dtype'], 'float_')
+            self.assertIsNone(s.meta['nodata'])
+            self.assertRaises(ValueError, s.read)

@@ -97,7 +97,7 @@ def from_epsg(code):
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
-# It is parsed into a list of paramter keys ``all_proj_keys``.
+# It is parsed into a list of parameter keys ``all_proj_keys``.
 
 _param_data = """
 +a         Semimajor radius of the ellipsoid axis

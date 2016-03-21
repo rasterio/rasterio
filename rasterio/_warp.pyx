@@ -1,7 +1,6 @@
 # distutils: language = c++
 
 from enum import IntEnum
-
 import logging
 
 import numpy as np
@@ -9,8 +8,10 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
+from rasterio._err import cpl_errs, GDALError
+from rasterio._io cimport InMemoryRaster
 from rasterio.errors import RasterioDriverRegistrationError
-from rasterio._err import cpl_errs
+from rasterio.transform import Affine, from_bounds
 
 
 cdef extern from "gdalwarper.h" nogil:
@@ -115,6 +116,7 @@ def _transform_geom(
                     <const OGRGeometry *>src_ogr_geom,
                     <OGRCoordinateTransformation *>transform,
                     options)
+    del factory
     g = _features.GeomBuilder().build(dst_ogr_geom)
 
     _ogr.OGR_G_DestroyGeometry(dst_ogr_geom)
@@ -287,9 +289,9 @@ def _reproject(
         osr = _base._osr_from_crs(src_crs)
         _gdal.OSRExportToWkt(osr, &srcwkt)
         _gdal.GDALSetProjection(hdsin, srcwkt)
+        log.debug("Set CRS on temp source dataset: %s", srcwkt)
         _gdal.CPLFree(srcwkt)
         _gdal.OSRDestroySpatialReference(osr)
-        log.debug("Set CRS on temp source dataset: %s", srcwkt)
         
         # Copy arrays to the dataset.
         retval = _io.io_auto(source, hdsin, 1)
@@ -325,21 +327,29 @@ def _reproject(
                         hrdriver, "output", cols, rows, src_count, 
                         dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
         if hdsout == NULL:
-            raise ValueError("NULL output datasource")
+            raise ValueError("Failed to create temp destination dataset.")
         _gdal.GDALSetDescription(
             hdsout, "Temporary destination dataset for _reproject()")
-        log.debug("Created temp destination dataset")
+        log.debug("Created temp destination dataset.")
+
         for i in range(6):
             gt[i] = dst_transform[i]
-        retval = _gdal.GDALSetGeoTransform(hdsout, gt)
-        log.debug("Set transform on temp destination dataset: %d", retval)
+
+        if not GDALError.success == _gdal.GDALSetGeoTransform(hdsout, gt):
+            raise ValueError(
+                "Failed to set transform on temp destination dataset.")
+
         osr = _base._osr_from_crs(dst_crs)
         _gdal.OSRExportToWkt(osr, &dstwkt)
-        retval = _gdal.GDALSetProjection(hdsout, dstwkt)
-        log.debug("Setting Projection: %d", retval)
-        _gdal.CPLFree(dstwkt)
         _gdal.OSRDestroySpatialReference(osr)
-        log.debug("Set CRS on temp destination dataset: %s", dstwkt)
+        log.debug("CRS for temp destination dataset: %s.", dstwkt)
+
+        if not GDALError.success == _gdal.GDALSetProjection(hdsout, dstwkt):
+            raise ValueError(
+                "Failed to set projection on temp destination dataset.")
+
+        _gdal.CPLFree(dstwkt)
+
         if dst_nodata is None and hasattr(destination, "fill_value"):
             # destination is a masked array
             dst_nodata = destination.fill_value
@@ -354,7 +364,6 @@ def _reproject(
     
     cdef void *hTransformArg = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
-    cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
 
     hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
                                         hdsin, NULL, hdsout, NULL,
@@ -372,7 +381,8 @@ def _reproject(
 
     val_b = str(num_threads).encode('utf-8')
     warp_extras = _gdal.CSLSetNameValue(warp_extras, "NUM_THREADS", val_b)
-
+    log.debug("Setting NUM_THREADS option: %s", val_b)
+        
     for k, v in kwargs.items():
         k, v = k.upper(), str(v).upper()
         key_b = k.encode('utf-8')
@@ -388,6 +398,9 @@ def _reproject(
 
     # Set src_nodata and dst_nodata
     if src_nodata is None and dst_nodata is not None:
+        psWOptions.papszWarpOptions = warp_extras
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
         raise ValueError("src_nodata must be provided because dst_nodata "
                          "is not None")
     log.debug("src_nodata: %s" % src_nodata)
@@ -402,6 +415,9 @@ def _reproject(
     # Validate nodata values
     if src_nodata is not None:
         if not _io.in_dtype_range(src_nodata, source.dtype):
+            psWOptions.papszWarpOptions = warp_extras
+            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+            _gdal.GDALDestroyWarpOptions(psWOptions)
             raise ValueError("src_nodata must be in valid range for "
                             "source dtype")
 
@@ -418,6 +434,9 @@ def _reproject(
 
     if dst_nodata is not None and not _io.in_dtype_range(
             dst_nodata, destination.dtype):
+        psWOptions.papszWarpOptions = warp_extras
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
         raise ValueError("dst_nodata must be in valid range for "
                          "destination dtype")
 
@@ -455,6 +474,7 @@ def _reproject(
 
     # Now that the transformer and warp options are set up, we init
     # and run the warper.
+    cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
     try:
         with cpl_errs:
             oWarper.Initialize(psWOptions)
@@ -466,6 +486,7 @@ def _reproject(
 
         with cpl_errs:
             if num_threads > 1:
+                log.debug("Executing multi warp with num_threads: %d", num_threads)
                 oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             else:
                 oWarper.ChunkAndWarpImage(0, 0, cols, rows)
@@ -479,11 +500,65 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-
-        if hTransformArg != NULL:
-            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
-        if psWOptions != NULL:
-            _gdal.GDALDestroyWarpOptions(psWOptions)
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
         if dtypes.is_ndarray(source):
             if hdsin != NULL:
                 _gdal.GDALClose(hdsin)
+
+
+def _calculate_default_transform(
+        src_crs, dst_crs, width, height, left, bottom, right, top, **kwargs):
+    """Wraps GDAL's algorithm."""
+
+    cdef void *hTransformArg = NULL
+    cdef int npixels = 0
+    cdef int nlines = 0
+    cdef double extent[4]
+    cdef double geotransform[6]
+    cdef void *osr = NULL
+    cdef char *wkt = NULL
+    cdef InMemoryRaster temp = None
+
+    extent[:] = [0.0, 0.0, 0.0, 0.0]
+    geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # Make an in-memory raster dataset we can pass to 
+    # GDALCreateGenImgProjTransformer().
+    transform = from_bounds(left, bottom, right, top, width, height)
+    img = np.empty((height, width))
+
+    osr = _base._osr_from_crs(dst_crs)
+    _gdal.OSRExportToWkt(osr, &wkt)
+    _gdal.OSRDestroySpatialReference(osr)
+
+    with InMemoryRaster(
+            img, transform=transform.to_gdal(), crs=src_crs) as temp:
+        hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
+            temp.dataset, NULL, NULL, wkt, 1, 1000.0, 0)
+        if hTransformArg == NULL:
+            if wkt != NULL:
+                _gdal.CPLFree(wkt)
+            raise ValueError("NULL transformer")
+        log.debug("Created transformer")
+
+        # geotransform, npixels, and nlines are modified by the
+        # function called below.
+        try:
+            if not GDALError.success == _gdal.GDALSuggestedWarpOutput2(
+                    temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
+                    geotransform, &npixels, &nlines, extent, 0):
+                raise RuntimeError(
+                    "Failed to compute a suggested warp output.")
+        finally:
+            if wkt != NULL:
+                _gdal.CPLFree(wkt)
+            if hTransformArg != NULL:
+                _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+
+    # Convert those modified arguments to Python values.
+    dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
+    dst_width = npixels
+    dst_height = nlines
+
+    return dst_affine, dst_width, dst_height

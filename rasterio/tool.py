@@ -1,11 +1,28 @@
+"""
+Implementations of various common operations, like `show()` for displaying an
+array or with matplotlib, and `stats()` for computing min/max/avg.  Most can
+handle a numpy array or `rasterio.Band()`.  Primarily supports `$ rio insp`.
+"""
+
+
+from __future__ import absolute_import
 
 import code
 import collections
 import logging
+import warnings
 
 try:
     import matplotlib.pyplot as plt
 except ImportError:
+    plt = None
+except RuntimeError as e:
+    # Certain environment configurations can trigger a RuntimeError like:
+
+    # Trying to import matplotlibRuntimeError: Python is not installed as a
+    # framework. The Mac OS X backend will not be able to function correctly
+    # if Python is not installed as a framework. See the Python ...
+    warnings.warn(str(e), RuntimeWarning, stacklevel=2)
     plt = None
 
 import numpy
@@ -22,19 +39,41 @@ Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 funcs = locals()
 
 
-def show(source, cmap='gray'):
-    """Show a raster using matplotlib.
-
-    The raster may be either an ndarray or a (dataset, bidx)
-    tuple.
+def show(source, cmap='gray', with_bounds=True):
     """
+    Display a raster or raster band using matplotlib.
+
+    Parameters
+    ----------
+    source : array-like or (raster dataset, bidx)
+        If array-like, should be of format compatible with
+        matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),
+        selects band `bidx` from raster.
+    cmap : str (opt)
+        Specifies the colormap to use in plotting. See
+        matplotlib.Colors.Colormap. Default is 'gray'.
+    with_bounds : bool (opt)
+        Whether to change the image extent to the spatial bounds of the image,
+        rather than pixel coordinates. Only works when source is
+        (raster dataset, bidx).
+    """
+
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
+        xs = source[0].res[0] / 2.
+        ys = source[0].res[1] / 2.
+        if with_bounds:
+            extent = (source[0].bounds.left - xs, source[0].bounds.right - xs,
+                      source[0].bounds.bottom - ys, source[0].bounds.top - ys)
+        else:
+            extent = None
     else:
         arr = source
+        extent = None
     if plt is not None:
-        plt.imshow(arr, cmap=cmap)
-        plt.show()
+        imax = plt.imshow(arr, cmap=cmap, extent=extent)
+        fig = plt.gcf()
+        fig.show()
     else:
         raise ImportError("matplotlib could not be imported")
 
@@ -116,7 +155,8 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     plt.grid(True)
     plt.xlabel('DN')
     plt.ylabel('Frequency')
-    plt.show()
+    fig = plt.gcf()
+    fig.show()
 
 
 def main(banner, dataset, alt_interpreter=None):

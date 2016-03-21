@@ -19,7 +19,7 @@ Changes
   window_intersection(), windows_intersect() (#496, #506).
 - Warn when an alpha band that might provide a dataset mask is shadowed by a
   nodata attribute (#508, #523).
-- IPython is not the default interpeter for rio-insp and the documentation 
+- IPython is not the default interpreter for rio-insp and the documentation 
   saying it is has been corrected (#518).
 - Guard against creating datasets with block sizes larger than the dataset
   width and height. Such datasets are semi-broken and are likely to be 
