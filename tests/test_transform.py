@@ -33,6 +33,15 @@ def test_from_bounds():
         assert [round(v, 7) for v in tr] == [round(v, 7) for v in src.affine]
 
 
+def test_array_bounds():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        w, s, e, n = src.bounds
+        height = src.height
+        width = src.width
+        tr = transform.from_bounds(w, s, e, n, src.width, src.height)
+    assert (w, s, e, n) == transform.array_bounds(height, width, tr)
+
+
 def test_window_bounds():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
 

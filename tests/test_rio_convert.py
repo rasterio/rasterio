@@ -175,3 +175,14 @@ def test_dtype_rescaling_float64(tmpdir):
         for band in src.read():
             assert round(band.min() + 1.0, 6) == 0.0
             assert round(band.max() - 1.0, 6) == 0.0
+
+
+def test_rgb(tmpdir):
+    outputname = str(tmpdir.join('test.tif'))
+    runner = CliRunner()
+    result = runner.invoke(
+        convert,
+        ['tests/data/RGB.byte.tif', outputname, '--rgb'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.colorinterp(1) == rasterio.enums.ColorInterp.red
