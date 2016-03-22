@@ -1,6 +1,41 @@
 Changes
 =======
 
+0.32.0 (2016-03-22)
+-------------------
+- Bug fix: geometry factories and warp operations are properly deallocated
+  in normal and error situations (#494, #568).
+- Bug fix: a code block in rio-merge's help has been better formatted (#535).
+- Bug fix: the rasterio.vfs module is imported in __init__.py to assist
+  cx_Freeze (#536).
+- Bug fix: old usage of `read_band()` has been replaced by `read()` throughout
+  the docs (#537).
+- Bug fix: accidental overwriting of existing files is now prevented by the
+  `resolve_inout()` function in `rasterio.rio.helpers`. Commands that take
+  one or more input files plus an output file should use this helper and force
+  overwrite either by using a `--force-overwrite` option or by using the
+  `-o output` option, which implicitly forces overwriting (#539, #540).
+- Bug fix: missing support for NaN nodata value in rio-warp added (#542, #544).
+- Bug fix: missing documentation of `rasterize()`'s `fill` parameter added
+  (#543).
+- Bug fix: raster dataset bounds are densified before transforming so that
+  the projected output of rio-bounds is correct (#556, #557).
+- Bug fix: add 'line' to the `Interleaving` enum (#560).
+- Bug fix: convert `matplotlib` import errors to a `RuntimeWarning` (#562).
+- Bug fix: deallocate CPL strings in error cases (#573).
+- Bug fix: non-invertable affine transforms are prevented using
+  `__future__.division` *#580).
+- Bug fix: rio-warp clips output regions to the limits of the destination
+  CRS unless disabled with `--no-check-invert-proj` (#597).
+- New feature: the functionality previously available only in rio-mask is now
+  available as `rasterio.tools.mask.mask()` (#552).
+- New feature: raster bounds are used to label axes in `rasterio.tool.show()`
+  (#553).
+- New feature: GDAL's suggested warp bounds algorithm is wrapped and exposed
+  for use in `warp()` and rio-warp (#574).
+- Breaking change: align rio-warp's `--bounds` option with rio-merge's: these
+  are in destination CRS units (#541, #545).
+
 0.31.0 (2015-12-18)
 -------------------
 - Warn when rasters have no georeferencing and when the default identity
