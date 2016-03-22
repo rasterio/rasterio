@@ -68,10 +68,10 @@ def x_dst_bounds_handler(ctx, param, value):
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
               default='nearest', help="Resampling method.",
               show_default=True)
-@click.option('--threads', type=int, default=2,
+@click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
 @click.option('--check-invert-proj', type=bool, default=True,
-              help='Constrain output extent to valid coordinate region in dst-crs')
+              help='Constrain output to valid coordinate region in dst-crs')
 @options.force_overwrite_opt
 @options.creation_options
 @click.pass_context

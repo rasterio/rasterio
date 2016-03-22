@@ -288,7 +288,7 @@ def calculate_default_transform(
     ----
     Must be called within a raster.drivers() context
 
-    Some behavior determined by the
+    Some behavior of this function is determined by the
     CHECK_WITH_INVERT_PROJ environment variable
         YES: constrain output raster to extents that can be inverted
              avoids visual artifacts and coordinate discontinuties.
