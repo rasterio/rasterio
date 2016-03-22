@@ -10,7 +10,7 @@ from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
 from rasterio._err import cpl_errs, GDALError
 from rasterio._io cimport InMemoryRaster
-from rasterio.errors import RasterioDriverRegistrationError
+from rasterio.errors import DriverRegistrationError
 from rasterio.transform import Affine, from_bounds
 
 
@@ -269,7 +269,7 @@ def _reproject(
 
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
-            raise RasterioDriverRegistrationError(
+            raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
                 "in a `with rasterio.drivers()` or `with rasterio.open()` "
                 "block.")
@@ -317,7 +317,7 @@ def _reproject(
 
         hrdriver = _gdal.GDALGetDriverByName("MEM")
         if hrdriver == NULL:
-            raise RasterioDriverRegistrationError(
+            raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
                 "in a `with rasterio.drivers()` or `with rasterio.open()` "
                 "block.")

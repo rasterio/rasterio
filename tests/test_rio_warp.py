@@ -114,11 +114,12 @@ def test_warp_reproject_dst_crs(runner, tmpdir):
         with rasterio.open(outputname) as output:
             assert output.count == src.count
             assert output.crs == {'init': 'epsg:4326'}
-            assert output.width == 824
-            assert output.height == 686
+            assert output.width == 835
+            assert output.height == 696
             assert numpy.allclose(output.bounds,
-                                  [-78.95864996545055, 23.564424693996177,
-                                   -76.57259451863895, 25.550873767433984])
+                                  [-78.95864996545055, 23.564787976164418,
+                                   -76.5759177302349, 25.550873767433984])
+
 
 def test_warp_reproject_dst_crs_error(runner, tmpdir):
     srcname = 'tests/data/RGB.byte.tif'
@@ -301,3 +302,18 @@ def test_warp_reproject_like(runner, tmpdir):
         assert numpy.allclose([0.001, 0.001], [output.affine.a, -output.affine.e])
         assert output.width == 10
         assert output.height == 10
+
+
+def test_warp_reproject_nolostdata(runner, tmpdir):
+    srcname = 'tests/data/world.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(warp.warp, [srcname, outputname,
+                                       '--dst-crs', 'EPSG:3857'])
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+
+    with rasterio.open(outputname) as output:
+        arr = output.read()
+        # 50 column swath on the right edge should have some ones (gdalwarped has 7223)
+        assert arr[0, :, -50:].sum() > 7000
+        assert output.crs == {'init': 'epsg:3857'}
