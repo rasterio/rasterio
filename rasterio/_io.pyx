@@ -20,7 +20,7 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import cpl_errs, GDALError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import RasterioDriverRegistrationError
+from rasterio.errors import DriverRegistrationError
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -1851,7 +1851,7 @@ cdef class InMemoryRaster:
 
         cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
         if memdriver == NULL:
-            raise RasterioDriverRegistrationError(
+            raise DriverRegistrationError(
                 "MEM driver is not registered.")
 
         self.dataset = _gdal.GDALCreate(
