@@ -283,12 +283,21 @@ def calculate_default_transform(
     Returns
     -------
     tuple of destination affine transform, width, and height
+
+    Note
+    ----
+    Must be called within a raster.drivers() context
+
+    Some behavior of this function is determined by the
+    CHECK_WITH_INVERT_PROJ environment variable
+        YES: constrain output raster to extents that can be inverted
+             avoids visual artifacts and coordinate discontinuties.
+        NO:  reproject coordinates beyond valid bound limits
     """
-    with rasterio.drivers():
-        dst_affine, dst_width, dst_height = _calculate_default_transform(
-            src_crs, dst_crs,
-            width, height,
-            left, bottom, right, top)
+    dst_affine, dst_width, dst_height = _calculate_default_transform(
+        src_crs, dst_crs,
+        width, height,
+        left, bottom, right, top)
 
     # If resolution is specified, Keep upper-left anchored
     # adjust the transform resolutions
