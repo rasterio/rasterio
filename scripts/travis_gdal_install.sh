@@ -67,32 +67,22 @@ if [ ! -d $GDALINST/gdal-1.9.2 ]; then
   make install
 fi
 
-if [ ! -d $GDALINST/gdal-1.11.4 ]; then
+if [ ! -d $GDALINST/gdal-1.11.2 ]; then
   cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz
-  tar -xzf gdal-1.11.4.tar.gz
-  cd gdal-1.11.4
-  ./configure --prefix=$GDALINST/gdal-1.11.4 $GDALOPTS
+  wget http://download.osgeo.org/gdal/1.11.2/gdal-1.11.2.tar.gz
+  tar -xzf gdal-1.11.2.tar.gz
+  cd gdal-1.11.2
+  ./configure --prefix=$GDALINST/gdal-1.11.2 $GDALOPTS
   make -s -j 2
   make install
 fi
 
-if [ ! -d $GDALINST/gdal-2.0.2 ]; then
+if [ ! -d $GDALINST/gdal-2.0.1 ]; then
   cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/2.0.2/gdal-2.0.2.tar.gz
-  tar -xzf gdal-2.0.2.tar.gz
-  cd gdal-2.0.2
-  ./configure --prefix=$GDALINST/gdal-2.0.2 $GDALOPTS
-  make -s -j 2
-  make install
-fi
-
-if [ ! -d $GDALINST/gdal-2.1-dev ]; then
-  cd $GDALBUILD
-  wget http://www.gdal.org/daily/gdal-svn-trunk-2016.03.24.tar.gz
-  tar -xzf gdal-svn-trunk-2016.03.24.tar.gz
-  cd gdal-svn-trunk-2016.03.24
-  ./configure --prefix=$GDALINST/gdal-2.1-dev $GDALOPTS
+  wget http://download.osgeo.org/gdal/2.0.1/gdal-2.0.1.tar.gz
+  tar -xzf gdal-2.0.1.tar.gz
+  cd gdal-2.0.1
+  ./configure --prefix=$GDALINST/gdal-2.0.1 $GDALOPTS
   make -s -j 2
   make install
 fi
