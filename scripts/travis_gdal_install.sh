@@ -17,13 +17,13 @@ GDALOPTS="  --with-ogr \
             --without-cfitsio \
             --without-pcraster \
             --without-netcdf \
-            --without-png \
+            --with-png \
             --with-jpeg=internal \
             --without-gif \
             --without-ogdi \
             --without-fme \
             --without-hdf4 \
-            --without-hdf5 \
+            --with-hdf5 \
             --without-jasper \
             --without-ecw \
             --without-kakadu \
@@ -56,35 +56,50 @@ fi
 
 ls -l $GDALINST
 
-# download and compile gdal version
-if [ ! -d $GDALINST/gdal-1.9.2 ]; then
-  cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/gdal-1.9.2.tar.gz
-  tar -xzf gdal-1.9.2.tar.gz
-  cd gdal-1.9.2
-  ./configure --prefix=$GDALINST/gdal-1.9.2 $GDALOPTS
-  make -s -j 2
-  make install
-fi
+# download and install proj.4
+wget http://download.osgeo.org/proj/proj-4.9.2.tar.gz
+tar -xf proj-4.9.2.tar.gz
+cd proj-4.9.2
+./configure --prefix=$PROJINST
+make
+make install
 
-if [ ! -d $GDALINST/gdal-1.11.2 ]; then
-  cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/1.11.2/gdal-1.11.2.tar.gz
-  tar -xzf gdal-1.11.2.tar.gz
-  cd gdal-1.11.2
-  ./configure --prefix=$GDALINST/gdal-1.11.2 $GDALOPTS
-  make -s -j 2
-  make install
-fi
+cd $GDALBUILD
 
-if [ ! -d $GDALINST/gdal-2.0.1 ]; then
-  cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/2.0.1/gdal-2.0.1.tar.gz
-  tar -xzf gdal-2.0.1.tar.gz
-  cd gdal-2.0.1
-  ./configure --prefix=$GDALINST/gdal-2.0.1 $GDALOPTS
-  make -s -j 2
-  make install
+# compile and install the correct gdal version
+if [ "$GDALVERSION" = "1.9.2" ]; then
+    wget http://download.osgeo.org/gdal/gdal-1.9.2.tar.gz
+    tar -xf gdal-1.9.2.tar.gz
+
+    echo "building GDAL 1.9.2"
+    cd gdal-1.9.2
+    ./configure --prefix=$GDALINST/gdal-1.9.2 $GDALOPTS
+    make -s -j 2
+    make install
+
+elif [ "$GDALVERSION" = "1.11.4" ]; then
+    wget http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz
+    tar -xf gdal-1.11.4.tar.gz
+
+    echo "building GDAL 1.11.4"
+    cd gdal-1.11.4
+    ./configure --prefix=$GDALINST/gdal-1.11.4 $GDALOPTS
+    make -s -j 2
+    make install
+
+elif [ "$GDALVERSION" = "2.0.2" ]; then
+    wget http://download.osgeo.org/gdal/2.0.2/gdal-2.0.2.tar.gz
+    tar -xf gdal-2.0.2.tar.gz
+
+    echo "building GDAL 2.0.2"
+    cd gdal-2.0.2
+    ./configure --prefix=$GDALINST/gdal-2.0.2 $GDALOPTS
+    make -s -j 2
+    make install
+
+else
+    echo "Error: GDALVERSION ($GDALVERSION) not in expected set"
+    exit 1
 fi
 
 # change back to travis build dir

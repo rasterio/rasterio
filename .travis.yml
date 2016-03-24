@@ -1,28 +1,26 @@
 language: python
 sudo: false
-cache:
-  directories:
-    - $GDALINST
-    - ~/.cache/pip
 env:
   global:
     - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
+    - PROJINST=$HOME/projinstall
   matrix:
-    - GDALVERSION = "1.9.2"
-    - GDALVERSION = "1.11.4"
-    - GDALVERSION = "2.0.2"
+    - GDALVERSION="1.9.2"
+    - GDALVERSION="1.11.4"
+    - GDALVERSION="2.0.2"
+cache:
+  directories:
+    - pip
 addons:
   apt:
     packages:
-    - libgdal1h
-    - gdal-bin
-    - libgdal-dev
-    - libatlas-dev
-    - libatlas-base-dev
-    - gfortran
+      - libhdf5-serial-dev
+      - libatlas-dev
+      - libatlas-base-dev
+      - gfortran
 python:
   - "2.7"
   - "3.3"
@@ -32,13 +30,12 @@ before_install:
   - pip install wheel
   - . ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
-  - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
+  - export LD_LIBRARY_PATH=$PROJINST/lib:$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 install:
-  - "pip wheel -r requirements-dev.txt"
-  - "pip install -r requirements-dev.txt"
-  - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
-  - "pip install coveralls>=1.1"
-  - "pip install -e ."
+  - pip wheel -r requirements-dev.txt
+  - pip install -r requirements-dev.txt
+  - pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e .
+  - pip install coveralls>=1.1
 script:
   - py.test --cov rasterio --cov-report term-missing
 after_success:
