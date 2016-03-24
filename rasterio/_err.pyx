@@ -31,6 +31,8 @@ manager raises a more useful and informative error:
 
 from enums import IntEnum
 
+from rasterio.errors import RasterioIOError
+
 
 # CPL function declarations.
 cdef extern from "cpl_error.h":
@@ -39,17 +41,59 @@ cdef extern from "cpl_error.h":
     int CPLGetLastErrorType()
     void CPLErrorReset()
 
+
+class CPLError(Exception):
+    """Base CPL error class"""
+    pass
+
+
+class CPLE_AppDefined(CPLError):
+    pass
+
+
+class CPLE_OutOfMemory(CPLError):
+    pass
+
+
+class CPLE_FileIO(CPLError):
+    pass
+
+
+class CPLE_OpenFailed(CPLError):
+    pass
+
+
+class CPLE_IllegalArg(CPLError):
+    pass
+
+
+class CPLE_NotSupported(CPLError):
+    pass
+
+
+class CPLE_AssertionFailed(CPLError):
+    pass
+
+
+class CPLE_NoWriteAccess(CPLError):
+    pass
+
+
+class CPLE_UserInterrupt(CPLError):
+    pass
+
+
 # Map GDAL error numbers to Python exceptions.
 exception_map = {
-    1: RuntimeError,        # CPLE_AppDefined
-    2: MemoryError,         # CPLE_OutOfMemory
-    3: IOError,             # CPLE_FileIO
-    4: IOError,             # CPLE_OpenFailed
-    5: TypeError,           # CPLE_IllegalArg
-    6: ValueError,          # CPLE_NotSupported
-    7: AssertionError,      # CPLE_AssertionFailed
-    8: IOError,             # CPLE_NoWriteAccess
-    9: KeyboardInterrupt,   # CPLE_UserInterrupt
+    1: CPLE_AppDefined,        # 
+    2: CPLE_OutOfMemory,         # 
+    3: CPLE_FileIO,             # 
+    4: CPLE_OpenFailed,             # 
+    5: CPLE_IllegalArg,           # 
+    6: CPLE_NotSupported,          # 
+    7: CPLE_AssertionFailed,      # 
+    8: CPLE_NoWriteAccess,             # 
+    9: CPLE_UserInterrupt,   # 
     10: ValueError          # ObjectNull
     }
 
@@ -62,11 +106,17 @@ cdef class GDALErrCtxManager:
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        cdef int err_type = CPLGetLastErrorType()
-        cdef int err_no = CPLGetLastErrorNo()
-        cdef const char *msg = CPLGetLastErrorMsg()
+        cdef const char *msg_c = NULL
+
+        err_type = CPLGetLastErrorType()
         # TODO: warn for err_type 2?
         if err_type >= 3:
+            err_no = CPLGetLastErrorNo()
+            msg_c = CPLGetLastErrorMsg()
+            msg_b = msg_c
+            msg = msg_b.decode('utf-8')
+            msg = msg.replace("`", "'")
+            msg = msg.replace("\n", " ")
             raise exception_map[err_no](msg)
 
 
