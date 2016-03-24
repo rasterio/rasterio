@@ -1,15 +1,10 @@
-.. rasterio documentation master file, created by
-   sphinx-quickstart on Thu Mar 17 07:05:00 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Rasterio Documentation
 ======================
 
 .. warning::
     This is not the official documentation. Not yet.
-    This is a draft and everything here is subject to change. 
-    
+    This is a draft and everything here is subject to change.
+
     For now, please refer to https://github.com/mapbox/rasterio
     for documentation.
 
@@ -20,19 +15,19 @@ Rasterio employs GDAL_ under the hood for file I/O and raster formatting.
 Its functions typically accept and return Numpy ndarrays.
 Rasterio is designed to make working with geospatial raster data more productive and more fun.
 
-You can download from pypi and todo quick link to install
+Install with pip (see the complete :doc:`installation docs </installation>` )
 
 .. code::
 
     pip install rasterio
 
-And a quick example 
+And an example of use in python
 
-.. code::
+.. code:: python
 
     import rasterio
     with rasterio.open('data.tif') as src:
-        array = src.read() 
+        array = src.read()
 
 
 Contents:
@@ -46,7 +41,6 @@ Contents:
    community
 
 
- 
 Indices and tables
 ==================
 
