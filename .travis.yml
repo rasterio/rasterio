@@ -14,6 +14,7 @@ env:
     - GDALVERSION = "1.9.2"
     - GDALVERSION = "1.11.4"
     - GDALVERSION = "2.0.2"
+    - GDALVERSION = "2.1-dev"
 addons:
   apt:
     packages:
