@@ -8,7 +8,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio._err import cpl_errs, GDALError
+from rasterio._err import CPLErrors, GDALError
 from rasterio._io cimport InMemoryRaster
 from rasterio.errors import DriverRegistrationError
 from rasterio.transform import Affine, from_bounds
@@ -102,7 +102,7 @@ def _transform_geom(
     dst = _base._osr_from_crs(dst_crs)
 
     try:
-        with cpl_errs:
+        with CPLErrors() as cple:
             transform = _gdal.OCTNewCoordinateTransformation(src, dst)
     except:
         _gdal.OSRDestroySpatialReference(src)
@@ -120,11 +120,12 @@ def _transform_geom(
     try:
         factory = new OGRGeometryFactory()
         src_ogr_geom = _features.OGRGeomBuilder().build(geom)
-        with cpl_errs:
+        with CPLErrors() as cple:
             dst_ogr_geom = factory.transformWithOptions(
                     <const OGRGeometry *>src_ogr_geom,
                     <OGRCoordinateTransformation *>transform,
                     options)
+            cple.check()
         g = _features.GeomBuilder().build(dst_ogr_geom)
     finally:
         del factory
@@ -277,8 +278,9 @@ def _reproject(
             src_nodata = source.fill_value
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hrdriver = _gdal.GDALGetDriverByName("MEM")
+                cple.check()
         except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
@@ -286,10 +288,11 @@ def _reproject(
                 "block.")
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hdsin = _gdal.GDALCreate(
                     hrdriver, "input", cols, rows, 
                     src_count, dtypes.dtype_rev[dtype], NULL)
+                cple.check()
         except:
             raise
         _gdal.GDALSetDescription(
@@ -333,8 +336,9 @@ def _reproject(
             raise ValueError("Destination's shape is invalid")
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hrdriver = _gdal.GDALGetDriverByName("MEM")
+                cple.check()
         except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
@@ -343,10 +347,11 @@ def _reproject(
 
         _, rows, cols = destination.shape
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hdsout = _gdal.GDALCreate(
                     hrdriver, "output", cols, rows, src_count, 
                     dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
+                cple.check()
         except:
             raise
         _gdal.GDALSetDescription(
@@ -356,7 +361,7 @@ def _reproject(
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.success == _gdal.GDALSetGeoTransform(hdsout, gt):
+        if not GDALError.none == _gdal.GDALSetGeoTransform(hdsout, gt):
             raise ValueError(
                 "Failed to set transform on temp destination dataset.")
 
@@ -364,7 +369,7 @@ def _reproject(
             osr = _base._osr_from_crs(dst_crs)
             _gdal.OSRExportToWkt(osr, &dstwkt)
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
-            if not GDALError.success == _gdal.GDALSetProjection(
+            if not GDALError.none == _gdal.GDALSetProjection(
                     hdsout, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
@@ -387,12 +392,13 @@ def _reproject(
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
 
     try:
-        with cpl_errs:
+        with CPLErrors() as cple:
             hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
                                 hdsin, NULL, hdsout, NULL,
                                 1, 1000.0, 0)
-        with cpl_errs:
+            cple.check()
             psWOptions = _gdal.GDALCreateWarpOptions()
+            cple.check()
         log.debug("Created transformer and options.")
     except:
         _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
@@ -501,20 +507,21 @@ def _reproject(
     # and run the warper.
     cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
     try:
-        with cpl_errs:
+        with CPLErrors() as cple:
             oWarper.Initialize(psWOptions)
-
+            cple.check()
         rows, cols = destination.shape[-2:]
         log.debug(
             "Chunk and warp window: %d, %d, %d, %d.",
             0, 0, cols, rows)
 
-        with cpl_errs:
+        with CPLErrors() as cple:
             if num_threads > 1:
                 log.debug("Executing multi warp with num_threads: %d", num_threads)
                 oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             else:
                 oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+            cple.check()
 
         if dtypes.is_ndarray(destination):
             retval = _io.io_auto(destination, hdsout, 0)
@@ -560,17 +567,16 @@ def _calculate_default_transform(
     with InMemoryRaster(
             img, transform=transform.to_gdal(), crs=src_crs) as temp:
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
                                     temp.dataset, NULL, NULL, wkt,
                                     1, 1000.0,0)
-            with cpl_errs:
+                cple.check()
                 result = _gdal.GDALSuggestedWarpOutput2(
                     temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
                     geotransform, &npixels, &nlines, extent, 0)
+                cple.check()
             log.debug("Created transformer and warp output.")
-        except:
-            raise
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)

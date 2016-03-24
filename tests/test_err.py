@@ -9,7 +9,7 @@ from rasterio.errors import RasterioIOError
 def test_io_error(tmpdir):
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open(str(tmpdir.join('foo.tif')))
-    msg = str(exc_info.value)
+    msg, = exc_info.value.args
     assert msg.startswith("'{0}'".format(tmpdir.join('foo.tif')))
     assert ("does not exist in the file system, and is not recognised as a "
             "supported dataset name.") in msg

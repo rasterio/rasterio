@@ -15,7 +15,7 @@ from libc.stdlib cimport malloc, free
 from rasterio cimport _gdal, _ogr
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import (
-    cpl_errs, GDALError, CPLE_IllegalArg, CPLE_OpenFailed)
+    CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed)
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.errors import RasterioIOError
@@ -75,11 +75,12 @@ cdef class DatasetReader(object):
         cdef const char *fname = name_b
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 self._hds = _gdal.GDALOpen(fname, 0)
+                cple.check()
         except CPLE_OpenFailed as err:
             self.env.stop()
-            raise RasterioIOError(str(err))
+            raise RasterioIOError(err.args[-1])
 
         cdef void *drv
         cdef const char *drv_name
@@ -104,8 +105,9 @@ cdef class DatasetReader(object):
     cdef void *band(self, int bidx) except NULL:
         cdef void *hband = NULL
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+                cple.check()
         except CPLE_IllegalArg as exc:
             self.env.stop()
             raise IndexError(str(exc))
@@ -114,8 +116,9 @@ cdef class DatasetReader(object):
     def _has_band(self, bidx):
         cdef void *hband = NULL
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+                cple.check()
         except CPLE_IllegalArg:
             self.env.stop()
             return False

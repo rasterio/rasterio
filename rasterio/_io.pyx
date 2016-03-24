@@ -17,7 +17,7 @@ from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs, GDALError, CPLE_OpenFailed
+from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.errors import DriverRegistrationError, RasterioIOError
@@ -1290,8 +1290,9 @@ cdef class RasterUpdater(RasterReader):
             drv_name = driver_b
             
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     drv = _gdal.GDALGetDriverByName(drv_name)
+                    cple.check()
             except Exception as err:
                 self.env.stop()
                 raise DriverRegistrationError(str(err))
@@ -1333,10 +1334,11 @@ cdef class RasterUpdater(RasterReader):
                     (k, _gdal.CSLFetchNameValue(options, key_c)))
 
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     self._hds = _gdal.GDALCreate(
                         drv, fname, self.width, self.height, self._count,
                         gdal_dtype, options)
+                    cple.check()
             except Exception as err:
                 self.env.stop()
                 if options != NULL:
@@ -1363,8 +1365,9 @@ cdef class RasterUpdater(RasterReader):
         
         elif self.mode == 'r+':
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     self._hds = _gdal.GDALOpen(fname, 1)
+                    cple.check()
             except CPLE_OpenFailed as err:
                 self.env.stop()
                 raise RasterioIOError(str(err))
@@ -1747,12 +1750,13 @@ cdef class RasterUpdater(RasterReader):
         cdef void *hmask = NULL
 
         hband = self.band(1)
-        if GDALError.success != _gdal.GDALCreateMaskBand(hband, 0x02):
+        if GDALError.none != _gdal.GDALCreateMaskBand(hband, 0x02):
             raise RasterioIOError("Failed to create mask.")
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hmask = _gdal.GDALGetMaskBand(hband)
+                cple.check()
         except:
             raise
         log.debug("Created mask band")
@@ -1792,11 +1796,12 @@ cdef class RasterUpdater(RasterReader):
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     resampling_b = resampling.value.encode('utf-8')
                     resampling_c = resampling_b
                     err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
                         len(factors), factors_c, 0, NULL, NULL, NULL)
+                    cple.check()
             finally:
                 if factors_c != NULL:
                     _gdal.CPLFree(factors_c)
@@ -1846,17 +1851,19 @@ cdef class InMemoryRaster:
         self.band_ids[0] = 1
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 memdriver = _gdal.GDALGetDriverByName("MEM")
+                cple.check()
         except:
             raise DriverRegistrationError("MEM driver is not registered.")
 
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 self.dataset = _gdal.GDALCreate(
                     memdriver, "output", image.shape[1], image.shape[0],
                     1, <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
                     NULL)
+                cple.check()
         except:
             raise
 
@@ -1946,10 +1953,11 @@ cdef class IndirectRasterUpdater(RasterUpdater):
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     self._hds = _gdal.GDALCreate(
                         memdrv, "temp", self.width, self.height, self._count,
                         gdal_dtype, NULL)
+                    cple.check()
             except:
                 self.env.close()
                 raise
@@ -1966,15 +1974,17 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
         elif self.mode == 'r+':
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     temp = _gdal.GDALOpen(fname, 0)
+                    cple.check()
             except Exception as exc:
                 raise RasterioIOError(str(exc))
             
             try:
-                with cpl_errs:
+                with CPLErrors() as cple:
                     self._hds = _gdal.GDALCreateCopy(
                         memdrv, "temp", temp, 1, NULL, NULL, NULL)
+                    cple.check()
             except:
                 raise
 
@@ -2037,9 +2047,10 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
         #self.update_tags(ns='rio_creation_kwds', **kwds)
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 temp = _gdal.GDALCreateCopy(
                     drv, fname, self._hds, 1, options, NULL, NULL)
+                cple.check()
         except:
             raise
         finally:
@@ -2074,8 +2085,9 @@ def writer(path, mode, **kwargs):
         name_b = path.encode('utf-8')
         fname = name_b
         try:
-            with cpl_errs:
+            with CPLErrors() as cple:
                 hds = _gdal.GDALOpen(fname, 0)
+                cple.check()
         except CPLE_OpenFailed as exc:
             raise RasterioIOError(str(exc))
 
@@ -2101,8 +2113,9 @@ def virtual_file_to_buffer(filename):
     cfilename = filename_b
     
     try:
-        with cpl_errs:
+        with CPLErrors() as cple:
             buff = _gdal.VSIGetMemFileBuffer(cfilename, &buff_len, 0)
+            cple.check()
     except:
         raise
 
