@@ -13,5 +13,4 @@ Submodules
 
    rasterio.tools.mask
    rasterio.tools.merge
-   rasterio.tools.test
 
