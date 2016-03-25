@@ -80,7 +80,7 @@ cdef class DatasetReader(object):
                 cple.check()
         except CPLE_OpenFailed as err:
             self.env.stop()
-            raise RasterioIOError(err.args[-1])
+            raise RasterioIOError(err.errmsg)
 
         cdef void *drv
         cdef const char *drv_name

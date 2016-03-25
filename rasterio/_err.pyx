@@ -50,7 +50,15 @@ class CPLError(Exception):
     Exceptions deriving from this class are intended for use only in
     Rasterio's Cython code. Let's not expose API users to them.
     """
-    pass
+
+    def __init__(self, errtype, errno, errmsg):
+        self.errtype = errtype
+        self.errno = errno
+        self.errmsg = errmsg
+
+    @property
+    def args(self):
+        return self.errtype, self.errno, self.errmsg
 
 
 class CPLE_AppDefined(CPLError):
