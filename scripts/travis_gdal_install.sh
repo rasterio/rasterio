@@ -94,9 +94,9 @@ if [ ! -d $GDALINST/gdal-2.1.0 ]; then
   #
   # TODO Use official release, for now use nightly
   #
-  wget http://www.gdal.org/daily/gdal-svn-trunk-2016.03.24.tar.gz
-  tar -xzf gdal-svn-trunk-2016.03.24.tar.gz
-  cd gdal-svn-trunk-2016.03.24
+  wget http://www.gdal.org/daily/gdal-svn-trunk-2016.03.25.tar.gz
+  tar -xzf gdal-svn-trunk-2016.03.25.tar.gz
+  cd gdal-svn-trunk-2016.03.25
   ./configure --prefix=$GDALINST/gdal-2.1.0 $GDALOPTS
   make -s -j 2
   make install
