@@ -22,7 +22,9 @@ from rasterio import _err, coords, enums, vfs
 # Classes in rasterio._io are imported below just before we need them.
 
 __all__ = [
-    'band', 'open', 'drivers', 'copy', 'pad']
+    'band', 'open', 'drivers', 'copy', 'pad',
+    'get_data_window', 'windows_intersect', 'window_intersection',
+    'window_union']
 __version__ = "0.32.0"
 
 log = logging.getLogger('rasterio')
@@ -279,8 +281,7 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
 
 def get_data_window(arr, nodata=None):
-    """
-    Returns a window for the non-nodata pixels within the input array.
+    """Returns a window for the non-nodata pixels within the input array.
 
     Parameters
     ----------
@@ -294,7 +295,6 @@ def get_data_window(arr, nodata=None):
     Returns
     -------
     ((row_start, row_stop), (col_start, col_stop))
-
     """
 
     from rasterio._io import get_data_window
@@ -302,8 +302,7 @@ def get_data_window(arr, nodata=None):
 
 
 def window_union(windows):
-    """
-    Union windows and return the outermost extent they cover.
+    """Union windows and return the outermost extent they cover.
 
     Parameters
     ----------
@@ -320,8 +319,7 @@ def window_union(windows):
 
 
 def window_intersection(windows):
-    """
-    Intersect windows and return the innermost extent they cover.
+    """Intersect windows and return the innermost extent they cover.
 
     Will raise ValueError if windows do not intersect.
 
@@ -340,8 +338,7 @@ def window_intersection(windows):
 
 
 def windows_intersect(windows):
-    """
-    Test if windows intersect.
+    """Test if windows intersect.
 
     Parameters
     ----------
