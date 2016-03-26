@@ -6,7 +6,7 @@ Transformation of GDAL C API errors to Python exceptions using Python's
 The ``CPLErrors`` error-handling context manager is intended for use in
 Rasterio's Cython code. When entering the body of a ``with`` statement,
 the context manager clears GDAL's error stack. On exit, the stack is
-cleared again. Its ``raise()`` method can be called after calling any
+cleared again. Its ``check()`` method can be called after calling any
 GDAL function to determine if ``CPLError()`` was called, and raise an
 exception appropriately.
 

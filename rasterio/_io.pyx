@@ -1750,16 +1750,16 @@ cdef class RasterUpdater(RasterReader):
         cdef void *hmask = NULL
 
         hband = self.band(1)
-        if GDALError.none != _gdal.GDALCreateMaskBand(hband, 0x02):
-            raise RasterioIOError("Failed to create mask.")
 
         try:
             with CPLErrors() as cple:
+                retval = _gdal.GDALCreateMaskBand(hband, 0x02):
+                cple.check()
                 hmask = _gdal.GDALGetMaskBand(hband)
                 cple.check()
+                log.debug("Created mask band")
         except:
-            raise
-        log.debug("Created mask band")
+            raise RasterioIOError("Failed to get mask.")
 
         if window:
             window = eval_window(window, self.height, self.width)
@@ -1850,22 +1850,14 @@ cdef class InMemoryRaster:
         # Several GDAL operations require the array of band IDs as input
         self.band_ids[0] = 1
 
-        try:
-            with CPLErrors() as cple:
-                memdriver = _gdal.GDALGetDriverByName("MEM")
-                cple.check()
-        except:
-            raise DriverRegistrationError("MEM driver is not registered.")
-
-        try:
-            with CPLErrors() as cple:
-                self.dataset = _gdal.GDALCreate(
-                    memdriver, "output", image.shape[1], image.shape[0],
-                    1, <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
-                    NULL)
-                cple.check()
-        except:
-            raise
+        with CPLErrors() as cple:
+            memdriver = _gdal.GDALGetDriverByName("MEM")
+            cple.check()
+            self.dataset = _gdal.GDALCreate(
+                memdriver, "output", image.shape[1], image.shape[0],
+                1, <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
+                NULL)
+            cple.check()
 
         if transform is not None:
             for i in range(6):
