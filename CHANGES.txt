@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.32.0.post1 (2016-03-27)
+-------------------------
+- No changes to the library in this post-release version, but there is a
+  significant change to the distributions on PyPI: to help make Rasterio more
+  compatible with Shapely on OS X, the GDAL shared library included in the
+  macosx (only) binary wheels now statically links the GEOS library. See
+  https://github.com/sgillies/frs-wheel-builds/issues/5.
+
 0.32.0 (2016-03-22)
 -------------------
 - Bug fix: geometry factories and warp operations are properly deallocated
