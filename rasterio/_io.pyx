@@ -1753,7 +1753,7 @@ cdef class RasterUpdater(RasterReader):
 
         try:
             with CPLErrors() as cple:
-                retval = _gdal.GDALCreateMaskBand(hband, 0x02):
+                retval = _gdal.GDALCreateMaskBand(hband, 0x02)
                 cple.check()
                 hmask = _gdal.GDALGetMaskBand(hband)
                 cple.check()
