@@ -18,13 +18,15 @@ Numpy. The ``count`` attribute tells you the number of bands in the dataset.
 
 .. code-block:: python
 
-    >>> dataset.driver
+    >>> import rasterio
+    >>> src = rasterio.open("tests/data/RGB.byte.tif")
+    >>> src.driver
     u'GTiff'
-    >>> dataset.height, dataset.width
+    >>> src.height, src.width
     (718, 791)
-    >>> dataset.shape
+    >>> src.shape
     (718, 791)
-    >>> dataset.count
+    >>> src.count
     3
 
 What makes geospatial raster datasets different from other raster files is
@@ -34,9 +36,9 @@ coordinates to coordinates in that reference system.
 
 .. code-block:: python
 
-    >>> dataset.crs
-    {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
-    >>> dataset.affine
+    >>> src.crs
+    {'init': u'epsg:32618'}
+    >>> src.affine
     Affine(300.0379266750948, 0.0, 101985.0,
            0.0, -300.041782729805, 2826915.0)
 

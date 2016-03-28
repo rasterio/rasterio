@@ -22,14 +22,13 @@ invalid data or *nodata* pixels. In, e.g., merging the image with adjacent
 scenes, we'd like to ignore the nodata pixels and have only valid image data in
 our final mosaic.
 
-Let's use the rio-insp command to look at the two kinds of masks and their
+Let's look at the two kinds of masks and their
 inverse relationship in the context of RGB.byte.tif.
 
 .. code-block:: console
 
-    $ rio insp tests/data/RGB.byte.tif
-    Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read(1)", or "help(src)" for more information.
+    >>> import rasterio
+    >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> src.shape
     (718, 791)
     >>> src.count
@@ -49,30 +48,30 @@ mask corresponding to the first dataset band.
 .. code-block:: python
 
     >>> msk = src.read_masks(1)
+    >>> msk.shape
+    (718, 791)
     >>> msk
     array([[0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
-           ...,
+           ...
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
 
-This array is a valid data mask in the sense of `GDAL RFC 15
-<https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask>`__. The 0 values in its
+This 2D array is a valid data mask in the sense of `GDAL RFC 15
+<https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask>`__. The ``0`` values in its
 corners represent *nodata* regions. Zooming in on the interior of the mask
-array shows the ``255`` values that indicate valid data regions.
+array shows the ``255`` values that indicate *valid data* regions.
 
 .. code-block:: python
 
-    >>> m[200:250,200:250]
-    array([[255, 255, 255, ..., 255, 255, 255],
-           [255, 255, 255, ..., 255, 255, 255],
-           [255, 255, 255, ..., 255, 255, 255],
-           ...,
-           [255, 255, 255, ..., 255, 255, 255],
-           [255, 255, 255, ..., 255, 255, 255],
-           [255, 255, 255, ..., 255, 255, 255]], dtype=uint8)
+    >>> msk[200:205,200:205]
+    array([[255, 255, 255, 255, 255],
+           [255, 255, 255, 255, 255],
+           [255, 255, 255, 255, 255],
+           [255, 255, 255, 255, 255],
+           [255, 255, 255, 255, 255]], dtype=uint8)
 
 Displayed using Matplotlib's `imshow()`, the mask looks like this:
 
@@ -93,14 +92,16 @@ Writing masks
 Writing a mask that applies to all dataset bands is just as straightforward:
 pass an ndarray with ``True`` (or values that evaluate to ``True`` to indicate
 valid data and ``False`` to indicate no data to ``write_mask()``. Consider a
-copy of the test data opened using rio-insp in "r+" (update) mode.
+copy of the test data opened in "r+" (update) mode.
+
 
 .. code-block:: python
 
-    $ rio insp copy.tif --mode r+
-    Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read(1)", or "help(src)" for more information.
-    >>>
+    >>> import shutil
+    >>> import rasterio
+
+    >>> shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
+    >>> src = rasterio.open("/tmp/RGB.byte.tif", mode="r+")
 
 To mark that all pixels of all bands are valid (i.e., to override nodata
 metadata values that can't be unset), you'd do this.
@@ -124,17 +125,22 @@ return mask arrays based on the .msk file.
     -rw-r--r--  1 sean  staff      916 Mar 24 14:25 copy.tif.msk
 
 Can Rasterio help fix buggy nodata masks like the ones in RGB.byte.tif? It
-certainly can. Consider a fresh copy of that file. This time we'll read all
-3 band masks (based on the nodata values, not a .msk GeoTIFF) and show them
+certainly can. Consider a fresh copy of that file. 
+
+.. code-block:: python
+
+    >>> src.close()
+    >>> shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
+    >>> src = rasterio.open("/tmp/RGB.byte.tif", mode="r+")
+
+This time we'll read all 3 band masks 
+(based on the nodata values, not a .msk GeoTIFF) and show them
 as an RGB image (with the help of `numpy.dstack()`):
 
 .. code-block:: python
 
-    $rio insp copy.tif --mode r+
-    Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read(1)", or "help(src)" for more information.
     >>> msk = src.read_masks()
-    >>> show(np.dstack(msk))
+    >>> show(np.dstack(msk))  # doctest: +SKIP
 
 .. image:: img/mask_bands_rgb.png
 
@@ -146,7 +152,7 @@ masks we've read.
 .. code-block:: python
 
     >>> new_msk = (msk[0] & msk[1] & msk[2])
-    >>> show(new_msk)
+    >>> show(new_msk)  # doctest: +SKIP
 
 .. image:: img/mask_conj.png
 
@@ -157,7 +163,7 @@ found the right value for the ``size`` argument empirically.
 
     >>> from rasterio.features import sieve
     >>> sieved_msk = sieve(new_msk, size=800)
-    >>> show(sieved_msk)
+    >>> show(sieved_msk)  # doctest: +SKIP
 
 .. image:: img/mask_sieved.png
 
@@ -166,6 +172,7 @@ Last thing to do is write that sieved mask back to the dataset.
 .. code-block:: python
 
     >>> src.write_mask(sieved_msk)
+    >>> src.close()
 
 The result is a properly masked dataset that allows some 0 value pixels to be
 considered valid.
@@ -177,15 +184,13 @@ If you want, you can read dataset bands as numpy masked arrays.
 
 .. code-block:: python
 
-    $ rio insp tests/data/RGB.byte.tif
-    Rasterio 0.19.0 Interactive Inspector (Python 2.7.9)
-    Type "src.meta", "src.read(1)", or "help(src)" for more information.
+    >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> blue = src.read(1, masked=True)
     >>> blue.mask
     array([[ True,  True,  True, ...,  True,  True,  True],
            [ True,  True,  True, ...,  True,  True,  True],
            [ True,  True,  True, ...,  True,  True,  True],
-           ...,
+           ...
            [ True,  True,  True, ...,  True,  True,  True],
            [ True,  True,  True, ...,  True,  True,  True],
            [ True,  True,  True, ...,  True,  True,  True]], dtype=bool)
@@ -201,5 +206,6 @@ You can rely on this Rasterio identity for any integer value ``N``.
 
 .. code-block:: python
 
+    >>> N = 1
     >>> (~src.read(N, masked=True).mask * 255 == src.read_masks(N)).all()
     True

@@ -23,7 +23,9 @@ namespace, just call ``tags()`` with no arguments.
 
 .. code-block:: pycon
 
-    >>>src.tags()
+    >>> import rasterio
+    >>> src = rasterio.open("tests/data/RGB.byte.tif")
+    >>> src.tags()
     {u'AREA_OR_POINT': u'Area'}
 
 A dataset's bands may have tags, too. Here are the tags from the default namespace

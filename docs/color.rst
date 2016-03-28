@@ -9,6 +9,8 @@ Color interpretation of raster bands can be read from the dataset
 
 .. code-block:: python
 
+    >>> import rasterio
+    >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> src.colorinterp(1)
     <ColorInterp.red: 3>
 
@@ -21,22 +23,17 @@ specify a ``photometric`` string when writing a new raster.
 
 .. code:: python
 
-    >>> src.profile['dtype']
-    'uint16'
-    >>> src.colorinterp(2)
-    <ColorInterp.undefined: 0>
     >>> profile = src.profile
     >>> profile['photometric'] = "RGB"
-    >>> with rasterio.open("test.tif", 'w', **profile) as dst:
-            dst.write(src.read())
+    >>> with rasterio.open("/tmp/rgb.tif", 'w', **profile) as dst:
+    ...     dst.write(src.read())
 
-And the resulting raster will be interpretted as RGB despite having uint16 bands
+And the resulting raster will be interpretted as RGB.
 
 .. code:: python
 
-    >>> src.profile['dtype']
-    'uint16'
-    >>> src.colorinterp(2)
+    >>> with rasterio.open("/tmp/rgb.tif") as src2:
+    ...     src2.colorinterp(2)
     <ColorInterp.green: 4>
 
 
