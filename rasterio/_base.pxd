@@ -21,7 +21,7 @@ cdef class DatasetReader:
     cdef public object _read
     cdef object env
 
-    cdef void *band(self, int bidx)
+    cdef void *band(self, int bidx) except NULL
 
 
 cdef void *_osr_from_crs(object crs)
