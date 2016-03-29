@@ -217,3 +217,7 @@ pseudoxml:
 .PHONY: apidocs
 apidocs:
 	sphinx-apidoc -f -e -T -M -o . ../rasterio ../rasterio/rio ../rasterio/five.py
+
+.PHONY: publish
+publish: html
+	aws s3 sync _build/html/ s3://mapbox/playground/perrygeo/rasterio-docs --delete --acl public-read
