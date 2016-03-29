@@ -11,21 +11,26 @@ env:
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
   matrix:
-    - GDALVERSION = "1.9.2"
-    - GDALVERSION = "1.11.2"
-    - GDALVERSION = "2.0.1"
+    - GDALVERSION="1.9.2"
+    - GDALVERSION="1.10.0"  # doesn't exist but path/lib will fall back to system
+    - GDALVERSION="1.11.4"
+    - GDALVERSION="2.0.2"
+    - GDALVERSION="2.1.0"
 addons:
   apt:
     packages:
     - libgdal1h
     - gdal-bin
+    - libproj-dev
+    - libhdf5-serial-dev
+    - libpng-dev
     - libgdal-dev
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
 python:
   - "2.7"
-  - "3.3"
+  # - "3.3"   # disabling python3.3 for now
   - "3.4"
 before_install:
   - pip install -U pip
@@ -34,6 +39,7 @@ before_install:
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 install:
+  - "if [ $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - "pip wheel -r requirements-dev.txt"
   - "pip install -r requirements-dev.txt"
   - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
