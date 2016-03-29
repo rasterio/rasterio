@@ -2,10 +2,7 @@ import numpy
 import pytest
 
 import rasterio
-from rasterio import (
-    get_data_window, window_intersection, window_union, windows_intersect
-)
-
+from rasterio import windows
 
 DATA_WINDOW = ((3, 5), (2, 6))
 
@@ -86,21 +83,21 @@ def data():
 
 
 def test_data_window_unmasked(data):
-    window = get_data_window(data)
+    window = windows.get_data_window(data)
     assert window == ((0, data.shape[0]), (0, data.shape[1]))
 
 
 def test_data_window_masked(data):
     data = numpy.ma.masked_array(data, data == 0)
-    window = get_data_window(data)
+    window = windows.get_data_window(data)
     assert window == DATA_WINDOW
 
 
 def test_data_window_nodata(data):
-    window = get_data_window(data, nodata=0)
+    window = windows.get_data_window(data, nodata=0)
     assert window == DATA_WINDOW
 
-    window = get_data_window(numpy.ones_like(data), nodata=0)
+    window = windows.get_data_window(numpy.ones_like(data), nodata=0)
     assert window == ((0, data.shape[0]), (0, data.shape[1]))
 
 
@@ -109,44 +106,44 @@ def test_data_window_nodata_disjunct():
     data[0, :4, 1:4] = 1
     data[1, 2:5, 2:8] = 1
     data[2, 1:6, 1:6] = 1
-    window = get_data_window(data, nodata=0)
+    window = windows.get_data_window(data, nodata=0)
     assert window == ((0, 6), (1, 8))
 
 
 def test_data_window_empty_result():
     data = numpy.zeros((3, 10, 10), dtype='uint8')
-    window = get_data_window(data, nodata=0)
+    window = windows.get_data_window(data, nodata=0)
     assert window == ((0, 0), (0, 0))
 
 
 def test_data_window_masked_file():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        window = get_data_window(src.read(1, masked=True))
+        window = windows.get_data_window(src.read(1, masked=True))
         assert window == ((3, 714), (13, 770))
 
-        window = get_data_window(src.read(masked=True))
+        window = windows.get_data_window(src.read(masked=True))
         assert window == ((3, 714), (13, 770))
 
 
 def test_window_union():
-    assert window_union([
+    assert windows.union([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
     ]) == ((0, 6), (1, 6))
 
 
 def test_window_intersection():
-    assert window_intersection([
+    assert windows.intersection([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
     ]) == ((2, 4), (3, 5))
 
-    assert window_intersection([
+    assert windows.intersection([
         ((0, 6), (3, 6)),
         ((6, 10), (1, 5))
     ]) == ((6, 6), (3, 5))
 
-    assert window_intersection([
+    assert windows.intersection([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
         ((3, 6), (0, 6))
@@ -155,7 +152,7 @@ def test_window_intersection():
 
 def test_window_intersection_disjunct():
     with pytest.raises(ValueError):
-        window_intersection([
+        windows.intersection([
             ((0, 6), (3, 6)),
             ((100, 200), (0, 12)),
             ((7, 12), (7, 12))
@@ -163,12 +160,12 @@ def test_window_intersection_disjunct():
 
 
 def test_windows_intersect():
-    assert windows_intersect([
+    assert windows.intersect([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
     ]) == True
 
-    assert windows_intersect([
+    assert windows.intersect([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
         ((3, 6), (0, 6))
@@ -176,18 +173,18 @@ def test_windows_intersect():
 
 
 def test_windows_intersect_disjunct():
-    assert windows_intersect([
+    assert windows.intersect([
         ((0, 6), (3, 6)),
         ((10, 20), (0, 6))
     ]) == False
 
-    assert windows_intersect([
+    assert windows.intersect([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
         ((5, 6), (0, 6))
     ]) == False
 
-    assert windows_intersect([
+    assert windows.intersect([
         ((0, 6), (3, 6)),
         ((2, 4), (1, 3)),
         ((3, 6), (4, 6))

@@ -1,9 +1,8 @@
 # rasterio
+from __future__ import absolute_import
 
 from collections import namedtuple
 import logging
-import os
-import warnings
 
 from rasterio._base import eval_window, window_shape, window_index
 from rasterio._drivers import driver_count, GDALEnv
@@ -14,6 +13,7 @@ from rasterio.dtypes import (
 from rasterio.five import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
+from rasterio import windows
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
@@ -33,7 +33,7 @@ log.addHandler(NullHandler())
 
 
 def open(
-        path, mode='r', 
+        path, mode='r',
         driver=None,
         width=None, height=None,
         count=None,
@@ -43,7 +43,7 @@ def open(
         **kwargs):
     """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
     or "w" (write) and return a ``Reader`` or ``Updater`` object.
-    
+
     In write mode, a driver name such as "GTiff" or "JPEG" (see GDAL
     docs or ``gdal_translate --help`` on the command line), ``width``
     (number of pixels per line) and ``height`` (number of lines), the
@@ -55,7 +55,7 @@ def open(
     A coordinate reference system for raster datasets in write mode can
     be defined by the ``crs`` argument. It takes Proj4 style mappings
     like
-    
+
       {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
        'no_defs': True}
 
@@ -72,13 +72,13 @@ def open(
 
     a: rate of change of X with respect to increasing column, i.e.
             pixel width
-    b: rotation, 0 if the raster is oriented "north up" 
-    c: X coordinate of the top left corner of the top left pixel 
-    f: Y coordinate of the top left corner of the top left pixel 
+    b: rotation, 0 if the raster is oriented "north up"
+    c: X coordinate of the top left corner of the top left pixel
+    f: Y coordinate of the top left corner of the top left pixel
     d: rotation, 0 if the raster is oriented "north up"
     e: rate of change of Y with respect to increasing row, usually
             a negative number i.e. -1 * pixel height
-    f: Y coordinate of the top left corner of the top left pixel 
+    f: Y coordinate of the top left corner of the top left pixel
 
     A virtual filesystem can be specified. The ``vfs`` parameter may be
     an Apache Commons VFS style string beginning with "zip://" or
@@ -132,7 +132,7 @@ def copy(src, dst, **kw):
 
     A ``driver`` keyword argument with value like 'GTiff' or 'JPEG' is
     used to control the output format.
-    
+
     This is the one way to create write-once files like JPEGs.
     """
     from rasterio._copy import RasterCopier
@@ -155,15 +155,15 @@ Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
 def band(ds, bidx):
     """Wraps a dataset and a band index up as a 'Band'"""
     return Band(
-        ds, 
-        bidx, 
+        ds,
+        bidx,
         set(ds.dtypes).pop(),
         ds.shape)
 
 
 def pad(array, transform, pad_width, mode=None, **kwargs):
     """Returns a padded array and shifted affine transform matrix.
-    
+
     Array is padded using `numpy.pad()`."""
     import numpy
     transform = guard_transform(transform)
@@ -175,80 +175,24 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
 
 def get_data_window(arr, nodata=None):
-    """
-    Returns a window for the non-nodata pixels within the input array.
-
-    Parameters
-    ----------
-    arr: numpy ndarray, <= 3 dimensions
-    nodata: number
-        If None, will either return a full window if arr is not a masked
-        array, or will use the mask to determine non-nodata pixels.
-        If provided, it must be a number within the valid range of the dtype
-        of the input array.
-
-    Returns
-    -------
-    ((row_start, row_stop), (col_start, col_stop))
-
-    """
-
-    from rasterio._io import get_data_window
-    return get_data_window(arr, nodata)
+    import warnings
+    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    return windows.get_data_window(arr, nodata)
 
 
-def window_union(windows):
-    """
-    Union windows and return the outermost extent they cover.
-
-    Parameters
-    ----------
-    windows: list-like of window objects
-        ((row_start, row_stop), (col_start, col_stop))
-
-    Returns
-    -------
-    ((row_start, row_stop), (col_start, col_stop))
-    """
-
-    from rasterio._io import window_union
-    return window_union(windows)
+def window_union(data):
+    import warnings
+    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    return windows.union(data)
 
 
-def window_intersection(windows):
-    """
-    Intersect windows and return the innermost extent they cover.
-
-    Will raise ValueError if windows do not intersect.
-
-    Parameters
-    ----------
-    windows: list-like of window objects
-        ((row_start, row_stop), (col_start, col_stop))
-
-    Returns
-    -------
-    ((row_start, row_stop), (col_start, col_stop))
-    """
-
-    from rasterio._io import window_intersection
-    return window_intersection(windows)
+def window_intersection(data):
+    import warnings
+    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    return windows.intersection(data)
 
 
-def windows_intersect(windows):
-    """
-    Test if windows intersect.
-
-    Parameters
-    ----------
-    windows: list-like of window objects
-        ((row_start, row_stop), (col_start, col_stop))
-
-    Returns
-    -------
-    boolean:
-        True if all windows intersect.
-    """
-
-    from rasterio._io import windows_intersect
-    return windows_intersect(windows)
+def windows_intersect(data):
+    import warnings
+    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    return windows.intersect(data)
