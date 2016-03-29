@@ -7,12 +7,12 @@ from rasterio.errors import RasterioIOError
 
 
 def test_io_error(tmpdir):
+    """RasterioIOError is raised when a disk file can't be opened.
+    Newlines are removed from GDAL error messages."""
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open(str(tmpdir.join('foo.tif')))
     msg, = exc_info.value.args
-    assert msg.startswith("'{0}'".format(tmpdir.join('foo.tif')))
-    assert ("does not exist in the file system, and is not recognised as a "
-            "supported dataset name.") in msg
+    assert "\n" not in msg
 
 
 def test_io_error_env(tmpdir):
