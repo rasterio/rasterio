@@ -38,9 +38,10 @@ else:
 
 cdef class DatasetReader(object):
 
-    def __init__(self, path):
+    def __init__(self, path, options=None):
         self.name = path
         self.mode = 'r'
+        self.options = options or {}
         self._hds = NULL
         self._count = 0
         self._closed = True

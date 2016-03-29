@@ -1,7 +1,7 @@
 import os
 
 from rasterio._drivers import ConfigEnv
-from rasterio.five import configparser
+from rasterio.five import configparser, string_types
 
 
 class Session(ConfigEnv):
@@ -41,3 +41,16 @@ class Session(ConfigEnv):
         self.options['AWS_SESSION_TOKEN'] = self.aws_session_token
         self.options['AWS_REGION'] = self.region_name
         self.prev_options = {}
+
+    def open(self, path, mode='r'):
+        """Read-only access to rasters on S3."""
+        if not isinstance(path, string_types):
+            raise TypeError("invalid path: %r" % path)
+        if mode == 'r-':
+            from rasterio._base import DatasetReader
+            s = DatasetReader(path, options=self.options)
+        else:
+            from rasterio._io import RasterReader
+            s = RasterReader(path, options=self.options)
+        s.start()
+        return s
