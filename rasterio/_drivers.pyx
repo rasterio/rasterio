@@ -50,7 +50,6 @@ level_map = {
     4: logging.CRITICAL }
 
 code_map = {
-    0: 'CPLE_None',
     1: 'CPLE_AppDefined',
     2: 'CPLE_OutOfMemory',
     3: 'CPLE_FileIO',
@@ -60,8 +59,16 @@ code_map = {
     7: 'CPLE_AssertionFailed',
     8: 'CPLE_NoWriteAccess',
     9: 'CPLE_UserInterrupt',
-    10: 'CPLE_ObjectNull'
-}
+    10: 'ObjectNull',
+
+    # error numbers 11-16 are introduced in GDAL 2.1. See 
+    # https://github.com/OSGeo/gdal/pull/98.
+    11: 'CPLE_HttpResponse',
+    12: 'CPLE_AWSBucketNotFound',
+    13: 'CPLE_AWSObjectNotFound',
+    14: 'CPLE_AWSAccessDenied',
+    15: 'CPLE_AWSInvalidCredentials',
+    16: 'CPLE_AWSSignatureDoesNotMatch'}
 
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
     log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
