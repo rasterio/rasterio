@@ -29,9 +29,6 @@ Rio plugins
 In addition to the core ``rio`` commands, visit the `Rio plugin registry`_ for a list of external plugins. 
 
 
-Who are the rasterio developers?
---------------------------------
-
 .. include:: ../AUTHORS.txt
 
 

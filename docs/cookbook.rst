@@ -16,6 +16,17 @@ the fundamentals.
 Generating summary statistics for each band
 -------------------------------------------
 
+.. literalinclude:: recipies/band_summary_stats.py
+    :language: python
+    :linenos:
+
+.. code::
+
+    $ python docs/recipies/band_summary_stats.py
+    [{'max': 255, 'mean': 29.94772668847656, 'median': 13.0, 'min': 0},
+     {'max': 255, 'mean': 44.516147889382289, 'median': 30.0, 'min': 0},
+     {'max': 255, 'mean': 48.113056354742945, 'median': 30.0, 'min': 0}]
+
 Raster algebra
 --------------
 
