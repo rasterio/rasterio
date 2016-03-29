@@ -54,7 +54,8 @@ def test_with_session():
     """Enter and exit a session."""
     with Session(aws_access_key_id='id', aws_secret_access_key='key',
                  aws_session_token='token', region_name='null-island-1') as s:
-        pass
+        with rasterio.open("s3://mapbox/rasterio/RGB.byte.tif") as f:
+            assert f.count == 3
 
 
 def test_open_with_session():
