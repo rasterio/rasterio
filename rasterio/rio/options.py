@@ -91,12 +91,16 @@ def file_in_handler(ctx, param, value):
     except ValueError as exc:
         raise click.BadParameter(str(exc))
     path_to_check = archive or path
-    if not os.path.exists(path_to_check):
+    if not scheme in ['http', 'https', 's3'] and not os.path.exists(path_to_check):
         raise click.BadParameter(
             "Input file {0} does not exist".format(path_to_check))
     if archive and scheme:
         archive = os.path.abspath(archive)
         path = "{0}://{1}!{2}".format(scheme, archive, path)
+    elif scheme and scheme.startswith('http'):
+        path = "{0}://{1}".format(scheme, path)
+    elif scheme == 's3':
+        path = "{0}://{1}".format(scheme, path)
     else:
         path = os.path.abspath(path)
     return path

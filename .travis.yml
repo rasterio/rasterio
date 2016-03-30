@@ -10,6 +10,8 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
+    - secure: "Wp1x31bAV//2BF3yJeZKRtit5sAqmULgoTmTH825A+8Frgqb3k9tYf6OR/nP61q9Q84BI2ODqkSRd+EPTgz0hzQIHtDdnOEs4aFefE91dsFRml6LpyhJtoC1cAj45GySS/H8/qME2lby+OvBYceGdQAuaXWHjOT2cdhNqULxQOg="
+    - secure: "qAvCpDLYDiMdHhd8l6PZaukogRKFregFm2JG3aWatiOwNPA7qmp+O7Ac2Z0SsQdXxk7LNw6cVKyuRaiyXbWkAIGt2858a1eRJK++kssZ9NXnIGz5WvYeoVQutYMJU/CBCAgSxzpFo56JJg0CK4xizHU8AyDpi72UTDKAOdpCKd8="
   matrix:
     - GDALVERSION="1.9.2"
     - GDALVERSION="1.10.0"  # doesn't exist but path/lib will fall back to system
@@ -30,7 +32,6 @@ addons:
     - gfortran
 python:
   - "2.7"
-  # - "3.3"   # disabling python3.3 for now
   - "3.4"
 before_install:
   - pip install -U pip
@@ -49,15 +50,3 @@ script:
   - py.test --cov rasterio --cov-report term-missing
 after_success:
   - coveralls
-before_deploy:
-  - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements-dev.txt
-  - pip wheel --wheel-dir=/tmp/wheelhouse -r requirements.txt
-  - pip wheel --wheel-dir=/tmp/wheelhouse .
-  - tar -C /tmp -czvf rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz wheelhouse
-deploy:
-  provider: releases
-  api_key:
-    secure: uP/hy8LRdDnN6XHSLChmKYdW9CdIy8pqvUyXFPgTDY/mlItMUdDNdP95bitzn/rNNXnOkCGsARqzRCLeGI3jB0nEGuAzY6fGWYt2igjfMOhpdDG6o3LcaoP4mITuFfe5/kCQeUb8WB3QK6c2cL7nEEPzoSniqZQ6MsxHIvUW7ts=
-  file: rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz
-  on:
-    tags: true
