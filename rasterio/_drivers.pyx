@@ -108,7 +108,7 @@ cdef class ConfigEnv(object):
                 val_b = ('ON' if val else 'OFF').encode('utf-8')
             val_c = val_b
             CPLSetConfigOption(key_c, val_c)
-            log.debug("Option %s=%s", key, CPLGetConfigOption(key_c, NULL))
+            log.debug("Option %s=%s", key, val)
 
     def exit_config_options(self):
         """Clear GDAL config options."""
