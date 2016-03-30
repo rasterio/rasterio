@@ -14,10 +14,8 @@ def test_session():
     """Create a session with arguments."""
     s = Session(aws_access_key_id='id', aws_secret_access_key='key',
                  aws_session_token='token', region_name='null-island-1')
-    assert s.aws_access_key_id == 'id'
-    assert s.aws_secret_access_key == 'key'
-    assert s.aws_session_token == 'token'
-    assert s.region_name == 'null-island-1'
+    assert s._creds
+    assert s._session
 
 
 def test_session_env(monkeypatch):
@@ -26,9 +24,8 @@ def test_session_env(monkeypatch):
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
     s = Session()
-    assert s.aws_access_key_id == 'id'
-    assert s.aws_secret_access_key == 'key'
-    assert s.aws_session_token == 'token'
+    assert s._creds
+    assert s._session
     monkeypatch.undo()
 
 
@@ -47,9 +44,8 @@ def test_session_config(monkeypatch, tmpdir):
         "[default]\n"
         "region = null-island-1\n")
     s = Session(config_dir=str(tmpdir))
-    assert s.aws_access_key_id == 'id'
-    assert s.aws_secret_access_key == 'key'
-    assert s.region_name == 'null-island-1'
+    assert s._creds
+    assert s._session
     monkeypatch.undo()
 
 

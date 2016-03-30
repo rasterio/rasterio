@@ -21,6 +21,27 @@ def configure_logging(verbosity):
     logging.basicConfig(stream=sys.stderr, level=log_level)
 
 
+class FakeSession(object):
+    """Fake AWS Session."""
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
+        pass
+
+    def open(self, path, mode='r'):
+        return rasterio.open(path, mode)
+
+
+def get_aws_session(profile_name):
+    try:
+        import rasterio.aws
+        return rasterio.aws.Session(profile_name=profile_name)
+    except ImportError:
+        return FakeSession()
+
+
 @with_plugins(ep for ep in list(iter_entry_points('rasterio.rio_commands')) +
               list(iter_entry_points('rasterio.rio_plugins')))
 @click.group()
@@ -39,4 +60,4 @@ def main_group(ctx, verbose, quiet, aws_profile):
     configure_logging(verbosity)
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
-    ctx.obj['aws_session'] = aws.Session(profile=aws_profile)
+    ctx.obj['aws_session'] = get_aws_session(aws_profile)
