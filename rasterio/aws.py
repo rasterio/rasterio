@@ -36,10 +36,14 @@ class Session(ConfigEnv):
         self.region_name = (region_name or rv.get('default.region') or
                             'us-east-1')
         self.options = options.copy()
-        self.options['AWS_ACCESS_KEY_ID'] = self.aws_access_key_id
-        self.options['AWS_SECRET_ACCESS_KEY'] = self.aws_secret_access_key
-        self.options['AWS_SESSION_TOKEN'] = self.aws_session_token
-        self.options['AWS_REGION'] = self.region_name
+        if self.aws_access_key_id:
+            self.options['AWS_ACCESS_KEY_ID'] = self.aws_access_key_id
+        if self.aws_secret_access_key:
+            self.options['AWS_SECRET_ACCESS_KEY'] = self.aws_secret_access_key
+        if self.aws_session_token:
+            self.options['AWS_SESSION_TOKEN'] = self.aws_session_token
+        if self.region_name:
+            self.options['AWS_REGION'] = self.region_name
         self.prev_options = {}
 
     def open(self, path, mode='r'):
