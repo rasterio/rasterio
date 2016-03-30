@@ -12,6 +12,7 @@ from rasterio.five import string_types
 cdef extern from "cpl_conv.h":
     void    CPLFree (void *ptr)
     void    CPLSetThreadLocalConfigOption (char *key, char *val)
+    void    CPLSetConfigOption (char *key, char *val)
     const char * CPLGetConfigOption ( const char *key, const char *default)
 
 
@@ -49,7 +50,6 @@ level_map = {
     4: logging.CRITICAL }
 
 code_map = {
-    0: 'CPLE_None',
     1: 'CPLE_AppDefined',
     2: 'CPLE_OutOfMemory',
     3: 'CPLE_FileIO',
@@ -59,30 +59,96 @@ code_map = {
     7: 'CPLE_AssertionFailed',
     8: 'CPLE_NoWriteAccess',
     9: 'CPLE_UserInterrupt',
-    10: 'CPLE_ObjectNull'
-}
+    10: 'ObjectNull',
+
+    # error numbers 11-16 are introduced in GDAL 2.1. See 
+    # https://github.com/OSGeo/gdal/pull/98.
+    11: 'CPLE_HttpResponse',
+    12: 'CPLE_AWSBucketNotFound',
+    13: 'CPLE_AWSObjectNotFound',
+    14: 'CPLE_AWSAccessDenied',
+    15: 'CPLE_AWSInvalidCredentials',
+    16: 'CPLE_AWSSignatureDoesNotMatch'}
 
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
-    log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
+    if err_no in code_map:
+        log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
 
 def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
 
 
-cdef class GDALEnv(object):
+cdef class ConfigEnv(object):
+
+    cdef public object options
+    cdef public object prev_options
+
+    def __init__(self, **options):
+        self.options = options.copy()
+        self.prev_options = {}
+
+    def enter_config_options(self):
+        """Set GDAL config options."""
+        cdef const char *key_c
+        cdef const char *val_c
+
+        for key, val in self.options.items():
+            key_b = key.upper().encode('utf-8')
+            key_c = key_b
+
+            # Save current value of that key.
+            val_c = CPLGetConfigOption(key_c, NULL)
+            if val_c != NULL:
+                val_b = val_c
+                self.prev_options[key_b] = val_b
+
+            if isinstance(val, string_types):
+                val_b = val.encode('utf-8')
+            else:
+                val_b = ('ON' if val else 'OFF').encode('utf-8')
+            val_c = val_b
+            CPLSetConfigOption(key_c, val_c)
+            log.debug("Option %s=%s", key, val)
+
+    def exit_config_options(self):
+        """Clear GDAL config options."""
+        cdef const char *key_c
+        cdef const char *val_c
+
+        for key in self.options:
+            key_b = key.upper().encode('utf-8')
+            key_c = key_b
+            if key_b in self.prev_options:
+                val_b = self.prev_options[key_b]
+                key_c = key_b; val_c = val_b
+                CPLSetConfigOption(key_c, val_c)
+            else:
+                CPLSetConfigOption(key_c, NULL)
+
+    def __enter__(self):
+        self.enter_config_options()
+        return self
+
+    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        self.exit_config_options()
+
+
+cdef class GDALEnv(ConfigEnv):
 
     cdef object is_chef
-    cdef public object options
 
     def __init__(self, is_chef=True, **options):
         self.is_chef = is_chef
         self.options = options.copy()
+        self.prev_options = {}
 
     def __enter__(self):
         self.start()
+        self.enter_config_options()
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        self.exit_config_options()
         self.stop()
 
     def start(self):
@@ -107,24 +173,7 @@ cdef class GDALEnv(object):
                 os.path.join(os.path.dirname(__file__), "proj_data"))
             os.environ['PROJ_LIB'] = whl_datadir
 
-        for key, val in self.options.items():
-            key_b = key.upper().encode('utf-8')
-            key_c = key_b
-            if isinstance(val, string_types):
-                val_b = val.encode('utf-8')
-            else:
-                val_b = ('ON' if val else 'OFF').encode('utf-8')
-            val_c = val_b
-            CPLSetThreadLocalConfigOption(key_c, val_c)
-            log.debug("Option %s=%s", key, CPLGetConfigOption(key_c, NULL))
-        return self
-
     def stop(self):
-        cdef const char *key_c
-        for key in self.options:
-            key_b = key.upper().encode('utf-8')
-            key_c = key_b
-            CPLSetThreadLocalConfigOption(key_c, NULL)
         CPLSetErrorHandler(NULL)
 
     def drivers(self):

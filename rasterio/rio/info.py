@@ -229,11 +229,14 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
     Optionally print a single metadata item as a string.
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    verbosity = ctx.obj.get('verbosity')
+    aws_session = ctx.obj.get('aws_session')
+
     logger = logging.getLogger('rio')
     mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     try:
-        with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
+        with rasterio.drivers(
+                CPL_DEBUG=(verbosity > 2)), aws_session:
             with rasterio.open(input, mode) as src:
                 info = src.profile
                 info['transform'] = info['affine'][:6]
@@ -295,9 +298,10 @@ def insp(ctx, input, mode, interpreter):
     """
     import rasterio.tool
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+        with rasterio.drivers(CPL_DEBUG=verbosity > 2), aws_session:
             with rasterio.open(input, mode) as src:
                 rasterio.tool.main(
                     'Rasterio %s Interactive Inspector (Python %s)\n'

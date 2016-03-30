@@ -7,6 +7,7 @@ cdef class DatasetReader:
 
     cdef readonly object name
     cdef readonly object mode
+    cdef readonly object options
     cdef readonly object width, height
     cdef readonly object shape
     cdef public object driver

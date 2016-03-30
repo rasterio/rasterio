@@ -2,7 +2,6 @@
 Helper objects used by multiple CLI commands.
 """
 
-
 import json
 import os
 
