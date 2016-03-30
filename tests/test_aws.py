@@ -55,7 +55,7 @@ def test_session_config(monkeypatch, tmpdir):
 
 
 @pytest.mark.xfail(
-        not(os.environ.get('GDALVERSION', '2.1').startswith('XXX')),
+        not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')),
         reason="S3 raster access requires GDAL 2.1")
 def test_with_session():
     """Enter and exit a session."""
@@ -65,7 +65,7 @@ def test_with_session():
 
 
 @pytest.mark.xfail(
-        not(os.environ.get('GDALVERSION', '2.1').startswith('XXX')),
+        not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')),
         reason="S3 raster access requires GDAL 2.1")
 def test_open_with_session():
     """Enter and exit a session."""
