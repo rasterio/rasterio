@@ -6,7 +6,8 @@ except ImportError:
     plt = None
 
 import rasterio
-from rasterio.rio.insp import show, show_hist, stats
+from rasterio.plot import show, show_hist
+from rasterio.rio.insp import stats
 
 def test_stats():
     with rasterio.drivers():
