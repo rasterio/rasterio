@@ -29,7 +29,6 @@ def test_session_env(monkeypatch):
     assert s.aws_access_key_id == 'id'
     assert s.aws_secret_access_key == 'key'
     assert s.aws_session_token == 'token'
-    assert s.region_name == 'us-east-1'
     monkeypatch.undo()
 
 
@@ -55,39 +54,36 @@ def test_session_config(monkeypatch, tmpdir):
 
 
 @pytest.mark.xfail(
-        not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')),
-        reason="S3 raster access requires GDAL 2.1")
+    (not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')) or
+        'AWS_ACCESS_KEY_ID' not in os.environ or
+        'AWS_SECRET_ACCESS_KEY' not in os.environ),
+    reason="S3 raster access requires GDAL 2.1")
 def test_with_session():
     """Enter and exit a session."""
-    aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    with Session(aws_access_key_id=aws_access_key_id,
-                 aws_secret_access_key=aws_secret_access_key) as s:
+    with Session() as s:
         with rasterio.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF") as f:
             assert f.count == 1
 
 
 @pytest.mark.xfail(
-        not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')),
-        reason="S3 raster access requires GDAL 2.1")
+    (not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')) or
+        'AWS_ACCESS_KEY_ID' not in os.environ or
+        'AWS_SECRET_ACCESS_KEY' not in os.environ),
+    reason="S3 raster access requires GDAL 2.1")
 def test_open_with_session():
     """Enter and exit a session."""
-    aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    s = Session(aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key)
+    s = Session()
     with s.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF") as f:
         assert f.count == 1
 
 
 @pytest.mark.xfail(
-        not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')),
-        reason="S3 raster access requires GDAL 2.1")
+    (not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')) or
+        'AWS_ACCESS_KEY_ID' not in os.environ or
+        'AWS_SECRET_ACCESS_KEY' not in os.environ),
+    reason="S3 raster access requires GDAL 2.1")
 def test_open_with_session_minus_mode():
     """Enter and exit a session, reading in 'r-' mode"""
-    aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    s = Session(aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key)
+    s = Session()
     with s.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF", 'r-') as f:
         assert f.count == 1
