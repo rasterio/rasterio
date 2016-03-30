@@ -13,7 +13,6 @@ import cligj
 
 from . import options
 import rasterio
-from rasterio import aws
 
 
 def configure_logging(verbosity):
@@ -27,7 +26,7 @@ class FakeSession(object):
     def __enter__(self):
         pass
 
-    def __exit__(self):
+    def __exit__(self, *args):
         pass
 
     def open(self, path, mode='r'):
