@@ -78,3 +78,16 @@ def test_open_with_session():
                 aws_secret_access_key=aws_secret_access_key)
     with s.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF") as f:
         assert f.count == 1
+
+
+@pytest.mark.xfail(
+        not(os.environ.get('GDALVERSION', '2.1').startswith('2.1')),
+        reason="S3 raster access requires GDAL 2.1")
+def test_open_with_session_minus_mode():
+    """Enter and exit a session, reading in 'r-' mode"""
+    aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
+    aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    s = Session(aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key)
+    with s.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF", 'r-') as f:
+        assert f.count == 1
