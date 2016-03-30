@@ -15,7 +15,7 @@ def test_update_tags(data):
         with rasterio.open(tiffname, 'r+') as f:
             f.update_tags(a='1', b='2')
             f.update_tags(1, c=3)
-            with pytest.raises(ValueError):
+            with pytest.raises(IndexError):
                 f.update_tags(4, d=4)
             assert f.tags() == {'AREA_OR_POINT': 'Area', 'a': '1', 'b': '2'}
             assert ('c', '3') in f.tags(1).items()

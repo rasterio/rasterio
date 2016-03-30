@@ -6,7 +6,7 @@ import numpy as np
 cimport numpy as np
 
 from rasterio import dtypes
-from rasterio._err import cpl_errs
+from rasterio._err import CPLErrors
 from rasterio cimport _gdal, _io
 
 from rasterio._io cimport InMemoryRaster
@@ -60,28 +60,22 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
     else:
         raise ValueError("Invalid source image mask")
 
-    with cpl_errs:
-        alg_options = _gdal.CSLSetNameValue(
+    try:
+        with CPLErrors() as cple:
+            alg_options = _gdal.CSLSetNameValue(
                 alg_options, "TEMP_FILE_DRIVER", "MEM")
-
-        _gdal.GDALFillNodata(
-                image_band,
-                mask_band,
-                max_search_distance,
-                0,
-                smoothing_iterations,
-                alg_options,
-                NULL,
-                NULL)
-
-    # read the result into a numpy ndarray
-    result = np.empty(image.shape, dtype=image.dtype)
-    _io.io_auto(result, image_band, False)
-
-    if image_dataset != NULL:
-        _gdal.GDALClose(image_dataset)
-    if mask_dataset != NULL:
-        _gdal.GDALClose(mask_dataset)
-    _gdal.CSLDestroy(alg_options)
+            _gdal.GDALFillNodata(
+                image_band, mask_band, max_search_distance, 0,
+                    smoothing_iterations, alg_options, NULL, NULL)
+            cple.check()
+        # read the result into a numpy ndarray
+        result = np.empty(image.shape, dtype=image.dtype)
+        _io.io_auto(result, image_band, False)
+    finally:
+        if image_dataset != NULL:
+            _gdal.GDALClose(image_dataset)
+        if mask_dataset != NULL:
+            _gdal.GDALClose(mask_dataset)
+        _gdal.CSLDestroy(alg_options)
 
     return result

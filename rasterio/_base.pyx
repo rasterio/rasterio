@@ -14,9 +14,11 @@ from libc.stdlib cimport malloc, free
 
 from rasterio cimport _gdal, _ogr
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs, GDALError
+from rasterio._err import (
+    CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed)
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
+from rasterio.errors import RasterioIOError
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, Compression, Interleaving
 from rasterio.vfs import parse_path, vsi_path
@@ -36,9 +38,10 @@ else:
 
 cdef class DatasetReader(object):
 
-    def __init__(self, path):
+    def __init__(self, path, options=None):
         self.name = path
         self.mode = 'r'
+        self.options = options or {}
         self._hds = NULL
         self._count = 0
         self._closed = True
@@ -71,10 +74,14 @@ cdef class DatasetReader(object):
 
         name_b = path.encode('utf-8')
         cdef const char *fname = name_b
-        with cpl_errs:
-            self._hds = _gdal.GDALOpen(fname, 0)
-        if self._hds == NULL:
-            raise ValueError("Null dataset")
+
+        try:
+            with CPLErrors() as cple:
+                self._hds = _gdal.GDALOpen(fname, 0)
+                cple.check()
+        except CPLE_OpenFailed as err:
+            self.env.stop()
+            raise RasterioIOError(err.errmsg)
 
         cdef void *drv
         cdef const char *drv_name
@@ -96,13 +103,27 @@ cdef class DatasetReader(object):
 
         self._closed = False
 
-    cdef void *band(self, int bidx):
-        if self._hds == NULL:
-            raise ValueError("Null dataset")
-        cdef void *hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband == NULL:
-            raise ValueError("Null band")
+    cdef void *band(self, int bidx) except NULL:
+        cdef void *hband = NULL
+        try:
+            with CPLErrors() as cple:
+                hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+                cple.check()
+        except CPLE_IllegalArg as exc:
+            self.env.stop()
+            raise IndexError(str(exc))
         return hband
+
+    def _has_band(self, bidx):
+        cdef void *hband = NULL
+        try:
+            with CPLErrors() as cple:
+                hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+                cple.check()
+        except CPLE_IllegalArg:
+            self.env.stop()
+            return False
+        return True
 
     def read_crs(self):
         cdef char *proj_c = NULL
@@ -596,14 +617,9 @@ cdef class DatasetReader(object):
         cdef void *hobj
         cdef const char *domain_c
         cdef char **papszStrList
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
+
         if bidx > 0:
-            if bidx not in self.indexes:
-                raise ValueError("Invalid band index")
-            hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hobj == NULL:
-                raise ValueError("NULL band")
+            hobj = self.band(bidx)
         else:
             hobj = self._hds
         if ns:
@@ -850,6 +866,8 @@ def tastes_like_gdal(t):
 
 
 cdef void *_osr_from_crs(object crs):
+    """Returns a reference to memory that must be deallocated
+    by the caller."""
     cdef char *proj_c = NULL
     cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
     params = []

@@ -7,6 +7,7 @@ cdef class DatasetReader:
 
     cdef readonly object name
     cdef readonly object mode
+    cdef readonly object options
     cdef readonly object width, height
     cdef readonly object shape
     cdef public object driver
@@ -21,7 +22,7 @@ cdef class DatasetReader:
     cdef public object _read
     cdef object env
 
-    cdef void *band(self, int bidx)
+    cdef void *band(self, int bidx) except NULL
 
 
 cdef void *_osr_from_crs(object crs)

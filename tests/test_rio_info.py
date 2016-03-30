@@ -208,8 +208,9 @@ def test_edit_crs_like(data):
 
     # The test.
     templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(edit, [
-        inputfile, '--like', templatefile, '--crs', 'like'])
+    result = runner.invoke(
+        main_group,
+        ['edit-info', inputfile, '--like', templatefile, '--crs', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -232,8 +233,9 @@ def test_edit_nodata_like(data):
 
     # The test.
     templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(edit, [
-        inputfile, '--like', templatefile, '--nodata', 'like'])
+    result = runner.invoke(
+        main_group,
+        ['edit-info', inputfile, '--like', templatefile, '--nodata', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32617'}
@@ -254,8 +256,8 @@ def test_edit_all_like(data):
         assert src.nodata == 1.0
 
     templatefile = 'tests/data/RGB.byte.tif'
-    result = runner.invoke(edit, [
-        inputfile, '--like', templatefile, '--all'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--like', templatefile, '--all'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -275,16 +277,14 @@ def test_env():
 def test_info_err():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests'])
+        main_group, ['info', 'tests'])
     assert result.exit_code == 1
 
 
 def test_info():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests/data/RGB.byte.tif'])
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
     assert '"count": 3' in result.output
 
@@ -312,8 +312,7 @@ def test_info_quiet():
 def test_info_count():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests/data/RGB.byte.tif', '--count'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--count'])
     assert result.exit_code == 0
     assert result.output == '3\n'
 
@@ -321,8 +320,7 @@ def test_info_count():
 def test_info_nodatavals():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests/data/RGB.byte.tif', '--bounds'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--bounds'])
     assert result.exit_code == 0
     assert result.output == '101985.0 2611485.0 339315.0 2826915.0\n'
 
@@ -330,8 +328,7 @@ def test_info_nodatavals():
 def test_info_tags():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests/data/RGB.byte.tif', '--tags'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--tags'])
     assert result.exit_code == 0
     assert result.output == '{"AREA_OR_POINT": "Area"}\n'
 
@@ -339,8 +336,7 @@ def test_info_tags():
 def test_info_res():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests/data/RGB.byte.tif', '--res'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--res'])
     assert result.exit_code == 0
     assert result.output.startswith('300.037')
 
@@ -348,15 +344,14 @@ def test_info_res():
 def test_info_lnglat():
     runner = CliRunner()
     result = runner.invoke(
-        info.info,
-        ['tests/data/RGB.byte.tif', '--lnglat'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--lnglat'])
     assert result.exit_code == 0
     assert result.output.startswith('-77.757')
 
 
 def test_mo_info():
     runner = CliRunner()
-    result = runner.invoke(info.info, ['tests/data/RGB.byte.tif'])
+    result = runner.invoke(main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
     assert '"res": [300.037' in result.output
     assert '"lnglat": [-77.757' in result.output
@@ -365,7 +360,7 @@ def test_mo_info():
 def test_info_stats():
     runner = CliRunner()
     result = runner.invoke(
-        info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--tell-me-more'])
     assert result.exit_code == 0
     assert '"max": 255.0' in result.output
     assert '"min": 1.0' in result.output
@@ -375,7 +370,8 @@ def test_info_stats():
 def test_info_stats_only():
     runner = CliRunner()
     result = runner.invoke(
-        info.info, ['tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
+        main_group,
+        ['info', 'tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.startswith('1.000000 255.000000 66.02')
 
@@ -597,26 +593,20 @@ def test_bounds_seq_rs():
 
 def test_insp():
     runner = CliRunner()
-    result = runner.invoke(main_group, [
-        'insp',
-        'tests/data/RGB.byte.tif'
-    ])
+    result = runner.invoke(main_group, ['insp', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
 
 
 def test_insp_err():
     runner = CliRunner()
-    result = runner.invoke(main_group, [
-        'insp',
-        'tests'
-    ])
+    result = runner.invoke(main_group, ['insp', 'tests'])
     assert result.exit_code == 1
 
 
 def test_info_checksums():
     runner = CliRunner()
     result = runner.invoke(
-        info.info, ['tests/data/RGB.byte.tif', '--tell-me-more'])
+        main_group, ['info', 'tests/data/RGB.byte.tif', '--tell-me-more'])
     assert result.exit_code == 0
     assert '"checksum": [25420, 29131, 37860]' in result.output
 
@@ -624,6 +614,7 @@ def test_info_checksums():
 def test_info_checksums_only():
     runner = CliRunner()
     result = runner.invoke(
-        info.info, ['tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
+        main_group,
+        ['info', 'tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.strip() == '29131'
