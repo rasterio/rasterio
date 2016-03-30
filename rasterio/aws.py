@@ -39,26 +39,32 @@ class Session(ConfigEnv):
             'aws_secret_access_key': '',
             'aws_session_token': '',
             'region': 'us-east-1'}
+        conf = defaults.copy()
         section = profile or 'default'
+
         parser = configparser.ConfigParser(defaults)
         parser.read(
             os.path.join(os.path.expanduser(config_dir), 'credentials'))
+        if section in parser.sections():
+            conf.update(parser.items(section))
         self.aws_access_key_id = (
             aws_access_key_id or
             os.environ.get('AWS_ACCESS_KEY_ID') or
-            parser.get(section, 'aws_access_key_id'))
+            conf.get('aws_access_key_id'))
         self.aws_secret_access_key = (
             aws_secret_access_key or
             os.environ.get('AWS_SECRET_ACCESS_KEY') or
-            parser.get(section, 'aws_secret_access_key'))
+            conf.get('aws_secret_access_key'))
         self.aws_session_token = (
             aws_session_token or
             os.environ.get('AWS_SESSION_TOKEN') or
-            parser.get(section, 'aws_session_token'))
+            conf.get('aws_session_token'))
 
         parser.read(
             os.path.join(os.path.expanduser(config_dir), 'config'))
-        self.region_name = region_name or parser.get(section, 'region')
+        if section in parser.sections():
+            conf.update(parser.items(section))
+        self.region_name = region_name or conf.get('region')
 
         self.options = options.copy()
         if self.aws_access_key_id:
