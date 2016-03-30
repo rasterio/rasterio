@@ -59,9 +59,12 @@ def test_session_config(monkeypatch, tmpdir):
         reason="S3 raster access requires GDAL 2.1")
 def test_with_session():
     """Enter and exit a session."""
-    with Session() as s:
-        with rasterio.open("s3://mapbox/rasterio/RGB.byte.tif") as f:
-            assert f.count == 3
+    aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
+    aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    with Session(aws_access_key_id=aws_access_key_id,
+                 aws_secret_access_key=aws_secret_access_key) as s:
+        with rasterio.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF") as f:
+            assert f.count == 1
 
 
 @pytest.mark.xfail(
@@ -69,6 +72,9 @@ def test_with_session():
         reason="S3 raster access requires GDAL 2.1")
 def test_open_with_session():
     """Enter and exit a session."""
-    s = Session()
-    with s.open("s3://mapbox/rasterio/RGB.byte.tif") as f:
-        assert f.count == 3
+    aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
+    aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    s = Session(aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key)
+    with s.open("s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF") as f:
+        assert f.count == 1
