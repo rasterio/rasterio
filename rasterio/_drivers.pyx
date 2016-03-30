@@ -71,7 +71,8 @@ code_map = {
     16: 'CPLE_AWSSignatureDoesNotMatch'}
 
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
-    log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
+    if err_no in code_map:
+        log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
 
 def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()

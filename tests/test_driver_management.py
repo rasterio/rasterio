@@ -31,7 +31,7 @@ def test_options(tmpdir):
             pass
 
     log = open(logfile1).read()
-    assert "GDAL: GDALOpen(tests/data/RGB.byte.tif" in log
+    assert "Option CPL_DEBUG=ON" in log
     
     # The GDAL env above having exited, CPL_DEBUG should be OFF.
     logfile2 = str(tmpdir.join('test_options2.log'))
@@ -44,4 +44,3 @@ def test_options(tmpdir):
     # Expect no debug messages from GDAL.
     log = open(logfile2).read()
     assert "GDAL: GDALOpen(tests/data/RGB.byte.tif" not in log
-
