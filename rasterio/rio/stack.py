@@ -1,3 +1,4 @@
+"""Commands for operating on bands of datasets."""
 import logging
 
 import click
