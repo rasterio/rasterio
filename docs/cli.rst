@@ -1,5 +1,13 @@
-Command Line Interface
-======================
+==================================
+``rio`` Command Line User's Manual
+==================================
+
+.. todo:: 
+ 
+    Introduce the command line interface main concepts, 
+    when you should and should not use the command line,
+    Overview of the general design pholosophy,
+
 
 Rasterio's command line interface is a program named "rio".
 
@@ -37,8 +45,11 @@ Rasterio's command line interface is a program named "rio".
 
 It is developed using `Click <http://click.pocoo.org/>`__.
 
+Commands
+========
 Commands are shown below. See ``--help`` of individual commands for more
 details.
+
 
 creation options
 ----------------
@@ -155,8 +166,9 @@ The command above is also an example of a calculation that is far beyond the
 design of the calc command and something that could be done much more
 efficiently in Python.
 
-Please see `calc.rst <calc.rst>`__ for more details.
+.. toctree::
 
+    calc
 
 clip
 ----
@@ -371,12 +383,13 @@ The ``insp`` command opens a dataset and an interpreter.
 
 .. code-block:: console
 
-    $ rio insp tests/data/RGB.byte.tif
-    Rasterio 0.18 Interactive Inspector (Python 2.7.9)
+    $ rio insp --ipython tests/data/RGB.byte.tif
+    Rasterio 0.32.0 Interactive Inspector (Python 2.7.10)
     Type "src.meta", "src.read(1)", or "help(src)" for more information.
-    >>> print src.name
-    tests/data/RGB.byte.tif
-    >>> print src.bounds
+    In [1]: print(src.name)
+    /path/rasterio/tests/data/RGB.byte.tif
+
+    In [2]: print(src.bounds)
     BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)
 
 

@@ -13,7 +13,7 @@ Expressions
 
 Rio-calc expressions look like
 
-.. code-block::
+.. code-block:: console
 
     (func|operator arg [*args])
 
