@@ -48,7 +48,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
       --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)
     """
 
-    from rasterio.tools.merge import merge as merge_tool
+    from rasterio.merge import merge as merge_tool
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')

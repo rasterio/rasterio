@@ -67,7 +67,7 @@ def mask(
     input raster.
     """
 
-    from rasterio.tools.mask import mask as mask_tool
+    from rasterio.mask import mask as mask_tool
     from rasterio.features import bounds as calculate_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1

@@ -216,7 +216,7 @@ pseudoxml:
 
 .PHONY: apidocs
 apidocs:
-	sphinx-apidoc -f -e -T -M -o . ../rasterio ../rasterio/rio ../rasterio/five.py
+	sphinx-apidoc -f -e -T -M -o . ../rasterio ../rasterio/rio ../rasterio/five.py ../rasterio/tools ../rasterio/tool.py
 
 .PHONY: publish
 publish: html

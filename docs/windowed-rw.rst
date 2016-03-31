@@ -170,7 +170,7 @@ a dataset:
 
 .. code-block:: python
 
-    from rasterio import get_data_window
+    from rasterio.windows import get_data_window
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         window = get_data_window(src.read(1, masked=True))
@@ -197,16 +197,16 @@ with the same full extent.
 
 .. code-block:: python
 
-    from rasterio import window_union, window_intersection
+    from rasterio import windows
 
     # Full window is ((0, 1000), (0, 500))
     window1 = ((100, 500), (10, 500))
     window2 = ((10, 150), (50, 250))
 
-    outer = window_union([window1, window2])
+    outer = windows.union([window1, window2])
     # outer = ((10, 500), (10, 500))
 
-    inner = window_intersection([window1, window2])
+    inner = windows.intersection([window1, window2])
     # inner = ((100, 150), (50, 250))
 
 
