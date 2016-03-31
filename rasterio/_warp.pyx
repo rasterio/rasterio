@@ -8,7 +8,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio._err import cpl_errs, GDALError
+from rasterio._err import CPLErrors, GDALError
 from rasterio._io cimport InMemoryRaster
 from rasterio.errors import DriverRegistrationError
 from rasterio.transform import Affine, from_bounds
@@ -100,8 +100,15 @@ def _transform_geom(
 
     src = _base._osr_from_crs(src_crs)
     dst = _base._osr_from_crs(dst_crs)
-    transform = _gdal.OCTNewCoordinateTransformation(src, dst)
 
+    try:
+        with CPLErrors() as cple:
+            transform = _gdal.OCTNewCoordinateTransformation(src, dst)
+    except:
+        _gdal.OSRDestroySpatialReference(src)
+        _gdal.OSRDestroySpatialReference(dst)
+        raise
+        
     # Transform options.
     val_b = str(antimeridian_offset).encode('utf-8')
     val_c = val_b
@@ -110,22 +117,25 @@ def _transform_geom(
     if antimeridian_cutting:
         options = _gdal.CSLSetNameValue(options, "WRAPDATELINE", "YES")
 
-    factory = new OGRGeometryFactory()
-    src_ogr_geom = _features.OGRGeomBuilder().build(geom)
-    dst_ogr_geom = factory.transformWithOptions(
+    try:
+        factory = new OGRGeometryFactory()
+        src_ogr_geom = _features.OGRGeomBuilder().build(geom)
+        with CPLErrors() as cple:
+            dst_ogr_geom = factory.transformWithOptions(
                     <const OGRGeometry *>src_ogr_geom,
                     <OGRCoordinateTransformation *>transform,
                     options)
-    del factory
-    g = _features.GeomBuilder().build(dst_ogr_geom)
-
-    _ogr.OGR_G_DestroyGeometry(dst_ogr_geom)
-    _ogr.OGR_G_DestroyGeometry(src_ogr_geom)
-    _gdal.OCTDestroyCoordinateTransformation(transform)
-    if options != NULL:
-        _gdal.CSLDestroy(options)
-    _gdal.OSRDestroySpatialReference(src)
-    _gdal.OSRDestroySpatialReference(dst)
+            cple.check()
+        g = _features.GeomBuilder().build(dst_ogr_geom)
+    finally:
+        del factory
+        _ogr.OGR_G_DestroyGeometry(dst_ogr_geom)
+        _ogr.OGR_G_DestroyGeometry(src_ogr_geom)
+        _gdal.OCTDestroyCoordinateTransformation(transform)
+        if options != NULL:
+            _gdal.CSLDestroy(options)
+        _gdal.OSRDestroySpatialReference(src)
+        _gdal.OSRDestroySpatialReference(dst)
 
     if precision >= 0:
         if g['type'] == 'Point':
@@ -267,31 +277,41 @@ def _reproject(
             # source is a masked array
             src_nodata = source.fill_value
 
-        hrdriver = _gdal.GDALGetDriverByName("MEM")
-        if hrdriver == NULL:
+        try:
+            with CPLErrors() as cple:
+                hrdriver = _gdal.GDALGetDriverByName("MEM")
+                cple.check()
+        except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
                 "in a `with rasterio.drivers()` or `with rasterio.open()` "
                 "block.")
 
-        hdsin = _gdal.GDALCreate(
+        try:
+            with CPLErrors() as cple:
+                hdsin = _gdal.GDALCreate(
                     hrdriver, "input", cols, rows, 
                     src_count, dtypes.dtype_rev[dtype], NULL)
-        if hdsin == NULL:
-            raise ValueError("NULL input datasource")
+                cple.check()
+        except:
+            raise
         _gdal.GDALSetDescription(
             hdsin, "Temporary source dataset for _reproject()")
         log.debug("Created temp source dataset")
+
         for i in range(6):
             gt[i] = src_transform[i]
         retval = _gdal.GDALSetGeoTransform(hdsin, gt)
         log.debug("Set transform on temp source dataset: %d", retval)
-        osr = _base._osr_from_crs(src_crs)
-        _gdal.OSRExportToWkt(osr, &srcwkt)
-        _gdal.GDALSetProjection(hdsin, srcwkt)
-        log.debug("Set CRS on temp source dataset: %s", srcwkt)
-        _gdal.CPLFree(srcwkt)
-        _gdal.OSRDestroySpatialReference(osr)
+
+        try:
+            osr = _base._osr_from_crs(src_crs)
+            _gdal.OSRExportToWkt(osr, &srcwkt)
+            _gdal.GDALSetProjection(hdsin, srcwkt)
+            log.debug("Set CRS on temp source dataset: %s", srcwkt)
+        finally:
+            _gdal.CPLFree(srcwkt)
+            _gdal.OSRDestroySpatialReference(osr)
         
         # Copy arrays to the dataset.
         retval = _io.io_auto(source, hdsin, 1)
@@ -315,19 +335,25 @@ def _reproject(
         if destination.shape[0] != src_count:
             raise ValueError("Destination's shape is invalid")
 
-        hrdriver = _gdal.GDALGetDriverByName("MEM")
-        if hrdriver == NULL:
+        try:
+            with CPLErrors() as cple:
+                hrdriver = _gdal.GDALGetDriverByName("MEM")
+                cple.check()
+        except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
                 "in a `with rasterio.drivers()` or `with rasterio.open()` "
                 "block.")
 
         _, rows, cols = destination.shape
-        hdsout = _gdal.GDALCreate(
-                        hrdriver, "output", cols, rows, src_count, 
-                        dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
-        if hdsout == NULL:
-            raise ValueError("Failed to create temp destination dataset.")
+        try:
+            with CPLErrors() as cple:
+                hdsout = _gdal.GDALCreate(
+                    hrdriver, "output", cols, rows, src_count, 
+                    dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
+                cple.check()
+        except:
+            raise
         _gdal.GDALSetDescription(
             hdsout, "Temporary destination dataset for _reproject()")
         log.debug("Created temp destination dataset.")
@@ -335,20 +361,20 @@ def _reproject(
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.success == _gdal.GDALSetGeoTransform(hdsout, gt):
+        if not GDALError.none == _gdal.GDALSetGeoTransform(hdsout, gt):
             raise ValueError(
                 "Failed to set transform on temp destination dataset.")
 
-        osr = _base._osr_from_crs(dst_crs)
-        _gdal.OSRExportToWkt(osr, &dstwkt)
-        _gdal.OSRDestroySpatialReference(osr)
-        log.debug("CRS for temp destination dataset: %s.", dstwkt)
-
-        if not GDALError.success == _gdal.GDALSetProjection(hdsout, dstwkt):
-            raise ValueError(
-                "Failed to set projection on temp destination dataset.")
-
-        _gdal.CPLFree(dstwkt)
+        try:
+            osr = _base._osr_from_crs(dst_crs)
+            _gdal.OSRExportToWkt(osr, &dstwkt)
+            log.debug("CRS for temp destination dataset: %s.", dstwkt)
+            if not GDALError.none == _gdal.GDALSetProjection(
+                    hdsout, dstwkt):
+                raise ("Failed to set projection on temp destination dataset.")
+        finally:
+            _gdal.OSRDestroySpatialReference(osr)
+            _gdal.CPLFree(dstwkt)
 
         if dst_nodata is None and hasattr(destination, "fill_value"):
             # destination is a masked array
@@ -365,14 +391,19 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
 
-    hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
-                                        hdsin, NULL, hdsout, NULL,
-                                        1, 1000.0, 0)
-    if hTransformArg == NULL:
-        raise ValueError("NULL transformer")
-    log.debug("Created transformer")
-
-    psWOptions = _gdal.GDALCreateWarpOptions()
+    try:
+        with CPLErrors() as cple:
+            hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
+                                hdsin, NULL, hdsout, NULL,
+                                1, 1000.0, 0)
+            cple.check()
+            psWOptions = _gdal.GDALCreateWarpOptions()
+            cple.check()
+        log.debug("Created transformer and options.")
+    except:
+        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyWarpOptions(psWOptions)
+        raise
 
     # Note: warp_extras is pointed to different memory locations on every
     # call to CSLSetNameValue call below, but needs to be set here to
@@ -476,20 +507,21 @@ def _reproject(
     # and run the warper.
     cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
     try:
-        with cpl_errs:
+        with CPLErrors() as cple:
             oWarper.Initialize(psWOptions)
-
+            cple.check()
         rows, cols = destination.shape[-2:]
         log.debug(
             "Chunk and warp window: %d, %d, %d, %d.",
             0, 0, cols, rows)
 
-        with cpl_errs:
+        with CPLErrors() as cple:
             if num_threads > 1:
                 log.debug("Executing multi warp with num_threads: %d", num_threads)
                 oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             else:
                 oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+            cple.check()
 
         if dtypes.is_ndarray(destination):
             retval = _io.io_auto(destination, hdsout, 0)
@@ -534,22 +566,17 @@ def _calculate_default_transform(
 
     with InMemoryRaster(
             img, transform=transform.to_gdal(), crs=src_crs) as temp:
-        hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
-            temp.dataset, NULL, NULL, wkt, 1, 1000.0, 0)
-        if hTransformArg == NULL:
-            if wkt != NULL:
-                _gdal.CPLFree(wkt)
-            raise ValueError("NULL transformer")
-        log.debug("Created transformer")
-
-        # geotransform, npixels, and nlines are modified by the
-        # function called below.
         try:
-            if not GDALError.success == _gdal.GDALSuggestedWarpOutput2(
+            with CPLErrors() as cple:
+                hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
+                                    temp.dataset, NULL, NULL, wkt,
+                                    1, 1000.0,0)
+                cple.check()
+                result = _gdal.GDALSuggestedWarpOutput2(
                     temp.dataset, _gdal.GDALGenImgProjTransform, hTransformArg,
-                    geotransform, &npixels, &nlines, extent, 0):
-                raise RuntimeError(
-                    "Failed to compute a suggested warp output.")
+                    geotransform, &npixels, &nlines, extent, 0)
+                cple.check()
+            log.debug("Created transformer and warp output.")
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)

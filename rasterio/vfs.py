@@ -6,7 +6,8 @@ import os
 # NB: As not to propagate fallacies of distributed computing, Rasterio
 # does not support HTTP or FTP URLs via GDAL's vsicurl handler. Only
 # the following local filesystem schemes are supported.
-SCHEMES = ['gzip', 'zip', 'tar']
+SCHEMES = {'gzip': 'gzip', 'zip': 'zip', 'tar': 'tar', 'https': 'curl',
+        'http': 'curl', 's3': 's3'}
 
 
 def parse_path(path, vfs=None):
@@ -35,9 +36,14 @@ def vsi_path(path, archive=None, scheme=None):
     """Convert a parsed path to a GDAL VSI path."""
     # If a VSF and archive file are specified, we convert the path to
     # a GDAL VSI path (see cpl_vsi.h).
-    if scheme and scheme != 'file':
+    if scheme and scheme.startswith('http'):
+        result = "/vsicurl/{0}://{1}".format(scheme, path)
+    elif scheme and scheme == 's3':
+        result = "/vsis3/{0}".format(path)
+    elif scheme and scheme != 'file':
         path = path.strip(os.path.sep)
-        result = os.path.sep.join(['/vsi{0}'.format(scheme), archive, path])
+        result = os.path.sep.join(
+            ['/vsi{0}'.format(scheme), archive, path])
     else:
         result = path
     return result

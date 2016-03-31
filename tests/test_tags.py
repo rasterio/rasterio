@@ -13,7 +13,7 @@ def test_tags_read():
         assert src.tags(ns='IMAGE_STRUCTURE') == {'INTERLEAVE': 'PIXEL'}
         assert src.tags(ns='bogus') == {}
         assert 'STATISTICS_MAXIMUM' in src.tags(1)
-        with pytest.raises(ValueError):
+        with pytest.raises(IndexError):
             tags = src.tags(4)
 
 def test_tags_update(tmpdir):
@@ -29,7 +29,7 @@ def test_tags_update(tmpdir):
 
         dst.update_tags(a='1', b='2')
         dst.update_tags(1, c=3)
-        with pytest.raises(ValueError):
+        with pytest.raises(IndexError):
             dst.update_tags(4, d=4)
 
         assert dst.tags() == {'a': '1', 'b': '2'}

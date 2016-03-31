@@ -13,6 +13,7 @@ import cligj
 
 from . import options
 import rasterio
+from rasterio import aws
 
 
 def configure_logging(verbosity):
@@ -25,9 +26,10 @@ def configure_logging(verbosity):
 @click.group()
 @cligj.verbose_opt
 @cligj.quiet_opt
+@click.option('--aws-profile', help="AWS credentials profile name")
 @click.version_option(version=rasterio.__version__, message='%(version)s')
 @click.pass_context
-def main_group(ctx, verbose, quiet):
+def main_group(ctx, verbose, quiet, aws_profile):
 
     """
     Rasterio command line interface.
@@ -37,3 +39,4 @@ def main_group(ctx, verbose, quiet):
     configure_logging(verbosity)
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
+    ctx.obj['aws_session'] = aws.Session(profile=aws_profile)

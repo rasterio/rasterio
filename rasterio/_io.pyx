@@ -17,10 +17,10 @@ from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import cpl_errs, GDALError
+from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import DriverRegistrationError
+from rasterio.errors import DriverRegistrationError, RasterioIOError
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -1288,9 +1288,14 @@ cdef class RasterUpdater(RasterReader):
             
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
-            drv = _gdal.GDALGetDriverByName(drv_name)
-            if drv == NULL:
-                raise ValueError("NULL driver for %s", self.driver)
+            
+            try:
+                with CPLErrors() as cple:
+                    drv = _gdal.GDALGetDriverByName(drv_name)
+                    cple.check()
+            except Exception as err:
+                self.env.stop()
+                raise DriverRegistrationError(str(err))
             
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
@@ -1328,12 +1333,17 @@ cdef class RasterUpdater(RasterReader):
                     "Option: %r\n", 
                     (k, _gdal.CSLFetchNameValue(options, key_c)))
 
-            self._hds = _gdal.GDALCreate(
-                drv, fname, self.width, self.height, self._count,
-                gdal_dtype, options)
-
-            if self._hds == NULL:
-                raise ValueError("NULL dataset")
+            try:
+                with CPLErrors() as cple:
+                    self._hds = _gdal.GDALCreate(
+                        drv, fname, self.width, self.height, self._count,
+                        gdal_dtype, options)
+                    cple.check()
+            except Exception as err:
+                self.env.stop()
+                if options != NULL:
+                    _gdal.CSLDestroy(options)
+                raise
 
             if self._init_nodata is not None:
 
@@ -1354,10 +1364,13 @@ cdef class RasterUpdater(RasterReader):
                 self.set_crs(self._crs)
         
         elif self.mode == 'r+':
-            with cpl_errs:
-                self._hds = _gdal.GDALOpen(fname, 1)
-            if self._hds == NULL:
-                raise ValueError("NULL dataset")
+            try:
+                with CPLErrors() as cple:
+                    self._hds = _gdal.GDALOpen(fname, 1)
+                    cple.check()
+            except CPLE_OpenFailed as err:
+                self.env.stop()
+                raise RasterioIOError(str(err))
 
         drv = _gdal.GDALGetDatasetDriver(self._hds)
         drv_name = _gdal.GDALGetDriverShortName(drv)
@@ -1659,14 +1672,8 @@ cdef class RasterUpdater(RasterReader):
         cdef void *hobj = NULL
         cdef const char *domain_c = NULL
         cdef char **papszStrList = NULL
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
         if bidx > 0:
-            if bidx not in self.indexes:
-                raise ValueError("Invalid band index")
-            hobj = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hobj == NULL:
-                raise ValueError("NULL band")
+            hobj = self.band(bidx)
         else:
             hobj = self._hds
         if ns:
@@ -1700,21 +1707,15 @@ cdef class RasterUpdater(RasterReader):
         cdef void *hBand = NULL
         cdef void *hTable
         cdef _gdal.GDALColorEntry color
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
         if bidx > 0:
-            if bidx not in self.indexes:
-                raise ValueError("Invalid band index")
-            hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
-            if hBand == NULL:
-                raise ValueError("NULL band")
+            hBand = self.band(bidx)
+
         # RGB only for now. TODO: the other types.
         # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2,     GPI_HLS=3
         hTable = _gdal.GDALCreateColorTable(1)
         vals = range(256)
 
         for i, rgba in colormap.items():
-
             if len(rgba) == 4 and self.driver in ('GTiff'):
                 warnings.warn(
                     "This format doesn't support alpha in colormap entries. "
@@ -1745,19 +1746,20 @@ cdef class RasterUpdater(RasterReader):
 
         specifying a raster subset to write into.
         """
-        cdef void *hband
-        cdef void *hmask
-        if self._hds == NULL:
-            raise ValueError("can't write closed raster file")
-        hband = _gdal.GDALGetRasterBand(self._hds, 1)
-        if hband == NULL:
-            raise ValueError("NULL band mask")
-        if _gdal.GDALCreateMaskBand(hband, 0x02) != 0:
-            raise RuntimeError("Failed to create mask")
-        hmask = _gdal.GDALGetMaskBand(hband)
-        if hmask == NULL:
-            raise ValueError("NULL band mask")
-        log.debug("Created mask band")
+        cdef void *hband = NULL
+        cdef void *hmask = NULL
+
+        hband = self.band(1)
+
+        try:
+            with CPLErrors() as cple:
+                retval = _gdal.GDALCreateMaskBand(hband, 0x02)
+                cple.check()
+                hmask = _gdal.GDALGetMaskBand(hband)
+                cple.check()
+                log.debug("Created mask band")
+        except:
+            raise RasterioIOError("Failed to get mask.")
 
         if window:
             window = eval_window(window, self.height, self.width)
@@ -1788,23 +1790,21 @@ cdef class RasterUpdater(RasterReader):
         cdef int *factors_c = NULL
         cdef const char *resampling_c = NULL
 
-        if self._hds == NULL:
-            raise ValueError("can't write closed raster file")
-
         # Allocate arrays.
         if factors:
             factors_c = <int *>_gdal.CPLMalloc(len(factors)*sizeof(int))
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
-
-            with cpl_errs:
-                resampling_b = resampling.value.encode('utf-8')
-                resampling_c = resampling_b
-                err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
-                    len(factors), factors_c, 0, NULL, NULL, NULL)
-
-            if factors_c != NULL:
-                _gdal.CPLFree(factors_c)
+            try:
+                with CPLErrors() as cple:
+                    resampling_b = resampling.value.encode('utf-8')
+                    resampling_c = resampling_b
+                    err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
+                        len(factors), factors_c, 0, NULL, NULL, NULL)
+                    cple.check()
+            finally:
+                if factors_c != NULL:
+                    _gdal.CPLFree(factors_c)
 
 
 cdef class InMemoryRaster:
@@ -1845,27 +1845,19 @@ cdef class InMemoryRaster:
         cdef int i = 0  # avoids Cython warning in for loop below
         cdef const char *srcwkt = NULL
         cdef void *osr = NULL
+        cdef void *memdriver = NULL
 
         # Several GDAL operations require the array of band IDs as input
         self.band_ids[0] = 1
 
-        cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
-        if memdriver == NULL:
-            raise DriverRegistrationError(
-                "MEM driver is not registered.")
-
-        self.dataset = _gdal.GDALCreate(
-            memdriver,
-            "output",
-            image.shape[1],
-            image.shape[0],
-            1,
-            <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
-            NULL
-        )
-
-        if self.dataset == NULL:
-            raise ValueError("NULL output datasource")
+        with CPLErrors() as cple:
+            memdriver = _gdal.GDALGetDriverByName("MEM")
+            cple.check()
+            self.dataset = _gdal.GDALCreate(
+                memdriver, "output", image.shape[1], image.shape[0],
+                1, <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
+                NULL)
+            cple.check()
 
         if transform is not None:
             for i in range(6):
@@ -1951,14 +1943,20 @@ cdef class IndirectRasterUpdater(RasterUpdater):
                     gdal_dtype = dtypes.dtype_rev.get(tp)
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
-            self._hds = _gdal.GDALCreate(
-                memdrv, "temp", self.width, self.height, self._count,
-                gdal_dtype, NULL)
-            if self._hds == NULL:
-                raise ValueError("NULL dataset")
+
+            try:
+                with CPLErrors() as cple:
+                    self._hds = _gdal.GDALCreate(
+                        memdrv, "temp", self.width, self.height, self._count,
+                        gdal_dtype, NULL)
+                    cple.check()
+            except:
+                self.env.close()
+                raise
+
             if self._init_nodata is not None:
                 for i in range(self._count):
-                    hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                    hband = self.band(i+1)
                     success = _gdal.GDALSetRasterNoDataValue(
                                     hband, self._init_nodata)
             if self._transform:
@@ -1967,14 +1965,21 @@ cdef class IndirectRasterUpdater(RasterUpdater):
                 self.set_crs(self._crs)
 
         elif self.mode == 'r+':
-            with cpl_errs:
-                temp = _gdal.GDALOpen(fname, 0)
-            if temp == NULL:
-                raise ValueError("Null dataset")
-            self._hds = _gdal.GDALCreateCopy(
-                                memdrv, "temp", temp, 1, NULL, NULL, NULL)
-            if self._hds == NULL:
-                raise ValueError("NULL dataset")
+            try:
+                with CPLErrors() as cple:
+                    temp = _gdal.GDALOpen(fname, 0)
+                    cple.check()
+            except Exception as exc:
+                raise RasterioIOError(str(exc))
+            
+            try:
+                with CPLErrors() as cple:
+                    self._hds = _gdal.GDALCreateCopy(
+                        memdrv, "temp", temp, 1, NULL, NULL, NULL)
+                    cple.check()
+            except:
+                raise
+
             drv = _gdal.GDALGetDatasetDriver(temp)
             drv_name = _gdal.GDALGetDriverShortName(drv)
             self.driver = drv_name.decode('utf-8')
@@ -2031,16 +2036,20 @@ cdef class IndirectRasterUpdater(RasterUpdater):
             log.debug(
                 "Option: %r\n", 
                 (k, _gdal.CSLFetchNameValue(options, key_c)))
-        
+
         #self.update_tags(ns='rio_creation_kwds', **kwds)
-        temp = _gdal.GDALCreateCopy(
+        try:
+            with CPLErrors() as cple:
+                temp = _gdal.GDALCreateCopy(
                     drv, fname, self._hds, 1, options, NULL, NULL)
-
-        if options != NULL:
-            _gdal.CSLDestroy(options)
-
-        if temp != NULL:
-            _gdal.GDALClose(temp)
+                cple.check()
+        except:
+            raise
+        finally:
+            if options != NULL:
+                _gdal.CSLDestroy(options)
+            if temp != NULL:
+                _gdal.GDALClose(temp)
 
 
 def writer(path, mode, **kwargs):
@@ -2067,15 +2076,18 @@ def writer(path, mode, **kwargs):
         # driver.
         name_b = path.encode('utf-8')
         fname = name_b
-        with cpl_errs:
-            hds = _gdal.GDALOpen(fname, 0)
-            if hds == NULL:
-                raise ValueError("NULL dataset")
-            drv = _gdal.GDALGetDatasetDriver(hds)
-            drv_name = _gdal.GDALGetDriverShortName(drv)
-            drv_name_b = drv_name
-            driver = drv_name_b.decode('utf-8')
-            _gdal.GDALClose(hds)
+        try:
+            with CPLErrors() as cple:
+                hds = _gdal.GDALOpen(fname, 0)
+                cple.check()
+        except CPLE_OpenFailed as exc:
+            raise RasterioIOError(str(exc))
+
+        drv = _gdal.GDALGetDatasetDriver(hds)
+        drv_name = _gdal.GDALGetDriverShortName(drv)
+        drv_name_b = drv_name
+        driver = drv_name_b.decode('utf-8')
+        _gdal.GDALClose(hds)
 
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
@@ -2091,7 +2103,14 @@ def virtual_file_to_buffer(filename):
      
     filename_b = filename if not isinstance(filename, string_types) else filename.encode('utf-8')
     cfilename = filename_b
-    buff = _gdal.VSIGetMemFileBuffer(cfilename, &buff_len, 0)
+    
+    try:
+        with CPLErrors() as cple:
+            buff = _gdal.VSIGetMemFileBuffer(cfilename, &buff_len, 0)
+            cple.check()
+    except:
+        raise
+
     n = buff_len
     log.debug("Buffer length: %d bytes", n)
     cdef np.uint8_t[:] buff_view = <np.uint8_t[:n]>buff

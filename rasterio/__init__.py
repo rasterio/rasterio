@@ -25,7 +25,7 @@ __all__ = [
     'band', 'open', 'drivers', 'copy', 'pad',
     'get_data_window', 'windows_intersect', 'window_intersection',
     'window_union']
-__version__ = "0.32.0.post1"
+__version__ = "0.32.0post1"
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):
