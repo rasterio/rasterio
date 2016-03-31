@@ -7,8 +7,8 @@ Rasterio reads and writes geospatial raster datasets.
 .. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
    :target: https://travis-ci.org/mapbox/rasterio
 
-.. image:: https://coveralls.io/repos/mapbox/rasterio/badge.png
-   :target: https://coveralls.io/r/mapbox/rasterio
+.. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
+   :target: https://coveralls.io/github/mapbox/rasterio?branch=master
 
 Rasterio employs GDAL under the hood for file I/O and raster formatting. Its
 functions typically accept and return Numpy ndarrays. Rasterio is designed to
