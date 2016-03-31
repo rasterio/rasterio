@@ -6,18 +6,12 @@ rasterio package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    rasterio.tools
-
 Submodules
 ----------
 
 .. toctree::
 
+   rasterio.aws
    rasterio.coords
    rasterio.crs
    rasterio.dtypes
@@ -25,11 +19,14 @@ Submodules
    rasterio.errors
    rasterio.features
    rasterio.fill
+   rasterio.mask
+   rasterio.merge
+   rasterio.plot
    rasterio.profiles
    rasterio.sample
-   rasterio.tool
    rasterio.transform
    rasterio.vfs
    rasterio.warnings
    rasterio.warp
+   rasterio.windows
 

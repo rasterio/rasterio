@@ -1,7 +1,7 @@
 import pytest
 
 import rasterio
-from rasterio.tools.mask import mask as mask_tool
+from rasterio.mask import mask as mask_tool
 
 
 def test_nodata(basic_image_file, basic_geometry):
