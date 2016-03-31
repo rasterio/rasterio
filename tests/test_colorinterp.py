@@ -1,25 +1,50 @@
 
 import rasterio
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, PhotometricInterp
 
 
-def test_colorinterp(tmpdir):
-    
+def test_cmyk_interp(tmpdir):
+    """A CMYK TIFF has cyan, magenta, yellow, black bands."""
     with rasterio.drivers():
-
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            assert src.colorinterp(1) == ColorInterp.red
-            assert src.colorinterp(2) == ColorInterp.green
-            assert src.colorinterp(3) == ColorInterp.blue
-            
-        tiffname = str(tmpdir.join('foo.tif'))
-        
-        meta = src.meta
+            meta = src.meta
         meta['photometric'] = 'CMYK'
         meta['count'] = 4
+        tiffname = str(tmpdir.join('foo.tif'))
         with rasterio.open(tiffname, 'w', **meta) as dst:
+            assert dst.profile['photometric'] == 'cmyk'
             assert dst.colorinterp(1) == ColorInterp.cyan
             assert dst.colorinterp(2) == ColorInterp.magenta
             assert dst.colorinterp(3) == ColorInterp.yellow
             assert dst.colorinterp(4) == ColorInterp.black
 
+
+def test_ycbcr_interp(tmpdir):
+    """A YCbCr TIFF has red, green, blue bands."""
+    with rasterio.drivers():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            meta = src.meta
+        meta['photometric'] = 'ycbcr'
+        meta['compress'] = 'jpeg'
+        meta['count'] = 3
+        tiffname = str(tmpdir.join('foo.tif'))
+        with rasterio.open(tiffname, 'w', **meta) as dst:
+            assert dst.colorinterp(1) == ColorInterp.red
+            assert dst.colorinterp(2) == ColorInterp.green
+            assert dst.colorinterp(3) == ColorInterp.blue
+
+
+def test_ycbcr_no_convert(tmpdir):
+    """An unconverted YCbCr TIFF has Y, Cb, Cr bands."""
+    with rasterio.drivers(GDAL_JPEG_TO_RGB=False):
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            meta = src.meta
+        meta['photometric'] = 'ycbcr'
+        meta['compress'] = 'jpeg'
+        meta['count'] = 3
+        tiffname = str(tmpdir.join('foo.tif'))
+        with rasterio.open(tiffname, 'w', **meta) as dst:
+            assert dst.profile['photometric'] == 'ycbcr'
+            assert dst.colorinterp(1) == ColorInterp.red
+            assert dst.colorinterp(2) == ColorInterp.green
+            assert dst.colorinterp(3) == ColorInterp.blue

@@ -18,6 +18,9 @@ class ColorInterp(IntEnum):
     magenta=11
     yellow=12
     black=13
+    Y=14
+    Cb=15
+    Cr=16
 
 
 class Resampling(Enum):
@@ -53,3 +56,14 @@ class MaskFlags(IntEnum):
     per_dataset=2
     alpha=4
     nodata=8
+
+
+class PhotometricInterp(Enum):
+    black='MINISBLACK'
+    white='MINISWHITE'
+    rgb='RGB'
+    cmyk='CMYK'
+    ycbcr='YCbCr'
+    cielab='CIELAB'
+    icclab='ICCLAB'
+    itulab='ITULAB'
