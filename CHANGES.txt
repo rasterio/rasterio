@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next
+----
+- New feature: the ability to read datasets from S3 is an extra feature that
+  can be installed like `pip install rasterio[s3]`. Credentials are handled
+  by boto3 (and botocore). S3 access is enabled in the following CLI 
+  commands: rio-info, rio-insp, rio-bounds, rio-shapes, rio-sample (#551,
+  #610).
+
 0.32.0.post1 (2016-03-27)
 -------------------------
 - No changes to the library in this post-release version, but there is a
