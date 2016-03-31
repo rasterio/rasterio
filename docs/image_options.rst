@@ -1,6 +1,8 @@
-Options
-=======
+Image Options
+*************
 
+Driver Options
+-----------------
 GDAL's format drivers have many [configuration
 options](https://trac.osgeo.org/gdal/wiki/ConfigOptions) The way to set options
 for rasterio is via ``rasterio.drivers()``. Options set on entering are deleted
@@ -19,4 +21,17 @@ on exit.
 
 Use native Python forms (``True`` and ``False``) for boolean options. Rasterio
 will convert them GDAL's internal forms.
+
+
+Creation options
+-----------------
+
+Blocksize
+tiled
+
+Compression
+-----------
+
+Interleaving
+------------
 

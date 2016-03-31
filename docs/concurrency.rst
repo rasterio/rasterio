@@ -1,5 +1,5 @@
 Concurrent processing
-=====================
+*********************
 
 Rasterio affords concurrent processing of raster data. The Python GIL is
 released when calling GDAL's ``GDALRasterIO()`` function, which means that
