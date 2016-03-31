@@ -239,23 +239,23 @@ setup_args = dict(
         rio=rasterio.rio.main:main_group
 
         [rasterio.rio_commands]
-        bounds=rasterio.rio.features:bounds
+        bounds=rasterio.rio.bounds:bounds
         calc=rasterio.rio.calc:calc
-        clip=rasterio.rio.convert:clip
+        clip=rasterio.rio.clip:clip
         convert=rasterio.rio.convert:convert
-        edit-info=rasterio.rio.info:edit
-        env=rasterio.rio.info:env
+        edit-info=rasterio.rio.edit_info:edit
+        env=rasterio.rio.env:env
         info=rasterio.rio.info:info
-        insp=rasterio.rio.info:insp
-        mask=rasterio.rio.features:mask
+        insp=rasterio.rio.insp:insp
+        mask=rasterio.rio.mask:mask
         merge=rasterio.rio.merge:merge
         overview=rasterio.rio.overview:overview
-        rasterize=rasterio.rio.features:rasterize
+        rasterize=rasterio.rio.rasterize:rasterize
         sample=rasterio.rio.sample:sample
-        shapes=rasterio.rio.features:shapes
-        stack=rasterio.rio.bands:stack
+        shapes=rasterio.rio.shapes:shapes
+        stack=rasterio.rio.stack:stack
         warp=rasterio.rio.warp:warp
-        transform=rasterio.rio.info:transform
+        transform=rasterio.rio.transform:transform
     ''',
     include_package_data=True,
     ext_modules=ext_modules,

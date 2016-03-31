@@ -6,7 +6,8 @@ from click.testing import CliRunner
 
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.rio.convert import convert, clip
+from rasterio.rio.clip import clip
+from rasterio.rio.convert import convert
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)

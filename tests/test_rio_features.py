@@ -7,6 +7,9 @@ import json
 from affine import Affine
 
 import rasterio
+from rasterio.rio.mask import mask
+from rasterio.rio.shapes import shapes
+from rasterio.rio.rasterize import rasterize
 from rasterio.rio.main import main_group
 
 
@@ -190,7 +193,6 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
         main_group,
         ['mask', outfilename, output, '--crop', '--geojson-mask', '-'],
         input=json.dumps(basic_feature))
-
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
@@ -544,7 +546,7 @@ def test_rasterize_invalid_src_crs(tmpdir, runner, basic_feature):
 def test_rasterize_existing_output(tmpdir, runner, basic_feature):
     """
     Create a rasterized output, then rasterize additional pixels into it.
-    The final result should include rasterized pixels from both features.
+    The final result should include rasterized pixels from both
     """
 
     truth = numpy.zeros(DEFAULT_SHAPE)
