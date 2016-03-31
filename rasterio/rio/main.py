@@ -1,5 +1,5 @@
 """
-Main click group for CLI
+Main command group for Rasterio's CLI.
 """
 
 
@@ -7,8 +7,8 @@ import logging
 from pkg_resources import iter_entry_points
 import sys
 
-import click
 from click_plugins import with_plugins
+import click
 import cligj
 
 from . import options
@@ -34,6 +34,8 @@ class FakeSession(object):
 
 
 def get_aws_session(profile_name):
+    """Return a credentialed AWS session or a fake, depending on 
+    whether boto3 could be imported."""
     try:
         import rasterio.aws
         return rasterio.aws.Session(profile_name=profile_name)
@@ -46,7 +48,7 @@ def get_aws_session(profile_name):
 @click.group()
 @cligj.verbose_opt
 @cligj.quiet_opt
-@click.option('--aws-profile', help="AWS credentials profile name")
+@click.option('--aws-profile', help="Use a specific profile from your shared AWS credentials file")
 @click.version_option(version=rasterio.__version__, message='%(version)s')
 @click.pass_context
 def main_group(ctx, verbose, quiet, aws_profile):

@@ -289,7 +289,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 @click.option(
     '-m',
     '--mode',
-    type=click.Choice(['r', 'r+']),
+    type=click.Choice(['r', 'r+', 'r-']),
     default='r',
     help="File mode (default 'r').")
 @click.pass_context

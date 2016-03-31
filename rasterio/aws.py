@@ -15,7 +15,6 @@ or by calling ``rasterio.open()`` from within a session block
     with Session() as sess:
         with rasterio.open('s3://bucket/foo.tif') as src:
             ...
-
 """
 
 import os
@@ -27,7 +26,7 @@ from rasterio.five import configparser, string_types
 
 
 class Session(ConfigEnv):
-    """An authenticated AWS S3 raster access session."""
+    """A credentialed AWS S3 raster access session."""
 
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
                  aws_session_token=None, region_name=None, profile_name=None,
