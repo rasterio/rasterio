@@ -10,4 +10,5 @@ pytest-cov>=2.2.0
 setuptools>=0.9.8
 wheel
 sphinx
+sphinx-rtd-theme
 numpydoc

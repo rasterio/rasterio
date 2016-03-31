@@ -36,14 +36,56 @@ Resampling rasters to a different cell size
 Reproject/warp a raster to a different CRS
 ------------------------------------------
 
+Reproject to a Transverse Mercator projection, Hawaii zone 3 (ftUS),
+aka EPSG code 3759. 
+
+.. literalinclude:: recipies/reproject.py
+    :language: python
+    :linenos:
+
+.. code::
+
+    $ python docs/recipies/reproject.py
+
+
+The original image
+
+.. image:: img/world.jpg
+    :scale: 100 %
+
+Warped to ``EPSG:3759``. Notice that the bounds are contrainted to the new projection's
+valid region (``CHECK_WITH_INVERT_PROJ=True`` on line 13) and the new raster is wrapped seamlessly across the anti-meridian.
+
+.. image:: img/reproject.jpg
+    :scale: 100 %
+
 Raster to polygon features
 --------------------------
 
 Rasterizing GeoJSON features
 ----------------------------
 
-Clipping raster to a polygon feature
-------------------------------------
+Masking raster with a polygon feature
+-------------------------------------
+
+.. literalinclude:: recipies/mask_shp.py
+    :language: python
+    :linenos:
+
+.. code::
+
+    $ python docs/recipies/mask_shp.py
+
+
+The original image with the shapefile overlayed
+
+.. image:: img/box_rgb.jpg
+    :scale: 50 %
+
+Masked and cropped to the geometry
+
+.. image:: img/box_masked_rgb.jpg
+    :scale: 50 %
 
 Creating valid data bounding polygons
 -------------------------------------
