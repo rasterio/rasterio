@@ -68,6 +68,19 @@ Rasterizing GeoJSON features
 Masking raster with a polygon feature
 -------------------------------------
 
+Using ``rasterio`` with ``fiona``, we can open a shapefile, read geometries, and
+mask out regions of a raster that are outside the polygons defined in the shapefile.
+
+This shapefile contains a single polygon, a box near the center of the raster,
+so in this case, our list of geometries is one element long.
+
+Applying the features in the shapefile as a mask on the raster sets all pixels outside
+of the features to be zero. Since ``crop=True`` in this example, the extent of the raster
+is also set to be the extent of the features in the shapefile.
+
+We can then use the updated spatial transform and raster height and width
+to write the masked raster to a new file.
+
 .. literalinclude:: recipies/mask_shp.py
     :language: python
     :linenos:
@@ -79,13 +92,13 @@ Masking raster with a polygon feature
 
 The original image with the shapefile overlayed
 
-.. image:: img/box_rgb.jpg
-    :scale: 50 %
+.. image:: img/box_rgb.png
+    :scale: 80 %
 
 Masked and cropped to the geometry
 
-.. image:: img/box_masked_rgb.jpg
-    :scale: 50 %
+.. image:: img/box_masked_rgb.png
+    :scale: 80 %
 
 Creating valid data bounding polygons
 -------------------------------------
