@@ -1256,13 +1256,7 @@ cdef class RasterUpdater(RasterReader):
         cdef void *hband = NULL
         cdef int success
 
-
-        # Is there not a driver manager already?
-        if driver_count() == 0 and not self.env:
-            # create a local manager and enter
-            self.env = GDALEnv(True)
-        else:
-            self.env = GDALEnv(False)
+        self.env = GDALEnv()
         self.env.start()
 
         path, archive, scheme = parse_path(self.name)
@@ -1285,7 +1279,7 @@ cdef class RasterUpdater(RasterReader):
             # Delete existing file, create.
             if os.path.exists(path):
                 os.unlink(path)
-            
+
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
             
@@ -1922,12 +1916,7 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
         memdrv = _gdal.GDALGetDriverByName("MEM")
 
-        # Is there not a driver manager already?
-        if driver_count() == 0 and not self.env:
-            # create a local manager and enter
-            self.env = GDALEnv(True)
-        else:
-            self.env = GDALEnv(False)
+        self.env = GDALEnv()
         self.env.start()
         
         if self.mode == 'w':

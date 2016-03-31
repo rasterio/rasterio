@@ -60,13 +60,7 @@ cdef class DatasetReader(object):
             self.mode)
 
     def start(self):
-        # Is there not a driver manager already?
-        if driver_count() == 0 and not self.env:
-            # create a local manager and enter
-            self.env = GDALEnv(True)
-        else:
-            # create a local manager and enter
-            self.env = GDALEnv(False)
+        self.env = GDALEnv()
         self.env.start()
 
         path, archive, scheme = parse_path(self.name)

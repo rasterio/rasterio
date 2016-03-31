@@ -70,9 +70,11 @@ code_map = {
     15: 'CPLE_AWSInvalidCredentials',
     16: 'CPLE_AWSSignatureDoesNotMatch'}
 
+
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
     if err_no in code_map:
         log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
+
 
 def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
@@ -135,10 +137,7 @@ cdef class ConfigEnv(object):
 
 cdef class GDALEnv(ConfigEnv):
 
-    cdef object is_chef
-
-    def __init__(self, is_chef=True, **options):
-        self.is_chef = is_chef
+    def __init__(self, **options):
         self.options = options.copy()
         self.prev_options = {}
 

@@ -223,12 +223,7 @@ def drivers(**kwargs):
     -----
     Use as a context manager, ``with rasterio.drivers(): ...``
     """
-    if driver_count() == 0:
-        log.debug("Creating a chief GDALEnv in drivers()")
-        return GDALEnv(True, **kwargs)
-    else:
-        log.debug("Creating a not-responsible GDALEnv in drivers()")
-        return GDALEnv(False, **kwargs)
+    return GDALEnv(**kwargs)
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
