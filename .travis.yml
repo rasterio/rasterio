@@ -45,7 +45,7 @@ install:
   - "pip install -r requirements-dev.txt"
   - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
   - "pip install coveralls>=1.1"
-  - "pip install -e ."
+  - "pip install -e .[s3]"
 script:
   - py.test --cov rasterio --cov-report term-missing
 after_success:

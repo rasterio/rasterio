@@ -53,6 +53,7 @@ def sample(ctx, files, bidx):
 
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    aws_session = ctx.obj.get('aws_session')
     logger = logging.getLogger('rio')
 
     files = list(files)
@@ -66,7 +67,7 @@ def sample(ctx, files, bidx):
         points = [input]
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+        with rasterio.drivers(CPL_DEBUG=verbosity>2), aws_session:
             with rasterio.open(source) as src:
                 if bidx is None:
                     indexes = src.indexes
