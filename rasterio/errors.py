@@ -15,4 +15,5 @@ class FileOverwriteError(FileError):
     """Rasterio's CLI refuses to implicitly clobber output files."""
 
     def __init__(self, message):
+        """Raise FileOverwriteError with message as hint."""
         super(FileOverwriteError, self).__init__('', hint=message)
