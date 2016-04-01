@@ -6,7 +6,6 @@ _BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
 
 
 class BoundingBox(_BoundingBox):
-
     """Bounding box named tuple, defining extent in cartesian coordinates.
 
     .. code::
