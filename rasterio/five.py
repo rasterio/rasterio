@@ -1,4 +1,4 @@
-# Python 2-3 compatibility
+"""Python 2-3 compatibility."""
 
 import itertools
 import sys
