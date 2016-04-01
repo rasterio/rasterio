@@ -28,6 +28,7 @@ from rasterio.five import zip_longest
 
 logger = logging.getLogger('rasterio')
 
+
 def show(source, cmap='gray', with_bounds=True):
     """
     Display a raster or raster band using matplotlib.
@@ -68,7 +69,6 @@ def show(source, cmap='gray', with_bounds=True):
 
 
 def show_hist(source, bins=10, masked=True, title='Histogram'):
-
     """
     Easily display a histogram with matplotlib.
 

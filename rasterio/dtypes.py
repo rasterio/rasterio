@@ -4,7 +4,7 @@
 # Happily strings can be used throughout Numpy and so existing code will
 # break.
 #
-# Within Rasterio, to test data types, we use Numpy's dtype() factory to 
+# Within Rasterio, to test data types, we use Numpy's dtype() factory to
 # do something like this:
 #
 #   if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...
@@ -37,7 +37,7 @@ dtype_fwd = {
     8: complex_,        # GDT_CInt16
     9: complex_,        # GDT_CInt32
     10: complex64,      # GDT_CFloat32
-    11: complex128 }    # GDT_CFloat64
+    11: complex128}    # GDT_CFloat64
 
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 dtype_rev['uint8'] = 1
@@ -54,7 +54,7 @@ typename_fwd = {
     8: 'CInt16',
     9: 'CInt32',
     10: 'CFloat32',
-    11: 'CFloat64' }
+    11: 'CFloat64'}
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 

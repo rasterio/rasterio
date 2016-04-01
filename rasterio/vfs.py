@@ -7,7 +7,7 @@ import os
 # does not support HTTP or FTP URLs via GDAL's vsicurl handler. Only
 # the following local filesystem schemes are supported.
 SCHEMES = {'gzip': 'gzip', 'zip': 'zip', 'tar': 'tar', 'https': 'curl',
-        'http': 'curl', 's3': 's3'}
+           'http': 'curl', 's3': 's3'}
 
 
 def parse_path(path, vfs=None):

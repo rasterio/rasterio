@@ -3,6 +3,7 @@ from collections import namedtuple
 
 _BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
 
+
 class BoundingBox(_BoundingBox):
     """Bounding box named tuple, defining extent in cartesian coordinates
 
@@ -22,6 +23,7 @@ class BoundingBox(_BoundingBox):
         Top coordinate
     """
     pass
+
 
 def disjoint_bounds(bounds1, bounds2):
     """Compare two bounds and determine if they are disjoint

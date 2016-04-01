@@ -2,9 +2,7 @@
 
 from __future__ import absolute_import
 
-import json
 import logging
-import time
 import warnings
 
 import numpy as np
@@ -19,6 +17,7 @@ log = logging.getLogger('rasterio')
 
 
 class NullHandler(logging.Handler):
+
     def emit(self, record):
         pass
 log.addHandler(NullHandler())
@@ -162,7 +161,7 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
             stacklevel=2)  # pragma: no cover
-    
+
     out = out if out is not None else output
 
     if out is None:
@@ -239,7 +238,6 @@ def rasterize(
     def format_cast_error(param, dtype):
         return '{0} cannot be cast to specified dtype: {1}'.format(param, dtype)
 
-
     if fill != 0:
         fill_array = np.array([fill])
         if not validate_dtype(fill_array, valid_dtypes):
@@ -259,7 +257,6 @@ def rasterize(
     if dtype is not None and np.dtype(dtype).name not in valid_dtypes:
         raise ValueError(format_invalid_dtype('dtype'))
 
-
     valid_shapes = []
     shape_values = []
     for index, item in enumerate(shapes):
@@ -270,7 +267,7 @@ def rasterize(
             value = default_value
         geom = getattr(geom, '__geo_interface__', None) or geom
 
-        #not isinstance(geom, dict) or
+        # not isinstance(geom, dict) or
         if 'type' in geom or 'coordinates' in geom:
             valid_shapes.append((geom, value))
             shape_values.append(value)
@@ -299,7 +296,7 @@ def rasterize(
             "The 'output' keyword arg has been superseded by 'out' "
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
-            stacklevel=2) # pragma: no cover
+            stacklevel=2)  # pragma: no cover
 
     out = out if out is not None else output
     if out is not None:

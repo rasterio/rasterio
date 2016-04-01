@@ -9,7 +9,6 @@ import warnings
 from affine import Affine
 import numpy as np
 
-import rasterio
 from rasterio._base import _transform
 from rasterio._warp import (_transform_geom, _reproject, Resampling,
                             _calculate_default_transform)
@@ -94,7 +93,14 @@ def transform_geom(
         precision)
 
 
-def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21):
+def transform_bounds(
+        src_crs,
+        dst_crs,
+        left,
+        bottom,
+        right,
+        top,
+        densify_pts=21):
     """
     Transforms bounds from src_crs to dst_crs, optionally densifying the edges
     (to account for nonlinear transformations along these edges) and extracting
@@ -135,14 +141,14 @@ def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21)
         for x in (left, right):
             in_xs.extend([x] * (densify_pts + 2))
             in_ys.extend(
-                bottom + np.arange(0, densify_pts + 2, dtype=np.float32)
-                * ((top - bottom) * densify_factor)
+                bottom + np.arange(0, densify_pts + 2, dtype=np.float32) *
+                ((top - bottom) * densify_factor)
             )
 
         for y in (bottom, top):
             in_xs.extend(
-                left + np.arange(1, densify_pts + 1, dtype=np.float32)
-                * ((right - left) * densify_factor)
+                left + np.arange(1, densify_pts + 1, dtype=np.float32) *
+                ((right - left) * densify_factor)
             )
             in_ys.extend([y] * densify_pts)
 

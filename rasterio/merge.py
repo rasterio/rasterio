@@ -6,8 +6,7 @@ import warnings
 
 import numpy as np
 
-import rasterio
-from rasterio._base import get_index, get_window
+from rasterio._base import get_window
 from rasterio.transform import Affine
 
 
@@ -30,18 +29,18 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
     Parameters
     ----------
-    sources: list of source datasets 
+    sources: list of source datasets
         Open rasterio RasterReader objects to be merged.
-    bounds: tuple, optional 
+    bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
-        If not set, bounds are determined from bounds of input rasters. 
-    res: tuple, optional 
+        If not set, bounds are determined from bounds of input rasters.
+    res: tuple, optional
         Output resolution in units of coordinate reference system. If not set,
         the resolution of the first raster is used. If a single value is passed,
         output pixels will be square.
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
-        in the first input raster. 
+        in the first input raster.
 
     Returns
     -------
@@ -65,11 +64,11 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         xs = []
         ys = []
         for src in sources:
-           left, bottom, right, top = src.bounds
-           xs.extend([left, right])
-           ys.extend([bottom, top])
+            left, bottom, right, top = src.bounds
+            xs.extend([left, right])
+            ys.extend([bottom, top])
         dst_w, dst_s, dst_e, dst_n = min(xs), min(ys), max(xs), max(ys)
-    
+
     logger.debug("Output bounds: %r", (dst_w, dst_s, dst_e, dst_n))
     output_transform = Affine.translation(dst_w, dst_n)
     logger.debug("Output transform, before scaling: %r", output_transform)
@@ -161,6 +160,6 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         region = dest[:, roff:roff + trows, coff:coff + tcols]
         np.copyto(
             region, temp,
-            where=np.logical_and(region==nodataval, temp.mask==False))
+            where=np.logical_and(region == nodataval, temp.mask == False))
 
     return dest, output_transform
