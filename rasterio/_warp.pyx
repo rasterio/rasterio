@@ -8,9 +8,9 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio._err import CPLErrors, GDALError
+from rasterio._err import CPLErrors, GDALError, CPLE_NotSupported
 from rasterio._io cimport InMemoryRaster
-from rasterio.errors import DriverRegistrationError
+from rasterio.errors import DriverRegistrationError, CRSError
 from rasterio.transform import Affine, from_bounds
 
 
@@ -577,6 +577,8 @@ def _calculate_default_transform(
                     geotransform, &npixels, &nlines, extent, 0)
                 cple.check()
             log.debug("Created transformer and warp output.")
+        except CPLE_NotSupported as err:
+            raise CRSError(err.errmsg)
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)
