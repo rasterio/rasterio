@@ -20,7 +20,8 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.errors import RasterioIOError
 from rasterio.transform import Affine
-from rasterio.enums import ColorInterp, Compression, Interleaving
+from rasterio.enums import (
+    ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.vfs import parse_path, vsi_path
 
 
@@ -482,6 +483,8 @@ cdef class DatasetReader(object):
     def compression(self):
         val = self.tags(ns='IMAGE_STRUCTURE').get('COMPRESSION')
         if val:
+            # 'YCbCr JPEG' will be normalized to 'JPEG'
+            val = val.split(' ')[-1]
             return Compression(val)
         else:
             return None
@@ -491,6 +494,14 @@ cdef class DatasetReader(object):
         val = self.tags(ns='IMAGE_STRUCTURE').get('INTERLEAVE')
         if val:
             return Interleaving(val)
+        else:
+            return None
+
+    @property
+    def photometric(self):
+        val = self.tags(ns='IMAGE_STRUCTURE').get('SOURCE_COLOR_SPACE')
+        if val:
+            return PhotometricInterp(val)
         else:
             return None
 
@@ -508,7 +519,8 @@ cdef class DatasetReader(object):
         """
         def __get__(self):
             m = self.meta
-            m.update(self.tags(ns='rio_creation_kwds'))
+            m.update((k, v.lower()) for k, v in self.tags(
+                ns='rio_creation_kwds').items())
             if self.is_tiled:
                 m.update(
                     blockxsize=self.block_shapes[0][1],
@@ -520,6 +532,8 @@ cdef class DatasetReader(object):
                 m['compress'] = self.compression.name
             if self.interleaving:
                 m['interleave'] = self.interleaving.name
+            if self.photometric:
+                m['photometric'] = self.photometric.name
             return m
 
     def lnglat(self):
