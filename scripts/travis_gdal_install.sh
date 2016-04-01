@@ -94,9 +94,9 @@ if [ ! -d $GDALINST/gdal-2.1.0 ]; then
   #
   # TODO Use official release, for now use a copy of GDAL daily from mar 28
   #
-  wget https://mapbox.s3.amazonaws.com/playground/perrygeo/gdal-svn-trunk-2016.03.28.tar.gz
-  tar -xzf gdal-svn-trunk-2016.03.28.tar.gz
-  cd gdal-svn-trunk-2016.03.28
+  wget http://download.osgeo.org/gdal/2.1.0beta1/gdal-2.1.0beta1.tar.gz
+  tar -xzf gdal-2.1.0beta1.tar.gz
+  cd gdal-2.1.0beta1
   ./configure --prefix=$GDALINST/gdal-2.1.0 $GDALOPTS
   make -s -j 2
   make install
