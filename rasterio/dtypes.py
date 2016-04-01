@@ -1,14 +1,14 @@
-# Mapping of GDAL to Numpy data types.
-#
-# Since 0.13 we are not importing numpy here and data types are strings.
-# Happily strings can be used throughout Numpy and so existing code will
-# break.
-#
-# Within Rasterio, to test data types, we use Numpy's dtype() factory to 
-# do something like this:
-#
-#   if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...
-#
+"""Mapping of GDAL to Numpy data types.
+
+Since 0.13 we are not importing numpy here and data types are strings.
+Happily strings can be used throughout Numpy and so existing code will
+break.
+
+Within Rasterio, to test data types, we use Numpy's dtype() factory to
+do something like this:
+
+    if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...
+"""
 
 bool_ = 'bool'
 ubyte = uint8 = 'uint8'
@@ -37,7 +37,7 @@ dtype_fwd = {
     8: complex_,        # GDT_CInt16
     9: complex_,        # GDT_CInt32
     10: complex64,      # GDT_CFloat32
-    11: complex128 }    # GDT_CFloat64
+    11: complex128}    # GDT_CFloat64
 
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 dtype_rev['uint8'] = 1
@@ -54,7 +54,7 @@ typename_fwd = {
     8: 'CInt16',
     9: 'CInt32',
     10: 'CFloat32',
-    11: 'CFloat64' }
+    11: 'CFloat64'}
 
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
@@ -76,6 +76,7 @@ def _gdal_typename(dt):
 
 
 def check_dtype(dt):
+    """Check if dtype is a known dtype."""
     if dt not in dtype_rev:
         try:
             return dt().dtype.name in dtype_rev
@@ -85,10 +86,10 @@ def check_dtype(dt):
 
 
 def get_minimum_dtype(values):
-    """
+    """Determine minimum type to represent values.
+
     Uses range checking to determine the minimum integer or floating point
-    data type required
-    to represent values.
+    data type required to represent values.
 
     Parameters
     ----------
@@ -99,7 +100,6 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-
     import numpy
 
     if not is_ndarray(values):
@@ -128,14 +128,14 @@ def get_minimum_dtype(values):
 
 
 def is_ndarray(array):
+    """Check if array is a ndarray."""
     import numpy
 
     return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
 
 
 def can_cast_dtype(values, dtype):
-    """
-    Tests if values can be cast to dtype without loss of information.
+    """Test if values can be cast to dtype without loss of information.
 
     Parameters
     ----------
@@ -147,7 +147,6 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-
     import numpy
 
     if not is_ndarray(values):
@@ -164,8 +163,7 @@ def can_cast_dtype(values, dtype):
 
 
 def validate_dtype(values, valid_dtypes):
-    """
-    Tests if dtype of values is one of valid_dtypes.
+    """Test if dtype of values is one of valid_dtypes.
 
     Parameters
     ----------
@@ -178,7 +176,6 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-
     import numpy
 
     if not is_ndarray(values):
