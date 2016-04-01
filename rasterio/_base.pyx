@@ -15,10 +15,10 @@ from libc.stdlib cimport malloc, free
 from rasterio cimport _gdal, _ogr
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import (
-    CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed)
+    CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, CRSError
 from rasterio.transform import Affine
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
@@ -935,40 +935,32 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         for i in range(n):
             z[i] = zs[i]
 
-    transform = _gdal.OCTNewCoordinateTransformation(src, dst)
-    if transform == NULL:
+    try:
+        with CPLErrors() as cple:
+            transform = _gdal.OCTNewCoordinateTransformation(src, dst)
+            cple.check()
+            res = _gdal.OCTTransform(transform, n, x, y, z)
+            res_xs = [0]*n
+            res_ys = [0]*n
+            for i in range(n):
+                res_xs[i] = x[i]
+                res_ys[i] = y[i]
+            if zs is not None:
+                res_zs = [0]*n
+                for i in range(n):
+                    res_zs[i] = z[i]
+                retval = (res_xs, res_ys, res_zs)
+            else:
+                retval = (res_xs, res_ys)
+    except CPLE_NotSupported as err:
+        raise CRSError(err.errmsg)
+    finally:
         _gdal.CPLFree(x)
         _gdal.CPLFree(y)
         _gdal.CPLFree(z)
         _gdal.OSRDestroySpatialReference(src)
         _gdal.OSRDestroySpatialReference(dst)
-        raise ValueError("Cannot create coordinate transformer")
-    res = _gdal.OCTTransform(transform, n, x, y, z)
-    #if res:
-    #    raise ValueError("Failed coordinate transformation")
 
-    res_xs = [0]*n
-    res_ys = [0]*n
-
-    for i in range(n):
-        res_xs[i] = x[i]
-        res_ys[i] = y[i]
-
-    if zs is not None:
-        res_zs = [0]*n
-        for i in range(n):
-            res_zs[i] = z[i]
-        _gdal.CPLFree(z)
-
-        retval = (res_xs, res_ys, res_zs)
-    else:
-        retval = (res_xs, res_ys)
-
-    _gdal.CPLFree(x)
-    _gdal.CPLFree(y)
-    _gdal.OCTDestroyCoordinateTransformation(transform)
-    _gdal.OSRDestroySpatialReference(src)
-    _gdal.OSRDestroySpatialReference(dst)
     return retval
 
 
@@ -976,7 +968,6 @@ def is_geographic_crs(crs):
     cdef void *osr_crs = _osr_from_crs(crs)
     cdef int retval = _gdal.OSRIsGeographic(osr_crs)
     _gdal.OSRDestroySpatialReference(osr_crs)
-
     return retval == 1
 
 
@@ -984,7 +975,6 @@ def is_projected_crs(crs):
     cdef void *osr_crs = _osr_from_crs(crs)
     cdef int retval = _gdal.OSRIsProjected(osr_crs)
     _gdal.OSRDestroySpatialReference(osr_crs)
-
     return retval == 1
 
 
@@ -994,5 +984,4 @@ def is_same_crs(crs1, crs2):
     cdef int retval = _gdal.OSRIsSame(osr_crs1, osr_crs2)
     _gdal.OSRDestroySpatialReference(osr_crs1)
     _gdal.OSRDestroySpatialReference(osr_crs2)
-
     return retval == 1
