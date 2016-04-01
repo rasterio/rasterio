@@ -24,6 +24,9 @@ def test_dst_crs_error(runner, tmpdir):
     assert 'for dst_crs: crs appears to be JSON but is not' in result.output
 
 
+@pytest.mark.xfail(
+    os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
+                   reason="GDAL 1.9 doesn't catch this error")
 def test_dst_crs_error_2(runner, tmpdir):
     """Invalid PROJ.4 is a bad parameter."""
     srcname = 'tests/data/RGB.byte.tif'

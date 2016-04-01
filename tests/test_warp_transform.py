@@ -79,6 +79,9 @@ def test_gdal_transform_fail_src_crs():
             top=70)
 
 
+@pytest.mark.xfail(
+    os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
+                   reason="GDAL 1.9 doesn't catch this error")
 def test_gdal_transform_fail_src_crs():
     with rasterio.drivers():
         with pytest.raises(CRSError):
