@@ -77,9 +77,10 @@ def insp(ctx, input, mode, interpreter):
     """ Open the input file in a Python interpreter.
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+        with rasterio.drivers(CPL_DEBUG=verbosity > 2), aws_session:
             with rasterio.open(input, mode) as src:
                 main(
                     'Rasterio %s Interactive Inspector (Python %s)\n'

@@ -53,7 +53,7 @@ def sample(ctx, files, bidx):
 
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    aws_session = ctx.obj.get('aws_session')
+    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
 
     files = list(files)
@@ -67,7 +67,7 @@ def sample(ctx, files, bidx):
         points = [input]
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2), aws_session:
+        with rasterio.drivers(CPL_DEBUG=verbosity > 2), aws_session:
             with rasterio.open(source) as src:
                 if bidx is None:
                     indexes = src.indexes
@@ -76,12 +76,11 @@ def sample(ctx, files, bidx):
                         lambda x: int(x) if x else None, bidx.split('..'))
                     if start is None:
                         start = 1
-                    indexes = src.indexes[slice(start-1, stop)]
+                    indexes = src.indexes[slice(start - 1, stop)]
                 else:
                     indexes = list(map(int, bidx.split(',')))
                 for vals in src.sample(
-                            (json.loads(line) for line in points),
-                            indexes=indexes):
+                        (json.loads(line) for line in points), indexes=indexes):
                     click.echo(json.dumps(vals.tolist()))
 
     except Exception:

@@ -37,6 +37,19 @@ else:
     log.addHandler(NullHandler())
 
 
+def check_gdal_version(major, minor):
+    """Return True if the major and minor versions match."""
+    return bool(_gdal.GDALCheckVersion(int(major), int(minor), NULL))
+
+
+def gdal_version():
+    """Return the version as a major.minor.patchlevel string."""
+    cdef const char *ver_c = NULL
+    ver_c = _gdal.GDALVersionInfo("RELEASE_NAME")
+    ver_b = ver_c
+    return ver_b.decode('utf-8')
+
+
 cdef class DatasetReader(object):
 
     def __init__(self, path, options=None):

@@ -14,7 +14,7 @@ from rasterio.coords import disjoint_bounds
 @click.argument(
     'files',
     nargs=-1,
-    type=click.Path(resolve_path=True),
+    type=click.Path(),
     required=True,
     metavar="INPUT OUTPUT")
 @options.output_opt
@@ -54,8 +54,9 @@ def clip(
     from rasterio.warp import transform_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
 
-    with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+    with rasterio.drivers(CPL_DEBUG=verbosity > 2), aws_session:
 
         output, files = resolve_inout(files=files, output=output)
         input = files[0]

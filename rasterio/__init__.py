@@ -4,7 +4,8 @@ from __future__ import absolute_import
 from collections import namedtuple
 import logging
 
-from rasterio._base import eval_window, window_shape, window_index
+from rasterio._base import (
+    eval_window, window_shape, window_index, gdal_version, check_gdal_version)
 from rasterio._drivers import driver_count, GDALEnv
 import rasterio.dtypes
 from rasterio.dtypes import (
@@ -24,6 +25,7 @@ from rasterio import _err, coords, enums, vfs
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'pad']
 __version__ = "0.33.0"
+__gdal_version__ = gdal_version()
 
 log = logging.getLogger('rasterio')
 class NullHandler(logging.Handler):

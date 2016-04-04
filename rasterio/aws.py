@@ -17,12 +17,10 @@ or by calling ``rasterio.open()`` from within a session block
             ...
 """
 
-import os
-
 import boto3
 
 from rasterio._drivers import ConfigEnv
-from rasterio.five import configparser, string_types
+from rasterio.five import string_types
 
 
 class Session(ConfigEnv):
