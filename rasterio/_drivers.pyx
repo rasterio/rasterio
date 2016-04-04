@@ -80,13 +80,6 @@ def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
 
 
-class Redacting(object):
-
-    def __format__(self, format):
-        if (format == ''):
-            return "I'm afraid I can't do that."
-        return 'HAL 9000'
-
 cdef class ConfigEnv(object):
 
     cdef public object options
