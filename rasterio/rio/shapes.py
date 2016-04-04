@@ -92,6 +92,7 @@ def shapes(
     import rasterio.warp
 
     verbosity = ctx.obj['verbosity'] if ctx.obj else 1
+    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -218,7 +219,7 @@ def shapes(
         geojson_type = 'collection'
 
     try:
-        with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
+        with rasterio.drivers(CPL_DEBUG=(verbosity > 2)), aws_session:
             write_features(
                 stdout, Collection(), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,

@@ -134,6 +134,10 @@ cdef extern from "gdal.h" nogil:
     int GDALGetOverviewCount (void *hBand)
     int GDALBuildOverviews (void *hDS, const char *resampling, int nOverviews, int *overviews, int nBands, int *bands, void *progress_func, void *progress_data)
 
+    int GDALCheckVersion(int nVersionMajor, int nVersionMinor, const char *pszCallingComponentName)
+    const char* GDALVersionInfo (const char *pszRequest)
+
+
 cdef extern from "gdalwarper.h":
 
     ctypedef enum GDALResampleAlg:

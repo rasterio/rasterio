@@ -24,7 +24,7 @@ def data():
 
 
 def test_data_window_unmasked(data):
-    with pytest.warns(DeprecationWarning):
+    with pytest.deprecated_call():
         old = get_data_window(data)
     new = windows.get_data_window(data)
     assert old == new
@@ -35,7 +35,7 @@ def test_windows_intersect_disjunct():
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))]
 
-    with pytest.warns(DeprecationWarning):
+    with pytest.deprecated_call():
         old = windows_intersect(data)
     new = windows.intersect(data)
     assert old == new
@@ -46,7 +46,7 @@ def test_window_intersection():
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))]
 
-    with pytest.warns(DeprecationWarning):
+    with pytest.deprecated_call()::
         old = window_intersection(data)
     new = windows.intersection(data)
     assert old == new
@@ -57,7 +57,7 @@ def test_window_union():
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))]
 
-    with pytest.warns(DeprecationWarning):
+    with pytest.deprecated_call()::
         old = window_union(data)
     new = windows.union(data)
     assert old == new

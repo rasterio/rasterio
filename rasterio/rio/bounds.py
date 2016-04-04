@@ -19,7 +19,7 @@ logger = logging.getLogger('rio')
 @click.command(short_help="Write bounding boxes to stdout as GeoJSON.")
 # One or more files, the bounds of each are a feature in the collection
 # object or feature sequence.
-@click.argument('INPUT', nargs=-1, type=click.Path(exists=True), required=True)
+@click.argument('INPUT', nargs=-1, type=click.Path(), required=True)
 @precision_opt
 @indent_opt
 @compact_opt
@@ -47,6 +47,7 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     """
     import rasterio.warp
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
+    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -108,7 +109,7 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     # Use the generator defined above as input to the generic output
     # writing function.
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+        with rasterio.drivers(CPL_DEBUG=verbosity > 2), aws_session:
             write_features(
                 stdout, col, sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
