@@ -6,7 +6,6 @@ from click.testing import CliRunner
 
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.rio.clip import clip
 from rasterio.rio.convert import convert
 
 
@@ -19,8 +18,7 @@ def test_clip_bounds(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
         main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds'] + TEST_BBOX
-    )
+        ['clip', 'tests/data/shade.tif', output, '--bounds'] + TEST_BBOX)
     assert result.exit_code == 0
     assert os.path.exists(output)
 
@@ -31,9 +29,9 @@ def test_clip_bounds(runner, tmpdir):
 def test_clip_like(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        clip,
-        ['tests/data/shade.tif', output, '--like', 'tests/data/shade.tif']
-    )
+        main_group, [
+            'clip', 'tests/data/shade.tif', output, '--like',
+            'tests/data/shade.tif'])
     assert result.exit_code == 0
     assert os.path.exists(output)
 
@@ -46,9 +44,7 @@ def test_clip_like(runner, tmpdir):
 def test_clip_missing_params(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        clip,
-        ['tests/data/shade.tif', output]
-    )
+        main_group, ['clip', 'tests/data/shade.tif', output])
     assert result.exit_code == 2
     assert '--bounds or --like required' in result.output
 
@@ -56,9 +52,8 @@ def test_clip_missing_params(runner, tmpdir):
 def test_clip_bounds_disjunct(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        clip,
-        ['tests/data/shade.tif', output, '--bounds'] + [0, 0, 10, 10]
-    )
+        main_group,
+        ['clip', 'tests/data/shade.tif', output, '--bounds'] + [0, 0, 10, 10])
     assert result.exit_code == 2
     assert '--bounds' in result.output
 
@@ -66,9 +61,9 @@ def test_clip_bounds_disjunct(runner, tmpdir):
 def test_clip_like_disjunct(runner, tmpdir):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        clip,
-        ['tests/data/shade.tif', output, '--like', 'tests/data/RGB.byte.tif']
-    )
+        main_group, [
+            'clip', 'tests/data/shade.tif', output, '--like',
+            'tests/data/RGB.byte.tif'])
     assert result.exit_code == 2
     assert '--like' in result.output
 
@@ -116,7 +111,7 @@ def test_dtype(tmpdir):
         ['tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
-        assert src.dtypes == ['uint16']*3
+        assert src.dtypes == ['uint16'] * 3
 
 
 def test_dtype_rescaling_uint8_full(tmpdir):
@@ -174,7 +169,7 @@ def test_dtype_rescaling_float64(tmpdir):
     runner = CliRunner()
     result = runner.invoke(convert, [
         'tests/data/RGB.byte.tif', outputname, '--dtype', 'float64',
-        '--scale-ratio', str(2.0/255), '--scale-offset', '-1.0'])
+        '--scale-ratio', str(2.0 / 255), '--scale-offset', '-1.0'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         for band in src.read():
