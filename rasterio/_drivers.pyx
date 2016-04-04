@@ -80,6 +80,13 @@ def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
 
 
+class Redacting(object):
+
+    def __format__(self, format):
+        if (format == ''):
+            return "I'm afraid I can't do that."
+        return 'HAL 9000'
+
 cdef class ConfigEnv(object):
 
     cdef public object options
@@ -110,6 +117,11 @@ cdef class ConfigEnv(object):
                 val_b = ('ON' if val else 'OFF').encode('utf-8')
             val_c = val_b
             CPLSetConfigOption(key_c, val_c)
+
+            # Redact AWS credentials.
+            if key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+                       'AWS_SESSION_TOKEN', 'AWS_REGION']:
+                val = '******'
             log.debug("Option %s=%s", key, val)
 
     def exit_config_options(self):

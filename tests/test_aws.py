@@ -14,7 +14,7 @@ from rasterio.rio.main import main_group
 
 # Custom markers.
 mingdalversion = pytest.mark.skipif(
-    parse(rasterio.__gdal_version__).base_version < parse('2.1.0'),
+    parse(rasterio.__gdal_version__) < parse('2.1.0dev'),
     reason="S3 raster access requires GDAL 2.1")
 
 credentials = pytest.mark.skipif(
