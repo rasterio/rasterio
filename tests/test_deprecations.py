@@ -1,6 +1,8 @@
 # TODO delete this in 1.0
 # This ensures that deprecation warnings are given but behavior is maintained
 # on the way to stabilizing the API for 1.0
+import warnings
+
 import pytest
 import numpy
 
@@ -23,41 +25,50 @@ def data():
     return data
 
 
-def test_data_window_unmasked(data):
-    with pytest.deprecated_call():
-        old = get_data_window(data)
+def test_data_window_unmasked(data, recwarn):
+    warnings.simplefilter('always')
+    old = get_data_window(data)
+    assert len(recwarn) == 1
+    assert recwarn.pop(DeprecationWarning)
     new = windows.get_data_window(data)
+    assert len(recwarn) == 0
     assert old == new
 
 
-def test_windows_intersect_disjunct():
+def test_windows_intersect_disjunct(recwarn):
     data = [
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))]
-
-    with pytest.deprecated_call():
-        old = windows_intersect(data)
+    warnings.simplefilter('always')
+    old = windows_intersect(data)
+    assert len(recwarn) == 1
+    assert recwarn.pop(DeprecationWarning)
     new = windows.intersect(data)
+    assert len(recwarn) == 0
     assert old == new
 
 
-def test_window_intersection():
+def test_window_intersection(recwarn):
     data = [
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))]
-
-    with pytest.deprecated_call()::
-        old = window_intersection(data)
+    warnings.simplefilter('always')
+    old = window_intersection(data)
+    assert len(recwarn) == 1
+    assert recwarn.pop(DeprecationWarning)
     new = windows.intersection(data)
+    assert len(recwarn) == 0
     assert old == new
 
 
-def test_window_union():
+def test_window_union(recwarn):
     data = [
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))]
-
-    with pytest.deprecated_call()::
-        old = window_union(data)
+    warnings.simplefilter('always')
+    old = window_union(data)
+    assert len(recwarn) == 1
+    assert recwarn.pop(DeprecationWarning)
     new = windows.union(data)
+    assert len(recwarn) == 0
     assert old == new
