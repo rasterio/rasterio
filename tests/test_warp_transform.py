@@ -1,6 +1,12 @@
+import os
+
+import pytest
+
 import rasterio
 from rasterio._warp import _calculate_default_transform
+from rasterio.errors import CRSError
 from rasterio.transform import Affine, from_bounds
+from rasterio.warp import transform_bounds
 
 
 def test_identity():
@@ -22,6 +28,18 @@ def test_identity():
     assert res_height == height
     for res, exp in zip(res_transform, transform):
         assert round(res, 7) == round(exp, 7)
+
+
+def test_transform_bounds():
+    """CRSError is raised."""
+    with rasterio.drivers():
+        left, bottom, right, top = (
+            -11740727.544603072, 4852834.0517692715, -11584184.510675032,
+            5009377.085697309)
+        src_crs = 'EPSG:3857'
+        dst_crs = {'proj': 'foobar'}
+        with pytest.raises(CRSError):
+            transform_bounds(src_crs, dst_crs, left, bottom, right, top)
 
 
 def test_gdal_transform_notnull():
@@ -61,3 +79,20 @@ def test_gdal_transform_fail_src_crs():
             bottom=30,
             right=-80,
             top=70)
+
+
+@pytest.mark.xfail(
+    os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
+                   reason="GDAL 1.9 doesn't catch this error")
+def test_gdal_transform_fail_src_crs():
+    with rasterio.drivers():
+        with pytest.raises(CRSError):
+            dt, dw, dh = _calculate_default_transform(
+                {'init': 'EPSG:4326'},
+                {'proj': 'foobar'},
+                width=80,
+                height=80,
+                left=-120,
+                bottom=30,
+                right=-80,
+                top=70)

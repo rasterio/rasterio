@@ -30,5 +30,6 @@ Authors
 * Sean Gillies <sean@mapbox.com>
 * Trevor R.H. Clarke <tclarke@ball.com>
 * cgohlke <cgohlke@uci.edu>
+* Rob Emmanuele
 
 See also https://github.com/mapbox/rasterio/graphs/contributors.

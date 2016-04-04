@@ -8,9 +8,53 @@ import pytest
 
 import rasterio
 from rasterio.rio import warp
+from rasterio.rio.main import main_group
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+def test_dst_crs_error(runner, tmpdir):
+    """Invalid JSON is a bad parameter."""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', '{foo: bar}'])
+    assert result.exit_code == 2
+    assert 'for dst_crs: crs appears to be JSON but is not' in result.output
+
+
+@pytest.mark.xfail(
+    os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
+                   reason="GDAL 1.9 doesn't catch this error")
+def test_dst_crs_error_2(runner, tmpdir):
+    """Invalid PROJ.4 is a bad parameter."""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', '{"proj": "foobar"}'])
+    assert result.exit_code == 2
+    assert 'for dst_crs: Failed to initialize PROJ.4' in result.output
+
+
+def test_dst_crs_error_epsg(runner, tmpdir):
+    """Malformed EPSG string is a bad parameter."""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', 'EPSG:'])
+    assert result.exit_code == 2
+    assert 'for dst_crs: invalid literal for int()' in result.output
+
+
+def test_dst_crs_error_epsg_2(runner, tmpdir):
+    """Invalid EPSG code is a bad parameter."""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', 'EPSG:0'])
+    assert result.exit_code == 2
+    assert 'for dst_crs: EPSG codes are positive integers' in result.output
 
 
 def test_warp_no_reproject(runner, tmpdir):
@@ -119,15 +163,6 @@ def test_warp_reproject_dst_crs(runner, tmpdir):
             assert numpy.allclose(output.bounds,
                                   [-78.95864996545055, 23.564787976164418,
                                    -76.5759177302349, 25.550873767433984])
-
-
-def test_warp_reproject_dst_crs_error(runner, tmpdir):
-    srcname = 'tests/data/RGB.byte.tif'
-    outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(warp.warp, [srcname, outputname,
-                                       '--dst-crs', '{foo: bar}'])
-    assert result.exit_code == 2
-    assert 'invalid crs format' in result.output
 
 
 def test_warp_reproject_dst_crs_proj4(runner, tmpdir):

@@ -1,13 +1,29 @@
 Changes
 =======
 
-Next
-----
-- New feature: the ability to read datasets from S3 is an extra feature that
-  can be installed like `pip install rasterio[s3]`. Credentials are handled
-  by boto3 (and botocore). S3 access is enabled in the following CLI 
-  commands: rio-info, rio-insp, rio-bounds, rio-shapes, rio-sample (#551,
-  #610).
+0.33.0 (2016-04-01)
+-------------------
+
+I played a lot of One-on-One on the computers of the mid-1980s and dedicate
+this release to the best #33 of all time, Larry Bird.
+
+- Bug fix: YCbCr JPEG-in-TIFF files no longer break rio-info (#617, #618).
+- New feature: the ability to read dataset metadata and imagery from S3 objects
+  is an extra feature that can be installed like this `pip install -U
+  rasterio[s3]`. AWS Credentials are handled by boto3 (and botocore) and so can
+  be provided by environment variables, session arguments, `~/.aws/credentials`
+  file, or EC2 instance metadata. S3 access is enabled in the following CLI
+  commands: rio-clip, rio-info, rio-insp, rio-bounds, rio-shapes, rio-sample
+  and may be expanded in future versions. S3 objects are identified on the
+  command line and in API functions by URIs following the pattern
+  `s3://bucket/object`. Extra thanks to Rob Emanuele and Even Rouault for
+  helping on this one (#551, #610).
+- New feature: new and improved documentation coming soon to a website near
+  you (#588).
+- Refactoring: commands for the rio CLI have been moved to their own
+  modules so that they're easier to find (#594).
+- Refactoring: we've changed our primary pattern for checking errors set by
+  GDAL API functions (#600).
 
 0.32.0.post1 (2016-03-27)
 -------------------------

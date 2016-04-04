@@ -9,6 +9,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
+from rasterio.errors import CRSError
 from rasterio.transform import Affine
 from rasterio.warp import (reproject, Resampling, calculate_default_transform,
    transform_bounds)
@@ -159,16 +160,20 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             elif dst_crs:
                 try:
                     dst_crs = crs.from_string(dst_crs)
-                except ValueError:
-                    raise click.BadParameter("invalid crs format.",
-                                             param=dst_crs, param_hint=dst_crs)
+                except ValueError as err:
+                    raise click.BadParameter(
+                        str(err), param='dst_crs', param_hint='dst_crs')
 
                 if dimensions:
                     # Calculate resolution appropriate for dimensions
                     # in target.
                     dst_width, dst_height = dimensions
-                    xmin, ymin, xmax, ymax = transform_bounds(src.crs, dst_crs,
-                                                              *src.bounds)
+                    try:
+                        xmin, ymin, xmax, ymax = transform_bounds(
+                            src.crs, dst_crs, *src.bounds)
+                    except CRSError as err:
+                        raise click.BadParameter(
+                            str(err), param='dst_crs', param_hint='dst_crs')
                     dst_transform = Affine(
                         (xmax - xmin) / float(dst_width),
                         0, xmin, 0,
@@ -183,8 +188,13 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                             param='res', param_hint='res')
 
                     if src_bounds:
-                        xmin, ymin, xmax, ymax = transform_bounds(
-                            src.crs, dst_crs, *src_bounds)
+                        try:
+                            xmin, ymin, xmax, ymax = transform_bounds(
+                                src.crs, dst_crs, *src_bounds)
+                        except CRSError as err:
+                            raise click.BadParameter(
+                                str(err), param='dst_crs',
+                                param_hint='dst_crs')
                     else:
                         xmin, ymin, xmax, ymax = dst_bounds
 
@@ -193,10 +203,13 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
 
                 else:
-                    dst_transform, dst_width, dst_height = calculate_default_transform(
-                        src.crs, dst_crs, src.width, src.height, *src.bounds,
-                        resolution=res)
-
+                    try:
+                        dst_transform, dst_width, dst_height = calculate_default_transform(
+                            src.crs, dst_crs, src.width, src.height,
+                            *src.bounds, resolution=res)
+                    except CRSError as err:
+                        raise click.BadParameter(
+                            str(err), param='dst_crs', param_hint='dst_crs')
             elif dimensions:
                 # Same projection, different dimensions, calculate resolution.
                 dst_crs = src.crs
