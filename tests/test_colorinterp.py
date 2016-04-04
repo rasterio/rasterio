@@ -33,20 +33,3 @@ def test_ycbcr_interp(tmpdir):
             assert dst.colorinterp(1) == ColorInterp.red
             assert dst.colorinterp(2) == ColorInterp.green
             assert dst.colorinterp(3) == ColorInterp.blue
-
-
-@pytest.mark.xfail()
-def test_ycbcr_no_convert(tmpdir):
-    """An unconverted YCbCr TIFF has Y, Cb, Cr bands."""
-    with rasterio.drivers(GDAL_JPEG_TO_RGB=False):
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            meta = src.meta
-        meta['photometric'] = 'ycbcr'
-        meta['compress'] = 'jpeg'
-        meta['count'] = 3
-        tiffname = str(tmpdir.join('foo.tif'))
-        with rasterio.open(tiffname, 'w', **meta) as dst:
-            assert dst.profile['photometric'] == 'ycbcr'
-            assert dst.colorinterp(1) == ColorInterp.Y
-            assert dst.colorinterp(2) == ColorInterp.Cb
-            assert dst.colorinterp(3) == ColorInterp.Cr
