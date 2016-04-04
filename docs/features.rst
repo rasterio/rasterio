@@ -61,6 +61,12 @@ intersecting with geometries.
                 ((g, 255) for g, v in shapes),
                 out_shape=src.shape)
 
+By default, only pixels whose center is within the polygon or that
+are selected by Bresenham's line algorithm will be burned in.  
+You can specify ``all_touched=True`` to burn in all pixels touched by the geometry.
+The geometries will be rasterized by the "painter's algorithm" - 
+geometries are handled in order and subsequent geometries will overwrite previous values.
+
 Again, to burn in georeferenced shapes, pass an appropriate transform for the
 image to be created.
 
