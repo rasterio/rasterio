@@ -49,4 +49,4 @@ install:
 script:
   - py.test --cov rasterio --cov-report term-missing
 after_success:
-  - coveralls
+  - coveralls || echo "!! intermittent coveralls failure"
