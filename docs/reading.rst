@@ -46,7 +46,7 @@ thing as ``open()``, raising an exception immediately.
     >>> rasterio.open('/lol/wut.tif')
     Traceback (most recent call last):
      ...
-    IOError: No such file or directory
+    RasterioIOError: No such file or directory
 
 Datasets generally have one or more bands (or layers). Following the GDAL
 convention, these are indexed starting with the number 1. The first band of
