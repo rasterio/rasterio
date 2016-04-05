@@ -74,6 +74,13 @@ def test_open_with_session_minus_mode():
     with s.open(L8TIF, 'r-') as f:
         assert f.count == 1
 
+@mingdalversion
+def test_open_as_https_vsicurl():
+    """Test the same object via https using vsicurl, reading in 'r-' mode"""
+    s = Session()
+    httpstif = "https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
+    with s.open(httpstif, 'r-') as f:
+        assert f.count == 1
 
 # CLI tests.
 
