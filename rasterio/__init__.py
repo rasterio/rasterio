@@ -5,9 +5,8 @@ from collections import namedtuple
 import logging
 
 from rasterio._base import (
-    eval_window, window_shape, window_index, gdal_version, check_gdal_version)
+    eval_window, window_shape, window_index, gdal_version)
 from rasterio._drivers import driver_count, GDALEnv
-import rasterio.dtypes
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_)
@@ -24,7 +23,7 @@ from rasterio import _err, coords, enums, vfs
 
 __all__ = [
     'band', 'open', 'drivers', 'copy', 'pad']
-__version__ = "0.33.0"
+__version__ = "0.34.0"
 __gdal_version__ = gdal_version()
 
 log = logging.getLogger('rasterio')
@@ -279,8 +278,8 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     transform = guard_transform(transform)
     padded_array = numpy.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)
-    padded_trans[2] -= pad_width*padded_trans[0]
-    padded_trans[5] -= pad_width*padded_trans[4]
+    padded_trans[2] -= pad_width * padded_trans[0]
+    padded_trans[5] -= pad_width * padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
 
 
