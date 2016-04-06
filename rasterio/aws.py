@@ -37,14 +37,15 @@ class Session(ConfigEnv):
             profile_name=profile_name)
         self._creds = self._session._session.get_credentials()
         self.options = options.copy()
-        if self._creds.access_key:
-            self.options['AWS_ACCESS_KEY_ID'] = self._creds.access_key
-        if self._creds.secret_key:
-            self.options['AWS_SECRET_ACCESS_KEY'] = self._creds.secret_key
-        if self._creds.token:
-            self.options['AWS_SESSION_TOKEN'] = self._creds.token
-        if self._session.region_name:
-            self.options['AWS_REGION'] = self._session.region_name
+        if self._creds:
+            if self._creds.access_key:
+                self.options['AWS_ACCESS_KEY_ID'] = self._creds.access_key
+            if self._creds.secret_key:
+                self.options['AWS_SECRET_ACCESS_KEY'] = self._creds.secret_key
+            if self._creds.token:
+                self.options['AWS_SESSION_TOKEN'] = self._creds.token
+            if self._session.region_name:
+                self.options['AWS_REGION'] = self._session.region_name
         self.prev_options = {}
 
     def open(self, path, mode='r'):
