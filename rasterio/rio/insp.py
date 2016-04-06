@@ -17,9 +17,9 @@ import rasterio
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
+except ImportError:  # pragma: no cover
     plt = None
-except RuntimeError as e:
+except RuntimeError as e:  # pragma: no cover
     # Certain environment configurations can trigger a RuntimeError like:
 
     # Trying to import matplotlibRuntimeError: Python is not installed as a

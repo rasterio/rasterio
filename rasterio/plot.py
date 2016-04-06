@@ -12,9 +12,9 @@ import rasterio
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
+except ImportError:  # pragma: no cover
     plt = None
-except RuntimeError as e:
+except RuntimeError as e:  # pragma: no cover
     # Certain environment configurations can trigger a RuntimeError like:
 
     # Trying to import matplotlibRuntimeError: Python is not installed as a
@@ -63,7 +63,7 @@ def show(source, cmap='gray', with_bounds=True):
         imax = plt.imshow(arr, cmap=cmap, extent=extent)
         fig = plt.gcf()
         fig.show()
-    else:
+    else:  # pragma: no cover
         raise ImportError("matplotlib could not be imported")
 
 
@@ -86,7 +86,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
         Title for the figure.
     """
 
-    if plt is None:
+    if plt is None:  # pragma: no cover
         raise ImportError("Could not import matplotlib")
 
     if isinstance(source, (tuple, rasterio.Band)):
