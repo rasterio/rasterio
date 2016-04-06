@@ -146,3 +146,8 @@ def test_is_valid_false():
 
 def test_is_valid():
     assert is_valid_crs('EPSG:4326')
+
+
+def test_empty_json():
+    with pytest.raises(ValueError):
+        crs.from_string('{}')

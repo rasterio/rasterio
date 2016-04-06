@@ -54,9 +54,13 @@ def from_string(prjs):
     if '{' in prjs:
         # may be json, try to decode it
         try:
-            return json.loads(prjs, strict=False)
+            val = json.loads(prjs, strict=False)
         except ValueError:
             raise ValueError('crs appears to be JSON but is not valid')
+        if not val:
+            raise ValueError("crs is empty JSON")
+        else:
+            return val
 
     if prjs.strip().upper().startswith('EPSG:'):
         return from_epsg(prjs.split(':')[1])
