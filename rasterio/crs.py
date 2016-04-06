@@ -1,14 +1,14 @@
-# Coordinate reference systems and functions.
-#
-# PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
-# coordinate reference systems are described by strings of parameters such as
-#
-#   +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
-#
-# here we use mappings:
-#
-#   {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
-#
+"""Coordinate reference systems and functions.
+
+PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
+coordinate reference systems are described by strings of parameters such as
+
+  +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+
+here we use mappings:
+
+  {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
+"""
 
 
 import json
