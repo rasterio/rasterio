@@ -8,6 +8,7 @@ import rasterio
 from rasterio import crs
 from rasterio.crs import (
     is_geographic_crs, is_projected_crs, is_same_crs, is_valid_crs)
+from rasterio.errors import CRSError
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -149,5 +150,9 @@ def test_is_valid():
 
 
 def test_empty_json():
-    with pytest.raises(ValueError):
+    with pytest.raises(CRSError):
         crs.from_string('{}')
+    with pytest.raises(CRSError):
+        crs.from_string('[]')
+    with pytest.raises(CRSError):
+        crs.from_string('')
