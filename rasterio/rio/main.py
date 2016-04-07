@@ -24,7 +24,7 @@ class FakeSession(object):
     """Fake AWS Session."""
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, *args):
         pass
@@ -34,12 +34,12 @@ class FakeSession(object):
 
 
 def get_aws_session(profile_name):
-    """Return a credentialed AWS session or a fake, depending on 
+    """Return a credentialed AWS session or a fake, depending on
     whether boto3 could be imported."""
     try:
         import rasterio.aws
         return rasterio.aws.Session(profile_name=profile_name)
-    except ImportError:
+    except ImportError:  # pragma: no cover
         return FakeSession()
 
 
