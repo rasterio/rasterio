@@ -16,13 +16,13 @@ the fundamentals.
 Generating summary statistics for each band
 -------------------------------------------
 
-.. literalinclude:: recipies/band_summary_stats.py
+.. literalinclude:: recipes/band_summary_stats.py
     :language: python
     :linenos:
 
 .. code::
 
-    $ python docs/recipies/band_summary_stats.py
+    $ python docs/recipes/band_summary_stats.py
     [{'max': 255, 'mean': 29.94772668847656, 'median': 13.0, 'min': 0},
      {'max': 255, 'mean': 44.516147889382289, 'median': 30.0, 'min': 0},
      {'max': 255, 'mean': 48.113056354742945, 'median': 30.0, 'min': 0}]
@@ -39,13 +39,13 @@ Reproject/warp a raster to a different CRS
 Reproject to a Transverse Mercator projection, Hawaii zone 3 (ftUS),
 aka EPSG code 3759. 
 
-.. literalinclude:: recipies/reproject.py
+.. literalinclude:: recipes/reproject.py
     :language: python
     :linenos:
 
 .. code::
 
-    $ python docs/recipies/reproject.py
+    $ python docs/recipes/reproject.py
 
 
 The original image
@@ -81,13 +81,13 @@ is also set to be the extent of the features in the shapefile.
 We can then use the updated spatial transform and raster height and width
 to write the masked raster to a new file.
 
-.. literalinclude:: recipies/mask_shp.py
+.. literalinclude:: recipes/mask_shp.py
     :language: python
     :linenos:
 
 .. code::
 
-    $ python docs/recipies/mask_shp.py
+    $ python docs/recipes/mask_shp.py
 
 
 The original image with the shapefile overlayed
@@ -115,17 +115,17 @@ Creating a least cost path
 Using a scipy filter to smooth a raster
 ---------------------------------------
 
-This recipie demonstrates the use of scipy's `signal processing filters <http://docs.scipy.org/doc/scipy/reference/signal.html#signal-processing-scipy-signal>`_ to manipulate multi-band raster imagery
+This recipe demonstrates the use of scipy's `signal processing filters <http://docs.scipy.org/doc/scipy/reference/signal.html#signal-processing-scipy-signal>`_ to manipulate multi-band raster imagery
 and save the results to a new GeoTIFF. Here we apply a median filter to smooth
 the image and remove small inclusions (at the expense of some sharpness and detail).
 
-.. literalinclude:: recipies/filter.py
+.. literalinclude:: recipes/filter.py
     :language: python
     :linenos:
 
 .. code::
 
-    $ python docs/recipies/filter.py
+    $ python docs/recipes/filter.py
 
 
 The original image
@@ -141,15 +141,15 @@ With median filter applied
 Using skimage to adjust the saturation of a RGB raster
 ------------------------------------------------------
 
-This recipie demonstrates the use of manipulating color with the scikit image `color module <http://scikit-image.org/docs/stable/api/skimage.color.html>`_.
+This recipe demonstrates the use of manipulating color with the scikit image `color module <http://scikit-image.org/docs/stable/api/skimage.color.html>`_.
 
-.. literalinclude:: recipies/saturation.py
+.. literalinclude:: recipes/saturation.py
     :language: python
     :linenos:
 
 .. code::
 
-    $ python docs/recipies/saturation.py
+    $ python docs/recipes/saturation.py
 
 
 The original image
@@ -160,4 +160,19 @@ The original image
 With increased saturation
 
 .. image:: img/saturation.jpg
+    :scale: 50 %
+
+
+Generating a KMZ from a raster
+------------------------------
+
+A raster can be converted to a KMZ and opened in Google Earth using ``rasterio`` to access the raster metadata. Executing
+
+.. code::
+
+    $ python docs/recipes/raster_to_kmz.py
+
+creates the file ``green_box.tif``, which is a green image that extends from longitude -36 to -35 and latitude 74 to 75 in ``EPSG:4326`` projection, and then embeds this raster in a KMZ file ``green_box.kmz``. In Google Earth, we can see the box inside Greenland (screenshot below).
+
+.. image:: img/green_box_kmz.png
     :scale: 50 %
