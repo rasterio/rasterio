@@ -1,3 +1,5 @@
+"""Fill holes in raster dataset by interpolation from the edges."""
+
 import rasterio
 from rasterio._fill import _fillnodata
 
@@ -7,8 +9,7 @@ def fillnodata(
         mask=None,
         max_search_distance=100.0,
         smoothing_iterations=0):
-    """
-    Fill holes in a raster dataset by interpolation from the edges.
+    """Fill holes in a raster dataset by interpolation from the edges.
 
     This algorithm will interpolate values for all designated nodata
     pixels (marked by zeros in `mask`). For each pixel a four direction

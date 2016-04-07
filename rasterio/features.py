@@ -2,9 +2,7 @@
 
 from __future__ import absolute_import
 
-import json
 import logging
-import time
 import warnings
 
 import numpy as np
@@ -19,8 +17,12 @@ log = logging.getLogger('rasterio')
 
 
 class NullHandler(logging.Handler):
+    """Handle logging be emitting nothing."""
+
     def emit(self, record):
+        """Do nothing."""
         pass
+
 log.addHandler(NullHandler())
 
 
@@ -30,7 +32,9 @@ def geometry_mask(
         transform,
         all_touched=False,
         invert=False):
-    """Create a mask from shapes.  By default, mask is intended for use as a
+    """Create a mask from shapes.
+
+    By default, mask is intended for use as a
     numpy mask, where pixels that overlap shapes are False.
 
     Parameters
@@ -55,7 +59,6 @@ def geometry_mask(
     out : numpy ndarray of type 'bool'
         Result
     """
-
     fill, mask_value = (0, 1) if invert else (1, 0)
 
     return rasterize(
@@ -68,9 +71,7 @@ def geometry_mask(
 
 
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
-    """
-    Return a generator of (polygon, value) for each each set of adjacent pixels
-    of the same value.
+    """Yield (polygon, value for each set of adjacent pixels of the same value.
 
     Parameters
     ----------
@@ -87,10 +88,10 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
         If not provided, feature coordinates will be generated based on pixel
         coordinates
 
-    Returns
+    Yields
     -------
-    Generator of (polygon, value)
-        Yields a pair of (polygon, value) for each feature found in the image.
+    tuple
+        A pair of (polygon, value) for each feature found in the image.
         Polygons are GeoJSON-like dicts and the values are the associated value
         from the image, in the data type of the image.
         Note: due to floating point precision issues, values returned from a
@@ -105,7 +106,6 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     memory.
 
     """
-
     transform = guard_transform(transform)
 
     with rasterio.drivers():
@@ -114,10 +114,9 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
 
 def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
-    """
-    Replaces small polygons in `image` with the value of their largest
-    neighbor.  Polygons are found for each set of neighboring pixels of the
-    same value.
+    """Replace small polygons in `image` with value of their largest neighbor.
+
+    Polygons are found for each set of neighboring pixels of the same value.
 
     Parameters
     ----------
@@ -154,7 +153,6 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     large amounts of memory.
 
     """
-
     # Start moving users over to 'out'.
     if output is not None:
         warnings.warn(
@@ -162,7 +160,7 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
             stacklevel=2)  # pragma: no cover
-    
+
     out = out if out is not None else output
 
     if out is None:
@@ -183,8 +181,7 @@ def rasterize(
         all_touched=False,
         default_value=1,
         dtype=None):
-    """
-    Returns an image array with input geometries burned in.
+    """Return an image array with input geometries burned in.
 
     Parameters
     ----------
@@ -226,7 +223,6 @@ def rasterize(
     rasterio.float64.
 
     """
-
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
@@ -238,7 +234,6 @@ def rasterize(
 
     def format_cast_error(param, dtype):
         return '{0} cannot be cast to specified dtype: {1}'.format(param, dtype)
-
 
     if fill != 0:
         fill_array = np.array([fill])
@@ -259,7 +254,6 @@ def rasterize(
     if dtype is not None and np.dtype(dtype).name not in valid_dtypes:
         raise ValueError(format_invalid_dtype('dtype'))
 
-
     valid_shapes = []
     shape_values = []
     for index, item in enumerate(shapes):
@@ -270,7 +264,7 @@ def rasterize(
             value = default_value
         geom = getattr(geom, '__geo_interface__', None) or geom
 
-        #not isinstance(geom, dict) or
+        # not isinstance(geom, dict) or
         if 'type' in geom or 'coordinates' in geom:
             valid_shapes.append((geom, value))
             shape_values.append(value)
@@ -299,7 +293,7 @@ def rasterize(
             "The 'output' keyword arg has been superseded by 'out' "
             "and will be removed before Rasterio 1.0.",
             FutureWarning,
-            stacklevel=2) # pragma: no cover
+            stacklevel=2)  # pragma: no cover
 
     out = out if out is not None else output
     if out is not None:
@@ -325,8 +319,9 @@ def rasterize(
 
 
 def bounds(geometry):
-    """Returns a (minx, miny, maxx, maxy) bounding box.  From Fiona 1.4.8.
-    Modified to return bbox from geometry if available.
+    """Return a (minx, miny, maxx, maxy) bounding box.
+
+    From Fiona 1.4.8. Modified to return bbox from geometry if available.
 
     Parameters
     ----------
@@ -337,7 +332,6 @@ def bounds(geometry):
     tuple
         Bounding box: (minx, miny, maxx, maxy)
     """
-
     if 'bbox' in geometry:
         return tuple(geometry['bbox'])
 
