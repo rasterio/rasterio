@@ -241,8 +241,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_height = max(int(ceil((t - b) / res[1])), 1)
 
             else:
-                print(dst_crs)
-                print("HEYYYYY")
                 dst_crs = src.crs
                 dst_transform = src.affine
                 dst_width = src.width
