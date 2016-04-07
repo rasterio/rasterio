@@ -618,3 +618,10 @@ def test_info_checksums_only():
         ['info', 'tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.strip() == '29131'
+
+
+def test_bad_interpreter():
+    from rasterio.rio.insp import main
+    with rasterio.open("tests/data/RGB.byte.tif", 'r') as src:
+        with pytest.raises(ValueError):
+            main("Test banner", src, "PHP")

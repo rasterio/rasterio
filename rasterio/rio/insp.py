@@ -52,7 +52,7 @@ def main(banner, dataset, alt_interpreter=None):
     local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
     if not alt_interpreter:
         code.interact(banner, local=local)
-    elif alt_interpreter == 'ipython':
+    elif alt_interpreter == 'ipython':  # pragma: no cover
         import IPython
         IPython.InteractiveShell.banner1 = banner
         IPython.start_ipython(argv=[], user_ns=local)
