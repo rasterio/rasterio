@@ -1,12 +1,12 @@
 import logging
 import os
-import re
 import sys
 
 import numpy
 import pytest
 
 import rasterio
+import rasterio.crs
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
 
@@ -352,3 +352,22 @@ def test_warp_reproject_nolostdata(runner, tmpdir):
         # 50 column swath on the right edge should have some ones (gdalwarped has 7223)
         assert arr[0, :, -50:].sum() > 7000
         assert output.crs == {'init': 'epsg:3857'}
+
+
+def test_warp_dst_crs_empty_string(runner, tmpdir):
+    """`$ rio warp --dst-crs ''` used to perform a falsey check that would treat
+    `--dst-crs ''` as though `--dst-crs` was not supplied at all.  If the user
+    gives any value we should let `rasterio.crs.from_string()` handle the
+    validation.
+    """
+
+    infile = 'tests/data/RGB.byte.tif'
+    outfile = str(tmpdir.mkdir('empty_warp_dst_crs.tif').join('test.tif'))
+
+    result = runner.invoke(warp.warp, [
+        infile,
+        outfile,
+        '--dst-crs', ''])
+
+    assert result.exit_code != 0
+    assert 'empty or invalid' in result.output

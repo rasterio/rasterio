@@ -1,17 +1,20 @@
-# Coordinate reference systems and functions.
-#
-# PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
-# coordinate reference systems are described by strings of parameters such as
-#
-#   +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
-#
-# here we use mappings:
-#
-#   {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
-#
+"""Coordinate reference systems and functions.
+
+PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
+coordinate reference systems are described by strings of parameters such as
+
+  +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+
+here we use mappings:
+
+  {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
+"""
+
 
 import json
+
 from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
+from rasterio.errors import CRSError
 from rasterio.five import string_types
 
 
@@ -54,9 +57,14 @@ def from_string(prjs):
     if '{' in prjs:
         # may be json, try to decode it
         try:
-            return json.loads(prjs, strict=False)
+            val = json.loads(prjs, strict=False)
         except ValueError:
-            raise ValueError('crs appears to be JSON but is not valid')
+            raise CRSError('crs appears to be JSON but is not valid')
+
+        if not val:
+            raise CRSError("crs is empty JSON")
+        else:
+            return val
 
     if prjs.strip().upper().startswith('EPSG:'):
         return from_epsg(prjs.split(':')[1])
@@ -82,7 +90,12 @@ def from_string(prjs):
         lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
         (p.split('=') for p in parts))
 
-    return dict((k, v) for k, v in items if k in all_proj_keys)
+    out = dict((k, v) for k, v in items if k in all_proj_keys)
+
+    if not out:
+        raise CRSError("crs is empty or invalid: {}".format(prjs))
+
+    return out
 
 
 def from_epsg(code):
