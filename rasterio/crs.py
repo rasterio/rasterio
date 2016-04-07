@@ -59,7 +59,7 @@ def from_string(prjs):
         try:
             val = json.loads(prjs, strict=False)
         except ValueError:
-            raise ValueError('crs appears to be JSON but is not valid')
+            raise CRSError('crs appears to be JSON but is not valid')
 
         if not val:
             raise CRSError("crs is empty JSON")
