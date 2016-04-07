@@ -10,8 +10,8 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
-    - secure: "HNlbjIcrNwj8/oUHbhWYhUmG1AH/iZwJFSnUiYZVOrQ8NfI4veR0AqHzXJYIK4npsW6yAVpQ1iz6BR/lxMiEgtLwSqNhzXeMNCM/u7FhSOr3wkNHURDhCecyPL1jGd1DKm9p8OWSPoaTOHxFjSbEGVPMWXh8uln8QKwbsJNMqgE="
-    - secure: "OnrfYA8v2vemdxouNoB6AOuFGWN2HHSaRaOdpGS4CqERzHoHPz0BMWruzh0d1bfGAoxk+PrbF3t2aWAj4a3X0rQSWSulJ5OF5DP2Nd+HV+0gU+pMo4ze95DOJT5EX1aq3u9CUJ7XdkNMqHwCMpGQOQ50hDXVHA9+vidxUP6nZIc="
+    - secure: "hvRtEFBJ7qoRNxM+xCcSp4RAXMIRhllFtXZbEAs8xdz6ov3DHBB16QKXLIQ713R9gQHsoyZkEShLSU22pqD/37EqdFtGQ7V6iICfVZMzUp4YLxbw2JClT4MHmjTzbtrkh4LvxpUS2e+sZUukFisfYiNgklDyaNPTl15f0YFTr18="
+    - secure: "xYB0j68QKkKTHa2fdVTr8SAmge8FITZCLyIcdIVdc0PcowEHXEgYcGScXYgWUarQrpfshBlf7xV8jRMzLSWj8ut5k52ozRunm1tjSYhHrROQhZIntfuFgEkF7N05o144XslrrESh6L0q6scFMPvOOepHRMbiApYLhTHRAhHFp7Q="
   matrix:
     - GDALVERSION="1.9.2"
     - GDALVERSION="1.10.0"  # doesn't exist but path/lib will fall back to system

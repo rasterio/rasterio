@@ -1,0 +1,64 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Rasterio Testing Resources",
+    "Resources": {
+        "testuser": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "testpolicy",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Resource": [
+                                        "arn:aws:s3:::landsat-pds",
+                                        "arn:aws:s3:::landsat-pds/*"
+                                    ],
+                                    "Action": [
+                                        "s3:ListBucket"
+                                    ],
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Resource": [
+                                        "arn:aws:s3:::landsat-pds/*"
+                                    ],
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "TestKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "testuser"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "TestAccessKeyId": {
+            "Value": {
+                "Ref": "TestKey"
+            }
+        },
+        "TestSecretAccessKey": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "TestKey",
+                    "SecretAccessKey"
+                ]
+            }
+        }
+    }
+}
+
