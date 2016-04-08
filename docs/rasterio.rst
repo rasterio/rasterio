@@ -30,3 +30,15 @@ Submodules
    rasterio.warp
    rasterio.windows
 
+
+Source Interface
+-----------------
+
+Instances of these classes are returned from
+``rasterio.open``
+
+.. autoclass:: rasterio._io.RasterReader
+    :inherited-members:
+
+.. autoclass:: rasterio._io.RasterUpdater
+    :inherited-members:
