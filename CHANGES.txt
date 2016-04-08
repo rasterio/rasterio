@@ -1,9 +1,12 @@
 Changes
 =======
 
+Next
+----
+- Requirements: affine requirement upped to >=1.3.0 (#430).
+
 0.34.0 (2016-04-04)
 -------------------
-
 - Bug fix: S3 support was found missing in several of the CLI commands 
   mentioned below. This is corrected in 0.34 and we have the tests to prove it
   (#633).
