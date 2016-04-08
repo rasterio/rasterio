@@ -157,7 +157,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     dst_height = template_ds.height
                     dst_width = template_ds.width
 
-            elif dst_crs:
+            elif dst_crs is not None:
                 try:
                     dst_crs = crs.from_string(dst_crs)
                 except ValueError as err:
