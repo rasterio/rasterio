@@ -17,9 +17,9 @@ import rasterio
 
 try:
     import matplotlib.pyplot as plt
-except ImportError:
+except ImportError:  # pragma: no cover
     plt = None
-except RuntimeError as e:
+except RuntimeError as e:  # pragma: no cover
     # Certain environment configurations can trigger a RuntimeError like:
 
     # Trying to import matplotlibRuntimeError: Python is not installed as a
@@ -52,7 +52,7 @@ def main(banner, dataset, alt_interpreter=None):
     local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
     if not alt_interpreter:
         code.interact(banner, local=local)
-    elif alt_interpreter == 'ipython':
+    elif alt_interpreter == 'ipython':  # pragma: no cover
         import IPython
         IPython.InteractiveShell.banner1 = banner
         IPython.start_ipython(argv=[], user_ns=local)

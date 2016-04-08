@@ -371,3 +371,25 @@ def test_warp_dst_crs_empty_string(runner, tmpdir):
 
     assert result.exit_code != 0
     assert 'empty or invalid' in result.output
+
+
+def test_warp_badcrs_dimensions(runner, tmpdir):
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(warp.warp, [srcname, outputname,
+                                       '--dst-crs', '{"init": "epsg:-1"}',
+                                       '--dimensions', '100', '100'])
+    assert result.exit_code == 2
+    assert "Invalid value for dst_crs" in result.output
+
+
+def test_warp_badcrs_src_bounds(runner, tmpdir):
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    out_bounds = [-11850000, 4810000, -11849000, 4812000]
+    result = runner.invoke(
+        warp.warp, [srcname, outputname,
+                    '--dst-crs', '{"init": "epsg:-1"}',
+                    '--res', 0.001, '--src-bounds'] + out_bounds)
+    assert result.exit_code == 2
+    assert "Invalid value for dst_crs" in result.output

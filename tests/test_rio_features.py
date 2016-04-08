@@ -497,6 +497,23 @@ def test_rasterize_resolution(tmpdir, runner, basic_feature):
         assert numpy.all(data)
 
 
+def test_rasterize_multiresolution(tmpdir, runner, basic_feature):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        rasterize,
+        [output, '--res', 0.15, '--res', 0.15],
+        input=json.dumps(basic_feature)
+    )
+
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+    with rasterio.open(output) as out:
+        assert numpy.allclose(out.bounds, (2, 2, 4.25, 4.25))
+        data = out.read(1, masked=False)
+        assert data.shape == (15, 15)
+        assert numpy.all(data)
+
+
 def test_rasterize_src_crs(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
@@ -621,6 +638,39 @@ def test_rasterize_like_raster_src_crs_mismatch(tmpdir, runner, basic_feature,
 
     assert result.exit_code == 2
     assert 'GeoJSON does not match crs of --like raster' in result.output
+
+
+def test_rasterize_featurecollection(tmpdir, runner, basic_feature,
+                                     pixelated_image_file):
+    output = str(tmpdir.join('test.tif'))
+    collection = {
+        'type': 'FeatureCollection',
+        'features': [basic_feature]}
+    result = runner.invoke(
+        rasterize,
+        [output, '--like', pixelated_image_file],
+        input=json.dumps(collection)
+    )
+    assert result.exit_code == 0
+
+
+def test_rasterize_src_crs_mismatch(tmpdir, runner, basic_feature,
+                                    pixelated_image_file):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        rasterize,
+        [output, '--like', pixelated_image_file],
+        input=json.dumps(basic_feature)
+    )
+    assert result.exit_code == 0
+
+    result = runner.invoke(
+        rasterize,
+        [output, '--force-overwrite', '--src-crs', 'EPSG:3857'],
+        input=json.dumps(basic_feature)
+    )
+    assert result.exit_code == 2
+    assert 'GeoJSON does not match crs of existing output raster' in result.output
 
 
 def test_rasterize_property_value(tmpdir, runner, basic_feature):

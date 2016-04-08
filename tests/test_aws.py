@@ -24,6 +24,7 @@ credentials = pytest.mark.skipif(
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
+httpstif = "https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
 
 
 def test_session():
@@ -74,6 +75,12 @@ def test_open_with_session_minus_mode():
     with s.open(L8TIF, 'r-') as f:
         assert f.count == 1
 
+@mingdalversion
+def test_open_as_https_vsicurl():
+    """Test the same object via https using vsicurl, reading in 'r-' mode"""
+    s = Session()
+    with s.open(httpstif, 'r-') as f:
+        assert f.count == 1
 
 # CLI tests.
 
@@ -82,6 +89,15 @@ def test_open_with_session_minus_mode():
 def test_rio_info(runner):
     """S3 is supported by rio-info"""
     result = runner.invoke(main_group, ['info', L8TIF])
+    assert result.exit_code == 0
+    assert '"crs": "EPSG:32645"' in result.output
+
+
+@mingdalversion
+@credentials
+def test_https_rio_info(runner):
+    """HTTPS is supported by rio-info"""
+    result = runner.invoke(main_group, ['info', httpstif])
     assert result.exit_code == 0
     assert '"crs": "EPSG:32645"' in result.output
 
@@ -133,3 +149,11 @@ def test_rio_clip(runner, tmpdir):
         main_group, ['clip', '--bounds', '420000', '2350000', '420060', '2350060',
                      '-o', str(outputfile), L8TIF])
     assert result.exit_code == 0
+
+
+@mingdalversion
+@credentials
+def test_aws_open_bad_path():
+    from rasterio.aws import Session
+    with pytest.raises(TypeError):
+        Session().open(3.14)

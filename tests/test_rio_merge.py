@@ -399,3 +399,11 @@ def test_merge_rgb(tmpdir):
 
     with rasterio.open(outputname) as src:
         assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
+
+
+def test_merge_tiny_intres(tiffs):
+    from rasterio.merge import merge
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    sources = [rasterio.open(x) for x in inputs]
+    result = merge(sources, res=2)
