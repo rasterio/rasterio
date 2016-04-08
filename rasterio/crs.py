@@ -3,13 +3,12 @@
 PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
 coordinate reference systems are described by strings of parameters such as
 
-  +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+    +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
 
 here we use mappings:
 
-  {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
+    {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
 """
-
 
 import json
 
@@ -19,6 +18,7 @@ from rasterio.five import string_types
 
 
 def is_valid_crs(crs):
+    """Check if valid geographic or projected coordinate reference system."""
     return is_geographic_crs(crs) or is_projected_crs(crs)
 
 
@@ -53,7 +53,6 @@ def from_string(prjs):
 
     JSON text-encoded strings are allowed.
     """
-
     if '{' in prjs:
         # may be json, try to decode it
         try:

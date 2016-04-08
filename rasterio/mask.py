@@ -1,3 +1,5 @@
+"""Mask the area outside of the input shapes with no data."""
+
 from __future__ import absolute_import
 
 import warnings
@@ -8,7 +10,8 @@ from rasterio.features import geometry_mask
 
 def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
          invert=False):
-    """
+    """Mask the area outside of the input shapes with nodata.
+
     For all regions in the input raster outside of the regions defined by
     `shapes`, sets any data present to nodata.
 
@@ -43,7 +46,6 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         Information for mapping pixel coordinates in `masked` to another
         coordinate system.
     """
-
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
     if nodata is None:

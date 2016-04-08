@@ -1,10 +1,12 @@
+"""Bounding box tuple, and disjoint operator."""
 
 from collections import namedtuple
 
 _BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
 
+
 class BoundingBox(_BoundingBox):
-    """Bounding box named tuple, defining extent in cartesian coordinates
+    """Bounding box named tuple, defining extent in cartesian coordinates.
 
     .. code::
 
@@ -21,10 +23,12 @@ class BoundingBox(_BoundingBox):
     top :
         Top coordinate
     """
+
     pass
 
+
 def disjoint_bounds(bounds1, bounds2):
-    """Compare two bounds and determine if they are disjoint
+    """Compare two bounds and determine if they are disjoint.
 
     Parameters
     ----------
@@ -39,6 +43,5 @@ def disjoint_bounds(bounds1, bounds2):
     ``True`` if bounds are disjoint,
     ``False`` if bounds overlap
     """
-
     return (bounds1[0] > bounds2[2] or bounds1[2] < bounds2[0] or
             bounds1[1] > bounds2[3] or bounds1[3] < bounds2[1])
