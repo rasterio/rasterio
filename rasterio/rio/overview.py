@@ -19,10 +19,10 @@ def build_handler(ctx, param, value):
             if '^' in value:
                 base, exp_range = value.split('^')
                 exp_min, exp_max = (int(v) for v in exp_range.split('..'))
-                value = [pow(int(base), k) for k in range(exp_min, exp_max+1)]
+                value = [pow(int(base), k) for k in range(exp_min, exp_max + 1)]
             else:
                 value = [int(v) for v in value.split(',')]
-        except Exception as exc:
+        except Exception:
             raise click.BadParameter(u"must match 'n,n,n,…' or 'n^n..n'.")
     return value
 
@@ -38,7 +38,8 @@ def build_handler(ctx, param, value):
 @click.option('--rebuild', help="Reconstruct existing overviews.",
               is_flag=True, default=False)
 @click.option('--resampling', help="Resampling algorithm.",
-              type=click.Choice([item.name for item in Resampling]),
+              type=click.Choice(
+                  [it.name for it in Resampling if it.value in [0, 2, 5, 6, 7]]),
               default='nearest', show_default=True)
 @click.pass_context
 def overview(ctx, input, build, ls, rebuild, resampling):
@@ -56,7 +57,7 @@ def overview(ctx, input, build, ls, rebuild, resampling):
 
       rio overview --build 2^1..4
 
-    Note that overviews can not currently be removed and are not 
+    Note that overviews can not currently be removed and are not
     automatically updated when the dataset's primary bands are
     modified.
 
@@ -69,7 +70,7 @@ def overview(ctx, input, build, ls, rebuild, resampling):
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
 
-    with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
+    with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
         with rasterio.open(input, 'r+') as dst:
 
             if ls:

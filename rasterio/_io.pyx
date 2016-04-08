@@ -20,7 +20,8 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import DriverRegistrationError, RasterioIOError
+from rasterio.errors import (
+    DriverRegistrationError, RasterioIOError, UnsupportedResamplingAlgorithm)
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -1784,6 +1785,17 @@ cdef class RasterUpdater(RasterReader):
         cdef int *factors_c = NULL
         cdef const char *resampling_c = NULL
 
+        try:
+            resampling_alg = {
+                0: 'NEAREST',
+                2: 'CUBIC',
+                5: 'AVERAGE',
+                6: 'MODE',
+                7: 'GAUSS'}[Resampling(resampling.value)]
+        except (KeyError, ValueError):
+            raise UnsupportedResamplingAlgorithm(
+                "Overviews do not support '{0!r}'".format(resampling))
+
         # Allocate arrays.
         if factors:
             factors_c = <int *>_gdal.CPLMalloc(len(factors)*sizeof(int))
@@ -1791,7 +1803,7 @@ cdef class RasterUpdater(RasterReader):
                 factors_c[i] = factor
             try:
                 with CPLErrors() as cple:
-                    resampling_b = resampling.value.encode('utf-8')
+                    resampling_b = resampling_alg.encode('utf-8')
                     resampling_c = resampling_b
                     err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
                         len(factors), factors_c, 0, NULL, NULL, NULL)

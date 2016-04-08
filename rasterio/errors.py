@@ -23,3 +23,8 @@ class FileOverwriteError(FileError):
 class RasterioIOError(IOError):
     """Raised when a dataset cannot be opened using one of the
     registered format drivers."""
+
+
+class UnsupportedResamplingAlgorithm(ValueError):
+    """Raised when a requested resampling algorithm is not supported by
+    a method or function."""

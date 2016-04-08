@@ -3,6 +3,7 @@ from enum import Enum, IntEnum
 
 
 class ColorInterp(IntEnum):
+    """Raster band color interpretation."""
     undefined = 0
     grey = 1
     gray = 1
@@ -23,17 +24,27 @@ class ColorInterp(IntEnum):
     Cr = 16
 
 
-class Resampling(Enum):
-    nearest = 'NEAREST'
-    gauss = 'GAUSS'
-    cubic = 'CUBIC'
-    average = 'AVERAGE'
-    mode = 'MODE'
-    average_magphase = 'AVERAGE_MAGPHASE'
-    none = 'NONE'
+class Resampling(IntEnum):
+    """Available warp resampling algorithms.
+
+    A subset of these (0, 2, 5, 6) are available to band overviews.
+    """
+    nearest = 0
+    bilinear = 1
+    cubic = 2
+    cubic_spline = 3
+    lanczos = 4
+    average = 5
+    mode = 6
+    max = 8
+    min = 9
+    med = 10
+    q1 = 11
+    q3 = 12
 
 
 class Compression(Enum):
+    """Available compression algorithms."""
     jpeg = 'JPEG'
     lzw = 'LZW'
     packbits = 'PACKBITS'
