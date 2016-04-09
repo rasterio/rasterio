@@ -11,8 +11,9 @@ import numpy as np
 
 import rasterio
 from rasterio._base import _transform
-from rasterio._warp import (_transform_geom, _reproject, Resampling,
-                            _calculate_default_transform)
+from rasterio._warp import (
+    _transform_geom, _reproject, _calculate_default_transform)
+from rasterio.enums import Resampling
 from rasterio.transform import guard_transform
 
 
@@ -225,7 +226,15 @@ def reproject(
     """
 
     # Resampling guard.
-    _ = Resampling(resampling)
+    try:
+        Resampling(resampling)
+        if resampling == 7:
+            raise ValueError
+    except ValueError:
+        raise ValueError(
+            "resampling must be one of: {0}".format(", ".join(
+                ['Resampling.{0}'.format(k) for k in
+                 Resampling.__members__.keys() if k != 'gauss'])))
 
     if src_transform:
         src_transform = guard_transform(src_transform).to_gdal()

@@ -27,7 +27,10 @@ class ColorInterp(IntEnum):
 class Resampling(IntEnum):
     """Available warp resampling algorithms.
 
-    A subset of these (0, 2, 5, 6) are available to band overviews.
+    The subset of 'nearest', 'cubic', 'average', 'mode', and 'gauss'
+    are available in making dataset overviews.
+
+    Note: 'gauss' is not available to the functions in rio.warp.
     """
     nearest = 0
     bilinear = 1
@@ -36,6 +39,7 @@ class Resampling(IntEnum):
     lanczos = 4
     average = 5
     mode = 6
+    gauss = 7
     max = 8
     min = 9
     med = 10

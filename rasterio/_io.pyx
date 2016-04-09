@@ -20,8 +20,7 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import (
-    DriverRegistrationError, RasterioIOError, UnsupportedResamplingAlgorithm)
+from rasterio.errors import DriverRegistrationError, RasterioIOError
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
@@ -1786,15 +1785,23 @@ cdef class RasterUpdater(RasterReader):
         cdef const char *resampling_c = NULL
 
         try:
-            resampling_alg = {
+            # GDALBuildOverviews() takes a string algo name, not a 
+            # Resampling enum member (like warping) and accepts only
+            # a subset of the warp algorithms. 'NONE' is omitted below
+            # (what does that even mean?) and so is 'AVERAGE_MAGPHASE'
+            # (no corresponding member in the warp enum).
+            resampling_map = {
                 0: 'NEAREST',
                 2: 'CUBIC',
                 5: 'AVERAGE',
                 6: 'MODE',
-                7: 'GAUSS'}[Resampling(resampling.value)]
+                7: 'GAUSS'}
+            resampling_alg = resampling_map[Resampling(resampling.value)]
         except (KeyError, ValueError):
-            raise UnsupportedResamplingAlgorithm(
-                "Overviews do not support '{0!r}'".format(resampling))
+            raise ValueError(
+                "resampling must be one of: {0}".format(", ".join(
+                    ['Resampling.{0}'.format(Resampling(k).name) for k in
+                     resampling_map.keys()])))
 
         # Allocate arrays.
         if factors:
