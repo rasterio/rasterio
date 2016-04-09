@@ -1,5 +1,6 @@
-"""Implementations of various common operations,
-like `show()` for displaying an array or with matplotlib.
+"""Implementations of various common operations.
+
+Including `show()` for displaying an array or with matplotlib.
 Most can handle a numpy array or `rasterio.Band()`.
 Primarily supports `$ rio insp`.
 """
@@ -28,9 +29,9 @@ from rasterio.five import zip_longest
 
 logger = logging.getLogger('rasterio')
 
+
 def show(source, cmap='gray', with_bounds=True):
-    """
-    Display a raster or raster band using matplotlib.
+    """Display a raster or raster band using matplotlib.
 
     Parameters
     ----------
@@ -46,7 +47,6 @@ def show(source, cmap='gray', with_bounds=True):
         rather than pixel coordinates. Only works when source is
         (raster dataset, bidx).
     """
-
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         xs = source[0].res[0] / 2.
@@ -68,9 +68,7 @@ def show(source, cmap='gray', with_bounds=True):
 
 
 def show_hist(source, bins=10, masked=True, title='Histogram'):
-
-    """
-    Easily display a histogram with matplotlib.
+    """Easily display a histogram with matplotlib.
 
     Parameters
     ----------
@@ -85,7 +83,6 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     title : str, optional
         Title for the figure.
     """
-
     if plt is None:  # pragma: no cover
         raise ImportError("Could not import matplotlib")
 
