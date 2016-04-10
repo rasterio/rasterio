@@ -1,4 +1,4 @@
-"""Raster warping and reprojection"""
+"""Raster warping and reprojection."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -9,7 +9,6 @@ import warnings
 from affine import Affine
 import numpy as np
 
-import rasterio
 from rasterio._base import _transform
 from rasterio._warp import (_transform_geom, _reproject, Resampling,
                             _calculate_default_transform)
@@ -22,7 +21,8 @@ warnings.warn(
 
 
 def transform(src_crs, dst_crs, xs, ys, zs=None):
-    """
+    """Transform vectors from source to target coordinate reference system.
+
     Transform vectors of x, y and optionally z from source
     coordinate reference system into target.
 
@@ -56,8 +56,7 @@ def transform_geom(
         antimeridian_cutting=False,
         antimeridian_offset=10.0,
         precision=-1):
-    """
-    Transform geometry from source coordinate reference system into target.
+    """Transform geometry from source coordinate reference system into target.
 
     Parameters
     ------------
@@ -84,7 +83,6 @@ def transform_geom(
     out: GeoJSON like dict object
         Transformed geometry in GeoJSON dict format
     """
-
     return _transform_geom(
         src_crs,
         dst_crs,
@@ -94,11 +92,18 @@ def transform_geom(
         precision)
 
 
-def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21):
-    """
-    Transforms bounds from src_crs to dst_crs, optionally densifying the edges
-    (to account for nonlinear transformations along these edges) and extracting
-    the outermost bounds.
+def transform_bounds(
+        src_crs,
+        dst_crs,
+        left,
+        bottom,
+        right,
+        top,
+        densify_pts=21):
+    """Transform bounds from src_crs to dst_crs.
+
+    Optionally densifying the edges (to account for nonlinear transformations
+    along these edges) and extracting the outermost bounds.
 
     Note: this does not account for the antimeridian.
 
@@ -121,7 +126,6 @@ def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21)
     left, bottom, right, top: float
         Outermost coordinates in target coordinate reference system.
     """
-
     if densify_pts < 0:
         raise ValueError('densify parameter must be >= 0')
 
@@ -135,14 +139,14 @@ def transform_bounds(src_crs, dst_crs, left, bottom, right, top, densify_pts=21)
         for x in (left, right):
             in_xs.extend([x] * (densify_pts + 2))
             in_ys.extend(
-                bottom + np.arange(0, densify_pts + 2, dtype=np.float32)
-                * ((top - bottom) * densify_factor)
+                bottom + np.arange(0, densify_pts + 2, dtype=np.float32) *
+                ((top - bottom) * densify_factor)
             )
 
         for y in (bottom, top):
             in_xs.extend(
-                left + np.arange(1, densify_pts + 1, dtype=np.float32)
-                * ((right - left) * densify_factor)
+                left + np.arange(1, densify_pts + 1, dtype=np.float32) *
+                ((right - left) * densify_factor)
             )
             in_ys.extend([y] * densify_pts)
 
@@ -223,7 +227,6 @@ def reproject(
     out: None
         Output is written to destination.
     """
-
     # Resampling guard.
     _ = Resampling(resampling)
 
@@ -255,7 +258,8 @@ def calculate_default_transform(
         right,
         top,
         resolution=None):
-    """
+    """Calculate parameters for reproject function.
+
     Transforms bounds to destination coordinate system, calculates resolution
     if not provided, and returns destination transform and dimensions.
     Intended to be used to calculate parameters for reproject function.

@@ -1,7 +1,8 @@
+"""Windows and related functions."""
+
 
 def get_data_window(arr, nodata=None):
-    """
-    Returns a window for the non-nodata pixels within the input array.
+    """Return a window for the non-nodata pixels within the input array.
 
     Parameters
     ----------
@@ -17,14 +18,12 @@ def get_data_window(arr, nodata=None):
     ((row_start, row_stop), (col_start, col_stop))
 
     """
-
     from rasterio._io import get_data_window
     return get_data_window(arr, nodata)
 
 
 def union(windows):
-    """
-    Union windows and return the outermost extent they cover.
+    """Union windows and return the outermost extent they cover.
 
     Parameters
     ----------
@@ -35,14 +34,12 @@ def union(windows):
     -------
     ((row_start, row_stop), (col_start, col_stop))
     """
-
     from rasterio._io import window_union
     return window_union(windows)
 
 
 def intersection(windows):
-    """
-    Intersect windows and return the innermost extent they cover.
+    """Intersect windows and return the innermost extent they cover.
 
     Will raise ValueError if windows do not intersect.
 
@@ -55,14 +52,12 @@ def intersection(windows):
     -------
     ((row_start, row_stop), (col_start, col_stop))
     """
-
     from rasterio._io import window_intersection
     return window_intersection(windows)
 
 
 def intersect(windows):
-    """
-    Test if windows intersect.
+    """Test if windows intersect.
 
     Parameters
     ----------
@@ -74,6 +69,5 @@ def intersect(windows):
     boolean:
         True if all windows intersect.
     """
-
     from rasterio._io import windows_intersect
     return windows_intersect(windows)
