@@ -1,9 +1,9 @@
 # The GDAL and OGR driver registry.
 # GDAL driver management.
 
+import logging
 import os
 import os.path
-import logging
 import sys
 
 from rasterio.five import string_types
@@ -35,13 +35,6 @@ cdef extern from "ogr_api.h":
     int OGRGetDriverCount()
 
 
-log = logging.getLogger('GDAL')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
-
-
 level_map = {
     0: 0,
     1: logging.DEBUG,
@@ -50,6 +43,7 @@ level_map = {
     4: logging.CRITICAL }
 
 code_map = {
+    0: 'CPLE_None',
     1: 'CPLE_AppDefined',
     2: 'CPLE_OutOfMemory',
     3: 'CPLE_FileIO',
@@ -70,10 +64,13 @@ code_map = {
     15: 'CPLE_AWSInvalidCredentials',
     16: 'CPLE_AWSSignatureDoesNotMatch'}
 
+log = logging.getLogger('rasterio')
+
 
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
     if err_no in code_map:
-        log.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
+        logger = logging.getLogger('GDAL')
+        logger.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
 
 
 def driver_count():
@@ -178,7 +175,10 @@ cdef class GDALEnv(ConfigEnv):
             os.environ['PROJ_LIB'] = whl_datadir
 
     def stop(self):
-        CPLSetErrorHandler(NULL)
+        # NB: do not restore the CPL error handler to its default
+        # state here. If you do, log messages will be written to stderr
+        # by GDAL instead of being sent to Python's logging module.
+        pass
 
     def drivers(self):
         cdef void *drv = NULL

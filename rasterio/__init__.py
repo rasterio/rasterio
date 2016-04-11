@@ -3,6 +3,12 @@ from __future__ import absolute_import
 
 from collections import namedtuple
 import logging
+try:
+    from logging import NullHandler
+except ImportError:
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
 
 from rasterio._base import (
     eval_window, window_shape, window_index, gdal_version)
@@ -26,11 +32,12 @@ __all__ = [
 __version__ = "0.34.0"
 __gdal_version__ = gdal_version()
 
-log = logging.getLogger('rasterio')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+# Rasterio attaches NullHandler to the 'rasterio' and 'GDAL' loggers.
+# See https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+# Applications will need to attach their own handlers in order to
+# see messages. See rasterio/rio/main.py for an example.
+log = logging.getLogger('rasterio').addHandler(NullHandler())
+log = logging.getLogger('GDAL').addHandler(NullHandler())
 
 
 def open(
