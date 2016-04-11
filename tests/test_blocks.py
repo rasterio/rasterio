@@ -69,7 +69,7 @@ class RasterBlocksTest(unittest.TestCase):
     def test_blocks(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assertEqual(len(s.block_shapes), 3)
-            self.assertEqual(s.block_shapes, [(3, 791), (3, 791), (3, 791)])
+            self.assertEqual(s.block_shapes, ((3, 791), (3, 791), (3, 791)))
             windows = s.block_windows(1)
             (j,i), first = next(windows)
             self.assertEqual((j,i), (0, 0))

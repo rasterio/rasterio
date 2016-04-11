@@ -282,11 +282,11 @@ cdef class DatasetReader(object):
 
     @property
     def indexes(self):
-        return list(range(1, self.count+1))
+        return tuple(range(1, self.count+1))
 
     @property
     def dtypes(self):
-        """Returns an ordered list of all band data types."""
+        """Returns an ordered tuple of all band data types."""
         cdef void *hband = NULL
         if not self._dtypes:
             if self._hds == NULL:
@@ -295,7 +295,7 @@ cdef class DatasetReader(object):
                 hband = _gdal.GDALGetRasterBand(self._hds, i+1)
                 self._dtypes.append(
                     dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)])
-        return self._dtypes
+        return tuple(self._dtypes)
     
     @property
     def block_shapes(self):
@@ -316,7 +316,7 @@ cdef class DatasetReader(object):
                     raise ValueError("Null band")
                 _gdal.GDALGetBlockSize(hband, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
-        return self._block_shapes
+        return tuple(self._block_shapes)
 
     def get_nodatavals(self):
         cdef void *hband = NULL
@@ -347,7 +347,7 @@ cdef class DatasetReader(object):
                 log.debug("Nodata value: %f", nodataval)
                 self._nodatavals.append(val)
 
-        return self._nodatavals
+        return tuple(self._nodatavals)
 
     property nodatavals:
         """Nodata values for each band."""
