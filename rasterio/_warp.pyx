@@ -10,6 +10,7 @@ from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
 from rasterio._err import CPLErrors, GDALError, CPLE_NotSupported
 from rasterio._io cimport InMemoryRaster
+from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError
 from rasterio.transform import Affine, from_bounds
 
@@ -41,19 +42,6 @@ cdef extern from "gdalwarper.h" nogil:
                                 double dfProgressScale=1.0)
 
 
-class Resampling(IntEnum):
-    nearest=0
-    bilinear=1
-    cubic=2
-    cubic_spline=3
-    lanczos=4
-    average=5
-    mode=6
-    max=8
-    min=9
-    med=10
-    q1=11
-    q3=12
 
 
 cdef extern from "ogr_geometry.h" nogil:

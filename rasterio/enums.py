@@ -3,6 +3,7 @@ from enum import Enum, IntEnum
 
 
 class ColorInterp(IntEnum):
+    """Raster band color interpretation."""
     undefined = 0
     grey = 1
     gray = 1
@@ -23,17 +24,31 @@ class ColorInterp(IntEnum):
     Cr = 16
 
 
-class Resampling(Enum):
-    nearest = 'NEAREST'
-    gauss = 'GAUSS'
-    cubic = 'CUBIC'
-    average = 'AVERAGE'
-    mode = 'MODE'
-    average_magphase = 'AVERAGE_MAGPHASE'
-    none = 'NONE'
+class Resampling(IntEnum):
+    """Available warp resampling algorithms.
+
+    The subset of 'nearest', 'cubic', 'average', 'mode', and 'gauss'
+    are available in making dataset overviews.
+
+    Note: 'gauss' is not available to the functions in rio.warp.
+    """
+    nearest = 0
+    bilinear = 1
+    cubic = 2
+    cubic_spline = 3
+    lanczos = 4
+    average = 5
+    mode = 6
+    gauss = 7
+    max = 8
+    min = 9
+    med = 10
+    q1 = 11
+    q3 = 12
 
 
 class Compression(Enum):
+    """Available compression algorithms."""
     jpeg = 'JPEG'
     lzw = 'LZW'
     packbits = 'PACKBITS'

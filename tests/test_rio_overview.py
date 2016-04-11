@@ -53,7 +53,8 @@ def test_rebuild_ls(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
 
-    result = runner.invoke(cli,
+    result = runner.invoke(
+        cli,
         ['overview', inputfile, '--build', '2,4,8', '--resampling', 'cubic'])
     assert result.exit_code == 0
 

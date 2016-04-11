@@ -1784,6 +1784,25 @@ cdef class RasterUpdater(RasterReader):
         cdef int *factors_c = NULL
         cdef const char *resampling_c = NULL
 
+        try:
+            # GDALBuildOverviews() takes a string algo name, not a 
+            # Resampling enum member (like warping) and accepts only
+            # a subset of the warp algorithms. 'NONE' is omitted below
+            # (what does that even mean?) and so is 'AVERAGE_MAGPHASE'
+            # (no corresponding member in the warp enum).
+            resampling_map = {
+                0: 'NEAREST',
+                2: 'CUBIC',
+                5: 'AVERAGE',
+                6: 'MODE',
+                7: 'GAUSS'}
+            resampling_alg = resampling_map[Resampling(resampling.value)]
+        except (KeyError, ValueError):
+            raise ValueError(
+                "resampling must be one of: {0}".format(", ".join(
+                    ['Resampling.{0}'.format(Resampling(k).name) for k in
+                     resampling_map.keys()])))
+
         # Allocate arrays.
         if factors:
             factors_c = <int *>_gdal.CPLMalloc(len(factors)*sizeof(int))
@@ -1791,7 +1810,7 @@ cdef class RasterUpdater(RasterReader):
                 factors_c[i] = factor
             try:
                 with CPLErrors() as cple:
-                    resampling_b = resampling.value.encode('utf-8')
+                    resampling_b = resampling_alg.encode('utf-8')
                     resampling_c = resampling_b
                     err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
                         len(factors), factors_c, 0, NULL, NULL, NULL)

@@ -4,6 +4,7 @@ import logging
 import sys
 
 from click.testing import CliRunner
+import pytest
 
 import rasterio
 from rasterio.enums import Resampling
@@ -40,7 +41,7 @@ def test_build_overviews_two(data):
         assert src.overviews(3) == [2, 4]
 
 
-def test_build_overviews_three(data):
+def test_build_overviews_average(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
         overview_factors = [2, 4]
@@ -48,3 +49,21 @@ def test_build_overviews_three(data):
         assert src.overviews(1) == [2, 4]
         assert src.overviews(2) == [2, 4]
         assert src.overviews(3) == [2, 4]
+
+
+def test_build_overviews_gauss(data):
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as src:
+        overview_factors = [2, 4]
+        src.build_overviews(overview_factors, resampling=Resampling.gauss)
+        assert src.overviews(1) == [2, 4]
+        assert src.overviews(2) == [2, 4]
+        assert src.overviews(3) == [2, 4]
+
+
+def test_test_unsupported_algo(data):
+    inputfile = str(data.join('RGB.byte.tif'))
+    with pytest.raises(ValueError):
+        with rasterio.open(inputfile, 'r+') as src:
+            overview_factors = [2, 4]
+            src.build_overviews(overview_factors, resampling=Resampling.q1)

@@ -6,8 +6,9 @@ from affine import Affine
 import numpy
 
 import rasterio
+from rasterio.enums import Resampling
 from rasterio.warp import (
-    reproject, Resampling, transform_geom, transform, transform_bounds,
+    reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
 
 
@@ -277,7 +278,6 @@ def test_reproject_nodata():
 
 def test_reproject_nodata_nan():
     params = default_reproject_params()
-    nodata = 215
 
     with rasterio.drivers():
         source = numpy.ones((params.width, params.height), dtype=numpy.float32)
@@ -298,8 +298,7 @@ def test_reproject_nodata_nan():
 
         assert (out == 1).sum() == 6215
         assert numpy.isnan(out).sum() == (params.dst_width *
-                                         params.dst_height - 6215)
-
+                                          params.dst_height - 6215)
 
 
 def test_reproject_dst_nodata_default():
@@ -536,9 +535,7 @@ def test_transform_geom():
                 (662054.7979028501, 6772962.86384242),
                 (841909.6014891531, 6731793.200435557),
                 (840726.455490463, 6727039.8672589315),
-                (798842.3090855901, 6569056.500655151)),
-            )
-    }
+                (798842.3090855901, 6569056.500655151)),)}
 
     result = transform_geom('EPSG:3373', 'EPSG:4326', geom)
     assert result['type'] == 'Polygon'
@@ -550,27 +547,27 @@ def test_transform_geom():
     assert len(result['coordinates']) == 2
 
     result = transform_geom(
-        'EPSG:3373', 
-        'EPSG:4326', 
-        geom, 
+        'EPSG:3373',
+        'EPSG:4326',
+        geom,
         antimeridian_cutting=True,
         antimeridian_offset=0)
     assert result['type'] == 'MultiPolygon'
     assert len(result['coordinates']) == 2
 
-    result = transform_geom('EPSG:3373', 'EPSG:4326',  geom,  precision=1)
+    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
     assert int(result['coordinates'][0][0][0] * 10) == -1778
 
 
-def test_reproject_invalid_resampling():
-    # An invalid resampling number fails.
+def test_reproject_unsupported_resampling():
+    """Values not in enums.Resampling are not supported."""
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             source = src.read_band(1)
 
         dst_crs = {'init': 'EPSG:32619'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValueError):
             reproject(
                 source,
                 out,
@@ -579,4 +576,22 @@ def test_reproject_invalid_resampling():
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs,
                 resampling=99)
-            assert "99 is not a valid Resampling" in exc_info.value.message
+
+
+def test_reproject_unsupported_resampling_guass():
+    """Resampling.gauss is unsupported."""
+    with rasterio.drivers():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            source = src.read_band(1)
+
+        dst_crs = {'init': 'EPSG:32619'}
+        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        with pytest.raises(ValueError):
+            reproject(
+                source,
+                out,
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=DST_TRANSFORM,
+                dst_crs=dst_crs,
+                resampling=Resampling.gauss)
