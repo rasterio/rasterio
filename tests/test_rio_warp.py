@@ -406,20 +406,15 @@ def test_warp_reproject_check_invert(runner, tmpdir):
 
     with rasterio.open(outputname) as output:
         assert output.crs == {'init': 'epsg:3759'}
-        assert output.width == 397
-        assert output.height == 412
+        shape1 = output.shape
 
-
-def test_warp_reproject_no_check_invert(runner, tmpdir):
-    srcname = 'tests/data/world.rgb.tif'
-    outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(warp.warp, [srcname, outputname,
+    output2name = str(tmpdir.join('test2.tif'))
+    result = runner.invoke(warp.warp, [srcname, output2name,
                                        '--check-invert-proj', 'no',
                                        '--dst-crs', 'EPSG:3759'])
     assert result.exit_code == 0
-    assert os.path.exists(outputname)
+    assert os.path.exists(output2name)
 
-    with rasterio.open(outputname) as output:
+    with rasterio.open(output2name) as output:
         assert output.crs == {'init': 'epsg:3759'}
-        assert output.width == 493
-        assert output.height == 291
+        assert output.shape != shape1
