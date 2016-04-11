@@ -74,7 +74,8 @@ include_dirs = []
 library_dirs = []
 libraries = []
 extra_link_args = []
-gdal_output = [None]*3
+gdal2plus = False
+gdal_output = [None]*4
 
 try:
     import numpy
@@ -85,7 +86,7 @@ except ImportError:
 
 try:
     gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
-    for i, flag in enumerate(("--cflags", "--libs", "--datadir")):
+    for i, flag in enumerate(("--cflags", "--libs", "--datadir", "--version")):
         gdal_output[i] = check_output([gdal_config, flag]).strip()
 
     for item in gdal_output[0].split():
@@ -99,6 +100,9 @@ try:
         else:
             # e.g. -framework GDAL
             extra_link_args.append(item)
+    # datadir, gdal_output[2] handled below
+    for item in gdal_output[3].split():
+        gdal2plus = not item.startswith("1.")
 
 except Exception as e:
     if os.name == "nt":
@@ -148,6 +152,14 @@ if os.environ.get('CYTHON_COVERAGE'):
 
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
+if gdal2plus:
+    # GDAL>=2.0 does not require vendorized rasterfill.cpp
+    cython_fill = ['rasterio/_fill.pyx']
+    sdist_fill = ['rasterio/_fill.cpp']
+else:
+    cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
+    sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
+
 # When building from a repo, Cython is required.
 if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
     log.info("MANIFEST.in found, presume a repo, cythonizing...")
@@ -170,7 +182,7 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
         Extension(
-            'rasterio._fill', ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp'], **ext_options),
+            'rasterio._fill', cython_fill, **ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
@@ -193,12 +205,11 @@ else:
         Extension(
             'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
         Extension(
-            'rasterio._fill', ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp'], **ext_options),
+            'rasterio._fill', sdist_fill, **ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.c'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.c'], **ext_options),
-            ]
+            'rasterio._example', ['rasterio/_example.c'], **ext_options)]
 
 with open('README.rst') as f:
     readme = f.read()
