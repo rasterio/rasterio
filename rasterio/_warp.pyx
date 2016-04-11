@@ -8,7 +8,7 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio._err import CPLErrors, GDALError, CPLE_NotSupported
+from rasterio._err import CPLErrors, GDALError, CPLE_NotSupported, CPLE_AppDefined
 from rasterio._io cimport InMemoryRaster
 from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError
@@ -567,6 +567,8 @@ def _calculate_default_transform(
             log.debug("Created transformer and warp output.")
         except CPLE_NotSupported as err:
             raise CRSError(err.errmsg)
+        except CPLE_AppDefined as err:
+            pass
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)
