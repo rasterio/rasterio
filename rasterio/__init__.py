@@ -1,4 +1,5 @@
-# rasterio
+"""Rasterio"""
+
 from __future__ import absolute_import
 
 from collections import namedtuple
@@ -32,12 +33,12 @@ __all__ = [
 __version__ = "0.34.0"
 __gdal_version__ = gdal_version()
 
-# Rasterio attaches NullHandler to the 'rasterio' and 'GDAL' loggers.
-# See https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
-# Applications will need to attach their own handlers in order to
-# see messages. See rasterio/rio/main.py for an example.
-log = logging.getLogger('rasterio').addHandler(NullHandler())
-log = logging.getLogger('GDAL').addHandler(NullHandler())
+# Rasterio attaches NullHandler to the 'rasterio' logger and its
+# descendents. See
+# https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
+# Applications must attach their own handlers in order to see messages.
+# See rasterio/rio/main.py for an example.
+logging.getLogger(__name__).addHandler(NullHandler())
 
 
 def open(

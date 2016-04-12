@@ -19,16 +19,6 @@ def configure_logging(verbosity):
     log_level = max(10, 30 - 10 * verbosity)
     logging.basicConfig(stream=sys.stderr, level=log_level)
 
-    # Rasterio has attached the 'rasterio' and 'GDAL' loggers to
-    # NullHandler. The CLI attaches a new StreamHandler to each
-    # so log messages go to sys.stderr.
-    log = logging.getLogger('rasterio')
-    log.setLevel(log_level)
-    log.addHandler(logging.StreamHandler())
-    log = logging.getLogger('GDAL')
-    log.setLevel(log_level)
-    log.addHandler(logging.StreamHandler())
-
 
 class FakeSession(object):
     """Fake AWS Session."""
