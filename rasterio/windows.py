@@ -22,7 +22,7 @@ def get_data_window(arr, nodata=None):
     return get_data_window(arr, nodata)
 
 
-def union(windows):
+def union(*windows):
     """Union windows and return the outermost extent they cover.
 
     Parameters
@@ -38,7 +38,7 @@ def union(windows):
     return window_union(windows)
 
 
-def intersection(windows):
+def intersection(*windows):
     """Intersect windows and return the innermost extent they cover.
 
     Will raise ValueError if windows do not intersect.
@@ -56,7 +56,7 @@ def intersection(windows):
     return window_intersection(windows)
 
 
-def intersect(windows):
+def intersect(*windows):
     """Test if windows intersect.
 
     Parameters
