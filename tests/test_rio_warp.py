@@ -393,3 +393,28 @@ def test_warp_badcrs_src_bounds(runner, tmpdir):
                     '--res', 0.001, '--src-bounds'] + out_bounds)
     assert result.exit_code == 2
     assert "Invalid value for dst_crs" in result.output
+
+
+def test_warp_reproject_check_invert(runner, tmpdir):
+    srcname = 'tests/data/world.rgb.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(warp.warp, [srcname, outputname,
+                                       '--check-invert-proj', 'yes',
+                                       '--dst-crs', 'EPSG:3759'])
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+
+    with rasterio.open(outputname) as output:
+        assert output.crs == {'init': 'epsg:3759'}
+        shape1 = output.shape
+
+    output2name = str(tmpdir.join('test2.tif'))
+    result = runner.invoke(warp.warp, [srcname, output2name,
+                                       '--check-invert-proj', 'no',
+                                       '--dst-crs', 'EPSG:3759'])
+    assert result.exit_code == 0
+    assert os.path.exists(output2name)
+
+    with rasterio.open(output2name) as output:
+        assert output.crs == {'init': 'epsg:3759'}
+        assert output.shape != shape1
