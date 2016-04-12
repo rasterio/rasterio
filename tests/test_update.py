@@ -58,7 +58,7 @@ def test_update_nodatavals(data):
     with rasterio.open(tiffname, 'r+') as f:
         f.nodata = 255
     with rasterio.open(tiffname) as f:
-        assert f.nodatavals == [255, 255, 255]
+        assert f.nodatavals == (255, 255, 255)
 
 
 def test_update_nodatavals_error(data):
