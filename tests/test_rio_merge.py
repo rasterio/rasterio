@@ -28,17 +28,15 @@ def test_data_dir_1(tmpdir):
         "nodata": 1
     }
 
-    with rasterio.drivers():
+    with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
+        data = numpy.ones((10, 10), dtype=rasterio.uint8)
+        data[0:6, 0:6] = 255
+        dst.write(data, indexes=1)
 
-        with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
-            data = numpy.ones((10, 10), dtype=rasterio.uint8)
-            data[0:6, 0:6] = 255
-            dst.write(data, indexes=1)
-
-        with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
-            data = numpy.ones((10, 10), dtype=rasterio.uint8)
-            data[4:8, 4:8] = 254
-            dst.write(data, indexes=1)
+    with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        data = numpy.ones((10, 10), dtype=rasterio.uint8)
+        data[4:8, 4:8] = 254
+        dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -56,17 +54,15 @@ def test_data_dir_2(tmpdir):
         # these files have undefined nodata.
     }
 
-    with rasterio.drivers():
+    with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
+        data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+        data[0:6, 0:6] = 255
+        dst.write(data, indexes=1)
 
-        with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.uint8)
-            data[0:6, 0:6] = 255
-            dst.write(data, indexes=1)
-
-        with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.uint8)
-            data[4:8, 4:8] = 254
-            dst.write(data, indexes=1)
+    with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+        data[4:8, 4:8] = 254
+        dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -184,15 +180,14 @@ def test_data_dir_overlapping(tmpdir):
         "nodata": 0
     }
 
-    with rasterio.drivers():
-        with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
-            data = numpy.ones((10, 10), dtype=rasterio.uint8)
-            dst.write(data, indexes=1)
+    with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
+        data = numpy.ones((10, 10), dtype=rasterio.uint8)
+        dst.write(data, indexes=1)
 
-        kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
-        with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
-            data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
-            dst.write(data, indexes=1)
+    kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
+    with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
+        data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
+        dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -230,16 +225,15 @@ def test_data_dir_float(tmpdir):
         "nodata": 0
     }
 
-    with rasterio.drivers():
-        with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.float64)
-            data[0:6, 0:6] = 255
-            dst.write(data, indexes=1)
+    with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
+        data = numpy.zeros((10, 10), dtype=rasterio.float64)
+        data[0:6, 0:6] = 255
+        dst.write(data, indexes=1)
 
-        with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.float64)
-            data[4:8, 4:8] = 254
-            dst.write(data, indexes=1)
+    with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
+        data = numpy.zeros((10, 10), dtype=rasterio.float64)
+        data[4:8, 4:8] = 254
+        dst.write(data, indexes=1)
     return tmpdir
 
 
@@ -275,23 +269,23 @@ def tiffs(tmpdir):
         'height': 1,
         'width': 1}
 
-    kwargs['transform'] = Affine( 1, 0, 1,
-                                  0,-1, 1)
+    kwargs['transform'] = Affine(1, 0, 1,
+                                 0, -1, 1)
     with rasterio.open(str(tmpdir.join('a-sw.tif')), 'w', **kwargs) as r:
         r.write(data * 40)
 
-    kwargs['transform'] = Affine( 1, 0, 2,
-                                  0,-1, 2)
+    kwargs['transform'] = Affine(1, 0, 2,
+                                 0, -1, 2)
     with rasterio.open(str(tmpdir.join('b-ct.tif')), 'w', **kwargs) as r:
         r.write(data * 60)
 
-    kwargs['transform'] = Affine( 2, 0, 3,
-                                  0,-2, 4)
+    kwargs['transform'] = Affine(2, 0, 3,
+                                 0, -2, 4)
     with rasterio.open(str(tmpdir.join('c-ne.tif')), 'w', **kwargs) as r:
         r.write(data * 90)
 
-    kwargs['transform'] = Affine( 2, 0, 2,
-                                  0,-2, 4)
+    kwargs['transform'] = Affine(2, 0, 2,
+                                 0, -2, 4)
     with rasterio.open(str(tmpdir.join('d-ne.tif')), 'w', **kwargs) as r:
         r.write(data * 120)
 
@@ -315,8 +309,8 @@ def test_merge_tiny(tiffs):
 
     with rasterio.open(outputname) as src:
         data = src.read()
-        assert (data[0][0:2,1] == 120).all()
-        assert (data[0][0:2,2:4] == 90).all()
+        assert (data[0][0:2, 1] == 120).all()
+        assert (data[0][0:2, 2:4] == 90).all()
         assert data[0][2][1] == 60
         assert data[0][3][0] == 40
 
@@ -338,8 +332,8 @@ def test_merge_tiny_output_opt(tiffs):
 
     with rasterio.open(outputname) as src:
         data = src.read()
-        assert (data[0][0:2,1] == 120).all()
-        assert (data[0][0:2,2:4] == 90).all()
+        assert (data[0][0:2, 1] == 120).all()
+        assert (data[0][0:2, 2:4] == 90).all()
         assert data[0][2][1] == 60
         assert data[0][3][0] == 40
 
@@ -407,4 +401,4 @@ def test_merge_tiny_intres(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     sources = [rasterio.open(x) for x in inputs]
-    result = merge(sources, res=2)
+    merge(sources, res=2)

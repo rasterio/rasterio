@@ -2,6 +2,8 @@
 
 import os
 
+from rasterio.five import urlparse
+
 
 # NB: As not to propagate fallacies of distributed computing, Rasterio
 # does not support HTTP or FTP URLs via GDAL's vsicurl handler. Only
@@ -14,18 +16,22 @@ def parse_path(path, vfs=None):
     """Parse a file path or Apache VFS URL into its parts."""
     archive = scheme = None
     if vfs:
-        parts = vfs.split("://")
-        scheme = parts.pop(0) if parts else None
-        archive = parts.pop(0) if parts else None
+        parts = urlparse(vfs)
+        scheme = parts.scheme
+        archive = parts.path
+        if parts.netloc and parts.netloc != 'localhost':  # pragma: no cover
+            archive = parts.netloc + archive
     else:
-        parts = path.split("://")
-        path = parts.pop() if parts else None
-        scheme = parts.pop() if parts else None
+        parts = urlparse(path)
+        scheme = parts.scheme
+        path = parts.path
+        if parts.netloc and parts.netloc != 'localhost':
+            path = parts.netloc + path
         if scheme in SCHEMES:
             parts = path.split('!')
             path = parts.pop() if parts else None
             archive = parts.pop() if parts else None
-        elif scheme in (None, 'file'):
+        elif scheme in (None, '', 'file'):
             pass
         else:
             raise ValueError("VFS scheme {0} is unknown".format(scheme))

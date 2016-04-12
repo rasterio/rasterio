@@ -8,6 +8,7 @@ import click
 from . import options
 import rasterio
 import rasterio.crs
+from rasterio.env import Env
 from rasterio.transform import guard_transform
 
 
@@ -118,7 +119,6 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
     import numpy as np
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
 
     def in_dtype_range(value, dtype):
         infos = {'c': np.finfo, 'f': np.finfo, 'i': np.iinfo,
@@ -126,7 +126,7 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
         rng = infos[np.dtype(dtype).kind](dtype)
         return rng.min <= value <= rng.max
 
-    with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
+    with Env(CPL_DEBUG=(verbosity > 2)) as env:
 
         with rasterio.open(input, 'r+') as dst:
 

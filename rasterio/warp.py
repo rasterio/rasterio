@@ -13,6 +13,7 @@ from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
+import rasterio.env
 from rasterio.transform import guard_transform
 
 
@@ -47,6 +48,7 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     Tuple of x, y, and optionally z vectors, transformed into the target
     coordinate reference system.
     """
+    rasterio.env.setenv()
     return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
@@ -84,6 +86,7 @@ def transform_geom(
     out: GeoJSON like dict object
         Transformed geometry in GeoJSON dict format
     """
+    rasterio.env.setenv()
     return _transform_geom(
         src_crs,
         dst_crs,
@@ -244,6 +247,7 @@ def reproject(
     if dst_transform:
         dst_transform = guard_transform(dst_transform).to_gdal()
 
+    rasterio.env.setenv()
     _reproject(
         source,
         destination,
@@ -300,7 +304,7 @@ def calculate_default_transform(
 
     Note
     ----
-    Must be called within a raster.drivers() context
+    Should be called within a raster.env.Env() context
 
     Some behavior of this function is determined by the
     CHECK_WITH_INVERT_PROJ environment variable
@@ -308,6 +312,7 @@ def calculate_default_transform(
              avoids visual artifacts and coordinate discontinuties.
         NO:  reproject coordinates beyond valid bound limits
     """
+    rasterio.env.setenv()
     dst_affine, dst_width, dst_height = _calculate_default_transform(
         src_crs, dst_crs,
         width, height,

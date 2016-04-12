@@ -87,20 +87,26 @@ cdef class ConfigEnv(object):
         self.options = options.copy()
         self.prev_options = {}
 
-    cdef enter_config_options(self):
+    def enter_config_options(self):
         """Set GDAL config options."""
+        self.update_config_options(**self.options)
+
+    def update_config_options(self, **kwargs):
+        """Update GDAL config options."""
         cdef const char *key_c
         cdef const char *val_c
 
-        for key, val in self.options.items():
+        self.options.update(**kwargs)
+        for key, val in kwargs.items():
             key_b = key.upper().encode('utf-8')
             key_c = key_b
 
             # Save current value of that key.
-            val_c = CPLGetConfigOption(key_c, NULL)
-            if val_c != NULL:
-                val_b = val_c
-                self.prev_options[key_b] = val_b
+            #if key not in self.prev_options:
+            #    val_c = CPLGetConfigOption(key_c, NULL)
+            #    if val_c != NULL:
+            #        val_b = val_c
+            #        self.prev_options[key] = val_b
 
             if isinstance(val, string_types):
                 val_b = val.encode('utf-8')
@@ -110,12 +116,12 @@ cdef class ConfigEnv(object):
             CPLSetConfigOption(key_c, val_c)
 
             # Redact AWS credentials.
-            if key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
-                       'AWS_SESSION_TOKEN', 'AWS_REGION']:
+            if key.upper() in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+                               'AWS_SESSION_TOKEN']:
                 val = '******'
-            log.debug("Option %s=%s", key, val)
+            log.debug("Set option %s=%s in env %r", key, val, self)
 
-    cdef exit_config_options(self):
+    def exit_config_options(self):
         """Clear GDAL config options."""
         cdef const char *key_c
         cdef const char *val_c
@@ -123,12 +129,15 @@ cdef class ConfigEnv(object):
         for key in self.options:
             key_b = key.upper().encode('utf-8')
             key_c = key_b
-            if key_b in self.prev_options:
-                val_b = self.prev_options[key_b]
-                key_c = key_b; val_c = val_b
+            if key in self.prev_options:
+                val = self.prev_options[key]
+                val_b = val.encode('utf-8')
+                val_c = val_b
                 CPLSetConfigOption(key_c, val_c)
+                log.debug("Restored previous option %s=%s in env %r", key, val, self)
             else:
                 CPLSetConfigOption(key_c, NULL)
+                log.debug("Unset option %s in env %r", key, self)
 
     def __enter__(self):
         self.enter_config_options()
@@ -136,6 +145,7 @@ cdef class ConfigEnv(object):
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
         self.exit_config_options()
+
 
 
 cdef class GDALEnv(ConfigEnv):
@@ -147,11 +157,13 @@ cdef class GDALEnv(ConfigEnv):
     def __enter__(self):
         self.start()
         self.enter_config_options()
+        log.debug("Entering env %r context", self)
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
         self.exit_config_options()
         self.stop()
+        log.debug("Exiting env %r context", self)
 
     def start(self):
         cdef const char *key_c
@@ -174,12 +186,14 @@ cdef class GDALEnv(ConfigEnv):
             whl_datadir = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "proj_data"))
             os.environ['PROJ_LIB'] = whl_datadir
+        log.debug("Env %r has been started", self)
+
 
     def stop(self):
         # NB: do not restore the CPL error handler to its default
         # state here. If you do, log messages will be written to stderr
         # by GDAL instead of being sent to Python's logging module.
-        pass
+        log.debug("Env %r has been stopped", self)
 
     def drivers(self):
         cdef void *drv = NULL

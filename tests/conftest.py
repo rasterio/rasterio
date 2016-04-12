@@ -17,16 +17,18 @@ if sys.version_info > (3,):
     reduce = functools.reduce
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
-    'data/RGB.byte.tif', 'data/float.tif', 'data/float_nan.tif', 'data/shade.tif']]
+    'data/RGB.byte.tif', 'data/float.tif', 'data/float_nan.tif',
+    'data/shade.tif']]
 
 
 def pytest_cmdline_main(config):
-    # Bail if the test raster data is not present. Test data is not 
+    # Bail if the test raster data is not present. Test data is not
     # distributed with sdists since 0.12.
     if reduce(operator.and_, map(os.path.exists, test_files)):
         print("Test data present.")
     else:
-        print("Test data not present. See download directions in tests/data/README.rst")
+        print("Test data not present. See download directions in "
+              "tests/data/README.rst")
         sys.exit(1)
 
 
@@ -146,8 +148,8 @@ def pixelated_image(basic_image):
     """
 
     image = basic_image.copy()
-    image [0, 0] = 1
-    image [8, 8] = 1
+    image[0, 0] = 1
+    image[8, 8] = 1
 
     return image
 
@@ -197,9 +199,8 @@ def basic_image_file(tmpdir, basic_image):
         "height": image.shape[0],
         "nodata": None
     }
-    with rasterio.drivers():
-        with rasterio.open(outfilename, 'w', **kwargs) as out:
-            out.write(image, indexes=1)
+    with rasterio.open(outfilename, 'w', **kwargs) as out:
+        out.write(image, indexes=1)
 
     return outfilename
 
@@ -233,8 +234,7 @@ def pixelated_image_file(tmpdir, pixelated_image):
         "height": image.shape[0],
         "nodata": 255
     }
-    with rasterio.drivers():
-        with rasterio.open(outfilename, 'w', **kwargs) as out:
-            out.write(image, indexes=1)
+    with rasterio.open(outfilename, 'w', **kwargs) as out:
+        out.write(image, indexes=1)
 
     return outfilename

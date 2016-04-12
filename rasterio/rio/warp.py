@@ -9,10 +9,11 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
+from rasterio.env import Env
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
-from rasterio.warp import (reproject, Resampling, calculate_default_transform,
-   transform_bounds)
+from rasterio.warp import (
+    reproject, Resampling, calculate_default_transform, transform_bounds)
 
 
 # Improper usage of rio-warp can lead to accidental creation of
@@ -25,7 +26,8 @@ MAX_OUTPUT_HEIGHT = 100000
 def bounds_handler(ctx, param, value):
     """Warn about future usage changes."""
     if value:
-        click.echo("Future Warning: "
+        click.echo(
+            "Future Warning: "
             "the semantics of the `--bounds` option will change in Rasterio "
             "version 1.0 from bounds of the source dataset to bounds of the "
             "destination dataset.", err=True)
@@ -35,7 +37,8 @@ def bounds_handler(ctx, param, value):
 def x_dst_bounds_handler(ctx, param, value):
     """Warn about future usage changes."""
     if value:
-        click.echo("Future Warning: "
+        click.echo(
+            "Future Warning: "
             "the `--x-dst-bounds` option will be removed in Rasterio version "
             "1.0 in favor of `--bounds`.", err=True)
     return value
@@ -121,7 +124,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
     """
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
 
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
@@ -135,8 +137,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         # Expand one value to two if needed
         res = (res[0], res[0]) if len(res) == 1 else res
 
-    with rasterio.drivers(CPL_DEBUG=verbosity > 2,
-                          CHECK_WITH_INVERT_PROJ=check_invert_proj):
+    with Env(CPL_DEBUG=verbosity > 2,
+             CHECK_WITH_INVERT_PROJ=check_invert_proj) as env:
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.meta.copy()

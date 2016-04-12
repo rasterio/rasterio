@@ -5,8 +5,8 @@ import json
 import click
 
 from . import options
-import rasterio
 import rasterio.crs
+from rasterio.env import Env
 
 
 @click.command(short_help="Print information about a data file.")
@@ -61,11 +61,9 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     Optionally print a single metadata item as a string.
     """
     verbosity = ctx.obj.get('verbosity')
-    aws_session = ctx.obj.get('aws_session')
     mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     try:
-        with rasterio.drivers(
-                CPL_DEBUG=(verbosity > 2)), aws_session:
+        with Env(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode) as src:
                 info = src.profile
                 info['transform'] = info['affine'][:6]

@@ -5,6 +5,7 @@ import pytest
 
 from affine import Affine
 import rasterio
+from rasterio.env import Env
 from rasterio.features import bounds, geometry_mask, rasterize, sieve, shapes
 
 
@@ -59,7 +60,7 @@ def test_bounds_existing_bbox(basic_featurecollection):
 
 
 def test_geometry_mask(basic_geometry, basic_image_2x2):
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image_2x2 == 0,
             geometry_mask(
@@ -71,7 +72,7 @@ def test_geometry_mask(basic_geometry, basic_image_2x2):
 
 
 def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image_2x2,
             geometry_mask(
@@ -86,7 +87,7 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
 def test_rasterize(basic_geometry, basic_image_2x2):
     """ Rasterize operation should succeed for both an out_shape and out """
 
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image_2x2,
             rasterize([basic_geometry], out_shape=DEFAULT_SHAPE)
@@ -101,7 +102,7 @@ def test_rasterize_invalid_out_dtype(basic_geometry):
     """ A non-supported data type for out should raise an exception """
 
     out = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.int64)
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             rasterize([basic_geometry], out=out)
 
@@ -110,7 +111,7 @@ def test_rasterize_shapes_out_dtype_mismatch(basic_geometry):
     """ Shape values must be able to fit in data type for out """
 
     out = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.uint8)
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             rasterize([(basic_geometry, 10000000)], out=out)
 
@@ -118,7 +119,7 @@ def test_rasterize_shapes_out_dtype_mismatch(basic_geometry):
 def test_rasterize_missing_out(basic_geometry):
     """ If both out and out_shape are missing, should raise exception """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             rasterize([basic_geometry], out=None, out_shape=None)
 
@@ -126,7 +127,7 @@ def test_rasterize_missing_out(basic_geometry):
 def test_rasterize_missing_shapes():
     """ Shapes are required for this operation """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError) as ex:
             rasterize([], out_shape=DEFAULT_SHAPE)
 
@@ -136,7 +137,7 @@ def test_rasterize_missing_shapes():
 def test_rasterize_invalid_shapes():
     """ Invalid shapes should raise an exception rather than be skipped """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError) as ex:
             rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
 
@@ -149,7 +150,7 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
     default_value = 2
     truth = basic_image_2x2 * default_value
 
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             truth,
             rasterize(
@@ -162,7 +163,7 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
 def test_rasterize_invalid_default_value(basic_geometry):
     """ A default value that requires an int64 should raise an exception """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE,
@@ -174,7 +175,7 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
     """ All pixels not covered by shapes should be given fill value """
 
     default_value = 2
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image_2x2 + 1,
             rasterize(
@@ -187,7 +188,7 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
 def test_rasterize_invalid_fill_value(basic_geometry):
     """ A fill value that requires an int64 should raise an exception """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000000000,
@@ -198,7 +199,7 @@ def test_rasterize_invalid_fill_value(basic_geometry):
 def test_rasterize_fill_value_dtype_mismatch(basic_geometry):
     """ A fill value that doesn't match dtype should fail """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000,
@@ -207,7 +208,7 @@ def test_rasterize_fill_value_dtype_mismatch(basic_geometry):
 
 
 def test_rasterize_all_touched(basic_geometry, basic_image):
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image,
             rasterize(
@@ -223,7 +224,7 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
     """
 
     value = 5
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image_2x2 * value,
             rasterize(
@@ -235,7 +236,7 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
 def test_rasterize_invalid_value(basic_geometry):
     """ A shape value that requires an int64 should raise an exception """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError) as ex:
             rasterize(
                 [(basic_geometry, 1000000000000)], out_shape=DEFAULT_SHAPE
@@ -247,7 +248,7 @@ def test_rasterize_invalid_value(basic_geometry):
 def test_rasterize_supported_dtype(basic_geometry):
     """ Supported data types should return valid results """
 
-    with rasterio.drivers():
+    with Env():
         supported_types = (
             ('int16', -32768),
             ('int32', -2147483648),
@@ -285,7 +286,7 @@ def test_rasterize_supported_dtype(basic_geometry):
 def test_rasterize_unsupported_dtype(basic_geometry):
     """ Unsupported types should all raise exceptions """
 
-    with rasterio.drivers():
+    with Env():
         unsupported_types = (
             ('int8', -127),
             ('int64', 20439845334323),
@@ -312,7 +313,7 @@ def test_rasterize_unsupported_dtype(basic_geometry):
 def test_rasterize_mismatched_dtype(basic_geometry):
     """ Mismatched values and dtypes should raise exceptions """
 
-    with rasterio.drivers():
+    with Env():
         mismatched_types = (('uint8', 3.2423), ('uint8', -2147483648))
         for dtype, default_value in mismatched_types:
             with pytest.raises(ValueError):
@@ -337,7 +338,7 @@ def test_rasterize_geometries_symmetric():
     transform = (1.0, 0.0, 0.0, 0.0, -1.0, 0.0)
     truth = numpy.zeros(DEFAULT_SHAPE, dtype=rasterio.ubyte)
     truth[2:5, 2:5] = 1
-    with rasterio.drivers():
+    with Env():
         s = shapes(truth, transform=transform)
         result = rasterize(s, out_shape=DEFAULT_SHAPE, transform=transform)
         assert numpy.array_equal(result, truth)
@@ -352,7 +353,7 @@ def test_rasterize_internal_driver_manager(basic_geometry):
 def test_shapes(basic_image):
     """ Test creation of shapes from pixel values """
 
-    with rasterio.drivers():
+    with Env():
         results = list(shapes(basic_image))
 
         assert len(results) == 2
@@ -380,7 +381,7 @@ def test_shapes(basic_image):
 def test_shapes_band(pixelated_image, pixelated_image_file):
     """ Shapes from a band should match shapes from an array """
 
-    with rasterio.drivers():
+    with Env():
         truth = list(shapes(pixelated_image))
 
         with rasterio.open(pixelated_image_file) as src:
@@ -397,7 +398,7 @@ def test_shapes_connectivity_rook(diagonal_image):
     background.
     """
 
-    with rasterio.drivers():
+    with Env():
         assert len(list(shapes(diagonal_image, connectivity=4))) == 12
 
 
@@ -407,14 +408,14 @@ def test_shapes_connectivity_queen(diagonal_image):
     background.
     """
 
-    with rasterio.drivers():
+    with Env():
         assert len(list(shapes(diagonal_image, connectivity=8))) == 2
 
 
 def test_shapes_connectivity_invalid(diagonal_image):
     """ Invalid connectivity should raise exception """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             assert next(shapes(diagonal_image, connectivity=12))
 
@@ -425,7 +426,7 @@ def test_shapes_mask(basic_image):
     mask = numpy.ones(basic_image.shape, dtype=rasterio.bool_)
     mask[4:5, 4:5] = False
 
-    with rasterio.drivers():
+    with Env():
         results = list(shapes(basic_image, mask=mask))
 
         assert len(results) == 2
@@ -443,7 +444,7 @@ def test_shapes_mask(basic_image):
 def test_shapes_blank_mask(basic_image):
     """ Mask is blank so results should mask shapes without mask """
 
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             list(shapes(
                 basic_image,
@@ -456,7 +457,7 @@ def test_shapes_blank_mask(basic_image):
 def test_shapes_invalid_mask_shape(basic_image):
     """ A mask that is the wrong shape should fail """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             next(shapes(
                 basic_image,
@@ -470,7 +471,7 @@ def test_shapes_invalid_mask_shape(basic_image):
 def test_shapes_invalid_mask_dtype(basic_image):
     """ A mask that is the wrong dtype should fail """
 
-    with rasterio.drivers():
+    with Env():
         for dtype in ('int8', 'int16', 'int32'):
             with pytest.raises(ValueError):
                 next(shapes(
@@ -490,7 +491,7 @@ def test_shapes_supported_dtypes(basic_image):
         ('float32', 1.434532)
     )
 
-    with rasterio.drivers():
+    with Env():
         for dtype, test_value in supported_types:
             shape, value = next(shapes(basic_image.astype(dtype) * test_value))
             assert numpy.allclose(value, test_value)
@@ -507,7 +508,7 @@ def test_shapes_unsupported_dtypes(basic_image):
         ('float64', -98332.133422114)
     )
 
-    with rasterio.drivers():
+    with Env():
         for dtype, test_value in unsupported_types:
             with pytest.raises(ValueError):
                 next(shapes(basic_image.astype(dtype) * test_value))
@@ -525,7 +526,7 @@ def test_sieve_small(basic_image, pixelated_image):
     image should not change the image.
     """
 
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image,
             sieve(pixelated_image, basic_image.sum())
@@ -537,12 +538,12 @@ def test_sieve_large(basic_image):
     Setting the size larger than size of feature should leave us an empty image.
     """
 
-    with rasterio.drivers():
+    with Env():
         assert not numpy.any(sieve(basic_image, basic_image.sum() + 1))
 
 
 def test_sieve_invalid_size(basic_image):
-    with rasterio.drivers():
+    with Env():
         for invalid_size in (0, 45.1234, basic_image.size + 1):
             with pytest.raises(ValueError):
                 sieve(basic_image, invalid_size)
@@ -573,7 +574,7 @@ def test_sieve_connectivity_invalid(basic_image):
 def test_sieve_out(basic_image):
     """ Output array passed in should match the returned array """
 
-    with rasterio.drivers():
+    with Env():
         output = numpy.zeros_like(basic_image)
         output[1:3, 1:3] = 5
         sieved_image = sieve(basic_image, basic_image.sum(), out=output)
@@ -584,7 +585,7 @@ def test_sieve_out(basic_image):
 def test_sieve_invalid_out(basic_image):
     """ Output with different dtype or shape should fail """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             sieve(
                 basic_image, basic_image.sum(),
@@ -611,7 +612,7 @@ def test_sieve_mask(basic_image):
     mask[4:5, 4:5] = False
     truth = basic_image * numpy.invert(mask)
 
-    with rasterio.drivers():
+    with Env():
         sieved_image = sieve(basic_image, basic_image.sum(), mask=mask)
         assert sieved_image.sum() > 0
 
@@ -630,7 +631,7 @@ def test_sieve_blank_mask(basic_image):
     """ A blank mask should have no effect """
 
     mask = numpy.ones(basic_image.shape, dtype=rasterio.bool_)
-    with rasterio.drivers():
+    with Env():
         assert numpy.array_equal(
             basic_image,
             sieve(basic_image, basic_image.sum(), mask=mask)
@@ -640,7 +641,7 @@ def test_sieve_blank_mask(basic_image):
 def test_sieve_invalid_mask_shape(basic_image):
     """ A mask that is the wrong shape should fail """
 
-    with rasterio.drivers():
+    with Env():
         with pytest.raises(ValueError):
             sieve(
                 basic_image, basic_image.sum(),
@@ -654,7 +655,7 @@ def test_sieve_invalid_mask_shape(basic_image):
 def test_sieve_invalid_mask_dtype(basic_image):
     """ A mask that is the wrong dtype should fail """
 
-    with rasterio.drivers():
+    with Env():
         for dtype in ('int8', 'int16', 'int32'):
             with pytest.raises(ValueError):
                 sieve(
@@ -673,7 +674,7 @@ def test_sieve_supported_dtypes(basic_image):
         ('uint16', 65535)
     )
 
-    with rasterio.drivers():
+    with Env():
         for dtype, test_value in supported_types:
             truth = (basic_image).astype(dtype) * test_value
             sieved_image = sieve(truth, basic_image.sum())
@@ -693,7 +694,7 @@ def test_sieve_unsupported_dtypes(basic_image):
         ('float64', -98332.133422114)
     )
 
-    with rasterio.drivers():
+    with Env():
         for dtype, test_value in unsupported_types:
             with pytest.raises(ValueError):
                 sieve(
@@ -705,7 +706,7 @@ def test_sieve_unsupported_dtypes(basic_image):
 def test_sieve_band(pixelated_image, pixelated_image_file):
     """ Sieving a band from a raster file should match sieve of array """
 
-    with rasterio.drivers():
+    with Env():
         truth = sieve(pixelated_image, 9)
 
         with rasterio.open(pixelated_image_file) as src:

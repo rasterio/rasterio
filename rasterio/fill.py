@@ -2,7 +2,7 @@
 
 import rasterio
 from rasterio._fill import _fillnodata
-
+from rasterio.env import setenv
 
 def fillnodata(
         image,
@@ -49,6 +49,6 @@ def fillnodata(
     """
     max_search_distance = float(max_search_distance)
     smoothing_iterations = int(smoothing_iterations)
-    with rasterio.drivers():
-        return _fillnodata(
-            image, mask, max_search_distance, smoothing_iterations)
+    rasterio.env.setenv()
+    return _fillnodata(
+        image, mask, max_search_distance, smoothing_iterations)

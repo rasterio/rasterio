@@ -2,16 +2,22 @@ import logging
 import sys
 
 import rasterio
-from rasterio._drivers import driver_count, GDALEnv
+from rasterio._drivers import driver_count
+from rasterio.env import Env
 
 
 def test_drivers():
+    with Env() as m:
+        assert driver_count() > 0
+        assert type(m) == Env
+    assert driver_count() > 0
+
+
+def test_drivers_bwd_compat():
     with rasterio.drivers() as m:
         assert driver_count() > 0
-        assert type(m) == GDALEnv
-        n = rasterio.drivers()
-        assert driver_count() > 0
-        assert type(n) == GDALEnv
+        assert type(m) == Env
+    assert driver_count() > 0
 
 
 def test_cpl_debug_true(tmpdir):
@@ -22,7 +28,7 @@ def test_cpl_debug_true(tmpdir):
     fh = logging.FileHandler(logfile)
     log.addHandler(fh)
 
-    with rasterio.drivers(CPL_DEBUG=True):
+    with Env(CPL_DEBUG=True):
         with rasterio.open("tests/data/RGB.byte.tif"):
             pass
 
@@ -38,7 +44,7 @@ def test_cpl_debug_false(tmpdir):
     fh = logging.FileHandler(logfile)
     log.addHandler(fh)
 
-    with rasterio.drivers(CPL_DEBUG=False):
+    with Env(CPL_DEBUG=False):
         with rasterio.open("tests/data/RGB.byte.tif"):
             pass
 
