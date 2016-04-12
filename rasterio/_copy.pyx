@@ -1,3 +1,5 @@
+"""Raster copying."""
+
 import logging
 import os
 import os.path
@@ -5,11 +7,7 @@ import os.path
 from rasterio cimport _gdal
 
 
-log = logging.getLogger('rasterio')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+log = logging.getLogger(__name__)
 
 
 cdef class RasterCopier:
@@ -52,4 +50,3 @@ cdef class RasterCopier:
 
         if options:
             _gdal.CSLDestroy(options)
-

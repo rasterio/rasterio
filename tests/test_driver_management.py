@@ -16,7 +16,7 @@ def test_drivers():
 
 def test_cpl_debug_true(tmpdir):
     """Setting CPL_DEBUG=True results in GDAL debug messages."""
-    log = logging.getLogger('GDAL')
+    log = logging.getLogger('rasterio._gdal')
     log.setLevel(logging.DEBUG)
     logfile = str(tmpdir.join('test.log'))
     fh = logging.FileHandler(logfile)
@@ -32,7 +32,7 @@ def test_cpl_debug_true(tmpdir):
 
 def test_cpl_debug_false(tmpdir):
     """Setting CPL_DEBUG=False results in no GDAL debug messages."""
-    log = logging.getLogger('GDAL')
+    log = logging.getLogger('rasterio._gdal')
     log.setLevel(logging.DEBUG)
     logfile = str(tmpdir.join('test.log'))
     fh = logging.FileHandler(logfile)

@@ -1,7 +1,6 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 import json
-import logging
 
 import click
 
@@ -63,8 +62,6 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     """
     verbosity = ctx.obj.get('verbosity')
     aws_session = ctx.obj.get('aws_session')
-
-    logger = logging.getLogger('rio')
     mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     try:
         with rasterio.drivers(
@@ -109,5 +106,4 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     click.echo(
                         json.dumps(src.tags(ns=namespace), indent=indent))
     except Exception:
-        logger.exception("Exception caught during processing")
         raise click.Abort()

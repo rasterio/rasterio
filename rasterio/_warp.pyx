@@ -1,4 +1,5 @@
 # distutils: language = c++
+"""Raster and vector warping and reprojection."""
 
 from enum import IntEnum
 import logging
@@ -59,11 +60,7 @@ cdef extern from "ogr_spatialref.h":
         pass
 
 
-log = logging.getLogger('rasterio')
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+log = logging.getLogger(__name__)
 
 
 def tastes_like_gdal(t):

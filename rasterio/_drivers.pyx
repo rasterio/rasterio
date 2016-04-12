@@ -1,5 +1,4 @@
-# The GDAL and OGR driver registry.
-# GDAL driver management.
+"""GDAL and OGR driver management."""
 
 import logging
 import os
@@ -64,12 +63,14 @@ code_map = {
     15: 'CPLE_AWSInvalidCredentials',
     16: 'CPLE_AWSSignatureDoesNotMatch'}
 
-log = logging.getLogger('rasterio')
+log = logging.getLogger(__name__)
 
 
 cdef void * errorHandler(int eErrClass, int err_no, char *msg):
     if err_no in code_map:
-        logger = logging.getLogger('GDAL')
+        # 'rasterio._gdal' is the name in our logging hierarchy for
+        # messages coming direct from CPLError().
+        logger = logging.getLogger('rasterio._gdal')
         logger.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
 
 
@@ -86,7 +87,7 @@ cdef class ConfigEnv(object):
         self.options = options.copy()
         self.prev_options = {}
 
-    def enter_config_options(self):
+    cdef enter_config_options(self):
         """Set GDAL config options."""
         cdef const char *key_c
         cdef const char *val_c
@@ -114,7 +115,7 @@ cdef class ConfigEnv(object):
                 val = '******'
             log.debug("Option %s=%s", key, val)
 
-    def exit_config_options(self):
+    cdef exit_config_options(self):
         """Clear GDAL config options."""
         cdef const char *key_c
         cdef const char *val_c

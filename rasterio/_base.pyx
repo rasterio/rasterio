@@ -1,6 +1,5 @@
-# The Numpy-free base classes.
-
 # cython: boundscheck=False
+"""Numpy-free base classes."""
 
 from __future__ import absolute_import
 
@@ -25,16 +24,7 @@ from rasterio.enums import (
 from rasterio.vfs import parse_path, vsi_path
 
 
-log = logging.getLogger('rasterio')
-if 'all' in sys.warnoptions:
-    # show messages in console with: python -W all
-    logging.basicConfig()
-else:
-    # no handler messages shown
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-    log.addHandler(NullHandler())
+log = logging.getLogger(__name__)
 
 
 def check_gdal_version(major, minor):
@@ -343,8 +333,8 @@ cdef class DatasetReader(object):
                         val < dtypes.dtype_ranges[dtype][0] or
                         val > dtypes.dtype_ranges[dtype][1]):
                     val = None
-                log.debug("Nodata success: %d", success)
-                log.debug("Nodata value: %f", nodataval)
+                log.debug(
+                    "Nodata success: %d, Nodata value: %f", success, nodataval)
                 self._nodatavals.append(val)
 
         return tuple(self._nodatavals)

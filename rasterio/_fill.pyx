@@ -1,6 +1,6 @@
 # distutils: language = c++
 # cython: profile=True
-#
+"""Raster fill."""
 
 import numpy as np
 cimport numpy as np
@@ -13,7 +13,7 @@ from rasterio._io cimport InMemoryRaster
 
 
 def _fillnodata(image, mask, double max_search_distance=100.0,
-        int smoothing_iterations=0):
+                int smoothing_iterations=0):
     cdef void *memdriver = _gdal.GDALGetDriverByName("MEM")
     cdef void *image_dataset = NULL
     cdef void *image_band = NULL
