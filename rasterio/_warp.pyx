@@ -568,6 +568,7 @@ def _calculate_default_transform(
         except CPLE_NotSupported as err:
             raise CRSError(err.errmsg)
         except CPLE_AppDefined as err:
+            log.debug("Encountered points outside of valid dst crs region")
             pass
         finally:
             if wkt != NULL:
