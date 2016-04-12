@@ -20,29 +20,6 @@ def configure_logging(verbosity):
     logging.basicConfig(stream=sys.stderr, level=log_level)
 
 
-class FakeSession(object):
-    """Fake AWS Session."""
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass
-
-    def open(self, path, mode='r'):
-        return rasterio.open(path, mode)
-
-
-def get_aws_session(profile_name):
-    """Return a credentialed AWS session or a fake, depending on
-    whether boto3 could be imported."""
-    try:
-        import rasterio.aws
-        return rasterio.aws.Session(profile_name=profile_name)
-    except ImportError:  # pragma: no cover
-        return FakeSession()
-
-
 def gdal_version_cb(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
@@ -69,4 +46,3 @@ def main_group(ctx, verbose, quiet, aws_profile, gdal_version):
     configure_logging(verbosity)
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
-    ctx.obj['aws_session'] = get_aws_session(aws_profile)

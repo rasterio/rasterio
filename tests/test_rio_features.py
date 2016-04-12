@@ -180,9 +180,8 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
         "width": image.shape[1],
         "height": image.shape[0],
         "nodata": 255}
-    with rasterio.drivers():
-        with rasterio.open(outfilename, 'w', **kwargs) as out:
-            out.write(image, indexes=1)
+    with rasterio.open(outfilename, 'w', **kwargs) as out:
+        out.write(image, indexes=1)
 
     output = str(tmpdir.join('test.tif'))
 

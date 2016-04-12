@@ -7,10 +7,12 @@ def test_open_bad_path():
         rasterio.open(3.14)
 
 
-def test_open_bad_mode():
+def test_open_bad_mode_1():
     with pytest.raises(TypeError):
         rasterio.open("tests/data/RGB.byte.tif", mode=3.14)
 
+
+def test_open_bad_mode_2():
     with pytest.raises(ValueError):
         rasterio.open("tests/data/RGB.byte.tif", mode="foo")
 
@@ -18,9 +20,3 @@ def test_open_bad_mode():
 def test_open_bad_driver():
     with pytest.raises(TypeError):
         rasterio.open("tests/data/RGB.byte.tif", mode="r", driver=3.14)
-
-
-def test_open_fake_aws_session():
-    from rasterio.rio.main import FakeSession
-    with FakeSession() as fs:
-        fs.open("tests/data/RGB.byte.tif")

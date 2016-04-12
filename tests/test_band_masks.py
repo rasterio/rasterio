@@ -6,12 +6,10 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.warnings import NodataShadowWarning
+from rasterio.errors import NodataShadowWarning
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
-
 
 
 @pytest.fixture(scope='function')
@@ -84,34 +82,34 @@ def test_warning_shadow(tiffs):
     filename = str(tiffs.join('shadowed.tif'))
     with rasterio.open(filename) as src:
         with pytest.warns(NodataShadowWarning):
-            _ = src.read_masks()
+            src.read_masks()
 
 
 def test_masks():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         rm, gm, bm = src.read_masks()
         r, g, b = src.read(masked=False)
-        assert not r[rm==0].any()
-        assert not g[gm==0].any()
-        assert not b[bm==0].any()
+        assert not r[rm == 0].any()
+        assert not g[gm == 0].any()
+        assert not b[bm == 0].any()
 
 
 def test_masked_true():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         r, g, b = src.read(masked=True)
         rm, gm, bm = src.read_masks()
-        assert (r.mask==~rm.astype('bool')).all()
-        assert (g.mask==~gm.astype('bool')).all()
-        assert (b.mask==~bm.astype('bool')).all()
+        assert (r.mask == ~rm.astype('bool')).all()
+        assert (g.mask == ~gm.astype('bool')).all()
+        assert (b.mask == ~bm.astype('bool')).all()
 
 
 def test_masked_none():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         r, g, b = src.read(masked=True)
         rm, gm, bm = src.read_masks()
-        assert (r.mask==~rm.astype('bool')).all()
-        assert (g.mask==~gm.astype('bool')).all()
-        assert (b.mask==~bm.astype('bool')).all()
+        assert (r.mask == ~rm.astype('bool')).all()
+        assert (g.mask == ~gm.astype('bool')).all()
+        assert (b.mask == ~bm.astype('bool')).all()
 
 
 def test_masking_no_nodata(tiffs):

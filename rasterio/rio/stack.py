@@ -7,6 +7,7 @@ from cligj import files_inout_arg, format_opt
 from .helpers import resolve_inout
 from . import options
 import rasterio
+from rasterio.env import Env
 from rasterio.five import zip_longest
 
 
@@ -57,9 +58,9 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 2
     logger = logging.getLogger('rio')
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity>2):
+        with Env(CPL_DEBUG=verbosity > 2) as env:
             output, files = resolve_inout(files=files, output=output,
-                force_overwrite=force_overwrite)
+                                          force_overwrite=force_overwrite)
             output_count = 0
             indexes = []
             for path, item in zip_longest(files, bidx, fillvalue=None):
@@ -73,8 +74,8 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
                         lambda x: int(x) if x else None, item.split('..'))
                     if start is None:
                         start = 1
-                    indexes.append(src_indexes[slice(start-1, stop)])
-                    output_count += len(src_indexes[slice(start-1, stop)])
+                    indexes.append(src_indexes[slice(start - 1, stop)])
+                    output_count += len(src_indexes[slice(start - 1, stop)])
                 else:
                     parts = list(map(int, item.split(',')))
                     if len(parts) == 1:
@@ -107,7 +108,7 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
                             dst_idx += 1
                         elif isinstance(index, list):
                             data = src.read(index)
-                            dst.write(data, range(dst_idx, dst_idx+len(index)))
+                            dst.write(data, range(dst_idx, dst_idx + len(index)))
                             dst_idx += len(index)
 
     except Exception:

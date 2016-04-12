@@ -7,10 +7,10 @@ import operator
 
 import click
 
+from . import options
 import rasterio
 from rasterio.enums import Resampling
-
-from . import options
+from rasterio.env import Env
 
 
 def build_handler(ctx, param, value):
@@ -68,9 +68,8 @@ def overview(ctx, input, build, ls, rebuild, resampling):
 
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
 
-    with rasterio.drivers(CPL_DEBUG=(verbosity > 2)):
+    with Env(CPL_DEBUG=(verbosity > 2)) as env:
         with rasterio.open(input, 'r+') as dst:
 
             if ls:

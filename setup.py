@@ -75,7 +75,7 @@ library_dirs = []
 libraries = []
 extra_link_args = []
 gdal2plus = False
-gdal_output = [None]*4
+gdal_output = [None] * 4
 
 try:
     import numpy
@@ -186,8 +186,8 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
-        ], quiet=True, **cythonize_options)
+            'rasterio._example', ['rasterio/_example.pyx'], **ext_options)],
+        quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
@@ -274,8 +274,8 @@ setup_args = dict(
     install_requires=inst_reqs,
     extras_require={
         'ipython': ['ipython>=2.0'],
-        's3': ['boto3'],
-        'test': ['boto3', 'packaging']})
+        's3': ['boto3>=1.2.4'],
+        'test': ['boto3>=1.2.4', 'packaging']})
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}

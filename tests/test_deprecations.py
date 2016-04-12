@@ -2,8 +2,9 @@
 # This ensures that deprecation warnings are given but behavior is maintained
 # on the way to stabilizing the API for 1.0
 import warnings
-import pytest
+
 import numpy
+import pytest
 
 # New modules
 import rasterio
@@ -77,49 +78,46 @@ def test_window_union(recwarn):
 def test_stats(recwarn):
     from rasterio.tool import stats as stats_old
     from rasterio.rio.insp import stats as stats_new
-    with rasterio.drivers():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            warnings.simplefilter('always')
-            old = stats_old((src, 1))
-            assert len(recwarn) == 1
-            assert recwarn.pop(DeprecationWarning)
-            new = stats_new((src, 1))
-            assert len(recwarn) == 0
-            assert numpy.allclose(numpy.array(new), numpy.array(old))
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        warnings.simplefilter('always')
+        old = stats_old((src, 1))
+        assert len(recwarn) == 1
+        assert recwarn.pop(DeprecationWarning)
+        new = stats_new((src, 1))
+        assert len(recwarn) == 0
+        assert numpy.allclose(numpy.array(new), numpy.array(old))
 
 
-# xfail because for unknown reasons, travis fails with matplotlib errors 
+# xfail because for unknown reasons, travis fails with matplotlib errors
 @pytest.mark.xfail
 def test_show(recwarn):
     from rasterio.tool import show as show_old
-    with rasterio.drivers():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            warnings.simplefilter('always')
-            old = show_old((src, 1))
-            assert len(recwarn) == 1
-            assert recwarn.pop(DeprecationWarning)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        warnings.simplefilter('always')
+        old = show_old((src, 1))
+        assert len(recwarn) == 1
+        assert recwarn.pop(DeprecationWarning)
 
-            from rasterio.plot import show as show_new
-            new = show_new((src, 1))
-            assert len(recwarn) == 0
-            assert new == old
+        from rasterio.plot import show as show_new
+        new = show_new((src, 1))
+        assert len(recwarn) == 0
+        assert new == old
 
 
-# xfail because for unknown reasons, travis fails with matplotlib errors 
+# xfail because for unknown reasons, travis fails with matplotlib errors
 @pytest.mark.xfail
 def test_show_hist(recwarn):
     from rasterio.tool import show_hist as show_old
-    with rasterio.drivers():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            warnings.simplefilter('always')
-            old = show_old((src, 1))
-            assert len(recwarn) == 1
-            assert recwarn.pop(DeprecationWarning)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        warnings.simplefilter('always')
+        old = show_old((src, 1))
+        assert len(recwarn) == 1
+        assert recwarn.pop(DeprecationWarning)
 
-            from rasterio.plot import show_hist as show_new
-            new = show_new((src, 1))
-            assert len(recwarn) == 0
-            assert new == old
+        from rasterio.plot import show_hist as show_new
+        new = show_new((src, 1))
+        assert len(recwarn) == 0
+        assert new == old
 
 
 def test_mask(recwarn, basic_image_file, basic_geometry):
@@ -128,7 +126,7 @@ def test_mask(recwarn, basic_image_file, basic_geometry):
     nodata_val = 0
     geometries = [basic_geometry]
     with rasterio.open(basic_image_file, "r") as src:
-        warnings.simplefilter('always')
+        warnings.simplefilter('once')
         old = mask_old(src, geometries, crop=False,
                        nodata=nodata_val, invert=True)
         recwarn.pop(DeprecationWarning)

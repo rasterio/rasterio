@@ -20,7 +20,6 @@ cdef class DatasetReader:
     cdef public object _block_shapes
     cdef public object _nodatavals
     cdef public object _read
-    cdef object env
 
     cdef void *band(self, int bidx) except NULL
 

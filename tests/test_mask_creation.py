@@ -6,14 +6,15 @@ See https://github.com/mapbox/rasterio/issues/293 for bug report.
 
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.env import Env
 
 
 def test_create_internal_mask(data):
     """Write an internal mask to the fixture's RGB.byte.tif."""
-    with rasterio.drivers(GDAL_TIFF_INTERNAL_MASK=True):
+    with Env(GDAL_TIFF_INTERNAL_MASK=True):
         with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
             blue = dst.read(1, masked=False)
-            mask = 255*(blue == 0).astype('uint8')
+            mask = 255 * (blue == 0).astype('uint8')
             dst.write_mask(mask)
 
     # There should be no .msk file
@@ -31,11 +32,10 @@ def test_create_internal_mask(data):
 
 def test_create_sidecar_mask(data):
     """Write a .msk sidecar mask."""
-    with rasterio.drivers():
-        with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
-            blue = dst.read(1, masked=False)
-            mask = 255*(blue == 0).astype('uint8')
-            dst.write_mask(mask)
+    with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
+        blue = dst.read(1, masked=False)
+        mask = 255 * (blue == 0).astype('uint8')
+        dst.write_mask(mask)
 
     # There should be a .msk file in this case.
     assert data.join('RGB.byte.tif').exists()

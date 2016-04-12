@@ -6,6 +6,7 @@ import click
 
 import rasterio
 import rasterio.crs
+from rasterio.env import Env
 
 
 @click.command(short_help="Print information about the rio environment.")
@@ -17,9 +18,8 @@ def env(ctx, key):
     formats, etc.
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
     stdout = click.get_text_stream('stdout')
-    with rasterio.drivers(CPL_DEBUG=(verbosity > 2)) as env:
+    with Env(CPL_DEBUG=(verbosity > 2)) as env:
         if key == 'formats':
             for k, v in sorted(env.drivers().items()):
                 stdout.write("%s: %s\n" % (k, v))

@@ -21,13 +21,13 @@ from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import DriverRegistrationError, RasterioIOError
+from rasterio.errors import (
+    DriverRegistrationError, RasterioIOError, NodataShadowWarning)
 from rasterio.five import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
-from rasterio.vfs import parse_path
-from rasterio.warnings import NodataShadowWarning
+from rasterio.vfs import parse_path, vsi_path
 
 
 log = logging.getLogger(__name__)
@@ -1200,12 +1200,9 @@ cdef class RasterReader(_base.DatasetReader):
 cdef class RasterUpdater(RasterReader):
     # Read-write access to raster data and metadata.
 
-    def __init__(
-            self, path, mode, driver=None,
-            width=None, height=None, count=None, 
-            crs=None, transform=None, dtype=None,
-            nodata=None,
-            **kwargs):
+    def __init__(self, path, mode, driver=None, width=None, height=None,
+                 count=None, crs=None, transform=None, dtype=None, nodata=None,
+                 **kwargs):
         # Validate write mode arguments.
         if mode == 'w':
             if not isinstance(driver, string_types):
@@ -1241,7 +1238,7 @@ cdef class RasterUpdater(RasterReader):
         self._dtypes = []
         self._nodatavals = []
         self._options = kwargs.copy()
-    
+
     def __repr__(self):
         return "<%s RasterUpdater name='%s' mode='%s'>" % (
             self.closed and 'closed' or 'open', 
@@ -1257,10 +1254,11 @@ cdef class RasterUpdater(RasterReader):
         cdef void *hband = NULL
         cdef int success
 
-        self.env = GDALEnv()
-        self.env.start()
-
+        # Parse the path to determine if there is scheme-specific
+        # configuration to be done.
         path, archive, scheme = parse_path(self.name)
+        path = vsi_path(path, archive=archive, scheme=scheme)
+
         if scheme and scheme != 'file':
             raise TypeError(
                 "VFS '{0}' datasets can not be created or updated.".format(
@@ -1289,7 +1287,6 @@ cdef class RasterUpdater(RasterReader):
                     drv = _gdal.GDALGetDriverByName(drv_name)
                     cple.check()
             except Exception as err:
-                self.env.stop()
                 raise DriverRegistrationError(str(err))
             
             # Find the equivalent GDAL data type or raise an exception
@@ -1335,7 +1332,6 @@ cdef class RasterUpdater(RasterReader):
                         gdal_dtype, options)
                     cple.check()
             except Exception as err:
-                self.env.stop()
                 if options != NULL:
                     _gdal.CSLDestroy(options)
                 raise
@@ -1364,7 +1360,6 @@ cdef class RasterUpdater(RasterReader):
                     self._hds = _gdal.GDALOpen(fname, 1)
                     cple.check()
             except CPLE_OpenFailed as err:
-                self.env.stop()
                 raise RasterioIOError(str(err))
 
         drv = _gdal.GDALGetDatasetDriver(self._hds)
@@ -1931,14 +1926,16 @@ cdef class IndirectRasterUpdater(RasterUpdater):
         cdef void *hband = NULL
         cdef void *temp = NULL
         cdef int success
-        name_b = self.name.encode('utf-8')
+
+        # Parse the path to determine if there is scheme-specific
+        # configuration to be done.
+        path, archive, scheme = parse_path(self.name)
+        path = vsi_path(path, archive=archive, scheme=scheme)
+        name_b = path.encode('utf-8')
         cdef const char *fname = name_b
 
         memdrv = _gdal.GDALGetDriverByName("MEM")
 
-        self.env = GDALEnv()
-        self.env.start()
-        
         if self.mode == 'w':
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
@@ -1960,7 +1957,6 @@ cdef class IndirectRasterUpdater(RasterUpdater):
                         gdal_dtype, NULL)
                     cple.check()
             except:
-                self.env.close()
                 raise
 
             if self._init_nodata is not None:
