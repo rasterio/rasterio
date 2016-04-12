@@ -36,9 +36,10 @@ The ``rasterio`` code:
 * follows the conventions of python file handles
 * uses context managers to safely manage memory, environment variables and file resources
 * will raise proper exceptions (i.e. ``IOError`` if the file does not exist)
+* uses a driver context to avoid reliance on environment variables to define behavior
+* readability is subjective but most Python programmers would agree that the ``rasterio`` example is easier to read and understand.
 
-Of course, readability is subjective but I think most Python programmers would agree that the
-``rasterio`` example is easier to understand and debug as well.
+For a more detailed look at some unexpected behaviors of the ``osgeo.gdal`` module, see the `Python Gotchas`_ page on the GDAL wiki. 
 
 .. todo::
 
@@ -59,3 +60,4 @@ Migrating
     Practical tips and examples of porting common use cases in both python and cli.
     Some overlap with the cookbook here, so probably best to reference it when appropriate.
 
+.. _Python Gotchas: https://trac.osgeo.org/gdal/wiki/PythonGotchas

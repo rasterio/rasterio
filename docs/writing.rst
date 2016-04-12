@@ -7,7 +7,6 @@ Writing Datasets
     * appending to existing data
     * context manager
     * write 3d vs write 2d
-    * profile.update
     * document issues with writing compressed files (per #77)
     * discuss and refer to topics
         * creation options
