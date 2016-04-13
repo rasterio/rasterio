@@ -177,7 +177,7 @@ def rasterize(
                     ne = result != fill
                     data[ne] = result[ne]
                     data.mask[ne] = False
-                    out.write_band(bidx, data)
+                    out.write(data, indexes=bidx)
 
         else:
             if like is not None:
@@ -268,4 +268,4 @@ def rasterize(
             kwargs['nodata'] = fill
 
             with rasterio.open(output, 'w', **kwargs) as out:
-                out.write_band(1, result)
+                out.write(result, indexes=1)

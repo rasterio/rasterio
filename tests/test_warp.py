@@ -186,7 +186,7 @@ def test_calculate_default_transform_multiple_resolutions():
 def test_reproject_ndarray():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read_band(1)
+            source = src.read(1)
 
         dst_crs = dict(
             proj='merc',
@@ -216,7 +216,7 @@ def test_reproject_ndarray():
 def test_reproject_epsg():
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read_band(1)
+            source = src.read(1)
 
         dst_crs = {'init': 'EPSG:3857'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)
@@ -235,7 +235,7 @@ def test_reproject_out_of_bounds():
     # using EPSG code not appropriate for the transform should return blank image
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read_band(1)
+            source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)
@@ -563,7 +563,7 @@ def test_reproject_unsupported_resampling():
     """Values not in enums.Resampling are not supported."""
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read_band(1)
+            source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)
@@ -582,7 +582,7 @@ def test_reproject_unsupported_resampling_guass():
     """Resampling.gauss is unsupported."""
     with rasterio.drivers():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read_band(1)
+            source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
         out = numpy.empty(src.shape, dtype=numpy.uint8)

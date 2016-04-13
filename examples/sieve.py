@@ -29,7 +29,7 @@ with rasterio.drivers():
     kwargs = src.meta
     kwargs['transform'] = kwargs.pop('affine')
     with rasterio.open('example-sieved.tif', 'w', **kwargs) as dst:
-        dst.write_band(1, sieved)
+        dst.write(sieved, indexes=1)
 
 # Dump out gdalinfo's report card and open (or "eog") the TIFF.
 print(subprocess.check_output(
