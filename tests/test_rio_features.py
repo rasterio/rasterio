@@ -711,7 +711,7 @@ def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
     assert 'outside bounds' in result.output
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert not numpy.any(out.read_band(1, masked=False))
+        assert not numpy.any(out.read(1, masked=False))
 
 
 def test_rasterize_invalid_stdin(tmpdir, runner):

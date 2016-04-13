@@ -24,7 +24,7 @@ class RevolvingDoorTest(unittest.TestCase):
     def test_write_colormap_revolving_door(self):
 
         with rasterio.open('tests/data/shade.tif') as src:
-            shade = src.read_band(1)
+            shade = src.read(1)
             meta = src.meta
 
         tiffname = os.path.join(self.tempdir, 'foo.tif')

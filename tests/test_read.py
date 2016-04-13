@@ -67,24 +67,24 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_ubyte(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = s.read_band(1)
+            a = s.read(1)
             self.assertEqual(a.dtype, rasterio.ubyte)
 
     def test_read_ubyte_bad_index(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            self.assertRaises(IndexError, s.read_band, 0)
+            self.assertRaises(IndexError, s.read, 0)
 
     def test_read_ubyte_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((718, 791), dtype=rasterio.ubyte)
-            a = s.read_band(1, a)
+            a = s.read(1, a)
             self.assertEqual(a.dtype, rasterio.ubyte)
 
     def test_read_out_dtype_fail(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = numpy.zeros((718, 791), dtype=rasterio.float32)
             try:
-                s.read_band(1, a)
+                s.read(1, a)
             except ValueError as e:
                 assert "the array's dtype 'float32' does not match the file's dtype" in str(e)
             except:

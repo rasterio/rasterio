@@ -96,7 +96,7 @@ class WindowReadTest(unittest.TestCase):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             windows = s.block_windows(1)
             ji, first_window = next(windows)
-            first_block = s.read_band(1, window=first_window)
+            first_block = s.read(1, window=first_window)
             self.assertEqual(first_block.dtype, rasterio.ubyte)
             self.assertEqual(
                 first_block.shape, 

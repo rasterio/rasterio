@@ -28,7 +28,7 @@ def test_update_band(data):
     with rasterio.open(tiffname, 'r+') as f:
         f.write(numpy.zeros(f.shape, dtype=f.dtypes[0]), indexes=1)
     with rasterio.open(tiffname) as f:
-        assert not f.read_band(1).any()
+        assert not f.read(1).any()
 
 
 def test_update_spatial(data):
