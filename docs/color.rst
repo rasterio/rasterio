@@ -57,7 +57,7 @@ to bands using the ``write_colormap()`` method.
             meta = src.meta
 
         with rasterio.open('/tmp/colormap.tif', 'w', **meta) as dst:
-            dst.write_band(1, shade)
+            dst.write(shade, indexes=1)
             dst.write_colormap(
                 1, {
                     0: (255, 0, 0, 255), 

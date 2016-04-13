@@ -114,7 +114,7 @@ class WindowWriteTest(unittest.TestCase):
                 name, 'w', 
                 driver='GTiff', width=100, height=100, count=1, 
                 dtype=a.dtype) as s:
-            s.write_band(1, a, window=((30, 80), (10, 60)))
+            s.write(a, indexes=1, window=((30, 80), (10, 60)))
         # subprocess.call(["open", name])
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(

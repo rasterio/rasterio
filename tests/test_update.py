@@ -26,7 +26,7 @@ def test_update_tags(data):
 def test_update_band(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
-        f.write_band(1, numpy.zeros(f.shape, dtype=f.dtypes[0]))
+        f.write(numpy.zeros(f.shape, dtype=f.dtypes[0]), indexes=1)
     with rasterio.open(tiffname) as f:
         assert not f.read_band(1).any()
 

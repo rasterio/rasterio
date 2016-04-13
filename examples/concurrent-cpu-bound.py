@@ -15,6 +15,7 @@ import numpy
 import rasterio
 from rasterio._example import compute
 
+
 def main(infile, outfile, num_workers=4):
 
     with rasterio.drivers():
@@ -60,11 +61,7 @@ def main(infile, outfile, num_workers=4):
 
                         result, window = future_to_window[future]
 
-                        # Since there's no multiband write() method yet in
-                        # Rasterio, we use write_band for each part of the
-                        # 3D data array.
-                        for i, arr in enumerate(result, 1):
-                            dst.write_band(i, arr, window=window)
+                        dst.write(result, window=window)
 
 
 if __name__ == '__main__':

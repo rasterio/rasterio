@@ -199,7 +199,7 @@ def basic_image_file(tmpdir, basic_image):
     }
     with rasterio.drivers():
         with rasterio.open(outfilename, 'w', **kwargs) as out:
-            out.write_band(1, image)
+            out.write(image, indexes=1)
 
     return outfilename
 
@@ -235,6 +235,6 @@ def pixelated_image_file(tmpdir, pixelated_image):
     }
     with rasterio.drivers():
         with rasterio.open(outfilename, 'w', **kwargs) as out:
-            out.write_band(1, image)
+            out.write(image, indexes=1)
 
     return outfilename

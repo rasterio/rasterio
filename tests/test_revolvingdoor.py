@@ -30,7 +30,7 @@ class RevolvingDoorTest(unittest.TestCase):
         tiffname = os.path.join(self.tempdir, 'foo.tif')
         
         with rasterio.open(tiffname, 'w', **meta) as dst:
-            dst.write_band(1, shade)
+            dst.write(shade, indexes=1)
 
         with rasterio.open(tiffname) as src:
             pass

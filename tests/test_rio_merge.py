@@ -33,12 +33,12 @@ def test_data_dir_1(tmpdir):
         with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -61,12 +61,12 @@ def test_data_dir_2(tmpdir):
         with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -187,12 +187,12 @@ def test_data_dir_overlapping(tmpdir):
     with rasterio.drivers():
         with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
         with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -234,12 +234,12 @@ def test_data_dir_float(tmpdir):
         with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.float64)
             data[0:6, 0:6] = 255
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.float64)
             data[4:8, 4:8] = 254
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
     return tmpdir
 
 
@@ -268,11 +268,12 @@ def tiffs(tmpdir):
 
     data = numpy.ones((1, 1, 1), 'uint8')
 
-    kwargs = {'count': '1',
-              'driver': 'GTiff',
-              'dtype': 'uint8',
-              'height': 1,
-              'width': 1}
+    kwargs = {
+        'count': '1',
+        'driver': 'GTiff',
+        'dtype': 'uint8',
+        'height': 1,
+        'width': 1}
 
     kwargs['transform'] = Affine( 1, 0, 1,
                                   0,-1, 1)

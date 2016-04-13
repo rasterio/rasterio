@@ -21,11 +21,10 @@ with rasterio.drivers():
             **meta
             ) as dst:
         for k, a in [(1, b), (2, g), (3, r)]:
-            dst.write_band(k, a)
+            dst.write(a, indexes=k)
 
     outfilename = os.path.join(tempfile.mkdtemp(), 'decimate.jpg')
 
     rasterio.copy(tmpfilename, outfilename, driver='JPEG', quality='30')
 
 info = subprocess.call(['open', outfilename])
-

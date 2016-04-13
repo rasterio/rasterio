@@ -36,7 +36,7 @@ def test_write_colormap(tmpdir):
         meta['driver'] = 'PNG'
 
         with rasterio.open(tiffname, 'w', **meta) as dst:
-            dst.write_band(1, shade)
+            dst.write(shade, indexes=1)
             dst.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 0)})
             cmap = dst.colormap(1)
             assert cmap[0] == (255, 0, 0, 255)

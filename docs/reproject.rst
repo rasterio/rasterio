@@ -157,7 +157,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
                     dst_crs=src.crs,
                     resampling=RESAMPLING.nearest)
 
-                dst.write_band(i, dest)
+                dst.write(dest, indexes=i)
 
 .. image:: https://farm8.staticflickr.com/7399/16390100651_54f01b8601_b_d.jpg)
 
