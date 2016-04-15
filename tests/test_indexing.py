@@ -224,3 +224,23 @@ def test_windows_intersect_disjunct():
         ((0, 6), (3, 6)),
         ((2, 4), (1, 3)),
         ((3, 6), (4, 6))) is False
+
+
+def test_iter_args_winfuncs():
+    wins = [
+        ((0, 6), (3, 6)),
+        ((2, 4), (1, 5))]
+
+    assert windows.intersect(*wins) == windows.intersect(wins)
+    assert windows.intersection(*wins) == windows.intersection(wins)
+    assert windows.union(*wins) == windows.union(wins)
+
+
+def test_iter_args():
+    from rasterio.windows import iter_args
+
+    @iter_args
+    def foo(*args):
+        return len(args)
+
+    assert foo([0, 1, 2]) == foo(0, 1, 2) == foo(range(3))

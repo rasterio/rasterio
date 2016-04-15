@@ -1,5 +1,21 @@
 """Windows and related functions."""
 
+import functools
+import collections
+
+
+def iter_args(function):
+    """Decorator to allow function to take either *args or
+    a single iterable which gets expanded to *args.
+    """
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], collections.Iterable):
+            return function(*args[0])
+        else:
+            return function(*args)
+    return wrapper
+
 
 def get_data_window(arr, nodata=None):
     """Return a window for the non-nodata pixels within the input array.
@@ -22,6 +38,7 @@ def get_data_window(arr, nodata=None):
     return get_data_window(arr, nodata)
 
 
+@iter_args
 def union(*windows):
     """Union windows and return the outermost extent they cover.
 
@@ -38,6 +55,7 @@ def union(*windows):
     return window_union(windows)
 
 
+@iter_args
 def intersection(*windows):
     """Intersect windows and return the innermost extent they cover.
 
@@ -56,6 +74,7 @@ def intersection(*windows):
     return window_intersection(windows)
 
 
+@iter_args
 def intersect(*windows):
     """Test if windows intersect.
 
