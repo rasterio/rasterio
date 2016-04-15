@@ -15,6 +15,6 @@ def test_write_ubyte(tmpdir):
             name, 'w', 
             driver='PNG', width=100, height=100, count=1, 
             dtype=a.dtype) as s:
-        s.write_band(1, a)
+        s.write(a, indexes=1)
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info

@@ -1,4 +1,5 @@
 """Copy valid pixels from input files to an output file."""
+
 from __future__ import absolute_import
 
 import logging
@@ -11,7 +12,7 @@ from rasterio._base import get_window
 from rasterio.transform import Affine
 
 
-logger = logging.getLogger('rasterio')
+logger = logging.getLogger(__name__)
 
 
 def merge(sources, bounds=None, res=None, nodata=None, precision=7):

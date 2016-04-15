@@ -13,17 +13,7 @@ from rasterio.transform import IDENTITY, guard_transform
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 
 
-log = logging.getLogger('rasterio')
-
-
-class NullHandler(logging.Handler):
-    """Handle logging be emitting nothing."""
-
-    def emit(self, record):
-        """Do nothing."""
-        pass
-
-log.addHandler(NullHandler())
+log = logging.getLogger(__name__)
 
 
 def geometry_mask(

@@ -323,7 +323,7 @@ def test_warp_reproject_like(runner, tmpdir):
     with rasterio.drivers():
         with rasterio.open(likename, 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     srcname = 'tests/data/shade.tif'
     outputname = str(tmpdir.join('test.tif'))

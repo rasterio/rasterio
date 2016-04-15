@@ -87,7 +87,7 @@ and 50 pixels to the right of the upper left corner of the GeoTIFF.
             '/tmp/example.tif', 'w',
             driver='GTiff', width=500, height=300, count=1,
             dtype=image.dtype) as dst:
-        dst.write_band(1, image, window=((30, 180), (50, 300)))
+        dst.write(image, window=((30, 180), (50, 300)), indexes=1)
     
 The result:
 
@@ -113,7 +113,7 @@ Below, the window is scaled to one third of the source image.
             driver='GTiff', width=500, height=300, count=3,
             dtype=r.dtype) as dst:
         for k, arr in [(1, b), (2, g), (3, r)]:
-            dst.write_band(k, arr, window=write_window)
+            dst.write(arr, indexes=k, window=write_window)
 
 And the result:
 
@@ -153,7 +153,7 @@ destination dataset.
             driver='GTiff', width=500, height=300, count=3,
             dtype=r.dtype) as dst:
         for k, arr in [(1, b), (2, g), (3, r)]:
-            dst.write_band(k, arr, window=write_window)
+            dst.write(arr, window=write_window, indexes=k)
 
 This example also demonstrates decimation.
 
@@ -239,7 +239,7 @@ The block windows themselves can be had from the block_windows function.
     ...
 
 This function returns an iterator that yields a pair of values. The second is
-a window tuple that can be used in calls to `read` or `write_band`. The first
+a window tuple that can be used in calls to `read` or `write`. The first
 is the pair of row and column indexes of this block within all blocks of the
 dataset.
 

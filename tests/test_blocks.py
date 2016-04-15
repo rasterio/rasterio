@@ -96,7 +96,7 @@ class WindowReadTest(unittest.TestCase):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             windows = s.block_windows(1)
             ji, first_window = next(windows)
-            first_block = s.read_band(1, window=first_window)
+            first_block = s.read(1, window=first_window)
             self.assertEqual(first_block.dtype, rasterio.ubyte)
             self.assertEqual(
                 first_block.shape, 
@@ -114,7 +114,7 @@ class WindowWriteTest(unittest.TestCase):
                 name, 'w', 
                 driver='GTiff', width=100, height=100, count=1, 
                 dtype=a.dtype) as s:
-            s.write_band(1, a, window=((30, 80), (10, 60)))
+            s.write(a, indexes=1, window=((30, 80), (10, 60)))
         # subprocess.call(["open", name])
         info = subprocess.check_output(["gdalinfo", "-stats", name])
         self.assert_(

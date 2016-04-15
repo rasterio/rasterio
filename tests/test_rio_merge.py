@@ -33,12 +33,12 @@ def test_data_dir_1(tmpdir):
         with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -61,12 +61,12 @@ def test_data_dir_2(tmpdir):
         with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
             data[0:6, 0:6] = 255
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.uint8)
             data[4:8, 4:8] = 254
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -81,7 +81,7 @@ def test_merge_with_nodata(test_data_dir_1):
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         expected = numpy.ones((10, 10), dtype=rasterio.uint8)
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
@@ -109,7 +109,7 @@ def test_merge_without_nodata(test_data_dir_2):
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         expected = numpy.zeros((10, 10), dtype=rasterio.uint8)
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
@@ -187,12 +187,12 @@ def test_data_dir_overlapping(tmpdir):
     with rasterio.drivers():
         with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8)
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
         with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
             data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
     return tmpdir
 
@@ -209,7 +209,7 @@ def test_merge_overlapping(test_data_dir_overlapping):
         assert out.count == 1
         assert out.shape == (15, 15)
         assert out.bounds == (-114, 43, -111, 46)
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         expected = numpy.zeros((15, 15), dtype=rasterio.uint8)
         expected[0:10, 0:10] = 1
         expected[5:, 5:] = 2
@@ -234,12 +234,12 @@ def test_data_dir_float(tmpdir):
         with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.float64)
             data[0:6, 0:6] = 255
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
 
         with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
             data = numpy.zeros((10, 10), dtype=rasterio.float64)
             data[4:8, 4:8] = 254
-            dst.write_band(1, data)
+            dst.write(data, indexes=1)
     return tmpdir
 
 
@@ -253,7 +253,7 @@ def test_merge_float(test_data_dir_float):
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
         assert out.count == 1
-        data = out.read_band(1, masked=False)
+        data = out.read(1, masked=False)
         expected = numpy.ones((10, 10), dtype=rasterio.float64) * -1.5
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
@@ -268,11 +268,12 @@ def tiffs(tmpdir):
 
     data = numpy.ones((1, 1, 1), 'uint8')
 
-    kwargs = {'count': '1',
-              'driver': 'GTiff',
-              'dtype': 'uint8',
-              'height': 1,
-              'width': 1}
+    kwargs = {
+        'count': '1',
+        'driver': 'GTiff',
+        'dtype': 'uint8',
+        'height': 1,
+        'width': 1}
 
     kwargs['transform'] = Affine( 1, 0, 1,
                                   0,-1, 1)

@@ -64,9 +64,7 @@ def main(infile, outfile, with_threads=False):
                     else:
                         compute(data, result)
                     
-                    # Write the result.
-                    for i, arr in enumerate(result, 1):
-                        dst.write_band(i, arr, window=window)
+                    dst.write(result, window=window)
 
                 # Queue up the loop's tasks.
                 tasks = [asyncio.Task(process_window(window)) 

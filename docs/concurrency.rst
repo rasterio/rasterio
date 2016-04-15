@@ -104,11 +104,7 @@ Here is the program in examples/concurrent-cpu-bound.py.
 
                             result, window = future_to_window[future]
 
-                            # Since there's no multiband write() method yet in
-                            # Rasterio, we use write_band for each part of the
-                            # 3D data array.
-                            for i, arr in enumerate(result, 1):
-                                dst.write_band(i, arr, window=window)
+                            dst.write(arr, window=window)
 
 
     if __name__ == '__main__':

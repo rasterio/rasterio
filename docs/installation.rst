@@ -48,6 +48,14 @@ this from the downloads folder:
     $ pip install GDAL-1.11.2-cp27-none-win32.whl
     $ pip install rasterio-0.24.0-cp27-none-win32.whl
 
+
+Installing with Anaconda
+*************************
+To install rasterio on the Anaconda Python distribution, please visit the
+`rasterio conda-forge`_ page for install instructions. This build is maintained
+separately from the rasterio distribution on PyPi and packaging issues should
+be addressed on the `rasterio conda-forge`_ issue tracker. 
+
 Installing from the source distribution
 ***************************************
 
@@ -155,3 +163,5 @@ GitHub as done in `rio-plugin-example
     script: 
       - py.test
 
+
+.. _rasterio conda-forge: https://github.com/conda-forge/rasterio-feedstock

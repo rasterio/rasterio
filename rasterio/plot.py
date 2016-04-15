@@ -4,6 +4,7 @@ Including `show()` for displaying an array or with matplotlib.
 Most can handle a numpy array or `rasterio.Band()`.
 Primarily supports `$ rio insp`.
 """
+
 from __future__ import absolute_import
 
 import logging
@@ -27,7 +28,7 @@ except RuntimeError as e:  # pragma: no cover
 
 from rasterio.five import zip_longest
 
-logger = logging.getLogger('rasterio')
+logger = logging.getLogger(__name__)
 
 
 def show(source, cmap='gray', with_bounds=True):
@@ -60,7 +61,7 @@ def show(source, cmap='gray', with_bounds=True):
         arr = source
         extent = None
     if plt is not None:
-        imax = plt.imshow(arr, cmap=cmap, extent=extent)
+        plt.imshow(arr, cmap=cmap, extent=extent)
         fig = plt.gcf()
         fig.show()
     else:  # pragma: no cover

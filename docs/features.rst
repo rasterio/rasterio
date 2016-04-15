@@ -91,7 +91,7 @@ written to disk like this,
             count=1, 
             width=src.width, 
             height=src.height) as dst:
-        dst.write_band(1, image)
+        dst.write(image, indexes=1)
 
 has a black background and white foreground features.
 

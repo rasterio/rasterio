@@ -182,7 +182,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
         "nodata": 255}
     with rasterio.drivers():
         with rasterio.open(outfilename, 'w', **kwargs) as out:
-            out.write_band(1, image)
+            out.write(image, indexes=1)
 
     output = str(tmpdir.join('test.tif'))
 
@@ -317,7 +317,7 @@ def test_shapes_with_nodata(runner, pixelated_image, pixelated_image_file):
     pixelated_image[0:2, 8:10] = 255
 
     with rasterio.open(pixelated_image_file, 'r+') as out:
-        out.write_band(1, pixelated_image)
+        out.write(pixelated_image, indexes=1)
 
     result = runner.invoke(
         main_group, ['shapes', pixelated_image_file, '--with-nodata'])
@@ -382,7 +382,7 @@ def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     pixelated_image[8:10, 8:10] = 255
 
     with rasterio.open(pixelated_image_file, 'r+') as out:
-        out.write_band(1, pixelated_image)
+        out.write(pixelated_image, indexes=1)
 
     result = runner.invoke(
         main_group, ['shapes', pixelated_image_file, '--mask'])
@@ -409,7 +409,7 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
     pixelated_image[8:10, 8:10] = 255
 
     with rasterio.open(pixelated_image_file, 'r+') as out:
-        out.write_band(1, pixelated_image)
+        out.write(pixelated_image, indexes=1)
 
     result = runner.invoke(
         main_group,
@@ -433,7 +433,7 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
     pixelated_image[2:3, 2:3] = 4
 
     with rasterio.open(pixelated_image_file, 'r+') as out:
-        out.write_band(1, pixelated_image)
+        out.write(pixelated_image, indexes=1)
 
     result = runner.invoke(
         main_group,
@@ -711,7 +711,7 @@ def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
     assert 'outside bounds' in result.output
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert not numpy.any(out.read_band(1, masked=False))
+        assert not numpy.any(out.read(1, masked=False))
 
 
 def test_rasterize_invalid_stdin(tmpdir, runner):

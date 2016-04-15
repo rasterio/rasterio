@@ -1,19 +1,16 @@
+"""Feature extraction"""
 
 import logging
+
 import numpy as np
 cimport numpy as np
+
 from rasterio._io cimport InMemoryRaster
 from rasterio cimport _gdal, _ogr, _io
 from rasterio import dtypes
 
 
-log = logging.getLogger('rasterio')
-
-
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-log.addHandler(NullHandler())
+log = logging.getLogger(__name__)
 
 
 def _shapes(image, mask, connectivity, transform):

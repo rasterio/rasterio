@@ -54,6 +54,6 @@ with rasterio.drivers():
             nodata=0,
             transform=dst_transform,
             crs=dst_crs) as dst:
-        dst.write_band(1, destination)
+        dst.write(destination, indexes=1)
 
 info = subprocess.call(['open', tiffname])

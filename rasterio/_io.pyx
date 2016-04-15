@@ -1,4 +1,5 @@
 # cython: boundscheck=False
+"""Rasterio input/output."""
 
 from __future__ import absolute_import
 
@@ -29,7 +30,7 @@ from rasterio.vfs import parse_path
 from rasterio.warnings import NodataShadowWarning
 
 
-log = logging.getLogger('rasterio')
+log = logging.getLogger(__name__)
 
 
 cdef bint in_dtype_range(value, dtype):

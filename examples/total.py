@@ -28,7 +28,7 @@ with rasterio.drivers(CPL_DEBUG=True):
         compress='lzw')
 
     with rasterio.open('example-total.tif', 'w', **kwargs) as dst:
-        dst.write_band(1, total.astype(rasterio.uint8))
+        dst.write(total.astype(rasterio.uint8), indexes=1)
 
 # Dump out gdalinfo's report card and open the image.
 info = subprocess.check_output(

@@ -1,4 +1,4 @@
-"""A module of errors."""
+"""Errors."""
 
 from click import FileError
 
