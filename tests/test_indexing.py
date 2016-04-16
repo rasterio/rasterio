@@ -243,4 +243,4 @@ def test_iter_args():
     def foo(*args):
         return len(args)
 
-    assert foo([0, 1, 2]) == foo(0, 1, 2) == foo(range(3))
+    assert foo([0, 1, 2]) == foo(0, 1, 2) == foo(range(3)) == 3
