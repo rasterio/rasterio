@@ -197,17 +197,14 @@ with the same full extent.
 
 .. code-block:: python
 
-    from rasterio import windows
-
-    # Full window is ((0, 1000), (0, 500))
-    window1 = ((100, 500), (10, 500))
-    window2 = ((10, 150), (50, 250))
-
-    outer = windows.union([window1, window2])
-    # outer = ((10, 500), (10, 500))
-
-    inner = windows.intersection([window1, window2])
-    # inner = ((100, 150), (50, 250))
+    >>> from rasterio import windows
+    >>> # Full window is ((0, 1000), (0, 500))
+    >>> window1 = ((100, 500), (10, 500))
+    >>> window2 = ((10, 150), (50, 250))
+    >>> windows.union(window1, window2)
+    ((10, 500), (10, 500))
+    >>> windows.intersection(window1, window2)
+    ((100, 150), (50, 250))
 
 
 Blocks

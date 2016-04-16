@@ -2243,7 +2243,7 @@ def windows_intersect(windows):
 
     def intersects(range1, range2):
         return not (
-            range1[0] > range2[1] or range1[1] < range2[0]
+            range1[0] >= range2[1] or range1[1] <= range2[0]
         )
 
     windows = np.array(windows)

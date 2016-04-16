@@ -126,66 +126,121 @@ def test_data_window_masked_file():
 
 
 def test_window_union():
-    assert windows.union([
+    assert windows.union(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
-    ]) == ((0, 6), (1, 6))
+    ) == ((0, 6), (1, 6))
 
 
 def test_window_intersection():
-    assert windows.intersection([
+    assert windows.intersection(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
-    ]) == ((2, 4), (3, 5))
+    ) == ((2, 4), (3, 5))
 
-    assert windows.intersection([
-        ((0, 6), (3, 6)),
-        ((6, 10), (1, 5))
-    ]) == ((6, 6), (3, 5))
-
-    assert windows.intersection([
+    assert windows.intersection(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
         ((3, 6), (0, 6))
-    ]) == ((3, 4), (3, 5))
+    ) == ((3, 4), (3, 5))
 
 
 def test_window_intersection_disjunct():
     with pytest.raises(ValueError):
-        windows.intersection([
+        windows.intersection(
             ((0, 6), (3, 6)),
             ((100, 200), (0, 12)),
-            ((7, 12), (7, 12))
-        ])
+            ((7, 12), (7, 12)))
+
+        # touch, no overlap on edge of open interval
+        assert windows.intersection(
+            ((0, 6), (3, 6)),
+            ((6, 10), (1, 5)))
 
 
 def test_windows_intersect():
-    assert windows.intersect([
+    assert windows.intersect(
         ((0, 6), (3, 6)),
-        ((2, 4), (1, 5))
-    ]) == True
+        ((2, 4), (1, 5))) is True
 
-    assert windows.intersect([
+    assert windows.intersect(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
-        ((3, 6), (0, 6))
-    ]) == True
+        ((3, 6), (0, 6))) is True
+
+    assert windows.intersect(
+        ((0, 2), (0, 2)),
+        ((1, 4), (1, 4))) is True
+
+
+def test_3x3matrix():
+    """For a 3x3 arrangement of 2x2 windows
+      a | b | c
+      ---------
+      d | e | f
+      ---------
+      g | h | i
+
+      i.e. window e is ((2, 4), (2, 4))
+
+      None of them should intersect or have an intersection
+    """
+    from itertools import product, combinations
+
+    pairs = ((0, 2), (2, 4), (4, 6))
+    arrangement = product(pairs, pairs)
+    for wins in combinations(arrangement, 2):
+        assert not windows.intersect(*wins)
+        with pytest.raises(ValueError):
+            windows.intersection(*wins)
 
 
 def test_windows_intersect_disjunct():
-    assert windows.intersect([
+    assert windows.intersect(
         ((0, 6), (3, 6)),
-        ((10, 20), (0, 6))
-    ]) == False
+        ((10, 20), (0, 6))) is False
 
-    assert windows.intersect([
+    # polygons touch at point
+    assert windows.intersect(
+        ((0, 2), (1, 3)),
+        ((2, 4), (3, 5))) is False
+
+    # polygons touch at point, rev order
+    assert windows.intersect(
+        ((2, 4), (3, 5)),
+        ((0, 2), (1, 3))) is False
+
+    # polygons touch at line
+    assert windows.intersect(
+        ((0, 6), (3, 6)),
+        ((6, 10), (1, 5))) is False
+
+    assert windows.intersect(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
-        ((5, 6), (0, 6))
-    ]) == False
+        ((5, 6), (0, 6))) is False
 
-    assert windows.intersect([
+    assert windows.intersect(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 3)),
-        ((3, 6), (4, 6))
-    ]) == False
+        ((3, 6), (4, 6))) is False
+
+
+def test_iter_args_winfuncs():
+    wins = [
+        ((0, 6), (3, 6)),
+        ((2, 4), (1, 5))]
+
+    assert windows.intersect(*wins) == windows.intersect(wins)
+    assert windows.intersection(*wins) == windows.intersection(wins)
+    assert windows.union(*wins) == windows.union(wins)
+
+
+def test_iter_args():
+    from rasterio.windows import iter_args
+
+    @iter_args
+    def foo(*args):
+        return len(args)
+
+    assert foo([0, 1, 2]) == foo(0, 1, 2) == foo(range(3)) == 3
