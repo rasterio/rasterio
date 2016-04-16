@@ -1,4 +1,5 @@
 """Commands for operating on bands of datasets."""
+import collections
 import logging
 
 import click
@@ -105,7 +106,7 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
                             data = src.read(index)
                             dst.write(data, dst_idx)
                             dst_idx += 1
-                        elif isinstance(index, list):
+                        elif isinstance(index, collections.Iterable):
                             data = src.read(index)
                             dst.write(data, range(dst_idx, dst_idx+len(index)))
                             dst_idx += len(index)
