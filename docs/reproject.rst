@@ -8,7 +8,7 @@ coordinate reference system and transform to the pixels of a source image with
 a different coordinate reference system and transform. This process is known as
 reprojection.
 
-Rasterio's ``rasterio.warp.reproject()`` is a very geospatial-specific analog
+Rasterio's ``rasterio.warp.reproject()`` is a geospatial-specific analog
 to SciPy's ``scipy.ndimage.interpolation.geometric_transform()`` [1]_.
 
 The code below reprojects between two arrays, using no pre-existing GIS
@@ -58,7 +58,7 @@ transform.
 
 See `examples/reproject.py <https://github.com/mapbox/rasterio/blob/master/examples/reproject.py>`__
 for code that writes the destination array to a GeoTIFF file. I've uploaded the
-resulting file to a Mapbox map to demonstrate that the reprojection is
+resulting file to a Mapbox map to show that the reprojection is
 correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033.
 
 Reprojecting a GeoTIFF dataset

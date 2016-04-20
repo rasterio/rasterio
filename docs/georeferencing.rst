@@ -61,10 +61,10 @@ a pixel's image coordinates are ``x, y`` and its world coordinates are
     | y' | = | d e f | | y |
     | 1  |   | 0 0 1 | | 1 |
 
-The ``Affine`` class has a number of useful properties and methods
+The ``Affine`` class has some useful properties and methods
 described at https://github.com/sgillies/affine.
 
-Previous versions of Rasterio had a ``transform`` attribute which was a 6-element
+Earlier versions of Rasterio had a ``transform`` attribute which was a 6-element
 tuple. This usage is deprecated, please see https://github.com/mapbox/rasterio/issues/86 for details. 
 In Rasterio 1.0, the value of a  ``transform`` attribute will be an instance
 of ``Affine`` and the ``affine`` attribute will remain as an alias.

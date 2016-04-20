@@ -2,8 +2,8 @@ Windowed reading and writing
 ****************************
 
 Beginning in rasterio 0.3, you can read and write "windows" of raster files.
-This feature allows you to operate on rasters that are larger than your
-computers RAM or process chunks of very large rasters in parallel.
+This feature allows you to work on rasters that are larger than your
+computers RAM or process chunks of large rasters in parallel.
 
 Windows
 -------

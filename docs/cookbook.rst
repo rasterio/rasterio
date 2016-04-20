@@ -115,7 +115,7 @@ Creating a least cost path
 Using a scipy filter to smooth a raster
 ---------------------------------------
 
-This recipe demonstrates the use of scipy's `signal processing filters <http://docs.scipy.org/doc/scipy/reference/signal.html#signal-processing-scipy-signal>`_ to manipulate multi-band raster imagery
+This recipe demonstrates scipy's `signal processing filters <http://docs.scipy.org/doc/scipy/reference/signal.html#signal-processing-scipy-signal>`_ to manipulate multi-band raster imagery
 and save the results to a new GeoTIFF. Here we apply a median filter to smooth
 the image and remove small inclusions (at the expense of some sharpness and detail).
 
@@ -141,7 +141,7 @@ With median filter applied
 Using skimage to adjust the saturation of a RGB raster
 ------------------------------------------------------
 
-This recipe demonstrates the use of manipulating color with the scikit image `color module <http://scikit-image.org/docs/stable/api/skimage.color.html>`_.
+This recipe demonstrates manipulating color with the scikit image `color module <http://scikit-image.org/docs/stable/api/skimage.color.html>`_.
 
 .. literalinclude:: recipes/saturation.py
     :language: python

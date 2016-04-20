@@ -17,7 +17,7 @@ trapezoid of image data within a rectangular background of 0,0,0 value pixels.
 
 .. image:: https://www.dropbox.com/s/sg7qejccih5m4ah/RGB.byte.jpg?dl=1
 
-Metadata in the dataset declares that values of 0 shall be interpreted as
+Metadata in the dataset declares that values of 0 will be interpreted as
 invalid data or *nodata* pixels. In, e.g., merging the image with adjacent
 scenes, we'd like to ignore the nodata pixels and have only valid image data in
 our final mosaic.
@@ -82,7 +82,7 @@ a problem inherent in 8-bit raster data: lack of dynamic range. The dataset
 creator has said that 0 values represent missing data (see the
 ``nodatavals`` property in the first code block of this document), but some of
 the valid data have values so low they've been rounded during processing to
-zero.  This can very easily happen in scaling 16-bit data to 8 bits.  There's
+zero.  This can happen in scaling 16-bit data to 8 bits.  There's
 no magic nodata value bullet for this. Using 16 bits per band helps, but you
 really have to be careful with 8-bit per band datasets and their nodata values.
 
@@ -196,7 +196,7 @@ If you want, you can read dataset bands as numpy masked arrays.
            [ True,  True,  True, ...,  True,  True,  True]], dtype=bool)
 
 As mentioned earlier, this mask is the inverse of the GDAL band mask. To get
-a mask conforming to GDAL RFC 15, simply do this:
+a mask conforming to GDAL RFC 15, do this:
 
 .. code-block:: python
 

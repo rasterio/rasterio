@@ -34,7 +34,7 @@ objects.
     >>> src.closed
     False
 
-If you attempt to access a nonexistent path, ``rasterio.open()`` does the same
+If you try to access a nonexistent path, ``rasterio.open()`` does the same
 thing as ``open()``, raising an exception immediately.
 
 .. code-block:: python
@@ -59,7 +59,7 @@ a file can be read like this:
     (718, 791)
 
 The returned object is a 2-dimensional Numpy ndarray. The representation of
-that array at the Python prompt is just a summary; the GeoTIFF file that
+that array at the Python prompt is a summary; the GeoTIFF file that
 Rasterio uses for testing has 0 values in the corners, but has nonzero values
 elsewhere.
 

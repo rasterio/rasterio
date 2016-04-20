@@ -4,8 +4,8 @@ Installation
 Dependencies
 ************************
 
-Rasterio has one C library dependency: ``GDAL >=1.9``. GDAL itself depends on a
-number of other libraries provided by most major operating systems and also
+Rasterio has one C library dependency: ``GDAL >=1.9``. GDAL itself depends on
+many of other libraries provided by most major operating systems and also
 depends on the non standard GEOS and PROJ4 libraries.
 
 Python package dependencies (see also requirements.txt): ``affine, cligj, click, enum34, numpy``.
@@ -19,7 +19,7 @@ OS X
 ----
 
 Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
-for OS X versions 10.7+ starting with Rasterio version 0.17. To install, just
+for OS X versions 10.7+ starting with Rasterio version 0.17. To install, 
 run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
 a source distribution, run ``pip install rasterio --no-use-wheel`` instead.
@@ -37,7 +37,7 @@ Windows
 Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are
 available from his website.
 
-To install rasterio, simply download both binaries for your system (`rasterio
+To install rasterio, download both binaries for your system (`rasterio
 <http://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio>`__ and `GDAL
 <http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal>`__) and run something like
 this from the downloads folder:

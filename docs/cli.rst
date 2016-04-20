@@ -535,8 +535,8 @@ The ``stack`` command stacks a number of bands from one or more input files
 into a multiband dataset. Input datasets must be of a kind: same data type,
 dimensions, etc. The output is cloned from the first input. By default,
 ``stack`` will take all bands from each input and write them in same order to
-the output. Optionally, bands for each input may be specified using a simple
-syntax:
+the output. Optionally, bands for each input may be specified using the
+following syntax:
 
 - ``--bidx N`` takes the Nth band from the input (first band is 1).
 - ``--bidx M,N,O`` takes bands M, N, and O.
@@ -642,7 +642,7 @@ a command ``rio mbtiles`` to export a raster to an MBTiles file.
 See `click-plugins <https://github.com/click-contrib/click-plugins>`__ for more
 information on how to build these plugins in general.
 
-In order to use these plugins with rio, add the commands to the
+To use these plugins with rio, add the commands to the
 ``rasterio.rio_plugins'`` entry point in your ``setup.py`` file, as described
 `here <https://github.com/click-contrib/click-plugins#developing-plugins>`__
 
