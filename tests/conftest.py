@@ -245,6 +245,7 @@ def gdalenv(request):
     import rasterio.env
 
     def fin():
-        rasterio.env.delenv()
-        rasterio.env._env = None
+        if rasterio.env._env:
+            rasterio.env.delenv()
+            rasterio.env._env = None
     request.addfinalizer(fin)
