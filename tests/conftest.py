@@ -238,3 +238,13 @@ def pixelated_image_file(tmpdir, pixelated_image):
         out.write(image, indexes=1)
 
     return outfilename
+
+
+@pytest.fixture(scope='function')
+def gdalenv(request):
+    import rasterio.env
+
+    def fin():
+        rasterio.env.delenv()
+        rasterio.env._env = None
+    request.addfinalizer(fin)

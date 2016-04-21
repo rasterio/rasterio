@@ -2,7 +2,8 @@
 
 import logging
 
-from rasterio._drivers import GDALEnv
+from rasterio._drivers import (
+    GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError
 from rasterio.five import string_types
@@ -16,7 +17,7 @@ _env = None
 log = logging.getLogger(__name__)
 
 
-class Env(GDALEnv):
+class Env(object):
     """Abstraction for GDAL and AWS configuration
 
     The GDAL library is stateful: it has a registry of format drivers,
@@ -49,7 +50,9 @@ class Env(GDALEnv):
     for GDAL as needed.
     """
 
-    def __init__(self, aws_session=None, **options):
+    def __init__(self, aws_session=None, aws_access_key_id=None,
+                 aws_secret_access_key=None, aws_session_token=None,
+                 region_name=None, profile_name=None, **options):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -67,64 +70,98 @@ class Env(GDALEnv):
         -------
         A new instance of Env.
         """
-        global _env
-        if _env and _env.managing:
-            raise EnvError("GDAL is currently configured. "
-                           "Multiple configuration is not allowed.")
-        super(Env, self).__init__(**options)
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+        self.aws_session_token = aws_session_token
+        self.region_name = region_name
+        self.profile_name = profile_name
         self.aws_session = aws_session
         self._creds = (
             self.aws_session._session.get_credentials()
             if self.aws_session else None)
-        self.start()
-        self.managing = False
-        _env = self
+        self.options = options.copy()
+        self.previous_options = {}
+        defenv()
 
     def get_aws_credentials(self):
         """Get credentials and configure GDAL."""
         import boto3
-        self.aws_session = boto3.Session(
-            aws_access_key_id=self.options.get('aws_access_key_id'),
-            aws_secret_access_key=self.options.get('aws_secret_access_key'),
-            aws_session_token=self.options.get('aws_session_token'),
-            region_name=self.options.get('region_name'),
-            profile_name=self.options.get('profile_name'))
+        if not self.aws_session:
+            self.aws_session = boto3.Session(
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                aws_session_token=self.aws_session_token,
+                region_name=self.region_name,
+                profile_name=self.profile_name)
         self._creds = self.aws_session._session.get_credentials()
 
         # Pass these credentials to the GDAL environment.
+        defenv()
         options = {}
         if self._creds.access_key:  # pragma: no branch
-            options.update(AWS_ACCESS_KEY_ID=self._creds.access_key)
+            options.update(aws_access_key_id=self._creds.access_key)
         if self._creds.secret_key:  # pragma: no branch
-            options.update(AWS_SECRET_ACCESS_KEY=self._creds.secret_key)
+            options.update(aws_secret_access_key=self._creds.secret_key)
         if self._creds.token:
-            options.update(AWS_SESSION_TOKEN=self._creds.token)
+            options.update(aws_session_token=self._creds.token)
         if self.aws_session.region_name:
-            options.update(AWS_REGION=self.aws_session.region_name)
-        self.update_config_options(**options)
+            options.update(aws_region=self.aws_session.region_name)
+        global _env
+        _env.update_config_options(**options)
+
+    def drivers(self):
+        """Return a mapping of registered drivers."""
+        global _env
+        return _env.drivers()
 
     def __enter__(self):
-        self.enter_config_options()
-        self.managing = True
+        self.previous_options = getenv()
+        setenv(**self.options)
         log.debug("Entering env %r context", self)
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        global _env
-        self.exit_config_options()
-        self.stop()
-        self.managing = False
-        _env = None
+        delenv()
+        setenv(**self.previous_options)
         log.debug("Exiting env %r context", self)
 
 
-def setenv():
-    """Assert that there is a GDAL environment, creating it if needed
+def defenv():
+    """Create a default environment if necessary."""
+    global _env
+    if _env:
+        log.debug("Environment %r exists", _env)
+    else:
+        _env = GDALEnv()
+        log.debug(
+            "New GDAL environment %r created", _env)
 
-    This is the function to be called by methods like `rasterio.open()`
-    that need a default environment.
-    """
+
+def getenv():
+    """Get a mapping of current options."""
     global _env
     if not _env:
-        _env = Env()
-        log.debug("New GDAL environment created %r", _env)
+        raise EnvError("No environment exists")
+    else:
+        log.debug("Got a copy of environment %r options", _env)
+        return _env.options.copy()
+
+
+def setenv(**options):
+    """Set options in the existing environment."""
+    global _env
+    if not _env:
+        raise EnvError("No environment exists")
+    else:
+        _env.update_config_options(**options)
+        log.debug("Updated existing %r with options %r", _env, options)
+
+
+def delenv():
+    """Delete options in the existing environment."""
+    global _env
+    if not _env:
+        raise EnvError("No environment exists")
+    else:
+        _env.clear_config_options()
+        log.debug("Cleared existing %r options", _env)
