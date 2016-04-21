@@ -17,11 +17,8 @@ def test_io_error(tmpdir):
 
 
 def test_io_error_env(tmpdir):
-    with Env() as env:
-        drivers_start = env.drivers()
-        with pytest.raises(RasterioIOError):
-            rasterio.open(str(tmpdir.join('foo.tif')))
-    assert env.drivers() == drivers_start
+    with pytest.raises(RasterioIOError):
+        rasterio.open(str(tmpdir.join('foo.tif')))
 
 
 def test_bogus_band_error():

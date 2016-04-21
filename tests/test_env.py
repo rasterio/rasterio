@@ -9,7 +9,9 @@ from packaging.version import parse
 import pytest
 
 import rasterio
-import rasterio.env
+from rasterio._drivers import (
+    GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config, driver_count)
+from rasterio.env import defenv, delenv, getenv, setenv, Env
 from rasterio.errors import EnvError
 from rasterio.rio.main import main_group
 
@@ -30,91 +32,131 @@ L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00
 httpstif = "https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
 
 
-def test_open_with_default_env():
-    """Read from a dataset with a default env."""
-    with rasterio.open('tests/data/RGB.byte.tif') as dataset:
-        assert rasterio.env._env
-        assert dataset.count == 3
+def test_gdal_config_accessers():
+    """Low level GDAL config access."""
+    assert get_gdal_config('foo') is None
+    set_gdal_config('foo', 'bar')
+    assert get_gdal_config('foo') == 'bar'
+    del_gdal_config('foo')
+    assert get_gdal_config('foo') is None
 
 
-def test_env_single():
-    """Our env is effectively a singleton."""
-    with rasterio.env.Env():
-        with pytest.raises(EnvError):
-            rasterio.env.Env()
+# The 'gdalenv' fixture ensures that gdal configuration is deleted
+# at the end of the test, making tests as isolates as GDAL allows.
+
+def test_env_accessors(gdalenv):
+    """High level GDAL env access"""
+    defenv()
+    setenv(foo='1', bar='2')
+    assert getenv() == rasterio.env._env.options == {'foo': '1', 'bar': '2'}
+    assert get_gdal_config('foo') == '1'
+    assert get_gdal_config('bar') == '2'
+    delenv()
+    assert getenv() == rasterio.env._env.options == {}
+    assert get_gdal_config('foo') is None
+    assert get_gdal_config('bar') is None
+    rasterio.env._env = None
+    with pytest.raises(EnvError):
+        delenv()
+    with pytest.raises(EnvError):
+        setenv()
+    with pytest.raises(EnvError):
+        getenv()
+
+def test_env_options(gdalenv):
+    """Test env options."""
+    env = Env(foo='x')
+    assert env.options == {'foo': 'x'}
+    assert not env.previous_options
+    assert getenv() == rasterio.env._env.options == {}
+    with env:
+        assert getenv() == rasterio.env._env.options == {'foo': 'x'}
+    assert getenv() == rasterio.env._env.options == {}
 
 
-def test_open_with_env():
-    """Read from a dataset with an explicit env."""
-    with rasterio.env.Env() as env:
-        assert rasterio.env._env is env
-        with rasterio.open('tests/data/RGB.byte.tif') as dataset:
-            assert dataset.count == 3
-
-
-def test_aws_session():
+def test_aws_session(gdalenv):
     """Create an Env with a boto3 session."""
     aws_session = boto3.Session(
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
     s = rasterio.env.Env(aws_session=aws_session)
-    assert rasterio.env._env is s
     assert s._creds.access_key == 'id'
     assert s._creds.secret_key == 'key'
     assert s._creds.token == 'token'
     assert s.aws_session.region_name == 'null-island-1'
 
 
-def test_session_lazy():
-    """Create an Env with lazy boto3 session."""
-    with rasterio.env.Env(
-            aws_access_key_id='id', aws_secret_access_key='key',
-            aws_session_token='token', region_name='null-island-1') as s:
-        assert s._creds is None
+def test_aws_session_credentials(gdalenv):
+    """Create an Env with a boto3 session."""
+    aws_session = boto3.Session(
+        aws_access_key_id='id', aws_secret_access_key='key',
+        aws_session_token='token', region_name='null-island-1')
+    s = rasterio.env.Env(aws_session=aws_session)
+    assert getenv() == rasterio.env._env.options == {}
+    s.get_aws_credentials()
+    assert getenv() == rasterio.env._env.options == {
+        'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
+        'aws_secret_access_key': 'key', 'aws_session_token': 'token'}
+
+
+def test_with_aws_session_credentials(gdalenv):
+    """Create an Env with a boto3 session."""
+    with Env(aws_access_key_id='id', aws_secret_access_key='key',
+             aws_session_token='token', region_name='null-island-1') as s:
+        assert getenv() == rasterio.env._env.options == {}
         s.get_aws_credentials()
-        assert s._creds.access_key == 'id'
-        assert s._creds.secret_key == 'key'
-        assert s._creds.token == 'token'
-        assert s.aws_session.region_name == 'null-island-1'
+        assert getenv() == rasterio.env._env.options == {
+            'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
+            'aws_secret_access_key': 'key', 'aws_session_token': 'token'}
 
 
-def test_session_env_lazy(monkeypatch):
+def test_session_env_lazy(monkeypatch, gdalenv):
     """Create an Env with AWS env vars."""
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
-    with rasterio.env.Env() as s:
-        assert s._creds is None
+    with Env() as s:
         s.get_aws_credentials()
-        assert s._creds.access_key == 'id'
-        assert s._creds.secret_key == 'key'
-        assert s._creds.token == 'token'
+        assert getenv() == rasterio.env._env.options == {
+            'aws_access_key_id': 'id', 'aws_secret_access_key': 'key',
+            'aws_session_token': 'token'}
     monkeypatch.undo()
+
+
+def test_open_with_default_env(gdalenv):
+    """Read from a dataset with a default env."""
+    with rasterio.open('tests/data/RGB.byte.tif') as dataset:
+        assert dataset.count == 3
+
+
+def test_open_with_env(gdalenv):
+    """Read from a dataset with an explicit env."""
+    with Env():
+        with rasterio.open('tests/data/RGB.byte.tif') as dataset:
+            assert dataset.count == 3
 
 
 @mingdalversion
 @credentials
-def test_s3_open_with_session():
+def test_s3_open_with_session(gdalenv):
     """Read from S3 demonstrating lazy credentials."""
-    with rasterio.env.Env() as env:
-        assert env._creds is None
+    with Env():
         with rasterio.open(L8TIF) as dataset:
-            assert env._creds
             assert dataset.count == 1
 
 
 @mingdalversion
 @credentials
-def test_s3_open_with_default_session():
+def test_s3_open_with_default_session(gdalenv):
     """Read from S3 using default env."""
     with rasterio.open(L8TIF) as dataset:
         assert dataset.count == 1
 
 
 @mingdalversion
-def test_open_https_vsicurl():
+def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL"""
-    with rasterio.env.Env():
+    with Env():
         with rasterio.open(httpstif) as dataset:
             assert dataset.count == 1
 

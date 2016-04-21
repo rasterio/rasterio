@@ -17,7 +17,7 @@ from rasterio._base import (
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
-import rasterio.env
+from rasterio.env import defenv, Env
 from rasterio.five import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
@@ -162,15 +162,14 @@ def open(path, mode='r', driver=None, width=None, height=None,
         transform = guard_transform(affine)
 
     # If there is no currently active GDAL/AWS environment, create one.
-    rasterio.env.setenv()
+    defenv()
 
     # Get AWS credentials if we're attempting to access a raster
     # on S3.
     pth, archive, scheme = parse_path(path)
-    if scheme == 's3' and not rasterio.env._env._creds:
-        rasterio.env._env.get_aws_credentials()
-        log.debug(
-            "In env %r AWS credentials have been obtained", rasterio.env._env)
+    if scheme == 's3':
+        Env().get_aws_credentials()
+        log.debug("AWS credentials have been obtained")
 
     # Create dataset instances and pass the given env, which will
     # be taken over by the dataset's context manager if it is not
@@ -227,7 +226,7 @@ def copy(src, dst, **kw):
     from rasterio._copy import RasterCopier
 
     # If there is no currently active GDAL/AWS environment, create one.
-    rasterio.env.setenv()
+    defenv()
     return RasterCopier()(src, dst, **kw)
 
 
@@ -253,7 +252,7 @@ def drivers(**kwargs):
     Use as a context manager, ``with rasterio.drivers(): ...``
     """
     warnings.warn("Deprecated; Use env.Env instead", DeprecationWarning)
-    return rasterio.env.Env(**kwargs)
+    return Env(**kwargs)
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
