@@ -12,7 +12,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_read_boundless_natural_extent():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         data = src.read(boundless=True)
-        assert data.shape == (3, src.height, src.width)
+        assert data.shape == src.shape
         assert abs(data[0].mean() - src.read(1).mean()) < 0.0001
         assert data.any()
 

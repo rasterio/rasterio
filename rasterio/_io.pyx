@@ -751,7 +751,7 @@ cdef class RasterReader(_base.DatasetReader):
                 (r_start, r_stop), (c_start, c_stop) = window
                 win_shape += (r_stop - r_start, c_stop - c_start)
         else:
-            win_shape += self.shape
+            win_shape += self.shape[1:]
 
         if out is not None:
             if out.dtype != dtype:
@@ -955,7 +955,7 @@ cdef class RasterReader(_base.DatasetReader):
                 win_shape += (maxr - minr, maxc - minc)
                 window = ((minr, maxr), (minc, maxc))
         else:
-            win_shape += self.shape
+            win_shape += self.shape[1:]
         
         dtype = 'uint8'
 
@@ -1154,7 +1154,7 @@ cdef class RasterReader(_base.DatasetReader):
             out_shape = (
                 window 
                 and window_shape(window, self.height, self.width) 
-                or self.shape)
+                or self.shape[1:])
             out = np.empty(out_shape, np.uint8)
         if window:
             window = eval_window(window, self.height, self.width)
@@ -1374,7 +1374,7 @@ cdef class RasterUpdater(RasterReader):
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
-        self.shape = (self.height, self.width)
+        self.shape = (self._count, self.height, self.width)
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
@@ -1997,7 +1997,7 @@ cdef class IndirectRasterUpdater(RasterUpdater):
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
-        self.shape = (self.height, self.width)
+        self.shape = (self._count, self.height, self.width)
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()

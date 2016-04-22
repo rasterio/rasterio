@@ -6,5 +6,5 @@ def test_band():
         assert b.ds == src
         assert b.bidx == 1
         assert b.dtype in src.dtypes
-        assert b.shape == src.shape
+        assert b.shape == src.shape[1:]
 
