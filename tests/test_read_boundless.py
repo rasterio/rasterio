@@ -90,14 +90,14 @@ def test_read_boundless_noshift():
         # the read offsets should be determined by start col/row alone
         # when col stop exceeds image width
         c1 = src.read(boundless=True,
-                      window=((100, 101), (-1, src.shape[1])))[0, 0, 0:9]
+                      window=((100, 101), (-1, src.shape[2])))[0, 0, 0:9]
         c2 = src.read(boundless=True,
-                      window=((100, 101), (-1, src.shape[1] + 1)))[0, 0, 0:9]
+                      window=((100, 101), (-1, src.shape[2] + 1)))[0, 0, 0:9]
         assert numpy.array_equal(c1, c2)
 
         # when row stop exceeds image height
         r1 = src.read(boundless=True,
-                      window=((-1, src.shape[0]), (100, 101)))[0, 0, 0:9]
+                      window=((-1, src.shape[1]), (100, 101)))[0, 0, 0:9]
         r2 = src.read(boundless=True,
-                      window=((-1, src.shape[0] + 1), (100, 101)))[0, 0, 0:9]
+                      window=((-1, src.shape[1] + 1), (100, 101)))[0, 0, 0:9]
         assert numpy.array_equal(r1, r2)
