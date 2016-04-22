@@ -14,6 +14,7 @@ def test_stack(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(outputname) as out:
         assert out.count == 3
+        assert out.read(1).max() > 0
 
 
 def test_stack_list(tmpdir):
