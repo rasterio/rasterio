@@ -409,7 +409,7 @@ def test_reproject_multi():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        destin = numpy.empty(source.shape[1:], dtype=numpy.uint8)
+        destin = numpy.empty(source.shape, dtype=numpy.uint8)
         reproject(
             source,
             destin,

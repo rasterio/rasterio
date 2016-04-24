@@ -255,7 +255,7 @@ def band(ds, bidx):
         ds,
         bidx,
         set(ds.dtypes).pop(),
-        ds.shape)
+        ds.shape[1:])
 
 
 def pad(array, transform, pad_width, mode=None, **kwargs):
