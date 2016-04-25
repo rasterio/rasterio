@@ -17,7 +17,6 @@ cdef extern from "cpl_conv.h":
 
 cdef extern from "cpl_error.h":
     void CPLSetErrorHandler(void *handler)
-    void CPLSetCurrentErrorHandlerCatchDebug(int bCatchDebug)
 
 
 cdef extern from "gdal.h":
@@ -160,7 +159,6 @@ cdef class GDALEnv(ConfigEnv):
         GDALAllRegister()
         OGRRegisterAll()
         CPLSetErrorHandler(<void *>errorHandler)
-        CPLSetCurrentErrorHandlerCatchDebug(1)
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
 
