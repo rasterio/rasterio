@@ -201,7 +201,7 @@ def test_reproject_ndarray():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape[1:], dtype=numpy.uint8)
         reproject(
             source,
             out,
@@ -219,7 +219,7 @@ def test_reproject_epsg():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:3857'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape[1:], dtype=numpy.uint8)
         reproject(
             source,
             out,
@@ -238,7 +238,7 @@ def test_reproject_out_of_bounds():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape[1:], dtype=numpy.uint8)
         reproject(
             source,
             out,
@@ -437,7 +437,7 @@ def test_warp_from_file():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        destin = numpy.empty(src.shape, dtype=numpy.uint8)
+        destin = numpy.empty(src.shape[1:], dtype=numpy.uint8)
         reproject(
             rasterio.band(src, 1),
             destin,
@@ -566,7 +566,7 @@ def test_reproject_unsupported_resampling():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape[1:], dtype=numpy.uint8)
         with pytest.raises(ValueError):
             reproject(
                 source,
@@ -585,7 +585,7 @@ def test_reproject_unsupported_resampling_guass():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = numpy.empty(src.shape[1:], dtype=numpy.uint8)
         with pytest.raises(ValueError):
             reproject(
                 source,

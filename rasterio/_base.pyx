@@ -90,7 +90,7 @@ cdef class DatasetReader(object):
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
         self.height = _gdal.GDALGetRasterYSize(self._hds)
-        self.shape = (self.height, self.width)
+        self.shape = (self._count, self.height, self.width)
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()

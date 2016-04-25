@@ -207,7 +207,7 @@ def test_merge_overlapping(test_data_dir_overlapping):
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
         assert out.count == 1
-        assert out.shape == (15, 15)
+        assert out.shape == (1, 15, 15)
         assert out.bounds == (-114, 43, -111, 46)
         data = out.read(1, masked=False)
         expected = numpy.zeros((15, 15), dtype=rasterio.uint8)

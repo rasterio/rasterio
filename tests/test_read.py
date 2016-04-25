@@ -21,7 +21,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.count, 3)
             self.assertEqual(s.width, 791)
             self.assertEqual(s.height, 718)
-            self.assertEqual(s.shape, (718, 791))
+            self.assertEqual(s.shape, (3, 718, 791))
             self.assertEqual(s.dtypes, tuple([rasterio.ubyte] * 3))
             self.assertEqual(s.nodatavals, (0, 0, 0))
             self.assertEqual(s.indexes, (1, 2, 3))
@@ -43,7 +43,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.count, 3)
         self.assertEqual(s.width, 791)
         self.assertEqual(s.height, 718)
-        self.assertEqual(s.shape, (718, 791))
+        self.assertEqual(s.shape, (3, 718, 791))
         self.assertEqual(s.dtypes, tuple([rasterio.ubyte] * 3))
         self.assertEqual(s.nodatavals, (0, 0, 0))
         self.assertEqual(s.crs['init'], 'epsg:32618')
@@ -185,7 +185,7 @@ class ReaderContextTest(unittest.TestCase):
         the dataset's bounds."""
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read(window=((None, 20000), (None, 20000)))
-            self.assertEqual(a.shape, (3,) + s.shape)
+            self.assertEqual(a.shape, s.shape)
 
     def test_read_window_beyond(self):
         """Test graceful Numpy-like handling of windows beyond

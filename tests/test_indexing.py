@@ -19,7 +19,7 @@ def test_index():
 def test_full_window():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
-        assert src.window(left, bottom, right, top) == tuple(zip((0, 0), src.shape))
+        assert src.window(left, bottom, right, top) == tuple(zip((0, 0), src.shape[1:]))
 
 
 def test_window_no_exception():

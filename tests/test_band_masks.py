@@ -39,7 +39,7 @@ def tiffs(tmpdir):
                 str(tmpdir.join('sidecar-masked.tif')), 'w',
                 **profile) as dst:
             dst.write(src.read(masked=False))
-            mask = np.zeros(src.shape, dtype='uint8')
+            mask = np.zeros(src.shape[1:], dtype='uint8')
             dst.write_mask(mask)
 
     return tmpdir
