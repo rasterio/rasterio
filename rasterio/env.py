@@ -114,6 +114,8 @@ class Env(object):
                 region_name=self.region_name,
                 profile_name=self.profile_name)
         self._creds = self.aws_session._session.get_credentials()
+
+        # Pass these credentials to the GDAL environment.
         if self._creds.access_key:  # pragma: no branch
             options.update(aws_access_key_id=self._creds.access_key)
         if self._creds.secret_key:  # pragma: no branch
