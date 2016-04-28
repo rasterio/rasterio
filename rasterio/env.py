@@ -62,14 +62,33 @@ class Env(object):
         ----------
         aws_session: object, optional
             A boto3 session.
+        aws_access_key_id: string, optional
+            An access key id, as per boto3.
+        aws_secret_access_key: string, optional
+            A secret access key, as per boto3.
+        aws_session_token: string, optional
+            A session token, as per boto3.
+        region_name: string, optional
+            A region name, as per boto3.
+        profile_name: string, optional
+            A shared credentials profile name, as per boto3.
         **options: optional
-            A mapping of boto3 session constructor keyword arguments
-            and GDAL configuration options.
+            A mapping of GDAL configuration options, e.g.,
+            `CPL_DEBUG=True, CHECK_WITH_INVERT_PROJ=False`.
 
         Returns
         -------
         A new instance of Env.
+
+        Note: We raise EnvError if the GDAL config options
+        AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are given. AWS
+        credentials are handled exclusively by boto3.
         """
+        if ('AWS_ACCESS_KEY_ID' in options or
+                'AWS_SECRET_ACCESS_KEY' in options):
+            raise EnvError(
+                "GDAL's AWS config options can not be directly set. "
+                "AWS credentials are handled exclusively by boto3.")
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_session_token = aws_session_token
@@ -86,6 +105,7 @@ class Env(object):
     def get_aws_credentials(self):
         """Get credentials and configure GDAL."""
         import boto3
+        options = {}
         if not self.aws_session:
             self.aws_session = boto3.Session(
                 aws_access_key_id=self.aws_access_key_id,
@@ -94,10 +114,6 @@ class Env(object):
                 region_name=self.region_name,
                 profile_name=self.profile_name)
         self._creds = self.aws_session._session.get_credentials()
-
-        # Pass these credentials to the GDAL environment.
-        defenv()
-        options = {}
         if self._creds.access_key:  # pragma: no branch
             options.update(aws_access_key_id=self._creds.access_key)
         if self._creds.secret_key:  # pragma: no branch
@@ -106,6 +122,9 @@ class Env(object):
             options.update(aws_session_token=self._creds.token)
         if self.aws_session.region_name:
             options.update(aws_region=self.aws_session.region_name)
+
+        # Pass these credentials to the GDAL environment.
+        defenv()
         global _env
         _env.update_config_options(**options)
 

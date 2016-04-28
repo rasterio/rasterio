@@ -63,6 +63,15 @@ def test_env_accessors(gdalenv):
     with pytest.raises(EnvError):
         getenv()
 
+
+def test_no_aws_gdal_config(gdalenv):
+    """Trying to set AWS-specific GDAL config options fails."""
+    with pytest.raises(EnvError):
+        Env(AWS_ACCESS_KEY_ID='x')
+    with pytest.raises(EnvError):
+        Env(AWS_SECRET_ACCESS_KEY='y')
+
+
 def test_env_options(gdalenv):
     """Test env options."""
     env = Env(foo='x')
