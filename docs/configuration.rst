@@ -19,7 +19,7 @@ From https://trac.osgeo.org/gdal/wiki/ConfigOptions:
 GDAL Example
 ------------
 
-The following is from [GDAL's test suite](https://github.com/OSGeo/gdal/blob/0b75aa3c39e6d126439fb17eed939de39f6f3720/autotest/gcore/tiff_read.py#L117-L119).
+The following is from `GDAL's test suite <https://github.com/OSGeo/gdal/blob/0b75aa3c39e6d126439fb17eed939de39f6f3720/autotest/gcore/tiff_read.py#L117-L119>`__.
 
 .. code-block:: python
 
@@ -52,8 +52,9 @@ recover better from errors.
         for key, val in options.items():
             gdal.SetConfigOption(key, None)
 
-Rasterio uses an element of Python syntax, the ``with`` statement, to make
-this even better.
+This is better, but has a lot of boilerplate. Rasterio uses elements of Python
+syntax, keyword arguments and the ``with`` statement, to make this cleaner
+and easier to use.
 
 Rasterio
 --------
