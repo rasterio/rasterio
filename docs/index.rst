@@ -26,6 +26,8 @@ And an example of use in python
 .. code:: python
 
     import rasterio
+
+
     with rasterio.open('data.tif') as src:
         array = src.read()
 
