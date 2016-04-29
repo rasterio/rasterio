@@ -53,7 +53,7 @@ recover better from errors.
             gdal.SetConfigOption(key, None)
 
 This is better, but has a lot of boilerplate. Rasterio uses elements of Python
-syntax, keyword arguments and the ``with`` statement, to make this cleaner
+syntax, keyword arguments and the [``with``](https://docs.python.org/2/reference/compound_stmts.html#with) statement, to make this cleaner
 and easier to use.
 
 Rasterio
@@ -65,11 +65,14 @@ Rasterio
         with rasterio.open('data/stefan_full_greyalpha.tif') as ds:
            # Suite of code accessing dataset ``ds`` follows...
 
-Configuration options are defined for a very specific suite of code and are
-cleared when the suite exits, even if an exception is raised. The object
-returned when you call ``rasterio.Env()`` handles the GDAL configuration for
-you and if you want to know what options are configured at any time, you
-could bind it to a name like so.
+The object returned when you call ``rasterio.Env()`` is a context manager.  It
+handles the GDAL configuration for a specific block of code and resets the
+configuration when the block exits for any reason, success or failure. The
+Rasterio ``with Env()`` pattern helps make the current GDAL configuration
+for any Python statement in the subordinate block of code more transparent.
+
+If you want to know what options are configured at any time, you could bind it
+to a name like so.
 
 .. code-block:: python
 
