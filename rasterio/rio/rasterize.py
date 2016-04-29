@@ -11,6 +11,8 @@ from . import options
 import rasterio
 from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
+from rasterio.env import Env
+
 
 logger = logging.getLogger('rio')
 
@@ -126,7 +128,7 @@ def rasterize(
     if fill == int(fill):
         fill = int(fill)
 
-    with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+    with Env(CPL_DEBUG=verbosity > 2):
 
         def feature_value(feature):
             if prop and 'properties' in feature:

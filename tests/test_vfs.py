@@ -32,7 +32,7 @@ def test_parse_path_file_scheme():
 def test_parse_path_file():
     """Correctly parse an ordinary filesystem path"""
     assert parse_path('/foo.tif') == (
-        '/foo.tif', None, None)
+        '/foo.tif', None, '')
 
 
 def test_parse_unknown_scheme():
@@ -45,12 +45,6 @@ def test_vsi_path_scheme():
     """Correctly make a vsi path"""
     assert vsi_path(
         'foo.tif', 'tests/data/files.zip', 'zip') == '/vsizip/tests/data/files.zip/foo.tif'
-
-
-def test_vsi_path_file():
-    """Correctly make a ordinary file path from a parsed file:// URL"""
-    assert vsi_path(
-        'foo.tif', None, 'file') == 'foo.tif'
 
 
 def test_vsi_path_file():
@@ -95,7 +89,7 @@ def test_read_vfs_none():
 def test_update_vfs(tmpdir, mode):
     """VFS datasets can not be created or updated"""
     with pytest.raises(TypeError):
-        _ = rasterio.open(
+        rasterio.open(
             'zip://{0}'.format(tmpdir), mode,
             **default_gtiff_profile(
                 count=1, width=1, height=1))

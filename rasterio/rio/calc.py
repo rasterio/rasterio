@@ -10,16 +10,17 @@ from cligj import files_inout_arg
 from .helpers import resolve_inout
 from . import options
 import rasterio
+from rasterio.env import Env
 from rasterio.fill import fillnodata
 from rasterio.features import sieve
 
 
 def get_bands(inputs, d, i=None):
     """Get a rasterio.Band object from calc's inputs"""
-    path = inputs[d] if d in dict(inputs) else inputs[int(d)-1][1]
+    path = inputs[d] if d in dict(inputs) else inputs[int(d) - 1][1]
     src = rasterio.open(path)
-    return (rasterio.band(src, i) if i else 
-            [rasterio.band(src, i) for i in src.indexes])
+    return (rasterio.band(src, i) if i else
+            [rasterio.band(src, j) for j in src.indexes])
 
 
 def read_array(ix, subix=None, dtype=None):
@@ -87,12 +88,11 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
     import numpy as np
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+        with Env(CPL_DEBUG=verbosity > 2) as env:
             output, files = resolve_inout(files=files, output=output,
-                force_overwrite=force_overwrite)
+                                          force_overwrite=force_overwrite)
 
             inputs = ([tuple(n.split('=')) for n in name] +
                       [(None, n) for n in files])
@@ -115,7 +115,7 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
                     #
                     # possibly something to do with the instance being
                     # a masked array.
-                    ctxkwds[name or '_i%d' % (i+1)] = src.read(masked=masked)
+                    ctxkwds[name or '_i%d' % (i + 1)] = src.read(masked=masked)
 
             # Extend snuggs.
             snuggs.func_map['read'] = read_array
@@ -145,6 +145,6 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
     except snuggs.ExpressionError as err:
         click.echo("Expression Error:")
         click.echo('  %s' % err.text)
-        click.echo(' ' +  ' ' * err.offset + "^")
+        click.echo(' ' + ' ' * err.offset + "^")
         click.echo(err)
         raise click.Abort()

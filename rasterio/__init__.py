@@ -6,20 +6,22 @@ from collections import namedtuple
 import logging
 try:
     from logging import NullHandler
-except ImportError:
+except ImportError:  # pragma: no cover
     class NullHandler(logging.Handler):
         def emit(self, record):
             pass
+import warnings
 
 from rasterio._base import (
     eval_window, window_shape, window_index, gdal_version)
-from rasterio._drivers import driver_count, GDALEnv
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
-    complex_)
+    complex_, check_dtype)
+from rasterio.env import defenv, Env
 from rasterio.five import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
+from rasterio.vfs import parse_path
 from rasterio import windows
 
 # These modules are imported from the Cython extensions, but are also import
@@ -29,7 +31,7 @@ from rasterio import _err, coords, enums, vfs
 # Classes in rasterio._io are imported below just before we need them.
 
 __all__ = [
-    'band', 'open', 'drivers', 'copy', 'pad']
+    'band', 'open', 'copy', 'pad']
 __version__ = "0.34.0"
 __gdal_version__ = gdal_version()
 
@@ -38,37 +40,34 @@ __gdal_version__ = gdal_version()
 # https://docs.python.org/2/howto/logging.html#configuring-logging-for-a-library
 # Applications must attach their own handlers in order to see messages.
 # See rasterio/rio/main.py for an example.
-logging.getLogger(__name__).addHandler(NullHandler())
+log = logging.getLogger(__name__)
+log.addHandler(NullHandler())
 
 
-def open(
-        path, mode='r',
-        driver=None,
-        width=None, height=None,
-        count=None,
-        crs=None, transform=None,
-        dtype=None,
-        nodata=None,
-        **kwargs):
-    """Open file at ``path`` in ``mode`` "r" (read), "r+" (read/write),
-    or "w" (write) and return a ``Reader`` or ``Updater`` object.
+def open(path, mode='r', driver=None, width=None, height=None,
+         count=None, crs=None, transform=None, dtype=None, nodata=None,
+         **kwargs):
+    """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
+    write), or 'w' (write) and return a dataset Reader or Updater
+    object.
 
     In write mode, a driver name such as "GTiff" or "JPEG" (see GDAL
-    docs or ``gdal_translate --help`` on the command line), ``width``
-    (number of pixels per line) and ``height`` (number of lines), the
-    ``count`` number of bands in the new file must be specified.
-    Additionally, the data type for bands such as ``rasterio.ubyte`` for
-    8-bit bands or ``rasterio.uint16`` for 16-bit bands must be
-    specified using the ``dtype`` argument.
+    docs or ``gdal_translate --help`` on the command line),
+    ``width`` (number of pixels per line) and ``height`` (number of
+    lines), the ``count`` number of bands in the new file must be
+    specified.  Additionally, the data type for bands such as
+    ``rasterio.ubyte`` for 8-bit bands or ``rasterio.uint16`` for
+    16-bit bands must be specified using the ``dtype`` argument.
 
     Parameters
     ----------
     mode: string
         "r" (read), "r+" (read/write), or "w" (write)
     driver: string
-        driver code specifying the format name (e.g. "GTiff" or "JPEG")
-        See GDAL docs at http://www.gdal.org/formats_list.html
-        (optional, required for write)
+        driver code specifying the format name (e.g. "GTiff" or
+        "JPEG"). See GDAL docs at
+        http://www.gdal.org/formats_list.html (optional, required
+        for writing).
     width: int
         number of pixels per line
         (optional, required for write)
@@ -86,31 +85,32 @@ def open(
         Coordinate reference system
         (optional, recommended for write)
     transform: Affine instance
-        Affine transformation mapping the pixel space to geographic space
-        (optional, recommended for write)
+        Affine transformation mapping the pixel space to geographic
+        space (optional, recommended for writing).
     nodata: number
         Defines pixel value to be interpreted as null/nodata
         (optional, recommended for write)
 
     Returns
     -------
-    A ``Reader`` or ``Updater`` object.
+    A ``DatasetReader`` or ``DatasetUpdater`` object.
 
     Notes
     -----
-    In write mode, you must specify at least ``width``, ``height``, ``count``
-    and ``dtype``.
+    In write mode, you must specify at least ``width``, ``height``,
+    ``count`` and ``dtype``.
 
-    A coordinate reference system for raster datasets in write mode can
-    be defined by the ``crs`` argument. It takes Proj4 style mappings
-    like
+    A coordinate reference system for raster datasets in write mode
+    can be defined by the ``crs`` argument. It takes Proj4 style
+    mappings like
 
     .. code::
 
-      {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
+      {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
+       'no_defs': True}
 
-    An affine transformation that maps ``col,row`` pixel coordinates to
-    ``x,y`` coordinates in the coordinate reference system can be
+    An affine transformation that maps ``col,row`` pixel coordinates
+    to ``x,y`` coordinates in the coordinate reference system can be
     specified using the ``transform`` argument. The value should be
     an instance of ``affine.Affine``
 
@@ -127,37 +127,53 @@ def open(
       | y | = | d  e  f | | r |
       | 1 |   | 0  0  1 | | 1 |
 
-        a: rate of change of X with respect to increasing column, i.e.  pixel width
-        b: rotation, 0 if the raster is oriented "north up"
-        c: X coordinate of the top left corner of the top left pixel
-        d: rotation, 0 if the raster is oriented "north up"
-        e: rate of change of Y with respect to increasing row, usually
-                a negative number (i.e. -1 * pixel height) if north-up.
-        f: Y coordinate of the top left corner of the top left pixel
+      a: rate of change of X with respect to increasing column,
+         i.e. pixel width
+      b: rotation, 0 if the raster is oriented "north up"
+      c: X coordinate of the top left corner of the top left pixel
+      d: rotation, 0 if the raster is oriented "north up"
+      e: rate of change of Y with respect to increasing row,
+         usually a negative number (i.e. -1 * pixel height) if
+         north-up.
+      f: Y coordinate of the top left corner of the top left pixel
 
-    A 6-element sequence of the affine transformation
-    matrix coefficients in ``c, a, b, f, d, e`` order,
-    (i.e. GDAL geotransform order) will be accepted until 1.0 (deprecated).
+    A 6-element sequence of the affine transformation matrix
+    coefficients in ``c, a, b, f, d, e`` order, (i.e. GDAL
+    geotransform order) will be accepted until 1.0 (deprecated).
 
-    A virtual filesystem can be specified. The ``vfs`` parameter may be
-    an Apache Commons VFS style string beginning with "zip://" or
+    A virtual filesystem can be specified. The ``vfs`` parameter may
+    be an Apache Commons VFS style string beginning with "zip://" or
     "tar://"". In this case, the ``path`` must be an absolute path
     within that container.
 
     """
     if not isinstance(path, string_types):
-        raise TypeError("invalid path: %r" % path)
+        raise TypeError("invalid path: {0!r}".format(path))
     if mode and not isinstance(mode, string_types):
-        raise TypeError("invalid mode: %r" % mode)
+        raise TypeError("invalid mode: {0!r}".format(mode))
     if driver and not isinstance(driver, string_types):
-        raise TypeError("invalid driver: %r" % driver)
-
+        raise TypeError("invalid driver: {0!r}".format(driver))
+    if dtype and not check_dtype(dtype):
+        raise TypeError("invalid dtype: {0!r}".format(dtype))
     if transform:
         transform = guard_transform(transform)
     elif 'affine' in kwargs:
         affine = kwargs.pop('affine')
         transform = guard_transform(affine)
 
+    # If there is no currently active GDAL/AWS environment, create one.
+    defenv()
+
+    # Get AWS credentials if we're attempting to access a raster
+    # on S3.
+    pth, archive, scheme = parse_path(path)
+    if scheme == 's3':
+        Env().get_aws_credentials()
+        log.debug("AWS credentials have been obtained")
+
+    # Create dataset instances and pass the given env, which will
+    # be taken over by the dataset's context manager if it is not
+    # None.
     if mode == 'r':
         from rasterio._io import RasterReader
         s = RasterReader(path)
@@ -172,8 +188,7 @@ def open(
         s = writer(path, mode, driver=driver,
                    width=width, height=height, count=count,
                    crs=crs, transform=transform, dtype=dtype,
-                   nodata=nodata,
-                   **kwargs)
+                   nodata=nodata, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
@@ -209,13 +224,17 @@ def copy(src, dst, **kw):
     This is the one way to create write-once files like JPEGs.
     """
     from rasterio._copy import RasterCopier
-    with drivers():
-        return RasterCopier()(src, dst, **kw)
+
+    # If there is no currently active GDAL/AWS environment, create one.
+    defenv()
+    return RasterCopier()(src, dst, **kw)
 
 
 def drivers(**kwargs):
-    """Create a gdal environment with registered drivers and
-    creation options.
+    """Create a gdal environment with registered drivers and creation
+    options.
+
+    This function is deprecated; please use ``env.Env`` instead.
 
     Parameters
     ----------
@@ -232,7 +251,8 @@ def drivers(**kwargs):
     -----
     Use as a context manager, ``with rasterio.drivers(): ...``
     """
-    return GDALEnv(**kwargs)
+    warnings.warn("Deprecated; Use env.Env instead", DeprecationWarning)
+    return Env(**kwargs)
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
@@ -292,23 +312,19 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
 
 def get_data_window(arr, nodata=None):
-    import warnings
     warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.get_data_window(arr, nodata)
 
 
 def window_union(data):
-    import warnings
     warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.union(data)
 
 
 def window_intersection(data):
-    import warnings
     warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.intersection(data)
 
 def windows_intersect(data):
-    import warnings
     warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.intersect(data)
