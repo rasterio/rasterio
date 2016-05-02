@@ -84,5 +84,5 @@ to a name like so.
     # ('GTIFF_FORCE_RGBA', True)
     # ('CPL_DEBUG', True)
 
-.. |WITHST| replace: ``with``
+.. |WITHST| replace:: ``with``
 .. _WITHST: https://docs.python.org/2/reference/compound_stmts.html#withhttps://docs.python.org/2/reference/compound_stmts
