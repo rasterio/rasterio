@@ -8,6 +8,7 @@ import click
 from cligj import precision_opt
 
 import rasterio
+from rasterio.env import Env
 
 
 @click.command(short_help="Transform coordinates.")
@@ -31,7 +32,7 @@ def transform(ctx, input, src_crs, dst_crs, precision):
         src = [input]
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+        with Env(CPL_DEBUG=verbosity > 2) as env:
             if src_crs.startswith('EPSG'):
                 src_crs = {'init': src_crs}
             elif os.path.exists(src_crs):
@@ -50,7 +51,7 @@ def transform(ctx, input, src_crs, dst_crs, precision):
                 if precision >= 0:
                     xs = [round(v, precision) for v in xs]
                     ys = [round(v, precision) for v in ys]
-                result = [0]*len(coords)
+                result = [0] * len(coords)
                 result[::2] = xs
                 result[1::2] = ys
                 print(json.dumps(result))

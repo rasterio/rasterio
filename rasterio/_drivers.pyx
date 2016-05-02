@@ -78,84 +78,79 @@ def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
 
 
+cpdef get_gdal_config(key):
+    cdef const char *key_c = NULL
+    cdef const char *val_c = NULL
+    key_b = key.upper().encode('utf-8')
+    key_c = key_b
+    val_c = CPLGetConfigOption(key_c, NULL)
+    if val_c == NULL:
+        return None
+    else:
+        val_b = val_c
+        val = val_b.decode('utf-8')
+        if val == 'ON':
+            return True
+        elif val == 'OFF':
+            return False
+        else:
+            return val
+
+
+cpdef set_gdal_config(key, val):
+    cdef const char *key_c = NULL
+    cdef const char *val_c = NULL
+    key_b = key.upper().encode('utf-8')
+    key_c = key_b
+    if isinstance(val, string_types):
+        val_b = val.encode('utf-8')
+    else:
+        val_b = ('ON' if val else 'OFF').encode('utf-8')
+    val_c = val_b
+    CPLSetConfigOption(key_c, val_c)
+
+
+cpdef del_gdal_config(key):
+    cdef const char *key_c = NULL
+    key_b = key.upper().encode('utf-8')
+    key_c = key_b
+    CPLSetConfigOption(key_c, NULL)
+
+
 cdef class ConfigEnv(object):
 
     cdef public object options
-    cdef public object prev_options
 
     def __init__(self, **options):
-        self.options = options.copy()
-        self.prev_options = {}
+        self.options = {}
+        self.update_config_options(**self.options)
 
-    cdef enter_config_options(self):
-        """Set GDAL config options."""
-        cdef const char *key_c
-        cdef const char *val_c
-
-        for key, val in self.options.items():
-            key_b = key.upper().encode('utf-8')
-            key_c = key_b
-
-            # Save current value of that key.
-            val_c = CPLGetConfigOption(key_c, NULL)
-            if val_c != NULL:
-                val_b = val_c
-                self.prev_options[key_b] = val_b
-
-            if isinstance(val, string_types):
-                val_b = val.encode('utf-8')
-            else:
-                val_b = ('ON' if val else 'OFF').encode('utf-8')
-            val_c = val_b
-            CPLSetConfigOption(key_c, val_c)
-
-            # Redact AWS credentials.
-            if key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
-                       'AWS_SESSION_TOKEN', 'AWS_REGION']:
+    def update_config_options(self, **kwargs):
+        """Update GDAL config options."""
+        for key, val in kwargs.items():
+            set_gdal_config(key, val)
+            # Redact AWS credentials for logs
+            if key.upper() in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+                               'AWS_SESSION_TOKEN']:
                 val = '******'
-            log.debug("Option %s=%s", key, val)
+            log.debug("Set option %s=%s in env %r", key, val, self)
+        self.options.update(**kwargs)
 
-    cdef exit_config_options(self):
+    def clear_config_options(self):
         """Clear GDAL config options."""
-        cdef const char *key_c
-        cdef const char *val_c
-
         for key in self.options:
-            key_b = key.upper().encode('utf-8')
-            key_c = key_b
-            if key_b in self.prev_options:
-                val_b = self.prev_options[key_b]
-                key_c = key_b; val_c = val_b
-                CPLSetConfigOption(key_c, val_c)
-            else:
-                CPLSetConfigOption(key_c, NULL)
-
-    def __enter__(self):
-        self.enter_config_options()
-        return self
-
-    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        self.exit_config_options()
+            del_gdal_config(key)
+            log.debug("Unset option %s in env %r", key, self)
+        self.options = {}
 
 
 cdef class GDALEnv(ConfigEnv):
 
     def __init__(self, **options):
-        self.options = options.copy()
-        self.prev_options = {}
-
-    def __enter__(self):
+        super(GDALEnv, self).__init__(**options)
         self.start()
-        self.enter_config_options()
-        return self
-
-    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        self.exit_config_options()
-        self.stop()
 
     def start(self):
-        cdef const char *key_c
-        cdef const char *val_c
         GDALAllRegister()
         OGRRegisterAll()
         CPLSetErrorHandler(<void *>errorHandler)
@@ -174,12 +169,13 @@ cdef class GDALEnv(ConfigEnv):
             whl_datadir = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "proj_data"))
             os.environ['PROJ_LIB'] = whl_datadir
+        log.debug("Env %r has been started", self)
 
     def stop(self):
         # NB: do not restore the CPL error handler to its default
         # state here. If you do, log messages will be written to stderr
         # by GDAL instead of being sent to Python's logging module.
-        pass
+        log.debug("Env %r has been stopped", self)
 
     def drivers(self):
         cdef void *drv = NULL

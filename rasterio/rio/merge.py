@@ -10,6 +10,7 @@ from cligj import files_inout_arg, format_opt
 from .helpers import resolve_inout
 from . import options
 import rasterio
+from rasterio.env import Env
 from rasterio.transform import Affine
 
 
@@ -27,7 +28,7 @@ from rasterio.transform import Affine
 @options.creation_options
 @click.pass_context
 def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
-        precision, creation_options):
+          precision, creation_options):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -51,23 +52,23 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
     from rasterio.merge import merge as merge_tool
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
 
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
 
-    sources = [rasterio.open(f) for f in files]
-    dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
-                                        nodata=nodata, precision=precision)
+    with Env(CPL_DEBUG=verbosity > 2) as env:
+        sources = [rasterio.open(f) for f in files]
+        dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
+                                            nodata=nodata, precision=precision)
 
-    profile = sources[0].profile
-    profile.pop('affine')
-    profile['transform'] = output_transform
-    profile['height'] = dest.shape[1]
-    profile['width'] = dest.shape[2]
-    profile['driver'] = driver
+        profile = sources[0].profile
+        profile.pop('affine')
+        profile['transform'] = output_transform
+        profile['height'] = dest.shape[1]
+        profile['width'] = dest.shape[2]
+        profile['driver'] = driver
 
-    profile.update(**creation_options)
+        profile.update(**creation_options)
 
-    with rasterio.open(output, 'w', **profile) as dst:
-        dst.write(dest)
+        with rasterio.open(output, 'w', **profile) as dst:
+            dst.write(dest)

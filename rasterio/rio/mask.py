@@ -8,6 +8,7 @@ import cligj
 from .helpers import resolve_inout
 from . import options
 import rasterio
+from rasterio.env import Env
 
 logger = logging.getLogger('rio')
 
@@ -71,7 +72,6 @@ def mask(
     from rasterio.features import bounds as calculate_bounds
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    logger = logging.getLogger('rio')
 
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
@@ -87,7 +87,7 @@ def mask(
         click.echo('Invert option ignored when using --crop', err=True)
         invert = False
 
-    with rasterio.drivers(CPL_DEBUG=verbosity > 2):
+    with Env(CPL_DEBUG=verbosity > 2) as env:
         try:
             with click.open_file(geojson_mask) as fh:
                 geojson = json.loads(fh.read())
@@ -103,7 +103,6 @@ def mask(
         else:
             raise click.BadParameter('Invalid GeoJSON', param=input,
                                      param_hint='input')
-        bounds = geojson.get('bbox', calculate_bounds(geojson))
 
         with rasterio.open(input) as src:
             try:
@@ -115,7 +114,8 @@ def mask(
                     if crop:
                         raise click.BadParameter('not allowed for GeoJSON '
                                                  'outside the extent of the '
-                                                 'input raster',                                                                 param=crop,
+                                                 'input raster',
+                                                 param=crop,
                                                  param_hint='--crop')
 
             meta = src.meta.copy()

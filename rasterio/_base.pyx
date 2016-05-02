@@ -12,15 +12,15 @@ import warnings
 from libc.stdlib cimport malloc, free
 
 from rasterio cimport _gdal, _ogr
-from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
-from rasterio.errors import RasterioIOError, CRSError
-from rasterio.transform import Affine
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
+from rasterio.env import Env
+from rasterio.errors import RasterioIOError, CRSError
+from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
 
 
@@ -55,7 +55,6 @@ cdef class DatasetReader(object):
         self._crs = None
         self._crs_wkt = None
         self._read = False
-        self.env = None
     
     def __repr__(self):
         return "<%s RasterReader name='%s' mode='%s'>" % (
@@ -64,21 +63,16 @@ cdef class DatasetReader(object):
             self.mode)
 
     def start(self):
-        self.env = GDALEnv()
-        self.env.start()
-
+        """Start of the dataset reader life cycle."""
         path, archive, scheme = parse_path(self.name)
         path = vsi_path(path, archive=archive, scheme=scheme)
-
         name_b = path.encode('utf-8')
         cdef const char *fname = name_b
-
         try:
             with CPLErrors() as cple:
                 self._hds = _gdal.GDALOpen(fname, 0)
                 cple.check()
         except CPLE_OpenFailed as err:
-            self.env.stop()
             raise RasterioIOError(err.errmsg)
 
         cdef void *drv
@@ -100,6 +94,8 @@ cdef class DatasetReader(object):
         _ = self.meta
 
         self._closed = False
+        log.debug("Dataset %r is started.", self)
+
 
     cdef void *band(self, int bidx) except NULL:
         cdef void *hband = NULL
@@ -108,7 +104,6 @@ cdef class DatasetReader(object):
                 hband = _gdal.GDALGetRasterBand(self._hds, bidx)
                 cple.check()
         except CPLE_IllegalArg as exc:
-            self.env.stop()
             raise IndexError(str(exc))
         return hband
 
@@ -119,7 +114,6 @@ cdef class DatasetReader(object):
                 hband = _gdal.GDALGetRasterBand(self._hds, bidx)
                 cple.check()
         except CPLE_IllegalArg:
-            self.env.stop()
             return False
         return True
 
@@ -240,19 +234,23 @@ cdef class DatasetReader(object):
         if self._hds != NULL:
             _gdal.GDALFlushCache(self._hds)
             _gdal.GDALClose(self._hds)
-        if self.env:
-            self.env.stop()
         self._hds = NULL
+        log.debug("Dataset %r has been stopped.", self)
 
     def close(self):
         self.stop()
         self._closed = True
+        log.debug("Dataset %r has been closed.", self)
+
     
     def __enter__(self):
+        log.debug("Entering Dataset %r context.", self)
         return self
 
     def __exit__(self, type, value, traceback):
         self.close()
+        log.debug("Exited Dataset %r context.", self)
+
 
     def __dealloc__(self):
         if self._hds != NULL:

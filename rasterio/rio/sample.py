@@ -4,6 +4,7 @@ import logging
 import click
 
 import rasterio
+from rasterio.env import Env
 
 
 @click.command(short_help="Sample a dataset.")
@@ -53,7 +54,6 @@ def sample(ctx, files, bidx):
 
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
 
     files = list(files)
@@ -67,7 +67,7 @@ def sample(ctx, files, bidx):
         points = [input]
 
     try:
-        with rasterio.drivers(CPL_DEBUG=verbosity > 2), aws_session:
+        with Env(CPL_DEBUG=verbosity > 2) as env:
             with rasterio.open(source) as src:
                 if bidx is None:
                     indexes = src.indexes

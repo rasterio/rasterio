@@ -7,6 +7,7 @@ import cligj
 from .helpers import coords, write_features
 from . import options
 import rasterio
+from rasterio.env import Env
 from rasterio.transform import Affine
 
 logger = logging.getLogger('rio')
@@ -92,7 +93,6 @@ def shapes(
     import rasterio.warp
 
     verbosity = ctx.obj['verbosity'] if ctx.obj else 1
-    aws_session = (ctx.obj and ctx.obj.get('aws_session'))
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -108,9 +108,10 @@ def shapes(
     # This is the generator for (feature, bbox) pairs.
     class Collection(object):
 
-        def __init__(self):
+        def __init__(self, env):
             self._xs = []
             self._ys = []
+            self.env = env
 
         @property
         def bbox(self):
@@ -142,7 +143,7 @@ def shapes(
                         msk = src.read_masks(bidx)
                     else:
                         msk_shape = (
-                            src.height//sampling, src.width//sampling)
+                            src.height // sampling, src.width // sampling)
                         if bidx is None:
                             msk = numpy.zeros(
                                 (src.count,) + msk_shape, 'uint8')
@@ -162,7 +163,7 @@ def shapes(
                         img = src.read(bidx, masked=False)
                     else:
                         img = numpy.zeros(
-                            (src.height//sampling, src.width//sampling),
+                            (src.height // sampling, src.width // sampling),
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read(bidx, img, masked=False)
 
@@ -219,9 +220,9 @@ def shapes(
         geojson_type = 'collection'
 
     try:
-        with rasterio.drivers(CPL_DEBUG=(verbosity > 2)), aws_session:
+        with Env(CPL_DEBUG=(verbosity > 2)) as env:
             write_features(
-                stdout, Collection(), sequence=sequence,
+                stdout, Collection(env), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
     except Exception:

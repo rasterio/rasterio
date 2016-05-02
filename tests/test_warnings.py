@@ -1,4 +1,4 @@
-from rasterio.warnings import NodataShadowWarning
+from rasterio.errors import NodataShadowWarning
 
 
 def test_nodata_shadow():
