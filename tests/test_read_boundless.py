@@ -2,6 +2,7 @@ import logging
 import sys
 
 import numpy
+import pytest
 
 import rasterio
 
@@ -101,3 +102,17 @@ def test_read_boundless_noshift():
         r2 = src.read(boundless=True,
                       window=((-1, src.shape[0] + 1), (100, 101)))[0, 0, 0:9]
         assert numpy.array_equal(r1, r2)
+
+
+def test_numpy_warning(recwarn):
+    """Ensure no deprecation warnings
+    On numpy 1.11 and previous versions of rasterio you might see:
+        VisibleDeprecationWarning: using a non-integer number
+        instead of an integer will result in an error in the future
+    """
+    import warnings
+    warnings.simplefilter('always')
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        window = ((-10, 100), (-10, 100))
+        src.read(1, window=window, boundless=True)
+    assert len(recwarn) == 0
