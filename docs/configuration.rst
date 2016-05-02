@@ -53,7 +53,7 @@ recover better from errors.
             gdal.SetConfigOption(key, None)
 
 This is better, but has a lot of boilerplate. Rasterio uses elements of Python
-syntax, keyword arguments and the [``with``](https://docs.python.org/2/reference/compound_stmts.html#with) statement, to make this cleaner
+syntax, keyword arguments and the ```with`` <https://docs.python.org/2/reference/compound_stmts.html#with>`__ statement, to make this cleaner
 and easier to use.
 
 Rasterio
