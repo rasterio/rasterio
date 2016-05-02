@@ -32,3 +32,15 @@ def test_read_out_shape_resample_up():
         data = s.read(1, out=out, masked=True)
         assert data.shape == (7180, 7910)
         assert data.mean() == s.read(1, masked=True).mean()
+
+
+def test_read_downsample_alpha():
+    with rasterio.Env(GTIFF_IMPLICIT_JPEG_OVR=False):
+        with rasterio.open('tests/data/alpha.tif') as src:
+            out = numpy.zeros((100, 100), dtype=rasterio.ubyte)
+            assert src.width == 1223
+            assert src.height == 1223
+            assert src.count == 4
+            assert src.read(1, out=out, masked=False).shape == out.shape
+            # attempt decimated read of alpha band
+            src.read(4, out=out, masked=False)
