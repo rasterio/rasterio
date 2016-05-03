@@ -27,42 +27,31 @@ band.  This new band is then written to a new single band TIFF.
 
     import numpy
     import rasterio
-    import subprocess
 
-    # Register GDAL format drivers and configuration options with a
-    # context manager.
-    with rasterio.drivers():
+    # Read raster bands directly to Numpy arrays.
+    #
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        r, g, b = src.read()
 
-        # Read raster bands directly to Numpy arrays.
-        #
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            r, g, b = src.read()
+    # Combine arrays in place. Expecting that the sum will
+    # temporarily exceed the 8-bit integer range, initialize it as
+    # a 64-bit float (the numpy default) array. Adding other
+    # arrays to it in-place converts those arrays "up" and
+    # preserves the type of the total array.
+    total = numpy.zeros(r.shape)
+    for band in r, g, b:
+        total += band
+    total /= 3
 
-        # Combine arrays in place. Expecting that the sum will
-        # temporarily exceed the 8-bit integer range, initialize it as
-        # a 64-bit float (the numpy default) array. Adding other
-        # arrays to it in-place converts those arrays "up" and
-        # preserves the type of the total array.
-        total = numpy.zeros(r.shape)
-        for band in r, g, b:
-            total += band
-        total /= 3
+    # Write the product as a raster band to a new 8-bit file. For
+    # the new file's profile, we start with the meta attributes of
+    # the source file, but then change the band count to 1, set the
+    # dtype to uint8, and specify LZW compression.
+    profile = src.profile
+    profile.update(dtype=rasterio.uint8, count=1, compress='lzw')
 
-        # Write the product as a raster band to a new 8-bit file. For
-        # the new file's profile, we start with the meta attributes of
-        # the source file, but then change the band count to 1, set the
-        # dtype to uint8, and specify LZW compression.
-        profile = src.profile
-        profile.update(
-            dtype=rasterio.uint8,
-            count=1,
-            compress='lzw')
-
-        with rasterio.open('example-total.tif', 'w', **profile) as dst:
-            dst.write(total.astype(rasterio.uint8), 1)
-
-    # At the end of the ``with rasterio.drivers()`` block, context
-    # manager exits and all drivers are de-registered.
+    with rasterio.open('example-total.tif', 'w', **profile) as dst:
+        dst.write(total.astype(rasterio.uint8), 1)
 
 The output:
 
@@ -77,15 +66,14 @@ Simple access is provided to properties of a geospatial raster file.
 
 .. code-block:: python
 
-    with rasterio.drivers():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            print(src.width, src.height)
-            print(src.crs)
-            print(src.affine)
-            print(src.count)
-            print(src.indexes)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        print(src.width, src.height)
+        print(src.crs)
+        print(src.affine)
+        print(src.count)
+        print(src.indexes)
 
-    # Output:
+    # Printed:
     # (791, 718)
     # {u'units': u'm', u'no_defs': True, u'ellps': u'WGS84', u'proj': u'utm', u'zone': 18}
     # Affine(300.0379266750948, 0.0, 101985.0,
@@ -98,11 +86,11 @@ georeferenced coordinates and vice versa.
 
 
 .. code-block:: python
-    
-    with rasterio.drivers():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            print src.window(**src.window_bounds(((100, 200), (100, 200))))
-    # Output:
+
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        print src.window(**src.window_bounds(((100, 200), (100, 200))))
+
+    # Printed:
     # ((100, 200), (100, 200))
 
 Rasterio CLI
@@ -281,44 +269,10 @@ From the repo directory, run py.test
 
 .. code-block:: console
 
-    $ py.test
+    $ python -m pytest
 
 Note: some tests do not succeed on Windows (see
-`#66
-<https://github.com/mapbox/rasterio/issues/66>`__.).
-
-
-Downstream testing
-------------------
-
-If your project depends on Rasterio and uses Travis-CI, you can speed up your
-builds by fetching Rasterio and its dependencies as a set of wheels from 
-GitHub as done in `rio-plugin-example 
-<https://github.com/sgillies/rio-plugin-example/blob/master/.travis.yml>`__.
-
-.. code-block:: yaml
-
-    language: python
-    env:
-      - RASTERIO_VERSION=0.26
-    python:
-      - "2.7"
-      - "3.4"
-    cache:
-      directories:
-        - $HOME/.pip-cache/
-        - $HOME/wheelhouse
-    before_install:
-      - sudo add-apt-repository -y ppa:ubuntugis/ppa
-      - sudo apt-get update -qq
-      - sudo apt-get install -y libgdal1h gdal-bin
-      - curl -L https://github.com/mapbox/rasterio/releases/download/$RASTERIO_VERSION/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz > /tmp/wheelhouse.tar.gz
-      - tar -xzvf /tmp/wheelhouse.tar.gz -C $HOME
-    install:
-      - pip install --use-wheel --find-links=$HOME/wheelhouse -e .[test] --cache-dir $HOME/.pip-cache
-    script: 
-      - py.test
-
+`#66 <https://github.com/mapbox/rasterio/issues/66>`__.).
 
 Documentation
 -------------
@@ -328,14 +282,14 @@ See https://github.com/mapbox/rasterio/tree/master/docs.
 License
 -------
 
-See LICENSE.txt
+See LICENSE.txt.
 
 Authors
 -------
 
-See AUTHORS.txt
+See AUTHORS.txt.
 
 Changes
 -------
 
-See CHANGES.txt
+See CHANGES.txt.
