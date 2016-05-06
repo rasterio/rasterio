@@ -188,7 +188,7 @@ def delenv():
         log.debug("Cleared existing %r options", _env)
 
 
-def defaultenv(f):
+def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
     defenv()

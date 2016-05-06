@@ -2,10 +2,10 @@
 
 import rasterio
 from rasterio._fill import _fillnodata
-from rasterio.env import defaultenv
+from rasterio.env import ensure_env
 
 
-@defaultenv
+@ensure_env
 def fillnodata(
         image,
         mask=None,

@@ -9,7 +9,7 @@ import numpy as np
 
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
-from rasterio.env import defaultenv
+from rasterio.env import ensure_env
 from rasterio.transform import IDENTITY, guard_transform
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 
@@ -17,7 +17,7 @@ from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 log = logging.getLogger(__name__)
 
 
-@defaultenv
+@ensure_env
 def geometry_mask(
         geometries,
         out_shape,
@@ -62,7 +62,7 @@ def geometry_mask(
         default_value=mask_value).astype('bool')
 
 
-@defaultenv
+@ensure_env
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     """Yield (polygon, value for each set of adjacent pixels of the same value.
 
@@ -104,7 +104,7 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
         yield s, v
 
 
-@defaultenv
+@ensure_env
 def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     """Replace small polygons in `image` with value of their largest neighbor.
 
@@ -160,7 +160,7 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     return out
 
 
-@defaultenv
+@ensure_env
 def rasterize(
         shapes,
         out_shape=None,

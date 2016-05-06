@@ -13,7 +13,7 @@ from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
-from rasterio.env import defaultenv
+from rasterio.env import ensure_env
 from rasterio.transform import guard_transform
 
 
@@ -22,7 +22,7 @@ warnings.warn(
     "RESAMPLING is deprecated, use Resampling instead.", DeprecationWarning)
 
 
-@defaultenv
+@ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):
     """Transform vectors from source to target coordinate reference system.
 
@@ -52,7 +52,7 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
-@defaultenv
+@ensure_env
 def transform_geom(
         src_crs,
         dst_crs,
@@ -96,7 +96,7 @@ def transform_geom(
         precision)
 
 
-@defaultenv
+@ensure_env
 def transform_bounds(
         src_crs,
         dst_crs,
@@ -163,7 +163,7 @@ def transform_bounds(
     return (min(xs), min(ys), max(xs), max(ys))
 
 
-@defaultenv
+@ensure_env
 def reproject(
         source,
         destination,
@@ -262,7 +262,7 @@ def reproject(
         **kwargs)
 
 
-@defaultenv
+@ensure_env
 def calculate_default_transform(
         src_crs,
         dst_crs,
