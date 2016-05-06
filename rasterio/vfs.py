@@ -12,9 +12,14 @@ SCHEMES = {'gzip': 'gzip', 'zip': 'zip', 'tar': 'tar', 'https': 'curl',
            'http': 'curl', 's3': 's3'}
 
 
-def parse_path(path, vfs=None):
-    """Parse a file path or Apache VFS URL into its parts."""
+def parse_path(uri, vfs=None):
+    """Parse a URI or Apache VFS URL into its parts
+
+    Returns: tuple
+        (path, archive, scheme)
+    """
     archive = scheme = None
+    path = uri
     if vfs:
         parts = urlparse(vfs)
         scheme = parts.scheme
@@ -27,14 +32,21 @@ def parse_path(path, vfs=None):
         path = parts.path
         if parts.netloc and parts.netloc != 'localhost':
             path = parts.netloc + path
+        # There are certain URI schemes we favor over GDAL's names.
         if scheme in SCHEMES:
             parts = path.split('!')
             path = parts.pop() if parts else None
             archive = parts.pop() if parts else None
+        # For filesystem paths.
         elif scheme in (None, '', 'file'):
             pass
+        # We permit GDAL's idiosyncratic URI-like dataset paths such as
+        # 'NETCDF:...' to fall right through with no parsed archive
+        # or scheme.
         else:
-            raise ValueError("VFS scheme {0} is unknown".format(scheme))
+            archive = scheme = None
+            path = uri
+
     return path, archive, scheme
 
 

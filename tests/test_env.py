@@ -11,7 +11,7 @@ import pytest
 import rasterio
 from rasterio._drivers import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config, driver_count)
-from rasterio.env import defenv, delenv, getenv, setenv, Env
+from rasterio.env import defenv, delenv, getenv, setenv, ensure_env, Env
 from rasterio.errors import EnvError
 from rasterio.rio.main import main_group
 
@@ -62,6 +62,13 @@ def test_env_accessors(gdalenv):
         setenv()
     with pytest.raises(EnvError):
         getenv()
+
+
+def test_ensure_env_decorator(gdalenv):
+    def f(x):
+        return x
+    wrapper = ensure_env(f)
+    assert wrapper == f
 
 
 def test_no_aws_gdal_config(gdalenv):

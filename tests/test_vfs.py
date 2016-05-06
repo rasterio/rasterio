@@ -35,10 +35,10 @@ def test_parse_path_file():
         '/foo.tif', None, '')
 
 
-def test_parse_unknown_scheme():
-    """Raise exception for unknown WFS scheme"""
-    with pytest.raises(ValueError):
-        parse_path('gopher://foo.tif')
+def test_parse_netcdf():
+    """Annoying URI-like GDAL dataset names fall through properly"""
+    assert parse_path('NETCDF:filepath:varname') == (
+        'NETCDF:filepath:varname', None, None)
 
 
 def test_vsi_path_scheme():

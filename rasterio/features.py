@@ -9,7 +9,7 @@ import numpy as np
 
 import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
-import rasterio.env
+from rasterio.env import ensure_env
 from rasterio.transform import IDENTITY, guard_transform
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 
@@ -17,6 +17,7 @@ from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 log = logging.getLogger(__name__)
 
 
+@ensure_env
 def geometry_mask(
         geometries,
         out_shape,
@@ -61,6 +62,7 @@ def geometry_mask(
         default_value=mask_value).astype('bool')
 
 
+@ensure_env
 def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
     """Yield (polygon, value for each set of adjacent pixels of the same value.
 
@@ -98,11 +100,11 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
     """
     transform = guard_transform(transform)
-    rasterio.env.setenv()
     for s, v in _shapes(image, mask, connectivity, transform.to_gdal()):
         yield s, v
 
 
+@ensure_env
 def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     """Replace small polygons in `image` with value of their largest neighbor.
 
@@ -152,15 +154,13 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
             stacklevel=2)  # pragma: no cover
 
     out = out if out is not None else output
-
     if out is None:
         out = np.zeros(image.shape, image.dtype)
-
-    rasterio.env.setenv()
     _sieve(image, size, out, mask, connectivity)
     return out
 
 
+@ensure_env
 def rasterize(
         shapes,
         out_shape=None,
@@ -301,10 +301,7 @@ def rasterize(
         raise ValueError('Either an output shape or image must be provided')
 
     transform = guard_transform(transform)
-
-    rasterio.env.setenv()
     _rasterize(valid_shapes, out, transform.to_gdal(), all_touched)
-
     return out
 
 

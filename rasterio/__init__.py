@@ -17,7 +17,7 @@ from rasterio._base import (
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
-from rasterio.env import defenv, Env
+from rasterio.env import ensure_env, Env
 from rasterio.five import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
@@ -44,6 +44,7 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
+@ensure_env
 def open(path, mode='r', driver=None, width=None, height=None,
          count=None, crs=None, transform=None, dtype=None, nodata=None,
          **kwargs):
@@ -161,9 +162,6 @@ def open(path, mode='r', driver=None, width=None, height=None,
         affine = kwargs.pop('affine')
         transform = guard_transform(affine)
 
-    # If there is no currently active GDAL/AWS environment, create one.
-    defenv()
-
     # Get AWS credentials if we're attempting to access a raster
     # on S3.
     pth, archive, scheme = parse_path(path)
@@ -196,6 +194,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     return s
 
 
+@ensure_env
 def copy(src, dst, **kw):
     """Copy a source raster to a new destination with driver specific
     creation options.
@@ -224,9 +223,6 @@ def copy(src, dst, **kw):
     This is the one way to create write-once files like JPEGs.
     """
     from rasterio._copy import RasterCopier
-
-    # If there is no currently active GDAL/AWS environment, create one.
-    defenv()
     return RasterCopier()(src, dst, **kw)
 
 

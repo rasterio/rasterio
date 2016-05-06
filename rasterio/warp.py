@@ -13,7 +13,7 @@ from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
-import rasterio.env
+from rasterio.env import ensure_env
 from rasterio.transform import guard_transform
 
 
@@ -22,6 +22,7 @@ warnings.warn(
     "RESAMPLING is deprecated, use Resampling instead.", DeprecationWarning)
 
 
+@ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):
     """Transform vectors from source to target coordinate reference system.
 
@@ -48,10 +49,10 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     Tuple of x, y, and optionally z vectors, transformed into the target
     coordinate reference system.
     """
-    rasterio.env.setenv()
     return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
+@ensure_env
 def transform_geom(
         src_crs,
         dst_crs,
@@ -86,7 +87,6 @@ def transform_geom(
     out: GeoJSON like dict object
         Transformed geometry in GeoJSON dict format
     """
-    rasterio.env.setenv()
     return _transform_geom(
         src_crs,
         dst_crs,
@@ -96,6 +96,7 @@ def transform_geom(
         precision)
 
 
+@ensure_env
 def transform_bounds(
         src_crs,
         dst_crs,
@@ -162,6 +163,7 @@ def transform_bounds(
     return (min(xs), min(ys), max(xs), max(ys))
 
 
+@ensure_env
 def reproject(
         source,
         destination,
@@ -247,7 +249,6 @@ def reproject(
     if dst_transform:
         dst_transform = guard_transform(dst_transform).to_gdal()
 
-    rasterio.env.setenv()
     _reproject(
         source,
         destination,
@@ -261,6 +262,7 @@ def reproject(
         **kwargs)
 
 
+@ensure_env
 def calculate_default_transform(
         src_crs,
         dst_crs,
@@ -312,7 +314,6 @@ def calculate_default_transform(
              avoids visual artifacts and coordinate discontinuties.
         NO:  reproject coordinates beyond valid bound limits
     """
-    rasterio.env.setenv()
     dst_affine, dst_width, dst_height = _calculate_default_transform(
         src_crs, dst_crs,
         width, height,

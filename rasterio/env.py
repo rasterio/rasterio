@@ -186,3 +186,10 @@ def delenv():
     else:
         _env.clear_config_options()
         log.debug("Cleared existing %r options", _env)
+
+
+def ensure_env(f):
+    """A decorator that ensures an env exists before a function
+    calls any GDAL C functions."""
+    defenv()
+    return f
