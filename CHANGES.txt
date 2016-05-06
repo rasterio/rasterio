@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.35.1 (2016-05-06)
+-------------------
+- Bug fix: restore support for URI-like GDAL dataset names such as
+  'NETCDF:foo:bar' (#695).
+- Bug fix: ensure GDAL environment is initialized for `transform_bounds()` as
+  well as the other functions in `rasterio.warp` (#694). In implementation, we
+  have done this with a function decorator.
+
 0.35.0.post1 (2016-05-04)
 -------------------------
 - Bug fix: added rasterfill.cpp to MANIFEST.in so it is included in source
