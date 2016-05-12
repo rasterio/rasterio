@@ -4,7 +4,7 @@ Vector Features
 Rasterio's ``features`` module provides functions to extract shapes of raster
 features and to create new features by "burning" shapes into rasters:
 ``shapes()`` and ``rasterize()``. These functions expose GDAL functions in
-a very general way, using iterators over GeoJSON-like Python objects instead of
+a general way, using iterators over GeoJSON-like Python objects instead of
 GIS layers.
 
 Extracting shapes of raster features
@@ -65,7 +65,7 @@ By default, only pixels whose center is within the polygon or that
 are selected by Bresenham's line algorithm will be burned in.  
 You can specify ``all_touched=True`` to burn in all pixels touched by the geometry.
 The geometries will be rasterized by the "painter's algorithm" - 
-geometries are handled in order and subsequent geometries will overwrite previous values.
+geometries are handled in order and later geometries will overwrite earlier values.
 
 Again, to burn in georeferenced shapes, pass an appropriate transform for the
 image to be created.

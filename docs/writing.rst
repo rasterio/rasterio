@@ -18,7 +18,7 @@ Opening a file in writing mode is a little more complicated than opening
 a text file in Python. The dimensions of the raster dataset, the 
 data types, and the specific format must be specified.
 
-Here's a simple example of the basic rasterio functionality. 
+Here's an example of basic rasterio functionality. 
 An array is written to a new single band TIFF.
 
 .. code-block:: python

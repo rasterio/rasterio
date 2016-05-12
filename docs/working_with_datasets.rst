@@ -8,12 +8,12 @@ Working with Datasets
 Attributes
 ----------
 
-In addition to the file-like attributes shown above, a dataset has a number
-of other read-only attributes that help explain its role in spatial information
-systems. The ``driver`` attribute gives you the name of the GDAL format
-driver used. The ``height`` and ``width`` are the number of rows and columns of
-the raster dataset and ``shape`` is a ``height, width`` tuple as used by
-Numpy. The ``count`` attribute tells you the number of bands in the dataset.
+Besides the file-like attributes shown above, a dataset has some other
+read-only attributes that help explain its role in spatial information systems.
+The ``driver`` attribute gives you the name of the GDAL format driver used. The
+``height`` and ``width`` are the number of rows and columns of the raster
+dataset and ``shape`` is a ``height, width`` tuple as used by Numpy. The
+``count`` attribute tells you the number of bands in the dataset.
 
 .. code-block:: python
 

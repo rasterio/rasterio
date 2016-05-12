@@ -19,7 +19,7 @@ I'm going to use the rasterio interactive inspector in these examples below.
     >>> 
 
 Tags belong to namespaces. To get a copy of a dataset's tags from the default
-namespace, just call ``tags()`` with no arguments.
+namespace, call ``tags()`` with no arguments.
 
 .. code-block:: pycon
 

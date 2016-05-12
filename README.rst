@@ -19,8 +19,8 @@ Rasterio is pronounced raw-STEER-ee-oh.
 Example
 =======
 
-Here's a simple example of the basic features rasterio provides. Three bands
-are read from an image and summed to produce something like a panchromatic
+Here's an example of some basic features that rasterio provides. Three bands
+are read from an image and averaged to produce something like a panchromatic
 band.  This new band is then written to a new single band TIFF.
 
 .. code-block:: python
@@ -62,7 +62,7 @@ The output:
 API Overview
 ============
 
-Simple access is provided to properties of a geospatial raster file.
+Rasterio gives access to properties of a geospatial raster file.
 
 .. code-block:: python
 
@@ -81,7 +81,7 @@ Simple access is provided to properties of a geospatial raster file.
     # 3
     # [1, 2, 3]
 
-A dataset also provides methods for getting extended array slices given
+A rasterio dataset also provides methods for getting extended array slices given
 georeferenced coordinates and vice versa.
 
 
@@ -140,7 +140,7 @@ using Python.
 Rio Plugins
 -----------
 
-Rio provides the ability to create additional subcommands using plugins.  See
+Rio provides the ability to create subcommands using plugins.  See
 `cli.rst <https://github.com/mapbox/rasterio/blob/master/docs/cli.rst#rio-plugins>`__
 for more information on building plugins.
 
@@ -171,7 +171,7 @@ OS X
 ----
 
 Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
-for OS X versions 10.7+ starting with Rasterio version 0.17. To install, just
+for OS X versions 10.7+ starting with Rasterio version 0.17. To install,
 run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
 a source distribution, run ``pip install rasterio --no-use-wheel`` instead.

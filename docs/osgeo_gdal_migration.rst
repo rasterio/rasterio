@@ -10,7 +10,7 @@ This section will discuss the differences between ``rasterio`` and ``osgeo.gdal`
 choose to use one over the other.
 
 ``osgeo.gdal`` is automatically-generated using swig. As a result, the interface and method names are
-very similar to the native C++ API.  The ``rasterio`` library is built with Cython which allows
+similar to the native C++ API.  The ``rasterio`` library is built with Cython which allows
 us to create an interface that follows the style and conventions of familiar Python code.
 
 This is best illustrated by example.  Opening a raster file with ``osgeo.gdal`` involves using gdal constants and the programmer must provide their own error handling and memory management ::
