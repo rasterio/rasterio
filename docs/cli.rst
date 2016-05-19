@@ -645,6 +645,7 @@ information on how to build these plugins in general.
 To use these plugins with rio, add the commands to the
 ``rasterio.rio_plugins'`` entry point in your ``setup.py`` file, as described
 `here <https://github.com/click-contrib/click-plugins#developing-plugins>`__
+and in ``rasterio/rio/main.py``.
 
 See the
 `plugin registry <https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry>`__
