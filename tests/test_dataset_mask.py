@@ -27,7 +27,7 @@ blu = np.array([[0, 0, 0],
                 [1, 0, 1]]).astype('uint8') * 255
 
 # equivalent to alp = red | grn | blu
-# 255 anywhere there is at least on r g b value
+# valid data anywhere there is at least one R, G or B value
 alp = np.array([[0, 0, 0],
                 [1, 1, 1],
                 [1, 0, 1]]).astype('uint8') * 255
@@ -174,7 +174,7 @@ def test_args(tiffs):
 
 def test_kwargs(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
-        # window and boundless are passes along
+        # window and boundless are passed along
         other = src.dataset_mask(window=((1, 4), (1, 4)), boundless=True)
         assert np.array_equal(alp_shift_lr, other)
 
