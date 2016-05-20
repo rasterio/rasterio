@@ -1122,13 +1122,12 @@ cdef class RasterReader(_base.DatasetReader):
         return out
 
 
-    def dataset_mask(self, *args, window=None, boundless=False):
+    def dataset_mask(self, window=None, boundless=False):
         """Calculate the dataset's 2D mask. Derived from the individual band masks
         provided by read_masks().
 
         Parameters
         ----------
-        position args ignored
         window and boundless are passed directly to read_masks()
         
         Returns
@@ -1150,7 +1149,6 @@ cdef class RasterReader(_base.DatasetReader):
         in that it applies per-dataset, not per-band
         (see https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
         """
-        del args
         kwargs = {
             'window': window,
             'boundless': boundless}

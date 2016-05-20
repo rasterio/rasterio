@@ -164,14 +164,6 @@ def test_rgba_msk(tiffs):
         # mask takes precendent over alpha
         assert np.array_equal(src.dataset_mask(), msk)
 
-def test_args(tiffs):
-    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
-        res = src.dataset_mask()
-        assert np.array_equal(res , alp)
-        # positional args ignored
-        other = src.dataset_mask('FOO')
-        assert np.array_equal(res, other)
-
 def test_kwargs(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
         # window and boundless are passed along
