@@ -133,9 +133,14 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
     with Env() as s:
         s.get_aws_credentials()
-        assert getenv() == rasterio.env._env.options == {
-            'aws_access_key_id': 'id', 'aws_secret_access_key': 'key',
+        assert getenv() == rasterio.env._env.options
+        expected = {
+            'aws_access_key_id': 'id',
+            'aws_secret_access_key': 'key',
             'aws_session_token': 'token'}
+        for k, v in expected.items():
+            assert getenv()[k] == v
+
     monkeypatch.undo()
 
 
