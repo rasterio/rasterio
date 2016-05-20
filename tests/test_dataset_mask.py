@@ -42,6 +42,10 @@ alldata = np.array([[1, 1, 1],
                     [1, 1, 1],
                     [1, 1, 1]]).astype('uint8') * 255
 
+# boundless window ((1, 4, (1, 4))
+alp_shift_lr = np.array([[1, 1, 0],
+                         [0, 1, 0],
+                         [0, 0, 0]]).astype('uint8') * 255
 
 @pytest.fixture(scope='function')
 def tiffs(tmpdir):
@@ -159,3 +163,21 @@ def test_rgba_msk(tiffs):
     with rasterio.open(str(tiffs.join('rgba_msk.tif'))) as src:
         # mask takes precendent over alpha
         assert np.array_equal(src.dataset_mask(), msk)
+
+def test_args(tiffs):
+    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+        res = src.dataset_mask()
+        assert np.array_equal(res , alp)
+        # positional args ignored
+        other = src.dataset_mask('FOO')
+        assert np.array_equal(res, other)
+
+def test_kwargs(tiffs):
+    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+        # window and boundless are passes along
+        other = src.dataset_mask(window=((1, 4), (1, 4)), boundless=True)
+        assert np.array_equal(alp_shift_lr, other)
+
+        # band indexes are not supported
+        with pytest.raises(TypeError):
+            src.dataset_mask(indexes=1)
