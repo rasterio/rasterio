@@ -1122,6 +1122,54 @@ cdef class RasterReader(_base.DatasetReader):
         return out
 
 
+    def dataset_mask(self, window=None, boundless=False):
+        """Calculate the dataset's 2D mask. Derived from the individual band masks
+        provided by read_masks().
+
+        Parameters
+        ----------
+        window and boundless are passed directly to read_masks()
+        
+        Returns
+        -------
+        ndarray, shape=(self.height, self.width), dtype='uint8'
+        0 = nodata, 255 = valid data
+
+        The dataset mask is calculate based on the individual band masks according to
+        the following logic, in order of precedence:
+
+        1. If a .msk file, dataset-wide alpha or internal mask exists,
+           it will be used as the dataset mask.
+        2. If an 4-band RGBA with a shadow nodata value,
+           band 4 will be used as the dataset mask.
+        3. If a nodata value exists, use the binary OR (|) of the band masks
+        4. If no nodata value exists, return a mask filled with 255
+
+        Note that this differs from read_masks and GDAL RFC15
+        in that it applies per-dataset, not per-band
+        (see https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
+        """
+        kwargs = {
+            'window': window,
+            'boundless': boundless}
+
+        # GDAL found dataset-wide alpha band or mask
+        # All band masks are equal so we can return the first
+        if self.mask_flags[0] & MaskFlags.per_dataset:
+            return self.read_masks(1, **kwargs)
+
+        # use Alpha mask if available and looks like RGB, even if nodata is shadowing
+        elif self.count == 4 and self.colorinterp(1) == ColorInterp.red:
+            return self.read_masks(4, **kwargs)
+
+        # Or use the binary OR intersection of all GDALGetMaskBands
+        else:
+            mask = self.read_masks(1, **kwargs)
+            for i in range(1, self.count):
+                mask = mask | self.read_masks(i, **kwargs)
+            return mask
+        
+
     def read_mask(self, indexes=None, out=None, window=None, boundless=False):
         """Read the mask band into an `out` array if provided, 
         otherwise return a new array containing the dataset's
