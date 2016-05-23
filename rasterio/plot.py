@@ -10,6 +10,7 @@ from __future__ import absolute_import
 import logging
 import warnings
 
+import numpy as np
 import rasterio
 
 try:
@@ -67,6 +68,35 @@ def show(source, cmap='gray', with_bounds=True):
     else:  # pragma: no cover
         raise ImportError("matplotlib could not be imported")
 
+def reshape_as_image(source, bands=(0, 1, 2), masked=True):
+    """Returns an array of the source reshaped into the order 
+    expected by image processing software (scikit-image)
+    by swapping the axes order from (bands, rows, columns) 
+    to (rows, columns, bands)
+
+    Parameters
+    ----------
+    source : array-like or raster dataset
+        If array-like, should be in a of format (bands, rows, columns)
+        Should have at least three bands.
+    bands : tuple, The R, G, B band indices from the array or raster
+        to use in the returned image
+    masked : bool, optional
+        When working with a raster dataset object, specifies if the data
+        should be masked on read.
+    """
+    if isinstance(source, rasterio._io.RasterReader):
+        arr = source.read(masked=masked)
+    else:
+        arr = source
+
+    #take the band indices specified
+    arr_selected = arr[np.array(bands), :, :]
+
+    #swap the axes order from (bands, rows, columns) to (rows, columns, bands)
+    im = np.transpose(arr_selected, [1,2,0])
+
+    return im
 
 def show_hist(source, bins=10, masked=True, title='Histogram'):
     """Easily display a histogram with matplotlib.
