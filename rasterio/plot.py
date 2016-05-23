@@ -98,6 +98,20 @@ def reshape_as_image(source, bands=(0, 1, 2), masked=True):
 
     return im
 
+def reshape_as_raster(arr):
+    """Returns the array in a raster order 
+    by swapping the axes order from (rows, columns, bands)
+    to (bands, rows, columns)
+
+    Parameters
+    ----------
+    arr : array-like in the image form of (rows, columns, bands)
+    """
+    #swap the axes order from (bands, rows, columns) to (rows, columns, bands)
+    im = np.transpose(arr, [2,0,1])
+
+    return im
+
 def show_hist(source, bins=10, masked=True, title='Histogram'):
     """Easily display a histogram with matplotlib.
 
