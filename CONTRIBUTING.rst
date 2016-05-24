@@ -20,6 +20,13 @@ Rasterio's API is different from GDAL's API and this is intentional.
   GDAL but is not a "Python binding for GDAL."
 - Rasterio always prefers Python's built-in protocols and types or Numpy
   protocols and types over concepts from GDAL's data model.
+- Rasterio keeps I/O separate from other operations. ``rasterio.open()`` is
+  the only library function that operates on filenames and URIs.
+  ``dataset.read()``, ``dataset.write()``, and their mask counterparts are
+  the methods that perform I/O.
+- Rasterio methods and functions should be free of side-effects and hidden
+  inputs. This is challenging in practice because GDAL embraces global
+  variables.
 
 Code Conventions
 ================
@@ -30,12 +37,14 @@ Cython language is a superset of Python. Cython files end with ``.pyx`` and
 ``.pxd`` and are where we keep all the code that calls C functions in the GDAL
 library.
 
-Rasterio supports Python 2 and Python 3 in the same code base.
+Rasterio supports Python 2 and Python 3 in the same code base. We have a
+compatibility module named ``five.py``. Renaming it is a to-do.
 
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
 
-Tests are mandatory for new features. We use ``pytest``.
+Tests are mandatory for new features. We use ``pytest``. Tests written using
+``unittest`` are fine, too.
 
 We aspire to 100% coverage for Python modules. Coverage of the Cython code is
 a future aspiration.
