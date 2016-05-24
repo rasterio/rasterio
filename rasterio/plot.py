@@ -51,11 +51,8 @@ def show(source, cmap='gray', with_bounds=True):
     """
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
-        xs = source[0].res[0] / 2.
-        ys = source[0].res[1] / 2.
         if with_bounds:
-            extent = (source[0].bounds.left - xs, source[0].bounds.right - xs,
-                      source[0].bounds.bottom - ys, source[0].bounds.top - ys)
+            extent = get_plotting_extent(source[0])
         else:
             extent = None
     else:
@@ -68,6 +65,23 @@ def show(source, cmap='gray', with_bounds=True):
     else:  # pragma: no cover
         raise ImportError("matplotlib could not be imported")
 
+def get_plotting_extent(source):
+    """Returns an extent in the format needed
+     for matplotlib's imshow (left, right, bottom, top)
+     instead of rasterio's bounds (left, bottom, top, right)
+
+    TODO: Account for AREA_OR_POINT src metadata to turn off half
+    pixel shift
+
+    Parameters
+    ----------
+    source : raster dataset
+    """
+    xs = source.res[0] / 2.
+    ys = source.res[1] / 2.
+    extent = (source.bounds.left - xs, source.bounds.right - xs,
+                source.bounds.bottom - ys, source.bounds.top - ys)
+    return extent
 def reshape_as_image(arr):
     """Returns the source array reshaped into the order
     expected by image processing and visualization software
