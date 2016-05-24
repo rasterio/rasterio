@@ -68,38 +68,24 @@ def show(source, cmap='gray', with_bounds=True):
     else:  # pragma: no cover
         raise ImportError("matplotlib could not be imported")
 
-def reshape_as_image(source, bands=(0, 1, 2), masked=True):
-    """Returns an array of the source reshaped into the order 
-    expected by image processing software (scikit-image)
-    by swapping the axes order from (bands, rows, columns) 
+def reshape_as_image(arr):
+    """Returns the source array reshaped into the order
+    expected by image processing and visualization software
+    (matplotlib, scikit-image, etc)
+    by swapping the axes order from (bands, rows, columns)
     to (rows, columns, bands)
 
     Parameters
     ----------
-    source : array-like or raster dataset
-        If array-like, should be in a of format (bands, rows, columns)
-        Should have at least three bands.
-    bands : tuple, The R, G, B band indices from the array or raster
-        to use in the returned image
-    masked : bool, optional
-        When working with a raster dataset object, specifies if the data
-        should be masked on read.
+    source : array-like in a of format (bands, rows, columns)
     """
-    if isinstance(source, rasterio._io.RasterReader):
-        arr = source.read(masked=masked)
-    else:
-        arr = source
-
     #take the band indices specified
-    arr_selected = arr[np.array(bands), :, :]
-
     #swap the axes order from (bands, rows, columns) to (rows, columns, bands)
-    im = np.transpose(arr_selected, [1,2,0])
-
+    im = np.transpose(arr, [1,2,0])
     return im
 
 def reshape_as_raster(arr):
-    """Returns the array in a raster order 
+    """Returns the array in a raster order
     by swapping the axes order from (rows, columns, bands)
     to (bands, rows, columns)
 
@@ -109,7 +95,6 @@ def reshape_as_raster(arr):
     """
     #swap the axes order from (bands, rows, columns) to (rows, columns, bands)
     im = np.transpose(arr, [2,0,1])
-
     return im
 
 def show_hist(source, bins=10, masked=True, title='Histogram'):
