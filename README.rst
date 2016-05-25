@@ -262,8 +262,22 @@ versions used `here
 Note: The GDAL dll (gdal111.dll) and gdal-data directory need to be in your
 Windows PATH otherwise rasterio will fail to work.
 
-Testing
--------
+Development and Testing
+-----------------------
+
+In a virtualenv, install Rasterio's build system requirements and then 
+Rasterio itself in develop mode.
+
+.. code-block:: console
+
+    (venv)$ pip install cython numpy
+    (venv)$ pip install -e .[test]
+
+Or use the included ``pep-518-install`` script to do both in one go.
+
+.. code-block:: console
+
+    (venv)$ /pep-518-install
 
 From the repo directory, run py.test
 
