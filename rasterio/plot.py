@@ -72,17 +72,12 @@ def plotting_extent(source):
      for matplotlib's imshow (left, right, bottom, top)
      instead of rasterio's bounds (left, bottom, top, right)
 
-    TODO: Account for AREA_OR_POINT src metadata to turn off half
-    pixel shift
-
     Parameters
     ----------
     source : raster dataset
     """
-    xs = source.res[0] / 2.
-    ys = source.res[1] / 2.
-    extent = (source.bounds.left - xs, source.bounds.right - xs,
-              source.bounds.bottom - ys, source.bounds.top - ys)
+    extent = (source.bounds.left, source.bounds.right,
+              source.bounds.bottom, source.bounds.top)
     return extent
 
 
