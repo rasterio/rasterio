@@ -2,7 +2,7 @@
 Rasterio
 ========
 
-Rasterio reads and writes geospatial raster datasets.
+Rasterio reads and writes geospatial raster data files.
 
 .. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
    :target: https://travis-ci.org/mapbox/rasterio
@@ -10,16 +10,14 @@ Rasterio reads and writes geospatial raster datasets.
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
 
-Rasterio employs GDAL under the hood for file I/O and raster formatting. Its
-functions typically accept and return Numpy ndarrays. Rasterio is designed to
-make working with geospatial raster data more productive and more fun.
-
-Rasterio is pronounced raw-STEER-ee-oh.
+Rasterio employs GDAL to read and writes files using GeoTIFF and many other
+formats. Its API uses familiar Python and SciPy interfaces and idioms like
+context managers, iterators, and ndarrays.
 
 Example
 =======
 
-Here's an example of some basic features that rasterio provides. Three bands
+Here's an example of some basic features that Rasterio provides. Three bands
 are read from an image and averaged to produce something like a panchromatic
 band.  This new band is then written to a new single band TIFF.
 
@@ -152,39 +150,54 @@ for a list of available plugins.
 Installation
 ============
 
+Please install Rasterio in a `virtual environment
+<https://www.python.org/dev/peps/pep-0405/>`__ so that its requirements don't
+tamper with your system's Python.
+
 Dependencies
 ------------
 
-Rasterio has one C library dependency: GDAL >=1.9. GDAL itself depends on a
+Rasterio has a C library dependency: GDAL >=1.9. GDAL itself depends on a
 number of other libraries provided by most major operating systems and also
-depends on the non standard GEOS and PROJ4 libraries.
+depends on the non standard GEOS and PROJ4 libraries. How to meet this
+requirement will be explained below.
 
-Python package dependencies (see also requirements.txt): affine, cligj (and
-click), enum34, numpy.
+Rasterio's Python dependencies are listed in its requirements.txt file.
 
 Development also requires (see requirements-dev.txt) Cython and other packages.
 
-Installing from binaries
-------------------------
+Binary Distributions
+--------------------
+
+Use a binary distributions that directly or indirectly provide GDAL if
+possible.
+
+Linux
++++++
+
+Rasterio distributions are available from UbuntuGIS and Anaconda's conda-forge
+channel.
+
+`Manylinux1 <https://github.com/pypa/manylinux>`__ distributions may be
+available in the future.
 
 OS X
-----
+++++
 
-Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
+Binary distributions with GDAL, GEOS, and PROJ4 libraries included are available
 for OS X versions 10.7+ starting with Rasterio version 0.17. To install,
 run ``pip install rasterio``. These binary wheels are preferred by newer
-versions of pip. If you don't want these wheels and want to install from
-a source distribution, run ``pip install rasterio --no-use-wheel`` instead.
+versions of pip.
+
+If you don't want these wheels and want to install from a source distribution,
+run ``pip install rasterio --no-use-wheel`` instead.
 
 The included GDAL library is fairly minimal, providing only the format drivers
 that ship with GDAL and are enabled by default. To get access to more formats,
 you must build from a source distribution (see below).
 
-Binary wheels for other operating systems will be available in a future
-release.
-
 Windows
--------
++++++++
 
 Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are
 available from his website.
@@ -197,11 +210,11 @@ this from the downloads folder:
 .. code-block:: console
 
     $ pip install -U pip 
-    $ pip install GDAL-1.11.2-cp27-none-win32.whl
-    $ pip install rasterio-0.24.0-cp27-none-win32.whl
+    $ pip install GDAL-2.0.2-cp27-none-win32.whl
+    $ pip install rasterio-0.34.0-cp27-cp27m-win32.whl
 
-Installing from the source distribution
----------------------------------------
+Source Distributions
+--------------------
 
 Rasterio is a Python C extension and to build you'll need a working compiler
 (XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy headers are
@@ -212,21 +225,21 @@ Travis `configuration
 guidance.
 
 Linux
------
++++++
 
 The following commands are adapted from Rasterio's Travis-CI configuration.
 
 .. code-block:: console
 
-    $ sudo add-apt-repository ppa:ubuntugis/ppa
-    $ sudo apt-get update
-    $ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
-    $ pip install rasterio
+    (venv)$ sudo add-apt-repository ppa:ubuntugis/ppa
+    (venv)$ sudo apt-get update
+    (venv)$ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    (venv)$ pip install rasterio
 
 Adapt them as necessary for your Linux system.
 
 OS X
-----
+++++
 
 For a Homebrew based Python environment, do the following.
 
@@ -236,7 +249,7 @@ For a Homebrew based Python environment, do the following.
     $ pip install rasterio
 
 Windows
--------
++++++++
 
 You can download a binary distribution of GDAL from `here
 <http://www.gisinternals.com/release.php>`__.  You will also need to download
@@ -251,8 +264,8 @@ setup.py as follows.
 
 .. code-block:: console
 
-    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
-    $ python setup.py install
+    (venv)$ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
+    (venv)$ python setup.py install
 
 We have had success compiling code using the same version of Microsoft's
 Visual Studio used to compile the targeted version of Python (more info on
