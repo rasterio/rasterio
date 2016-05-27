@@ -248,6 +248,13 @@ For a Homebrew based Python environment, do the following.
     $ brew install gdal
     $ pip install rasterio
 
+Alternatively, you can install GDAL binaries from `kyngchaos
+<http://www.kyngchaos.com/software/frameworks#gdal_complete>`__.  You will then
+need to add the installed location ``/Library/Frameworks/GDAL.framework/Programs``
+to your system path.
+
+
+
 Windows
 +++++++
 
