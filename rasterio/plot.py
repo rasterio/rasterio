@@ -10,6 +10,8 @@ from __future__ import absolute_import
 import logging
 import warnings
 
+import numpy as np
+
 import rasterio
 
 try:
@@ -50,11 +52,8 @@ def show(source, cmap='gray', with_bounds=True):
     """
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
-        xs = source[0].res[0] / 2.
-        ys = source[0].res[1] / 2.
         if with_bounds:
-            extent = (source[0].bounds.left - xs, source[0].bounds.right - xs,
-                      source[0].bounds.bottom - ys, source[0].bounds.top - ys)
+            extent = plotting_extent(source[0])
         else:
             extent = None
     else:
@@ -66,6 +65,50 @@ def show(source, cmap='gray', with_bounds=True):
         fig.show()
     else:  # pragma: no cover
         raise ImportError("matplotlib could not be imported")
+
+
+def plotting_extent(source):
+    """Returns an extent in the format needed
+     for matplotlib's imshow (left, right, bottom, top)
+     instead of rasterio's bounds (left, bottom, top, right)
+
+    Parameters
+    ----------
+    source : raster dataset
+    """
+    extent = (source.bounds.left, source.bounds.right,
+              source.bounds.bottom, source.bounds.top)
+    return extent
+
+
+def reshape_as_image(arr):
+    """Returns the source array reshaped into the order
+    expected by image processing and visualization software
+    (matplotlib, scikit-image, etc)
+    by swapping the axes order from (bands, rows, columns)
+    to (rows, columns, bands)
+
+    Parameters
+    ----------
+    source : array-like in a of format (bands, rows, columns)
+    """
+    # swap the axes order from (bands, rows, columns) to (rows, columns, bands)
+    im = np.transpose(arr, [1,2,0])
+    return im
+
+
+def reshape_as_raster(arr):
+    """Returns the array in a raster order
+    by swapping the axes order from (rows, columns, bands)
+    to (bands, rows, columns)
+
+    Parameters
+    ----------
+    arr : array-like in the image form of (rows, columns, bands)
+    """
+    # swap the axes order from (rows, columns, bands) to (bands, rows, columns)
+    im = np.transpose(arr, [2,0,1])
+    return im
 
 
 def show_hist(source, bins=10, masked=True, title='Histogram'):
