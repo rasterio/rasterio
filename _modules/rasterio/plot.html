@@ -1,0 +1,375 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.plot &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+        <link rel="up" title="rasterio" href="../rasterio.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
+      
+    <li>rasterio.plot</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.plot</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Implementations of various common operations.</span>
+
+<span class="sd">Including `show()` for displaying an array or with matplotlib.</span>
+<span class="sd">Most can handle a numpy array or `rasterio.Band()`.</span>
+<span class="sd">Primarily supports `$ rio insp`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">rasterio</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+    <span class="n">plt</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+    <span class="c"># Certain environment configurations can trigger a RuntimeError like:</span>
+
+    <span class="c"># Trying to import matplotlibRuntimeError: Python is not installed as a</span>
+    <span class="c"># framework. The Mac OS X backend will not be able to function correctly</span>
+    <span class="c"># if Python is not installed as a framework. See the Python ...</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span> <span class="o">=</span> <span class="bp">None</span>
+
+
+<span class="kn">from</span> <span class="nn">rasterio.five</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="show"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s">&#39;gray&#39;</span><span class="p">,</span> <span class="n">with_bounds</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Display a raster or raster band using matplotlib.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : array-like or (raster dataset, bidx)</span>
+<span class="sd">        If array-like, should be of format compatible with</span>
+<span class="sd">        matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),</span>
+<span class="sd">        selects band `bidx` from raster.</span>
+<span class="sd">    cmap : str (opt)</span>
+<span class="sd">        Specifies the colormap to use in plotting. See</span>
+<span class="sd">        matplotlib.Colors.Colormap. Default is &#39;gray&#39;.</span>
+<span class="sd">    with_bounds : bool (opt)</span>
+<span class="sd">        Whether to change the image extent to the spatial bounds of the image,</span>
+<span class="sd">        rather than pixel coordinates. Only works when source is</span>
+<span class="sd">        (raster dataset, bidx).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">with_bounds</span><span class="p">:</span>
+            <span class="n">extent</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">extent</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">plt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;matplotlib could not be imported&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plotting_extent"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.plotting_extent">[docs]</a><span class="k">def</span> <span class="nf">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns an extent in the format needed</span>
+<span class="sd">     for matplotlib&#39;s imshow (left, right, bottom, top)</span>
+<span class="sd">     instead of rasterio&#39;s bounds (left, bottom, top, right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : raster dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
+              <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">extent</span></div>
+
+
+<div class="viewcode-block" id="reshape_as_image"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.reshape_as_image">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the source array reshaped into the order</span>
+<span class="sd">    expected by image processing and visualization software</span>
+<span class="sd">    (matplotlib, scikit-image, etc)</span>
+<span class="sd">    by swapping the axes order from (bands, rows, columns)</span>
+<span class="sd">    to (rows, columns, bands)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : array-like in a of format (bands, rows, columns)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># swap the axes order from (bands, rows, columns) to (rows, columns, bands)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">im</span></div>
+
+
+<div class="viewcode-block" id="reshape_as_raster"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.reshape_as_raster">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the array in a raster order</span>
+<span class="sd">    by swapping the axes order from (rows, columns, bands)</span>
+<span class="sd">    to (bands, rows, columns)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr : array-like in the image form of (rows, columns, bands)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># swap the axes order from (rows, columns, bands) to (bands, rows, columns)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">im</span></div>
+
+
+<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Histogram&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Easily display a histogram with matplotlib.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bins : int, optional</span>
+<span class="sd">        Compute histogram across N bins.</span>
+<span class="sd">    data : np.array or rasterio.Band or tuple(dataset, bidx)</span>
+<span class="sd">        Input data to display.  The first three arrays in multi-dimensional</span>
+<span class="sd">        arrays are plotted as red, green, and blue.</span>
+<span class="sd">    masked : bool, optional</span>
+<span class="sd">        When working with a `rasterio.Band()` object, specifies if the data</span>
+<span class="sd">        should be masked on read.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        Title for the figure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">plt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;Could not import matplotlib&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Band</span><span class="p">)):</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">masked</span><span class="o">=</span><span class="n">masked</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
+
+    <span class="c"># The histogram is computed individually for each &#39;band&#39; in the array</span>
+    <span class="c"># so we need the overall min/max to constrain the plot</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="n">arr</span><span class="p">]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gold&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;red&#39;</span><span class="p">,</span> <span class="s">&#39;green&#39;</span><span class="p">,</span> <span class="s">&#39;blue&#39;</span><span class="p">,</span> <span class="s">&#39;violet&#39;</span><span class="p">,</span> <span class="s">&#39;gold&#39;</span><span class="p">,</span> <span class="s">&#39;saddlebrown&#39;</span><span class="p">)</span>
+
+    <span class="c"># If a rasterio.Band() is given make sure the proper index is displayed</span>
+    <span class="c"># in the legend.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Band</span><span class="p">)):</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)))</span>
+
+    <span class="c"># This loop should add a single plot each band in the input array,</span>
+    <span class="c"># regardless of if the number of bands exceeds the number of colors.</span>
+    <span class="c"># The colors slicing ensures that the number of iterations always</span>
+    <span class="c"># matches the number of bands.</span>
+    <span class="c"># The goal is to provide a curated set of colors for working with</span>
+    <span class="c"># smaller datasets and let matplotlib define additional colors when</span>
+    <span class="c"># working with larger datasets.</span>
+    <span class="k">for</span> <span class="n">bnd</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">colors</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)],</span> <span class="n">labels</span><span class="p">):</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+            <span class="n">bnd</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+            <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+            <span class="nb">range</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">&quot;upper right&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;DN&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

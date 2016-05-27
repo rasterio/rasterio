@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tagging datasets and bands &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+        <link rel="up" title="General Concepts" href="topics.html"/>
+        <link rel="next" title="Georeferencing" href="georeferencing.html"/>
+        <link rel="prev" title="Resampling" href="resampling.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="topics.html">General Concepts</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l3"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masks.html">Masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nodata.html">Nodata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Tagging datasets and bands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reading-tags">Reading tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#writing-tags">Writing tags</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a> &raquo;</li>
+      
+          <li><a href="topics.html">General Concepts</a> &raquo;</li>
+      
+    <li>Tagging datasets and bands</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/tags.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tagging-datasets-and-bands">
+<h1>Tagging datasets and bands<a class="headerlink" href="#tagging-datasets-and-bands" title="Permalink to this headline">¶</a></h1>
+<p>GDAL&#8217;s <a class="reference external" href="http://www.gdal.org/gdal_datamodel.html">data model</a> includes
+collections of key, value pairs for major classes. In that model, these are
+&#8220;metadata&#8221;, but since they don&#8217;t have to be just for metadata, these key, value
+pairs are called &#8220;tags&#8221; in rasterio.</p>
+<div class="section" id="reading-tags">
+<h2>Reading tags<a class="headerlink" href="#reading-tags" title="Permalink to this headline">¶</a></h2>
+<p>I&#8217;m going to use the rasterio interactive inspector in these examples below.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> rasterio.insp tests/data/RGB.byte.tif
+<span class="go">Rasterio 0.6 Interactive Inspector (Python 2.7.5)</span>
+<span class="go">Type &quot;src.name&quot;, &quot;src.read(1)&quot;, or &quot;help(src)&quot; for more information.</span>
+<span class="gp">&gt;</span>&gt;&gt;
+</pre></div>
+</div>
+<p>Tags belong to namespaces. To get a copy of a dataset&#8217;s tags from the default
+namespace, call <code class="docutils literal"><span class="pre">tags()</span></code> with no arguments.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span>
+<span class="go">{u&#39;AREA_OR_POINT&#39;: u&#39;Area&#39;}</span>
+</pre></div>
+</div>
+<p>A dataset&#8217;s bands may have tags, too. Here are the tags from the default namespace
+for the first band, accessed using the positional band index argument of <code class="docutils literal"><span class="pre">tags()</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">{u&#39;STATISTICS_MEAN&#39;: u&#39;29.947726688477&#39;, u&#39;STATISTICS_MINIMUM&#39;: u&#39;0&#39;, u&#39;STATISTICS_MAXIMUM&#39;: u&#39;255&#39;, u&#39;STATISTICS_STDDEV&#39;: u&#39;52.340921626611&#39;}</span>
+</pre></div>
+</div>
+<p>These are the tags that came with the sample data I&#8217;m using to test rasterio. In
+practice, maintaining stats in the tags can be unreliable as there is no automatic
+update of the tags when the band&#8217;s image data changes.</p>
+<p>The 3 standard, non-default GDAL tag namespaces are &#8216;SUBDATASETS&#8217;, &#8216;IMAGE_STRUCTURE&#8217;,
+and &#8216;RPC&#8217;. You can get the tags from these namespaces using the <cite>ns</cite> keyword of
+<code class="docutils literal"><span class="pre">tags()</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;IMAGE_STRUCTURE&#39;</span><span class="p">)</span>
+<span class="go">{u&#39;INTERLEAVE&#39;: u&#39;PIXEL&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;SUBDATASETS&#39;</span><span class="p">)</span>
+<span class="go">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;RPC&#39;</span><span class="p">)</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-tags">
+<h2>Writing tags<a class="headerlink" href="#writing-tags" title="Permalink to this headline">¶</a></h2>
+<p>You can add new tags to a dataset or band, in the default or another namespace,
+using the <code class="docutils literal"><span class="pre">update_tags()</span></code> method. Unicode tag values, too, at least for TIFF
+files.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
+
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+        <span class="s">&#39;/tmp/test.tif&#39;</span><span class="p">,</span>
+        <span class="s">&#39;w&#39;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span>
+        <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+
+    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">&#39;2&#39;</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="c"># True</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">}</span>
+    <span class="c"># True</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="s">&#39;3&#39;</span> <span class="p">}</span>
+
+    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;rasterio_testing&#39;</span><span class="p">,</span> <span class="n">rus</span><span class="o">=</span><span class="s">u&#39;другая строка&#39;</span><span class="p">)</span>
+    <span class="c"># True</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;rasterio_testing&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;rus&#39;</span><span class="p">:</span> <span class="s">u&#39;другая строка&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>As with image data, tags aren&#8217;t written to the file on disk until the dataset
+is closed.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="georeferencing.html" class="btn btn-neutral float-right" title="Georeferencing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="resampling.html" class="btn btn-neutral" title="Resampling" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

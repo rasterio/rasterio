@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.crs module &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+        <link rel="up" title="API Documentation" href="api_docs.html"/>
+        <link rel="next" title="rasterio.dtypes module" href="rasterio.dtypes.html"/>
+        <link rel="prev" title="rasterio.coords module" href="rasterio.coords.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="api_docs.html">API Documentation</a> &raquo;</li>
+      
+    <li>rasterio.crs module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/rasterio.crs.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-rasterio.crs">
+<span id="rasterio-crs-module"></span><h1>rasterio.crs module<a class="headerlink" href="#module-rasterio.crs" title="Permalink to this headline">¶</a></h1>
+<p>Coordinate reference systems and functions.</p>
+<p>PROJ.4 is the law of this land: <a class="reference external" href="http://proj.osgeo.org/">http://proj.osgeo.org/</a>. But whereas PROJ.4
+coordinate reference systems are described by strings of parameters such as</p>
+<blockquote>
+<div>+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</div></blockquote>
+<p>here we use mappings:</p>
+<blockquote>
+<div>{&#8216;proj&#8217;: &#8216;longlat&#8217;, &#8216;ellps&#8217;: &#8216;WGS84&#8217;, &#8216;datum&#8217;: &#8216;WGS84&#8217;, &#8216;no_defs&#8217;: True}</div></blockquote>
+<dl class="function">
+<dt id="rasterio.crs.from_epsg">
+<code class="descclassname">rasterio.crs.</code><code class="descname">from_epsg</code><span class="sig-paren">(</span><em>code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#from_epsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.from_epsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an integer code, returns an EPSG-like mapping.</p>
+<p>Note: the input code is not validated against an EPSG database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.crs.from_string">
+<code class="descclassname">rasterio.crs.</code><code class="descname">from_string</code><span class="sig-paren">(</span><em>prjs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.from_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn a PROJ.4 string into a mapping of parameters.</p>
+<p>Bare parameters like &#8220;+no_defs&#8221; are given a value of <code class="docutils literal"><span class="pre">True</span></code>. All keys
+are checked against the <code class="docutils literal"><span class="pre">all_proj_keys</span></code> list.</p>
+<p>EPSG:nnnn is allowed.</p>
+<p>JSON text-encoded strings are allowed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.crs.is_valid_crs">
+<code class="descclassname">rasterio.crs.</code><code class="descname">is_valid_crs</code><span class="sig-paren">(</span><em>crs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#is_valid_crs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.is_valid_crs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if valid geographic or projected coordinate reference system.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.crs.to_string">
+<code class="descclassname">rasterio.crs.</code><code class="descname">to_string</code><span class="sig-paren">(</span><em>crs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#to_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.to_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn a parameter mapping into a more conventional PROJ.4 string.</p>
+<p>Mapping keys are tested against the <code class="docutils literal"><span class="pre">all_proj_keys</span></code> list. Values of
+<code class="docutils literal"><span class="pre">True</span></code> are omitted, leaving the key bare: {&#8216;no_defs&#8217;: True} -&gt; &#8220;+no_defs&#8221;
+and items where the value is otherwise not a str, int, or float are
+omitted.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rasterio.dtypes.html" class="btn btn-neutral float-right" title="rasterio.dtypes module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rasterio.coords.html" class="btn btn-neutral" title="rasterio.coords module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

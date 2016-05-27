@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.errors &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+        <link rel="up" title="rasterio" href="../rasterio.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
+      
+    <li>rasterio.errors</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.errors</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Errors and Warnings.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">click</span> <span class="kn">import</span> <span class="n">FileError</span>
+
+
+<div class="viewcode-block" id="CRSError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.CRSError">[docs]</a><span class="k">class</span> <span class="nc">CRSError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when a CRS string or mapping is invalid or cannot serve</span>
+<span class="sd">    to define a coordinate transformation.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="EnvError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.EnvError">[docs]</a><span class="k">class</span> <span class="nc">EnvError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when the state of GDAL/AWS environment cannot be created</span>
+<span class="sd">    or modified.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="DriverRegistrationError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.DriverRegistrationError">[docs]</a><span class="k">class</span> <span class="nc">DriverRegistrationError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when a format driver is requested but is not registered.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FileOverwriteError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.FileOverwriteError">[docs]</a><span class="k">class</span> <span class="nc">FileOverwriteError</span><span class="p">(</span><span class="n">FileError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when Rasterio&#39;s CLI refuses to clobber output files.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raise FileOverwriteError with message as hint.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FileOverwriteError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RasterioIOError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.RasterioIOError">[docs]</a><span class="k">class</span> <span class="nc">RasterioIOError</span><span class="p">(</span><span class="ne">IOError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when a dataset cannot be opened using one of the</span>
+<span class="sd">    registered format drivers.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NodataShadowWarning"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.NodataShadowWarning">[docs]</a><span class="k">class</span> <span class="nc">NodataShadowWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Warn that a dataset&#39;s nodata attribute is shadowing its alpha band.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;The dataset&#39;s nodata attribute is shadowing &quot;</span>
+                <span class="s">&quot;the alpha band. All masks will be determined &quot;</span>
+                <span class="s">&quot;by the nodata attribute&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,8 +1,0 @@
-exclude *.rst *.txt *.py
-include CHANGES.txt AUTHORS.txt LICENSE.txt VERSION.txt README.rst setup.py
-recursive-include examples *.py
-recursive-include tests *.py *.rst
-recursive-exclude tests/data *.tif
-recursive-include tests/data *.txt
-recursive-include docs *.rst
-exclude MANIFEST.in

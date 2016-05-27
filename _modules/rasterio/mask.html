@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.mask &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+        <link rel="up" title="rasterio" href="../rasterio.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
+      
+    <li>rasterio.mask</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.mask</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Mask the area outside of the input shapes with no data.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">from</span> <span class="nn">rasterio.features</span> <span class="kn">import</span> <span class="n">geometry_mask</span>
+
+
+<div class="viewcode-block" id="mask"><a class="viewcode-back" href="../../rasterio.mask.html#rasterio.mask.mask">[docs]</a><span class="k">def</span> <span class="nf">mask</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">shapes</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">crop</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">all_touched</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+         <span class="n">invert</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mask the area outside of the input shapes with nodata.</span>
+
+<span class="sd">    For all regions in the input raster outside of the regions defined by</span>
+<span class="sd">    `shapes`, sets any data present to nodata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    raster: rasterio RasterReader object</span>
+<span class="sd">        Raster to which the mask will be applied.</span>
+<span class="sd">    shapes: list of polygons</span>
+<span class="sd">        Polygons are GeoJSON-like dicts specifying the boundaries of features</span>
+<span class="sd">        in the raster to be kept. All data outside of specified polygons</span>
+<span class="sd">        will be set to nodata.</span>
+<span class="sd">    nodata: int or float (opt)</span>
+<span class="sd">        Value representing nodata within each raster band. If not set,</span>
+<span class="sd">        defaults to the nodata value for the input raster. If there is no</span>
+<span class="sd">        set nodata value for the raster, it defaults to 0.</span>
+<span class="sd">    crop: bool (opt)</span>
+<span class="sd">        Whether to crop the raster to the extent of the data. Defaults to</span>
+<span class="sd">        False.</span>
+<span class="sd">    all_touched: bool (opt)</span>
+<span class="sd">        Use all pixels touched by features. If False (default), use only</span>
+<span class="sd">        pixels whose center is within the polygon or that are selected by</span>
+<span class="sd">        Bresenhams line algorithm.</span>
+<span class="sd">    invert: bool (opt)</span>
+<span class="sd">        If True, mask will be True for pixels that overlap shapes.</span>
+<span class="sd">        False by default.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    masked: numpy ndarray</span>
+<span class="sd">        Data contained in raster after applying the mask.</span>
+<span class="sd">    out_transform: affine object</span>
+<span class="sd">        Information for mapping pixel coordinates in `masked` to another</span>
+<span class="sd">        coordinate system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">crop</span> <span class="ow">and</span> <span class="n">invert</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;crop and invert cannot both be True.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">raster</span><span class="o">.</span><span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">nodata</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">nodata</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nodata</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">all_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">rasterio</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">bounds</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">]</span>
+    <span class="n">minxs</span><span class="p">,</span> <span class="n">minys</span><span class="p">,</span> <span class="n">maxxs</span><span class="p">,</span> <span class="n">maxys</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">all_bounds</span><span class="p">)</span>
+    <span class="n">mask_bounds</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">minxs</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">minys</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxxs</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxys</span><span class="p">))</span>
+
+    <span class="n">invert_y</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">e</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">source_bounds</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">bounds</span>
+    <span class="k">if</span> <span class="n">invert_y</span><span class="p">:</span>
+        <span class="n">source_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">source_bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                         <span class="n">source_bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">source_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">disjoint_bounds</span><span class="p">(</span><span class="n">source_bounds</span><span class="p">,</span> <span class="n">mask_bounds</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">crop</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Input shapes do not overlap raster.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;GeoJSON outside bounds of existing output &quot;</span> <span class="o">+</span>
+                          <span class="s">&quot;raster. Are they in different coordinate &quot;</span> <span class="o">+</span>
+                          <span class="s">&quot;reference systems?&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">invert_y</span><span class="p">:</span>
+        <span class="n">mask_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">mask_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mask_bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                       <span class="n">mask_bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mask_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">crop</span><span class="p">:</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="o">*</span><span class="n">mask_bounds</span><span class="p">)</span>
+        <span class="n">out_transform</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">out_transform</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">affine</span>
+
+    <span class="n">out_image</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">out_shape</span> <span class="o">=</span> <span class="n">out_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">shape_mask</span> <span class="o">=</span> <span class="n">geometry_mask</span><span class="p">(</span><span class="n">shapes</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">out_transform</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="n">invert</span><span class="p">,</span>
+                               <span class="n">out_shape</span><span class="o">=</span><span class="n">out_shape</span><span class="p">,</span> <span class="n">all_touched</span><span class="o">=</span><span class="n">all_touched</span><span class="p">)</span>
+    <span class="n">out_image</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">out_image</span><span class="o">.</span><span class="n">mask</span> <span class="o">|</span> <span class="n">shape_mask</span>
+    <span class="n">out_image</span><span class="o">.</span><span class="n">fill_value</span> <span class="o">=</span> <span class="n">nodata</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">count</span><span class="p">):</span>
+        <span class="n">out_image</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_image</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out_image</span><span class="p">,</span> <span class="n">out_transform</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

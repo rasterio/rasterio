@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.windows &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+        <link rel="up" title="rasterio" href="../rasterio.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
+      
+    <li>rasterio.windows</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.windows</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Windows and related functions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+
+
+<div class="viewcode-block" id="iter_args"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.iter_args">[docs]</a><span class="k">def</span> <span class="nf">iter_args</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to allow function to take either *args or</span>
+<span class="sd">    a single iterable which gets expanded to *args.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="get_data_window"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.get_data_window">[docs]</a><span class="k">def</span> <span class="nf">get_data_window</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a window for the non-nodata pixels within the input array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr: numpy ndarray, &lt;= 3 dimensions</span>
+<span class="sd">    nodata: number</span>
+<span class="sd">        If None, will either return a full window if arr is not a masked</span>
+<span class="sd">        array, or will use the mask to determine non-nodata pixels.</span>
+<span class="sd">        If provided, it must be a number within the valid range of the dtype</span>
+<span class="sd">        of the input array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ((row_start, row_stop), (col_start, col_stop))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">get_data_window</span>
+    <span class="k">return</span> <span class="n">get_data_window</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nodata</span><span class="p">)</span></div>
+
+
+<span class="nd">@iter_args</span>
+<div class="viewcode-block" id="union"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.union">[docs]</a><span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Union windows and return the outermost extent they cover.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    windows: list-like of window objects</span>
+<span class="sd">        ((row_start, row_stop), (col_start, col_stop))</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ((row_start, row_stop), (col_start, col_stop))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">window_union</span>
+    <span class="k">return</span> <span class="n">window_union</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span></div>
+
+
+<span class="nd">@iter_args</span>
+<div class="viewcode-block" id="intersection"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.intersection">[docs]</a><span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Intersect windows and return the innermost extent they cover.</span>
+
+<span class="sd">    Will raise ValueError if windows do not intersect.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    windows: list-like of window objects</span>
+<span class="sd">        ((row_start, row_stop), (col_start, col_stop))</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ((row_start, row_stop), (col_start, col_stop))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">window_intersection</span>
+    <span class="k">return</span> <span class="n">window_intersection</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span></div>
+
+
+<span class="nd">@iter_args</span>
+<div class="viewcode-block" id="intersect"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.intersect">[docs]</a><span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test if windows intersect.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    windows: list-like of window objects</span>
+<span class="sd">        ((row_start, row_stop), (col_start, col_stop))</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    boolean:</span>
+<span class="sd">        True if all windows intersect.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">windows_intersect</span>
+    <span class="k">return</span> <span class="n">windows_intersect</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
