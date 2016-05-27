@@ -14,6 +14,8 @@ Rasterio employs GDAL to read and writes files using GeoTIFF and many other
 formats. Its API uses familiar Python and SciPy interfaces and idioms like
 context managers, iterators, and ndarrays.
 
+Documentation is published at https://mapbox.github.io/rasterio/.
+
 Example
 =======
 
