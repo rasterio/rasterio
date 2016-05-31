@@ -119,3 +119,27 @@ To run the tests:
 
     (riodev)$ python -m pytest --cov rasterio --cov-report term-missing
 
+
+
+Troubleshooting Development Environment
+=======================================
+
+If you have installed the above and run into issues compiling rasterio's
+Cython files or executing the test suite, try the following:
+
+
+OS X
+----
+
+* If you installed Python 3.5 from python.org and get an error during compiling
+  about not finding `stdio.h` or another core header file, try uninstalling
+  Python (see https://docs.python.org/3/using/mac.html) and install using homebrew
+  ``brew install python3``.
+
+* If you installed GDAL using homebrew and encounter segmentation faults during
+  the test suite, try uninstalling GDAL, and either installing from
+  `kyngchaos <http://www.kyngchaos.com/software/frameworks#gdal_complete>`__ or
+  building GDAL from source.
+
+
+
