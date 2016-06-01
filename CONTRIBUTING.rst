@@ -129,6 +129,9 @@ first from the Rasterio repo directory.
     (riodev)$ pip install -U pip
     (riodev)$ pip install -r requirements-dev.txt
 
+Installing Rasterio
+-------------------
+
 Once that's done, install Rasterio in editable mode with the "docs,test"
 extras.
 
@@ -139,13 +142,12 @@ extras.
 Any time you edit a Cython (``.pyx`` or ``.pxd``) file, you'll need to rerun
 that command to build the extension modules.
 
+Running the tests
+-----------------
+
 To run the tests:
 
 .. code-block:: console
 
     (riodev)$ python -m pytest --cov rasterio --cov-report term-missing
 
-OS X details
-------------
-
-We recommend 
