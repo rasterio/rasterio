@@ -211,7 +211,7 @@ this from the downloads folder:
 
 .. code-block:: console
 
-    $ pip install -U pip 
+    $ pip install -U pip
     $ pip install GDAL-2.0.2-cp27-none-win32.whl
     $ pip install rasterio-0.34.0-cp27-cp27m-win32.whl
 
@@ -236,6 +236,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
     (venv)$ sudo add-apt-repository ppa:ubuntugis/ppa
     (venv)$ sudo apt-get update
     (venv)$ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    (venv)$ pip install -U pip
     (venv)$ pip install rasterio
 
 Adapt them as necessary for your Linux system.
@@ -247,15 +248,15 @@ For a Homebrew based Python environment, do the following.
 
 .. code-block:: console
 
+    $ brew upgrade
     $ brew install gdal
-    $ pip install rasterio
+    (venv)$ pip install -U pip
+    (venv)$ pip install --no-use-wheel rasterio
 
 Alternatively, you can install GDAL binaries from `kyngchaos
 <http://www.kyngchaos.com/software/frameworks#gdal_complete>`__.  You will then
 need to add the installed location ``/Library/Frameworks/GDAL.framework/Programs``
 to your system path.
-
-
 
 Windows
 +++++++
@@ -287,28 +288,7 @@ Windows PATH otherwise rasterio will fail to work.
 Development and Testing
 -----------------------
 
-In a virtualenv, install Rasterio's build system requirements and then 
-Rasterio itself in develop mode.
-
-.. code-block:: console
-
-    (venv)$ pip install cython numpy
-    (venv)$ pip install -e .[test]
-
-Or use the included ``pep-518-install`` script to do both in one go.
-
-.. code-block:: console
-
-    (venv)$ /pep-518-install
-
-From the repo directory, run py.test
-
-.. code-block:: console
-
-    $ python -m pytest
-
-Note: some tests do not succeed on Windows (see
-`#66 <https://github.com/mapbox/rasterio/issues/66>`__.).
+See CONTRIBUTING.rst.
 
 Documentation
 -------------
