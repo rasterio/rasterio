@@ -235,7 +235,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 
     (venv)$ sudo add-apt-repository ppa:ubuntugis/ppa
     (venv)$ sudo apt-get update
-    (venv)$ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    (venv)$ sudo apt-get install libgdal1h gdal-bin libgdal-dev
     (venv)$ pip install -U pip
     (venv)$ pip install rasterio
 

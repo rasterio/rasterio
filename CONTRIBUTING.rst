@@ -95,6 +95,31 @@ Cloning Rasterio's Git repository is the next step
 Always develop in a `virtual environment
 <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__.
 
+Installing GDAL
+---------------
+
+The GDAL library and its headers are required to build Rasterio. We do not
+have currently have guidance for any platforms other than Linux and OS X.
+
+
+On Linux, you should obtain GDAL and its headers using your distro's 
+package manager. For Ubuntu the commands are:
+
+.. code-block:: console
+
+    (venv)$ sudo add-apt-repository ppa:ubuntugis/ppa
+    (venv)$ sudo apt-get update
+    (venv)$ sudo apt-get install libgdal1h gdal-bin libgdal-dev
+
+On OS X, Homebrew is a reliable way to get GDAL.
+
+.. code-block:: console
+
+    $ brew install gdal
+
+Python build requirements
+-------------------------
+
 Provision your virtualenv with Rasterio's build requirements. Rasterio's
 setup.py script will not run unless Cython and Numpy are installed, so do this
 first from the Rasterio repo directory.
@@ -104,11 +129,12 @@ first from the Rasterio repo directory.
     (riodev)$ pip install -U pip
     (riodev)$ pip install -r requirements-dev.txt
 
-Once that's done, install Rasterio in editable mode with the "test" extras.
+Once that's done, install Rasterio in editable mode with the "docs,test"
+extras.
 
 .. code-block:: console
 
-    (riodev)$ pip install -e .[test]
+    (riodev)$ pip install -e .[docs,test]
 
 Any time you edit a Cython (``.pyx`` or ``.pxd``) file, you'll need to rerun
 that command to build the extension modules.
@@ -119,3 +145,7 @@ To run the tests:
 
     (riodev)$ python -m pytest --cov rasterio --cov-report term-missing
 
+OS X details
+------------
+
+We recommend 
