@@ -1,14 +1,24 @@
+from hashlib import md5
 import logging
 import sys
 import unittest
 
 import numpy
-from hashlib import md5
+import pytest
 
 import rasterio
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+# Find out if we've got HDF support (needed below).
+try:
+    with rasterio.open('tests/data/no_band.h5') as s:
+        pass
+    has_hdf = True
+except:
+    has_hdf = False
 
 
 class ReaderContextTest(unittest.TestCase):
@@ -30,13 +40,13 @@ class ReaderContextTest(unittest.TestCase):
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
-                s.affine, 
+                s.affine,
                 (300.0379266750948, 0.0, 101985.0,
                  0.0, -300.041782729805, 2826915.0,
                  0, 0, 1.0))
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
-                repr(s), 
+                repr(s),
                 "<open RasterReader name='tests/data/RGB.byte.tif' "
                 "mode='r'>")
         self.assertEqual(s.closed, True)
@@ -48,7 +58,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.nodatavals, (0, 0, 0))
         self.assertEqual(s.crs['init'], 'epsg:32618')
         self.assertEqual(
-            s.affine, 
+            s.affine,
             (300.0379266750948, 0.0, 101985.0,
              0.0, -300.041782729805, 2826915.0,
              0, 0, 1.0))
@@ -86,7 +96,8 @@ class ReaderContextTest(unittest.TestCase):
             try:
                 s.read(1, a)
             except ValueError as e:
-                assert "the array's dtype 'float32' does not match the file's dtype" in str(e)
+                assert ("the array's dtype 'float32' does not match the "
+                        "file's dtype") in str(e)
             except:
                 assert "failed to catch exception" is False
 
@@ -167,18 +178,18 @@ class ReaderContextTest(unittest.TestCase):
             self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual(a.mask.sum((1, 2)).tolist(), [0, 0, 1])
             self.assertEqual([md5(x.tostring()).hexdigest() for x in a],
-                              ['1df719040daa9dfdb3de96d6748345e8',
-                               'ec8fb3659f40c4a209027231bef12bdb',
-                               '5a9c12aebc126ec6f27604babd67a4e2'])
+                             ['1df719040daa9dfdb3de96d6748345e8',
+                              'ec8fb3659f40c4a209027231bef12bdb',
+                              '5a9c12aebc126ec6f27604babd67a4e2'])
             # window without any missing data, but still is masked result
             a = s.read(window=((310, 330), (320, 330)), masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 20, 10))
             self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual([md5(x.tostring()).hexdigest() for x in a[:]],
-                              ['9e3000d60b4b6fb956f10dc57c4dc9b9',
-                               '6a675416a32fcb70fbcf601d01aeb6ee',
-                               '94fd2733b534376c273a894f36ad4e0b'])
+                             ['9e3000d60b4b6fb956f10dc57c4dc9b9',
+                              '6a675416a32fcb70fbcf601d01aeb6ee',
+                              '94fd2733b534376c273a894f36ad4e0b'])
 
     def test_read_window_overflow(self):
         """Test graceful Numpy-like handling of windows that overflow
@@ -192,14 +203,14 @@ class ReaderContextTest(unittest.TestCase):
         the dataset's bounds."""
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read(window=((10000, 20000), (10000, 20000)))
-            self.assertEqual(a.shape, (3,0,0))
+            self.assertEqual(a.shape, (3, 0, 0))
 
     def test_read_window_overlap(self):
         """Test graceful Numpy-like handling of windows beyond
         the dataset's bounds."""
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read(window=((-100, 20000), (-100, 20000)))
-            self.assertEqual(a.shape, (3,100,100))
+            self.assertEqual(a.shape, (3, 100, 100))
 
     def test_read_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -253,6 +264,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.shape, (1, 2, 2))
             self.assertTrue(hasattr(a, 'mask'))
 
+    @pytest.mark.skipif(not has_hdf, reason="HDF driver not available")
     def test_read_no_band(self):
         with rasterio.open('tests/data/no_band.h5') as s:
             self.assertEqual(s.count, 0)
