@@ -162,6 +162,24 @@ def can_cast_dtype(values, dtype):
         return np.array_equal(values, values.astype(dtype))
 
 
+def can_cast_number(number):
+    """Test if a number == itself as int(number),
+    and return int(number) if true; else, return number
+
+    Parameters
+    ----------
+    number: a float or int
+
+    Returns
+    -------
+    float or int
+    """
+    if int(number) == number:
+        number = int(number)
+
+    return number
+
+
 def validate_dtype(values, valid_dtypes):
     """Test if dtype of values is one of valid_dtypes.
 
