@@ -50,6 +50,9 @@ def show(source, cmap='gray', with_bounds=True):
         rather than pixel coordinates. Only works when source is
         (raster dataset, bidx).
     """
+    if plt is None:  # pragma: no cover
+        raise ImportError("Could not import matplotlib")
+
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         if with_bounds:
@@ -59,12 +62,6 @@ def show(source, cmap='gray', with_bounds=True):
     else:
         arr = source
         extent = None
-    if plt is not None:
-        plt.imshow(arr, cmap=cmap, extent=extent)
-        fig = plt.gcf()
-        fig.show()
-    else:  # pragma: no cover
-        raise ImportError("matplotlib could not be imported")
 
 
 def plotting_extent(source):
