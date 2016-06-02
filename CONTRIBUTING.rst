@@ -82,9 +82,7 @@ we only use a small portion of the features so it eliminates a dependency.
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
 
-Tests are mandatory for new features. We use `pytest <https://pytest.org>`_,
-although those written using the builtin `unittest
-<https://docs.python.org/3/library/unittest.html>`_ module are fine, too.
+Tests are mandatory for new features. We use `pytest <https://pytest.org>`__.
 
 We aspire to 100% coverage for Python modules but overage of the Cython code is
 a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
@@ -178,10 +176,10 @@ need to be recompiled, which is most easily achieved with:
 
     $ pip install -e .
 
-In some cases (when switching between Python 2 and 3?) an exception is raised
-claiming that an object ``has the wrong size, try recompiling``.  In this case
-run ``$ touch rasterio/*.pyx`` and then recompile the extension modules with
-the above command.
+When switching between Python versions the extension modules must be recompiled,
+which can be forced with ``$ touch rasterio/*.pyx`` and then re-installing with
+the command above.  If this is not done an error claiming that an object ``has
+the wrong size, try recompiling`` is raised.
 
 The dependencies required to build the docs can be installed with:
 
