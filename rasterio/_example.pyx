@@ -1,8 +1,5 @@
 # cython: boundscheck=False
 
-import numpy as np
-cimport numpy as np
-
 def compute(
         unsigned char[:, :, :] input,
         unsigned char[:, :, :] output):
