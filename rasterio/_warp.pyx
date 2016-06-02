@@ -565,8 +565,14 @@ def _calculate_default_transform(
         except CPLE_NotSupported as err:
             raise CRSError(err.errmsg)
         except CPLE_AppDefined as err:
-            log.debug("Encountered points outside of valid dst crs region")
-            pass
+            if "Reprojection failed" in str(err):
+                # This "exception" should be treated as a debug msg, not error
+                # "Reprojection failed, err = -14, further errors will be
+                # suppressed on the transform object."
+                log.debug("Encountered points outside of valid dst crs region")
+                pass
+            else:
+                raise err
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)
