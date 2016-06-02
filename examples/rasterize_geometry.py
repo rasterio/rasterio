@@ -1,5 +1,5 @@
 import logging
-import numpy
+import numpy as np
 import sys
 import rasterio
 from rasterio.features import rasterize
@@ -26,8 +26,8 @@ with rasterio.drivers():
             width=cols,
             height=rows,
             count=1,
-            dtype=numpy.uint8,
+            dtype=np.uint8,
             nodata=0,
             transform=IDENTITY,
             crs={'init': "EPSG:4326"}) as out:
-        out.write(result.astype(numpy.uint8), indexes=1)
+        out.write(result.astype(np.uint8), indexes=1)

@@ -13,8 +13,8 @@ raster processing function.
 
 .. code-block:: python
 
-    import numpy
-    cimport numpy
+    import numpy as np
+    cimport numpy as np
 
     def compute(
             unsigned char[:, :, :] input, 
@@ -55,7 +55,7 @@ Here is the program in examples/concurrent-cpu-bound.py.
     import multiprocessing
     import time
 
-    import numpy
+    import numpy as np
     import rasterio
     from rasterio._example import compute
 
@@ -79,7 +79,7 @@ Here is the program in examples/concurrent-cpu-bound.py.
                     def jobs():
                         for ij, window in dst.block_windows():
                             data = src.read(window=window)
-                            result = numpy.zeros(data.shape, dtype=data.dtype)
+                            result = np.zeros(data.shape, dtype=data.dtype)
                             yield data, result, window
 
                     # Submit the jobs to the thread pool executor.

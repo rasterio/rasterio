@@ -10,7 +10,7 @@ performance.
 import asyncio
 import time
 
-import numpy
+import numpy as np
 import rasterio
 
 from rasterio._example import compute
@@ -57,7 +57,7 @@ def main(infile, outfile, with_threads=False):
                     # The _example.compute function modifies no Python
                     # objects and releases the GIL. It can execute
                     # concurrently.
-                    result = numpy.zeros(data.shape, dtype=data.dtype)
+                    result = np.zeros(data.shape, dtype=data.dtype)
                     if with_threads:
                         yield from loop.run_in_executor(
                                             None, compute, data, result)

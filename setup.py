@@ -78,8 +78,8 @@ gdal2plus = False
 gdal_output = [None] * 4
 
 try:
-    import numpy
-    include_dirs.append(numpy.get_include())
+    import numpy as np
+    include_dirs.append(np.get_include())
 except ImportError:
     log.critical("Numpy and its headers are required to run setup(). Exiting.")
     sys.exit(1)

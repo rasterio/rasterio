@@ -25,7 +25,7 @@ band.  This new band is then written to a new single band TIFF.
 
 .. code-block:: python
 
-    import numpy
+    import numpy as np
     import rasterio
 
     # Read raster bands directly to Numpy arrays.
@@ -38,7 +38,7 @@ band.  This new band is then written to a new single band TIFF.
     # a 64-bit float (the numpy default) array. Adding other
     # arrays to it in-place converts those arrays "up" and
     # preserves the type of the total array.
-    total = numpy.zeros(r.shape)
+    total = np.zeros(r.shape)
     for band in r, g, b:
         total += band
     total /= 3

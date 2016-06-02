@@ -1,10 +1,10 @@
 # cython: boundscheck=False
 
-import numpy
-cimport numpy
+import numpy as np
+cimport numpy as np
 
 def compute(
-        unsigned char[:, :, :] input, 
+        unsigned char[:, :, :] input,
         unsigned char[:, :, :] output):
     # Given input and output uint8 arrays, fakes an CPU-intensive
     # computation.
@@ -23,4 +23,3 @@ def compute(
                         val += 1.0
                     val -= 2000.0
                     output[~i, j, k] = <unsigned char>val
-
