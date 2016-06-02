@@ -249,6 +249,12 @@ def reproject(
     if dst_transform:
         dst_transform = guard_transform(dst_transform).to_gdal()
 
+    # Passing None can cause segfault, use empty dict
+    if src_crs is None:
+        src_crs = {}
+    if dst_crs is None:
+        dst_crs = {}
+
     _reproject(
         source,
         destination,
