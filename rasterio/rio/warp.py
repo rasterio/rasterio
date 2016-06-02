@@ -9,7 +9,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
-from rasterio.dtypes import conditional_cast
 from rasterio.env import Env
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
@@ -257,7 +256,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             # value to src_nodata (will be overridden by dst_nodata if it is not None
             if src_nodata is not None:
                 # Update the dst nodata value
-                src_nodata = conditional_cast(src_nodata)
                 out_kwargs.update({
                     'nodata': src_nodata
                 })
@@ -270,7 +268,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         "--src-nodata must be provided because dst-nodata is not None")
                 else:
                     # Update the dst nodata value
-                    dst_nodata = conditional_cast(dst_nodata)
                     out_kwargs.update({
                         'nodata': dst_nodata
                         })
