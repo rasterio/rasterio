@@ -23,7 +23,7 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.errors import (
     DriverRegistrationError, RasterioIOError, NodataShadowWarning)
-from rasterio.five import text_type, string_types
+from rasterio.compat import text_type, string_types
 from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
