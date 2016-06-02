@@ -9,6 +9,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
+from rasterio import dtypes
 from rasterio.env import Env
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
@@ -72,8 +73,10 @@ def x_dst_bounds_handler(ctx, param, value):
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
               default='nearest', help="Resampling method.",
               show_default=True)
-@click.option('--source-nodata', default=None, show_default=True,
-              help="Manually set source nodata")
+@click.option('--src-nodata', default=None, show_default=True,
+              type=float, help="Manually override source nodata")
+@click.option('--dst-nodata', default=None, show_default=True,
+              type=float, help="Manually override destination nodata")
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
 @click.option('--check-invert-proj', type=bool, default=True,
@@ -82,7 +85,7 @@ def x_dst_bounds_handler(ctx, param, value):
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         x_dst_bounds, bounds, res, resampling, source_nodata, threads, check_invert_proj,
+         x_dst_bounds, bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -250,6 +253,24 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_width = src.width
                 dst_height = src.height
 
+            # Validate a manually set source NODATA value
+            # against the input datatype.
+            if src_nodata is not None:
+                if src_nodata is not dtypes.validate_dtype(
+                        src_nodata, [src.meta['dtype']]):
+                    raise click.BadParameter(
+                        "Invalid src dtype: {0} is not {1}".format(
+                            (src_nodata, src.meta['dtype'])))
+
+            # Validate a manually set destination NODATA value
+            # against the input datatype.
+            if dst_nodata is not None:
+                if dst_nodata is not dtypes.validate_dtype(
+                        dst_nodata, [src.meta['dtype']]):
+                    raise click.BadParameter(
+                        "Invalid dst dtype: {0} is not {1}".format(
+                            (dst_nodata, src.meta['dtype'])))
+
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
             if (dst_width < 0 or dst_height < 0 or
@@ -277,9 +298,9 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         destination=rasterio.band(dst, i),
                         src_transform=src.affine,
                         src_crs=src.crs,
-                        src_nodata=source_nodata,
+                        src_nodata=src_nodata,
                         dst_transform=out_kwargs['transform'],
                         dst_crs=out_kwargs['crs'],
-                        # dst_nodata=#TODO
+                        dst_nodata=dst_nodata,
                         resampling=resampling,
                         num_threads=threads)
