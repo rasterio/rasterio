@@ -280,7 +280,7 @@ setup_args = dict(
         'ipython': ['ipython>=2.0'],
         's3': ['boto3>=1.2.4'],
         'test': ['boto3>=1.2.4', 'packaging'],
-        'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx_rtd_theme']})
+        'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']})
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}

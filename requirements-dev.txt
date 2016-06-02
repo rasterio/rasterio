@@ -1,17 +1,4 @@
-affine>=1.3.0
-boto3>=1.2.4
-cligj
 cython>=0.23.4
 delocate
-enum34
-ghp-import
-numpy>=1.10
-snuggs>=1.2
-packaging
-pytest>=2.8.2
-pytest-cov>=2.2.0
 setuptools>=0.9.8
 wheel
-sphinx
-sphinx-rtd-theme
-numpydoc
