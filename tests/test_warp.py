@@ -596,3 +596,54 @@ def test_reproject_unsupported_resampling_guass():
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs,
                 resampling=Resampling.gauss)
+
+
+@pytest.mark.xfail()
+@pytest.mark.parametrize("method", Resampling)
+def test_resample_no_invert_proj(method):
+    """Nearest and bilinear should produce valid results with
+    CHECK_WITH_INVERT_PROJ = False
+    """
+    from rasterio.warp import calculate_default_transform
+    from rasterio._err import CPLE_AppDefined
+
+    with Env(CHECK_WITH_INVERT_PROJ=False):
+        with rasterio.open('tests/data/world.rgb.tif') as src:
+            source = src.read(1)
+            profile = src.profile.copy()
+
+        dst_crs = {'init': 'EPSG:32619'}
+
+        # Calculate the ideal dimensions and transformation in the new crs
+        dst_affine, dst_width, dst_height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds)
+
+        profile['height'] = dst_height
+        profile['width'] = dst_width
+
+        out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
+
+        # nearest works fine
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest)
+
+        assert out.mean() > 0
+
+        # some other methods succeed but produce blank images
+        out = np.empty(src.shape, dtype=np.uint8)
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=method)
+
+        assert out.mean() > 0

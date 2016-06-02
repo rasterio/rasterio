@@ -566,8 +566,7 @@ def _calculate_default_transform(
             raise CRSError(err.errmsg)
         except CPLE_AppDefined as err:
             log.debug("Encountered points outside of valid dst crs region")
-            raise
-            #pass
+            pass
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)

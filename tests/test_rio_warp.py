@@ -395,7 +395,6 @@ def test_warp_badcrs_src_bounds(runner, tmpdir):
     assert "Invalid value for dst_crs" in result.output
 
 
-@pytest.mark.xfail
 def test_warp_reproject_check_invert(runner, tmpdir):
     srcname = 'tests/data/world.rgb.tif'
     outputname = str(tmpdir.join('test.tif'))
