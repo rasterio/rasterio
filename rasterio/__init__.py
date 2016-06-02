@@ -118,7 +118,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     .. code:: python
 
         >>> from affine import Affine
-        >>> Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
+        >>> transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
 
     These coefficients are shown in the figure below.
 

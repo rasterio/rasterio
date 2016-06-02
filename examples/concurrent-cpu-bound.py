@@ -11,7 +11,7 @@ import concurrent.futures
 import multiprocessing
 import time
 
-import numpy
+import numpy as np
 import rasterio
 from rasterio._example import compute
 
@@ -36,7 +36,7 @@ def main(infile, outfile, num_workers=4):
                 def jobs():
                     for ij, window in dst.block_windows():
                         data = src.read(window=window)
-                        result = numpy.zeros(data.shape, dtype=data.dtype)
+                        result = np.zeros(data.shape, dtype=data.dtype)
                         yield data, result, window
 
                 # Submit the jobs to the thread pool executor.
