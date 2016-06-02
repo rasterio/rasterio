@@ -9,7 +9,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
-from rasterio import dtypes
 from rasterio.env import Env
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
@@ -259,6 +258,11 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 if src_nodata is None and src.meta['nodata'] is None:
                     raise click.BadParameter(
                         "src-nodata must be provided because dst-nodata is not None")
+                else:
+                    # Update the dst nodata value
+                    out_kwargs.update({
+                        'nodata': dst_nodata
+                        })
 
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
