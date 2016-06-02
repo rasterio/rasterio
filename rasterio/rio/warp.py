@@ -72,6 +72,8 @@ def x_dst_bounds_handler(ctx, param, value):
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
               default='nearest', help="Resampling method.",
               show_default=True)
+@click.option('--source-nodata', default=None, show_default=True,
+              help="Manually set source nodata")
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
 @click.option('--check-invert-proj', type=bool, default=True,
@@ -80,7 +82,7 @@ def x_dst_bounds_handler(ctx, param, value):
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         x_dst_bounds, bounds, res, resampling, threads, check_invert_proj,
+         x_dst_bounds, bounds, res, resampling, source_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -275,7 +277,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         destination=rasterio.band(dst, i),
                         src_transform=src.affine,
                         src_crs=src.crs,
-                        # src_nodata=#TODO
+                        src_nodata=source_nodata,
                         dst_transform=out_kwargs['transform'],
                         dst_crs=out_kwargs['crs'],
                         # dst_nodata=#TODO
