@@ -48,7 +48,11 @@ def x_dst_bounds_handler(ctx, param, value):
 @files_inout_arg
 @options.output_opt
 @format_opt
-@options.like_file_opt
+@click.option(
+    '--like',
+    type=click.Path(exists=True),
+    help='Raster dataset to use as a template for obtaining affine '
+         'transform (bounds and resolution), and crs.')
 @click.option('--dst-crs', default=None,
               help='Target coordinate reference system.')
 @options.dimensions_opt
