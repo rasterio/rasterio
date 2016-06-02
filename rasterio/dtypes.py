@@ -162,7 +162,7 @@ def can_cast_dtype(values, dtype):
         return np.array_equal(values, values.astype(dtype))
 
 
-def can_cast_number(number):
+def conditional_cast(number):
     """Test if a number == itself as int(number),
     and return int(number) if true; else, return number
 

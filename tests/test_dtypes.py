@@ -6,7 +6,7 @@ from rasterio import (
     ubyte, uint8, uint16, uint32, int16, int32, float32, float64, complex_)
 from rasterio.dtypes import (
     _gdal_typename, is_ndarray, check_dtype, get_minimum_dtype, can_cast_dtype,
-    validate_dtype, can_cast_number
+    validate_dtype, conditional_cast
 )
 
 
@@ -53,11 +53,11 @@ def test_can_cast_dtype():
     assert can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.uint8) == False
 
 
-def test_can_cast_number():
-    assert can_cast_number(0) == 0
-    assert can_cast_number(0.0) == 0
-    assert can_cast_number(1.5) == 1.5
-    assert can_cast_number(255) == 255
+def test_conditional_cast():
+    assert conditional_cast(0) == 0
+    assert conditional_cast(0.0) == 0
+    assert conditional_cast(1.5) == 1.5
+    assert conditional_cast(255) == 255
 
 
 def test_validate_dtype():
