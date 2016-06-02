@@ -233,11 +233,11 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 
 .. code-block:: console
 
-    (venv)$ sudo add-apt-repository ppa:ubuntugis/ppa
-    (venv)$ sudo apt-get update
-    (venv)$ sudo apt-get install libgdal1h gdal-bin libgdal-dev
-    (venv)$ pip install -U pip
-    (venv)$ pip install rasterio
+    $ sudo add-apt-repository ppa:ubuntugis/ppa
+    $ sudo apt-get update
+    $ sudo apt-get install libgdal1h gdal-bin libgdal-dev
+    $ pip install -U pip
+    $ pip install rasterio
 
 Adapt them as necessary for your Linux system.
 
@@ -250,8 +250,8 @@ For a Homebrew based Python environment, do the following.
 
     $ brew upgrade
     $ brew install gdal
-    (venv)$ pip install -U pip
-    (venv)$ pip install --no-use-wheel rasterio
+    $ pip install -U pip
+    $ pip install --no-use-wheel rasterio
 
 Alternatively, you can install GDAL binaries from `kyngchaos
 <http://www.kyngchaos.com/software/frameworks#gdal_complete>`__.  You will then
@@ -274,8 +274,8 @@ setup.py as follows.
 
 .. code-block:: console
 
-    (venv)$ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
-    (venv)$ python setup.py install
+    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
+    $ python setup.py install
 
 We have had success compiling code using the same version of Microsoft's
 Visual Studio used to compile the targeted version of Python (more info on
@@ -288,24 +288,24 @@ Windows PATH otherwise rasterio will fail to work.
 Development and Testing
 -----------------------
 
-See CONTRIBUTING.rst.
+See `CONTRIBUTING.rst <CONTRIBUTING.rst/>`__.
 
 Documentation
 -------------
 
-See https://github.com/mapbox/rasterio/tree/master/docs.
+See `docs/ <docs/>`__.
 
 License
 -------
 
-See LICENSE.txt.
+See `LICENSE.txt <LICENSE.txt>`__.
 
 Authors
 -------
 
-See AUTHORS.txt.
+See `AUTHORS.txt <AUTHORS.txt>`__.
 
 Changes
 -------
 
-See CHANGES.txt.
+See `CHANGES.txt <CHANGES.txt>`__.

@@ -11,6 +11,28 @@ Rights
 
 The BSD license (see LICENSE.txt) applies to all contributions.
 
+Issue Conventions
+=================
+
+Rasterio is a relatively new project and highly active. We have bugs, both
+known and unknown.
+
+Please search existing issues, open and closed, before creating a new one.
+
+Rasterio employs C extension modules, so bug reports very often hinge on the
+following details:
+
+- Operating system type and version (Windows? Ubuntu 12.04? 14.04?)
+- The version and source of Rasterio (PyPI, Anaconda, or somewhere else?)
+- The version and source of GDAL (UbuntuGIS? Homebrew?)
+
+Please provide these details as well as tracebacks and relevant logs.  When
+using the ``$ rio`` CLI logging can be enabled with ``$ rio -v`` and verbosity
+can be increased with ``-vvv``.  Short scripts and datasets demonstrating the
+issue are especially helpful!
+
+Rasterio is not at 1.0 yet and issues proposing new features are welcome.
+
 Design Principles
 =================
 
@@ -28,72 +50,71 @@ Rasterio's API is different from GDAL's API and this is intentional.
   inputs. This is challenging in practice because GDAL embraces global
   variables.
 
+Git Conventions
+===============
+
+We use a variant of centralized workflow described in the `Git Book
+<https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`__.  We
+have no 1.0 release for Rasterio yet and we are tagging and releasing from the
+master branch. Our post-1.0 workflow is to be decided.
+
+Work on features in a new branch of the mapbox/rasterio repo or in a branch on
+a fork. Create a `GitHub pull request
+<https://help.github.com/articles/using-pull-requests/>`__ when the changes are
+ready for review.  We recommend creating a pull request as early as possible
+to give other developers a heads up and to provide an opportunity for valuable
+early feedback.
+
 Code Conventions
 ================
 
 The ``rasterio`` namespace contains both Python and C extension modules. All
 C extension modules are written using `Cython <http://cython.org/>`__. The
 Cython language is a superset of Python. Cython files end with ``.pyx`` and
-``.pxd`` and are where we keep all the code that calls C functions in the GDAL
-library.
+``.pxd`` and are where we keep all the code that calls GDAL's C functions.
 
-Rasterio supports Python 2 and Python 3 in the same code base. We have a
-compatibility module named ``five.py``. Renaming it is a to-do.
+Rasterio supports Python 2 and Python 3 in the same code base, which is
+aided by an internal compatibility module named ``five.py``. Renaming it is a
+to-do (`#719 <https://github.com/mapbox/rasterio/issues/719>`__).  It functions
+similarly to the more widely known `six <https://pythonhosted.org/six/>`__ but
+we only use a small portion of the features so it eliminates a dependency.
 
 We strongly prefer code adhering to `PEP8
 <https://www.python.org/dev/peps/pep-0008/>`__.
 
-Tests are mandatory for new features. We use ``pytest``. Tests written using
-``unittest`` are fine, too.
+Tests are mandatory for new features. We use `pytest <https://pytest.org>`__.
 
-We aspire to 100% coverage for Python modules. Coverage of the Cython code is
-a future aspiration.
-
-Git Conventions
-===============
-
-TODO
-
-Issue Conventions
-=================
-
-Rasterio is a relatively new project and highly active. We have bugs, both
-known and unknown.
-
-Please do a search of existing issues, open and closed, before creating a
-new one.
-
-Because Rasterio has C extension modules, bug reports very often hinge on the
-following details:
-
-- Operating system type and version (Windows? Ubuntu 12.04? 14.04?)
-- The source of the Rasterio distribution you installed (PyPI, Anaconda, or
-  somewhere else?)
-- The version and source of the GDAL library on your system (UbuntuGIS? 
-  Homebrew?)
-
-Please provide these details as well as Rasterio version and tracebacks from
-your program. Short scripts and datasets that demonstrate the bug are 
-especially helpful!
-
-Rasterio is not at 1.0 yet and issues proposing new features are welcome.
+We aspire to 100% coverage for Python modules but overage of the Cython code is
+a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
 
 Development Environment
 =======================
 
-To develop Rasterio, you will need Python 2.7, 3.4, or 3.5 (SG: I'm largely
-developing in a Python 3.5 environment) and a C compiler. Windows compiler
-details are forthcoming.
+Developing Rasterio requires Python 2.7 or any final release after and
+including 3.4.  We prefer developing with the most recent version of Python
+but recognize this is not possible for all contributors.  A C compiler is also
+required to leverage `existing protocols
+<https://docs.python.org/3.5/extending/extending.html>`__ for extending Python
+with C or C++.  See the Windows install instructions in the `readme
+<README.rst>`__ for more information about building on Windows.
 
-How to extend Python with C or C++ is explained at
-https://docs.python.org/3.5/extending/extending.html. All of that applies to
-Rasterio development, we're not doing anything extraordinary.
+Initial Setup
+-------------
 
-Cloning Rasterio's Git repository is the next step
-(see https://github.com/mapbox/rasterio).
+First, clone Rasterio's ``git`` repo:
 
-Always develop in a `virtual environment
-<http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__.
+.. code-block:: console
+
+    $ git clone https://github.com/mapbox/rasterio
+
+Development should occur within a `virtual environment
+<http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__ to better isolate
+development work from custom environments.
+
+In some cases installing a library with an accompanying executable inside a
+virtual environment causes the shell to initially look outside the environment
+for the executable.  If this occurs try deactivating and reactivating the
+environment.
 
 Installing GDAL
 ---------------
@@ -101,15 +122,14 @@ Installing GDAL
 The GDAL library and its headers are required to build Rasterio. We do not
 have currently have guidance for any platforms other than Linux and OS X.
 
-
-On Linux, you should obtain GDAL and its headers using your distro's 
+On Linux, GDAL and its headers should be available through your distro's
 package manager. For Ubuntu the commands are:
 
 .. code-block:: console
 
-    (venv)$ sudo add-apt-repository ppa:ubuntugis/ppa
-    (venv)$ sudo apt-get update
-    (venv)$ sudo apt-get install libgdal1h gdal-bin libgdal-dev
+    $ sudo add-apt-repository ppa:ubuntugis/ppa
+    $ sudo apt-get update
+    $ sudo apt-get install libgdal1h gdal-bin libgdal-dev
 
 On OS X, Homebrew is a reliable way to get GDAL.
 
@@ -120,34 +140,74 @@ On OS X, Homebrew is a reliable way to get GDAL.
 Python build requirements
 -------------------------
 
-Provision your virtualenv with Rasterio's build requirements. Rasterio's
-setup.py script will not run unless Cython and Numpy are installed, so do this
-first from the Rasterio repo directory.
+Provision a virtualenv with Rasterio's build requirements.  Rasterio's
+``setup.py`` script will not run unless Cython and Numpy are installed, so do
+this first from the Rasterio repo directory.
+
+Linux users may need to install some additional Numpy dependencies:
 
 .. code-block:: console
 
-    (riodev)$ pip install -U pip
-    (riodev)$ pip install -r requirements-dev.txt
+    $ sudo apt-get install libatlas-dev libatlas-base-dev gfortran
+
+then:
+
+.. code-block:: console
+
+    $ pip install -U pip
+    $ pip install -r requirements-dev.txt
 
 Installing Rasterio
 -------------------
 
-Once that's done, install Rasterio in editable mode with the "docs,test"
-extras.
+Rasterio, its Cython extensions, normal dependencies, and dev dependencies can
+be installed with ``$ pip``.  Installing Rasterio in editable mode while
+developing is very but only affects the Python files.  Specifying the
+``[test]`` extra in the command below tells ``$ pip`` to also install
+Rasterio's dev dependencies.
 
 .. code-block:: console
 
-    (riodev)$ pip install -e .[docs,test]
+    $ pip install -e .[test]
 
-Any time you edit a Cython (``.pyx`` or ``.pxd``) file, you'll need to rerun
-that command to build the extension modules.
+Any time a Cython (``.pyx`` or ``.pxd``) file is edited the extension modules
+need to be recompiled, which is most easily achieved with:
+
+.. code-block:: console
+
+    $ pip install -e .
+
+When switching between Python versions the extension modules must be recompiled,
+which can be forced with ``$ touch rasterio/*.pyx`` and then re-installing with
+the command above.  If this is not done an error claiming that an object ``has
+the wrong size, try recompiling`` is raised.
+
+The dependencies required to build the docs can be installed with:
+
+.. code-block:: console
+
+    $ pip install -e .[docs]
 
 Running the tests
 -----------------
 
-To run the tests:
+Rasterio's tests live in ``tests <tests/>`` and generally match the main
+package layout.
+
+To run the entire suite and the code coverage report:
 
 .. code-block:: console
 
-    (riodev)$ python -m pytest --cov rasterio --cov-report term-missing
+    $ py.test --cov rasterio --cov-report term-missing
 
+A single test file:
+
+.. code-block:: console
+
+    $ py.test tests/test_band.py
+
+A single test:
+
+.. code-block:: console
+
+    $ py.test tests/test_band.py::test_band
