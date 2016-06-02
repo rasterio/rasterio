@@ -3,7 +3,7 @@ import logging
 import sys
 import unittest
 
-import numpy
+import numpy as np
 import pytest
 
 import rasterio
@@ -86,13 +86,13 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_ubyte_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = numpy.zeros((718, 791), dtype=rasterio.ubyte)
+            a = np.zeros((718, 791), dtype=rasterio.ubyte)
             a = s.read(1, a)
             self.assertEqual(a.dtype, rasterio.ubyte)
 
     def test_read_out_dtype_fail(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = numpy.zeros((718, 791), dtype=rasterio.float32)
+            a = np.zeros((718, 791), dtype=rasterio.float32)
             try:
                 s.read(1, a)
             except ValueError as e:
@@ -215,34 +215,34 @@ class ReaderContextTest(unittest.TestCase):
     def test_read_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             # regular array, without mask
-            a = numpy.empty((3, 718, 791), numpy.ubyte)
+            a = np.empty((3, 718, 791), np.ubyte)
             b = s.read(out=a)
             self.assertFalse(hasattr(a, 'mask'))
             self.assertFalse(hasattr(b, 'mask'))
             # with masked array
-            a = numpy.ma.empty((3, 718, 791), numpy.ubyte)
+            a = np.ma.empty((3, 718, 791), np.ubyte)
             b = s.read(out=a)
             self.assertEqual(id(a.data), id(b.data))
             # TODO: is there a way to id(a.mask)?
             self.assertTrue(hasattr(a, 'mask'))
             self.assertTrue(hasattr(b, 'mask'))
             # use all parameters
-            a = numpy.empty((1, 20, 10), numpy.ubyte)
+            a = np.empty((1, 20, 10), np.ubyte)
             b = s.read([2], a, ((310, 330), (320, 330)), False)
             self.assertEqual(id(a), id(b))
             # pass 2D array with index
-            a = numpy.empty((20, 10), numpy.ubyte)
+            a = np.empty((20, 10), np.ubyte)
             b = s.read(2, a, ((310, 330), (320, 330)), False)
             self.assertEqual(id(a), id(b))
             self.assertEqual(a.ndim, 2)
             # different data types
-            a = numpy.empty((3, 718, 791), numpy.float64)
+            a = np.empty((3, 718, 791), np.float64)
             self.assertRaises(ValueError, s.read, out=a)
             # different number of array dimensions
-            a = numpy.empty((20, 10), numpy.ubyte)
+            a = np.empty((20, 10), np.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)
             # different number of array shape in 3D
-            a = numpy.empty((2, 20, 10), numpy.ubyte)
+            a = np.empty((2, 20, 10), np.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)
 
     def test_read_nan_nodata(self):
@@ -251,13 +251,13 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
             self.assertTrue(hasattr(a, 'mask'))
-            self.assertNotEqual(a.fill_value, numpy.nan)
-            self.assertEqual(str(list(set(s.nodatavals))), str([numpy.nan]))
+            self.assertNotEqual(a.fill_value, np.nan)
+            self.assertEqual(str(list(set(s.nodatavals))), str([np.nan]))
             self.assertEqual(a.dtype, rasterio.float32)
-            self.assertFalse(numpy.isnan(a).any())
+            self.assertFalse(np.isnan(a).any())
             a = s.read(masked=False)
             self.assertFalse(hasattr(a, 'mask'))
-            self.assertTrue(numpy.isnan(a).any())
+            self.assertTrue(np.isnan(a).any())
             # Window does not contain a nodatavalue, result is still masked
             a = s.read(window=((0, 2), (0, 2)), masked=True)
             self.assertEqual(a.ndim, 3)

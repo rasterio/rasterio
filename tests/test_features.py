@@ -1,6 +1,6 @@
 import logging
 import sys
-import numpy
+import numpy as np
 import pytest
 
 from affine import Affine
@@ -61,7 +61,7 @@ def test_bounds_existing_bbox(basic_featurecollection):
 
 def test_geometry_mask(basic_geometry, basic_image_2x2):
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2 == 0,
             geometry_mask(
                 [basic_geometry],
@@ -73,7 +73,7 @@ def test_geometry_mask(basic_geometry, basic_image_2x2):
 
 def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2,
             geometry_mask(
                 [basic_geometry],
@@ -88,20 +88,20 @@ def test_rasterize(basic_geometry, basic_image_2x2):
     """ Rasterize operation should succeed for both an out_shape and out """
 
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2,
             rasterize([basic_geometry], out_shape=DEFAULT_SHAPE)
         )
 
-        out = numpy.zeros(DEFAULT_SHAPE)
+        out = np.zeros(DEFAULT_SHAPE)
         rasterize([basic_geometry], out=out)
-        assert numpy.array_equal(basic_image_2x2, out)
+        assert np.array_equal(basic_image_2x2, out)
 
 
 def test_rasterize_invalid_out_dtype(basic_geometry):
     """ A non-supported data type for out should raise an exception """
 
-    out = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.int64)
+    out = np.zeros(DEFAULT_SHAPE, dtype=np.int64)
     with Env():
         with pytest.raises(ValueError):
             rasterize([basic_geometry], out=out)
@@ -110,7 +110,7 @@ def test_rasterize_invalid_out_dtype(basic_geometry):
 def test_rasterize_shapes_out_dtype_mismatch(basic_geometry):
     """ Shape values must be able to fit in data type for out """
 
-    out = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.uint8)
+    out = np.zeros(DEFAULT_SHAPE, dtype=np.uint8)
     with Env():
         with pytest.raises(ValueError):
             rasterize([(basic_geometry, 10000000)], out=out)
@@ -151,7 +151,7 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
     truth = basic_image_2x2 * default_value
 
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             truth,
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE,
@@ -176,7 +176,7 @@ def test_rasterize_fill_value(basic_geometry, basic_image_2x2):
 
     default_value = 2
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2 + 1,
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1,
@@ -203,13 +203,13 @@ def test_rasterize_fill_value_dtype_mismatch(basic_geometry):
         with pytest.raises(ValueError):
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE, fill=1000000,
-                default_value=2, dtype=numpy.uint8
+                default_value=2, dtype=np.uint8
             )
 
 
 def test_rasterize_all_touched(basic_geometry, basic_image):
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image,
             rasterize(
                 [basic_geometry], out_shape=DEFAULT_SHAPE, all_touched=True
@@ -225,7 +225,7 @@ def test_rasterize_value(basic_geometry, basic_image_2x2):
 
     value = 5
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2 * value,
             rasterize(
                 [(basic_geometry, value)], out_shape=DEFAULT_SHAPE
@@ -260,7 +260,7 @@ def test_rasterize_supported_dtype(basic_geometry):
         )
 
         for dtype, default_value in supported_types:
-            truth = numpy.zeros(DEFAULT_SHAPE, dtype=dtype)
+            truth = np.zeros(DEFAULT_SHAPE, dtype=dtype)
             truth[2:4, 2:4] = default_value
 
             result = rasterize(
@@ -269,17 +269,17 @@ def test_rasterize_supported_dtype(basic_geometry):
                 default_value=default_value,
                 dtype=dtype
             )
-            assert numpy.array_equal(result, truth)
-            assert numpy.dtype(result.dtype) == numpy.dtype(truth.dtype)
+            assert np.array_equal(result, truth)
+            assert np.dtype(result.dtype) == np.dtype(truth.dtype)
 
             result = rasterize(
                 [(basic_geometry, default_value)],
                 out_shape=DEFAULT_SHAPE
             )
-            if numpy.dtype(dtype).kind == 'f':
-                assert numpy.allclose(result, truth)
+            if np.dtype(dtype).kind == 'f':
+                assert np.allclose(result, truth)
             else:
-                assert numpy.array_equal(result, truth)
+                assert np.array_equal(result, truth)
             # Since dtype is auto-detected, it may not match due to upcasting
 
 
@@ -336,12 +336,12 @@ def test_rasterize_geometries_symmetric():
     """ Make sure that rasterize is symmetric with shapes """
 
     transform = (1.0, 0.0, 0.0, 0.0, -1.0, 0.0)
-    truth = numpy.zeros(DEFAULT_SHAPE, dtype=rasterio.ubyte)
+    truth = np.zeros(DEFAULT_SHAPE, dtype=rasterio.ubyte)
     truth[2:5, 2:5] = 1
     with Env():
         s = shapes(truth, transform=transform)
         result = rasterize(s, out_shape=DEFAULT_SHAPE, transform=transform)
-        assert numpy.array_equal(result, truth)
+        assert np.array_equal(result, truth)
 
 
 def test_rasterize_internal_driver_manager(basic_geometry):
@@ -423,7 +423,7 @@ def test_shapes_connectivity_invalid(diagonal_image):
 def test_shapes_mask(basic_image):
     """ Only pixels not masked out should be converted to features """
 
-    mask = numpy.ones(basic_image.shape, dtype=rasterio.bool_)
+    mask = np.ones(basic_image.shape, dtype=rasterio.bool_)
     mask[4:5, 4:5] = False
 
     with Env():
@@ -445,10 +445,10 @@ def test_shapes_blank_mask(basic_image):
     """ Mask is blank so results should mask shapes without mask """
 
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             list(shapes(
                 basic_image,
-                mask=numpy.ones(basic_image.shape, dtype=rasterio.bool_))
+                mask=np.ones(basic_image.shape, dtype=rasterio.bool_))
             ),
             list(shapes(basic_image))
         )
@@ -461,7 +461,7 @@ def test_shapes_invalid_mask_shape(basic_image):
         with pytest.raises(ValueError):
             next(shapes(
                 basic_image,
-                mask=numpy.ones(
+                mask=np.ones(
                     (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
                     dtype=rasterio.bool_
                 )
@@ -476,7 +476,7 @@ def test_shapes_invalid_mask_dtype(basic_image):
             with pytest.raises(ValueError):
                 next(shapes(
                     basic_image,
-                    mask=numpy.ones(basic_image.shape, dtype=dtype)
+                    mask=np.ones(basic_image.shape, dtype=dtype)
                 ))
 
 
@@ -494,7 +494,7 @@ def test_shapes_supported_dtypes(basic_image):
     with Env():
         for dtype, test_value in supported_types:
             shape, value = next(shapes(basic_image.astype(dtype) * test_value))
-            assert numpy.allclose(value, test_value)
+            assert np.allclose(value, test_value)
 
 
 def test_shapes_unsupported_dtypes(basic_image):
@@ -527,7 +527,7 @@ def test_sieve_small(basic_image, pixelated_image):
     """
 
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image,
             sieve(pixelated_image, basic_image.sum())
         )
@@ -539,7 +539,7 @@ def test_sieve_large(basic_image):
     """
 
     with Env():
-        assert not numpy.any(sieve(basic_image, basic_image.sum() + 1))
+        assert not np.any(sieve(basic_image, basic_image.sum() + 1))
 
 
 def test_sieve_invalid_size(basic_image):
@@ -552,7 +552,7 @@ def test_sieve_invalid_size(basic_image):
 def test_sieve_connectivity_rook(diagonal_image):
     """ Diagonals are not connected, so feature is removed """
 
-    assert not numpy.any(
+    assert not np.any(
         sieve(diagonal_image, diagonal_image.sum(), connectivity=4)
     )
 
@@ -560,7 +560,7 @@ def test_sieve_connectivity_rook(diagonal_image):
 def test_sieve_connectivity_queen(diagonal_image):
     """ Diagonals are connected, so feature is retained """
 
-    assert numpy.array_equal(
+    assert np.array_equal(
         diagonal_image,
         sieve(diagonal_image, diagonal_image.sum(), connectivity=8)
     )
@@ -575,11 +575,11 @@ def test_sieve_out(basic_image):
     """ Output array passed in should match the returned array """
 
     with Env():
-        output = numpy.zeros_like(basic_image)
+        output = np.zeros_like(basic_image)
         output[1:3, 1:3] = 5
         sieved_image = sieve(basic_image, basic_image.sum(), out=output)
-        assert numpy.array_equal(basic_image, sieved_image)
-        assert numpy.array_equal(output, sieved_image)
+        assert np.array_equal(basic_image, sieved_image)
+        assert np.array_equal(output, sieved_image)
 
 
 def test_sieve_invalid_out(basic_image):
@@ -589,13 +589,13 @@ def test_sieve_invalid_out(basic_image):
         with pytest.raises(ValueError):
             sieve(
                 basic_image, basic_image.sum(),
-                out=numpy.zeros(basic_image.shape, dtype=rasterio.int32)
+                out=np.zeros(basic_image.shape, dtype=rasterio.int32)
             )
 
         with pytest.raises(ValueError):
             sieve(
                 basic_image, basic_image.sum(),
-                out=numpy.zeros(
+                out=np.zeros(
                     (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
                     dtype=rasterio.ubyte
                 )
@@ -608,20 +608,20 @@ def test_sieve_mask(basic_image):
     as mask is a bool or uint8 dtype.
     """
 
-    mask = numpy.ones(basic_image.shape, dtype=rasterio.bool_)
+    mask = np.ones(basic_image.shape, dtype=rasterio.bool_)
     mask[4:5, 4:5] = False
-    truth = basic_image * numpy.invert(mask)
+    truth = basic_image * np.invert(mask)
 
     with Env():
         sieved_image = sieve(basic_image, basic_image.sum(), mask=mask)
         assert sieved_image.sum() > 0
 
-        assert numpy.array_equal(
+        assert np.array_equal(
             truth,
             sieved_image
         )
 
-        assert numpy.array_equal(
+        assert np.array_equal(
             truth.astype(rasterio.uint8),
             sieved_image
         )
@@ -630,9 +630,9 @@ def test_sieve_mask(basic_image):
 def test_sieve_blank_mask(basic_image):
     """ A blank mask should have no effect """
 
-    mask = numpy.ones(basic_image.shape, dtype=rasterio.bool_)
+    mask = np.ones(basic_image.shape, dtype=rasterio.bool_)
     with Env():
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image,
             sieve(basic_image, basic_image.sum(), mask=mask)
         )
@@ -645,7 +645,7 @@ def test_sieve_invalid_mask_shape(basic_image):
         with pytest.raises(ValueError):
             sieve(
                 basic_image, basic_image.sum(),
-                mask=numpy.ones(
+                mask=np.ones(
                     (basic_image.shape[0] + 10, basic_image.shape[1] + 10),
                     dtype=rasterio.bool_
                 )
@@ -660,7 +660,7 @@ def test_sieve_invalid_mask_dtype(basic_image):
             with pytest.raises(ValueError):
                 sieve(
                     basic_image, basic_image.sum(),
-                    mask=numpy.ones(basic_image.shape, dtype=dtype)
+                    mask=np.ones(basic_image.shape, dtype=dtype)
                 )
 
 
@@ -678,8 +678,8 @@ def test_sieve_supported_dtypes(basic_image):
         for dtype, test_value in supported_types:
             truth = (basic_image).astype(dtype) * test_value
             sieved_image = sieve(truth, basic_image.sum())
-            assert numpy.array_equal(truth, sieved_image)
-            assert numpy.dtype(sieved_image.dtype) == numpy.dtype(dtype)
+            assert np.array_equal(truth, sieved_image)
+            assert np.dtype(sieved_image.dtype) == np.dtype(dtype)
 
 
 def test_sieve_unsupported_dtypes(basic_image):
@@ -711,10 +711,10 @@ def test_sieve_band(pixelated_image, pixelated_image_file):
 
         with rasterio.open(pixelated_image_file) as src:
             band = rasterio.band(src, 1)
-            assert numpy.array_equal(truth, sieve(band, 9))
+            assert np.array_equal(truth, sieve(band, 9))
 
             # Mask band should also work but will be a no-op
-            assert numpy.array_equal(
+            assert np.array_equal(
                 pixelated_image,
                 sieve(band, 9, mask=band)
             )
@@ -723,7 +723,7 @@ def test_sieve_band(pixelated_image, pixelated_image_file):
 def test_sieve_internal_driver_manager(basic_image, pixelated_image):
     """ Sieve should work without explicitly calling driver manager """
 
-    assert numpy.array_equal(
+    assert np.array_equal(
         basic_image,
         sieve(pixelated_image, basic_image.sum())
     )

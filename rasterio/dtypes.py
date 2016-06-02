@@ -100,10 +100,10 @@ def get_minimum_dtype(values):
     -------
     rasterio dtype string
     """
-    import numpy
+    import numpy as np
 
     if not is_ndarray(values):
-        values = numpy.array(values)
+        values = np.array(values)
 
     min_value = values.min()
     max_value = values.max()
@@ -129,9 +129,9 @@ def get_minimum_dtype(values):
 
 def is_ndarray(array):
     """Check if array is a ndarray."""
-    import numpy
+    import numpy as np
 
-    return isinstance(array, numpy.ndarray) or hasattr(array, '__array__')
+    return isinstance(array, np.ndarray) or hasattr(array, '__array__')
 
 
 def can_cast_dtype(values, dtype):
@@ -147,19 +147,19 @@ def can_cast_dtype(values, dtype):
     boolean
         True if values can be cast to data type.
     """
-    import numpy
+    import numpy as np
 
     if not is_ndarray(values):
-        values = numpy.array(values)
+        values = np.array(values)
 
-    if values.dtype.name == numpy.dtype(dtype).name:
+    if values.dtype.name == np.dtype(dtype).name:
         return True
 
     elif values.dtype.kind == 'f':
-        return numpy.allclose(values, values.astype(dtype))
+        return np.allclose(values, values.astype(dtype))
 
     else:
-        return numpy.array_equal(values, values.astype(dtype))
+        return np.array_equal(values, values.astype(dtype))
 
 
 def validate_dtype(values, valid_dtypes):
@@ -176,10 +176,10 @@ def validate_dtype(values, valid_dtypes):
     boolean:
         True if dtype of values is one of valid_dtypes
     """
-    import numpy
+    import numpy as np
 
     if not is_ndarray(values):
-        values = numpy.array(values)
+        values = np.array(values)
 
     return (values.dtype.name in valid_dtypes or
             get_minimum_dtype(values) in valid_dtypes)

@@ -3,7 +3,7 @@ import re
 import subprocess
 import sys
 
-import numpy
+import numpy as np
 import pytest
 
 import rasterio
@@ -42,7 +42,7 @@ def test_no_crs(tmpdir):
     with rasterio.open(
             name, 'w', driver='GTiff', width=100, height=100, count=1,
             dtype=rasterio.uint8) as dst:
-        dst.write(numpy.ones((100, 100), dtype=rasterio.uint8), indexes=1)
+        dst.write(np.ones((100, 100), dtype=rasterio.uint8), indexes=1)
 
 def test_context(tmpdir):
     name = str(tmpdir.join("test_context.tif"))
@@ -73,7 +73,7 @@ def test_context(tmpdir):
 
 def test_write_ubyte(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -83,7 +83,7 @@ def test_write_ubyte(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 def test_write_ubyte_multi(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -93,7 +93,7 @@ def test_write_ubyte_multi(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 def test_write_ubyte_multi_list(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
-    a = numpy.array([numpy.ones((100, 100), dtype=rasterio.ubyte) * 127])
+    a = np.array([np.ones((100, 100), dtype=rasterio.ubyte) * 127])
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -103,7 +103,7 @@ def test_write_ubyte_multi_list(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 def test_write_ubyte_multi_3(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
-    arr = numpy.array(3 * [numpy.ones((100, 100), dtype=rasterio.ubyte) * 127])
+    arr = np.array(3 * [np.ones((100, 100), dtype=rasterio.ubyte) * 127])
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=3,
@@ -114,7 +114,7 @@ def test_write_ubyte_multi_3(tmpdir):
 
 def test_write_float(tmpdir):
     name = str(tmpdir.join("test_write_float.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.float32) * 42.0
+    a = np.ones((100, 100), dtype=rasterio.float32) * 42.0
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=2,
@@ -127,7 +127,7 @@ def test_write_float(tmpdir):
 
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = [101985.0, 300.0379266750948, 0.0,
                  2826915.0, 0.0, -300.041782729805]
     with rasterio.open(
@@ -147,7 +147,7 @@ def test_write_crs_transform(tmpdir):
 
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = [101985.0, 300.0379266750948, 0.0,
                  2826915.0, 0.0, -300.041782729805]
     with rasterio.open(
@@ -168,7 +168,7 @@ def test_write_crs_transform_affine(tmpdir):
 def test_write_crs_transform_2(tmpdir):
     """Using 'EPSG:32618' as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = [101985.0, 300.0379266750948, 0.0,
                  2826915.0, 0.0, -300.041782729805]
     with rasterio.open(
@@ -188,7 +188,7 @@ def test_write_crs_transform_2(tmpdir):
 def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = [101985.0, 300.0379266750948, 0.0,
                  2826915.0, 0.0, -300.041782729805]
     crs_wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
@@ -208,7 +208,7 @@ def test_write_crs_transform_3(tmpdir):
 
 def test_write_meta(tmpdir):
     name = str(tmpdir.join("test_write_meta.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     meta = dict(driver='GTiff', width=100, height=100, count=1)
     with rasterio.open(name, 'w', dtype=a.dtype, **meta) as s:
         s.write(a, indexes=1)
@@ -217,7 +217,7 @@ def test_write_meta(tmpdir):
 
 def test_write_nodata(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=2,
@@ -230,7 +230,7 @@ def test_write_nodata(tmpdir):
 
 def test_guard_nodata(tmpdir):
     name = str(tmpdir.join("test_guard_nodata.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     with pytest.raises(ValueError):
         rasterio.open(
             name, 'w',
@@ -240,7 +240,7 @@ def test_guard_nodata(tmpdir):
 
 def test_write_lzw(tmpdir):
     name = str(tmpdir.join("test_write_lzw.tif"))
-    a = numpy.ones((100, 100), dtype=rasterio.ubyte) * 127
+    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     with rasterio.open(
             name, 'w',
             driver='GTiff',
@@ -259,9 +259,9 @@ def test_write_noncontiguous(tmpdir):
     BANDS = 6
     # Create a 3-D random int array (rows, columns, bands)
     total = ROWS * COLS * BANDS
-    arr = numpy.random.randint(
+    arr = np.random.randint(
         0, 10, size=total).reshape(
-            (ROWS, COLS, BANDS), order='F').astype(numpy.int32)
+            (ROWS, COLS, BANDS), order='F').astype(np.int32)
     kwargs = {
         'driver': 'GTiff',
         'width': COLS,

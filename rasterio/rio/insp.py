@@ -8,7 +8,7 @@ import sys
 import collections
 import warnings
 
-import numpy
+import numpy as np
 import click
 
 from . import options
@@ -45,12 +45,12 @@ def stats(source):
         arr = source[0].read(source[1])
     else:
         arr = source
-    return Stats(numpy.min(arr), numpy.max(arr), numpy.mean(arr))
+    return Stats(np.min(arr), np.max(arr), np.mean(arr))
 
 
 def main(banner, dataset, alt_interpreter=None):
     """ Main entry point for use with python interpreter """
-    local = dict(funcs, src=dataset, np=numpy, rio=rasterio, plt=plt)
+    local = dict(funcs, src=dataset, np=np, rio=rasterio, plt=plt)
     if not alt_interpreter:
         code.interact(banner, local=local)
     elif alt_interpreter == 'ipython':  # pragma: no cover

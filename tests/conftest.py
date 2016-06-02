@@ -7,7 +7,7 @@ import sys
 from click.testing import CliRunner
 import py
 import pytest
-import numpy
+import numpy as np
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -107,10 +107,10 @@ def basic_image():
     Returns
     -------
 
-    numpy ndarray
+    np ndarray
     """
 
-    image = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.uint8)
+    image = np.zeros(DEFAULT_SHAPE, dtype=np.uint8)
     image[2:5, 2:5] = 1
 
     return image
@@ -126,10 +126,10 @@ def basic_image_2x2():
     Returns
     -------
 
-    numpy ndarray
+    np ndarray
     """
 
-    image = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.uint8)
+    image = np.zeros(DEFAULT_SHAPE, dtype=np.uint8)
     image[2:4, 2:4] = 1
 
     return image
@@ -144,7 +144,7 @@ def pixelated_image(basic_image):
     Returns
     -------
 
-    numpy ndarray
+    np ndarray
     """
 
     image = basic_image.copy()
@@ -162,11 +162,11 @@ def diagonal_image():
     Returns
     -------
 
-    numpy ndarray
+    np ndarray
     """
 
-    image = numpy.zeros(DEFAULT_SHAPE, dtype=numpy.uint8)
-    numpy.fill_diagonal(image, 1)
+    image = np.zeros(DEFAULT_SHAPE, dtype=np.uint8)
+    np.fill_diagonal(image, 1)
     return image
 
 

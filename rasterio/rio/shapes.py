@@ -88,7 +88,7 @@ def shapes(
       $ rio shapes --as-mask --bidx 1 tests/data/RGB.byte.tif
     """
     # These import numpy, which we don't want to do unless it's needed.
-    import numpy
+    import numpy as np
     import rasterio.features
     import rasterio.warp
 
@@ -145,14 +145,14 @@ def shapes(
                         msk_shape = (
                             src.height // sampling, src.width // sampling)
                         if bidx is None:
-                            msk = numpy.zeros(
+                            msk = np.zeros(
                                 (src.count,) + msk_shape, 'uint8')
                         else:
-                            msk = numpy.zeros(msk_shape, 'uint8')
+                            msk = np.zeros(msk_shape, 'uint8')
                         msk = src.read_masks(bidx, msk)
 
                     if bidx is None:
-                        msk = numpy.logical_or.reduce(msk).astype('uint8')
+                        msk = np.logical_or.reduce(msk).astype('uint8')
 
                     # Possibly overridden below.
                     img = msk
@@ -162,7 +162,7 @@ def shapes(
                     if sampling == 1:
                         img = src.read(bidx, masked=False)
                     else:
-                        img = numpy.zeros(
+                        img = np.zeros(
                             (src.height // sampling, src.width // sampling),
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read(bidx, img, masked=False)
@@ -172,7 +172,7 @@ def shapes(
                 # categories to 2 and likely reduces the number of
                 # shapes.
                 if as_mask:
-                    tmp = numpy.ones_like(img, 'uint8') * 255
+                    tmp = np.ones_like(img, 'uint8') * 255
                     tmp[img == 0] = 0
                     img = tmp
                     if not with_nodata:
