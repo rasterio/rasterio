@@ -63,6 +63,10 @@ def show(source, cmap='gray', with_bounds=True):
         arr = source
         extent = None
 
+    plt.imshow(arr, cmap=cmap, extent=extent)
+    plt.show()
+
+
 
 def plotting_extent(source):
     """Returns an extent in the format needed
@@ -172,5 +176,4 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     plt.grid(True)
     plt.xlabel('DN')
     plt.ylabel('Frequency')
-    fig = plt.gcf()
-    fig.show()
+    plt.show()
