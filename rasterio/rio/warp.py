@@ -252,12 +252,19 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_width = src.width
                 dst_height = src.height
 
+            # If src_nodata is not None, update the dst metadata NODATA
+            # value to src_nodata (will be overridden by dst_nodata if it is not None
+            if src_nodata is not None:
+                out_kwargs.update({
+                    'nodata': src_nodata
+                })
+
             # Validate a manually set destination NODATA value
             # against the input datatype.
             if dst_nodata is not None:
                 if src_nodata is None and src.meta['nodata'] is None:
                     raise click.BadParameter(
-                        "src-nodata must be provided because dst-nodata is not None")
+                        "--src-nodata must be provided because dst-nodata is not None")
                 else:
                     # Update the dst nodata value
                     out_kwargs.update({

@@ -57,33 +57,6 @@ def test_dst_crs_error_epsg_2(runner, tmpdir):
     assert 'for dst_crs: EPSG codes are positive integers' in result.output
 
 
-def test_src_nodata_int_ok(runner, tmpdir):
-    """Valid integer source nodata dtype"""
-    srcname = 'tests/data/RGB.byte.tif'
-    outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(main_group, [
-        'warp', srcname, outputname, '--src-nodata', '0'])
-    assert result.exit_code == 0
-
-
-def test_src_nodata_float_ok(runner, tmpdir):
-    """Valid integer source nodata dtype"""
-    srcname = 'tests/data/float.tif'
-    outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(main_group, [
-        'warp', srcname, outputname, '--src-nodata', '1.0'])
-    assert result.exit_code == 0
-
-
-def test_dst_nodata_int_ok(runner, tmpdir):
-    """Valid integer destination nodata dtype"""
-    srcname = 'tests/data/RGB.byte.tif'
-    outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(main_group, [
-        'warp', srcname, outputname, '--dst-nodata', '255'])
-    assert result.exit_code == 0
-
-
 def test_dst_nodata_float_no_src_nodata_err(runner, tmpdir):
     """Valid integer destination nodata dtype"""
     srcname = 'tests/data/float.tif'
@@ -94,13 +67,48 @@ def test_dst_nodata_float_no_src_nodata_err(runner, tmpdir):
     assert 'src-nodata must be provided because dst-nodata is not None' in result.output
 
 
-def test_dst_nodata_float_src_nodata_ok(runner, tmpdir):
-    """Valid integer destination nodata dtype"""
+def test_src_nodata_int_ok(runner, tmpdir):
+    """Check if input nodata is overridden"""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '1'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 1
+
+
+def test_dst_nodata_int_ok(runner, tmpdir):
+    """Check if input nodata is overridden"""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-nodata', '255'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 255
+
+
+def test_src_nodata_float_ok(runner, tmpdir):
+    """Check if input nodata is overridden"""
     srcname = 'tests/data/float.tif'
     outputname = str(tmpdir.join('test.tif'))
     result = runner.invoke(main_group, [
-        'warp', srcname, outputname, '--dst-nodata', '0.0', '--src-nodata', '0.0'])
+        'warp', srcname, outputname, '--src-nodata', '1.5'])
     assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 1.5
+
+
+def test_dst_nodata_float_override_src_ok(runner, tmpdir):
+    """Check if srcnodata is overridden"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '1.5', '--dst-nodata', '2.5'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 2.5
 
 
 def test_warp_no_reproject(runner, tmpdir):
