@@ -10,15 +10,15 @@ from rasterio.features import sieve, shapes
 
 
 # Register GDAL and OGR drivers.
-with rasterio.drivers():
-    
+with rasterio.Env():
+
     # Read a raster to be sieved.
     with rasterio.open('tests/data/shade.tif') as src:
         shade = src.read(1)
-    
+
     # Print the number of shapes in the source raster.
     print("Slope shapes: %d" % len(list(shapes(shade))))
-    
+
     # Sieve out features 13 pixels or smaller.
     sieved = sieve(shade, 13, out=np.zeros(src.shape, src.dtypes[0]))
 
@@ -35,4 +35,3 @@ with rasterio.drivers():
 print(subprocess.check_output(
     ['gdalinfo', '-stats', 'example-sieved.tif']))
 subprocess.call(['open', 'example-sieved.tif'])
-

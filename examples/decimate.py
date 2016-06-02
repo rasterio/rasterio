@@ -4,7 +4,7 @@ import tempfile
 
 import rasterio
 
-with rasterio.drivers():
+with rasterio.Env():
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read(k) for k in (1, 2, 3))
