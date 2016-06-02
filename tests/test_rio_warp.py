@@ -57,6 +57,52 @@ def test_dst_crs_error_epsg_2(runner, tmpdir):
     assert 'for dst_crs: EPSG codes are positive integers' in result.output
 
 
+def test_src_nodata_int_ok(runner, tmpdir):
+    """Valid integer source nodata dtype"""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '0'])
+    assert result.exit_code == 0
+
+
+def test_src_nodata_float_ok(runner, tmpdir):
+    """Valid integer source nodata dtype"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '1.0'])
+    assert result.exit_code == 0
+
+
+def test_dst_nodata_int_ok(runner, tmpdir):
+    """Valid integer destination nodata dtype"""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-nodata', '255'])
+    assert result.exit_code == 0
+
+
+def test_dst_nodata_float_no_src_nodata_err(runner, tmpdir):
+    """Valid integer destination nodata dtype"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-nodata', '0.0'])
+    assert result.exit_code == 2
+    assert 'src-nodata must be provided because dst-nodata is not None' in result.output
+
+
+def test_dst_nodata_float_src_nodata_ok(runner, tmpdir):
+    """Valid integer destination nodata dtype"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-nodata', '0.0', '--src-nodata', '0.0'])
+    assert result.exit_code == 0
+
+
 def test_warp_no_reproject(runner, tmpdir):
     """ When called without parameters, output should be same as source """
     srcname = 'tests/data/shade.tif'

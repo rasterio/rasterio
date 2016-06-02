@@ -253,23 +253,12 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_width = src.width
                 dst_height = src.height
 
-            # Validate a manually set source NODATA value
-            # against the input datatype.
-            if src_nodata is not None:
-                if src_nodata is not dtypes.validate_dtype(
-                        src_nodata, [src.meta['dtype']]):
-                    raise click.BadParameter(
-                        "Invalid src dtype: {0} is not {1}".format(
-                            (src_nodata, src.meta['dtype'])))
-
             # Validate a manually set destination NODATA value
             # against the input datatype.
             if dst_nodata is not None:
-                if dst_nodata is not dtypes.validate_dtype(
-                        dst_nodata, [src.meta['dtype']]):
+                if src_nodata is None and src.meta['nodata'] is None:
                     raise click.BadParameter(
-                        "Invalid dst dtype: {0} is not {1}".format(
-                            (dst_nodata, src.meta['dtype'])))
+                        "src-nodata must be provided because dst-nodata is not None")
 
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
