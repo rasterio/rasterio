@@ -5,7 +5,7 @@ import os
 import os.path
 import sys
 
-from rasterio.five import string_types
+from rasterio.compat import string_types
 
 
 cdef extern from "cpl_conv.h":

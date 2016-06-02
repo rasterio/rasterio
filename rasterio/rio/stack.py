@@ -9,7 +9,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.env import Env
-from rasterio.five import zip_longest
+from rasterio.compat import zip_longest
 
 
 # Stack command.
