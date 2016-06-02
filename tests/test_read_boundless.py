@@ -1,7 +1,7 @@
 import logging
 import sys
 
-import numpy
+import numpy as np
 import pytest
 
 import rasterio
@@ -42,7 +42,7 @@ def test_read_boundless_overlap():
 
 def test_read_boundless_resample():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        out = numpy.zeros((3, 800, 800), dtype=numpy.uint8)
+        out = np.zeros((3, 800, 800), dtype=np.uint8)
         data = src.read(
                 out=out,
                 window=((-200, 200), (-200, 200)),
@@ -94,19 +94,19 @@ def test_read_boundless_noshift():
                       window=((100, 101), (-1, src.shape[1])))[0, 0, 0:9]
         c2 = src.read(boundless=True,
                       window=((100, 101), (-1, src.shape[1] + 1)))[0, 0, 0:9]
-        assert numpy.array_equal(c1, c2)
+        assert np.array_equal(c1, c2)
 
         # when row stop exceeds image height
         r1 = src.read(boundless=True,
                       window=((-1, src.shape[0]), (100, 101)))[0, 0, 0:9]
         r2 = src.read(boundless=True,
                       window=((-1, src.shape[0] + 1), (100, 101)))[0, 0, 0:9]
-        assert numpy.array_equal(r1, r2)
+        assert np.array_equal(r1, r2)
 
 
-def test_numpy_warning(recwarn):
+def test_np_warning(recwarn):
     """Ensure no deprecation warnings
-    On numpy 1.11 and previous versions of rasterio you might see:
+    On np 1.11 and previous versions of rasterio you might see:
         VisibleDeprecationWarning: using a non-integer number
         instead of an integer will result in an error in the future
     """

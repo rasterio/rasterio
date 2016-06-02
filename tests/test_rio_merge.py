@@ -2,7 +2,7 @@ import sys
 import os
 import logging
 import click
-import numpy
+import numpy as np
 from click.testing import CliRunner
 from pytest import fixture
 
@@ -29,12 +29,12 @@ def test_data_dir_1(tmpdir):
     }
 
     with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
-        data = numpy.ones((10, 10), dtype=rasterio.uint8)
+        data = np.ones((10, 10), dtype=rasterio.uint8)
         data[0:6, 0:6] = 255
         dst.write(data, indexes=1)
 
     with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
-        data = numpy.ones((10, 10), dtype=rasterio.uint8)
+        data = np.ones((10, 10), dtype=rasterio.uint8)
         data[4:8, 4:8] = 254
         dst.write(data, indexes=1)
 
@@ -55,12 +55,12 @@ def test_data_dir_2(tmpdir):
     }
 
     with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
-        data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+        data = np.zeros((10, 10), dtype=rasterio.uint8)
         data[0:6, 0:6] = 255
         dst.write(data, indexes=1)
 
     with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
-        data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+        data = np.zeros((10, 10), dtype=rasterio.uint8)
         data[4:8, 4:8] = 254
         dst.write(data, indexes=1)
 
@@ -78,10 +78,10 @@ def test_merge_with_nodata(test_data_dir_1):
     with rasterio.open(outputname) as out:
         assert out.count == 1
         data = out.read(1, masked=False)
-        expected = numpy.ones((10, 10), dtype=rasterio.uint8)
+        expected = np.ones((10, 10), dtype=rasterio.uint8)
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
-        assert numpy.all(data == expected)
+        assert np.all(data == expected)
 
 
 def test_merge_warn(test_data_dir_1):
@@ -106,10 +106,10 @@ def test_merge_without_nodata(test_data_dir_2):
     with rasterio.open(outputname) as out:
         assert out.count == 1
         data = out.read(1, masked=False)
-        expected = numpy.zeros((10, 10), dtype=rasterio.uint8)
+        expected = np.zeros((10, 10), dtype=rasterio.uint8)
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
-        assert numpy.all(data == expected)
+        assert np.all(data == expected)
 
 
 def test_merge_output_exists(tmpdir):
@@ -181,12 +181,12 @@ def test_data_dir_overlapping(tmpdir):
     }
 
     with rasterio.open(str(tmpdir.join('se.tif')), 'w', **kwargs) as dst:
-        data = numpy.ones((10, 10), dtype=rasterio.uint8)
+        data = np.ones((10, 10), dtype=rasterio.uint8)
         dst.write(data, indexes=1)
 
     kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
     with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
-        data = numpy.ones((10, 10), dtype=rasterio.uint8) * 2
+        data = np.ones((10, 10), dtype=rasterio.uint8) * 2
         dst.write(data, indexes=1)
 
     return tmpdir
@@ -205,10 +205,10 @@ def test_merge_overlapping(test_data_dir_overlapping):
         assert out.shape == (15, 15)
         assert out.bounds == (-114, 43, -111, 46)
         data = out.read(1, masked=False)
-        expected = numpy.zeros((15, 15), dtype=rasterio.uint8)
+        expected = np.zeros((15, 15), dtype=rasterio.uint8)
         expected[0:10, 0:10] = 1
         expected[5:, 5:] = 2
-        assert numpy.all(data == expected)
+        assert np.all(data == expected)
 
 
 # Fixture to create test datasets within temporary directory
@@ -226,12 +226,12 @@ def test_data_dir_float(tmpdir):
     }
 
     with rasterio.open(str(tmpdir.join('two.tif')), 'w', **kwargs) as dst:
-        data = numpy.zeros((10, 10), dtype=rasterio.float64)
+        data = np.zeros((10, 10), dtype=rasterio.float64)
         data[0:6, 0:6] = 255
         dst.write(data, indexes=1)
 
     with rasterio.open(str(tmpdir.join('one.tif')), 'w', **kwargs) as dst:
-        data = numpy.zeros((10, 10), dtype=rasterio.float64)
+        data = np.zeros((10, 10), dtype=rasterio.float64)
         data[4:8, 4:8] = 254
         dst.write(data, indexes=1)
     return tmpdir
@@ -248,10 +248,10 @@ def test_merge_float(test_data_dir_float):
     with rasterio.open(outputname) as out:
         assert out.count == 1
         data = out.read(1, masked=False)
-        expected = numpy.ones((10, 10), dtype=rasterio.float64) * -1.5
+        expected = np.ones((10, 10), dtype=rasterio.float64) * -1.5
         expected[0:6, 0:6] = 255
         expected[4:8, 4:8] = 254
-        assert numpy.all(data == expected)
+        assert np.all(data == expected)
 
 
 # Test below comes from issue #288. There was an off-by-one error in
@@ -260,7 +260,7 @@ def test_merge_float(test_data_dir_float):
 @fixture(scope='function')
 def tiffs(tmpdir):
 
-    data = numpy.ones((1, 1, 1), 'uint8')
+    data = np.ones((1, 1, 1), 'uint8')
 
     kwargs = {
         'count': '1',

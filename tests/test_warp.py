@@ -3,7 +3,7 @@ import logging
 import sys
 import pytest
 from affine import Affine
-import numpy
+import numpy as np
 
 import rasterio
 from rasterio.enums import Resampling
@@ -57,19 +57,19 @@ def test_transform():
     ECEF_crs = {'init': 'EPSG:4978'}
     ECEF_points = ([4642610.], [1028584.], [4236562.])
     ECEF_result = transform(WGS84_crs, ECEF_crs, *WGS84_points)
-    assert numpy.allclose(numpy.array(ECEF_result), numpy.array(ECEF_points))
+    assert np.allclose(np.array(ECEF_result), np.array(ECEF_points))
 
     UTM33_crs = {'init': 'EPSG:32633'}
     UTM33_points = ([291952], [4640623])
     UTM33_result = transform(WGS84_crs, UTM33_crs, *WGS84_points[:2])
-    assert numpy.allclose(numpy.array(UTM33_result), numpy.array(UTM33_points))
+    assert np.allclose(np.array(UTM33_result), np.array(UTM33_points))
 
 
 def test_transform_bounds():
     with Env():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             l, b, r, t = src.bounds
-            assert numpy.allclose(
+            assert np.allclose(
                 transform_bounds(src.crs, {'init': 'EPSG:4326'}, l, b, r, t),
                 (
                     -78.95864996545055, 23.564991210854686,
@@ -83,7 +83,7 @@ def test_transform_bounds_densify():
     # a different result than otherwise
     src_crs = {'init': 'EPSG:4326'}
     dst_crs = {'init': 'EPSG:32610'}
-    assert numpy.allclose(
+    assert np.allclose(
         transform_bounds(
             src_crs,
             dst_crs,
@@ -96,7 +96,7 @@ def test_transform_bounds_densify():
         )
     )
 
-    assert numpy.allclose(
+    assert np.allclose(
         transform_bounds(
             src_crs,
             dst_crs,
@@ -115,7 +115,7 @@ def test_transform_bounds_no_change():
     with Env():
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             l, b, r, t = src.bounds
-            assert numpy.allclose(
+            assert np.allclose(
                 transform_bounds(src.crs, src.crs, l, b, r, t),
                 src.bounds
             )
@@ -202,7 +202,7 @@ def test_reproject_ndarray():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = np.empty(src.shape, dtype=np.uint8)
         reproject(
             source,
             out,
@@ -220,7 +220,7 @@ def test_reproject_epsg():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:3857'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = np.empty(src.shape, dtype=np.uint8)
         reproject(
             source,
             out,
@@ -239,7 +239,7 @@ def test_reproject_out_of_bounds():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = np.empty(src.shape, dtype=np.uint8)
         reproject(
             source,
             out,
@@ -256,8 +256,8 @@ def test_reproject_nodata():
     nodata = 215
 
     with Env():
-        source = numpy.ones((params.width, params.height), dtype=numpy.uint8)
-        out = numpy.zeros((params.dst_width, params.dst_height),
+        source = np.ones((params.width, params.height), dtype=np.uint8)
+        out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
@@ -281,8 +281,8 @@ def test_reproject_nodata_nan():
     params = default_reproject_params()
 
     with Env():
-        source = numpy.ones((params.width, params.height), dtype=numpy.float32)
-        out = numpy.zeros((params.dst_width, params.dst_height),
+        source = np.ones((params.width, params.height), dtype=np.float32)
+        out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
@@ -291,14 +291,14 @@ def test_reproject_nodata_nan():
             out,
             src_transform=params.src_transform,
             src_crs=params.src_crs,
-            src_nodata=numpy.nan,
+            src_nodata=np.nan,
             dst_transform=params.dst_transform,
             dst_crs=params.dst_crs,
-            dst_nodata=numpy.nan
+            dst_nodata=np.nan
         )
 
         assert (out == 1).sum() == 6215
-        assert numpy.isnan(out).sum() == (params.dst_width *
+        assert np.isnan(out).sum() == (params.dst_width *
                                           params.dst_height - 6215)
 
 
@@ -311,8 +311,8 @@ def test_reproject_dst_nodata_default():
     params = default_reproject_params()
 
     with Env():
-        source = numpy.ones((params.width, params.height), dtype=numpy.uint8)
-        out = numpy.zeros((params.dst_width, params.dst_height),
+        source = np.ones((params.width, params.height), dtype=np.uint8)
+        out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
@@ -335,7 +335,7 @@ def test_reproject_invalid_dst_nodata():
     params = default_reproject_params()
 
     with Env():
-        source = numpy.ones((params.width, params.height), dtype=numpy.uint8)
+        source = np.ones((params.width, params.height), dtype=np.uint8)
         out = source.copy()
 
         with pytest.raises(ValueError):
@@ -356,7 +356,7 @@ def test_reproject_missing_src_nodata():
     params = default_reproject_params()
 
     with Env():
-        source = numpy.ones((params.width, params.height), dtype=numpy.uint8)
+        source = np.ones((params.width, params.height), dtype=np.uint8)
         out = source.copy()
 
         with pytest.raises(ValueError):
@@ -376,7 +376,7 @@ def test_reproject_invalid_src_nodata():
     params = default_reproject_params()
 
     with Env():
-        source = numpy.ones((params.width, params.height), dtype=numpy.uint8)
+        source = np.ones((params.width, params.height), dtype=np.uint8)
         out = source.copy()
 
         with pytest.raises(ValueError):
@@ -410,7 +410,7 @@ def test_reproject_multi():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        destin = numpy.empty(source.shape, dtype=numpy.uint8)
+        destin = np.empty(source.shape, dtype=np.uint8)
         reproject(
             source,
             destin,
@@ -438,7 +438,7 @@ def test_warp_from_file():
             nadgrids='@null',
             wktext=True,
             no_defs=True)
-        destin = numpy.empty(src.shape, dtype=numpy.uint8)
+        destin = np.empty(src.shape, dtype=np.uint8)
         reproject(
             rasterio.band(src, 1),
             destin,
@@ -567,7 +567,7 @@ def test_reproject_unsupported_resampling():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = np.empty(src.shape, dtype=np.uint8)
         with pytest.raises(ValueError):
             reproject(
                 source,
@@ -586,7 +586,7 @@ def test_reproject_unsupported_resampling_guass():
             source = src.read(1)
 
         dst_crs = {'init': 'EPSG:32619'}
-        out = numpy.empty(src.shape, dtype=numpy.uint8)
+        out = np.empty(src.shape, dtype=np.uint8)
         with pytest.raises(ValueError):
             reproject(
                 source,
