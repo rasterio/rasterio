@@ -142,7 +142,7 @@ def reshape_as_raster(arr):
     return im
 
 
-def show_hist(source, bins=10, masked=True, title='Histogram'):
+def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs):
     """Easily display a histogram with matplotlib.
 
     Parameters
@@ -161,7 +161,9 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     if plt is None:  # pragma: no cover
         raise ImportError("Could not import matplotlib")
 
-    if isinstance(source, (tuple, rasterio.Band)):
+    if isinstance(source, rasterio._io.RasterReader):
+        arr = source.read(masked=masked)
+    elif isinstance(source, (tuple, rasterio.Band)):
         arr = source[0].read(source[1], masked=masked)
     else:
         arr = source
@@ -206,4 +208,26 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     plt.grid(True)
     plt.xlabel('DN')
     plt.ylabel('Frequency')
-    plt.show()
+    plt.show()    if ax:
+    if ax:
+        show = False
+    else:
+        show = False
+        ax = plt.gca()
+
+    fig = ax.get_figure()
+
+    ax.hist(arr,
+             bins=bins,
+             color=colors,
+             label=labels,
+             range=rng,
+             **kwargs)
+
+    ax.legend(loc="upper right")
+    ax.set_title(title, fontweight='bold')
+    ax.grid(True)
+    ax.set_xlabel('DN')
+    ax.set_ylabel('Frequency')
+    if show:
+        plt.show()
