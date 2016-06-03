@@ -24,4 +24,4 @@ cdef class DatasetReader:
     cdef void *band(self, int bidx) except NULL
 
 
-cdef void *_osr_from_crs(object crs)
+cdef void *_osr_from_crs(object crs) except NULL

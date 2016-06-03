@@ -5,6 +5,7 @@ import sys
 import json
 
 import rasterio
+from rasterio._base import _can_create_osr
 from rasterio import crs
 from rasterio.crs import (
     is_geographic_crs, is_projected_crs, is_same_crs, is_valid_crs)
@@ -139,7 +140,8 @@ def test_to_string():
 
 
 def test_is_valid_false():
-    assert not is_valid_crs('EPSG:432600')
+    with pytest.raises(CRSError):
+        is_valid_crs('EPSG:432600')
 
 
 def test_is_valid():
@@ -153,3 +155,20 @@ def test_empty_json():
         crs.from_string('[]')
     with pytest.raises(CRSError):
         crs.from_string('')
+
+
+def test_can_create_osr():
+    assert _can_create_osr({'init': 'EPSG:4326'})
+    assert _can_create_osr('EPSG:4326')
+
+
+def test_can_create_osr_empty():
+    assert _can_create_osr({})
+    assert _can_create_osr('')
+
+
+def test_can_create_osr_invalid():
+    assert not _can_create_osr(None)
+    assert not _can_create_osr('EPSG:-1')
+    assert not _can_create_osr('EPSG:')
+    assert not _can_create_osr('foo')
