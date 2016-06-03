@@ -105,7 +105,7 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
 
 @ensure_env
-def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
+def sieve(image, size, out=None, mask=None, connectivity=4):
     """Replace small polygons in `image` with value of their largest neighbor.
 
     Polygons are found for each set of neighboring pixels of the same value.
@@ -120,8 +120,6 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
         minimum polygon size (number of pixels) to retain.
     out : numpy ndarray, optional
         Array of same shape and data type as `image` in which to store results.
-    output : older alias for `out`, will be removed before 1.0.
-    output : numpy ndarray, optional
     mask : numpy ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -145,15 +143,7 @@ def sieve(image, size, out=None, output=None, mask=None, connectivity=4):
     large amounts of memory.
 
     """
-    # Start moving users over to 'out'.
-    if output is not None:
-        warnings.warn(
-            "The 'output' keyword arg has been superseded by 'out' "
-            "and will be removed before Rasterio 1.0.",
-            FutureWarning,
-            stacklevel=2)  # pragma: no cover
 
-    out = out if out is not None else output
     if out is None:
         out = np.zeros(image.shape, image.dtype)
     _sieve(image, size, out, mask, connectivity)
@@ -166,7 +156,6 @@ def rasterize(
         out_shape=None,
         fill=0,
         out=None,
-        output=None,
         transform=IDENTITY,
         all_touched=False,
         default_value=1,
@@ -186,7 +175,6 @@ def rasterize(
     out : numpy ndarray, optional
         Array of same shape and data type as `image` in which to store
         results.
-    output : older alias for `out`, will be removed before 1.0.
     transform : Affine transformation object, optional
         Transformation from pixel coordinates of `image` to the
         coordinate system of the input `shapes`. See the `transform`
@@ -278,14 +266,6 @@ def rasterize(
     elif not can_cast_dtype(shape_values, dtype):
         raise ValueError(format_cast_error('shape values', dtype))
 
-    if output is not None:
-        warnings.warn(
-            "The 'output' keyword arg has been superseded by 'out' "
-            "and will be removed before Rasterio 1.0.",
-            FutureWarning,
-            stacklevel=2)  # pragma: no cover
-
-    out = out if out is not None else output
     if out is not None:
         if np.dtype(out.dtype).name not in valid_dtypes:
             raise ValueError(format_invalid_dtype('out'))
@@ -298,7 +278,7 @@ def rasterize(
         out.fill(fill)
 
     else:
-        raise ValueError('Either an output shape or image must be provided')
+        raise ValueError('Either an out_shape or image must be provided')
 
     transform = guard_transform(transform)
     _rasterize(valid_shapes, out, transform.to_gdal(), all_touched)
