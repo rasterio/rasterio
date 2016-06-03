@@ -764,10 +764,9 @@ cdef class RasterReader(_base.DatasetReader):
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
         elif out_shape is not None:
-            if out_shape:
-                if len(out_shape) == 2:
-                    out_shape = (1,) + out_shape
-                out = np.empty(out_shape, dtype=dtype)
+            if len(out_shape) == 2:
+                out_shape = (1,) + out_shape
+            out = np.empty(out_shape, dtype=dtype)
 
         if out is not None:
             if out.dtype != dtype:
