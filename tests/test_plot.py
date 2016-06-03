@@ -1,4 +1,5 @@
-import numpy as np
+"""Unittests for rasterio.plot"""
+
 
 try:
     import matplotlib.pyplot as plt
@@ -6,18 +7,8 @@ except ImportError:
     plt = None
 
 import rasterio
-from rasterio.plot import show, show_hist
-from rasterio.rio.insp import stats
-
-def test_stats():
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        results = stats((src, 1))
-        assert results[0] == 0
-        assert results[1] == 255
-        assert np.isclose(results[2], 29.9477)
-
-        results2 = stats(src.read(1))
-        assert np.allclose(np.array(results), np.array(results2))
+from rasterio.plot import show
+from rasterio.plot import show_hist
 
 
 def test_show_raster():
@@ -46,6 +37,8 @@ def test_show_raster_no_bounds():
             plt.close(fig)
         except ImportError:
             pass
+
+
 
 
 def test_show_array():

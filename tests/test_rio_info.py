@@ -3,12 +3,10 @@ import logging
 import sys
 
 import click
-from click import Context
 from click.testing import CliRunner
 import pytest
 
 import rasterio
-from rasterio.rio import info
 from rasterio.rio.edit_info import (edit, all_handler, crs_handler,
                                     tags_handler, transform_handler)
 from rasterio.rio.main import main_group
@@ -591,17 +589,6 @@ def test_bounds_seq_rs():
     assert result.output == (
         '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
 
-def test_insp():
-    runner = CliRunner()
-    result = runner.invoke(main_group, ['insp', 'tests/data/RGB.byte.tif'])
-    assert result.exit_code == 0
-
-
-def test_insp_err():
-    runner = CliRunner()
-    result = runner.invoke(main_group, ['insp', 'tests'])
-    assert result.exit_code == 1
-
 
 def test_info_checksums():
     runner = CliRunner()
@@ -618,10 +605,3 @@ def test_info_checksums_only():
         ['info', 'tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.strip() == '29131'
-
-
-def test_bad_interpreter():
-    from rasterio.rio.insp import main
-    with rasterio.open("tests/data/RGB.byte.tif", 'r') as src:
-        with pytest.raises(ValueError):
-            main("Test banner", src, "PHP")
