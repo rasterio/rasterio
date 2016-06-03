@@ -9,6 +9,7 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 
+import itertools
 import logging
 import os
 import pprint
@@ -220,6 +221,17 @@ inst_reqs = ['affine', 'cligj', 'numpy', 'snuggs', 'click-plugins']
 if sys.version_info < (3, 4):
     inst_reqs.append('enum34')
 
+extra_reqs = {
+    'ipython': ['ipython>=2.0'],
+    's3': ['boto3>=1.2.4'],
+    'plot': ['matplotlib'],
+    'test': [
+        'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging'],
+    'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']}
+
+# Add all extra requirements
+extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
+
 setup_args = dict(
     name='rasterio',
     version=version,
@@ -276,12 +288,7 @@ setup_args = dict(
     ext_modules=ext_modules,
     zip_safe=False,
     install_requires=inst_reqs,
-    extras_require={
-        'ipython': ['ipython>=2.0'],
-        's3': ['boto3>=1.2.4'],
-        'test': [
-            'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging'],
-        'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']})
+    extras_require=extra_reqs)
 
 if os.environ.get('PACKAGE_DATA'):
     setup_args['package_data'] = {'rasterio': ['gdal_data/*', 'proj_data/*']}

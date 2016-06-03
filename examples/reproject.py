@@ -1,7 +1,5 @@
 import os
-import shutil
 import subprocess
-import tempfile
 
 import numpy as np
 import rasterio
@@ -11,12 +9,12 @@ from rasterio.warp import reproject, RESAMPLING
 tempdir = '/tmp'
 tiffname = os.path.join(tempdir, 'example.tif')
 
-with rasterio.drivers():
+with rasterio.Env():
 
     # Consider a 512 x 512 raster centered on 0 degrees E and 0 degrees N
     # with each pixel covering 15".
     rows, cols = src_shape = (512, 512)
-    dpp = 1.0/240 # decimal degrees per pixel
+    dpp = 1.0/240  # decimal degrees per pixel
     west, south, east, north = -cols*dpp/2, -rows*dpp/2, cols*dpp/2, rows*dpp/2
     src_transform = transform.from_bounds(west, south, east, north, cols, rows)
     src_crs = {'init': 'EPSG:4326'}
@@ -30,8 +28,8 @@ with rasterio.drivers():
     destination = np.zeros(dst_shape, np.uint8)
 
     reproject(
-        source, 
-        destination, 
+        source,
+        destination,
         src_transform=src_transform,
         src_crs=src_crs,
         dst_transform=dst_transform,
@@ -44,7 +42,7 @@ with rasterio.drivers():
 
     # Write it out to a file.
     with rasterio.open(
-            tiffname, 
+            tiffname,
             'w',
             driver='GTiff',
             width=dst_shape[1],

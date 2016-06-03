@@ -26,7 +26,7 @@ This is best illustrated by example.  Opening a raster file with ``osgeo.gdal`` 
 Compared to the similar code in ``rasterio``::
 
     import rasterio
-    with rasterio.drivers():
+    with rasterio.Env():
         with rasterio.open(filename, 'r') as dataset:
             # ... work with dataset
 

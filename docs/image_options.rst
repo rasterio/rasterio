@@ -14,14 +14,14 @@ GDAL options are typically set as environment variables. While
 environment variables will influence the behavior of ``rasterio``, we
 highly recommended avoiding them in favor of defining behavior programatically.
 
-The preferred way to set options for rasterio is via ``rasterio.drivers()``.
+The preferred way to set options for rasterio is via ``rasterio.Env()``.
 Options set on entering the context are deleted on exit.
 
 .. code-block:: python
 
     import rasterio
 
-    with rasterio.drivers(GDAL_TIFF_INTERNAL_MASK=True):
+    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
         # GeoTIFFs written here will have internal masks, not the
         # .msk sidecars.
         ...

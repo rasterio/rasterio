@@ -11,7 +11,6 @@ from . import options
 import rasterio
 from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
-from rasterio.env import Env
 
 
 logger = logging.getLogger('rio')
@@ -68,7 +67,6 @@ def rasterize(
         prop,
         force_overwrite,
         creation_options):
-
     """Rasterize GeoJSON into a new or existing raster.
 
     If the output raster exists, rio-rasterize will rasterize feature values
@@ -108,7 +106,6 @@ def rasterize(
     of the output or --like rasters at this time.  This functionality may be
     added in the future.
     """
-
     from rasterio._base import is_geographic_crs, is_same_crs
     from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds
@@ -128,7 +125,7 @@ def rasterize(
     if fill == int(fill):
         fill = int(fill)
 
-    with Env(CPL_DEBUG=verbosity > 2):
+    with rasterio.Env(CPL_DEBUG=verbosity > 2):
 
         def feature_value(feature):
             if prop and 'properties' in feature:
@@ -171,7 +168,7 @@ def rasterize(
                     all_touched=all_touched,
                     dtype=meta.get('dtype', None),
                     default_value=default_value,
-                    fill = fill)
+                    fill=fill)
 
                 for bidx in range(1, meta['count'] + 1):
                     data = out.read(bidx, masked=True)
@@ -262,7 +259,7 @@ def rasterize(
                 all_touched=all_touched,
                 dtype=kwargs.get('dtype', None),
                 default_value=default_value,
-                fill = fill)
+                fill=fill)
 
             if 'dtype' not in kwargs:
                 kwargs['dtype'] = result.dtype

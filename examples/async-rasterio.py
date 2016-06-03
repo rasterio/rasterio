@@ -16,8 +16,8 @@ import rasterio
 from rasterio._example import compute
 
 def main(infile, outfile, with_threads=False):
-    
-    with rasterio.drivers():
+
+    with rasterio.Env():
 
         # Open the source dataset.
         with rasterio.open(infile) as src:
@@ -33,7 +33,7 @@ def main(infile, outfile, with_threads=False):
             with rasterio.open(outfile, 'w', **meta) as dst:
 
                 loop = asyncio.get_event_loop()
-                
+
                 # With the exception of the ``yield from`` statement,
                 # process_window() looks like callback-free synchronous
                 # code. With a coroutine, we can keep the read, compute,
@@ -46,10 +46,10 @@ def main(infile, outfile, with_threads=False):
 
                 @asyncio.coroutine
                 def process_window(window):
-                    
+
                     # Read a window of data.
                     data = src.read(window=window)
-                    
+
                     # We run the raster computation in a separate thread
                     # and pause until the computation finishes, letting
                     # other coroutines advance.
@@ -63,13 +63,13 @@ def main(infile, outfile, with_threads=False):
                                             None, compute, data, result)
                     else:
                         compute(data, result)
-                    
+
                     dst.write(result, window=window)
 
                 # Queue up the loop's tasks.
-                tasks = [asyncio.Task(process_window(window)) 
+                tasks = [asyncio.Task(process_window(window))
                          for ij, window in dst.block_windows(1)]
-                
+
                 # Wait for all the tasks to finish, and close.
                 loop.run_until_complete(asyncio.wait(tasks))
                 loop.close()
@@ -93,6 +93,6 @@ if __name__ == '__main__':
         action='store_true',
         help="Run with a pool of worker threads")
     args = parser.parse_args()
-    
+
     main(args.input, args.output, args.with_workers)
 

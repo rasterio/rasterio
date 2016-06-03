@@ -2,14 +2,14 @@
 
 Operate on a raster dataset window-by-window using a ThreadPoolExecutor.
 
-Simulates a CPU-bound thread situation where multiple threads can improve performance.
+Simulates a CPU-bound thread situation where multiple threads can improve
+performance.
 
 With -j 4, the program returns in about 1/4 the time as with -j 1.
 """
 
 import concurrent.futures
 import multiprocessing
-import time
 
 import numpy as np
 import rasterio
@@ -18,7 +18,7 @@ from rasterio._example import compute
 
 def main(infile, outfile, num_workers=4):
 
-    with rasterio.drivers():
+    with rasterio.Env():
 
         # Open the source dataset.
         with rasterio.open(infile) as src:
@@ -87,4 +87,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.input, args.output, args.j)
-

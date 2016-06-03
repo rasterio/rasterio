@@ -17,7 +17,7 @@ geometry = {
     'coordinates': [[(2, 2), (2, 4.25), (4.25, 4.25), (4.25, 2), (2, 2)]]}
 
 
-with rasterio.drivers():
+with rasterio.Env():
     result = rasterize([geometry], out_shape=(rows, cols))
     with rasterio.open(
             "test.tif",

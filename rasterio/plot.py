@@ -28,7 +28,7 @@ except RuntimeError as e:  # pragma: no cover
     plt = None
 
 
-from rasterio.five import zip_longest
+from rasterio.compat import zip_longest
 
 logger = logging.getLogger(__name__)
 

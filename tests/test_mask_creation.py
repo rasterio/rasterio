@@ -6,12 +6,11 @@ See https://github.com/mapbox/rasterio/issues/293 for bug report.
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.env import Env
 
 
 def test_create_internal_mask(data):
     """Write an internal mask to the fixture's RGB.byte.tif."""
-    with Env(GDAL_TIFF_INTERNAL_MASK=True):
+    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
         with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
             blue = dst.read(1, masked=False)
             mask = 255 * (blue == 0).astype('uint8')

@@ -74,8 +74,7 @@ Cython language is a superset of Python. Cython files end with ``.pyx`` and
 ``.pxd`` and are where we keep all the code that calls GDAL's C functions.
 
 Rasterio supports Python 2 and Python 3 in the same code base, which is
-aided by an internal compatibility module named ``five.py``. Renaming it is a
-to-do (`#719 <https://github.com/mapbox/rasterio/issues/719>`__).  It functions
+aided by an internal compatibility module named ``compat.py``. It functions
 similarly to the more widely known `six <https://pythonhosted.org/six/>`__ but
 we only use a small portion of the features so it eliminates a dependency.
 

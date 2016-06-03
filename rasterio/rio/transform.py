@@ -8,7 +8,6 @@ import click
 from cligj import precision_opt
 
 import rasterio
-from rasterio.env import Env
 
 
 @click.command(short_help="Transform coordinates.")
@@ -32,7 +31,7 @@ def transform(ctx, input, src_crs, dst_crs, precision):
         src = [input]
 
     try:
-        with Env(CPL_DEBUG=verbosity > 2) as env:
+        with rasterio.Env(CPL_DEBUG=verbosity > 2):
             if src_crs.startswith('EPSG'):
                 src_crs = {'init': src_crs}
             elif os.path.exists(src_crs):

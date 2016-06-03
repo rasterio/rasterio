@@ -7,7 +7,6 @@ import cligj
 from .helpers import coords, write_features
 from . import options
 import rasterio
-from rasterio.env import Env
 from rasterio.transform import Affine
 
 logger = logging.getLogger('rio')
@@ -220,7 +219,7 @@ def shapes(
         geojson_type = 'collection'
 
     try:
-        with Env(CPL_DEBUG=(verbosity > 2)) as env:
+        with rasterio.Env(CPL_DEBUG=(verbosity > 2)) as env:
             write_features(
                 stdout, Collection(env), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
