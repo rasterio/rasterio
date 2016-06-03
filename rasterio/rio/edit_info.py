@@ -10,6 +10,7 @@ import rasterio
 from rasterio._crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import guard_transform
+from rasterio.compat import string_types
 
 
 # Handlers for info module options.
@@ -33,7 +34,7 @@ def crs_handler(ctx, param, value):
         try:
             if isinstance(retval, dict):
                 retval = CRS(retval)
-            elif isinstance(retval, str):
+            elif isinstance(retval, string_types):
                 retval = CRS.from_string(retval)
         except CRSError:
             raise click.BadParameter(

@@ -48,7 +48,7 @@ class CRS(UserDict):
 
     def is_epsg_code(self):
         for val in self.values():
-            if type(val) is str and val.lower().startswith('epsg'):
+            if isinstance(val, string_types) and val.lower().startswith('epsg'):
                 return True
         return False
 

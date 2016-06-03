@@ -134,7 +134,7 @@ def test_is_same_crs():
 
 
 def test_to_string():
-    assert CRS.to_string({'init': 'EPSG:4326'}) == "+init=EPSG:4326"
+    assert CRS({'init': 'EPSG:4326'}).to_string() == "+init=EPSG:4326"
 
 
 def test_is_valid_false():
