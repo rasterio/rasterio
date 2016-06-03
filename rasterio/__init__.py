@@ -226,32 +226,8 @@ def copy(src, dst, **kw):
     return RasterCopier()(src, dst, **kw)
 
 
-def drivers(**kwargs):
-    """Create a gdal environment with registered drivers and creation
-    options.
-
-    This function is deprecated; please use ``env.Env`` instead.
-
-    Parameters
-    ----------
-    **kwargs:: keyword arguments
-        Configuration options that define GDAL driver behavior
-
-        See https://trac.osgeo.org/gdal/wiki/ConfigOptions
-
-    Returns
-    -------
-    GDALEnv responsible for managing the environment.
-
-    Notes
-    -----
-    Use as a context manager, ``with rasterio.drivers(): ...``
-    """
-    warnings.warn("Deprecated; Use env.Env instead", DeprecationWarning)
-    return Env(**kwargs)
-
-
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+
 
 def band(ds, bidx):
     """Wraps a dataset and a band index up as a 'Band'
