@@ -57,7 +57,22 @@ def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
         arr = source[0].read(source[1])
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
+    elif  isinstance(source, rasterio._io.RasterReader):
+        if source.count == 1:
+            arr = source.read(1, masked=True)
         else:
+            try:
+                source_colorinterp = {source.colorinterp(n): n for n in source.indexes}
+                colorinterp = rasterio.enums.ColorInterp
+                rgb_indexes = [source_colorinterp[ci] for ci in 
+                              (colorinterp.red, colorinterp.green, colorinterp.blue)]
+                arr = source.read(rgb_indexes, masked=True)
+                arr = reshape_as_image(arr)
+
+                if with_bounds:
+                    kwargs['extent'] = plotting_extent(source)
+            except KeyError:
+                arr = source.read(1, masked=True)
     else:
         arr = source
 
