@@ -595,3 +595,61 @@ def test_reproject_unsupported_resampling_guass():
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs,
                 resampling=Resampling.gauss)
+
+
+def test_reproject_crs_none():
+    """Reproject with crs is None should not cause segfault"""
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(1.1, 0.0, 0.0, 0.0, 1.1, 0.0)
+    srccrs = None
+    dst = np.empty(shape=(1, 11, 11))
+    dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    dstcrs = None
+
+    with rasterio.Env():
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=srccrs,
+            dst_transform=dstaff,
+            dst_crs=dstcrs,
+            resampling=Resampling.nearest)
+
+
+def test_reproject_identity():
+    """Reproject with an identity matrix."""
+    # note the affines are both positive e, src is identity
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 10, 10))
+    dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    dstcrs = {'init': 'epsg:3857'}
+
+    with rasterio.Env():
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=srccrs,
+            dst_transform=dstaff,
+            dst_crs=dstcrs,
+            resampling=Resampling.nearest)
+
+    # note the affines are both positive e, dst is identity
+    src = np.random.random(100).reshape((1, 10, 10))
+    srcaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 5, 5))
+    dstaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
+    dstcrs = {'init': 'epsg:3857'}
+
+    with rasterio.Env():
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=srccrs,
+            dst_transform=dstaff,
+            dst_crs=dstcrs,
+            resampling=Resampling.nearest)
