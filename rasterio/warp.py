@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from __future__ import division
 
 from math import ceil
-import warnings
 
 from affine import Affine
 import numpy as np
@@ -15,11 +14,6 @@ from rasterio._warp import (
 from rasterio.enums import Resampling
 from rasterio.env import ensure_env
 from rasterio.transform import guard_transform
-
-
-RESAMPLING = Resampling
-warnings.warn(
-    "RESAMPLING is deprecated, use Resampling instead.", DeprecationWarning)
 
 
 @ensure_env
