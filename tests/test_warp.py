@@ -628,7 +628,7 @@ def test_reproject_identity():
     dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
     dstcrs = {'init': 'epsg:3857'}
 
-    with Env():
+    with rasterio.Env():
         reproject(
             src, dst,
             src_transform=srcaff,
@@ -646,7 +646,7 @@ def test_reproject_identity():
     dstaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
     dstcrs = {'init': 'epsg:3857'}
 
-    with Env():
+    with rasterio.Env():
         reproject(
             src, dst,
             src_transform=srcaff,
