@@ -266,7 +266,7 @@ def _reproject(
             with CPLErrors() as cple:
                 hrdriver = _gdal.GDALGetDriverByName("MEM")
                 cple.check()
-        except:=`=jedi=0, =`=                    () =`=jedi=`=
+        except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
