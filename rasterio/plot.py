@@ -33,7 +33,7 @@ from rasterio.five import zip_longest
 logger = logging.getLogger(__name__)
 
 
-def show(source, cmap='gray', with_bounds=True):
+def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -63,8 +63,15 @@ def show(source, cmap='gray', with_bounds=True):
         arr = source
         extent = None
 
-    plt.imshow(arr, cmap=cmap, extent=extent)
-    plt.show()
+    if ax:
+        ax.imshow(arr, cmap=cmap, **kwargs)
+        if title:
+            ax.set_title(title, fontweight='bold')
+    else:
+        plt.imshow(arr, cmap=cmap, **kwargs)
+        if title:
+            plt.set_title(title, fontweight='bold')
+        plt.show()
 
 
 
