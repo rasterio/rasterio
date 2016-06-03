@@ -606,7 +606,7 @@ def test_reproject_crs_none():
     dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
     dstcrs = None
 
-    with Env():
+    with rasterio.Env():
         reproject(
             src, dst,
             src_transform=srcaff,
