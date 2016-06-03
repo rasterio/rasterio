@@ -374,7 +374,7 @@ def test_warp_reproject_like(runner, tmpdir):
         "nodata": 0
     }
 
-    with rasterio.drivers():
+    with rasterio.Env():
         with rasterio.open(likename, 'w', **kwargs) as dst:
             data = np.zeros((10, 10), dtype=rasterio.uint8)
             dst.write(data, indexes=1)

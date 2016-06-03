@@ -33,7 +33,7 @@ class Env(object):
 
     Example:
 
-        with Env(GDAL_CACHEMAX=512) as env:
+        with rasterio.Env(GDAL_CACHEMAX=512) as env:
             # All drivers are registered, GDAL's raster block cache
             # size is set to 512MB.
             # Commence processing...
@@ -56,7 +56,7 @@ class Env(object):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
-        until the context is entered via `with Env():`
+        until the context is entered via `with rasterio.Env():`
 
         Parameters
         ----------

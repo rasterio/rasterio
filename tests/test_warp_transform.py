@@ -4,9 +4,8 @@ import pytest
 
 import rasterio
 from rasterio._warp import _calculate_default_transform
-from rasterio.env import Env
 from rasterio.errors import CRSError
-from rasterio.transform import Affine, from_bounds
+from rasterio.transform import from_bounds
 from rasterio.warp import transform_bounds
 
 
@@ -21,7 +20,7 @@ def test_identity():
         5009377.085697309)
     transform = from_bounds(left, bottom, right, top, width, height)
 
-    with Env():
+    with rasterio.Env():
         res_transform, res_width, res_height = _calculate_default_transform(
             src_crs, dst_crs, width, height, left, bottom, right, top)
 
@@ -33,7 +32,7 @@ def test_identity():
 
 def test_transform_bounds():
     """CRSError is raised."""
-    with Env():
+    with rasterio.Env():
         left, bottom, right, top = (
             -11740727.544603072, 4852834.0517692715, -11584184.510675032,
             5009377.085697309)
@@ -44,7 +43,7 @@ def test_transform_bounds():
 
 
 def test_gdal_transform_notnull():
-    with Env():
+    with rasterio.Env():
         dt, dw, dh = _calculate_default_transform(
             src_crs={'init': 'EPSG:4326'},
             dst_crs={'init': 'EPSG:32610'},
@@ -58,7 +57,7 @@ def test_gdal_transform_notnull():
 
 
 def test_gdal_transform_fail_dst_crs():
-    with Env():
+    with rasterio.Env():
         dt, dw, dh = _calculate_default_transform(
             {'init': 'EPSG:4326'},
             '+proj=foobar',
@@ -69,8 +68,9 @@ def test_gdal_transform_fail_dst_crs():
             right=-80,
             top=70)
 
+
 def test_gdal_transform_fail_src_crs():
-    with Env():
+    with rasterio.Env():
         dt, dw, dh = _calculate_default_transform(
             '+proj=foobar',
             {'init': 'EPSG:32610'},
@@ -86,7 +86,7 @@ def test_gdal_transform_fail_src_crs():
     os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
                    reason="GDAL 1.9 doesn't catch this error")
 def test_gdal_transform_fail_src_crs():
-    with Env():
+    with rasterio.Env():
         with pytest.raises(CRSError):
             dt, dw, dh = _calculate_default_transform(
                 {'init': 'EPSG:4326'},

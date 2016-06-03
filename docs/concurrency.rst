@@ -61,7 +61,7 @@ Here is the program in examples/concurrent-cpu-bound.py.
 
     def main(infile, outfile, num_workers=4):
 
-        with rasterio.drivers():
+        with rasterio.Env():
 
             # Open the source dataset.
             with rasterio.open(infile) as src:
