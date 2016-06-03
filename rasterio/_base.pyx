@@ -12,6 +12,7 @@ import warnings
 from libc.stdlib cimport malloc, free
 
 from rasterio cimport _gdal, _ogr
+from rasterio._crs import CRS
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
 from rasterio import dtypes
@@ -124,7 +125,7 @@ cdef class DatasetReader(object):
         cdef void *osr = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
-        crs = {}
+        crs = CRS()
         cdef const char * wkt = _gdal.GDALGetProjectionRef(self._hds)
         if wkt is NULL:
             raise ValueError("Unexpected NULL spatial reference")
@@ -874,54 +875,6 @@ def tastes_like_gdal(t):
     return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
 
-cdef void *_osr_from_crs(object crs) except NULL:
-    """Returns a reference to memory that must be deallocated
-    by the caller."""
-
-    if crs is None:
-        raise CRSError('CRS cannot be None')
-
-    cdef char *proj_c = NULL
-    cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
-    params = []
-
-    try:
-        with CPLErrors() as cple:
-            # Normally, we expect a CRS dict.
-            if isinstance(crs, dict):
-                # EPSG is a special case.
-                init = crs.get('init')
-                if init:
-                    auth, val = init.split(':')
-                    if auth.upper() == 'EPSG':
-                        _gdal.OSRImportFromEPSG(osr, int(val))
-                else:
-                    if crs:
-                        crs['wktext'] = True
-                    for k, v in crs.items():
-                        if v is True or (k in ('no_defs', 'wktext') and v):
-                            params.append("+%s" % k)
-                        else:
-                            params.append("+%s=%s" % (k, v))
-                    proj = " ".join(params)
-                    log.debug("PROJ.4 to be imported: %r", proj)
-                    proj_b = proj.encode('utf-8')
-                    proj_c = proj_b
-                    _gdal.OSRImportFromProj4(osr, proj_c)
-            # Fall back for CRS strings like "EPSG:3857."
-            else:
-                proj_b = crs.encode('utf-8')
-                proj_c = proj_b
-                _gdal.OSRSetFromUserInput(osr, proj_c)
-
-            cple.check()
-
-    except:
-        raise CRSError('Invalid CRS')
-
-    return osr
-
-
 def _transform(src_crs, dst_crs, xs, ys, zs):
     cdef double *x = NULL
     cdef double *y = NULL
@@ -979,43 +932,64 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     return retval
 
 
-def is_geographic_crs(crs):
-    cdef void *osr_crs = _osr_from_crs(crs)
-    cdef int retval = _gdal.OSRIsGeographic(osr_crs)
-    _gdal.OSRDestroySpatialReference(osr_crs)
-    return retval == 1
+cdef void *_osr_from_crs(object crs) except NULL:
+    """Returns a reference to memory that must be deallocated
+    by the caller."""
 
+    if crs is None:
+        raise CRSError('CRS cannot be None')
 
-def is_projected_crs(crs):
-    cdef void *osr_crs = _osr_from_crs(crs)
-    cdef int retval = _gdal.OSRIsProjected(osr_crs)
-    _gdal.OSRDestroySpatialReference(osr_crs)
-    return retval == 1
+    cdef char *proj_c = NULL
+    cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
+    params = []
 
+    try:
+        with CPLErrors() as cple:
+            # Normally, we expect a CRS dict.
+            if isinstance(crs, dict):
+                crs = CRS(crs)
+            if isinstance(crs, CRS):
+                # EPSG is a special case.
+                init = crs.get('init')
+                if init:
+                    auth, val = init.split(':')
+                    if auth.upper() == 'EPSG':
+                        _gdal.OSRImportFromEPSG(osr, int(val))
+                else:
+                    crs['wktext'] = True
+                    for k, v in crs.items():
+                        if v is True or (k in ('no_defs', 'wktext') and v):
+                            params.append("+%s" % k)
+                        else:
+                            params.append("+%s=%s" % (k, v))
+                    proj = " ".join(params)
+                    log.debug("PROJ.4 to be imported: %r", proj)
+                    proj_b = proj.encode('utf-8')
+                    proj_c = proj_b
+                    _gdal.OSRImportFromProj4(osr, proj_c)
+            # Fall back for CRS strings like "EPSG:3857."
+            else:
+                proj_b = crs.encode('utf-8')
+                proj_c = proj_b
+                _gdal.OSRSetFromUserInput(osr, proj_c)
+            cple.check()
 
-def is_same_crs(crs1, crs2):
-    cdef void *osr_crs1 = _osr_from_crs(crs1)
-    cdef void *osr_crs2 = _osr_from_crs(crs2)
-    cdef int retval = _gdal.OSRIsSame(osr_crs1, osr_crs2)
-    _gdal.OSRDestroySpatialReference(osr_crs1)
-    _gdal.OSRDestroySpatialReference(osr_crs2)
-    return retval == 1
-
+    except:
+        raise CRSError('Invalid CRS')
+    
+    return osr
 
 def _can_create_osr(crs):
     """
     Returns True if valid OGRSpatialReference could be created from crs.
     Specifically, it must not be NULL or empty string.
-
     Parameters
     ----------
     crs: Source coordinate reference system, in rasterio dict format.
-
     Returns
     -------
     out: bool
         True if source coordinate reference appears valid.
-
     """
 
     cdef char *wkt = NULL

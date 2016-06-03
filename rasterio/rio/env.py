@@ -5,7 +5,6 @@ import logging
 import click
 
 import rasterio
-import rasterio.crs
 
 
 @click.command(short_help="Print information about the rio environment.")

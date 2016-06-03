@@ -8,7 +8,7 @@ from affine import Affine
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import NodataShadowWarning
-
+from rasterio._crs import CRS
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -53,7 +53,7 @@ def tiffs(tmpdir):
     _profile = {
         'affine': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
         'transform': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
-        'crs': {'init': 'epsg:4326'},
+        'crs': CRS(),
         'driver': 'GTiff',
         'dtype': 'uint8',
         'height': 3,

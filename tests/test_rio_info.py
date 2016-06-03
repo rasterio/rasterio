@@ -65,7 +65,7 @@ def test_edit_crs_obj(data):
         edit, [inputfile, '--crs', '{"init": "epsg:32618"}'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
+        assert src.crs.data == {'init': 'epsg:32618'}
 
 
 def test_edit_transform_err_not_json(data):
