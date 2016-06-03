@@ -4,6 +4,7 @@ import pytest
 
 import rasterio
 from rasterio.env import Env
+from rasterio._err import CPLError
 from rasterio.errors import RasterioIOError
 
 
@@ -24,3 +25,8 @@ def test_io_error_env(tmpdir):
 def test_bogus_band_error():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src._has_band(4) is False
+
+
+def test_cplerror_str():
+    err = CPLError(1, 1, "test123")
+    assert str(err) == "test123"
