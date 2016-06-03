@@ -76,6 +76,10 @@ def x_dst_bounds_handler(ctx, param, value):
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
               default='nearest', help="Resampling method.",
               show_default=True)
+@click.option('--src-nodata', default=None, show_default=True,
+              type=float, help="Manually override source nodata")
+@click.option('--dst-nodata', default=None, show_default=True,
+              type=float, help="Manually override destination nodata")
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
 @click.option('--check-invert-proj', type=bool, default=True,
@@ -84,7 +88,7 @@ def x_dst_bounds_handler(ctx, param, value):
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         x_dst_bounds, bounds, res, resampling, threads, check_invert_proj,
+         x_dst_bounds, bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -252,6 +256,26 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_width = src.width
                 dst_height = src.height
 
+            # If src_nodata is not None, update the dst metadata NODATA
+            # value to src_nodata (will be overridden by dst_nodata if it is not None
+            if src_nodata is not None:
+                # Update the dst nodata value
+                out_kwargs.update({
+                    'nodata': src_nodata
+                })
+
+            # Validate a manually set destination NODATA value
+            # against the input datatype.
+            if dst_nodata is not None:
+                if src_nodata is None and src.meta['nodata'] is None:
+                    raise click.BadParameter(
+                        "--src-nodata must be provided because dst-nodata is not None")
+                else:
+                    # Update the dst nodata value
+                    out_kwargs.update({
+                        'nodata': dst_nodata
+                        })
+
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
             if (dst_width < 0 or dst_height < 0 or
@@ -279,9 +303,9 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         destination=rasterio.band(dst, i),
                         src_transform=src.affine,
                         src_crs=src.crs,
-                        # src_nodata=#TODO
+                        src_nodata=src_nodata,
                         dst_transform=out_kwargs['transform'],
                         dst_crs=out_kwargs['crs'],
-                        # dst_nodata=#TODO
+                        dst_nodata=dst_nodata,
                         resampling=resampling,
                         num_threads=threads)
