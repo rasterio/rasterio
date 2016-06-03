@@ -639,7 +639,7 @@ cdef class RasterReader(_base.DatasetReader):
 
 
     def read(self, indexes=None, out=None, window=None, masked=False,
-            boundless=False):
+            out_shape=None, boundless=False):
         """Read raster bands as a multidimensional array
 
         Parameters
@@ -648,7 +648,7 @@ cdef class RasterReader(_base.DatasetReader):
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
 
-        out: numpy ndarray, optional
+        out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array with the same dimensions and shape into which
             data will be placed.
@@ -656,6 +656,14 @@ cdef class RasterReader(_base.DatasetReader):
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
+
+            Cannot be combined with `out_shape`.
+
+        out_shape : tuple, optional
+            A tuple describing the output array's shape.  Allows for decimated
+            reads without constructing an output Numpy array.
+
+            Cannot be combined with `out`.
 
         window : a pair (tuple) of pairs of ints, optional
             The optional `window` argument is a 2 item tuple. The first
@@ -753,7 +761,13 @@ cdef class RasterReader(_base.DatasetReader):
         else:
             win_shape += self.shape
 
-        if out is not None:
+        if out is not None and out_shape is not None:
+            raise ValueError("out and out_shape are exclusive")
+        elif out is not None or out_shape is not None:
+            if out_shape:
+                if len(out_shape) == 2:
+                    out_shape = (1, ) + out_shape
+                out = np.empty(out_shape, dtype=dtype)
             if out.dtype != dtype:
                 raise ValueError(
                     "the array's dtype '%s' does not match "
