@@ -10,7 +10,6 @@ except ImportError:  # pragma: no cover
     class NullHandler(logging.Handler):
         def emit(self, record):
             pass
-import warnings
 
 from rasterio._base import (
     eval_window, window_shape, window_index, gdal_version)

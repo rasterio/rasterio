@@ -617,27 +617,6 @@ cdef int io_auto(image, void *hband, bint write):
 
 cdef class RasterReader(_base.DatasetReader):
 
-    def read_band(self, bidx, out=None, window=None, masked=False):
-        """Read the `bidx` band into an `out` array if provided, 
-        otherwise return a new array.
-
-        Band indexes begin with 1: read_band(1) returns the first band.
-
-        The optional `window` argument is a 2 item tuple. The first item
-        is a tuple containing the indexes of the rows at which the
-        window starts and stops and the second is a tuple containing the
-        indexes of the columns at which the window starts and stops. For
-        example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
-        of the raster dataset.
-        """
-        warnings.warn(
-            "read_band() is deprecated and will be removed by Rasterio 1.0. "
-            "Please use read() instead.",
-            FutureWarning,
-            stacklevel=2)
-        return self.read(bidx, out=out, window=window, masked=masked)
-
-
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False):
         """Read raster bands as a multidimensional array
@@ -1200,56 +1179,6 @@ cdef class RasterReader(_base.DatasetReader):
             for i in range(1, self.count):
                 mask = mask | self.read_masks(i, **kwargs)
             return mask
-        
-
-    def read_mask(self, indexes=None, out=None, window=None, boundless=False):
-        """Read the mask band into an `out` array if provided, 
-        otherwise return a new array containing the dataset's
-        valid data mask.
-
-        The optional `window` argument takes a tuple like:
-        
-            ((row_start, row_stop), (col_start, col_stop))
-            
-        specifying a raster subset to write into.
-        """
-        cdef void *hband
-        cdef void *hmask
-
-        warnings.warn(
-            "read_mask() is deprecated and will be removed by Rasterio 1.0. "
-            "Please use read_masks() instead.",
-            FutureWarning,
-            stacklevel=2)
-
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        hband = _gdal.GDALGetRasterBand(self._hds, 1)
-        if hband == NULL:
-            raise ValueError("NULL band mask")
-        hmask = _gdal.GDALGetMaskBand(hband)
-        if hmask == NULL:
-            return None
-        if out is None:
-            out_shape = (
-                window 
-                and window_shape(window, self.height, self.width) 
-                or self.shape)
-            out = np.empty(out_shape, np.uint8)
-        if window:
-            window = eval_window(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
-        else:
-            xoff = yoff = 0
-            width = self.width
-            height = self.height
-
-        io_ubyte(
-            hmask, 0, xoff, yoff, width, height, out)
-        return out
 
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
@@ -1582,14 +1511,6 @@ cdef class RasterUpdater(RasterReader):
 
         def __get__(self):
             return self.get_nodatavals()
-
-        def __set__(self, value):
-            warnings.warn(
-                "nodatavals.__set__() is deprecated and will be removed by "
-                "Rasterio 1.0. Please use nodata.__set__() instead.",
-                FutureWarning,
-                stacklevel=2)
-            self.set_nodatavals(value)
 
     property nodata:
         """The dataset's single nodata value."""
