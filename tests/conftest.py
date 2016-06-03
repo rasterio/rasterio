@@ -249,3 +249,8 @@ def gdalenv(request):
             rasterio.env.delenv()
             rasterio.env._env = None
     request.addfinalizer(fin)
+
+
+@pytest.fixture(scope='module')
+def path_rgb_byte_tif():
+    return os.path.join('tests', 'data', 'RGB.byte.tif')
