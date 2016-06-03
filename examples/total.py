@@ -2,7 +2,7 @@ import numpy as np
 import rasterio
 import subprocess
 
-with rasterio.drivers(CPL_DEBUG=True):
+with rasterio.Env(CPL_DEBUG=True):
 
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -35,4 +35,3 @@ info = subprocess.check_output(
     ['gdalinfo', '-stats', 'example-total.tif'])
 print(info)
 subprocess.call(['open', 'example-total.tif'])
-

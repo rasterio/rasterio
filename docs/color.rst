@@ -50,7 +50,7 @@ to bands using the ``write_colormap()`` method.
 
     import rasterio
 
-    with rasterio.drivers():
+    with rasterio.Env():
 
         with rasterio.open('tests/data/shade.tif') as src:
             shade = src.read(1)

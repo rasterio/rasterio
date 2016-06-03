@@ -9,7 +9,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
-from rasterio.env import Env
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
 from rasterio.warp import (
@@ -76,6 +75,10 @@ def x_dst_bounds_handler(ctx, param, value):
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
               default='nearest', help="Resampling method.",
               show_default=True)
+@click.option('--src-nodata', default=None, show_default=True,
+              type=float, help="Manually override source nodata")
+@click.option('--dst-nodata', default=None, show_default=True,
+              type=float, help="Manually override destination nodata")
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
 @click.option('--check-invert-proj', type=bool, default=True,
@@ -84,7 +87,7 @@ def x_dst_bounds_handler(ctx, param, value):
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         x_dst_bounds, bounds, res, resampling, threads, check_invert_proj,
+         x_dst_bounds, bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -126,7 +129,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         > --bounds -78 22 -76 24 --res 0.1 --dst-crs EPSG:4326
 
     """
-
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
     output, files = resolve_inout(
@@ -141,8 +143,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         # Expand one value to two if needed
         res = (res[0], res[0]) if len(res) == 1 else res
 
-    with Env(CPL_DEBUG=verbosity > 2,
-             CHECK_WITH_INVERT_PROJ=check_invert_proj) as env:
+    with rasterio.Env(CPL_DEBUG=verbosity > 2,
+                      CHECK_WITH_INVERT_PROJ=check_invert_proj):
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.meta.copy()
@@ -252,6 +254,26 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_width = src.width
                 dst_height = src.height
 
+            # If src_nodata is not None, update the dst metadata NODATA
+            # value to src_nodata (will be overridden by dst_nodata if it is not None
+            if src_nodata is not None:
+                # Update the dst nodata value
+                out_kwargs.update({
+                    'nodata': src_nodata
+                })
+
+            # Validate a manually set destination NODATA value
+            # against the input datatype.
+            if dst_nodata is not None:
+                if src_nodata is None and src.meta['nodata'] is None:
+                    raise click.BadParameter(
+                        "--src-nodata must be provided because dst-nodata is not None")
+                else:
+                    # Update the dst nodata value
+                    out_kwargs.update({
+                        'nodata': dst_nodata
+                        })
+
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
             if (dst_width < 0 or dst_height < 0 or
@@ -279,9 +301,9 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         destination=rasterio.band(dst, i),
                         src_transform=src.affine,
                         src_crs=src.crs,
-                        # src_nodata=#TODO
+                        src_nodata=src_nodata,
                         dst_transform=out_kwargs['transform'],
                         dst_crs=out_kwargs['crs'],
-                        # dst_nodata=#TODO
+                        dst_nodata=dst_nodata,
                         resampling=resampling,
                         num_threads=threads)

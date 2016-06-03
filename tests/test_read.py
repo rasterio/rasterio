@@ -271,3 +271,55 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.meta['dtype'], 'float_')
             self.assertIsNone(s.meta['nodata'])
             self.assertRaises(ValueError, s.read)
+
+
+@pytest.mark.parametrize("shape,indexes", [
+    ((72, 80), 1),          # Single band
+    ((2, 72, 80), (1, 3)),  # Multiband
+    ((3, 72, 80), None)     # All bands
+])
+def test_out_shape(path_rgb_byte_tif, shape, indexes):
+
+    """Test read(out_shape) and read_masks(out_shape).  The tests are identical
+    aside from the method call.
+
+    The pytest parameters are:
+
+        * shape - tuple passed to out_shape
+        * indexes - The bands to read
+
+    The resulting images have been decimated by a factor of 10.
+    """
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+
+        for attr in 'read', 'read_masks':
+
+            reader = getattr(src, attr)
+
+            out_shape = reader(indexes, out_shape=shape)
+            out = reader(indexes, out=np.empty(shape, dtype=src.dtypes[0]))
+
+            assert out_shape.shape == out.shape
+            assert (out_shape == out).all()
+
+            # Sanity check fo the test itself
+            assert shape[-2:] == (72, 80)
+
+
+def test_out_shape_exceptions(path_rgb_byte_tif):
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+
+        for attr in 'read', 'read_masks':
+
+            reader = getattr(src, attr)
+
+            with pytest.raises(ValueError):
+                out = np.empty((src.count, src.height, src.width))
+                out_shape = (src.count, src.height, src.width)
+                reader(out=out, out_shape=out_shape)
+
+            with pytest.raises(ValueError):
+                out_shape = (5, src.height, src.width)
+                reader(1, out_shape=out_shape)

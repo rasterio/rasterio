@@ -23,7 +23,7 @@ transform.
     from rasterio import Affine as A
     from rasterio.warp import reproject, RESAMPLING
 
-    with rasterio.drivers():
+    with rasterio.Env():
 
         # As source: a 512 x 512 raster centered on 0 degrees E and 0
         # degrees N, each pixel covering 15".

@@ -9,7 +9,6 @@ import numpy as np
 from .helpers import resolve_inout
 from . import options
 import rasterio
-from rasterio.env import Env
 
 
 @click.command(short_help="Copy and convert raster dataset.")
@@ -57,7 +56,7 @@ def convert(
     """
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
-    with Env(CPL_DEBUG=verbosity > 2) as env:
+    with rasterio.Env(CPL_DEBUG=verbosity > 2):
 
         outputfile, files = resolve_inout(files=files, output=output)
         inputfile = files[0]

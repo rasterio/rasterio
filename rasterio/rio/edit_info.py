@@ -8,7 +8,6 @@ import click
 from . import options
 import rasterio
 import rasterio.crs
-from rasterio.env import Env
 from rasterio.transform import guard_transform
 
 
@@ -126,7 +125,7 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
         rng = infos[np.dtype(dtype).kind](dtype)
         return rng.min <= value <= rng.max
 
-    with Env(CPL_DEBUG=(verbosity > 2)) as env:
+    with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
 
         with rasterio.open(input, 'r+') as dst:
 
