@@ -147,16 +147,21 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
 
     Parameters
     ----------
-    bins : int, optional
-        Compute histogram across N bins.
-    data : np.array or rasterio.Band or tuple(dataset, bidx)
+    source : np.array or rasterio._io.RasterReader, rasterio.Band or tuple(dataset, bidx)
         Input data to display.  The first three arrays in multi-dimensional
         arrays are plotted as red, green, and blue.
+    bins : int, optional
+        Compute histogram across N bins.
     masked : bool, optional
         When working with a `rasterio.Band()` object, specifies if the data
         should be masked on read.
     title : str, optional
         Title for the figure.
+    ax : matplotlib axes (opt)
+        The raster will be added to this axes if passed.
+    **kwargs : optional keyword arguments
+        These will be passed to the matplotlib hist method. See full list at:
+        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.hist
     """
     if plt is None:  # pragma: no cover
         raise ImportError("Could not import matplotlib")
