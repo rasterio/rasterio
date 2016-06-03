@@ -173,10 +173,20 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     rng = arr.min(), arr.max()
 
     if len(arr.shape) is 2:
-        arr = [arr]
+        arr = np.expand_dims(arr.flatten(), 0).T
         colors = ['gold']
     else:
-        colors = ('red', 'green', 'blue', 'violet', 'gold', 'saddlebrown')
+        arr = arr.reshape(arr.shape[0], -1).T
+        colors = ['red', 'green', 'blue', 'violet', 'gold', 'saddlebrown']
+
+    #The goal is to provide a curated set of colors for working with
+    # smaller datasets and let matplotlib define additional colors when
+    # working with larger datasets.
+    if arr.shape[-1] > len(colors):
+        n = arr.shape[-1] - len(colors)
+        colors.append(mpl.cm.Accent(np.linspace(0, 1, n)))
+    else:
+        colors = colors[:arr.shape[-1]]
 
     # If a rasterio.Band() is given make sure the proper index is displayed
     # in the legend.
@@ -185,30 +195,6 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     else:
         labels = (str(i + 1) for i in range(len(arr)))
 
-    # This loop should add a single plot each band in the input array,
-    # regardless of if the number of bands exceeds the number of colors.
-    # The colors slicing ensures that the number of iterations always
-    # matches the number of bands.
-    # The goal is to provide a curated set of colors for working with
-    # smaller datasets and let matplotlib define additional colors when
-    # working with larger datasets.
-    for bnd, color, label in zip_longest(arr, colors[:len(arr)], labels):
-
-        plt.hist(
-            bnd.flatten(),
-            bins=bins,
-            alpha=0.5,
-            color=color,
-            label=label,
-            range=rng
-        )
-
-    plt.legend(loc="upper right")
-    plt.title(title, fontweight='bold')
-    plt.grid(True)
-    plt.xlabel('DN')
-    plt.ylabel('Frequency')
-    plt.show()    if ax:
     if ax:
         show = False
     else:
