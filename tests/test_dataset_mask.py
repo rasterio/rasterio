@@ -8,7 +8,7 @@ from affine import Affine
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import NodataShadowWarning
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

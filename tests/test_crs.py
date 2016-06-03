@@ -6,7 +6,7 @@ import json
 
 import rasterio
 from rasterio._base import _can_create_osr
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 from rasterio.errors import CRSError
 
 

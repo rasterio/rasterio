@@ -9,7 +9,7 @@ import py
 import pytest
 import numpy as np
 
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 
 DEFAULT_SHAPE = (10, 10)
 

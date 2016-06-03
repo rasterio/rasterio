@@ -1,13 +1,4 @@
 """Coordinate reference systems, class and functions.
-
-PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
-coordinate reference systems are described by strings of parameters such as
-
-    +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
-
-here we use mappings:
-
-    {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
 """
 
 import json
@@ -21,6 +12,24 @@ from rasterio.compat import string_types
 log = logging.getLogger(__name__)
 
 class CRS(UserDict):
+    """A container class for coordinate reference system info
+
+    PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
+    coordinate reference systems are described by strings of parameters such as
+
+        +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
+
+    here we use mappings:
+
+        {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
+
+    One can set/get any PROJ.4 parameter using a dict-like key/value pair on the
+    object. You can instantiate the object by simply passing a dict to the
+    constructor. E.g.
+
+        crs = CRS({'init': 'epsg:3005'})
+
+    """
     def is_valid(self):
         """Check if valid geographic or projected coordinate reference system."""
         return self.is_geographic() or self.is_projected()
@@ -133,7 +142,6 @@ class CRS(UserDict):
         """
         if int(code) <= 0:
             raise ValueError("EPSG codes are positive integers")
-        # FIXME: instantiate self
         return CRS(init="epsg:%s" % code, no_defs=True)
 
 

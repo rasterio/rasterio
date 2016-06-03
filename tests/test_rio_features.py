@@ -11,7 +11,7 @@ from rasterio.rio.mask import mask
 from rasterio.rio.shapes import shapes
 from rasterio.rio.rasterize import rasterize
 from rasterio.rio.main import main_group
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 
 DEFAULT_SHAPE = (10, 10)
 
