@@ -21,51 +21,6 @@ def data():
     return data
 
 
-def test_stats(recwarn):
-    from rasterio.tool import stats as stats_old
-    from rasterio.rio.insp import stats as stats_new
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        warnings.simplefilter('always')
-        old = stats_old((src, 1))
-        assert len(recwarn) == 1
-        assert recwarn.pop(DeprecationWarning)
-        new = stats_new((src, 1))
-        assert len(recwarn) == 0
-        assert np.allclose(np.array(new), np.array(old))
-
-
-# xfail because for unknown reasons, travis fails with matplotlib errors
-@pytest.mark.xfail
-def test_show(recwarn):
-    from rasterio.tool import show as show_old
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        warnings.simplefilter('always')
-        old = show_old((src, 1))
-        assert len(recwarn) == 1
-        assert recwarn.pop(DeprecationWarning)
-
-        from rasterio.plot import show as show_new
-        new = show_new((src, 1))
-        assert len(recwarn) == 0
-        assert new == old
-
-
-# xfail because for unknown reasons, travis fails with matplotlib errors
-@pytest.mark.xfail
-def test_show_hist(recwarn):
-    from rasterio.tool import show_hist as show_old
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        warnings.simplefilter('always')
-        old = show_old((src, 1))
-        assert len(recwarn) == 1
-        assert recwarn.pop(DeprecationWarning)
-
-        from rasterio.plot import show_hist as show_new
-        new = show_new((src, 1))
-        assert len(recwarn) == 0
-        assert new == old
-
-
 def test_mask(recwarn, basic_image_file, basic_geometry):
     from rasterio.mask import mask as mask_new
     from rasterio.tools.mask import mask as mask_old
