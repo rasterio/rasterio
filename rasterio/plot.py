@@ -88,11 +88,13 @@ def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
         ax.imshow(arr, cmap=cmap, **kwargs)
         if title:
             ax.set_title(title, fontweight='bold')
+        return ax
     else:
         plt.imshow(arr, cmap=cmap, **kwargs)
         if title:
             plt.set_title(title, fontweight='bold')
         plt.show()
+        return plt.gca()
 
 
 
