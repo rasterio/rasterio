@@ -281,22 +281,3 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans[2] -= pad_width * padded_trans[0]
     padded_trans[5] -= pad_width * padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
-
-
-def get_data_window(arr, nodata=None):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.get_data_window(arr, nodata)
-
-
-def window_union(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.union(data)
-
-
-def window_intersection(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.intersection(data)
-
-def windows_intersect(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.intersect(data)
