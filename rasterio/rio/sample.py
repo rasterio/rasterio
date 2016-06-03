@@ -4,7 +4,6 @@ import logging
 import click
 
 import rasterio
-from rasterio.env import Env
 
 
 @click.command(short_help="Sample a dataset.")
@@ -67,7 +66,7 @@ def sample(ctx, files, bidx):
         points = [input]
 
     try:
-        with Env(CPL_DEBUG=verbosity > 2) as env:
+        with rasterio.Env(CPL_DEBUG=verbosity > 2):
             with rasterio.open(source) as src:
                 if bidx is None:
                     indexes = src.indexes

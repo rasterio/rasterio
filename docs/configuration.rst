@@ -68,7 +68,7 @@ Rasterio
 The object returned when you call ``rasterio.Env()`` is a context manager.  It
 handles the GDAL configuration for a specific block of code and resets the
 configuration when the block exits for any reason, success or failure. The
-Rasterio ``with Env()`` pattern organizes GDAL configuration into single
+Rasterio ``with rasterio.Env()`` pattern organizes GDAL configuration into single
 statements and makes its relationship to a block of code clear.
 
 If you want to know what options are configured at any time, you could bind it

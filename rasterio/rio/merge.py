@@ -1,8 +1,6 @@
-# Merge command.
+"""Merge command."""
 
 import logging
-import math
-import os.path
 
 import click
 from cligj import files_inout_arg, format_opt
@@ -10,8 +8,6 @@ from cligj import files_inout_arg, format_opt
 from .helpers import resolve_inout
 from . import options
 import rasterio
-from rasterio.env import Env
-from rasterio.transform import Affine
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
@@ -48,7 +44,6 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
       --res 0.1 0.1  => --res 0.1 (square)
       --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)
     """
-
     from rasterio.merge import merge as merge_tool
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
@@ -56,7 +51,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
 
-    with Env(CPL_DEBUG=verbosity > 2) as env:
+    with rasterio.Env(CPL_DEBUG=verbosity > 2):
         sources = [rasterio.open(f) for f in files]
         dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
                                             nodata=nodata, precision=precision)

@@ -10,7 +10,6 @@ from cligj import files_inout_arg
 from .helpers import resolve_inout
 from . import options
 import rasterio
-from rasterio.env import Env
 from rasterio.fill import fillnodata
 from rasterio.features import sieve
 
@@ -90,7 +89,7 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
     try:
-        with Env(CPL_DEBUG=verbosity > 2) as env:
+        with rasterio.Env(CPL_DEBUG=verbosity > 2):
             output, files = resolve_inout(files=files, output=output,
                                           force_overwrite=force_overwrite)
 

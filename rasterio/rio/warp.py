@@ -9,7 +9,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio import crs
-from rasterio.env import Env
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
 from rasterio.warp import (
@@ -126,7 +125,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         > --bounds -78 22 -76 24 --res 0.1 --dst-crs EPSG:4326
 
     """
-
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
     output, files = resolve_inout(
@@ -141,8 +139,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         # Expand one value to two if needed
         res = (res[0], res[0]) if len(res) == 1 else res
 
-    with Env(CPL_DEBUG=verbosity > 2,
-             CHECK_WITH_INVERT_PROJ=check_invert_proj) as env:
+    with rasterio.Env(CPL_DEBUG=verbosity > 2,
+                      CHECK_WITH_INVERT_PROJ=check_invert_proj):
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.meta.copy()
