@@ -56,12 +56,10 @@ def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         if with_bounds:
-            extent = plotting_extent(source[0])
+            kwargs['extent'] = plotting_extent(source[0])
         else:
-            extent = None
     else:
         arr = source
-        extent = None
 
     if ax:
         ax.imshow(arr, cmap=cmap, **kwargs)
