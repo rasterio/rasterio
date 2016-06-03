@@ -38,17 +38,25 @@ def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
 
     Parameters
     ----------
-    source : array-like or (raster dataset, bidx)
+    source : array-like, or (raster dataset, bidx) tuple, or raster dataset, 
         If array-like, should be of format compatible with
         matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),
-        selects band `bidx` from raster.
+        selects band `bidx` from raster.  If raster dataset display the rgb image 
+        as defined in the colorinterp metadata, or default to first band. 
     cmap : str (opt)
         Specifies the colormap to use in plotting. See
         matplotlib.Colors.Colormap. Default is 'gray'.
     with_bounds : bool (opt)
         Whether to change the image extent to the spatial bounds of the image,
         rather than pixel coordinates. Only works when source is
-        (raster dataset, bidx).
+        (raster dataset, bidx) or raster dataset.
+    ax : matplotlib axes (opt)
+        The raster will be added to this axes if passed.
+    title : str, optional
+        Title for the figure.
+    **kwargs : optional keyword arguments
+        These will be passed to the matplotlib imshow method. See full list at:
+        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.imshow
     """
     if plt is None:  # pragma: no cover
         raise ImportError("Could not import matplotlib")
