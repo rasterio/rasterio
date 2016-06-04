@@ -174,6 +174,7 @@ def reproject(
         dst_crs=None,
         dst_nodata=None,
         resampling=Resampling.nearest,
+        multiple=False,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -225,6 +226,9 @@ def reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
+    multiple: bool
+        Flag to indicate warping multiple inputs to a single output.
+        Prevents overwrite of earlier writes. Defaults to False
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 
@@ -273,6 +277,7 @@ def reproject(
         dst_crs,
         dst_nodata,
         resampling,
+        multiple,
         **kwargs)
 
 
