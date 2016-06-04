@@ -93,28 +93,28 @@ def test_bare_parameters():
 
 
 def test_is_geographic():
-    assert CRS({'init': 'EPSG:4326'}).is_geographic() is True
-    assert CRS({'init': 'EPSG:3857'}).is_geographic() is False
+    assert CRS({'init': 'EPSG:4326'}).is_geographic is True
+    assert CRS({'init': 'EPSG:3857'}).is_geographic is False
 
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert wgs84_crs.is_geographic() is True
+    assert wgs84_crs.is_geographic is True
 
     nad27_crs = CRS.from_string('+proj=longlat +ellps=clrk66 +datum=NAD27 +no_defs')
-    assert nad27_crs.is_geographic() is True
+    assert nad27_crs.is_geographic is True
 
     lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    assert lcc_crs.is_geographic() is False
+    assert lcc_crs.is_geographic is False
 
 
 def test_is_projected():
-    assert CRS({'init': 'EPSG:3857'}).is_projected() is True
-    assert CRS({'INIT': 'EPSG:4326'}).is_projected() is False
+    assert CRS({'init': 'EPSG:3857'}).is_projected is True
+    assert CRS({'INIT': 'EPSG:4326'}).is_projected is False
 
     lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    assert CRS(lcc_crs).is_projected() is True
+    assert CRS(lcc_crs).is_projected is True
 
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert CRS(wgs84_crs).is_projected() is False
+    assert CRS(wgs84_crs).is_projected is False
 
 
 def test_is_same_crs():
@@ -139,11 +139,11 @@ def test_to_string():
 
 def test_is_valid_false():
     with pytest.raises(CRSError):
-        CRS(init='EPSG:432600').is_valid()
+        CRS(init='EPSG:432600').is_valid
 
 
 def test_is_valid():
-    assert CRS(init='EPSG:4326').is_valid()
+    assert CRS(init='EPSG:4326').is_valid
 
 
 def test_empty_json():

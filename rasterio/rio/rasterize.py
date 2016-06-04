@@ -212,7 +212,7 @@ def rasterize(
             else:
                 bounds = bounds or geojson_bounds
 
-                if src_crs.is_geographic():
+                if src_crs.is_geographic:
                     if (bounds[0] < -180 or bounds[2] > 180 or
                             bounds[1] < -80 or bounds[3] > 80):
                         raise click.BadParameter(
@@ -241,7 +241,7 @@ def rasterize(
                     height = max(int(ceil((bounds[3] - bounds[1]) /
                                  float(res[1]))), 1)
 
-                if not src_crs.is_epsg_code():
+                if not src_crs.is_epsg_code:
                     raise bad_param
 
                 kwargs = {

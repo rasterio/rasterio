@@ -30,22 +30,26 @@ class CRS(UserDict):
         crs = CRS({'init': 'epsg:3005'})
 
     """
+    @property
     def is_valid(self):
         """Check if valid geographic or projected coordinate reference system."""
-        return self.is_geographic() or self.is_projected()
+        return self.is_geographic or self.is_projected
 
+    @property
     def is_geographic(self):
         cdef void *osr_crs = _base._osr_from_crs(self)
         cdef int retval = _gdal.OSRIsGeographic(osr_crs)
         _gdal.OSRDestroySpatialReference(osr_crs)
         return retval == 1
 
+    @property
     def is_projected(self):
         cdef void *osr_crs = _base._osr_from_crs(self)
         cdef int retval = _gdal.OSRIsProjected(osr_crs)
         _gdal.OSRDestroySpatialReference(osr_crs)
         return retval == 1
 
+    @property
     def is_epsg_code(self):
         for val in self.values():
             if isinstance(val, string_types) and val.lower().startswith('epsg'):
