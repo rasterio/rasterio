@@ -159,6 +159,10 @@ class CRS(UserDict):
             _gdal.OSRDestroySpatialReference(osr)
         return wkt
 
+    def __repr__(self):
+        return "CRS({})".format(super(CRS, self).__repr__())
+
+
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
 # It is parsed into a list of parameter keys ``all_proj_keys``.
