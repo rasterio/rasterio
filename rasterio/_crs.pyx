@@ -144,6 +144,17 @@ class CRS(UserDict):
             raise ValueError("EPSG codes are positive integers")
         return CRS(init="epsg:%s" % code, no_defs=True)
 
+    @property
+    def wkt(self):
+        cdef char *srcwkt = NULL
+        cdef void *osr = _base._osr_from_crs(self)
+        try:
+            _gdal.OSRExportToWkt(osr, &srcwkt)
+            wkt = srcwkt.decode('utf-8')
+        finally:
+            _gdal.CPLFree(srcwkt)
+            _gdal.OSRDestroySpatialReference(osr)
+        return wkt
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
