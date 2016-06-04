@@ -4,7 +4,6 @@ import logging
 import sys
 
 import pytest
-from click.testing import CliRunner
 
 import rasterio
 from rasterio.enums import Resampling

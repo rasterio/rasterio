@@ -1,4 +1,3 @@
-import pytest
 from affine import Affine
 
 import rasterio

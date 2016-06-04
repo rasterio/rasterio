@@ -278,7 +278,6 @@ class ReaderContextTest(unittest.TestCase):
     ((3, 72, 80), None)     # All bands
 ])
 def test_out_shape(path_rgb_byte_tif, shape, indexes):
-
     """Test read(out_shape) and read_masks(out_shape).  The tests are identical
     aside from the method call.
 
@@ -289,7 +288,6 @@ def test_out_shape(path_rgb_byte_tif, shape, indexes):
 
     The resulting images have been decimated by a factor of 10.
     """
-
     with rasterio.open(path_rgb_byte_tif) as src:
 
         for attr in 'read', 'read_masks':

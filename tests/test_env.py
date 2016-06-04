@@ -115,8 +115,10 @@ def test_aws_session_credentials(gdalenv):
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
-    with rasterio.Env(aws_access_key_id='id', aws_secret_access_key='key',
-             aws_session_token='token', region_name='null-island-1') as s:
+    with rasterio.Env(aws_access_key_id='id',
+                      aws_secret_access_key='key',
+                      aws_session_token='token',
+                      region_name='null-island-1') as s:
         assert getenv() == rasterio.env._env.options == {}
         s.get_aws_credentials()
         assert getenv() == rasterio.env._env.options == {

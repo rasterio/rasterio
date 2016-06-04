@@ -4,11 +4,9 @@ import sys
 
 import click
 import pytest
-from click import Context
 from click.testing import CliRunner
 
 import rasterio
-from rasterio.rio import info
 from rasterio.rio.edit_info import (all_handler, crs_handler, edit,
                                     tags_handler, transform_handler)
 from rasterio.rio.main import main_group
@@ -589,6 +587,7 @@ def test_bounds_seq_rs():
     assert result.exit_code == 0
     assert result.output == (
         '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
+
 
 def test_insp():
     runner = CliRunner()

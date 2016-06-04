@@ -4,10 +4,10 @@ import sys
 import numpy as np
 import pytest
 
-import rasterio
 from rasterio.fill import fillnodata
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
 
 def test_fillnodata():
     """Test filling nodata values in an ndarray"""
@@ -20,12 +20,14 @@ def test_fillnodata():
     result = fillnodata(a, mask)
     assert(np.all((np.ones([3, 3]) * 42) == result))
 
+
 def test_fillnodata_invalid_types():
     a = np.ones([3, 3])
     with pytest.raises(ValueError):
         fillnodata(None, a)
     with pytest.raises(ValueError):
         fillnodata(a, 42)
+
 
 def test_fillnodata_mask_ones():
     # when mask is all ones, image should be unmodified

@@ -1,10 +1,8 @@
 import logging
 import sys
 
-import click
 from click.testing import CliRunner
 
-import rasterio
 from rasterio.rio.main import main_group
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -44,7 +42,8 @@ def test_sample_bidx():
     runner = CliRunner()
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '1,2', "[220650.0, 2719200.0]"],
+        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '1,2',
+         "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
     assert result.output.strip() == '[18, 25]'
@@ -54,7 +53,8 @@ def test_sample_bidx2():
     runner = CliRunner()
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '1..2', "[220650.0, 2719200.0]"],
+        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '1..2',
+         "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
     assert result.output.strip() == '[18, 25]'
@@ -64,7 +64,8 @@ def test_sample_bidx3():
     runner = CliRunner()
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '..2', "[220650.0, 2719200.0]"],
+        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '..2',
+         "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
     assert result.output.strip() == '[18, 25]'
@@ -74,7 +75,8 @@ def test_sample_bidx4():
     runner = CliRunner()
     result = runner.invoke(
         main_group,
-        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '3', "[220650.0, 2719200.0]"],
+        ['sample', 'tests/data/RGB.byte.tif', '--bidx', '3',
+         "[220650.0, 2719200.0]"],
         catch_exceptions=False)
     assert result.exit_code == 0
     assert result.output.strip() == '[14]'

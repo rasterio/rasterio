@@ -5,6 +5,7 @@ def test_bounds():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.bounds == (101985.0, 2611485.0, 339315.0, 2826915.0)
 
+
 def test_ul():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.ul(0, 0) == (101985.0, 2826915.0)
@@ -13,6 +14,7 @@ def test_ul():
         assert tuple(
             round(v, 6) for v in src.ul(~0, ~0)
             ) == (339014.962073, 2611785.041783)
+
 
 def test_res():
     with rasterio.open('tests/data/RGB.byte.tif') as src:

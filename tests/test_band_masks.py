@@ -41,6 +41,7 @@ def tiffs(tmpdir):
 
     return tmpdir
 
+
 def test_mask_flags():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         for flags in src.mask_flags:
@@ -68,7 +69,7 @@ def test_mask_flags_shadow(tiffs):
 
 
 def test_warning_no():
-    """No shadow warning is raised"""
+    """No shadow warning is raised."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
             rm, gm, bm = src.read_masks()
@@ -77,7 +78,7 @@ def test_warning_no():
 
 
 def test_warning_shadow(tiffs):
-    """Shadow warning is raised"""
+    """Shadow warning is raised."""
     filename = str(tiffs.join('shadowed.tif'))
     with rasterio.open(filename) as src:
         with pytest.warns(NodataShadowWarning):

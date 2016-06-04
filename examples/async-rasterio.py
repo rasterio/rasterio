@@ -15,6 +15,7 @@ import rasterio
 
 from rasterio._example import compute
 
+
 def main(infile, outfile, with_threads=False):
 
     with rasterio.Env():
