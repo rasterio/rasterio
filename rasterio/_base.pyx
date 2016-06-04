@@ -983,13 +983,16 @@ def _can_create_osr(crs):
     """
     Returns True if valid OGRSpatialReference could be created from crs.
     Specifically, it must not be NULL or empty string.
+
     Parameters
     ----------
     crs: Source coordinate reference system, in rasterio dict format.
+
     Returns
     -------
     out: bool
         True if source coordinate reference appears valid.
+
     """
 
     cdef char *wkt = NULL
