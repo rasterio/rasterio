@@ -83,6 +83,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                               } for b in src.read(masked=masked)]
                     info['stats'] = stats
                     info['checksum'] = [src.checksum(i) for i in src.indexes]
+                    info['colorinterp'] = [src.colorinterp(i).name
+                                           for i in src.indexes]
                 if aspect == 'meta':
                     if meta_member == 'stats':
                         band = src.read(bidx, masked=masked)
