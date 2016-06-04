@@ -3,10 +3,11 @@
 import click
 from cligj import format_opt
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
 from rasterio.coords import disjoint_bounds
+
+from . import options
+from .helpers import resolve_inout
 
 
 # Clip command

@@ -13,8 +13,8 @@ here we use mappings:
 import json
 
 from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
-from rasterio.errors import CRSError
 from rasterio.compat import string_types
+from rasterio.errors import CRSError
 
 
 def is_valid_crs(crs):

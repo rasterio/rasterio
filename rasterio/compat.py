@@ -3,7 +3,6 @@
 import itertools
 import sys
 
-
 if sys.version_info[0] >= 3:   # pragma: no cover
     string_types = str,
     text_type = str

@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 
 import rasterio
+from rasterio.compat import zip_longest
 
 try:
     import matplotlib.pyplot as plt
@@ -28,7 +29,6 @@ except RuntimeError as e:  # pragma: no cover
     plt = None
 
 
-from rasterio.compat import zip_longest
 
 logger = logging.getLogger(__name__)
 

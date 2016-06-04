@@ -3,12 +3,13 @@
 import logging
 
 import click
-from cligj import format_opt
 import numpy as np
+from cligj import format_opt
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
+
+from . import options
+from .helpers import resolve_inout
 
 
 @click.command(short_help="Copy and convert raster dataset.")

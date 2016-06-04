@@ -5,9 +5,10 @@ import shutil
 import click
 import cligj
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
+
+from . import options
+from .helpers import resolve_inout
 
 logger = logging.getLogger('rio')
 

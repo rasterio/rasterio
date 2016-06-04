@@ -2,17 +2,18 @@
 from __future__ import absolute_import
 
 import code
+import collections
 import logging
 import sys
-import collections
 import warnings
 
-import numpy as np
 import click
+import numpy as np
 
-from . import options
 import rasterio
 from rasterio.plot import show, show_hist
+
+from . import options
 
 try:
     import matplotlib.pyplot as plt

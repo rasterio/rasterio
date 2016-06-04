@@ -1,17 +1,18 @@
 # Calc command.
 
-from distutils.version import LooseVersion
 import logging
+from distutils.version import LooseVersion
 
 import click
 import snuggs
 from cligj import files_inout_arg
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
-from rasterio.fill import fillnodata
 from rasterio.features import sieve
+from rasterio.fill import fillnodata
+
+from . import options
+from .helpers import resolve_inout
 
 
 def get_bands(inputs, d, i=None):

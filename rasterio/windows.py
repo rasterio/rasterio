@@ -1,7 +1,7 @@
 """Windows and related functions."""
 
-import functools
 import collections
+import functools
 
 
 def iter_args(function):

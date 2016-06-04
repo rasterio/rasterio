@@ -11,7 +11,6 @@ import numpy as np
 from rasterio._base import get_window
 from rasterio.transform import Affine
 
-
 logger = logging.getLogger(__name__)
 
 

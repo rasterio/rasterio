@@ -5,10 +5,11 @@ import logging
 
 import click
 
-from . import options
 import rasterio
 import rasterio.crs
 from rasterio.transform import guard_transform
+
+from . import options
 
 
 # Handlers for info module options.

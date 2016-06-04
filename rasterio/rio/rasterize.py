@@ -1,17 +1,17 @@
 import json
 import logging
-from math import ceil
 import os
+from math import ceil
 
 import click
 import cligj
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
-from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
+from rasterio.transform import Affine
 
+from . import options
+from .helpers import resolve_inout
 
 logger = logging.getLogger('rio')
 

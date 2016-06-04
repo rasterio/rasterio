@@ -1,21 +1,19 @@
 """Raster warping and reprojection."""
 
-from __future__ import absolute_import
-from __future__ import division
+from __future__ import absolute_import, division
 
-from math import ceil
 import warnings
+from math import ceil
 
-from affine import Affine
 import numpy as np
+from affine import Affine
 
 from rasterio._base import _transform
-from rasterio._warp import (
-    _transform_geom, _reproject, _calculate_default_transform)
+from rasterio._warp import (_calculate_default_transform, _reproject,
+                            _transform_geom)
 from rasterio.enums import Resampling
 from rasterio.env import ensure_env
 from rasterio.transform import guard_transform
-
 
 RESAMPLING = Resampling
 warnings.warn(
