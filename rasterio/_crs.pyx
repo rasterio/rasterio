@@ -38,16 +38,22 @@ class CRS(UserDict):
     @property
     def is_geographic(self):
         cdef void *osr_crs = _base._osr_from_crs(self)
-        cdef int retval = _gdal.OSRIsGeographic(osr_crs)
-        _gdal.OSRDestroySpatialReference(osr_crs)
-        return retval == 1
+        cdef int retval
+        try:
+            retval = _gdal.OSRIsGeographic(osr_crs)
+            return retval == 1
+        finally:
+            _gdal.OSRDestroySpatialReference(osr_crs)
 
     @property
     def is_projected(self):
         cdef void *osr_crs = _base._osr_from_crs(self)
-        cdef int retval = _gdal.OSRIsProjected(osr_crs)
-        _gdal.OSRDestroySpatialReference(osr_crs)
-        return retval == 1
+        cdef int retval
+        try:
+            retval = _gdal.OSRIsProjected(osr_crs)
+            return retval == 1
+        finally:
+            _gdal.OSRDestroySpatialReference(osr_crs)
 
     @property
     def is_epsg_code(self):
