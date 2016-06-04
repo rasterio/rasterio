@@ -74,6 +74,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4
                 info['res'] = src.res
+                info['colorinterp'] = [src.colorinterp(i).name
+                                       for i in src.indexes]
                 if proj4 != '':
                     info['lnglat'] = src.lnglat()
                 if verbose:
@@ -83,8 +85,6 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                               } for b in src.read(masked=masked)]
                     info['stats'] = stats
                     info['checksum'] = [src.checksum(i) for i in src.indexes]
-                    info['colorinterp'] = [src.colorinterp(i).name
-                                           for i in src.indexes]
                 if aspect == 'meta':
                     if meta_member == 'stats':
                         band = src.read(bidx, masked=masked)
