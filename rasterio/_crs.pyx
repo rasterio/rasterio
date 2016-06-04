@@ -160,7 +160,9 @@ class CRS(UserDict):
         return wkt
 
     def __repr__(self):
-        return "CRS({})".format(super(CRS, self).__repr__())
+        # Should use super() here, but what's the best way to be compatible
+        # between Python 2 and 3?
+        return "CRS({})".format(dict.__repr__(self.data))
 
 
 # Below is the big list of PROJ4 parameters from
