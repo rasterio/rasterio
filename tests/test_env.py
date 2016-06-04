@@ -5,16 +5,14 @@ import logging
 import sys
 
 import boto3
-from packaging.version import parse
 import pytest
+from packaging.version import parse
 
 import rasterio
-from rasterio._drivers import (del_gdal_config, get_gdal_config,
-                               set_gdal_config)
-from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
+from rasterio._drivers import del_gdal_config, get_gdal_config, set_gdal_config
+from rasterio.env import defenv, delenv, ensure_env, getenv, setenv
 from rasterio.errors import EnvError
 from rasterio.rio.main import main_group
-
 
 # Custom markers.
 mingdalversion = pytest.mark.skipif(

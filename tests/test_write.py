@@ -8,7 +8,6 @@ import pytest
 
 import rasterio
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 

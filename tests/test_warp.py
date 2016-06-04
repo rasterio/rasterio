@@ -1,16 +1,15 @@
 
 import logging
 import sys
+
+import numpy as np
 import pytest
 from affine import Affine
-import numpy as np
 
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.warp import (
-    reproject, transform_geom, transform, transform_bounds,
-    calculate_default_transform)
-
+from rasterio.warp import (calculate_default_transform, reproject, transform,
+                           transform_bounds, transform_geom)
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

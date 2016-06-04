@@ -10,7 +10,6 @@ import numpy as np
 
 import rasterio
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class WindowTest(unittest.TestCase):

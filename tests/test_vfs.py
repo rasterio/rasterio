@@ -7,7 +7,6 @@ import rasterio
 from rasterio.profiles import default_gtiff_profile
 from rasterio.vfs import parse_path, vsi_path
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 

@@ -3,16 +3,15 @@ import logging
 import sys
 
 import click
+import pytest
 from click import Context
 from click.testing import CliRunner
-import pytest
 
 import rasterio
 from rasterio.rio import info
-from rasterio.rio.edit_info import (edit, all_handler, crs_handler,
+from rasterio.rio.edit_info import (all_handler, crs_handler, edit,
                                     tags_handler, transform_handler)
 from rasterio.rio.main import main_group
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

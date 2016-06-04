@@ -1,17 +1,17 @@
+import json
 import logging
 import os
 import re
 import sys
+
 import numpy as np
-import json
 from affine import Affine
 
 import rasterio
-from rasterio.rio.mask import mask
-from rasterio.rio.shapes import shapes
-from rasterio.rio.rasterize import rasterize
 from rasterio.rio.main import main_group
-
+from rasterio.rio.mask import mask
+from rasterio.rio.rasterize import rasterize
+from rasterio.rio.shapes import shapes
 
 DEFAULT_SHAPE = (10, 10)
 

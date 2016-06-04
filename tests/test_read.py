@@ -1,13 +1,12 @@
-from hashlib import md5
 import logging
 import sys
 import unittest
+from hashlib import md5
 
 import numpy as np
 import pytest
 
 import rasterio
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

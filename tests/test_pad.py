@@ -12,4 +12,3 @@ def test_pad():
     assert arr2.shape == (14, 14)
     assert trans2.xoff ==  -2.0
     assert trans2.yoff ==  12.0
-

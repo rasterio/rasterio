@@ -1,5 +1,6 @@
-from affine import Affine
 import pytest
+from affine import Affine
+
 import rasterio
 from rasterio import transform
 

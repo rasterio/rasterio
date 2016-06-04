@@ -1,11 +1,10 @@
-import sys
 import logging
+import sys
 
 from click.testing import CliRunner
 
 import rasterio
 from rasterio.rio.calc import calc
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

@@ -1,8 +1,9 @@
 import logging
-import pytest
 import re
 import subprocess
 import sys
+
+import pytest
 
 import rasterio
 

@@ -1,13 +1,14 @@
 
+import re
 import shutil
 import subprocess
-import re
 
 import affine
 import numpy as np
 import pytest
 
 import rasterio
+
 
 def test_update_tags(data):
     tiffname = str(data.join('RGB.byte.tif'))

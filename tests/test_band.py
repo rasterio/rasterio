@@ -3,7 +3,6 @@ import logging
 import rasterio
 import rasterio.env
 
-
 logging.basicConfig(level=logging.DEBUG)
 
 def test_band():

@@ -34,4 +34,3 @@ class RevolvingDoorTest(unittest.TestCase):
 
         with rasterio.open(tiffname) as src:
             pass
-

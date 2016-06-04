@@ -1,6 +1,7 @@
-import sys
-import os
 import logging
+import os
+import sys
+
 import click
 import numpy as np
 from click.testing import CliRunner
@@ -9,7 +10,6 @@ from pytest import fixture
 import rasterio
 from rasterio.rio.merge import merge
 from rasterio.transform import Affine
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

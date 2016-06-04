@@ -1,5 +1,6 @@
 import rasterio
 
+
 def test_bounds():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.bounds == (101985.0, 2611485.0, 339315.0, 2826915.0)

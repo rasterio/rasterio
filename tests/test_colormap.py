@@ -4,7 +4,6 @@ import sys
 
 import rasterio
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 

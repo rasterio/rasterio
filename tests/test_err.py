@@ -3,8 +3,8 @@
 import pytest
 
 import rasterio
-from rasterio.env import Env
 from rasterio._err import CPLError
+from rasterio.env import Env
 from rasterio.errors import RasterioIOError
 
 

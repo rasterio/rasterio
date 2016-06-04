@@ -1,16 +1,16 @@
+import json
 import logging
-import pytest
 import subprocess
 import sys
-import json
+
+import pytest
 
 import rasterio
-from rasterio._base import _can_create_osr
 from rasterio import crs
-from rasterio.crs import (
-    is_geographic_crs, is_projected_crs, is_same_crs, is_valid_crs)
+from rasterio._base import _can_create_osr
+from rasterio.crs import (is_geographic_crs, is_projected_crs, is_same_crs,
+                          is_valid_crs)
 from rasterio.errors import CRSError
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

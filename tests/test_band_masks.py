@@ -8,7 +8,6 @@ import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import NodataShadowWarning
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 

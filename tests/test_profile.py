@@ -1,8 +1,8 @@
 import pytest
 
 import rasterio
-from rasterio.profiles import Profile, DefaultGTiffProfile
-from rasterio.profiles import default_gtiff_profile
+from rasterio.profiles import (DefaultGTiffProfile, Profile,
+                               default_gtiff_profile)
 
 
 def test_base_profile():
