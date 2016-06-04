@@ -1454,7 +1454,6 @@ cdef class RasterUpdater(RasterReader):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         if options != NULL:
             _gdal.CSLDestroy(options)
@@ -2080,7 +2079,6 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         # touch self.meta
         _ = self.meta

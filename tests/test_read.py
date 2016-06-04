@@ -36,7 +36,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.nodatavals, (0, 0, 0))
             self.assertEqual(s.indexes, (1, 2, 3))
             self.assertEqual(s.crs['init'], 'epsg:32618')
-            self.assert_(s.crs_wkt.startswith('PROJCS'), s.crs_wkt)
+            self.assert_(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
@@ -69,7 +69,7 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_derived_spatial(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            self.assert_(s.crs_wkt.startswith('PROJCS'), s.crs_wkt)
+            self.assert_(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
             for a, b in zip(s.ul(0, 0), (101985.0, 2826915.0)):

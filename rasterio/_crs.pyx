@@ -146,6 +146,9 @@ class CRS(UserDict):
 
     @property
     def wkt(self):
+        """An OGC WKT string representation of the coordinate reference
+        system.
+        """
         cdef char *srcwkt = NULL
         cdef void *osr = _base._osr_from_crs(self)
         try:

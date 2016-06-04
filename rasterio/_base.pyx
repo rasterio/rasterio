@@ -54,7 +54,6 @@ cdef class DatasetReader(object):
         self._block_shapes = None
         self._nodatavals = []
         self._crs = None
-        self._crs_wkt = None
         self._read = False
     
     def __repr__(self):
@@ -89,7 +88,6 @@ cdef class DatasetReader(object):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         # touch self.meta
         _ = self.meta
@@ -182,36 +180,6 @@ cdef class DatasetReader(object):
         else:
             log.debug("GDAL dataset has no projection.")
         return crs
-
-    def read_crs_wkt(self):
-        cdef char *proj_c = NULL
-        cdef char *key_c = NULL
-        cdef void *osr = NULL
-        cdef const char * wkt = NULL
-        if self._hds == NULL:
-            raise ValueError("Null dataset")
-        wkt = _gdal.GDALGetProjectionRef(self._hds)
-        if wkt is NULL:
-            raise ValueError("Unexpected NULL spatial reference")
-        wkt_b = wkt
-        if len(wkt_b) > 0:
-            osr = _gdal.OSRNewSpatialReference(wkt)
-            log.debug("Got coordinate system")
-            if osr != NULL:
-                retval = _gdal.OSRAutoIdentifyEPSG(osr)
-                if retval > 0:
-                    log.info("Failed to auto identify EPSG: %d", retval)
-                _gdal.OSRExportToWkt(osr, &proj_c)
-                if proj_c == NULL:
-                    raise ValueError("Null projection")
-                proj_b = proj_c
-                crs_wkt = proj_b.decode('utf-8')
-                _gdal.CPLFree(proj_c)
-                _gdal.OSRDestroySpatialReference(osr)
-        else:
-            log.debug("GDAL dataset has no projection.")
-            crs_wkt = None
-        return crs_wkt
 
     def read_transform(self):
         if self._hds == NULL:
@@ -558,15 +526,6 @@ cdef class DatasetReader(object):
         """
         def __get__(self):
             return self.get_crs()
-
-    property crs_wkt:
-        """An OGC WKT string representation of the coordinate reference
-        system.
-        """
-        def __get__(self):
-            if not self._read and self._crs_wkt is None:
-                self._crs = self.read_crs_wkt()
-            return self._crs_wkt
 
     def get_transform(self):
         """Returns a GDAL geotransform in its native form."""
