@@ -74,6 +74,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4
                 info['res'] = src.res
+                info['colorinterp'] = [src.colorinterp(i).name
+                                       for i in src.indexes]
                 if proj4 != '':
                     info['lnglat'] = src.lnglat()
                 if verbose:

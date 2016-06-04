@@ -132,7 +132,7 @@ class MockOption:
 def test_all_callback_pass(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, None) == None
+    assert all_handler(ctx, None, None) is None
 
 
 def test_all_callback(data):
@@ -167,7 +167,7 @@ def test_transform_callback(data):
 
 
 def test_crs_callback_pass(data):
-    """Always return None if the value is None"""
+    """Always return None if the value is None."""
     ctx = MockContext()
     ctx.obj['like'] = {'crs': 'foo'}
     assert crs_handler(ctx, MockOption('crs'), None) is None
@@ -374,6 +374,13 @@ def test_info_stats_only():
         ['info', 'tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.startswith('1.000000 255.000000 66.02')
+
+
+def test_info_colorinterp():
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['info', 'tests/data/alpha.tif'])
+    assert result.exit_code == 0
+    assert '"colorinterp": ["red", "green", "blue", "alpha"]' in result.output
 
 
 def test_transform_err():
@@ -590,6 +597,7 @@ def test_bounds_seq_rs():
     assert result.exit_code == 0
     assert result.output == (
         '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
+
 
 def test_insp():
     runner = CliRunner()
