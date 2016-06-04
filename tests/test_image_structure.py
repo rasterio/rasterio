@@ -67,7 +67,7 @@ def test_interleaving_pixel():
         assert src.profile['interleave'] == 'pixel'
 
 
-def test_interleaving_pixel():
+def test_interleaving_band():
     with rasterio.open('tests/data/rgb_deflate.tif') as src:
         assert src.interleaving.name == 'band'
         assert src.interleaving.value == 'BAND'
