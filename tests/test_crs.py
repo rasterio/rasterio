@@ -172,7 +172,7 @@ def test_can_create_osr_invalid():
     assert not _can_create_osr('foo')
 
 
-def test_has_wkt_propert():
+def test_has_wkt_property():
     assert CRS({'init': 'EPSG:4326'}).wkt.startswith('GEOGCS["WGS 84",DATUM')
 
 
