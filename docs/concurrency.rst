@@ -70,8 +70,6 @@ Here is the program in examples/concurrent-cpu-bound.py.
                 # The destination will be tiled, and we'll "process" the tiles
                 # concurrently.
                 meta = src.meta
-                del meta['transform']
-                meta.update(affine=src.affine)
                 meta.update(blockxsize=256, blockysize=256, tiled='yes')
                 with rasterio.open(outfile, 'w', **meta) as dst:
 

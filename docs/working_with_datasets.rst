@@ -37,7 +37,7 @@ coordinates to coordinates in that reference system.
 
     >>> src.crs
     {'init': u'epsg:32618'}
-    >>> src.affine
+    >>> src.transform
     Affine(300.0379266750948, 0.0, 101985.0,
            0.0, -300.041782729805, 2826915.0)
 
@@ -48,10 +48,10 @@ row)``.
 .. code-block:: python
 
     >>> col, row = 0, 0
-    >>> src.affine * (col, row)
+    >>> src.transform * (col, row)
     (101985.0, 2826915.0)
     >>> col, row = src.width, src.height
-    >>> src.affine * (col, row)
+    >>> src.transform * (col, row)
     (339315.0, 2611485.0)
 
 

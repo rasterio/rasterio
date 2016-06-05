@@ -27,8 +27,6 @@ def main(infile, outfile, with_threads=False):
             # concurrently.
 
             meta = src.meta
-            del meta['transform']
-            meta.update(affine=src.affine)
             meta.update(blockxsize=256, blockysize=256, tiled='yes')
             with rasterio.open(outfile, 'w', **meta) as dst:
 
