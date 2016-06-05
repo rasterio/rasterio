@@ -53,7 +53,7 @@ def tiffs(tmpdir):
     _profile = {
         'affine': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
         'transform': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
-        'crs': CRS(),
+        'crs': CRS({'init': 'epsg:4326'}),
         'driver': 'GTiff',
         'dtype': 'uint8',
         'height': 3,
