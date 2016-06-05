@@ -184,7 +184,7 @@ def _reproject(
         Source raster.
     destination: ndarray or rasterio Band
         Target raster.
-    src_transform: affine transform object, optional
+    src_transform: affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
     src_crs: dict, optional
@@ -197,7 +197,7 @@ def _reproject(
         for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
         if available.  Must be provided if dst_nodata is not None.
-    dst_transform: affine transform object, optional
+    dst_transform: affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
     dst_crs: dict, optional

@@ -45,11 +45,16 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
     Returns
     -------
-    dest: numpy ndarray
-        Contents of all input rasters in single array.
-    out_transform: affine object
-        Information for mapping pixel coordinates in `dest` to another
-        coordinate system
+    tuple
+
+        Two elements:
+
+            dest: numpy ndarray
+                Contents of all input rasters in single array.
+
+            out_transform: affine.Affine()
+                Information for mapping pixel coordinates in `dest` to another
+                coordinate system
     """
     first = sources[0]
     first_res = first.res

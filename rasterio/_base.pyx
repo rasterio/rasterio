@@ -792,7 +792,7 @@ cpdef eval_window(object window, int height, int width):
     return (r_start, r_stop), (c_start, c_stop)
 
 
-def get_index(x, y, affine, op=math.floor, precision=6):
+def get_index(x, y, transform, op=math.floor, precision=6):
     """
     Returns the (row, col) index of the pixel containing (x, y) given a
     coordinate reference system.
@@ -803,7 +803,7 @@ def get_index(x, y, affine, op=math.floor, precision=6):
         x value in coordinate reference system
     y : float
         y value in coordinate reference system
-    affine : tuple
+    transform : tuple
         Coefficients mapping pixel coordinates to coordinate reference system.
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
@@ -822,12 +822,12 @@ def get_index(x, y, affine, op=math.floor, precision=6):
     # and sign determined by the op function: positive for floor, negative
     # for ceil.
     eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
-    row = int(op((y - eps - affine[5]) / affine[4]))
-    col = int(op((x + eps - affine[2]) / affine[0]))
+    row = int(op((y - eps - transform[5]) / transform[4]))
+    col = int(op((x + eps - transform[2]) / transform[0]))
     return row, col
 
 
-def get_window(left, bottom, right, top, affine, precision=6):
+def get_window(left, bottom, right, top, transform, precision=6):
     """
     Returns a window tuple given coordinate bounds and the coordinate reference
     system.
@@ -842,15 +842,15 @@ def get_window(left, bottom, right, top, affine, precision=6):
         Right edge of window
     top : float
         top edge of window
-    affine : tuple
+    transform : tuple
         Coefficients mapping pixel coordinates to coordinate reference system.
     precision : int
         Decimal places of precision in indexing, as in `round()`.
     """
     window_start = get_index(
-        left, top, affine, op=math.floor, precision=precision)
+        left, top, transform, op=math.floor, precision=precision)
     window_stop = get_index(
-        right, bottom, affine, op=math.ceil, precision=precision)
+        right, bottom, transform, op=math.ceil, precision=precision)
     window = tuple(zip(window_start, window_stop))
     return window
 

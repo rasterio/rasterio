@@ -198,10 +198,6 @@ def rasterize(
 
                 kwargs = template_ds.meta.copy()
                 kwargs['count'] = 1
-
-                # DEPRECATED
-                # upgrade transform to affine object or we may get an invalid
-                # transform set on output
                 kwargs['transform'] = template_ds.transform
 
                 template_ds.close()
@@ -258,7 +254,7 @@ def rasterize(
             result = rasterize(
                 geometries,
                 out_shape=(kwargs['height'], kwargs['width']),
-                transform=kwargs.get('affine', kwargs['transform']),
+                transform=kwargs['transform'],
                 all_touched=all_touched,
                 dtype=kwargs.get('dtype', None),
                 default_value=default_value,

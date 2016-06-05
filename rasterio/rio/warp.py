@@ -287,7 +287,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             out_kwargs.update({
                 'crs': dst_crs,
                 'transform': dst_transform,
-                'affine': dst_transform,
                 'width': dst_width,
                 'height': dst_height
             })
