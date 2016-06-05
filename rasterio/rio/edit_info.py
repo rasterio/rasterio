@@ -7,7 +7,7 @@ import click
 
 from . import options
 import rasterio
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import guard_transform
 from rasterio.compat import string_types

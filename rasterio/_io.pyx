@@ -17,7 +17,7 @@ cimport numpy as np
 from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes

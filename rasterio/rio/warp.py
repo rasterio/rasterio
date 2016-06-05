@@ -8,7 +8,7 @@ from cligj import files_inout_arg, format_opt
 from .helpers import resolve_inout
 from . import options
 import rasterio
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
 from rasterio.warp import (

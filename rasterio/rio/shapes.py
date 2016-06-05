@@ -8,7 +8,7 @@ from .helpers import coords, write_features
 from . import options
 import rasterio
 from rasterio.transform import Affine
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 
 logger = logging.getLogger('rio')
 

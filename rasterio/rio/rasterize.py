@@ -107,7 +107,7 @@ def rasterize(
     of the output or --like rasters at this time.  This functionality may be
     added in the future.
     """
-    from rasterio._crs import CRS
+    from rasterio.crs import CRS
     from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds
 

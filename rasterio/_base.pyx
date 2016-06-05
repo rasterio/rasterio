@@ -12,7 +12,7 @@ import warnings
 from libc.stdlib cimport malloc, free
 
 from rasterio cimport _gdal, _ogr
-from rasterio._crs import CRS
+from rasterio.crs import CRS
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
 from rasterio import dtypes
