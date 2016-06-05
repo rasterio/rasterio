@@ -16,7 +16,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 # When possible, Rasterio gives you the CRS in the form of an EPSG code.
 def test_read_epsg(tmpdir):
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        assert src.crs.data == {'init': 'epsg:32618'}
+        assert src.crs.to_dict() == {'init': 'epsg:32618'}
 
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
@@ -24,7 +24,7 @@ def test_read_epsg3857(tmpdir):
         'gdalwarp', '-t_srs', 'EPSG:3857',
         'tests/data/RGB.byte.tif', tiffname])
     with rasterio.open(tiffname) as src:
-        assert src.crs.data == {'init': 'epsg:3857'}
+        assert src.crs.to_dict() == {'init': 'epsg:3857'}
 
 # Ensure that CRS sticks when we write a file.
 def test_write_3857(tmpdir):
@@ -35,7 +35,7 @@ def test_write_3857(tmpdir):
     dst_path = str(tmpdir.join('wut.tif'))
     with rasterio.open(src_path) as src:
         with rasterio.open(dst_path, 'w', **src.meta) as dst:
-            assert dst.crs.data == {'init': 'epsg:3857'}
+            assert dst.crs.to_dict() == {'init': 'epsg:3857'}
     info = subprocess.check_output([
         'gdalinfo', dst_path])
     # WKT string may vary a bit w.r.t GDAL versions
@@ -72,11 +72,11 @@ def test_from_epsg_string():
 
 def test_from_string():
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert wgs84_crs.data == {'no_defs': True, 'ellps': 'WGS84', 'datum': 'WGS84', 'proj': 'longlat'}
+    assert wgs84_crs.to_dict() == {'no_defs': True, 'ellps': 'WGS84', 'datum': 'WGS84', 'proj': 'longlat'}
 
     # Make sure this doesn't get handled using the from_epsg() even though 'epsg' is in the string
     epsg_init_crs = CRS.from_string('+units=m +init=epsg:26911 +no_defs=True')
-    assert epsg_init_crs.data == {'units': 'm', 'init': 'epsg:26911', 'no_defs': True}
+    assert epsg_init_crs.to_dict() == {'units': 'm', 'init': 'epsg:26911', 'no_defs': True}
 
 
 def test_bare_parameters():

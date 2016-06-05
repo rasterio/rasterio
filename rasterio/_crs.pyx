@@ -174,6 +174,8 @@ class CRS(UserDict):
         # between Python 2 and 3?
         return "CRS({})".format(dict.__repr__(self.data))
 
+    def to_dict(self):
+        return self.data
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
