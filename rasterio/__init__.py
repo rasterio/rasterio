@@ -4,6 +4,7 @@ from __future__ import absolute_import
 
 from collections import namedtuple
 import logging
+import warnings
 try:
     from logging import NullHandler
 except ImportError:  # pragma: no cover
@@ -160,6 +161,12 @@ def open(path, mode='r', driver=None, width=None, height=None,
     elif 'affine' in kwargs:
         affine = kwargs.pop('affine')
         transform = guard_transform(affine)
+        warnings.warn(
+            "The affine kwarg is deprecated as of 1.0 and only exists to ease "
+            "the transition.  Please switch to the transform kwarg.  See "
+            "https://github.com/mapbox/rasterio/issues/86 for details.",
+            RuntimeWarning,
+            stacklevel=2)
 
     # Get AWS credentials if we're attempting to access a raster
     # on S3.

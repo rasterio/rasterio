@@ -87,7 +87,7 @@ def test_edit_transform_affine(data):
     result = runner.invoke(edit, [inputfile, '--transform', input_t])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        for a, b in zip(src.affine, json.loads(input_t)):
+        for a, b in zip(src.transform, json.loads(input_t)):
             assert round(a, 6) == round(b, 6)
 
 
@@ -100,7 +100,7 @@ def test_edit_transform_gdal(data):
         '--transform', '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        for a, b in zip(src.affine, json.loads(input_t)):
+        for a, b in zip(src.transform, json.loads(input_t)):
             assert round(a, 6) == round(b, 6)
 
 

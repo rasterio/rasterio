@@ -1,17 +1,18 @@
-"""Commands for operating on bands of datasets."""
+"""$ rio stack"""
+
+
 import collections
 import logging
 
 import click
 from cligj import files_inout_arg, format_opt
 
-from .helpers import resolve_inout
-from . import options
+from rasterio.rio.helpers import resolve_inout
+from rasterio.rio import options
 import rasterio
 from rasterio.compat import zip_longest
 
 
-# Stack command.
 @click.command(short_help="Stack a number of bands into a multiband dataset.")
 @files_inout_arg
 @options.output_opt
@@ -88,7 +89,6 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
             with rasterio.open(files[0]) as first:
                 kwargs = first.meta
                 kwargs.update(**creation_options)
-                kwargs['transform'] = kwargs.pop('affine')
 
             kwargs.update(
                 driver=driver,

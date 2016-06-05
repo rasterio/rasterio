@@ -36,8 +36,10 @@ def test_update_spatial(data):
         f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         f.crs = {'init': 'epsg:4326'}
     with rasterio.open(tiffname) as f:
-        assert list(f.transform) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-        assert list(f.affine.to_gdal()) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        assert f.transform == affine.Affine.from_gdal(
+            1.0, 1.0, 0.0,
+            0.0, 0.0, -1.0)
+        assert f.transform.to_gdal() == (1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         assert f.crs == {'init': 'epsg:4326'}
 
 
@@ -47,8 +49,10 @@ def test_update_spatial_epsg(data):
         f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         f.crs = 'EPSG:4326'
     with rasterio.open(tiffname) as f:
-        assert list(f.transform) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-        assert list(f.affine.to_gdal()) == [1.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        assert f.transform == affine.Affine.from_gdal(
+            1.0, 1.0, 0.0,
+            0.0, 0.0, -1.0)
+        assert f.transform.to_gdal() == (1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         assert f.crs == {'init': 'epsg:4326'}
 
 

@@ -161,7 +161,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             if like:
                 with rasterio.open(like) as template_ds:
                     dst_crs = template_ds.crs
-                    dst_transform = template_ds.affine
+                    dst_transform = template_ds.transform
                     dst_height = template_ds.height
                     dst_width = template_ds.width
 
@@ -233,7 +233,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 # Same projection, different dimensions and possibly
                 # different resolution.
                 if not res:
-                    res = (src.affine.a, -src.affine.e)
+                    res = (src.transform.a, -src.transform.e)
 
                 dst_crs = src.crs
                 xmin, ymin, xmax, ymax = (src_bounds or dst_bounds)
@@ -250,7 +250,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
             else:
                 dst_crs = src.crs
-                dst_transform = src.affine
+                dst_transform = src.transform
                 dst_width = src.width
                 dst_height = src.height
 
@@ -299,7 +299,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     reproject(
                         source=rasterio.band(src, i),
                         destination=rasterio.band(dst, i),
-                        src_transform=src.affine,
+                        src_transform=src.transform,
                         src_crs=src.crs,
                         src_nodata=src_nodata,
                         dst_transform=out_kwargs['transform'],

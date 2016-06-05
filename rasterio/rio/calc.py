@@ -1,7 +1,7 @@
-# Calc command.
+"""$ rio calc"""
+
 
 from distutils.version import LooseVersion
-import logging
 
 import click
 import snuggs
@@ -99,7 +99,6 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
             with rasterio.open(inputs[0][1]) as first:
                 kwargs = first.meta
                 kwargs.update(**creation_options)
-                kwargs['transform'] = kwargs.pop('affine')
                 dtype = dtype or first.meta['dtype']
                 kwargs['dtype'] = dtype
 

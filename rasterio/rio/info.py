@@ -1,11 +1,12 @@
-"""Fetch and edit raster dataset metadata from the command line."""
+"""$ rio info"""
+
 
 import json
 
 import click
 
-from . import options
 import rasterio.crs
+from rasterio.rio import options
 
 
 @click.command(short_help="Print information about a data file.")
@@ -65,8 +66,6 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode) as src:
                 info = src.profile
-                info['transform'] = info['affine'][:6]
-                del info['affine']
                 info['shape'] = info['height'], info['width']
                 info['bounds'] = src.bounds
                 proj4 = rasterio.crs.to_string(src.crs)

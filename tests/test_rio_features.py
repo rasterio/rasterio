@@ -1,14 +1,14 @@
 import logging
+import json
 import os
 import re
 import sys
-import numpy as np
-import json
+import warnings
+
 from affine import Affine
+import numpy as np
 
 import rasterio
-from rasterio.rio.mask import mask
-from rasterio.rio.shapes import shapes
 from rasterio.rio.rasterize import rasterize
 from rasterio.rio.main import main_group
 
@@ -613,7 +613,7 @@ def test_rasterize_like_raster(tmpdir, runner, basic_feature, basic_image_2x2,
         with rasterio.open(pixelated_image_file) as src:
             assert out.crs == src.crs
             assert out.bounds == src.bounds
-            assert src.affine == src.affine
+            assert out.transform == src.transform
 
 
 def test_rasterize_invalid_like_raster(tmpdir, runner, basic_feature):

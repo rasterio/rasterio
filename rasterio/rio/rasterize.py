@@ -199,7 +199,7 @@ def rasterize(
                 # DEPRECATED
                 # upgrade transform to affine object or we may get an invalid
                 # transform set on output
-                kwargs['transform'] = template_ds.affine
+                kwargs['transform'] = template_ds.transform
 
                 template_ds.close()
 

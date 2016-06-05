@@ -46,6 +46,7 @@ Registry of common rio CLI options.  See cligj for more options.
 
 # TODO: move file_in_arg and file_out_arg to cligj
 
+
 import os.path
 
 import click
@@ -125,7 +126,7 @@ def like_handler(ctx, param, value):
         with rasterio.open(value) as src:
             metadata = src.meta
             ctx.obj['like'] = metadata
-            ctx.obj['like']['transform'] = metadata['affine']
+            ctx.obj['like']['transform'] = metadata['transform']
             ctx.obj['like']['tags'] = src.tags()
 
 
