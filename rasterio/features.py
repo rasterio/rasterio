@@ -1,17 +1,14 @@
 """Functions for working with features in a raster dataset."""
 
-from __future__ import absolute_import
 
 import logging
-import warnings
 
 import numpy as np
 
-import rasterio
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
+from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 from rasterio.env import ensure_env
 from rasterio.transform import IDENTITY, guard_transform
-from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 
 
 log = logging.getLogger(__name__)

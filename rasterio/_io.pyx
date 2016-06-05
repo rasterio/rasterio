@@ -4,29 +4,27 @@
 from __future__ import absolute_import
 
 import logging
-import math
 import os
 import os.path
-import sys
 import warnings
 
-from libc.stdlib cimport malloc, free
 import numpy as np
 cimport numpy as np
 
-from rasterio cimport _base, _gdal, _ogr, _io
-from rasterio._base import (
-    crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
-from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
+from rasterio cimport _base
+from rasterio cimport _gdal
+from rasterio._base import crop_window
+from rasterio._base import eval_window
+from rasterio._err import CPLErrors
+from rasterio._err import CPLE_OpenFailed
 from rasterio import dtypes
-from rasterio.coords import BoundingBox
-from rasterio.errors import (
-    DriverRegistrationError, RasterioIOError, NodataShadowWarning)
 from rasterio.compat import text_type, string_types
-from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.errors import DriverRegistrationError
+from rasterio.errors import RasterioIOError
+from rasterio.errors import NodataShadowWarning
 from rasterio.sample import sample_gen
+from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
 
 

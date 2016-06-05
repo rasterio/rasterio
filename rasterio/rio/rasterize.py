@@ -1,3 +1,6 @@
+"""$ rio rasterize"""
+
+
 import json
 import logging
 from math import ceil
@@ -6,11 +9,11 @@ import os
 import click
 import cligj
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
-from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
+from rasterio.transform import Affine
 
 
 logger = logging.getLogger('rio')

@@ -4,9 +4,9 @@
 import click
 from cligj import files_inout_arg, format_opt
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
 
 
 @click.command(short_help="Merge a stack of raster datasets.")

@@ -7,9 +7,7 @@ import logging
 import math
 import warnings
 
-from libc.stdlib cimport malloc, free
-
-from rasterio cimport _gdal, _ogr
+from rasterio cimport _gdal
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
 from rasterio import dtypes

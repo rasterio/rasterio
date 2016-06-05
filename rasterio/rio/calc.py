@@ -4,14 +4,14 @@
 from distutils.version import LooseVersion
 
 import click
-import snuggs
 from cligj import files_inout_arg
+import snuggs
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
-from rasterio.fill import fillnodata
 from rasterio.features import sieve
+from rasterio.fill import fillnodata
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
 
 
 def get_bands(inputs, d, i=None):

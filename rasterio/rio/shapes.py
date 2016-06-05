@@ -7,8 +7,8 @@ import os
 import click
 import cligj
 
-from rasterio.rio.helpers import coords, write_features
 from rasterio.rio import options
+from rasterio.rio.helpers import coords, write_features
 from rasterio.transform import Affine
 
 

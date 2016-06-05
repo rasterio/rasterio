@@ -1,8 +1,6 @@
 """Copy valid pixels from input files to an output file."""
 
 
-from __future__ import absolute_import
-
 import logging
 import math
 import warnings

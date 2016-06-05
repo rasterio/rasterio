@@ -1,7 +1,7 @@
 # distutils: language = c++
 """Raster and vector warping and reprojection."""
 
-from enum import IntEnum
+
 import logging
 
 import numpy as np
