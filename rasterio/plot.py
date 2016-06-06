@@ -201,7 +201,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
         labels = (str(i + 1) for i in range(len(arr)))
 
     if ax:
-        show = False
+        show = True
     else:
         show = False
         ax = plt.gca()
