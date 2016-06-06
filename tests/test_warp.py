@@ -391,6 +391,111 @@ def test_reproject_invalid_src_nodata():
             )
 
 
+def test_reproject_init_nodata_tofile(tmpdir):
+    """Test that nodata is not being initialized."""
+    params = default_reproject_params()
+
+    tiffname = str(tmpdir.join('foo.tif'))
+
+    source1 = np.zeros((params.width, params.height), dtype=np.uint8)
+    source2 = source1.copy()
+
+    # fill both sources w/ arbitrary values
+    rows, cols = source1.shape
+    source1[:rows / 2, :cols / 2] = 200
+    source2[rows / 2:, cols / 2:] = 100
+
+    kwargs = {
+        'count': 1,
+        'width': params.width,
+        'height': params.height,
+        'dtype': np.uint8,
+        'driver': 'GTiff',
+        'crs': params.dst_crs,
+        'transform': params.dst_transform
+    }
+
+    with rasterio.open(tiffname, 'w', **kwargs) as dst:
+        reproject(
+            source1,
+            rasterio.band(dst, 1),
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=0.0,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=0.0
+        )
+
+        # 200s should NOT be overwritten by 100s
+        reproject(
+            source2,
+            rasterio.band(dst, 1),
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=0.0,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=0.0
+        )
+
+    with rasterio.open(tiffname) as src:
+        assert src.read().max() == 100
+
+
+def test_reproject_no_init_nodata_tofile(tmpdir):
+    """Test that nodata is not being initialized."""
+    params = default_reproject_params()
+
+    tiffname = str(tmpdir.join('foo.tif'))
+
+    source1 = np.zeros((params.width, params.height), dtype=np.uint8)
+    source2 = source1.copy()
+
+    # fill both sources w/ arbitrary values
+    rows, cols = source1.shape
+    source1[:rows / 2, :cols / 2] = 200
+    source2[rows / 2:, cols / 2:] = 100
+
+    kwargs = {
+        'count': 1,
+        'width': params.width,
+        'height': params.height,
+        'dtype': np.uint8,
+        'driver': 'GTiff',
+        'crs': params.dst_crs,
+        'transform': params.dst_transform
+    }
+
+    with rasterio.open(tiffname, 'w', **kwargs) as dst:
+        reproject(
+            source1,
+            rasterio.band(dst, 1),
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=0.0,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=0.0
+        )
+
+        # 200s should NOT be overwritten by 100s
+        reproject(
+            source2,
+            rasterio.band(dst, 1),
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=0.0,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=0.0,
+            init_dest_nodata=False
+        )
+
+    with rasterio.open(tiffname) as src:
+        assert src.read().max() == 200
+
+
 def test_reproject_multi():
     """Ndarry to ndarray."""
     with rasterio.Env():
