@@ -523,8 +523,9 @@ def test_reproject_no_init_nodata_toarray():
         )
 
         assert out.max() == 200
-
+        assert out.min() == 0
         # 200s should NOT be overwritten by 100s
+
         reproject(
             source2,
             out,
@@ -533,10 +534,12 @@ def test_reproject_no_init_nodata_toarray():
             src_nodata=0.0,
             dst_transform=params.dst_transform,
             dst_crs=params.dst_crs,
-            dst_nodata=0.0
+            dst_nodata=0.0,
+            init_dest_nodata=False
         )
 
         assert out.max() == 200
+        assert out.min() == 0
 
 
 def test_reproject_multi():
