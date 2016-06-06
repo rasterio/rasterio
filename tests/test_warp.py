@@ -12,9 +12,7 @@ from rasterio.warp import (calculate_default_transform, reproject, transform,
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-
-DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0,
-                                 -300.0)
+DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300, 0, 2943560.235, 0, -300)
 
 
 class ReprojectParams(object):

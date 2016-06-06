@@ -42,8 +42,8 @@ def test_parse_netcdf():
 
 def test_vsi_path_scheme():
     """Correctly make a vsi path"""
-    assert vsi_path('foo.tif', 'tests/data/files.zip',
-        'zip') == '/vsizip/tests/data/files.zip/foo.tif'
+    vp = vsi_path('foo.tif', 'tests/data/files.zip', 'zip')
+    assert vp == '/vsizip/tests/data/files.zip/foo.tif'
 
 
 def test_vsi_path_file():

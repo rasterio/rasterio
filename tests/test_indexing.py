@@ -18,11 +18,7 @@ def test_index():
 
 def test_full_window():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        left, bottom, right, top = src.bounds
-        assert src.window(
-            left, bottom, right, top) == tuple(
-            zip((0, 0),
-                src.shape))
+        assert src.window(*src.bounds) == tuple(zip((0, 0), src.shape))
 
 
 def test_window_no_exception():
@@ -45,14 +41,13 @@ def test_window():
         left, bottom, right, top = src.bounds
         dx, dy = src.res
         eps = 1.0e-8
-        assert src.window(
-            left+eps, bottom+eps, right-eps, top-eps) == ((0, src.height),
-                                                          (0, src.width))
+        window = src.window(left+eps, bottom+eps, right-eps, top-eps)
+        assert window == ((0, src.height), (0, src.width))
         assert src.index(left+400, top-400) == (1, 1)
         assert src.index(left+dx+eps, top-dy-eps) == (1, 1)
         assert src.window(left, top-400, left+400, top) == ((0, 2), (0, 2))
-        assert src.window(left, top-2*dy-eps, left+2*dx-eps,
-                          top) == ((0, 2), (0, 2))
+        window = src.window(left, top-2*dy-eps, left+2*dx-eps, top)
+        assert window == ((0, 2), (0, 2))
 
 
 def test_window_bounds_roundtrip():
