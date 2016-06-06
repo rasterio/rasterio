@@ -12,7 +12,6 @@ from rasterio.warp import transform_bounds
 def test_identity():
     """Get the same transform and dimensions back for same crs."""
     # Tile: [53, 96, 8]
-    # [-11740727.544603072, 4852834.0517692715, -11584184.510675032, 5009377.085697309]
     src_crs = dst_crs = 'EPSG:3857'
     width = height = 1000
     left, bottom, right, top = (
@@ -85,7 +84,7 @@ def test_gdal_transform_fail_src_crs():
 @pytest.mark.xfail(
     os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
                    reason="GDAL 1.9 doesn't catch this error")
-def test_gdal_transform_fail_src_crs():
+def test_gdal_transform_fail_dst_crs_xfail():
     with rasterio.Env():
         with pytest.raises(CRSError):
             dt, dw, dh = _calculate_default_transform(
