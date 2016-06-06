@@ -1,12 +1,12 @@
 import logging
 import sys
+
 import numpy as np
 import pytest
-
 from affine import Affine
-import rasterio
-from rasterio.features import bounds, geometry_mask, rasterize, sieve, shapes
 
+import rasterio
+from rasterio.features import bounds, geometry_mask, rasterize, shapes, sieve
 
 DEFAULT_SHAPE = (10, 10)
 

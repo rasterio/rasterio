@@ -1,9 +1,7 @@
 import logging
-import subprocess
 import sys
 
 import rasterio
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

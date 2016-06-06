@@ -32,15 +32,16 @@ so that other ``rio`` users may find it.
 
 
 import logging
-from pkg_resources import iter_entry_points
 import sys
 
-from click_plugins import with_plugins
 import click
 import cligj
+from click_plugins import with_plugins
+from pkg_resources import iter_entry_points
+
+import rasterio
 
 from . import options
-import rasterio
 
 
 def configure_logging(verbosity):

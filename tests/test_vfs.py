@@ -7,7 +7,6 @@ import rasterio
 from rasterio.profiles import default_gtiff_profile
 from rasterio.vfs import parse_path, vsi_path
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
@@ -43,8 +42,8 @@ def test_parse_netcdf():
 
 def test_vsi_path_scheme():
     """Correctly make a vsi path"""
-    assert vsi_path(
-        'foo.tif', 'tests/data/files.zip', 'zip') == '/vsizip/tests/data/files.zip/foo.tif'
+    vp = vsi_path('foo.tif', 'tests/data/files.zip', 'zip')
+    assert vp == '/vsizip/tests/data/files.zip/foo.tif'
 
 
 def test_vsi_path_file():
@@ -65,6 +64,7 @@ def test_read_vfs_file():
             'file://tests/data/RGB.byte.tif') as src:
         assert src.name == 'file://tests/data/RGB.byte.tif'
         assert src.count == 3
+
 
 def test_read_vfs_zip_cmp_array():
     with rasterio.open(

@@ -1,10 +1,11 @@
 import logging
-import numpy as np
 import sys
+
+import numpy as np
+
 import rasterio
 from rasterio.features import rasterize
 from rasterio.transform import IDENTITY
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 logger = logging.getLogger('rasterize_geometry')

@@ -1,13 +1,13 @@
-import sys
-import os
 import logging
+import os
+import sys
+
 import numpy as np
 from click.testing import CliRunner
 
 import rasterio
-from rasterio.rio.main import main_group
 from rasterio.rio.convert import convert
-
+from rasterio.rio.main import main_group
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

@@ -2,12 +2,10 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio import (
-    ubyte, uint8, uint16, uint32, int16, int32, float32, float64, complex_)
-from rasterio.dtypes import (
-    _gdal_typename, is_ndarray, check_dtype, get_minimum_dtype, can_cast_dtype,
-    validate_dtype
-)
+from rasterio import (complex_, float32, float64, int16, int32, ubyte, uint8,
+                      uint16, uint32)
+from rasterio.dtypes import (_gdal_typename, can_cast_dtype, check_dtype,
+                             get_minimum_dtype, is_ndarray, validate_dtype)
 
 
 def test_is_ndarray():

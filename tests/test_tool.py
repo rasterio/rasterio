@@ -1,13 +1,14 @@
 import numpy as np
 
+import rasterio
+from rasterio.plot import show, show_hist
+from rasterio.rio.insp import stats
+
 try:
     import matplotlib.pyplot as plt
 except ImportError:
     plt = None
 
-import rasterio
-from rasterio.plot import show, show_hist
-from rasterio.rio.insp import stats
 
 def test_stats():
     with rasterio.open('tests/data/RGB.byte.tif') as src:

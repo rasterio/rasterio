@@ -45,13 +45,15 @@ def test_file_in_handler_with_vfs_nonexistent():
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
         _ = file_in_handler(
-            ctx, 'INPUT', 'zip://{0}/files.zip!/inputs/RGB.byte.tif'.format(uuid.uuid4()))
+            ctx, 'INPUT', 'zip://{0}/files.zip!/inputs/RGB.byte.tif'.format(
+                uuid.uuid4()))
 
 
 def test_file_in_handler_with_vfs():
     """vfs file path path is expanded"""
     ctx = MockContext()
-    retval = file_in_handler(ctx, 'INPUT', 'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
+    retval = file_in_handler(ctx, 'INPUT',
+                             'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
     assert retval.startswith('zip:///')
     assert retval.endswith('tests/data/files.zip!/inputs/RGB.byte.tif')
 

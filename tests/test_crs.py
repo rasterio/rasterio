@@ -1,16 +1,16 @@
+import json
 import logging
-import pytest
 import subprocess
 import sys
-import json
+
+import pytest
 
 import rasterio
-from rasterio._base import _can_create_osr
 from rasterio import crs
-from rasterio.crs import (
-    is_geographic_crs, is_projected_crs, is_same_crs, is_valid_crs)
+from rasterio._base import _can_create_osr
+from rasterio.crs import (is_geographic_crs, is_projected_crs, is_same_crs,
+                          is_valid_crs)
 from rasterio.errors import CRSError
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -19,6 +19,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_read_epsg(tmpdir):
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.crs == {'init': 'epsg:32618'}
+
 
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
@@ -29,6 +30,8 @@ def test_read_epsg3857(tmpdir):
         assert src.crs == {'init': 'epsg:3857'}
 
 # Ensure that CRS sticks when we write a file.
+
+
 def test_write_3857(tmpdir):
     src_path = str(tmpdir.join('lol.tif'))
     subprocess.call([
@@ -73,12 +76,21 @@ def test_from_epsg_string():
 
 
 def test_from_string():
-    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert wgs84_crs == {'no_defs': True, 'ellps': 'WGS84', 'datum': 'WGS84', 'proj': 'longlat'}
+    wgs84_crs = crs.from_string(
+        '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    assert wgs84_crs == {
+        'no_defs': True,
+        'ellps': 'WGS84',
+        'datum': 'WGS84',
+        'proj': 'longlat'}
 
-    # Make sure this doesn't get handled using the from_epsg() even though 'epsg' is in the string
+    # Make sure this doesn't get handled using the from_epsg() even though
+    # 'epsg' is in the string
     epsg_init_crs = crs.from_string('+units=m +init=epsg:26911 +no_defs=True')
-    assert epsg_init_crs == {'units': 'm', 'init': 'epsg:26911', 'no_defs': True}
+    assert epsg_init_crs == {
+        'units': 'm',
+        'init': 'epsg:26911',
+        'no_defs': True}
 
 
 def test_bare_parameters():
@@ -87,10 +99,12 @@ def test_bare_parameters():
     which makes presents bare parameters as key=<bool>."""
 
     # Example produced by pyproj
-    crs_dict = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    crs_dict = crs.from_string(
+        '+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert crs_dict.get('no_defs', False) is True
 
-    crs_dict = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=False +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    crs_dict = crs.from_string(
+        '+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=False +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert crs_dict.get('no_defs', True) is False
 
 
@@ -98,13 +112,16 @@ def test_is_geographic():
     assert is_geographic_crs({'init': 'EPSG:4326'}) is True
     assert is_geographic_crs({'init': 'EPSG:3857'}) is False
 
-    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    wgs84_crs = crs.from_string(
+        '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
     assert is_geographic_crs(wgs84_crs) is True
 
-    nad27_crs = crs.from_string('+proj=longlat +ellps=clrk66 +datum=NAD27 +no_defs')
+    nad27_crs = crs.from_string(
+        '+proj=longlat +ellps=clrk66 +datum=NAD27 +no_defs')
     assert is_geographic_crs(nad27_crs) is True
 
-    lcc_crs = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    lcc_crs = crs.from_string(
+        '+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert is_geographic_crs(lcc_crs) is False
 
 
@@ -112,10 +129,12 @@ def test_is_projected():
     assert is_projected_crs({'init': 'EPSG:3857'}) is True
     assert is_projected_crs({'init': 'EPSG:4326'}) is False
 
-    lcc_crs = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    lcc_crs = crs.from_string(
+        '+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert is_projected_crs(lcc_crs) is True
 
-    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    wgs84_crs = crs.from_string(
+        '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
     assert is_projected_crs(wgs84_crs) is False
 
 
@@ -126,12 +145,15 @@ def test_is_same_crs():
     assert is_same_crs(crs1, crs1) is True
     assert is_same_crs(crs1, crs2) is False
 
-    wgs84_crs = crs.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+    wgs84_crs = crs.from_string(
+        '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
     assert is_same_crs(crs1, wgs84_crs) is True
 
     # Make sure that same projection with different parameter are not equal
-    lcc_crs1 = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    lcc_crs2 = crs.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=45 +lat_0=0')
+    lcc_crs1 = crs.from_string(
+        '+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    lcc_crs2 = crs.from_string(
+        '+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=45 +lat_0=0')
     assert is_same_crs(lcc_crs1, lcc_crs2) is False
 
 

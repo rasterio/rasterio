@@ -5,16 +5,14 @@ import logging
 import sys
 
 import boto3
-from packaging.version import parse
 import pytest
+from packaging.version import parse
 
 import rasterio
-from rasterio._drivers import (del_gdal_config, get_gdal_config,
-                               set_gdal_config)
-from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
+from rasterio._drivers import del_gdal_config, get_gdal_config, set_gdal_config
+from rasterio.env import defenv, delenv, ensure_env, getenv, setenv
 from rasterio.errors import EnvError
 from rasterio.rio.main import main_group
-
 
 # Custom markers.
 mingdalversion = pytest.mark.skipif(
@@ -117,8 +115,10 @@ def test_aws_session_credentials(gdalenv):
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
-    with rasterio.Env(aws_access_key_id='id', aws_secret_access_key='key',
-             aws_session_token='token', region_name='null-island-1') as s:
+    with rasterio.Env(aws_access_key_id='id',
+                      aws_secret_access_key='key',
+                      aws_session_token='token',
+                      region_name='null-island-1') as s:
         assert getenv() == rasterio.env._env.options == {}
         s.get_aws_credentials()
         assert getenv() == rasterio.env._env.options == {

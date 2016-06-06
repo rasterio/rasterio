@@ -2,15 +2,16 @@ import logging
 import os
 
 import click
-from cligj import (
-    precision_opt, indent_opt, compact_opt, projection_geographic_opt,
-    projection_mercator_opt, projection_projected_opt, sequence_opt,
-    use_rs_opt, geojson_type_feature_opt, geojson_type_bbox_opt,
-    geojson_type_collection_opt)
+from cligj import (compact_opt, geojson_type_bbox_opt,
+                   geojson_type_collection_opt, geojson_type_feature_opt,
+                   indent_opt, precision_opt, projection_geographic_opt,
+                   projection_mercator_opt, projection_projected_opt,
+                   sequence_opt, use_rs_opt)
 
-from .helpers import write_features, to_lower
 import rasterio
 from rasterio.warp import transform_bounds
+
+from .helpers import to_lower, write_features
 
 logger = logging.getLogger('rio')
 

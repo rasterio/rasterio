@@ -8,11 +8,10 @@ import warnings
 import numpy as np
 
 import rasterio
-from rasterio._features import _shapes, _sieve, _rasterize, _bounds
+from rasterio._features import _bounds, _rasterize, _shapes, _sieve
+from rasterio.dtypes import can_cast_dtype, get_minimum_dtype, validate_dtype
 from rasterio.env import ensure_env
 from rasterio.transform import IDENTITY, guard_transform
-from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
-
 
 log = logging.getLogger(__name__)
 

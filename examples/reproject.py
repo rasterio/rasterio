@@ -2,9 +2,10 @@ import os
 import subprocess
 
 import numpy as np
+
 import rasterio
 from rasterio import transform
-from rasterio.warp import reproject, RESAMPLING
+from rasterio.warp import RESAMPLING, reproject
 
 tempdir = '/tmp'
 tiffname = os.path.join(tempdir, 'example.tif')

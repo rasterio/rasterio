@@ -1,6 +1,8 @@
-import numpy as np
-import rasterio
 import subprocess
+
+import numpy as np
+
+import rasterio
 
 with rasterio.Env(CPL_DEBUG=True):
 

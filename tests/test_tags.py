@@ -3,9 +3,11 @@ import logging
 import sys
 
 import pytest
+
 import rasterio
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
 
 def test_tags_read():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -16,15 +18,16 @@ def test_tags_read():
         with pytest.raises(IndexError):
             tags = src.tags(4)
 
+
 def test_tags_update(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(
-            tiffname, 
-            'w', 
-            driver='GTiff', 
-            count=1, 
-            dtype=rasterio.uint8, 
-            width=10, 
+            tiffname,
+            'w',
+            driver='GTiff',
+            count=1,
+            dtype=rasterio.uint8,
+            width=10,
             height=10) as dst:
 
         dst.update_tags(a='1', b='2')
@@ -33,8 +36,8 @@ def test_tags_update(tmpdir):
             dst.update_tags(4, d=4)
 
         assert dst.tags() == {'a': '1', 'b': '2'}
-        assert dst.tags(1) == {'c': '3' }
-        
+        assert dst.tags(1) == {'c': '3'}
+
         # Assert that unicode tags work.
         # Russian text appropriated from pytest issue #319
         # https://bitbucket.org/hpk42/pytest/issue/319/utf-8-output-in-assertion-error-converted
@@ -46,9 +49,10 @@ def test_tags_update(tmpdir):
         assert src.tags(1) == {'c': '3'}
         assert src.tags(ns='rasterio_testing') == {'rus': u'другая строка'}
 
+
 def test_tags_update_twice():
     with rasterio.open(
-            'test.tif', 'w', 
+            'test.tif', 'w',
             'GTiff', 3, 4, 1, dtype=rasterio.ubyte) as dst:
         dst.update_tags(a=1, b=2)
         assert dst.tags() == {'a': '1', 'b': '2'}
@@ -58,7 +62,7 @@ def test_tags_update_twice():
 
 def test_tags_eq():
     with rasterio.open(
-            'test.tif', 'w', 
+            'test.tif', 'w',
             'GTiff', 3, 4, 1, dtype=rasterio.ubyte) as dst:
         dst.update_tags(a="foo=bar")
         assert dst.tags() == {'a': "foo=bar"}

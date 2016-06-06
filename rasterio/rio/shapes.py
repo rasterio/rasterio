@@ -4,10 +4,11 @@ import os
 import click
 import cligj
 
-from .helpers import coords, write_features
-from . import options
 import rasterio
 from rasterio.transform import Affine
+
+from . import options
+from .helpers import coords, write_features
 
 logger = logging.getLogger('rio')
 

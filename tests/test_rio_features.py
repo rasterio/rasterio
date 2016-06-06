@@ -1,17 +1,15 @@
+import json
 import logging
 import os
 import re
 import sys
+
 import numpy as np
-import json
 from affine import Affine
 
 import rasterio
-from rasterio.rio.mask import mask
-from rasterio.rio.shapes import shapes
-from rasterio.rio.rasterize import rasterize
 from rasterio.rio.main import main_group
-
+from rasterio.rio.rasterize import rasterize
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -200,7 +198,8 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
             out.read(1, masked=True).filled(0))
 
 
-def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_file):
+def test_mask_crop_inverted_y(runner, tmpdir, basic_feature,
+                              pixelated_image_file):
     """
     --crop option should also work if raster has a positive y pixel size
     (e.g., Affine.identity() ).
@@ -632,7 +631,8 @@ def test_rasterize_like_raster_src_crs_mismatch(tmpdir, runner, basic_feature,
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
         main_group,
-        ['rasterize', output, '--like', pixelated_image_file, '--src-crs', 'EPSG:3857'],
+        ['rasterize', output, '--like', pixelated_image_file, '--src-crs',
+         'EPSG:3857'],
         input=json.dumps(basic_feature))
 
     assert result.exit_code == 2

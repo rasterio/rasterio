@@ -2,10 +2,8 @@ import logging
 import sys
 
 import numpy as np
-import pytest
 
 import rasterio
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -37,7 +35,7 @@ def test_read_boundless_overlap():
         data = src.read(window=((-200, 200), (-200, 200)), boundless=True)
         assert data.shape == (3, 400, 400)
         assert data.any()
-        assert data[0,399,399] == 13
+        assert data[0, 399, 399] == 13
 
 
 def test_read_boundless_resample():
@@ -50,7 +48,7 @@ def test_read_boundless_resample():
                 boundless=True)
         assert data.shape == (3, 800, 800)
         assert data.any()
-        assert data[0,798,798] == 13
+        assert data[0, 798, 798] == 13
 
 
 def test_read_boundless_masked_no_overlap():
@@ -68,8 +66,8 @@ def test_read_boundless_masked_overlap():
         assert data.shape == (3, 400, 400)
         assert data.mask.any()
         assert not data.mask.all()
-        assert data.mask[0,399,399] == False
-        assert data.mask[0,0,0] == True
+        assert data.mask[0, 399, 399] == False
+        assert data.mask[0, 0, 0] == True
 
 
 def test_read_boundless_zero_stop():
@@ -85,6 +83,7 @@ def test_read_boundless_masks_zero_stop():
         data = src.read_masks(window=((-200, 0), (-200, 0)), boundless=True)
         assert data.shape == (3, 200, 200)
         assert data.min() == data.max() == src.nodata
+
 
 def test_read_boundless_noshift():
     with rasterio.open('tests/data/rgb4.tif') as src:

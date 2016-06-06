@@ -3,12 +3,11 @@ import sys
 
 import numpy as np
 import pytest
-
 from affine import Affine
+
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import NodataShadowWarning
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -46,6 +45,7 @@ alldata = np.array([[1, 1, 1],
 alp_shift_lr = np.array([[1, 1, 0],
                          [0, 1, 0],
                          [0, 0, 0]]).astype('uint8') * 255
+
 
 @pytest.fixture(scope='function')
 def tiffs(tmpdir):
@@ -134,19 +134,23 @@ def test_no_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgb_no_ndv.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), alldata)
 
+
 def test_rgb_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), alp)
 
+
 def test_rgba_no_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgba_no_ndv.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), alp)
+
 
 def test_rgba_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgba_ndv.tif'))) as src:
         with pytest.warns(NodataShadowWarning):
             res = src.dataset_mask()
         assert np.array_equal(res, alp)
+
 
 def test_rgb_msk(tiffs):
     with rasterio.open(str(tiffs.join('rgb_msk.tif'))) as src:
@@ -155,14 +159,17 @@ def test_rgb_msk(tiffs):
         for bmask in src.read_masks():
             assert np.array_equal(bmask, msk)
 
+
 def test_rgb_msk_int(tiffs):
     with rasterio.open(str(tiffs.join('rgb_msk_internal.tif'))) as src:
         assert np.array_equal(src.dataset_mask(), msk)
+
 
 def test_rgba_msk(tiffs):
     with rasterio.open(str(tiffs.join('rgba_msk.tif'))) as src:
         # mask takes precendent over alpha
         assert np.array_equal(src.dataset_mask(), msk)
+
 
 def test_kwargs(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:

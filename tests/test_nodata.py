@@ -1,5 +1,4 @@
 import logging
-import pytest
 import re
 import subprocess
 import sys
@@ -7,6 +6,7 @@ import sys
 import rasterio
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
 
 def test_nodata(tmpdir):
     dst_path = str(tmpdir.join('lol.tif'))
@@ -23,6 +23,7 @@ def test_nodata(tmpdir):
     assert re.search(pattern, info, re.DOTALL) is not None
     pattern = b'Band 2.*?NoData Value=0'
     assert re.search(pattern, info, re.DOTALL) is not None
+
 
 def test_set_nodata(tmpdir):
     dst_path = str(tmpdir.join('lol.tif'))

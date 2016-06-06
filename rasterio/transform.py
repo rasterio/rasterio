@@ -1,12 +1,10 @@
 """Geospatial transforms"""
 
-from __future__ import absolute_import
-from __future__ import division
+from __future__ import absolute_import, division
 
 import warnings
 
 from affine import Affine
-
 
 IDENTITY = Affine.identity()
 

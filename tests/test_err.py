@@ -3,14 +3,15 @@
 import pytest
 
 import rasterio
-from rasterio.env import Env
 from rasterio._err import CPLError
 from rasterio.errors import RasterioIOError
 
 
 def test_io_error(tmpdir):
     """RasterioIOError is raised when a disk file can't be opened.
-    Newlines are removed from GDAL error messages."""
+
+    Newlines are removed from GDAL error messages.
+    """
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open(str(tmpdir.join('foo.tif')))
     msg, = exc_info.value.args

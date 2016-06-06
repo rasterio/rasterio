@@ -1,13 +1,10 @@
 import logging
-import re
 import sys
 
 from click.testing import CliRunner
 from packaging.version import parse
-import pytest
 
 from rasterio.rio.main import main_group
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

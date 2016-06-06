@@ -24,7 +24,7 @@ def test_checksum_band_window_min():
 def test_checksum_band_window_quarter():
     """A quarter window's checksum is different from the full image's"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        window = ((0, src.height//2), (0, src.width//2))
+        window = ((0, src.height // 2), (0, src.width // 2))
         checksums = [src.checksum(i, window=window) for i in src.indexes]
         assert checksums != [25420, 29131, 37860]
 

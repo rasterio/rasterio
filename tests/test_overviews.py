@@ -3,12 +3,10 @@
 import logging
 import sys
 
-from click.testing import CliRunner
 import pytest
 
 import rasterio
 from rasterio.enums import Resampling
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 

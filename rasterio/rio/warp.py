@@ -1,19 +1,19 @@
 import logging
-from math import ceil
 import warnings
+from math import ceil
 
 import click
 from cligj import files_inout_arg, format_opt
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
 from rasterio import crs
 from rasterio.errors import CRSError
 from rasterio.transform import Affine
-from rasterio.warp import (
-    reproject, Resampling, calculate_default_transform, transform_bounds)
+from rasterio.warp import (Resampling, calculate_default_transform, reproject,
+                           transform_bounds)
 
+from . import options
+from .helpers import resolve_inout
 
 # Improper usage of rio-warp can lead to accidental creation of
 # extremely large datasets. We'll put a hard limit on the size of

@@ -1,21 +1,18 @@
-
 import logging
 import sys
+
+import numpy as np
 import pytest
 from affine import Affine
-import numpy as np
 
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.warp import (
-    reproject, transform_geom, transform, transform_bounds,
-    calculate_default_transform)
-
+from rasterio.warp import (calculate_default_transform, reproject, transform,
+                           transform_bounds, transform_geom)
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-
-DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
+DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300, 0, 2943560.235, 0, -300)
 
 
 class ReprojectParams(object):
@@ -261,7 +258,7 @@ def test_reproject_nodata():
     with rasterio.Env():
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
-                          dtype=source.dtype)
+                       dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
         reproject(
@@ -286,7 +283,7 @@ def test_reproject_nodata_nan():
     with rasterio.Env():
         source = np.ones((params.width, params.height), dtype=np.float32)
         out = np.zeros((params.dst_width, params.dst_height),
-                          dtype=source.dtype)
+                       dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
         reproject(
@@ -312,7 +309,7 @@ def test_reproject_dst_nodata_default():
     with rasterio.Env():
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
-                          dtype=source.dtype)
+                       dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
         reproject(

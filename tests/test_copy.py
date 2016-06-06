@@ -1,10 +1,10 @@
 import logging
 import os.path
-import unittest
 import shutil
 import subprocess
 import sys
 import tempfile
+import unittest
 
 import rasterio
 

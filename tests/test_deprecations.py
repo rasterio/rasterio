@@ -11,10 +11,8 @@ import rasterio
 from rasterio import windows
 
 # Deprecated modules
-from rasterio import (
-    get_data_window, window_intersection, window_union, windows_intersect
-)
-
+from rasterio import (get_data_window, window_intersection, window_union,
+                      windows_intersect)
 
 DATA_WINDOW = ((3, 5), (2, 6))
 

@@ -1,7 +1,7 @@
-import sys
-import os
 import logging
-import click
+import os
+import sys
+
 import numpy as np
 from click.testing import CliRunner
 from pytest import fixture
@@ -9,7 +9,6 @@ from pytest import fixture
 import rasterio
 from rasterio.rio.merge import merge
 from rasterio.transform import Affine
-
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -343,7 +342,8 @@ def test_merge_tiny_res_bounds(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
+    result = runner.invoke(merge, inputs +
+                           [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
     assert result.exit_code == 0
 
     # Output should be
@@ -364,7 +364,8 @@ def test_merge_tiny_res_high_precision(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--precision', 15])
+    result = runner.invoke(merge, inputs +
+                           [outputname, '--res', 2, '--precision', 15])
     assert result.exit_code == 0
 
     # Output should be

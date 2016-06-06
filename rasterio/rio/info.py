@@ -4,8 +4,9 @@ import json
 
 import click
 
-from . import options
 import rasterio.crs
+
+from . import options
 
 
 @click.command(short_help="Print information about a data file.")

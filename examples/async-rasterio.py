@@ -15,6 +15,7 @@ import rasterio
 
 from rasterio._example import compute
 
+
 def main(infile, outfile, with_threads=False):
 
     with rasterio.Env():
@@ -95,4 +96,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args.input, args.output, args.with_workers)
-

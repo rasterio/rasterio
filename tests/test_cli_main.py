@@ -1,6 +1,5 @@
-from pkg_resources import iter_entry_points
-
 from click.testing import CliRunner
+from pkg_resources import iter_entry_points
 
 import rasterio
 from rasterio.rio.main import main_group

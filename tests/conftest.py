@@ -4,11 +4,10 @@ import os
 import shutil
 import sys
 
-from click.testing import CliRunner
+import numpy as np
 import py
 import pytest
-import numpy as np
-
+from click.testing import CliRunner
 
 DEFAULT_SHAPE = (10, 10)
 
