@@ -14,24 +14,22 @@ import numpy as np
 
 import rasterio
 
-try:
-    import matplotlib.pyplot as plt
-except ImportError:  # pragma: no cover
-    plt = None
-except RuntimeError as e:  # pragma: no cover
-    # Certain environment configurations can trigger a RuntimeError like:
-
-    # Trying to import matplotlibRuntimeError: Python is not installed as a
-    # framework. The Mac OS X backend will not be able to function correctly
-    # if Python is not installed as a framework. See the Python ...
-    warnings.warn(str(e), RuntimeWarning, stacklevel=2)
-    plt = None
-
-
 from rasterio.five import zip_longest
 
 logger = logging.getLogger(__name__)
 
+def get_plt():
+    """import matplotlib.pyplot
+    raise import error if matplotlib is not installed
+    """
+    try:
+        import matplotlib.pyplot as plt
+        return plt
+    except (ImportError, RuntimeError):  # pragma: no cover
+        msg = "Could not import matplotlib\n"
+        msg += "matplotlib required for plotting functions"
+        raise ImportError(msg)
+   
 
 def show(source, cmap='gray', with_bounds=True):
     """Display a raster or raster band using matplotlib.
@@ -50,9 +48,8 @@ def show(source, cmap='gray', with_bounds=True):
         rather than pixel coordinates. Only works when source is
         (raster dataset, bidx).
     """
-    if plt is None:  # pragma: no cover
-        raise ImportError("Could not import matplotlib")
-
+    plt = get_plt()
+        
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         if with_bounds:
@@ -128,8 +125,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram'):
     title : str, optional
         Title for the figure.
     """
-    if plt is None:  # pragma: no cover
-        raise ImportError("Could not import matplotlib")
+    plt = get_plt()
 
     if isinstance(source, (tuple, rasterio.Band)):
         arr = source[0].read(source[1], masked=masked)
