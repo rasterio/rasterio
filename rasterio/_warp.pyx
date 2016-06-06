@@ -165,7 +165,7 @@ def _reproject(
         dst_crs=None,
         dst_nodata=None,
         resampling=Resampling.nearest,
-        multiple=False,
+        init_dest_nodata=False,
         num_threads=1,
         **kwargs):
     """
@@ -218,9 +218,9 @@ def _reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
-    multiple: bool
-        Warping multiple files; prevents overwrite of previous warps.
-        Defaults to False
+    init_dest_nodata: bool
+        Flag to specify initialization of nodata in destination;
+        prevents overwrite of previous warps. Defaults to False.
     num_threads: int
         Number of worker threads.
     kwargs:  dict, optional
@@ -466,7 +466,7 @@ def _reproject(
         psWOptions.padfDstNoDataReal[i] = dst_nodata
         psWOptions.padfDstNoDataImag[i] = 0.0
 
-    if not multiple:
+    if not init_dest_nodata:
         warp_extras = _gdal.CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
 
     # Important: set back into struct or values set above are lost
