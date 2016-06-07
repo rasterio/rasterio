@@ -14,7 +14,7 @@ import numpy as np
 
 import rasterio
 
-from rasterio.five import zip_longest
+from rasterio.compat import zip_longest
 
 logger = logging.getLogger(__name__)
 

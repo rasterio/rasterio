@@ -2,7 +2,7 @@
 
 import os
 
-from rasterio.five import urlparse
+from rasterio.compat import urlparse
 
 
 # NB: As not to propagate fallacies of distributed computing, Rasterio
