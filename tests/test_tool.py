@@ -1,7 +1,10 @@
 import numpy as np
 
 try:
+    import matplotlib as mpl
+    mpl.use('agg')
     import matplotlib.pyplot as plt
+    plt.show = lambda :None
 except ImportError:
     plt = None
 

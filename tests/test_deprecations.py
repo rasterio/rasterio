@@ -15,6 +15,13 @@ from rasterio import (
     get_data_window, window_intersection, window_union, windows_intersect
 )
 
+try:
+    import matplotlib as mpl
+    mpl.use('agg')
+    import matplotlib.pyplot as plt
+    plt.show = lambda :None
+except:
+    pass
 
 DATA_WINDOW = ((3, 5), (2, 6))
 
