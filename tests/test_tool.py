@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 try:
     import matplotlib as mpl
@@ -22,7 +23,8 @@ def test_stats():
         results2 = stats(src.read(1))
         assert np.allclose(np.array(results), np.array(results2))
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_raster():
     """
     This test only verifies that code up to the point of plotting with
@@ -36,7 +38,8 @@ def test_show_raster():
         except ImportError:
             pass
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_raster_no_bounds():
     """
     This test only verifies that code up to the point of plotting with
@@ -50,7 +53,8 @@ def test_show_raster_no_bounds():
         except ImportError:
             pass
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_array():
     """
     This test only verifies that code up to the point of plotting with
@@ -64,7 +68,8 @@ def test_show_array():
         except ImportError:
             pass
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_hist():
     """
     This test only verifies that code up to the point of plotting with
