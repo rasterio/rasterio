@@ -479,7 +479,6 @@ def test_reproject_no_init_nodata_tofile(tmpdir):
             dst_nodata=0.0
         )
 
-        # 200s should not be overwritten by 100s
         reproject(
             source2,
             rasterio.band(dst, 1),
@@ -492,16 +491,16 @@ def test_reproject_no_init_nodata_tofile(tmpdir):
             init_dest_nodata=False
         )
 
+    # 200s should not be overwritten by 100s
     with rasterio.open(tiffname) as src:
         assert src.read().max() == 200
 
 
-@pytest.mark.xfail
 def test_reproject_no_init_nodata_toarray():
     """Test that nodata is being initialized."""
     params = default_reproject_params()
 
-    source1 = np.zeros((params.width, params.height), dtype=np.uint8)
+    source1 = np.zeros((params.width, params.height))
     source2 = source1.copy()
     out = source1.copy()
 
@@ -524,7 +523,6 @@ def test_reproject_no_init_nodata_toarray():
 
         assert out.max() == 200
         assert out.min() == 0
-        # 200s should NOT be overwritten by 100s
 
         reproject(
             source2,
@@ -538,6 +536,7 @@ def test_reproject_no_init_nodata_toarray():
             init_dest_nodata=False
         )
 
+        # 200s should NOT be overwritten by 100s
         assert out.max() == 200
         assert out.min() == 0
 

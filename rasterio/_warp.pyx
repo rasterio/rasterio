@@ -448,6 +448,7 @@ def _reproject(
         for i in range(src_count):
             psWOptions.padfSrcNoDataReal[i] = src_nodata
             psWOptions.padfSrcNoDataImag[i] = 0.0
+
         warp_extras = _gdal.CSLSetNameValue(
             warp_extras, "UNIFIED_SRC_NODATA", "YES")
 
