@@ -501,8 +501,8 @@ cdef void *_create_MEM_dataset(data, transform, crs, desc, src_count=None) excep
     cdef char *wkt = NULL
     cdef double gt[6]
 
-    desc_dict = {'source': 'input',
-                 'destination': 'output'}
+    desc_dict = {"source": "input",
+                 "destination": "output"}
     assert desc in desc_dict.keys(), "Must use 'source' or 'destination' as description"
     if desc == 'source':
         assert src_count is None, "src_count for 'source' must be None"
