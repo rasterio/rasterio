@@ -31,10 +31,10 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
 
     Parameters
     ------------
-    src_crs: dict
-        Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+    src_crs: CRS or dict
+        Source coordinate reference system, as a rasterio CRS object.
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     xs: array_like
         Contains x values.  Will be cast to double floating point values.
@@ -64,10 +64,10 @@ def transform_geom(
 
     Parameters
     ------------
-    src_crs: dict
+    src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     geom: GeoJSON like dict object
     antimeridian_cutting: bool, optional
@@ -114,10 +114,10 @@ def transform_bounds(
 
     Parameters
     ----------
-    src_crs: dict
+    src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     left, bottom, right, top: float
         Bounding coordinates in src_crs, from the bounds property of a raster.
@@ -195,11 +195,11 @@ def reproject(
     src_transform: affine transform object, optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
-    src_crs: dict, optional
+    src_crs: CRS or dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
         Will be derived from source if it is a rasterio Band.
-        Example: {'init': 'EPSG:4326'}
+        Example: CRS({'init': 'EPSG:4326'})
     src_nodata: int or float, optional
         The source nodata value.  Pixels with this value will not be used
         for interpolation.  If not set, it will be default to the
@@ -208,7 +208,7 @@ def reproject(
     dst_transform: affine transform object, optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
-    dst_crs: dict, optional
+    dst_crs: CRS or dict, optional
         Target coordinate reference system.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
     dst_nodata: int or float, optional
@@ -300,10 +300,10 @@ def calculate_default_transform(
 
     Parameters
     ----------
-    src_crs: dict
+    src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     width: int
         Source raster width.
