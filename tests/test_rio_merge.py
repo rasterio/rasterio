@@ -67,6 +67,26 @@ def test_data_dir_2(tmpdir):
     return tmpdir
 
 
+def test_merge_with_colormap(test_data_dir_1):
+    outputname = str(test_data_dir_1.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_1.listdir()]
+    inputs.sort()
+
+    # Add a colormap to the first input prior merge
+    with rasterio.open(inputs[0], 'r+') as src:
+        src.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 0)})
+
+    runner = CliRunner()
+    result = runner.invoke(merge, inputs + [outputname])
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+
+    with rasterio.open(outputname) as out:
+        cmap = out.colormap(1)
+        assert cmap[0] == (255, 0, 0, 255)
+        assert cmap[255] == (0, 0, 0, 255)
+
+
 def test_merge_with_nodata(test_data_dir_1):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
