@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 import rasterio
-import rasterio.crs
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
 

@@ -11,7 +11,7 @@ from rasterio.rio.mask import mask
 from rasterio.rio.shapes import shapes
 from rasterio.rio.rasterize import rasterize
 from rasterio.rio.main import main_group
-
+from rasterio.crs import CRS
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -172,7 +172,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
     image = pixelated_image
     outfilename = str(tmpdir.join('pixelated_image.tif'))
     kwargs = {
-        "crs": {'init': 'epsg:4326'},
+        "crs": CRS({'init': 'epsg:4326'}),
         "transform": Affine(1, 0, 0, 0, -1, 0),
         "count": 1,
         "dtype": rasterio.uint8,

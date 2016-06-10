@@ -9,6 +9,7 @@ import cligj
 from .helpers import resolve_inout
 from . import options
 import rasterio
+from rasterio.errors import CRSError
 from rasterio.transform import Affine
 from rasterio.coords import disjoint_bounds
 
@@ -106,7 +107,7 @@ def rasterize(
     of the output or --like rasters at this time.  This functionality may be
     added in the future.
     """
-    from rasterio._base import is_geographic_crs, is_same_crs
+    from rasterio.crs import CRS
     from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds
 
@@ -115,8 +116,13 @@ def rasterize(
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
 
+    bad_param = click.BadParameter('invalid CRS.  Must be an EPSG code.',
+                                   ctx, param=src_crs, param_hint='--src_crs')
     has_src_crs = src_crs is not None
-    src_crs = src_crs or 'EPSG:4326'
+    try:
+        src_crs = CRS.from_string(src_crs) if has_src_crs else CRS.from_string('EPSG:4326')
+    except CRSError:
+        raise bad_param
 
     # If values are actually meant to be integers, we need to cast them
     # as such or rasterize creates floating point outputs
@@ -148,7 +154,7 @@ def rasterize(
 
         if os.path.exists(output):
             with rasterio.open(output, 'r+') as out:
-                if has_src_crs and not is_same_crs(src_crs, out.crs):
+                if has_src_crs and src_crs != out.crs:
                     raise click.BadParameter('GeoJSON does not match crs of '
                                              'existing output raster',
                                              param='input', param_hint='input')
@@ -182,7 +188,7 @@ def rasterize(
             if like is not None:
                 template_ds = rasterio.open(like)
 
-                if has_src_crs and not is_same_crs(src_crs, template_ds.crs):
+                if has_src_crs and src_crs != template_ds.crs:
                     raise click.BadParameter('GeoJSON does not match crs of '
                                              '--like raster',
                                              param='input', param_hint='input')
@@ -206,7 +212,7 @@ def rasterize(
             else:
                 bounds = bounds or geojson_bounds
 
-                if is_geographic_crs(src_crs):
+                if src_crs.is_geographic:
                     if (bounds[0] < -180 or bounds[2] > 180 or
                             bounds[1] < -80 or bounds[3] > 80):
                         raise click.BadParameter(
@@ -235,11 +241,8 @@ def rasterize(
                     height = max(int(ceil((bounds[3] - bounds[1]) /
                                  float(res[1]))), 1)
 
-                src_crs = src_crs.upper()
-                if not src_crs.count('EPSG:'):
-                    raise click.BadParameter(
-                        'invalid CRS.  Must be an EPSG code.',
-                        ctx, param=src_crs, param_hint='--src_crs')
+                if not src_crs.is_epsg_code:
+                    raise bad_param
 
                 kwargs = {
                     'count': 1,

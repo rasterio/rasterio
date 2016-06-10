@@ -5,8 +5,7 @@ import json
 import click
 
 from . import options
-import rasterio.crs
-
+import rasterio
 
 @click.command(short_help="Print information about a data file.")
 @options.file_in_arg
@@ -69,7 +68,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                 del info['affine']
                 info['shape'] = info['height'], info['width']
                 info['bounds'] = src.bounds
-                proj4 = rasterio.crs.to_string(src.crs)
+                proj4 = src.crs.to_string()
                 if proj4.startswith('+init=epsg'):
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4

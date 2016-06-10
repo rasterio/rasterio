@@ -7,8 +7,10 @@ import click
 
 from . import options
 import rasterio
-import rasterio.crs
+from rasterio.crs import CRS
+from rasterio.errors import CRSError
 from rasterio.transform import guard_transform
+from rasterio.compat import string_types
 
 
 # Handlers for info module options.
@@ -29,7 +31,12 @@ def crs_handler(ctx, param, value):
             retval = json.loads(value)
         except ValueError:
             retval = value
-        if not rasterio.crs.is_valid_crs(retval):
+        try:
+            if isinstance(retval, dict):
+                retval = CRS(retval)
+            elif isinstance(retval, string_types):
+                retval = CRS.from_string(retval)
+        except CRSError:
             raise click.BadParameter(
                 "'%s' is not a recognized CRS." % retval,
                 param=param, param_hint='crs')

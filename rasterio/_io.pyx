@@ -17,6 +17,7 @@ cimport numpy as np
 from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
+from rasterio.crs import CRS
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
 from rasterio import dtypes
@@ -1453,7 +1454,6 @@ cdef class RasterUpdater(RasterReader):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         if options != NULL:
             _gdal.CSLDestroy(options)
@@ -1479,6 +1479,8 @@ cdef class RasterUpdater(RasterReader):
 
         # Normally, we expect a CRS dict.
         if isinstance(crs, dict):
+            crs = CRS(crs)
+        if isinstance(crs, CRS):
             # EPSG is a special case.
             init = crs.get('init')
             if init:
@@ -2077,7 +2079,6 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         # touch self.meta
         _ = self.meta
