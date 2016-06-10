@@ -33,8 +33,7 @@ class CRS(_CRS):
     @property
     def is_epsg_code(self):
         for val in self.values():
-            if isinstance(val,
-                          string_types) and val.lower().startswith('epsg'):
+            if isinstance(val, string_types) and val.lower().startswith('epsg'):
                 return True
         return False
 
@@ -48,7 +47,9 @@ class CRS(_CRS):
         """
         items = []
         for k, v in sorted(filter(
-                lambda x: x[0] in all_proj_keys and x[1] is not False and (isinstance(x[1], (bool, int, float)) or isinstance(x[1], string_types)),
+                lambda x: x[0] in all_proj_keys and x[1] is not False and (
+                    isinstance(x[1], (bool, int, float)) or
+                    isinstance(x[1], string_types)),
                 self.items())):
             items.append("+" + "=".join(map(str, filter(
                 lambda y: (y or y == 0) and y is not True, (k, v)))))
