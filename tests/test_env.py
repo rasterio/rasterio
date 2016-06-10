@@ -157,14 +157,6 @@ def test_open_with_env(gdalenv):
             assert dataset.count == 3
 
 
-def test_driver_deprec(gdalenv):
-    """Test that drivers() still works but raises deprecation
-    """
-    with pytest.deprecated_call():
-        with rasterio.drivers():
-            pass
-
-
 @mingdalversion
 @credentials
 def test_s3_open_with_session(gdalenv):
