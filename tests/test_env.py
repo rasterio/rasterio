@@ -160,7 +160,7 @@ def test_open_with_env(gdalenv):
 def test_driver_deprec(gdalenv):
     """Test that drivers() still works but raises deprecation
     """
-    with pytest.warns(DeprecationWarning):
+    with pytest.deprecated_call():
         with rasterio.drivers():
             pass
 
