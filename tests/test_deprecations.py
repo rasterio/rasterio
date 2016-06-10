@@ -155,3 +155,14 @@ def test_merge(recwarn, tmpdir):
     assert len(recwarn) == nwarn
     for parts in zip(new, old):
         assert np.allclose(parts[0], parts[1])
+
+
+def test_driver_deprec(recwarn):
+    """Test that drivers() still works but raises deprecation
+    """
+    warnings.simplefilter('always')
+    with rasterio.drivers():
+        pass
+    assert len(recwarn) == 1
+    recwarn.pop(DeprecationWarning)
+    assert len(recwarn) == 0

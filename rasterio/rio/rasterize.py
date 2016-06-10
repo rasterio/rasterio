@@ -241,9 +241,6 @@ def rasterize(
                     height = max(int(ceil((bounds[3] - bounds[1]) /
                                  float(res[1]))), 1)
 
-                if not src_crs.is_epsg_code:
-                    raise bad_param
-
                 kwargs = {
                     'count': 1,
                     'crs': src_crs,
