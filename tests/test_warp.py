@@ -629,19 +629,6 @@ def test_resample_default_invert_proj(method):
 
         out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
 
-        # nearest works fine
-        reproject(
-            source,
-            out,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=dst_affine,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
-
-        assert out.mean() > 0
-
-        # some other methods succeed but produce blank images
         out = np.empty(src.shape, dtype=np.uint8)
         reproject(
             source,
@@ -680,19 +667,7 @@ def test_resample_no_invert_proj(method):
 
         out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
 
-        # nearest works fine
-        reproject(
-            source,
-            out,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=dst_affine,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
-
-        assert out.mean() > 0
-
-        # some other methods succeed but produce blank images
+        # see #614, some resamplin methods succeed but produce blank images
         out = np.empty(src.shape, dtype=np.uint8)
         reproject(
             source,
