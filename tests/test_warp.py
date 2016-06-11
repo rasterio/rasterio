@@ -19,11 +19,20 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
 
 
-is_gdal1 = parse(rasterio.__gdal_version__) < parse('2.0')
-
-gdal2plus_only = (
-    Resampling.max, Resampling.min, Resampling.med,
-    Resampling.q1, Resampling.q3)
+def supported_resampling(method):
+    if method == Resampling.gauss:
+        return False
+    gdal110plus_only = (
+        Resampling.mode, Resampling.average)
+    gdal2plus_only = (
+        Resampling.max, Resampling.min, Resampling.med,
+        Resampling.q1, Resampling.q3)
+    version = parse(rasterio.__gdal_version__)
+    if version < parse('1.10'):
+        return method not in gdal2plus_only and method not in gdal110plus_only
+    if version < parse('2.0'):
+        return method not in gdal2plus_only
+    return True
 
 
 reproj_expected = (
@@ -618,7 +627,7 @@ def test_resample_default_invert_proj(method):
     """Nearest and bilinear should produce valid results
     with the default Env
     """
-    if method == Resampling.gauss or (is_gdal1 and method in gdal2plus_only):
+    if not supported_resampling(method):
         pytest.skip()
 
     with rasterio.Env():
@@ -656,7 +665,7 @@ def test_resample_no_invert_proj(method):
     """Nearest and bilinear should produce valid results with
     CHECK_WITH_INVERT_PROJ = False
     """
-    if method == Resampling.gauss or (is_gdal1 and method in gdal2plus_only):
+    if not supported_resampling(method):
         pytest.skip()
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
