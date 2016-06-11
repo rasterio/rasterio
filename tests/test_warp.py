@@ -18,6 +18,11 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
 
 
+reproj_expected = (
+    ({'CHECK_WITH_INVERT_PROJ': False}, 6215),
+    ({'CHECK_WITH_INVERT_PROJ': True}, 4005))
+
+
 class ReprojectParams(object):
     """Class to assist testing reprojection by encapsulating parameters."""
 
@@ -254,11 +259,12 @@ def test_reproject_out_of_bounds():
         assert not out.any()
 
 
-def test_reproject_nodata():
+@pytest.mark.parametrize("options, expected", reproj_expected)
+def test_reproject_nodata(options, expected):
     params = default_reproject_params()
     nodata = 215
 
-    with rasterio.Env():
+    with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
@@ -275,15 +281,16 @@ def test_reproject_nodata():
             dst_nodata=nodata
         )
 
-        assert (out == 1).sum() == 6215
+        assert (out == 1).sum() == expected
         assert (out == nodata).sum() == (params.dst_width *
-                                         params.dst_height - 6215)
+                                         params.dst_height - expected)
 
 
-def test_reproject_nodata_nan():
+@pytest.mark.parametrize("options, expected", reproj_expected)
+def test_reproject_nodata_nan(options, expected):
     params = default_reproject_params()
 
-    with rasterio.Env():
+    with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.float32)
         out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
@@ -300,16 +307,17 @@ def test_reproject_nodata_nan():
             dst_nodata=np.nan
         )
 
-        assert (out == 1).sum() == 6215
+        assert (out == 1).sum() == expected
         assert np.isnan(out).sum() == (params.dst_width *
-                                       params.dst_height - 6215)
+                                       params.dst_height - expected)
 
 
-def test_reproject_dst_nodata_default():
+@pytest.mark.parametrize("options, expected", reproj_expected)
+def test_reproject_dst_nodata_default(options, expected):
     """If nodata is not provided, destination will be filled with 0."""
     params = default_reproject_params()
 
-    with rasterio.Env():
+    with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
@@ -324,9 +332,9 @@ def test_reproject_dst_nodata_default():
             dst_crs=params.dst_crs
         )
 
-        assert (out == 1).sum() == 6215
+        assert (out == 1).sum() == expected
         assert (out == 0).sum() == (params.dst_width *
-                                    params.dst_height - 6215)
+                                    params.dst_height - expected)
 
 
 def test_reproject_invalid_dst_nodata():
@@ -597,12 +605,65 @@ def test_reproject_unsupported_resampling_guass():
                 resampling=Resampling.gauss)
 
 
+@pytest.mark.parametrize("method", Resampling)
+def test_resample_default_invert_proj(method):
+    """Nearest and bilinear should produce valid results
+    with the default Env
+    """
+    if method == Resampling.gauss:
+        pytest.skip()  # not supported
+
+    with rasterio.Env():
+        with rasterio.open('tests/data/world.rgb.tif') as src:
+            source = src.read(1)
+            profile = src.profile.copy()
+
+        dst_crs = {'init': 'EPSG:32619'}
+
+        # Calculate the ideal dimensions and transformation in the new crs
+        dst_affine, dst_width, dst_height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds)
+
+        profile['height'] = dst_height
+        profile['width'] = dst_width
+
+        out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
+
+        # nearest works fine
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest)
+
+        assert out.mean() > 0
+
+        # some other methods succeed but produce blank images
+        out = np.empty(src.shape, dtype=np.uint8)
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=method)
+
+        assert out.mean() > 0
+
+
 @pytest.mark.xfail()
 @pytest.mark.parametrize("method", Resampling)
 def test_resample_no_invert_proj(method):
     """Nearest and bilinear should produce valid results with
     CHECK_WITH_INVERT_PROJ = False
     """
+    if method == Resampling.gauss:
+        pytest.skip()  # not supported
+
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
         with rasterio.open('tests/data/world.rgb.tif') as src:
             source = src.read(1)

@@ -154,6 +154,11 @@ def defenv():
         log.debug("Environment %r exists", _env)
     else:
         _env = GDALEnv()
+        # Rasterio defaults
+        options = {
+            'CHECK_WITH_INVERT_PROJ': True
+        }
+        _env.update_config_options(**options)
         log.debug(
             "New GDAL environment %r created", _env)
 

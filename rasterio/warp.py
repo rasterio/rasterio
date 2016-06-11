@@ -320,7 +320,7 @@ def calculate_default_transform(
 
     Note
     ----
-    Should be called within a raster.env.Env() context
+    Should be called within a rasterio.Env() context
 
     Some behavior of this function is determined by the
     CHECK_WITH_INVERT_PROJ environment variable
