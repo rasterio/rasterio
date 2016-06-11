@@ -4,6 +4,7 @@ import sys
 import pytest
 from affine import Affine
 import numpy as np
+from packaging.version import parse
 
 import rasterio
 from rasterio.enums import Resampling
@@ -16,6 +17,13 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
+
+
+is_gdal1 = parse(rasterio.__gdal_version__) < parse('2.0')
+
+gdal2plus_only = (
+    Resampling.max, Resampling.min, Resampling.med,
+    Resampling.q1, Resampling.q3)
 
 
 reproj_expected = (
@@ -610,8 +618,8 @@ def test_resample_default_invert_proj(method):
     """Nearest and bilinear should produce valid results
     with the default Env
     """
-    if method == Resampling.gauss:
-        pytest.skip()  # not supported
+    if method == Resampling.gauss or (is_gdal1 and method in gdal2plus_only):
+        pytest.skip()
 
     with rasterio.Env():
         with rasterio.open('tests/data/world.rgb.tif') as src:
@@ -648,8 +656,8 @@ def test_resample_no_invert_proj(method):
     """Nearest and bilinear should produce valid results with
     CHECK_WITH_INVERT_PROJ = False
     """
-    if method == Resampling.gauss:
-        pytest.skip()  # not supported
+    if method == Resampling.gauss or (is_gdal1 and method in gdal2plus_only):
+        pytest.skip()
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
         with rasterio.open('tests/data/world.rgb.tif') as src:
