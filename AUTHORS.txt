@@ -8,10 +8,14 @@ Authors
 * AsgerPetersen <asgerpetersen@gmail.com>
 * Bas Couwenberg <sebastic@xs4all.nl>
 * Brendan Ward <bcward@consbio.org>
+* Charlie Loyd <charlie@mapbox.com>
+* Colin Talbert <talbertc@usgs.gov>
+* Damon Burgett <damon@mapbox.com>
 * Erik Seglem <erik.seglem@gmail.com>
 * Etienne B. Racine <etiennebr@gmail.com>
 * Even Rouault <even.rouault@spatialys.com>
 * Jacques Tardie <hi@jacquestardie.org>
+* James Hiebert <hiebert@uvic.ca>
 * James McBride <jmcbride@berkeley.edu>
 * James Seppi <james.seppi@gmail.com>
 * Jeffrey Gerard <jgerard@climate.com>
