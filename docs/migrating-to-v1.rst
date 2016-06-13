@@ -30,7 +30,7 @@ but Rasterio 1.0 contains more interactions with GDAL's environment, so
     import rasterio
     import rasterio.env
 
-    with rasterio.env.Env():
+    with rasterio.Env():
 
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             pass
@@ -39,7 +39,7 @@ Tickets
 ```````
 
 * `#665 <https://github.com/mapbox/rasterio/pull/665>`__ - Deprecation of
-  ``rasterio.drivers()`` and introduction of ``rasterio.env.Env()``.
+  ``rasterio.drivers()`` and introduction of ``rasterio.Env()``.
 
 Removed: ``src.read_band()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
