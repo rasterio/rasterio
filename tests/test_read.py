@@ -1,14 +1,24 @@
+from hashlib import md5
 import logging
 import sys
 import unittest
 
-import numpy
-from hashlib import md5
+import numpy as np
+import pytest
 
 import rasterio
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+# Find out if we've got HDF support (needed below).
+try:
+    with rasterio.open('tests/data/no_band.h5') as s:
+        pass
+    has_hdf = True
+except:
+    has_hdf = False
 
 
 class ReaderContextTest(unittest.TestCase):
@@ -30,13 +40,13 @@ class ReaderContextTest(unittest.TestCase):
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
-                s.affine, 
+                s.affine,
                 (300.0379266750948, 0.0, 101985.0,
                  0.0, -300.041782729805, 2826915.0,
                  0, 0, 1.0))
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
-                repr(s), 
+                repr(s),
                 "<open RasterReader name='tests/data/RGB.byte.tif' "
                 "mode='r'>")
         self.assertEqual(s.closed, True)
@@ -48,7 +58,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.nodatavals, (0, 0, 0))
         self.assertEqual(s.crs['init'], 'epsg:32618')
         self.assertEqual(
-            s.affine, 
+            s.affine,
             (300.0379266750948, 0.0, 101985.0,
              0.0, -300.041782729805, 2826915.0,
              0, 0, 1.0))
@@ -76,17 +86,18 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_ubyte_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = numpy.zeros((718, 791), dtype=rasterio.ubyte)
+            a = np.zeros((718, 791), dtype=rasterio.ubyte)
             a = s.read(1, a)
             self.assertEqual(a.dtype, rasterio.ubyte)
 
     def test_read_out_dtype_fail(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            a = numpy.zeros((718, 791), dtype=rasterio.float32)
+            a = np.zeros((718, 791), dtype=rasterio.float32)
             try:
                 s.read(1, a)
             except ValueError as e:
-                assert "the array's dtype 'float32' does not match the file's dtype" in str(e)
+                assert ("the array's dtype 'float32' does not match the "
+                        "file's dtype") in str(e)
             except:
                 assert "failed to catch exception" is False
 
@@ -167,18 +178,18 @@ class ReaderContextTest(unittest.TestCase):
             self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual(a.mask.sum((1, 2)).tolist(), [0, 0, 1])
             self.assertEqual([md5(x.tostring()).hexdigest() for x in a],
-                              ['1df719040daa9dfdb3de96d6748345e8',
-                               'ec8fb3659f40c4a209027231bef12bdb',
-                               '5a9c12aebc126ec6f27604babd67a4e2'])
+                             ['1df719040daa9dfdb3de96d6748345e8',
+                              'ec8fb3659f40c4a209027231bef12bdb',
+                              '5a9c12aebc126ec6f27604babd67a4e2'])
             # window without any missing data, but still is masked result
             a = s.read(window=((310, 330), (320, 330)), masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (3, 20, 10))
             self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual([md5(x.tostring()).hexdigest() for x in a[:]],
-                              ['9e3000d60b4b6fb956f10dc57c4dc9b9',
-                               '6a675416a32fcb70fbcf601d01aeb6ee',
-                               '94fd2733b534376c273a894f36ad4e0b'])
+                             ['9e3000d60b4b6fb956f10dc57c4dc9b9',
+                              '6a675416a32fcb70fbcf601d01aeb6ee',
+                              '94fd2733b534376c273a894f36ad4e0b'])
 
     def test_read_window_overflow(self):
         """Test graceful Numpy-like handling of windows that overflow
@@ -192,46 +203,46 @@ class ReaderContextTest(unittest.TestCase):
         the dataset's bounds."""
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read(window=((10000, 20000), (10000, 20000)))
-            self.assertEqual(a.shape, (3,0,0))
+            self.assertEqual(a.shape, (3, 0, 0))
 
     def test_read_window_overlap(self):
         """Test graceful Numpy-like handling of windows beyond
         the dataset's bounds."""
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             a = s.read(window=((-100, 20000), (-100, 20000)))
-            self.assertEqual(a.shape, (3,100,100))
+            self.assertEqual(a.shape, (3, 100, 100))
 
     def test_read_out(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             # regular array, without mask
-            a = numpy.empty((3, 718, 791), numpy.ubyte)
+            a = np.empty((3, 718, 791), np.ubyte)
             b = s.read(out=a)
             self.assertFalse(hasattr(a, 'mask'))
             self.assertFalse(hasattr(b, 'mask'))
             # with masked array
-            a = numpy.ma.empty((3, 718, 791), numpy.ubyte)
+            a = np.ma.empty((3, 718, 791), np.ubyte)
             b = s.read(out=a)
             self.assertEqual(id(a.data), id(b.data))
             # TODO: is there a way to id(a.mask)?
             self.assertTrue(hasattr(a, 'mask'))
             self.assertTrue(hasattr(b, 'mask'))
             # use all parameters
-            a = numpy.empty((1, 20, 10), numpy.ubyte)
+            a = np.empty((1, 20, 10), np.ubyte)
             b = s.read([2], a, ((310, 330), (320, 330)), False)
             self.assertEqual(id(a), id(b))
             # pass 2D array with index
-            a = numpy.empty((20, 10), numpy.ubyte)
+            a = np.empty((20, 10), np.ubyte)
             b = s.read(2, a, ((310, 330), (320, 330)), False)
             self.assertEqual(id(a), id(b))
             self.assertEqual(a.ndim, 2)
             # different data types
-            a = numpy.empty((3, 718, 791), numpy.float64)
+            a = np.empty((3, 718, 791), np.float64)
             self.assertRaises(ValueError, s.read, out=a)
             # different number of array dimensions
-            a = numpy.empty((20, 10), numpy.ubyte)
+            a = np.empty((20, 10), np.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)
             # different number of array shape in 3D
-            a = numpy.empty((2, 20, 10), numpy.ubyte)
+            a = np.empty((2, 20, 10), np.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)
 
     def test_read_nan_nodata(self):
@@ -240,22 +251,75 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
             self.assertTrue(hasattr(a, 'mask'))
-            self.assertNotEqual(a.fill_value, numpy.nan)
-            self.assertEqual(str(list(set(s.nodatavals))), str([numpy.nan]))
+            self.assertNotEqual(a.fill_value, np.nan)
+            self.assertEqual(str(list(set(s.nodatavals))), str([np.nan]))
             self.assertEqual(a.dtype, rasterio.float32)
-            self.assertFalse(numpy.isnan(a).any())
+            self.assertFalse(np.isnan(a).any())
             a = s.read(masked=False)
             self.assertFalse(hasattr(a, 'mask'))
-            self.assertTrue(numpy.isnan(a).any())
+            self.assertTrue(np.isnan(a).any())
             # Window does not contain a nodatavalue, result is still masked
             a = s.read(window=((0, 2), (0, 2)), masked=True)
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 2))
             self.assertTrue(hasattr(a, 'mask'))
 
+    @pytest.mark.skipif(not has_hdf, reason="HDF driver not available")
     def test_read_no_band(self):
         with rasterio.open('tests/data/no_band.h5') as s:
             self.assertEqual(s.count, 0)
             self.assertEqual(s.meta['dtype'], 'float_')
             self.assertIsNone(s.meta['nodata'])
             self.assertRaises(ValueError, s.read)
+
+
+@pytest.mark.parametrize("shape,indexes", [
+    ((72, 80), 1),          # Single band
+    ((2, 72, 80), (1, 3)),  # Multiband
+    ((3, 72, 80), None)     # All bands
+])
+def test_out_shape(path_rgb_byte_tif, shape, indexes):
+
+    """Test read(out_shape) and read_masks(out_shape).  The tests are identical
+    aside from the method call.
+
+    The pytest parameters are:
+
+        * shape - tuple passed to out_shape
+        * indexes - The bands to read
+
+    The resulting images have been decimated by a factor of 10.
+    """
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+
+        for attr in 'read', 'read_masks':
+
+            reader = getattr(src, attr)
+
+            out_shape = reader(indexes, out_shape=shape)
+            out = reader(indexes, out=np.empty(shape, dtype=src.dtypes[0]))
+
+            assert out_shape.shape == out.shape
+            assert (out_shape == out).all()
+
+            # Sanity check fo the test itself
+            assert shape[-2:] == (72, 80)
+
+
+def test_out_shape_exceptions(path_rgb_byte_tif):
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+
+        for attr in 'read', 'read_masks':
+
+            reader = getattr(src, attr)
+
+            with pytest.raises(ValueError):
+                out = np.empty((src.count, src.height, src.width))
+                out_shape = (src.count, src.height, src.width)
+                reader(out=out, out_shape=out_shape)
+
+            with pytest.raises(ValueError):
+                out_shape = (5, src.height, src.width)
+                reader(1, out_shape=out_shape)

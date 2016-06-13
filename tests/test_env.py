@@ -9,9 +9,9 @@ from packaging.version import parse
 import pytest
 
 import rasterio
-from rasterio._drivers import (
-    GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config, driver_count)
-from rasterio.env import defenv, delenv, getenv, setenv, ensure_env, Env
+from rasterio._drivers import (del_gdal_config, get_gdal_config,
+                               set_gdal_config)
+from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
 from rasterio.errors import EnvError
 from rasterio.rio.main import main_group
 
@@ -45,7 +45,7 @@ def test_gdal_config_accessers():
 # at the end of the test, making tests as isolates as GDAL allows.
 
 def test_env_accessors(gdalenv):
-    """High level GDAL env access"""
+    """High level GDAL env access."""
     defenv()
     setenv(foo='1', bar='2')
     assert getenv() == rasterio.env._env.options == {'foo': '1', 'bar': '2'}
@@ -74,14 +74,14 @@ def test_ensure_env_decorator(gdalenv):
 def test_no_aws_gdal_config(gdalenv):
     """Trying to set AWS-specific GDAL config options fails."""
     with pytest.raises(EnvError):
-        Env(AWS_ACCESS_KEY_ID='x')
+        rasterio.Env(AWS_ACCESS_KEY_ID='x')
     with pytest.raises(EnvError):
-        Env(AWS_SECRET_ACCESS_KEY='y')
+        rasterio.Env(AWS_SECRET_ACCESS_KEY='y')
 
 
 def test_env_options(gdalenv):
     """Test env options."""
-    env = Env(foo='x')
+    env = rasterio.Env(foo='x')
     assert env.options == {'foo': 'x'}
     assert not env.previous_options
     assert getenv() == rasterio.env._env.options == {}
@@ -117,7 +117,7 @@ def test_aws_session_credentials(gdalenv):
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
-    with Env(aws_access_key_id='id', aws_secret_access_key='key',
+    with rasterio.Env(aws_access_key_id='id', aws_secret_access_key='key',
              aws_session_token='token', region_name='null-island-1') as s:
         assert getenv() == rasterio.env._env.options == {}
         s.get_aws_credentials()
@@ -131,7 +131,7 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
-    with Env() as s:
+    with rasterio.Env() as s:
         s.get_aws_credentials()
         assert getenv() == rasterio.env._env.options
         expected = {
@@ -152,7 +152,7 @@ def test_open_with_default_env(gdalenv):
 
 def test_open_with_env(gdalenv):
     """Read from a dataset with an explicit env."""
-    with Env():
+    with rasterio.Env():
         with rasterio.open('tests/data/RGB.byte.tif') as dataset:
             assert dataset.count == 3
 
@@ -161,7 +161,7 @@ def test_open_with_env(gdalenv):
 @credentials
 def test_s3_open_with_session(gdalenv):
     """Read from S3 demonstrating lazy credentials."""
-    with Env():
+    with rasterio.Env():
         with rasterio.open(L8TIF) as dataset:
             assert dataset.count == 1
 
@@ -176,8 +176,8 @@ def test_s3_open_with_default_session(gdalenv):
 
 @mingdalversion
 def test_open_https_vsicurl(gdalenv):
-    """Read from HTTPS URL"""
-    with Env():
+    """Read from HTTPS URL."""
+    with rasterio.Env():
         with rasterio.open(httpstif) as dataset:
             assert dataset.count == 1
 
@@ -187,7 +187,7 @@ def test_open_https_vsicurl(gdalenv):
 @mingdalversion
 @credentials
 def test_s3_rio_info(runner):
-    """S3 is supported by rio-info"""
+    """S3 is supported by rio-info."""
     result = runner.invoke(main_group, ['info', L8TIF])
     assert result.exit_code == 0
     assert '"crs": "EPSG:32645"' in result.output
@@ -196,7 +196,7 @@ def test_s3_rio_info(runner):
 @mingdalversion
 @credentials
 def test_https_rio_info(runner):
-    """HTTPS is supported by rio-info"""
+    """HTTPS is supported by rio-info."""
     result = runner.invoke(main_group, ['info', httpstif])
     assert result.exit_code == 0
     assert '"crs": "EPSG:32645"' in result.output

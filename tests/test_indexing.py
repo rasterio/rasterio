@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import pytest
 
 import rasterio
@@ -77,7 +77,7 @@ def test_window_full_cover():
 
 @pytest.fixture
 def data():
-    data = numpy.zeros((10, 10), dtype='uint8')
+    data = np.zeros((10, 10), dtype='uint8')
     data[slice(*DATA_WINDOW[0]), slice(*DATA_WINDOW[1])] = 1
     return data
 
@@ -88,7 +88,7 @@ def test_data_window_unmasked(data):
 
 
 def test_data_window_masked(data):
-    data = numpy.ma.masked_array(data, data == 0)
+    data = np.ma.masked_array(data, data == 0)
     window = windows.get_data_window(data)
     assert window == DATA_WINDOW
 
@@ -97,12 +97,12 @@ def test_data_window_nodata(data):
     window = windows.get_data_window(data, nodata=0)
     assert window == DATA_WINDOW
 
-    window = windows.get_data_window(numpy.ones_like(data), nodata=0)
+    window = windows.get_data_window(np.ones_like(data), nodata=0)
     assert window == ((0, data.shape[0]), (0, data.shape[1]))
 
 
 def test_data_window_nodata_disjunct():
-    data = numpy.zeros((3, 10, 10), dtype='uint8')
+    data = np.zeros((3, 10, 10), dtype='uint8')
     data[0, :4, 1:4] = 1
     data[1, 2:5, 2:8] = 1
     data[2, 1:6, 1:6] = 1
@@ -111,7 +111,7 @@ def test_data_window_nodata_disjunct():
 
 
 def test_data_window_empty_result():
-    data = numpy.zeros((3, 10, 10), dtype='uint8')
+    data = np.zeros((3, 10, 10), dtype='uint8')
     window = windows.get_data_window(data, nodata=0)
     assert window == ((0, 0), (0, 0))
 

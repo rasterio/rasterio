@@ -244,10 +244,24 @@ def reproject(
                 ['Resampling.{0}'.format(k) for k in
                  Resampling.__members__.keys() if k != 'gauss'])))
 
+    # If working with identity transform, assume it is crs-less data
+    # and that translating the matrix very slightly will avoid #674
+    eps = 1e-100
+    if src_transform and guard_transform(src_transform).is_identity:
+        src_transform = src_transform.translation(eps, eps)
+    if dst_transform and guard_transform(dst_transform).is_identity:
+        dst_transform = dst_transform.translation(eps, eps)
+
     if src_transform:
         src_transform = guard_transform(src_transform).to_gdal()
     if dst_transform:
         dst_transform = guard_transform(dst_transform).to_gdal()
+
+    # Passing None can cause segfault, use empty dict
+    if src_crs is None:
+        src_crs = {}
+    if dst_crs is None:
+        dst_crs = {}
 
     _reproject(
         source,

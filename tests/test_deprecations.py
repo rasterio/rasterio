@@ -3,7 +3,7 @@
 # on the way to stabilizing the API for 1.0
 import warnings
 
-import numpy
+import numpy as np
 import pytest
 
 # New modules
@@ -28,7 +28,7 @@ DATA_WINDOW = ((3, 5), (2, 6))
 
 @pytest.fixture
 def data():
-    data = numpy.zeros((10, 10), dtype='uint8')
+    data = np.zeros((10, 10), dtype='uint8')
     data[slice(*DATA_WINDOW[0]), slice(*DATA_WINDOW[1])] = 1
     return data
 
@@ -92,7 +92,7 @@ def test_stats(recwarn):
         assert recwarn.pop(DeprecationWarning)
         new = stats_new((src, 1))
         assert len(recwarn) == 0
-        assert numpy.allclose(numpy.array(new), numpy.array(old))
+        assert np.allclose(np.array(new), np.array(old))
 
 
 # xfail because for unknown reasons, travis fails with matplotlib errors
@@ -142,7 +142,7 @@ def test_mask(recwarn, basic_image_file, basic_geometry):
                        nodata=nodata_val, invert=True)
         assert len(recwarn) == nwarn
         for parts in zip(new, old):
-            assert numpy.allclose(parts[0], parts[1])
+            assert np.allclose(parts[0], parts[1])
 
 
 def test_merge(recwarn, tmpdir):
@@ -161,4 +161,4 @@ def test_merge(recwarn, tmpdir):
     new = merge_new(in_sources)
     assert len(recwarn) == nwarn
     for parts in zip(new, old):
-        assert numpy.allclose(parts[0], parts[1])
+        assert np.allclose(parts[0], parts[1])

@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-import numpy
+import numpy as np
 import pytest
 
 import rasterio
@@ -57,6 +57,60 @@ def test_dst_crs_error_epsg_2(runner, tmpdir):
     assert 'for dst_crs: EPSG codes are positive integers' in result.output
 
 
+def test_dst_nodata_float_no_src_nodata_err(runner, tmpdir):
+    """Valid integer destination nodata dtype"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-nodata', '0.0'])
+    assert result.exit_code == 2
+    assert 'src-nodata must be provided because dst-nodata is not None' in result.output
+
+
+def test_src_nodata_int_ok(runner, tmpdir):
+    """Check if input nodata is overridden"""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '1'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 1
+
+
+def test_dst_nodata_int_ok(runner, tmpdir):
+    """Check if input nodata is overridden"""
+    srcname = 'tests/data/RGB.byte.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-nodata', '255'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 255
+
+
+def test_src_nodata_float_ok(runner, tmpdir):
+    """Check if input nodata is overridden"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '1.5'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 1.5
+
+
+def test_dst_nodata_float_override_src_ok(runner, tmpdir):
+    """Check if srcnodata is overridden"""
+    srcname = 'tests/data/float.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--src-nodata', '1.5', '--dst-nodata', '2.5'])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.meta['nodata'] == 2.5
+
+
 def test_warp_no_reproject(runner, tmpdir):
     """ When called without parameters, output should be same as source """
     srcname = 'tests/data/shade.tif'
@@ -70,9 +124,9 @@ def test_warp_no_reproject(runner, tmpdir):
             assert output.count == src.count
             assert output.crs == src.crs
             assert output.nodata == src.nodata
-            assert numpy.allclose(output.bounds, src.bounds)
+            assert np.allclose(output.bounds, src.bounds)
             assert output.affine.almost_equals(src.affine)
-            assert numpy.allclose(output.read(1), src.read(1))
+            assert np.allclose(output.read(1), src.read(1))
 
 
 def test_warp_no_reproject_dimensions(runner, tmpdir):
@@ -88,7 +142,7 @@ def test_warp_no_reproject_dimensions(runner, tmpdir):
             assert output.crs == src.crs
             assert output.width == 100
             assert output.height == 100
-            assert numpy.allclose([97.839396, 97.839396],
+            assert np.allclose([97.839396, 97.839396],
                                   [output.affine.a, -output.affine.e])
 
 
@@ -103,7 +157,7 @@ def test_warp_no_reproject_res(runner, tmpdir):
     with rasterio.open(srcname) as src:
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
-            assert numpy.allclose([30, 30], [output.affine.a, -output.affine.e])
+            assert np.allclose([30, 30], [output.affine.a, -output.affine.e])
             assert output.width == 327
             assert output.height == 327
 
@@ -120,8 +174,8 @@ def test_warp_no_reproject_bounds(runner, tmpdir):
     with rasterio.open(srcname) as src:
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
-            assert numpy.allclose(output.bounds, out_bounds)
-            assert numpy.allclose([src.affine.a, src.affine.e],
+            assert np.allclose(output.bounds, out_bounds)
+            assert np.allclose([src.affine.a, src.affine.e],
                                   [output.affine.a, output.affine.e])
             assert output.width == 105
             assert output.height == 210
@@ -140,8 +194,8 @@ def test_warp_no_reproject_bounds_res(runner, tmpdir):
     with rasterio.open(srcname) as src:
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
-            assert numpy.allclose(output.bounds, out_bounds)
-            assert numpy.allclose([30, 30], [output.affine.a, -output.affine.e])
+            assert np.allclose(output.bounds, out_bounds)
+            assert np.allclose([30, 30], [output.affine.a, -output.affine.e])
             assert output.width == 34
             assert output.height == 67
 
@@ -160,7 +214,7 @@ def test_warp_reproject_dst_crs(runner, tmpdir):
             assert output.crs == {'init': 'epsg:4326'}
             assert output.width == 835
             assert output.height == 696
-            assert numpy.allclose(output.bounds,
+            assert np.allclose(output.bounds,
                                   [-78.95864996545055, 23.564787976164418,
                                    -76.5759177302349, 25.550873767433984])
 
@@ -189,7 +243,7 @@ def test_warp_reproject_res(runner, tmpdir):
 
     with rasterio.open(outputname) as output:
         assert output.crs == {'init': 'epsg:4326'}
-        assert numpy.allclose([0.01, 0.01], [output.affine.a, -output.affine.e])
+        assert np.allclose([0.01, 0.01], [output.affine.a, -output.affine.e])
         assert output.width == 9
         assert output.height == 7
 
@@ -208,7 +262,7 @@ def test_warp_reproject_dimensions(runner, tmpdir):
             assert output.crs == {'init': 'epsg:4326'}
             assert output.width == 100
             assert output.height == 100
-            assert numpy.allclose([0.0008789062498762235, 0.0006771676143921468],
+            assert np.allclose([0.0008789062498762235, 0.0006771676143921468],
                                   [output.affine.a, -output.affine.e])
 
 
@@ -271,9 +325,9 @@ def test_warp_reproject_src_bounds_res(runner, tmpdir):
     with rasterio.open(srcname) as src:
         with rasterio.open(outputname) as output:
             assert output.crs == {'init': 'epsg:4326'}
-            assert numpy.allclose(output.bounds[:],
+            assert np.allclose(output.bounds[:],
                                   [-106.45036, 39.6138, -106.44136, 39.6278])
-            assert numpy.allclose([0.001, 0.001],
+            assert np.allclose([0.001, 0.001],
                                   [output.affine.a, -output.affine.e])
             assert output.width == 9
             assert output.height == 14
@@ -293,15 +347,15 @@ def test_warp_reproject_dst_bounds(runner, tmpdir):
     with rasterio.open(srcname) as src:
         with rasterio.open(outputname) as output:
             assert output.crs == {'init': 'epsg:4326'}
-            assert numpy.allclose(output.bounds[0::3],
+            assert np.allclose(output.bounds[0::3],
                                   [-106.45036, 39.6278])
-            assert numpy.allclose([0.001, 0.001],
+            assert np.allclose([0.001, 0.001],
                                   [output.affine.a, -output.affine.e])
 
             # XXX: an extra row and column is produced in the dataset
             # because we're using ceil instead of floor internally.
             # Not necessarily a bug, but may change in the future.
-            assert numpy.allclose([output.bounds[2]-0.001, output.bounds[1]+0.001],
+            assert np.allclose([output.bounds[2]-0.001, output.bounds[1]+0.001],
                                   [-106.44136, 39.6138])
             assert output.width == 10
             assert output.height == 15
@@ -320,9 +374,9 @@ def test_warp_reproject_like(runner, tmpdir):
         "nodata": 0
     }
 
-    with rasterio.drivers():
+    with rasterio.Env():
         with rasterio.open(likename, 'w', **kwargs) as dst:
-            data = numpy.zeros((10, 10), dtype=rasterio.uint8)
+            data = np.zeros((10, 10), dtype=rasterio.uint8)
             dst.write(data, indexes=1)
 
     srcname = 'tests/data/shade.tif'
@@ -334,7 +388,7 @@ def test_warp_reproject_like(runner, tmpdir):
 
     with rasterio.open(outputname) as output:
         assert output.crs == {'init': 'epsg:4326'}
-        assert numpy.allclose([0.001, 0.001], [output.affine.a, -output.affine.e])
+        assert np.allclose([0.001, 0.001], [output.affine.a, -output.affine.e])
         assert output.width == 10
         assert output.height == 10
 
@@ -395,7 +449,6 @@ def test_warp_badcrs_src_bounds(runner, tmpdir):
     assert "Invalid value for dst_crs" in result.output
 
 
-@pytest.mark.xfail
 def test_warp_reproject_check_invert(runner, tmpdir):
     srcname = 'tests/data/world.rgb.tif'
     outputname = str(tmpdir.join('test.tif'))

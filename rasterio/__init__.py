@@ -118,7 +118,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     .. code:: python
 
         >>> from affine import Affine
-        >>> Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
+        >>> transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
 
     These coefficients are shown in the figure below.
 
@@ -298,9 +298,9 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     See numpy docs for details on mode and other kwargs:
     http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html
     """
-    import numpy
+    import numpy as np
     transform = guard_transform(transform)
-    padded_array = numpy.pad(array, pad_width, mode, **kwargs)
+    padded_array = np.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)
     padded_trans[2] -= pad_width * padded_trans[0]
     padded_trans[5] -= pad_width * padded_trans[4]

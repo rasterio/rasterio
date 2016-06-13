@@ -10,7 +10,6 @@ from cligj import (
 
 from .helpers import write_features, to_lower
 import rasterio
-from rasterio.env import Env
 from rasterio.warp import transform_bounds
 
 logger = logging.getLogger('rio')
@@ -107,7 +106,7 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                 self._ys.extend(bbox[1::2])
 
     try:
-        with Env(CPL_DEBUG=verbosity > 2) as env:
+        with rasterio.Env(CPL_DEBUG=verbosity > 2) as env:
             write_features(
                 stdout, Collection(env), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,

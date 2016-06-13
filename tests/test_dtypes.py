@@ -1,7 +1,9 @@
 import numpy as np
+import pytest
 
+import rasterio
 from rasterio import (
-    ubyte, uint8, uint16, uint32, int16, int32, float32, float64)
+    ubyte, uint8, uint16, uint32, int16, int32, float32, float64, complex_)
 from rasterio.dtypes import (
     _gdal_typename, is_ndarray, check_dtype, get_minimum_dtype, can_cast_dtype,
     validate_dtype
@@ -55,4 +57,21 @@ def test_validate_dtype():
     assert validate_dtype([1, 2, 3], ('uint8', 'uint16')) == True
     assert validate_dtype(np.array([1, 2, 3]), ('uint8', 'uint16')) == True
     assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float32',)) == True
-    assert validate_dtype(np.array([1.4, 2.1, 3.65]),('uint8',)) == False
+    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('uint8',)) == False
+
+
+# Roundtrip to complex type failing for unknown reasons
+# see https://github.com/mapbox/rasterio/issues/714
+@pytest.mark.xfail
+def test_complex(tmpdir):
+    name = str(tmpdir.join("complex.tif"))
+    arr1 = np.ones((2, 2), dtype=complex_)
+    profile = dict(driver='GTiff', width=2, height=2, count=1, dtype=complex_)
+
+    with rasterio.open(name, 'w', **profile) as dst:
+        dst.write(arr1, 1)
+
+    with rasterio.open(name) as src:
+        arr2 = src.read(1)
+
+    assert np.array_equal(arr1, arr2)

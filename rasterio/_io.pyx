@@ -639,7 +639,7 @@ cdef class RasterReader(_base.DatasetReader):
 
 
     def read(self, indexes=None, out=None, window=None, masked=False,
-            boundless=False):
+            out_shape=None, boundless=False):
         """Read raster bands as a multidimensional array
 
         Parameters
@@ -648,7 +648,7 @@ cdef class RasterReader(_base.DatasetReader):
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
 
-        out: numpy ndarray, optional
+        out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array with the same dimensions and shape into which
             data will be placed.
@@ -656,6 +656,14 @@ cdef class RasterReader(_base.DatasetReader):
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
+
+            Cannot combined with `out_shape`.
+
+        out_shape : tuple, optional
+            A tuple describing the output array's shape.  Allows for decimated
+            reads without constructing an output Numpy array.
+
+            Cannot combined with `out`.
 
         window : a pair (tuple) of pairs of ints, optional
             The optional `window` argument is a 2 item tuple. The first
@@ -752,6 +760,13 @@ cdef class RasterReader(_base.DatasetReader):
                 win_shape += (r_stop - r_start, c_stop - c_start)
         else:
             win_shape += self.shape
+
+        if out is not None and out_shape is not None:
+            raise ValueError("out and out_shape are exclusive")
+        elif out_shape is not None:
+            if len(out_shape) == 2:
+                out_shape = (1,) + out_shape
+            out = np.empty(out_shape, dtype=dtype)
 
         if out is not None:
             if out.dtype != dtype:
@@ -889,7 +904,8 @@ cdef class RasterReader(_base.DatasetReader):
         return out
 
 
-    def read_masks(self, indexes=None, out=None, window=None, boundless=False):
+    def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
+                   boundless=False):
         """Read raster band masks as a multidimensional array
 
         Parameters
@@ -898,7 +914,7 @@ cdef class RasterReader(_base.DatasetReader):
             If `indexes` is a list, the result is a 3D array, but is
             a 2D array if it is a band index number.
 
-        out: numpy ndarray, optional
+        out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array with the same dimensions and shape into which
             data will be placed.
@@ -906,6 +922,14 @@ cdef class RasterReader(_base.DatasetReader):
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
+
+            Cannot combine with `out_shape`.
+
+        out_shape : tuple, optional
+            A tuple describing the output array's shape.  Allows for decimated
+            reads without constructing an output Numpy array.
+
+            Cannot combined with `out`.
 
         window : a pair (tuple) of pairs of ints, optional
             The optional `window` argument is a 2 item tuple. The first
@@ -959,6 +983,13 @@ cdef class RasterReader(_base.DatasetReader):
         
         dtype = 'uint8'
 
+        if out is not None and out_shape is not None:
+            raise ValueError("out and out_shape are exclusive")
+        elif out_shape is not None:
+            if len(out_shape) == 2:
+                out_shape = (1,) + out_shape
+            out = np.zeros(out_shape, 'uint8')
+
         if out is not None:
             if out.dtype != np.dtype(dtype):
                 raise ValueError(
@@ -968,8 +999,9 @@ cdef class RasterReader(_base.DatasetReader):
                 raise ValueError(
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
-        if out is None:
+        else:
             out = np.zeros(win_shape, 'uint8')
+
 
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.

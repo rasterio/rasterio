@@ -6,7 +6,6 @@ import click
 
 from . import options
 import rasterio.crs
-from rasterio.env import Env
 
 
 @click.command(short_help="Print information about a data file.")
@@ -63,7 +62,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     verbosity = ctx.obj.get('verbosity')
     mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     try:
-        with Env(CPL_DEBUG=(verbosity > 2)):
+        with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode) as src:
                 info = src.profile
                 info['transform'] = info['affine'][:6]
@@ -75,6 +74,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4
                 info['res'] = src.res
+                info['colorinterp'] = [src.colorinterp(i).name
+                                       for i in src.indexes]
                 if proj4 != '':
                     info['lnglat'] = src.lnglat()
                 if verbose:
