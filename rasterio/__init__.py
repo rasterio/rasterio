@@ -12,6 +12,8 @@ except ImportError:  # pragma: no cover
         def emit(self, record):
             pass
 
+import affine
+
 from rasterio._base import (
     eval_window, window_shape, window_index, gdal_version)
 from rasterio.dtypes import (
@@ -148,6 +150,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     within that container.
 
     """
+
     if not isinstance(path, string_types):
         raise TypeError("invalid path: {0!r}".format(path))
     if mode and not isinstance(mode, string_types):
@@ -156,17 +159,20 @@ def open(path, mode='r', driver=None, width=None, height=None,
         raise TypeError("invalid driver: {0!r}".format(driver))
     if dtype and not check_dtype(dtype):
         raise TypeError("invalid dtype: {0!r}".format(dtype))
-    if transform:
-        transform = guard_transform(transform)
+
+    if 'affine' in kwargs and transform is not None:
+        raise ValueError("The 'affine' and 'transform' arguments are exclusive")
     elif 'affine' in kwargs:
-        affine = kwargs.pop('affine')
-        transform = guard_transform(affine)
+        transform = kwargs.pop('affine')
         warnings.warn(
             "The affine kwarg is deprecated as of 1.0 and only exists to ease "
             "the transition.  Please switch to the transform kwarg.  See "
             "https://github.com/mapbox/rasterio/issues/86 for details.",
             RuntimeWarning,
             stacklevel=2)
+
+    if transform is not None and not isinstance(transform, affine.Affine):
+        raise TypeError("transform must be an instance of affine.Affine()")
 
     # Get AWS credentials if we're attempting to access a raster
     # on S3.

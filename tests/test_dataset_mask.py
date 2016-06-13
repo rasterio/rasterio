@@ -51,7 +51,6 @@ alp_shift_lr = np.array([[1, 1, 0],
 def tiffs(tmpdir):
 
     _profile = {
-        'affine': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
         'transform': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
         'crs': {'init': 'epsg:4326'},
         'driver': 'GTiff',

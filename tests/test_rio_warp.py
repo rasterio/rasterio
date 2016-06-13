@@ -1,7 +1,11 @@
+"""Unittests for $ rio warp"""
+
+
 import logging
 import os
 import sys
 
+import affine
 import numpy as np
 import pytest
 
@@ -365,7 +369,7 @@ def test_warp_reproject_like(runner, tmpdir):
     likename = str(tmpdir.join('like.tif'))
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": (-106.523, 0.001, 0, 39.6395, 0, -0.001),
+        "transform": affine.Affine.from_gdal(-106.523, 0.001, 0, 39.6395, 0, -0.001),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
