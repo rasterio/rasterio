@@ -224,7 +224,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     # working with larger datasets.
     if arr.shape[-1] > len(colors):
         n = arr.shape[-1] - len(colors)
-        colors.append(mpl.cm.Accent(np.linspace(0, 1, n)))
+        colors.extend(np.ndarray.tolist(plt.get_cmap('Accent')(np.linspace(0, 1, n))))
     else:
         colors = colors[:arr.shape[-1]]
 
