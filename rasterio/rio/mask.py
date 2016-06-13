@@ -8,7 +8,6 @@ import cligj
 from .helpers import resolve_inout
 from . import options
 import rasterio
-from rasterio.env import Env
 
 logger = logging.getLogger('rio')
 
@@ -45,7 +44,6 @@ def mask(
         invert,
         force_overwrite,
         creation_options):
-
     """Masks in raster using GeoJSON features (masks out all areas not covered
     by features), and optionally crops the output raster to the extent of the
     features.  Features are assumed to be in the same coordinate reference
@@ -67,7 +65,6 @@ def mask(
     --crop option is not valid if features are completely outside extent of
     input raster.
     """
-
     from rasterio.mask import mask as mask_tool
     from rasterio.features import bounds as calculate_bounds
 
@@ -87,7 +84,7 @@ def mask(
         click.echo('Invert option ignored when using --crop', err=True)
         invert = False
 
-    with Env(CPL_DEBUG=verbosity > 2) as env:
+    with rasterio.Env(CPL_DEBUG=verbosity > 2):
         try:
             with click.open_file(geojson_mask) as fh:
                 geojson = json.loads(fh.read())

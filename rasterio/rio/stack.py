@@ -8,8 +8,7 @@ from cligj import files_inout_arg, format_opt
 from .helpers import resolve_inout
 from . import options
 import rasterio
-from rasterio.env import Env
-from rasterio.five import zip_longest
+from rasterio.compat import zip_longest
 
 
 # Stack command.
@@ -55,11 +54,10 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
       rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. -o stacked.tif
 
     """
-
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 2
     logger = logging.getLogger('rio')
     try:
-        with Env(CPL_DEBUG=verbosity > 2) as env:
+        with rasterio.Env(CPL_DEBUG=verbosity > 2):
             output, files = resolve_inout(files=files, output=output,
                                           force_overwrite=force_overwrite)
             output_count = 0

@@ -7,7 +7,6 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.coords import disjoint_bounds
-from rasterio.env import Env
 
 
 # Clip command
@@ -56,7 +55,7 @@ def clip(
 
     verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
 
-    with Env(CPL_DEBUG=verbosity > 2) as env:
+    with rasterio.Env(CPL_DEBUG=verbosity > 2):
 
         output, files = resolve_inout(files=files, output=output)
         input = files[0]

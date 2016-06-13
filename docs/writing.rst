@@ -25,7 +25,7 @@ An array is written to a new single band TIFF.
 
     # Register GDAL format drivers and configuration options with a
     # context manager.
-    with rasterio.drivers():
+    with rasterio.Env():
 
         # Write the product as a raster band to a new 8-bit file. For
         # the new file's profile, we start with the meta attributes of
@@ -40,7 +40,7 @@ An array is written to a new single band TIFF.
         with rasterio.open('example-total.tif', 'w', **profile) as dst:
             dst.write(array.astype(rasterio.uint8), 1)
 
-    # At the end of the ``with rasterio.drivers()`` block, context
+    # At the end of the ``with rasterio.Env()`` block, context
     # manager exits and all drivers are de-registered.
 
 Writing data mostly works as with a Python file. There are a few format-

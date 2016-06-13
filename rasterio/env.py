@@ -6,7 +6,7 @@ from rasterio._drivers import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError
-from rasterio.five import string_types
+from rasterio.compat import string_types
 from rasterio.transform import guard_transform
 from rasterio.vfs import parse_path, vsi_path
 
@@ -33,7 +33,7 @@ class Env(object):
 
     Example:
 
-        with Env(GDAL_CACHEMAX=512) as env:
+        with rasterio.Env(GDAL_CACHEMAX=512) as env:
             # All drivers are registered, GDAL's raster block cache
             # size is set to 512MB.
             # Commence processing...
@@ -56,7 +56,7 @@ class Env(object):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
-        until the context is entered via `with Env():`
+        until the context is entered via `with rasterio.Env():`
 
         Parameters
         ----------

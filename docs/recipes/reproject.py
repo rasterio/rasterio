@@ -10,7 +10,7 @@ out = '/tmp/reproj.tif'
 dst_crs = crs.from_string("EPSG:3759")
 
 
-with rasterio.drivers(CHECK_WITH_INVERT_PROJ=True):
+with rasterio.Env(CHECK_WITH_INVERT_PROJ=True):
     with rasterio.open(rgb) as src:
         profile = src.profile
 

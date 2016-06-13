@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
+GITREF := $(/bin/bash git rev-parse --abbrev-ref HEAD)
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -216,8 +217,9 @@ pseudoxml:
 
 .PHONY: apidocs
 apidocs:
-	sphinx-apidoc -f -e -T -M -o . ../rasterio ../rasterio/rio ../rasterio/five.py ../rasterio/tools ../rasterio/tool.py
+	sphinx-apidoc -f -e -T -M -o . ../rasterio ../rasterio/rio ../rasterio/compat.py ../rasterio/tools ../rasterio/tool.py
 
 .PHONY: publish
 publish: html
-	aws s3 sync _build/html/ s3://mapbox/playground/perrygeo/rasterio-docs --delete --acl public-read
+	ghp-import _build/html -m "update docs at $(GITREF)"
+	git push origin gh-pages

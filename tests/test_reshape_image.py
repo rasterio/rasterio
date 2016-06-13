@@ -2,6 +2,12 @@ import numpy as np
 
 import rasterio
 
+try:
+    import matplotlib as mpl
+    mpl.use('agg')
+except:
+    pass
+
 def test_reshape():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         im_data = rasterio.plot.reshape_as_image(src.read())

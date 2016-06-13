@@ -1,8 +1,8 @@
-import numpy
+import numpy as np
 import rasterio
 import subprocess
 
-with rasterio.drivers(CPL_DEBUG=True):
+with rasterio.Env(CPL_DEBUG=True):
 
     # Read raster bands directly to Numpy arrays.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -12,7 +12,7 @@ with rasterio.drivers(CPL_DEBUG=True):
     # exceed the 8-bit integer range, initialize it as 16-bit. Adding other
     # arrays to it in-place converts those arrays up and preserves the type
     # of the total array.
-    total = numpy.zeros(r.shape, dtype=rasterio.uint16)
+    total = np.zeros(r.shape, dtype=rasterio.uint16)
     for band in (r, g, b):
         total += band
     total /= 3
@@ -35,4 +35,3 @@ info = subprocess.check_output(
     ['gdalinfo', '-stats', 'example-total.tif'])
 print(info)
 subprocess.call(['open', 'example-total.tif'])
-

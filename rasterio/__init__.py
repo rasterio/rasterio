@@ -18,7 +18,7 @@ from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
-from rasterio.five import string_types
+from rasterio.compat import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
@@ -118,7 +118,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     .. code:: python
 
         >>> from affine import Affine
-        >>> Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
+        >>> transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
 
     These coefficients are shown in the figure below.
 
@@ -298,9 +298,9 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     See numpy docs for details on mode and other kwargs:
     http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html
     """
-    import numpy
+    import numpy as np
     transform = guard_transform(transform)
-    padded_array = numpy.pad(array, pad_width, mode, **kwargs)
+    padded_array = np.pad(array, pad_width, mode, **kwargs)
     padded_trans = list(transform)
     padded_trans[2] -= pad_width * padded_trans[0]
     padded_trans[5] -= pad_width * padded_trans[4]

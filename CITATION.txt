@@ -1,0 +1,10 @@
+If you use Rasterio for any published work, please cite it using the reference
+below:
+
+@Misc{,
+  author =    {Sean Gillies and others},
+  organization = {Mapbox},
+  title =     {Rasterio: geospatial raster I/O for {Python} programmers},
+  year =      {2013--},
+  url = "https://github.com/mapbox/rasterio"
+}

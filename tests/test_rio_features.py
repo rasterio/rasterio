@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import sys
-import numpy
+import numpy as np
 import json
 from affine import Affine
 
@@ -33,7 +33,7 @@ def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2,
             out.read(1, masked=True).filled(0)
         )
@@ -54,7 +54,7 @@ def test_mask_all_touched(runner, tmpdir, basic_feature, basic_image,
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image,
             out.read(1, masked=True).filled(0)
         )
@@ -77,7 +77,7 @@ def test_mask_invert(runner, tmpdir, basic_feature, pixelated_image,
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             truth,
             out.read(1, masked=True).filled(0))
 
@@ -95,7 +95,7 @@ def test_mask_featurecollection(runner, tmpdir, basic_featurecollection,
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             basic_image_2x2,
             out.read(1, masked=True).filled(0))
 
@@ -107,7 +107,7 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
     blank image.
     """
 
-    coords = numpy.array(basic_feature['geometry']['coordinates']) - 10
+    coords = np.array(basic_feature['geometry']['coordinates']) - 10
     basic_feature['geometry']['coordinates'] = coords.tolist()
 
     output = str(tmpdir.join('test.tif'))
@@ -121,7 +121,7 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert not numpy.any(out.read(1, masked=True).filled(0))
+        assert not np.any(out.read(1, masked=True).filled(0))
 
 
 def test_mask_no_geojson(runner, tmpdir, pixelated_image, pixelated_image_file):
@@ -136,7 +136,7 @@ def test_mask_no_geojson(runner, tmpdir, pixelated_image, pixelated_image_file):
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             pixelated_image,
             out.read(1, masked=True).filled(0))
 
@@ -185,7 +185,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
 
     output = str(tmpdir.join('test.tif'))
 
-    truth = numpy.zeros((4, 3))
+    truth = np.zeros((4, 3))
     truth[1:3, 0:2] = 1
 
     result = runner.invoke(
@@ -195,7 +195,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             truth,
             out.read(1, masked=True).filled(0))
 
@@ -208,7 +208,7 @@ def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_fil
 
     output = str(tmpdir.join('test.tif'))
 
-    truth = numpy.zeros((4, 3))
+    truth = np.zeros((4, 3))
     truth[1:3, 0:2] = 1
 
     result = runner.invoke(
@@ -220,7 +220,7 @@ def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_fil
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.array_equal(
+        assert np.array_equal(
             truth,
             out.read(1, masked=True).filled(0))
 
@@ -232,7 +232,7 @@ def test_mask_crop_out_of_bounds(runner, tmpdir, basic_feature,
     --crop option.
     """
 
-    coords = numpy.array(basic_feature['geometry']['coordinates']) - 10
+    coords = np.array(basic_feature['geometry']['coordinates']) - 10
     basic_feature['geometry']['coordinates'] = coords.tolist()
 
     output = str(tmpdir.join('test.tif'))
@@ -267,7 +267,7 @@ def test_shapes(runner, pixelated_image_file):
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 4
-    assert numpy.allclose(
+    assert np.allclose(
         json.loads(result.output)['features'][0]['geometry']['coordinates'],
         [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]])
 
@@ -393,7 +393,7 @@ def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 1
 
-    assert numpy.allclose(
+    assert np.allclose(
         json.loads(result.output)['features'][0]['geometry']['coordinates'],
         [[[3, 5], [3, 10], [8, 10], [8, 8], [9, 8], [10, 8], [10, 5], [3, 5]]])
 
@@ -418,7 +418,7 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 1
 
-    assert numpy.allclose(
+    assert np.allclose(
         json.loads(result.output)['features'][0]['geometry']['coordinates'],
         [[[5, 5], [5, 10], [10, 10], [10, 5], [5, 5]]])
 
@@ -441,7 +441,7 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 3
-    assert numpy.allclose(
+    assert np.allclose(
         json.loads(result.output)['features'][1]['geometry']['coordinates'],
         [[[2, 2], [2, 5], [5, 5], [5, 2], [2, 2]]])
 
@@ -457,10 +457,10 @@ def test_rasterize(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.allclose(out.bounds, (2, 2, 4.25, 4.25))
+        assert np.allclose(out.bounds, (2, 2, 4.25, 4.25))
         data = out.read(1, masked=False)
         assert data.shape == DEFAULT_SHAPE
-        assert numpy.all(data)
+        assert np.all(data)
 
 
 def test_rasterize_bounds(tmpdir, runner, basic_feature, basic_image_2x2):
@@ -474,9 +474,9 @@ def test_rasterize_bounds(tmpdir, runner, basic_feature, basic_image_2x2):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.allclose(out.bounds, (0, 10, 10, 0))
+        assert np.allclose(out.bounds, (0, 10, 10, 0))
         data = out.read(1, masked=False)
-        assert numpy.array_equal(basic_image_2x2, data)
+        assert np.array_equal(basic_image_2x2, data)
         assert data.shape == DEFAULT_SHAPE
 
 
@@ -490,10 +490,10 @@ def test_rasterize_resolution(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.allclose(out.bounds, (2, 2, 4.25, 4.25))
+        assert np.allclose(out.bounds, (2, 2, 4.25, 4.25))
         data = out.read(1, masked=False)
         assert data.shape == (15, 15)
-        assert numpy.all(data)
+        assert np.all(data)
 
 
 def test_rasterize_multiresolution(tmpdir, runner, basic_feature):
@@ -507,10 +507,10 @@ def test_rasterize_multiresolution(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.allclose(out.bounds, (2, 2, 4.25, 4.25))
+        assert np.allclose(out.bounds, (2, 2, 4.25, 4.25))
         data = out.read(1, masked=False)
         assert data.shape == (15, 15)
-        assert numpy.all(data)
+        assert np.all(data)
 
 
 def test_rasterize_src_crs(tmpdir, runner, basic_feature):
@@ -533,7 +533,7 @@ def test_rasterize_mismatched_src_crs(tmpdir, runner, basic_feature):
     world bounds should fail.
     """
 
-    coords = numpy.array(basic_feature['geometry']['coordinates']) * 100000
+    coords = np.array(basic_feature['geometry']['coordinates']) * 100000
     basic_feature['geometry']['coordinates'] = coords.tolist()
 
     output = str(tmpdir.join('test.tif'))
@@ -565,7 +565,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
     The final result should include rasterized pixels from both
     """
 
-    truth = numpy.zeros(DEFAULT_SHAPE)
+    truth = np.zeros(DEFAULT_SHAPE)
     truth[2:4, 2:4] = 1
     truth[4:6, 4:6] = 1
 
@@ -580,7 +580,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
     assert os.path.exists(output)
 
-    coords = numpy.array(basic_feature['geometry']['coordinates']) + 2
+    coords = np.array(basic_feature['geometry']['coordinates']) + 2
     basic_feature['geometry']['coordinates'] = coords.tolist()
 
     result = runner.invoke(
@@ -592,7 +592,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
 
     with rasterio.open(output) as out:
-        assert numpy.array_equal(truth, out.read(1, masked=False))
+        assert np.array_equal(truth, out.read(1, masked=False))
 
 
 def test_rasterize_like_raster(tmpdir, runner, basic_feature, basic_image_2x2,
@@ -608,7 +608,7 @@ def test_rasterize_like_raster(tmpdir, runner, basic_feature, basic_image_2x2,
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.array_equal(basic_image_2x2, out.read(1, masked=False))
+        assert np.array_equal(basic_image_2x2, out.read(1, masked=False))
 
         with rasterio.open(pixelated_image_file) as src:
             assert out.crs == src.crs
@@ -683,10 +683,10 @@ def test_rasterize_property_value(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert numpy.allclose(out.bounds, (2, 2, 4.25, 4.25))
+        assert np.allclose(out.bounds, (2, 2, 4.25, 4.25))
         data = out.read(1, masked=False)
         assert data.shape == DEFAULT_SHAPE
-        assert numpy.all(data == basic_feature['properties']['val'])
+        assert np.all(data == basic_feature['properties']['val'])
 
 
 def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
@@ -696,7 +696,7 @@ def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
     in a blank image
     """
 
-    coords = numpy.array(basic_feature['geometry']['coordinates']) + 100
+    coords = np.array(basic_feature['geometry']['coordinates']) + 100
     basic_feature['geometry']['coordinates'] = coords.tolist()
 
     output = str(tmpdir.join('test.tif'))
@@ -710,7 +710,7 @@ def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
     assert 'outside bounds' in result.output
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert not numpy.any(out.read(1, masked=False))
+        assert not np.any(out.read(1, masked=False))
 
 
 def test_rasterize_invalid_stdin(tmpdir, runner):

@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-import numpy
+import numpy as np
 
 import rasterio
 
@@ -18,11 +18,11 @@ class WindowTest(unittest.TestCase):
         # Positive height and width are needed when stop is None.
         self.assertRaises(
             ValueError,
-            rasterio.window_shape, 
+            rasterio.window_shape,
             (((10, 20),(10, None)),) )
         self.assertRaises(
             ValueError,
-            rasterio.window_shape, 
+            rasterio.window_shape,
             (((None, 10),(10, 20)),) )
     def test_window_shape_None_start(self):
         self.assertEqual(
@@ -62,7 +62,7 @@ def test_window_index():
     assert r.stop == 4
     assert c.start == 1
     assert c.stop == 12
-    arr = numpy.ones((20,20))
+    arr = np.ones((20,20))
     assert arr[idx].shape == (4, 11)
 
 class RasterBlocksTest(unittest.TestCase):
@@ -88,7 +88,7 @@ class RasterBlocksTest(unittest.TestCase):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assertEqual(
                 s.width*s.height,
-                sum((w[0][1]-w[0][0])*(w[1][1]-w[1][0]) 
+                sum((w[0][1]-w[0][0])*(w[1][1]-w[1][0])
                     for ji, w in s.block_windows(1)))
 
 class WindowReadTest(unittest.TestCase):
@@ -99,7 +99,7 @@ class WindowReadTest(unittest.TestCase):
             first_block = s.read(1, window=first_window)
             self.assertEqual(first_block.dtype, rasterio.ubyte)
             self.assertEqual(
-                first_block.shape, 
+                first_block.shape,
                 rasterio.window_shape(first_window))
 
 class WindowWriteTest(unittest.TestCase):
@@ -109,10 +109,10 @@ class WindowWriteTest(unittest.TestCase):
         shutil.rmtree(self.tempdir)
     def test_write_window(self):
         name = os.path.join(self.tempdir, "test_write_window.tif")
-        a = numpy.ones((50, 50), dtype=rasterio.ubyte) * 127
+        a = np.ones((50, 50), dtype=rasterio.ubyte) * 127
         with rasterio.open(
-                name, 'w', 
-                driver='GTiff', width=100, height=100, count=1, 
+                name, 'w',
+                driver='GTiff', width=100, height=100, count=1,
                 dtype=a.dtype) as s:
             s.write(a, indexes=1, window=((30, 80), (10, 60)))
         # subprocess.call(["open", name])

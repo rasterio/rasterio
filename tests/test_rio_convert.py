@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-import numpy
+import numpy as np
 from click.testing import CliRunner
 
 import rasterio
@@ -38,7 +38,7 @@ def test_clip_like(runner, tmpdir):
     with rasterio.open('tests/data/shade.tif') as template_ds:
         with rasterio.open(output) as out:
             assert out.shape == template_ds.shape
-            assert numpy.allclose(out.bounds, template_ds.bounds)
+            assert np.allclose(out.bounds, template_ds.bounds)
 
 
 def test_clip_missing_params(runner, tmpdir):

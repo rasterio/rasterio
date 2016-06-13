@@ -24,22 +24,22 @@ cdef extern from "gdalwarper.h" nogil:
         GDALWarpOperation() except +
         int Initialize(const GDALWarpOptions *psNewOptions)
         const GDALWarpOptions *GetOptions()
-        int ChunkAndWarpImage( 
+        int ChunkAndWarpImage(
             int nDstXOff, int nDstYOff, int nDstXSize, int nDstYSize )
-        int ChunkAndWarpMulti( 
+        int ChunkAndWarpMulti(
             int nDstXOff, int nDstYOff, int nDstXSize, int nDstYSize )
-        int WarpRegion( int nDstXOff, int nDstYOff, 
+        int WarpRegion( int nDstXOff, int nDstYOff,
                         int nDstXSize, int nDstYSize,
                         int nSrcXOff=0, int nSrcYOff=0,
                         int nSrcXSize=0, int nSrcYSize=0,
                         double dfProgressBase=0.0, double dfProgressScale=1.0)
-        int WarpRegionToBuffer( int nDstXOff, int nDstYOff, 
-                                int nDstXSize, int nDstYSize, 
-                                void *pDataBuf, 
+        int WarpRegionToBuffer( int nDstXOff, int nDstYOff,
+                                int nDstXSize, int nDstYSize,
+                                void *pDataBuf,
                                 int eBufDataType,
                                 int nSrcXOff=0, int nSrcYOff=0,
                                 int nSrcXSize=0, int nSrcYSize=0,
-                                double dfProgressBase=0.0, 
+                                double dfProgressBase=0.0,
                                 double dfProgressScale=1.0)
 
 
@@ -93,7 +93,7 @@ def _transform_geom(
         _gdal.OSRDestroySpatialReference(src)
         _gdal.OSRDestroySpatialReference(dst)
         raise
-        
+
     # Transform options.
     val_b = str(antimeridian_offset).encode('utf-8')
     val_c = val_b
@@ -269,13 +269,13 @@ def _reproject(
         except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
-                "in a `with rasterio.drivers()` or `with rasterio.open()` "
+                "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
         try:
             with CPLErrors() as cple:
                 hdsin = _gdal.GDALCreate(
-                    hrdriver, "input", cols, rows, 
+                    hrdriver, "input", cols, rows,
                     src_count, dtypes.dtype_rev[dtype], NULL)
                 cple.check()
         except:
@@ -297,12 +297,12 @@ def _reproject(
         finally:
             _gdal.CPLFree(srcwkt)
             _gdal.OSRDestroySpatialReference(osr)
-        
+
         # Copy arrays to the dataset.
         retval = _io.io_auto(source, hdsin, 1)
         # TODO: handle errors (by retval).
         log.debug("Wrote array to temp source dataset")
-    
+
     # If the source is a rasterio Band, no copy necessary.
     elif isinstance(source, tuple):
         rdr = source.ds
@@ -312,7 +312,7 @@ def _reproject(
             src_nodata = rdr.nodata
     else:
         raise ValueError("Invalid source")
-    
+
     # Next, do the same for the destination raster.
     if dtypes.is_ndarray(destination):
         if len(destination.shape) == 2:
@@ -327,14 +327,14 @@ def _reproject(
         except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
-                "in a `with rasterio.drivers()` or `with rasterio.open()` "
+                "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
         _, rows, cols = destination.shape
         try:
             with CPLErrors() as cple:
                 hdsout = _gdal.GDALCreate(
-                    hrdriver, "output", cols, rows, src_count, 
+                    hrdriver, "output", cols, rows, src_count,
                     dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
                 cple.check()
         except:
@@ -372,7 +372,7 @@ def _reproject(
             dst_nodata = udr.nodata
     else:
         raise ValueError("Invalid destination")
-    
+
     cdef void *hTransformArg = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
 
@@ -398,7 +398,7 @@ def _reproject(
     val_b = str(num_threads).encode('utf-8')
     warp_extras = _gdal.CSLSetNameValue(warp_extras, "NUM_THREADS", val_b)
     log.debug("Setting NUM_THREADS option: %s", val_b)
-        
+
     for k, v in kwargs.items():
         k, v = k.upper(), str(v).upper()
         key_b = k.encode('utf-8')
@@ -540,7 +540,7 @@ def _calculate_default_transform(
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-    # Make an in-memory raster dataset we can pass to 
+    # Make an in-memory raster dataset we can pass to
     # GDALCreateGenImgProjTransformer().
     transform = from_bounds(left, bottom, right, top, width, height)
     img = np.empty((height, width))
@@ -565,9 +565,14 @@ def _calculate_default_transform(
         except CPLE_NotSupported as err:
             raise CRSError(err.errmsg)
         except CPLE_AppDefined as err:
-            log.debug("Encountered points outside of valid dst crs region")
-            raise
-            #pass
+            if "Reprojection failed" in str(err):
+                # This "exception" should be treated as a debug msg, not error
+                # "Reprojection failed, err = -14, further errors will be
+                # suppressed on the transform object."
+                log.debug("Encountered points outside of valid dst crs region")
+                pass
+            else:
+                raise err
         finally:
             if wkt != NULL:
                 _gdal.CPLFree(wkt)
