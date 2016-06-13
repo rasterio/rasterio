@@ -18,6 +18,7 @@ from rasterio.compat import zip_longest
 
 logger = logging.getLogger(__name__)
 
+
 def get_plt():
     """import matplotlib.pyplot
     raise import error if matplotlib is not installed
@@ -31,7 +32,10 @@ def get_plt():
         raise ImportError(msg)
    
 
-def show(source, with_bounds=True, ax=None, title=None, **kwargs):
+def show(source, with_bounds=True,\
+         contour=False, contour_label_kws=None,\
+         ax=None, title=None, 
+         **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -46,13 +50,27 @@ def show(source, with_bounds=True, ax=None, title=None, **kwargs):
         Whether to change the image extent to the spatial bounds of the image,
         rather than pixel coordinates. Only works when source is
         (raster dataset, bidx) or raster dataset.
-    ax : matplotlib axes (opt)
-        The raster will be added to this axes if passed.
+    contour : bool (opt)
+        Whether to plot the raster data as contours
+    contour_label_kws : dictionary (opt)
+        Keyword arguments for labeling the contours,
+        empty dictionary for no labels.
+    ax : matplotlib axis (opt)
+        Axis to plot on, otherwise uses current axis.
     title : str, optional
         Title for the figure.
-    **kwargs : optional keyword arguments
-        These will be passed to the matplotlib imshow method. See full list at:
+    **kwargs : key, value pairings optional
+        These will be passed to the matplotlib imshow or contour method 
+        depending on contour argument. 
+        See full lists at:
         http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.imshow
+        or
+        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.contour
+
+    Returns
+    -------
+    ax : matplotlib Axes
+        Axes with plot.
     """
     plt = get_plt()
         
@@ -84,18 +102,34 @@ def show(source, with_bounds=True, ax=None, title=None, **kwargs):
         else:
             arr = source
 
-    if ax:
-        ax.imshow(arr, cmap=cmap, **kwargs)
-        if title:
-            ax.set_title(title, fontweight='bold')
-        return ax
-    else:
-        plt.imshow(arr, cmap=cmap, **kwargs)
-        if title:
-            plt.title(title, fontweight='bold')
+    show = False
+    if not ax:
+        show = True
         ax = plt.gca()
+
+    if contour:
+        #set some defaults if they were not specified
+        if not kwargs.has_key('cmap'):
+            kwargs['colors'] = kwargs.get('colors', 'red')
+        kwargs['linewidths'] = kwargs.get('linewidths', 1.5)
+        kwargs['alpha'] = kwargs.get('alpha', 0.8)
+
+        C = ax.contour(arr, origin='upper', **kwargs)
+        if contour_label_kws is None:
+            #no explicit label kws passed use defaults 
+            contour_label_kws = dict(fontsize=8, 
+                                     inline=True)
+        if contour_label_kws:
+            ax.clabel(C, **contour_label_kws)
+    else:
+        ax.imshow(arr, **kwargs)
+    if title:
+        ax.set_title(title, fontweight='bold')
+
+    if show:
         plt.show()
 
+    return ax
 
 
 def plotting_extent(source):
@@ -126,6 +160,7 @@ def reshape_as_image(arr):
     # swap the axes order from (bands, rows, columns) to (rows, columns, bands)
     im = np.ma.transpose(arr, [1,2,0])
     return im
+
 
 
 def reshape_as_raster(arr):
