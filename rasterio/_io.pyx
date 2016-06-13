@@ -2139,6 +2139,24 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
 
 def writer(path, mode, **kwargs):
+    """Get a writer instance for path
+
+    Parameters
+    ----------
+    path: Path to new raster (for mode=='w') or existing raster to be updated
+    mode: string, open mode, one of ('w', 'r+')
+
+    Returns
+    -------
+    RasterUpdater in the case of GeoTiff
+        writes directly to disk
+    IndirectRasterUpdater for any other driver
+        using temporary MEM driver before copying data
+        to the final destination
+
+    Raises ``RasterioIOError` if driver is blacklisted from writing
+    due to known bugs in the IndirectRasterUpdater approach
+    """
     # Dispatch to direct or indirect writer/updater according to the
     # format driver's capabilities.
     cdef void *hds = NULL
@@ -2152,9 +2170,17 @@ def writer(path, mode, **kwargs):
             "VFS '{0}' datasets can not be created or updated.".format(
                 scheme))
 
+    # These drivers are known to produce invalid results with
+    # IndirectRasterUpdater. Save users the trouble and fail fast.
+    bad_write_drivers = ("netCDF", )
+
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':
             return RasterUpdater(path, mode, **kwargs)
+        elif kwargs['driver'] in bad_write_drivers:
+            raise RasterioIOError(
+                "Rasterio does not support writing "
+                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode, **kwargs)
     else:
@@ -2177,6 +2203,10 @@ def writer(path, mode, **kwargs):
 
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
+        elif kwargs['driver'] in bad_write_drivers:
+            raise RasterioIOError(
+                "Rasterio does not support updating "
+                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode)
 
