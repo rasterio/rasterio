@@ -21,6 +21,6 @@ def test_roundtrip_reshape():
         assert np.array_equal(data, rasterio.plot.reshape_as_raster(im_data))
 
 def test_reshape_as_raster():
-    img_arr = np.random.randn(718L, 791L, 3L)
+    img_arr = np.random.randn(718, 791, 3)
     rast_arr = plot.reshape_as_raster(img_arr)
     assert img_arr.shape[-1] == rast_arr.shape[0]

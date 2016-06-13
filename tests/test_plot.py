@@ -104,7 +104,7 @@ def test_show_hist_large():
     matplotlib works correctly.  Tests do not exercise matplotlib.
     """
     try:
-        rand_arr = np.random.randn(10L, 718L, 791L)
+        rand_arr = np.random.randn(10, 718, 791)
         show_hist(rand_arr)
         fig = plt.gcf()
         plt.close(fig)
