@@ -13,6 +13,7 @@ import warnings
 import numpy as np
 
 import rasterio
+from rasterio._io import RasterReader
 
 from rasterio.compat import zip_longest
 
@@ -78,7 +79,7 @@ def show(source, with_bounds=True,\
         arr = source[0].read(source[1])
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
-    elif  isinstance(source, rasterio._io.RasterReader):
+    elif  isinstance(source, RasterReader):
         if source.count == 1:
             arr = source.read(1, masked=True)
         else:
@@ -182,7 +183,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
 
     Parameters
     ----------
-    source : np.array or rasterio._io.RasterReader, rasterio.Band or tuple(dataset, bidx)
+    source : np.array or RasterReader, rasterio.Band or tuple(dataset, bidx)
         Input data to display.  The first three arrays in multi-dimensional
         arrays are plotted as red, green, and blue.
     bins : int, optional
@@ -200,7 +201,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     """
     plt = get_plt()
 
-    if isinstance(source, rasterio._io.RasterReader):
+    if isinstance(source, RasterReader):
         arr = source.read(masked=masked)
     elif isinstance(source, (tuple, rasterio.Band)):
         arr = source[0].read(source[1], masked=masked)
