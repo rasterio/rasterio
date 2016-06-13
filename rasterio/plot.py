@@ -36,9 +36,10 @@ def show(source, with_bounds=True, ax=None, title=None, **kwargs):
 
     Parameters
     ----------
-    source : array-like, or (raster dataset, bidx) tuple, or raster dataset, 
-        If array-like, should be of format compatible with
-        matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),
+    source : array-like in raster axis order, 
+        or (raster dataset, bidx) tuple, 
+        or raster dataset, 
+        If the tuple (raster dataset, bidx),
         selects band `bidx` from raster.  If raster dataset display the rgb image 
         as defined in the colorinterp metadata, or default to first band. 
     with_bounds : bool (opt)
@@ -76,7 +77,12 @@ def show(source, with_bounds=True, ax=None, title=None, **kwargs):
             except KeyError:
                 arr = source.read(1, masked=True)
     else:
-        arr = source
+        #The source is a numpy array reshape it to image if it has 3+ bands
+        source = np.ma.squeeze(source)
+        if len(source.shape) >= 3 :
+            arr = reshape_as_image(source)
+        else:
+            arr = source
 
     if ax:
         ax.imshow(arr, cmap=cmap, **kwargs)
