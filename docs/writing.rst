@@ -3,7 +3,6 @@ Writing Datasets
 
 .. todo::
 
-    * supported drivers
     * appending to existing data
     * context manager
     * write 3d vs write 2d
@@ -45,3 +44,20 @@ An array is written to a new single band TIFF.
 
 Writing data mostly works as with a Python file. There are a few format-
 specific differences.
+
+Supported Drivers
+-----------------
+``GTiff`` is the only driver that supports writing directly to disk.
+GeoTiffs use the ``RasterUpdater`` and leverage the full capabilities 
+of the ``GDALCreate`` function. We highly recommend using GeoTiff 
+driver for writing as it is the best-tested and best-supported format.
+
+Some other formats that are writable by GDAL can also be written by
+Rasterio. These use an ``IndirectRasterUpdater`` which does not create
+directly but uses a temporary in-memory dataset and ``GDALCreateCopy``
+to produce the final output.
+
+Some formats are known to produce invalid results using the
+``IndirectRasterUpdater``. These formats will raise a ``RasterioIOError``
+if you attempt to write to the. Currently this applies to the ``netCDF``
+driver but please let us know if you experience problems writing other formats.
