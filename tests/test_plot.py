@@ -11,6 +11,7 @@ except ImportError:
 
 import rasterio
 from rasterio.plot import show, show_hist, get_plt
+from rasterio.enums import ColorInterp
 
 @pytest.mark.skipif(plt is None,
                     reason="requires matplotlib")
@@ -22,6 +23,44 @@ def test_show_raster():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
             show((src, 1))
+            fig = plt.gcf()
+            plt.close(fig)
+        except ImportError:
+            pass
+
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            try:
+                show(src)
+                fig = plt.gcf()
+                plt.close(fig)
+            except ImportError:
+                pass
+
+        with rasterio.open('tests/data/float.tif') as src:
+            try:
+                show(src)
+                fig = plt.gcf()
+                plt.close(fig)
+            except ImportError:
+                pass
+
+def test_show_cmyk_interp(tmpdir):
+    """A CMYK TIFF has cyan, magenta, yellow, black bands."""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        meta = src.meta
+    meta['photometric'] = 'CMYK'
+    meta['count'] = 4
+    tiffname = str(tmpdir.join('foo.tif'))
+    with rasterio.open(tiffname, 'w', **meta) as dst:
+        assert dst.profile['photometric'] == 'cmyk'
+        assert dst.colorinterp(1) == ColorInterp.cyan
+        assert dst.colorinterp(2) == ColorInterp.magenta
+        assert dst.colorinterp(3) == ColorInterp.yellow
+        assert dst.colorinterp(4) == ColorInterp.black
+
+    with rasterio.open(tiffname) as src:
+        try:
+            show(src)
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:
@@ -41,6 +80,36 @@ def test_show_raster_no_bounds():
             plt.close(fig)
         except ImportError:
             pass
+
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
+def test_show_raster_title():
+    """
+    This test only verifies that code up to the point of plotting with
+    matplotlib works correctly.  Tests do not exercise matplotlib.
+    """
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        try:
+            show((src, 1), title="insert title here")
+            fig = plt.gcf()
+            plt.close(fig)
+        except ImportError:
+            pass
+
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
+def test_show_hist_large():
+    """
+    This test only verifies that code up to the point of plotting with
+    matplotlib works correctly.  Tests do not exercise matplotlib.
+    """
+    try:
+        rand_arr = np.random.randn(10L, 718L, 791L)
+        show_hist(rand_arr)
+        fig = plt.gcf()
+        plt.close(fig)
+    except ImportError:
+        pass
 
 @pytest.mark.skipif(plt is None,
                     reason="requires matplotlib")
@@ -120,6 +189,14 @@ def test_show_hist():
 
         try:
             show_hist(src.read(), bins=256)
+            fig = plt.gcf()
+            plt.close(fig)
+        except ImportError:
+            pass
+
+        try:
+            fig, ax = plt.subplots(1)
+            show_hist(src.read(), bins=256, ax=ax)
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:
