@@ -31,7 +31,7 @@ def get_plt():
         raise ImportError(msg)
    
 
-def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
+def show(source, with_bounds=True, ax=None, title=None, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -41,9 +41,6 @@ def show(source, cmap='gray', with_bounds=True, ax=None, title=None, **kwargs):
         matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),
         selects band `bidx` from raster.  If raster dataset display the rgb image 
         as defined in the colorinterp metadata, or default to first band. 
-    cmap : str (opt)
-        Specifies the colormap to use in plotting. See
-        matplotlib.Colors.Colormap. Default is 'gray'.
     with_bounds : bool (opt)
         Whether to change the image extent to the spatial bounds of the image,
         rather than pixel coordinates. Only works when source is
