@@ -16,6 +16,10 @@ _env = None
 
 log = logging.getLogger(__name__)
 
+# Rasterio defaults
+default_options = {
+    'CHECK_WITH_INVERT_PROJ': True
+}
 
 class Env(object):
     """Abstraction for GDAL and AWS configuration
@@ -154,6 +158,7 @@ def defenv():
         log.debug("Environment %r exists", _env)
     else:
         _env = GDALEnv()
+        _env.update_config_options(**default_options)
         log.debug(
             "New GDAL environment %r created", _env)
 
