@@ -110,7 +110,7 @@ def show(source, with_bounds=True,\
 
     if contour:
         #set some defaults if they were not specified
-        if not kwargs.has_key('cmap'):
+        if not 'cmap' in kwargs:
             kwargs['colors'] = kwargs.get('colors', 'red')
         kwargs['linewidths'] = kwargs.get('linewidths', 1.5)
         kwargs['alpha'] = kwargs.get('alpha', 0.8)
