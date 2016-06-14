@@ -1,40 +1,41 @@
 Authors
 -------
 
-* Aldo Culquicondor <alculquicondor@gmail.com>
-* Alessandro Amici <alexamici@gmail.com>
-* Alexander <spatial.hast@gmail.com>
-* Amit Kapadia <amit@planet.com>
-* AsgerPetersen <asgerpetersen@gmail.com>
-* Bas Couwenberg <sebastic@xs4all.nl>
-* Brendan Ward <bcward@consbio.org>
-* Charlie Loyd <charlie@mapbox.com>
-* Colin Talbert <talbertc@usgs.gov>
-* Damon Burgett <damon@mapbox.com>
-* Erik Seglem <erik.seglem@gmail.com>
-* Etienne B. Racine <etiennebr@gmail.com>
-* Even Rouault <even.rouault@spatialys.com>
-* Jacques Tardie <hi@jacquestardie.org>
-* James Hiebert <hiebert@uvic.ca>
-* James McBride <jmcbride@berkeley.edu>
-* James Seppi <james.seppi@gmail.com>
-* Jeffrey Gerard <jgerard@climate.com>
-* Johan Van de Wauw <johan.vandewauw@gmail.com>
-* Joshua Arnott <josh@snorfalorpagus.net>
-* Kelsey Jordahl <kjordahl@alum.mit.edu>
-* Kevin Wurster <wursterk@gmail.com>
-* Martijn Visser <mgvisser@gmail.com>
-* Matt Savoie <github@flamingbear.com>
-* Matthew Perry <perrygeo@gmail.com>
-* Maxim Dubinin <sim@gis-lab.info>
-* Mike Toews <mwtoews@gmail.com>
-* Nat Wilson <njwilson23@gmail.com>
-* Patrick Young <patrick.young@digitalglobe.com>
-* Robin Wilson <robin@rtwilson.com>
-* Ryan Grout <rgrout@continuum.io>
 * Sean Gillies <sean@mapbox.com>
+* Matthew Perry <perrygeo@gmail.com>
+* Brendan Ward <bcward@consbio.org>
+* Colin Talbert <talbertc@usgs.gov>
+* Erik Seglem <erik.seglem@gmail.com>
+* James McBride <jmcbride@berkeley.edu>
+* Kevin Wurster <wursterk@gmail.com>
+* James Hiebert <hiebert@uvic.ca>
+* Amit Kapadia <amit@planet.com>
+* Kelsey Jordahl <kjordahl@alum.mit.edu>
+* dnomadb <damon@mapbox.com>
+* Even Rouault <even.rouault@spatialys.com>
+* Ryan Grout <rgrout@continuum.io>
+* Maxim Dubinin <sim@gis-lab.info>
+* Joshua Arnott <josh@snorfalorpagus.net>
+* Mike Toews <mwtoews@gmail.com>
+* Johan Van de Wauw <johan.vandewauw@gmail.com>
+* Alessandro Amici <alexamici@gmail.com>
+* mwtoews <mwtoews@gmail.com>
+* Robin Wilson <robin@rtwilson.com>
+* Jacques Tardie <hi@jacquestardie.org>
+* Jeffrey Gerard <jgerard@climate.com>
+* Nat Wilson <njwilson23@gmail.com>
+* Martijn Visser <mgvisser@gmail.com>
+* grovduck <matt.gregory@oregonstate.edu>
+* Patrick Young <patrick.young@digitalglobe.com>
+* Aldo Culquicondor <alculquicondor@gmail.com>
+* Etienne B. Racine <etiennebr@gmail.com>
+* Charlie Loyd <charlie@mapbox.com>
+* Talbert <talbertc@usgs.gov>
 * Trevor R.H. Clarke <tclarke@ball.com>
+* Alexander <spatial.hast@gmail.com>
 * cgohlke <cgohlke@uci.edu>
-* Rob Emmanuele
+* Bas Couwenberg <sebastic@xs4all.nl>
+* Matt Savoie <github@flamingbear.com>
+* James Seppi <james.seppi@gmail.com>
 
 See also https://github.com/mapbox/rasterio/graphs/contributors.
