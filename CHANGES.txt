@@ -12,6 +12,7 @@ Changes
 - rio warp and reproject enhancements and bug fixes (#746, #749, #750) 
 - Read and read_masks take an `out_shape` argument for decimated reads (#761)
 - Use gdal's invert projection check by default (#780)
+- Enhanced plotting functions (#765)
 
 0.35.1 (2016-05-06)
 -------------------
