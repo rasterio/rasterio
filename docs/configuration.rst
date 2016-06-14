@@ -3,8 +3,6 @@ GDAL Option Configuration
 
 .. todo::
 
-    Why to use Env() instead of drivers().
-
     When to use with rasterio.Env() instead of a bare rasterio.open()
 
 

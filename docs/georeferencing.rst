@@ -17,7 +17,7 @@ attribute.
     >>> import rasterio
     >>> src = rasterio.open('tests/data/RGB.byte.tif')
     >>> src.crs
-    CRS({'init': u'epsg:32618'})
+    CRS({'init': 'epsg:32618'})
 
 Rasterio follows pyproj and uses PROJ.4 syntax in dict form as its native
 CRS syntax. If you want a WKT representation of the CRS, see the CRS

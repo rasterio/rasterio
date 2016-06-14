@@ -26,7 +26,7 @@ namespace, call ``tags()`` with no arguments.
     >>> import rasterio
     >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> src.tags()
-    {u'AREA_OR_POINT': u'Area'}
+    {'AREA_OR_POINT': 'Area'}
 
 A dataset's bands may have tags, too. Here are the tags from the default namespace
 for the first band, accessed using the positional band index argument of ``tags()``.
@@ -34,8 +34,8 @@ for the first band, accessed using the positional band index argument of ``tags(
 .. code-block:: pycon
 
     >>> src.tags(1)
-    {u'STATISTICS_MEAN': u'29.947726688477', u'STATISTICS_MINIMUM': u'0', u'STATISTICS_MAXIMUM': u'255', u'STATISTICS_STDDEV': u'52.340921626611'}
-
+    {'STATISTICS_MEAN': '29.947726688477', 'STATISTICS_MINIMUM': '0', 'STATISTICS_MAXIMUM': '255', 'STATISTICS_STDDEV': '52.340921626611'}
+    
 These are the tags that came with the sample data I'm using to test rasterio. In
 practice, maintaining stats in the tags can be unreliable as there is no automatic
 update of the tags when the band's image data changes.

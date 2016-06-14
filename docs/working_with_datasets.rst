@@ -20,7 +20,7 @@ dataset and ``shape`` is a ``height, width`` tuple as used by Numpy. The
     >>> import rasterio
     >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> src.driver
-    u'GTiff'
+    'GTiff'
     >>> src.height, src.width
     (718, 791)
     >>> src.shape
@@ -36,7 +36,7 @@ coordinates to coordinates in that reference system.
 .. code-block:: python
 
     >>> src.crs
-    {'init': u'epsg:32618'}
+    CRS({'init': 'epsg:32618'})
     >>> src.affine
     Affine(300.0379266750948, 0.0, 101985.0,
            0.0, -300.041782729805, 2826915.0)
