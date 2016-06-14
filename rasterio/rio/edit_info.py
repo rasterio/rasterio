@@ -59,6 +59,7 @@ def transform_handler(ctx, param, value):
         except ValueError:
             pass
         try:
+            # This is the only place where we allow a GDAL geotransform
             if tastes_like_gdal(value):
                 retval = affine.Affine.from_gdal(*value)
             else:

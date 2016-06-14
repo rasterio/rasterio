@@ -21,7 +21,7 @@ def guard_transform(transform):
     if not isinstance(transform, Affine):
         if tastes_like_gdal(transform):
             raise ValueError(
-                "GDAL-style transforms have been deprecated in 1.0.  This "
+                "GDAL-style transforms have been deprecated.  This "
                 "exception will be raised for a period of time to highlight "
                 "potentially confusing errors, but will eventually be removed.")
         else:
