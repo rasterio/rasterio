@@ -31,22 +31,20 @@ def get_plt():
         msg = "Could not import matplotlib\n"
         msg += "matplotlib required for plotting functions"
         raise ImportError(msg)
-   
 
-def show(source, with_bounds=True,\
-         contour=False, contour_label_kws=None,\
-         ax=None, title=None, 
-         **kwargs):
+
+def show(source, with_bounds=True, contour=False, contour_label_kws=None,
+         ax=None, title=None, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
     ----------
-    source : array-like in raster axis order, 
-        or (raster dataset, bidx) tuple, 
-        or raster dataset, 
+    source : array-like in raster axis order,
+        or (raster dataset, bidx) tuple,
+        or raster dataset,
         If the tuple (raster dataset, bidx),
-        selects band `bidx` from raster.  If raster dataset display the rgb image 
-        as defined in the colorinterp metadata, or default to first band. 
+        selects band `bidx` from raster.  If raster dataset display the rgb image
+        as defined in the colorinterp metadata, or default to first band.
     with_bounds : bool (opt)
         Whether to change the image extent to the spatial bounds of the image,
         rather than pixel coordinates. Only works when source is
@@ -61,8 +59,8 @@ def show(source, with_bounds=True,\
     title : str, optional
         Title for the figure.
     **kwargs : key, value pairings optional
-        These will be passed to the matplotlib imshow or contour method 
-        depending on contour argument. 
+        These will be passed to the matplotlib imshow or contour method
+        depending on contour argument.
         See full lists at:
         http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.imshow
         or
@@ -74,20 +72,20 @@ def show(source, with_bounds=True,\
         Axes with plot.
     """
     plt = get_plt()
-        
+
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
-    elif  isinstance(source, RasterReader):
+    elif isinstance(source, RasterReader):
         if source.count == 1:
             arr = source.read(1, masked=True)
         else:
             try:
                 source_colorinterp = {source.colorinterp(n): n for n in source.indexes}
                 colorinterp = rasterio.enums.ColorInterp
-                rgb_indexes = [source_colorinterp[ci] for ci in 
-                              (colorinterp.red, colorinterp.green, colorinterp.blue)]
+                rgb_indexes = [source_colorinterp[ci] for ci in
+                               (colorinterp.red, colorinterp.green, colorinterp.blue)]
                 arr = source.read(rgb_indexes, masked=True)
                 arr = reshape_as_image(arr)
 
@@ -96,9 +94,9 @@ def show(source, with_bounds=True,\
             except KeyError:
                 arr = source.read(1, masked=True)
     else:
-        #The source is a numpy array reshape it to image if it has 3+ bands
+        # The source is a numpy array reshape it to image if it has 3+ bands
         source = np.ma.squeeze(source)
-        if len(source.shape) >= 3 :
+        if len(source.shape) >= 3:
             arr = reshape_as_image(source)
         else:
             arr = source
@@ -109,16 +107,15 @@ def show(source, with_bounds=True,\
         ax = plt.gca()
 
     if contour:
-        #set some defaults if they were not specified
-        if not 'cmap' in kwargs:
+        if 'cmap' not in kwargs:
             kwargs['colors'] = kwargs.get('colors', 'red')
         kwargs['linewidths'] = kwargs.get('linewidths', 1.5)
         kwargs['alpha'] = kwargs.get('alpha', 0.8)
 
         C = ax.contour(arr, origin='upper', **kwargs)
         if contour_label_kws is None:
-            #no explicit label kws passed use defaults 
-            contour_label_kws = dict(fontsize=8, 
+            # no explicit label kws passed use defaults
+            contour_label_kws = dict(fontsize=8,
                                      inline=True)
         if contour_label_kws:
             ax.clabel(C, **contour_label_kws)
