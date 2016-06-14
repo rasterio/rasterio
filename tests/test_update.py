@@ -33,12 +33,12 @@ def test_update_band(data):
 def test_update_spatial(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
-        f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
+        f.transform = affine.Affine(1.0, 0.0, 1.0,
+                                    0.0, -1.0, 0.0)
         f.crs = {'init': 'epsg:4326'}
     with rasterio.open(tiffname) as f:
-        assert f.transform == affine.Affine.from_gdal(
-            1.0, 1.0, 0.0,
-            0.0, 0.0, -1.0)
+        assert f.transform == affine.Affine(1.0, 0.0, 1.0,
+                                            0.0, -1.0, 0.0)
         assert f.transform.to_gdal() == (1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         assert f.crs == {'init': 'epsg:4326'}
 
@@ -46,12 +46,12 @@ def test_update_spatial(data):
 def test_update_spatial_epsg(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
-        f.transform = affine.Affine.from_gdal(1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
+        f.transform = affine.Affine(1.0, 0.0, 1.0,
+                                    0.0, -1.0, 0.0)
         f.crs = 'EPSG:4326'
     with rasterio.open(tiffname) as f:
-        assert f.transform == affine.Affine.from_gdal(
-            1.0, 1.0, 0.0,
-            0.0, 0.0, -1.0)
+        assert f.transform == affine.Affine(1.0, 0.0, 1.0,
+                                            0.0, -1.0, 0.0)
         assert f.transform.to_gdal() == (1.0, 1.0, 0.0, 0.0, 0.0, -1.0)
         assert f.crs == {'init': 'epsg:4326'}
 

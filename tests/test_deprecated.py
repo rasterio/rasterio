@@ -9,12 +9,14 @@ from rasterio.transform import guard_transform
 
 
 def test_open_affine_and_transform(path_rgb_byte_tif):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         with rasterio.open(
                 path_rgb_byte_tif,
                 affine=affine.Affine.identity(),
                 transform=affine.Affine.identity()) as src:
             pass
+        for word in 'affine', 'transform', 'exclusive':
+            assert word in str(e)
 
 
 def test_open_transform_not_Affine(path_rgb_byte_tif):

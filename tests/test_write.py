@@ -129,8 +129,9 @@ def test_write_float(tmpdir):
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine.from_gdal(101985.0, 300.0379266750948, 0.0,
-                                        2826915.0, 0.0, -300.041782729805)
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
+
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -149,8 +150,8 @@ def test_write_crs_transform(tmpdir):
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine.from_gdal(101985.0, 300.0379266750948, 0.0,
-                                        2826915.0, 0.0, -300.041782729805)
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -170,8 +171,8 @@ def test_write_crs_transform_2(tmpdir):
     """Using 'EPSG:32618' as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine.from_gdal(101985.0, 300.0379266750948, 0.0,
-                                        2826915.0, 0.0, -300.041782729805)
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -190,8 +191,8 @@ def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = affine.Affine.from_gdal(101985.0, 300.0379266750948, 0.0,
-                                        2826915.0, 0.0, -300.041782729805)
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
     crs_wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
     with rasterio.open(
             name, 'w',

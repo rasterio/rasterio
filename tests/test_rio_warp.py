@@ -369,7 +369,8 @@ def test_warp_reproject_like(runner, tmpdir):
     likename = str(tmpdir.join('like.tif'))
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": affine.Affine.from_gdal(-106.523, 0.001, 0, 39.6395, 0, -0.001),
+        "transform": affine.Affine(0.001, 0, -106.523,
+                                   0, -0.001, 39.6395),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
