@@ -1,18 +1,18 @@
 Welcome to the Rasterio project. Here's how we work.
 
 Code of Conduct
-===============
+---------------
 
 First of all: the Rasterio project has a code of conduct. Please read the
 CODE_OF_CONDUCT.txt file, it's important to all of us.
 
 Rights
-======
+------
 
 The BSD license (see LICENSE.txt) applies to all contributions.
 
 Issue Conventions
-=================
+-----------------
 
 Rasterio is a relatively new project and highly active. We have bugs, both
 known and unknown.
@@ -34,7 +34,7 @@ issue are especially helpful!
 Rasterio is not at 1.0 yet and issues proposing new features are welcome.
 
 Design Principles
-=================
+-----------------
 
 Rasterio's API is different from GDAL's API and this is intentional.
 
@@ -51,7 +51,7 @@ Rasterio's API is different from GDAL's API and this is intentional.
   variables.
 
 Git Conventions
-===============
+---------------
 
 We use a variant of centralized workflow described in the `Git Book
 <https://git-scm.com/book/en/v2/Distributed-Git-Distributed-Workflows>`__.  We
@@ -66,7 +66,7 @@ to give other developers a heads up and to provide an opportunity for valuable
 early feedback.
 
 Code Conventions
-================
+----------------
 
 The ``rasterio`` namespace contains both Python and C extension modules. All
 C extension modules are written using `Cython <http://cython.org/>`__. The
@@ -87,7 +87,7 @@ We aspire to 100% coverage for Python modules but overage of the Cython code is
 a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
 
 Development Environment
-=======================
+-----------------------
 
 Developing Rasterio requires Python 2.7 or any final release after and
 including 3.4.  We prefer developing with the most recent version of Python
@@ -98,7 +98,7 @@ with C or C++.  See the Windows install instructions in the `readme
 <README.rst>`__ for more information about building on Windows.
 
 Initial Setup
--------------
+^^^^^^^^^^^^^
 
 First, clone Rasterio's ``git`` repo:
 
@@ -116,7 +116,7 @@ for the executable.  If this occurs try deactivating and reactivating the
 environment.
 
 Installing GDAL
----------------
+^^^^^^^^^^^^^^^
 
 The GDAL library and its headers are required to build Rasterio. We do not
 have currently have guidance for any platforms other than Linux and OS X.
@@ -137,7 +137,7 @@ On OS X, Homebrew is a reliable way to get GDAL.
     $ brew install gdal
 
 Python build requirements
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Provision a virtualenv with Rasterio's build requirements.  Rasterio's
 ``setup.py`` script will not run unless Cython and Numpy are installed, so do
@@ -157,7 +157,7 @@ then:
     $ pip install -r requirements-dev.txt
 
 Installing Rasterio
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 Rasterio, its Cython extensions, normal dependencies, and dev dependencies can
 be installed with ``$ pip``.  Installing Rasterio in editable mode while
@@ -188,7 +188,7 @@ The dependencies required to build the docs can be installed with:
     $ pip install -e .[docs]
 
 Running the tests
------------------
+^^^^^^^^^^^^^^^^^
 
 Rasterio's tests live in ``tests <tests/>`` and generally match the main
 package layout.
