@@ -5,6 +5,7 @@ import affine
 import pytest
 
 import rasterio
+from rasterio.transform import guard_transform
 
 
 def test_open_affine_and_transform(path_rgb_byte_tif):
@@ -30,3 +31,11 @@ def test_affine_warning(path_rgb_byte_tif):
                 path_rgb_byte_tif,
                 affine=affine.Affine.identity()) as src:
             pass
+
+
+def test_guard_transform_gdal_exception(path_rgb_byte_tif):
+    """A GDAL-style transform passed to `guard_transform()` should fail."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        transform = src.transform
+    with pytest.raises(ValueError):
+        guard_transform(transform.to_gdal())

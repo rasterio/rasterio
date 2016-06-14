@@ -171,8 +171,8 @@ def open(path, mode='r', driver=None, width=None, height=None,
             RuntimeWarning,
             stacklevel=2)
 
-    if transform is not None and not isinstance(transform, affine.Affine):
-        raise TypeError("transform must be an instance of affine.Affine()")
+    if transform is not None:
+        transform = guard_transform(transform)
 
     # Get AWS credentials if we're attempting to access a raster
     # on S3.

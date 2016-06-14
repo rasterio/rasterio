@@ -1,14 +1,15 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
-import json
-import logging
 
+import json
+
+import affine
 import click
 
-from . import options
+from rasterio.rio import options
 import rasterio
 import rasterio.crs
-from rasterio.transform import guard_transform
+from rasterio.transform import guard_transform, tastes_like_gdal
 
 
 # Handlers for info module options.
@@ -58,7 +59,10 @@ def transform_handler(ctx, param, value):
         except ValueError:
             pass
         try:
-            retval = guard_transform(value)
+            if tastes_like_gdal(value):
+                retval = affine.Affine.from_gdal(*value)
+            else:
+                retval = guard_transform(value)
         except:
             raise click.BadParameter(
                 "'%s' is not recognized as an Affine or GDAL "
