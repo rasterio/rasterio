@@ -34,6 +34,11 @@ from rasterio.vfs import parse_path, vsi_path
 log = logging.getLogger(__name__)
 
 
+# These drivers are known to produce invalid results with
+# IndirectRasterUpdater. Save users the trouble and fail fast.
+BAD_WRITE_DRIVERS = ("netCDF", )
+
+
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
@@ -2170,14 +2175,10 @@ def writer(path, mode, **kwargs):
             "VFS '{0}' datasets can not be created or updated.".format(
                 scheme))
 
-    # These drivers are known to produce invalid results with
-    # IndirectRasterUpdater. Save users the trouble and fail fast.
-    bad_write_drivers = ("netCDF", )
-
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':
             return RasterUpdater(path, mode, **kwargs)
-        elif kwargs['driver'] in bad_write_drivers:
+        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
             raise RasterioIOError(
                 "Rasterio does not support writing "
                 "with {} driver".format(kwargs['driver']))
@@ -2203,7 +2204,7 @@ def writer(path, mode, **kwargs):
 
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
-        elif kwargs['driver'] in bad_write_drivers:
+        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
             raise RasterioIOError(
                 "Rasterio does not support updating "
                 "with {} driver".format(kwargs['driver']))

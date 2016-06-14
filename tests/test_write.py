@@ -8,6 +8,7 @@ import pytest
 
 import rasterio
 from rasterio.errors import RasterioIOError
+from rasterio._io import BAD_WRITE_DRIVERS
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -275,10 +276,11 @@ def test_write_noncontiguous(tmpdir):
             dst.write(arr[:, :, i], indexes=i + 1)
 
 
-def test_write_blacklist(tmpdir):
-    name = str(tmpdir.join("sst.nc"))
+@pytest.mark.parametrize("driver", BAD_WRITE_DRIVERS)
+def test_write_blacklist(tmpdir, driver):
+    name = str(tmpdir.join("data.test"))
     with pytest.raises(RasterioIOError) as exc_info:
-        rasterio.open(name, 'w', driver='netCDF', width=100, height=100,
+        rasterio.open(name, 'w', driver=driver, width=100, height=100,
                       count=1, dtype='uint8')
     exc = str(exc_info.value)
-    assert 'Rasterio does not support writing with netCDF driver' in exc
+    assert "Rasterio does not support writing with {} driver".format(driver) in exc
