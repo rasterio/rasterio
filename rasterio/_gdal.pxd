@@ -14,6 +14,7 @@ cdef extern from "cpl_string.h":
 
     int CSLFindName (char **papszStrList, const char *pszName)
     const char * CSLFetchNameValue (char **papszStrList, const char *pszName)
+    int CSLFetchBoolean (char **papszStrList, const char *pszName, int default)
     char ** CSLSetNameValue (char **list, char *name, char *val)
     void    CSLDestroy (char **list)
 

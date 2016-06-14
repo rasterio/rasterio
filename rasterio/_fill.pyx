@@ -19,8 +19,8 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
     cdef void *image_band = NULL
     cdef void *mask_dataset = NULL
     cdef void *mask_band = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterReader mrdr
+    cdef _io.RasterReaderBase rdr
+    cdef _io.RasterReaderBase mrdr
     cdef char **alg_options = NULL
 
     if dtypes.is_ndarray(image):

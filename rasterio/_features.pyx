@@ -51,8 +51,8 @@ def _shapes(image, mask, connectivity, transform):
     cdef void *hfs = NULL
     cdef void *hlayer = NULL
     cdef void *fielddefn = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterReader mrdr
+    cdef _io.RasterReaderBase rdr
+    cdef _io.RasterReaderBase mrdr
     cdef char **options = NULL
 
     cdef InMemoryRaster mem_ds = None
@@ -171,9 +171,9 @@ def _sieve(image, size, out, mask, connectivity):
     cdef void *in_band = NULL
     cdef void *out_band = NULL
     cdef void *mask_band = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterUpdater udr
-    cdef _io.RasterReader mask_reader
+    cdef _io.RasterReaderBase rdr
+    cdef _io.RasterUpdaterBase udr
+    cdef _io.RasterReaderBase mask_reader
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
 

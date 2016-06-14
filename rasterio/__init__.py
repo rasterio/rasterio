@@ -173,20 +173,20 @@ def open(path, mode='r', driver=None, width=None, height=None,
     # be taken over by the dataset's context manager if it is not
     # None.
     if mode == 'r':
-        from rasterio._io import RasterReader
-        s = RasterReader(path)
+        from rasterio.dataio import RasterDataReader
+        s = RasterDataReader(path)
     elif mode == 'r+':
-        from rasterio._io import writer
-        s = writer(path, mode)
+        from rasterio.dataio import get_writer_for_path
+        s = get_writer_for_path(path)(path, mode)
     elif mode == 'r-':
-        from rasterio._base import DatasetReader
-        s = DatasetReader(path)
+        from rasterio.metadataio import RasterMetadataReader
+        s = RasterMetadataReader(path)
     elif mode == 'w':
-        from rasterio._io import writer
-        s = writer(path, mode, driver=driver,
-                   width=width, height=height, count=count,
-                   crs=crs, transform=transform, dtype=dtype,
-                   nodata=nodata, **kwargs)
+        from rasterio.dataio import get_writer_for_driver
+        s = get_writer_for_driver(driver)(
+                path, mode, driver=driver, width=width, height=height,
+                count=count, crs=crs, transform=transform, dtype=dtype,
+                nodata=nodata, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
@@ -253,6 +253,7 @@ def drivers(**kwargs):
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
 
+
 def band(ds, bidx):
     """Wraps a dataset and a band index up as a 'Band'
 
@@ -308,19 +309,24 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
 
 
 def get_data_window(arr, nodata=None):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    warnings.warn(
+        "Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.get_data_window(arr, nodata)
 
 
 def window_union(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    warnings.warn(
+        "Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.union(data)
 
 
 def window_intersection(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    warnings.warn(
+        "Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.intersection(data)
 
+
 def windows_intersect(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
+    warnings.warn(
+        "Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.intersect(data)

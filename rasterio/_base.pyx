@@ -40,7 +40,65 @@ def gdal_version():
     return ver_b.decode('utf-8')
 
 
-cdef class DatasetReader(object):
+def get_dataset_driver(path):
+    """Return the name of the driver that would be used to open the
+    dataset at the given path."""
+    cdef void *hds = NULL
+    cdef void *drv = NULL
+    cdef const char *drv_name = NULL
+    cdef const char *fname = NULL
+
+    name_b = path.encode('utf-8')
+    fname = name_b
+    try:
+        with CPLErrors() as cple:
+            hds = _gdal.GDALOpen(fname, 0)
+            cple.check()
+    except CPLE_OpenFailed as exc:
+        raise RasterioIOError(str(exc))
+
+    drv = _gdal.GDALGetDatasetDriver(hds)
+    drv_name = _gdal.GDALGetDriverShortName(drv)
+    drv_name_b = drv_name
+    driver = drv_name_b.decode('utf-8')
+    _gdal.GDALClose(hds)
+
+    return driver
+
+
+def driver_can_create(name):
+    """Return True if the driver has CREATE capability"""
+    cdef void *driver = NULL
+    cdef const char *driver_name = NULL
+    cdef char **metdata = NULL
+
+    name_b = name.encode('utf-8')
+    driver_name = name_b
+    driver = _gdal.GDALGetDriverByName(driver_name)
+    if driver == NULL:
+        raise ValueError("No such driver: %s", name)
+
+    metadata = _gdal.GDALGetMetadata(driver, NULL)
+    return bool(_gdal.CSLFetchBoolean(metadata, 'DCAP_CREATE', 0))
+
+
+def driver_can_create_copy(name):
+    """Return True if the driver has CREATE_COPY capability"""
+    cdef void *driver = NULL
+    cdef const char *driver_name = NULL
+    cdef char **metdata = NULL
+
+    name_b = name.encode('utf-8')
+    driver_name = name_b
+    driver = _gdal.GDALGetDriverByName(driver_name)
+    if driver == NULL:
+        raise ValueError("No such driver: %s", name)
+
+    metadata = _gdal.GDALGetMetadata(driver, NULL)
+    return bool(_gdal.CSLFetchBoolean(metadata, 'DCAP_CREATECOPY', 0))
+
+
+cdef class DatasetReaderBase(object):
 
     def __init__(self, path, options=None):
         self.name = path
@@ -55,7 +113,7 @@ cdef class DatasetReader(object):
         self._crs = None
         self._crs_wkt = None
         self._read = False
-    
+
     def __repr__(self):
         return "<%s RasterReader name='%s' mode='%s'>" % (
             self.closed and 'closed' or 'open', 
@@ -97,8 +155,11 @@ cdef class DatasetReader(object):
         log.debug("Dataset %r is started.", self)
 
 
-    cdef void *band(self, int bidx) except NULL:
+    cdef void *band(self, object bidx) except NULL:
+        cdef int b = bidx
         cdef void *hband = NULL
+        if self._hds == NULL:
+            raise ValueError("Dataset is unopened.")
         try:
             with CPLErrors() as cple:
                 hband = _gdal.GDALGetRasterBand(self._hds, bidx)
@@ -721,11 +782,8 @@ cdef class DatasetReader(object):
         """
         cdef void *hband = NULL
         cdef int xoff, yoff, width, height
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband == NULL:
-            raise ValueError("NULL band")
+
+        hband = self.band(bidx)
         if not window:
             xoff = yoff = 0
             width, height = self.width, self.height

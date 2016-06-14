@@ -44,6 +44,7 @@ def test_no_crs(tmpdir):
             dtype=rasterio.uint8) as dst:
         dst.write(np.ones((100, 100), dtype=rasterio.uint8), indexes=1)
 
+
 def test_context(tmpdir):
     name = str(tmpdir.join("test_context.tif"))
     with rasterio.open(
@@ -58,13 +59,13 @@ def test_context(tmpdir):
         assert s.height == 100
         assert s.shape == (100, 100)
         assert s.indexes == (1,)
-        assert repr(s) == "<open RasterUpdater name='%s' mode='w'>" % name
+        assert repr(s) == "<open RasterDataWriter name='%s' mode='w'>" % name
     assert s.closed
     assert s.count == 1
     assert s.width == 100
     assert s.height == 100
     assert s.shape == (100, 100)
-    assert repr(s) == "<closed RasterUpdater name='%s' mode='w'>" % name
+    assert repr(s) == "<closed RasterDataWriter name='%s' mode='w'>" % name
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "GTiff" in info
     assert "Size is 100, 100" in info
@@ -79,8 +80,11 @@ def test_write_ubyte(tmpdir):
             driver='GTiff', width=100, height=100, count=1,
             dtype=a.dtype) as s:
         s.write(a, indexes=1)
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
-    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.0" in info
+
+
 def test_write_ubyte_multi(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -89,8 +93,11 @@ def test_write_ubyte_multi(tmpdir):
             driver='GTiff', width=100, height=100, count=1,
             dtype=a.dtype) as s:
         s.write(a, 1)
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
-    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.0" in info
+
+
 def test_write_ubyte_multi_list(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
     a = np.array([np.ones((100, 100), dtype=rasterio.ubyte) * 127])
@@ -99,8 +106,11 @@ def test_write_ubyte_multi_list(tmpdir):
             driver='GTiff', width=100, height=100, count=1,
             dtype=a.dtype) as s:
         s.write(a, [1])
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
-    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.0" in info
+
+
 def test_write_ubyte_multi_3(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
     arr = np.array(3 * [np.ones((100, 100), dtype=rasterio.ubyte) * 127])
@@ -109,8 +119,10 @@ def test_write_ubyte_multi_3(tmpdir):
             driver='GTiff', width=100, height=100, count=3,
             dtype=arr.dtype) as s:
         s.write(arr)
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
-    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.0" in info
+
 
 def test_write_float(tmpdir):
     name = str(tmpdir.join("test_write_float.tif"))
@@ -122,8 +134,10 @@ def test_write_float(tmpdir):
         assert s.dtypes == (rasterio.float32, rasterio.float32)
         s.write(a, indexes=1)
         s.write(a, indexes=2)
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=42.000, Maximum=42.000, Mean=42.000, StdDev=0.000" in info
+
 
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -145,6 +159,7 @@ def test_write_crs_transform(tmpdir):
     # (precision varies slightly by platform)
     assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
 
+
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -165,6 +180,7 @@ def test_write_crs_transform_affine(tmpdir):
     # (precision varies slightly by platform)
     assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
 
+
 def test_write_crs_transform_2(tmpdir):
     """Using 'EPSG:32618' as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -184,6 +200,7 @@ def test_write_crs_transform_2(tmpdir):
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+
 
 def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
@@ -206,14 +223,17 @@ def test_write_crs_transform_3(tmpdir):
     # (precision varies slightly by platform)
     assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
 
+
 def test_write_meta(tmpdir):
     name = str(tmpdir.join("test_write_meta.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     meta = dict(driver='GTiff', width=100, height=100, count=1)
     with rasterio.open(name, 'w', dtype=a.dtype, **meta) as s:
         s.write(a, indexes=1)
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
-    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.0" in info
+
 
 def test_write_nodata(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))
@@ -224,7 +244,8 @@ def test_write_nodata(tmpdir):
             dtype=a.dtype, nodata=0) as s:
         s.write(a, indexes=1)
         s.write(a, indexes=2)
-    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    info = subprocess.check_output(
+        ["gdalinfo", "-stats", name]).decode('utf-8')
     assert "NoData Value=0" in info
 
 
@@ -251,6 +272,7 @@ def test_write_lzw(tmpdir):
         s.write(a, indexes=1)
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "LZW" in info
+
 
 def test_write_noncontiguous(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))

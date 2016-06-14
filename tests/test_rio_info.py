@@ -3,12 +3,10 @@ import logging
 import sys
 
 import click
-from click import Context
 from click.testing import CliRunner
 import pytest
 
 import rasterio
-from rasterio.rio import info
 from rasterio.rio.edit_info import (edit, all_handler, crs_handler,
                                     tags_handler, transform_handler)
 from rasterio.rio.main import main_group
@@ -132,7 +130,7 @@ class MockOption:
 def test_all_callback_pass(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, None) == None
+    assert all_handler(ctx, None, None) is None
 
 
 def test_all_callback(data):
@@ -278,7 +276,7 @@ def test_info_err():
     runner = CliRunner()
     result = runner.invoke(
         main_group, ['info', 'tests'])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
 
 
 def test_info():
@@ -589,7 +587,9 @@ def test_bounds_seq_rs():
     ])
     assert result.exit_code == 0
     assert result.output == (
-        '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
+        '\x1e[-78.96, 23.56, -76.57, 25.55]\n'
+        '\x1e[-78.96, 23.56, -76.57, 25.55]\n')
+
 
 def test_insp():
     runner = CliRunner()

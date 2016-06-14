@@ -1,6 +1,6 @@
 # Base class.
 
-cdef class DatasetReader:
+cdef class DatasetReaderBase:
     # Read-only access to dataset metadata. No IO!
     
     cdef void *_hds
@@ -21,7 +21,7 @@ cdef class DatasetReader:
     cdef public object _nodatavals
     cdef public object _read
 
-    cdef void *band(self, int bidx) except NULL
+    cdef void *band(self, object bidx) except NULL
 
 
 cdef void *_osr_from_crs(object crs)

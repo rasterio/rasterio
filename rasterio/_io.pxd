@@ -29,19 +29,19 @@ cdef extern from "gdal.h":
         GF_Write
 
 
-cdef class RasterReader(_base.DatasetReader):
+cdef class RasterReaderBase(_base.DatasetReaderBase):
     # Read-only access to raster data and metadata.
     pass
 
 
-cdef class RasterUpdater(RasterReader):
+cdef class RasterUpdaterBase(RasterReaderBase):
     # Read-write access to raster data and metadata.
     cdef readonly object _init_dtype
     cdef readonly object _init_nodata
     cdef readonly object _options
 
 
-cdef class IndirectRasterUpdater(RasterUpdater):
+cdef class IndirectRasterUpdater(RasterUpdaterBase):
     pass
 
 

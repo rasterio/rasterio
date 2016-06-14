@@ -234,8 +234,8 @@ def _reproject(
     cdef void *hdsout = NULL
     cdef void *hbandin = NULL
     cdef void *hbandout = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterUpdater udr
+    cdef _io.RasterReaderBase rdr
+    cdef _io.RasterUpdaterBase udr
     cdef _io.GDALAccess GA
     cdef double gt[6]
     cdef char *srcwkt = NULL
