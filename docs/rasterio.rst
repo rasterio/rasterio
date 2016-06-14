@@ -11,11 +11,11 @@ Submodules
 
 .. toctree::
 
-   rasterio.aws
    rasterio.coords
    rasterio.crs
    rasterio.dtypes
    rasterio.enums
+   rasterio.env
    rasterio.errors
    rasterio.features
    rasterio.fill
@@ -26,19 +26,6 @@ Submodules
    rasterio.sample
    rasterio.transform
    rasterio.vfs
-   rasterio.warnings
    rasterio.warp
    rasterio.windows
 
-
-Source Interface
------------------
-
-Instances of these classes are returned from
-``rasterio.open``
-
-.. autoclass:: rasterio._io.RasterReader
-    :inherited-members:
-
-.. autoclass:: rasterio._io.RasterUpdater
-    :inherited-members:
