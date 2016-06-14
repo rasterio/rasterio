@@ -14,7 +14,7 @@ import numpy as np
 
 import rasterio
 from rasterio._io import RasterReader
-
+from rasterio.transform import guard_transform
 from rasterio.compat import zip_longest
 
 logger = logging.getLogger(__name__)
@@ -152,10 +152,11 @@ def plotting_extent(source, transform=None):
         if transform is None:
             raise ValueError(
                 "transform is required if source is an array")
+        transform = guard_transform(transform)
         rows, cols = source.shape[0:2]
         left, top = transform * (0, 0)
         right, bottom = transform * (cols, rows)
-        extent = [left, right, bottom, top]
+        extent = (left, right, bottom, top)
 
     return extent
 
