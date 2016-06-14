@@ -34,6 +34,11 @@ from rasterio.vfs import parse_path, vsi_path
 log = logging.getLogger(__name__)
 
 
+# These drivers are known to produce invalid results with
+# IndirectRasterUpdater. Save users the trouble and fail fast.
+BAD_WRITE_DRIVERS = ("netCDF", )
+
+
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
@@ -2139,6 +2144,24 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
 
 def writer(path, mode, **kwargs):
+    """Get a writer instance for path
+
+    Parameters
+    ----------
+    path: Path to new raster (for mode=='w') or existing raster to be updated
+    mode: string, open mode, one of ('w', 'r+')
+
+    Returns
+    -------
+    RasterUpdater in the case of GeoTiff
+        writes directly to disk
+    IndirectRasterUpdater for any other driver
+        using temporary MEM driver before copying data
+        to the final destination
+
+    Raises ``RasterioIOError` if driver is blacklisted from writing
+    due to known bugs in the IndirectRasterUpdater approach
+    """
     # Dispatch to direct or indirect writer/updater according to the
     # format driver's capabilities.
     cdef void *hds = NULL
@@ -2155,6 +2178,10 @@ def writer(path, mode, **kwargs):
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':
             return RasterUpdater(path, mode, **kwargs)
+        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
+            raise RasterioIOError(
+                "Rasterio does not support writing "
+                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode, **kwargs)
     else:
@@ -2177,6 +2204,10 @@ def writer(path, mode, **kwargs):
 
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
+        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
+            raise RasterioIOError(
+                "Rasterio does not support updating "
+                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode)
 
