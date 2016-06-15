@@ -42,11 +42,11 @@ thing as ``open()``, raising an exception immediately.
     >>> open('/lol/wut.tif')
     Traceback (most recent call last):
      ...
-    IOError: [Errno 2] No such file or directory: '/lol/wut.tif'
+    FileNotFoundError: [Errno 2] No such file or directory: '/lol/wut.tif'
     >>> rasterio.open('/lol/wut.tif')
     Traceback (most recent call last):
      ...
-    RasterioIOError: No such file or directory
+    rasterio.errors.RasterioIOError: No such file or directory
 
 Datasets generally have one or more bands (or layers). Following the GDAL
 convention, these are indexed starting with the number 1. The first band of
@@ -79,7 +79,7 @@ be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
 .. code-block:: python
 
     >>> for i, dtype, nodataval in zip(src.indexes, src.dtypes, src.nodatavals):
-    ...     print i, dtype, nodataval
+    ...     print(i, dtype, nodataval)
     ...
     1 uint8 0.0
     2 uint8 0.0
@@ -111,7 +111,7 @@ This is the same behavior as Python's ``file``.
     >>> f.read()
     Traceback (most recent call last):
      ...
-    ValueError: I/O operation on closed file
+    ValueError: I/O operation on closed file.
 
 As Python ``file`` objects can, Rasterio datasets can manage the entry into 
 and exit from runtime contexts created using a ``with`` statement. This 
@@ -122,12 +122,12 @@ the the block.
 
     >>> with rasterio.open('tests/data/RGB.byte.tif', 'r') as one:
     ...     with rasterio.open('tests/data/RGB.byte.tif', 'r') as two:
-    ...        print two
-    ...     print one
+    ...        print(two)
+    ...     print(one)
     <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
     <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
 
-    >>> print two
+    >>> print(two)
     <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
-    >>> print one
+    >>> print(one)
     <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>

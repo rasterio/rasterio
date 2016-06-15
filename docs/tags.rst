@@ -33,8 +33,8 @@ for the first band, accessed using the positional band index argument of ``tags(
 
 .. code-block:: pycon
 
-    >>> src.tags(1)
-    {'STATISTICS_MEAN': '29.947726688477', 'STATISTICS_MINIMUM': '0', 'STATISTICS_MAXIMUM': '255', 'STATISTICS_STDDEV': '52.340921626611'}
+    >>> src.tags(1)['STATISTICS_MEAN']
+    '29.947726688477'
     
 These are the tags that came with the sample data I'm using to test rasterio. In
 practice, maintaining stats in the tags can be unreliable as there is no automatic
@@ -47,7 +47,7 @@ and 'RPC'. You can get the tags from these namespaces using the `ns` keyword of
 .. code-block:: pycon
 
     >>> src.tags(ns='IMAGE_STRUCTURE')
-    {u'INTERLEAVE': u'PIXEL'}
+    {'INTERLEAVE': 'PIXEL'}
     >>> src.tags(ns='SUBDATASETS')
     {}
     >>> src.tags(ns='RPC')
