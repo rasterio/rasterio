@@ -141,7 +141,7 @@ def plotting_extent(source, transform=None):
 
     Parameters
     ----------
-    source : raster dataset or array
+    source : raster dataset or array in image order (see reshape_as_image)
     transform: Affine, required if source is array
     """
     if hasattr(source, 'bounds'):
