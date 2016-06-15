@@ -28,9 +28,10 @@ def test_file_in_handler_no_vfs_nonexistent():
 
 def test_file_in_handler_no_vfs():
     """file path is expanded to abspath"""
+    from rasterio.rio.options import abspath_forward_slashes
     ctx = MockContext()
     retval = file_in_handler(ctx, 'INPUT', 'tests/data/RGB.byte.tif')
-    assert retval == os.path.abspath('tests/data/RGB.byte.tif')
+    assert retval == abspath_forward_slashes('tests/data/RGB.byte.tif')
 
 
 def test_file_in_handler_bad_scheme():
@@ -52,7 +53,6 @@ def test_file_in_handler_with_vfs():
     """vfs file path path is expanded"""
     ctx = MockContext()
     retval = file_in_handler(ctx, 'INPUT', 'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
-    assert retval.startswith('zip:///')
     assert retval.endswith('tests/data/files.zip!/inputs/RGB.byte.tif')
 
 

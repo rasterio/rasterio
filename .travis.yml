@@ -34,6 +34,10 @@ python:
   - "2.7"
   - "3.4"
   - "3.5"
+before_script: # configure a headless display to test matplotlib
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - "sleep 3"
 before_install:
   - pip install -U pip
   - pip install wheel
@@ -47,6 +51,7 @@ install:
   - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
   - "pip install coveralls>=1.1"
   - "pip install -e .[test]"
+  - "pip install -e .[plot]"
   - "rio --version"
   - "rio --gdal-version"
 script:
