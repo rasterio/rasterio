@@ -144,14 +144,13 @@ def plotting_extent(source, transform=None):
     source : raster dataset or array
     transform: Affine, required if source is array
     """
-    try:
+    if hasattr(source, 'bounds'):
         extent = (source.bounds.left, source.bounds.right,
                   source.bounds.bottom, source.bounds.top)
-    except AttributeError:
-        # no bounds attribute, try array
-        if transform is None:
-            raise ValueError(
-                "transform is required if source is an array")
+    elif not transform:
+        raise ValueError(
+            "transform is required if source is an array")
+    else:
         transform = guard_transform(transform)
         rows, cols = source.shape[0:2]
         left, top = transform * (0, 0)

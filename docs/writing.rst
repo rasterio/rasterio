@@ -26,17 +26,18 @@ An array is written to a new single band TIFF.
     # context manager.
     with rasterio.Env():
 
-        # Write the product as a raster band to a new 8-bit file. For
-        # the new file's profile, we start with the meta attributes of
-        # the source file, but then change the band count to 1, set the
-        # dtype to uint8, and specify LZW compression.
+        # Write an array as a raster band to a new 8-bit file. For
+        # the new file's profile, we start with the profile of the source
         profile = src.profile
+
+        # And then change the band count to 1, set the
+        # dtype to uint8, and specify LZW compression.
         profile.update(
             dtype=rasterio.uint8,
             count=1,
             compress='lzw')
 
-        with rasterio.open('example-total.tif', 'w', **profile) as dst:
+        with rasterio.open('example.tif', 'w', **profile) as dst:
             dst.write(array.astype(rasterio.uint8), 1)
 
     # At the end of the ``with rasterio.Env()`` block, context
