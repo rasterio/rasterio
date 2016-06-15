@@ -7,7 +7,7 @@ import click
 from cligj import files_inout_arg, format_opt
 
 import rasterio
-from rasterio import crs
+from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
@@ -168,7 +168,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
             elif dst_crs is not None:
                 try:
-                    dst_crs = crs.from_string(dst_crs)
+                    dst_crs = CRS.from_string(dst_crs)
                 except ValueError as err:
                     raise click.BadParameter(
                         str(err), param='dst_crs', param_hint='dst_crs')

@@ -1,8 +1,57 @@
 Changes
 =======
 
+0.36.0 (2016-06-14)
+-------------------
+
+Bug fixes:
+
+- rio-merge now copies colormaps to output files (#774, #778).
+- The correct `--force-overwrite` and `--output` usage is now provided in the
+  case of a `FileOverwriteError` (#750).
+- Passing undefined CRS to `reproject` no longer causes a segfault (#749).
+- GDAL's invert projection check is always used by default in reprojecting
+  (#780).
+- Forward slashes are always used for GDAL VSI paths (`/vsizip/` etc) instead
+  of `os.path.sep` (#754, #789).
+
+Documentation:
+
+- Contributing guidelines have been added (#701).
+- Axis order has been corrected in image processing doc (#700).
+- A framework for comprehensive documentaton has been created (#713, #723,
+  #729, #737, #738, #739, #740, #748, #756, #760).
+
+New features:
+
+- `--src-nodata` and `--dst-nodata` options for rio-warp (#746).
+- `read()` and `read_masks()` take an `out_shape` argument for decimated reads
+  (#761).
+- Color interpretation of bands added to rio-info output (#766).
+- Dataset objects have a new per-dataset mask property: `dataset_mask` (#716).
+- Utility functions for rehaping and plotting arrays have been added to
+  `rasterio.plot` (#718, #765).
+- New `CRS` class like our old crs dicts, but with methods attached (#736,
+  #770).
+
+Packaging:
+
+- setup.py has new install extras: '[plot]', and '[all]' (#744).
+
+Refactoring:
+
+- We've standardized on `import numpy as np` (#727, #738, #740) throughout the
+  project.
+- The `five` module has been renamed to `compat` (#745).
+
+Testing:
+
+- More coverage, more xfailing tests to mark known bugs (#742, #762, #753,
+  #773, #782).
+
 0.35.1 (2016-05-06)
 -------------------
+
 - Bug fix: restore support for URI-like GDAL dataset names such as
   'NETCDF:foo:bar' (#695).
 - Bug fix: ensure GDAL environment is initialized for `transform_bounds()` as

@@ -84,6 +84,9 @@ def _cb_key_val(ctx, param, value):
                 out[k] = v
         return out
 
+def abspath_forward_slashes(path):
+    """Return forward-slashed version of os.path.abspath"""
+    return '/'.join(os.path.abspath(path).split(os.path.sep))
 
 def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
@@ -96,14 +99,14 @@ def file_in_handler(ctx, param, value):
         raise click.BadParameter(
             "Input file {0} does not exist".format(path_to_check))
     if archive and scheme:
-        archive = os.path.abspath(archive)
+        archive = abspath_forward_slashes(archive)
         path = "{0}://{1}!{2}".format(scheme, archive, path)
     elif scheme and scheme.startswith('http'):
         path = "{0}://{1}".format(scheme, path)
     elif scheme == 's3':
         path = "{0}://{1}".format(scheme, path)
     else:
-        path = os.path.abspath(path)
+        path = abspath_forward_slashes(path)
     return path
 
 

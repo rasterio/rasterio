@@ -7,8 +7,8 @@ from click.testing import CliRunner
 import pytest
 
 import rasterio
-from rasterio.rio.edit_info import (edit, all_handler, crs_handler,
-                                    tags_handler, transform_handler)
+from rasterio.rio.edit_info import (
+    edit, all_handler, crs_handler, tags_handler, transform_handler)
 from rasterio.rio.main import main_group
 
 
@@ -63,7 +63,7 @@ def test_edit_crs_obj(data):
         edit, [inputfile, '--crs', '{"init": "epsg:32618"}'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
+        assert src.crs.to_dict() == {'init': 'epsg:32618'}
 
 
 def test_edit_transform_err_not_json(data):
@@ -130,7 +130,7 @@ class MockOption:
 def test_all_callback_pass(data):
     ctx = MockContext()
     ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, None) == None
+    assert all_handler(ctx, None, None) is None
 
 
 def test_all_callback(data):
@@ -165,7 +165,7 @@ def test_transform_callback(data):
 
 
 def test_crs_callback_pass(data):
-    """Always return None if the value is None"""
+    """Always return None if the value is None."""
     ctx = MockContext()
     ctx.obj['like'] = {'crs': 'foo'}
     assert crs_handler(ctx, MockOption('crs'), None) is None
@@ -372,6 +372,13 @@ def test_info_stats_only():
         ['info', 'tests/data/RGB.byte.tif', '--stats', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.startswith('1.000000 255.000000 66.02')
+
+
+def test_info_colorinterp():
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['info', 'tests/data/alpha.tif'])
+    assert result.exit_code == 0
+    assert '"colorinterp": ["red", "green", "blue", "alpha"]' in result.output
 
 
 def test_transform_err():
@@ -588,6 +595,18 @@ def test_bounds_seq_rs():
     assert result.exit_code == 0
     assert result.output == (
         '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
+
+
+def test_insp():
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['insp', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+
+
+def test_insp_err():
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['insp', 'tests'])
+    assert result.exit_code == 1
 
 
 def test_info_checksums():

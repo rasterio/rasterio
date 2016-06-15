@@ -75,6 +75,7 @@ rasterio/_err.c
 rasterio/_example.c
 rasterio/_features.c
 rasterio/_io.c
+rasterio/_crs.c
 
 # vim
 .*.swp

@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.errors import RasterioIOError
+from rasterio._io import BAD_WRITE_DRIVERS
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -140,7 +142,7 @@ def test_write_crs_transform(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs == {'init': 'epsg:32618'}
+    assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
@@ -160,7 +162,7 @@ def test_write_crs_transform_affine(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs == {'init': 'epsg:32618'}
+    assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
@@ -180,12 +182,13 @@ def test_write_crs_transform_2(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs == {'init': 'epsg:32618'}
+    assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["WGS 84 / UTM zone 18N",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+
 
 def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
@@ -193,15 +196,15 @@ def test_write_crs_transform_3(tmpdir):
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
                               0.0, -300.041782729805, 2826915.0)
-    crs_wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
+    wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
-            crs=crs_wkt,
+            crs=wkt,
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs == {'init': 'epsg:32618'}
+    assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
@@ -274,3 +277,13 @@ def test_write_noncontiguous(tmpdir):
     with rasterio.open(name, 'w', **kwargs) as dst:
         for i in range(BANDS):
             dst.write(arr[:, :, i], indexes=i + 1)
+
+
+@pytest.mark.parametrize("driver", BAD_WRITE_DRIVERS)
+def test_write_blacklist(tmpdir, driver):
+    name = str(tmpdir.join("data.test"))
+    with pytest.raises(RasterioIOError) as exc_info:
+        rasterio.open(name, 'w', driver=driver, width=100, height=100,
+                      count=1, dtype='uint8')
+    exc = str(exc_info.value)
+    assert "Rasterio does not support writing with {} driver".format(driver) in exc

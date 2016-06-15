@@ -9,6 +9,7 @@ import py
 import pytest
 import numpy as np
 
+from rasterio.crs import CRS
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -190,7 +191,7 @@ def basic_image_file(tmpdir, basic_image):
 
     outfilename = str(tmpdir.join('basic_image.tif'))
     kwargs = {
-        "crs": {'init': 'epsg:4326'},
+        "crs": CRS({'init': 'epsg:4326'}),
         "transform": Affine.identity(),
         "count": 1,
         "dtype": rasterio.uint8,
@@ -225,7 +226,7 @@ def pixelated_image_file(tmpdir, pixelated_image):
 
     outfilename = str(tmpdir.join('pixelated_image.tif'))
     kwargs = {
-        "crs": {'init': 'epsg:4326'},
+        "crs": CRS({'init': 'epsg:4326'}),
         "transform": Affine.identity(),
         "count": 1,
         "dtype": rasterio.uint8,

@@ -5,6 +5,7 @@ import json
 
 import click
 
+import rasterio
 import rasterio.crs
 from rasterio.rio import options
 
@@ -68,11 +69,13 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                 info = src.profile
                 info['shape'] = info['height'], info['width']
                 info['bounds'] = src.bounds
-                proj4 = rasterio.crs.to_string(src.crs)
+                proj4 = src.crs.to_string()
                 if proj4.startswith('+init=epsg'):
                     proj4 = proj4.split('=')[1].upper()
                 info['crs'] = proj4
                 info['res'] = src.res
+                info['colorinterp'] = [src.colorinterp(i).name
+                                       for i in src.indexes]
                 if proj4 != '':
                     info['lnglat'] = src.lnglat()
                 if verbose:

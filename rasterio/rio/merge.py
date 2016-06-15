@@ -65,3 +65,10 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
 
         with rasterio.open(output, 'w', **profile) as dst:
             dst.write(dest)
+
+            # uses the colormap in the first input raster.
+            try:
+                colormap = sources[0].colormap(1)
+                dst.write_colormap(1, colormap)
+            except ValueError:
+                pass

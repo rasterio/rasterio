@@ -7,11 +7,12 @@ import logging
 import math
 import warnings
 
-from rasterio cimport _gdal
+from rasterio import dtypes
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
-from rasterio import dtypes
+from rasterio cimport _gdal
 from rasterio.coords import BoundingBox
+from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.errors import RasterioIOError, CRSError
@@ -48,7 +49,6 @@ cdef class DatasetReader(object):
         self._block_shapes = None
         self._nodatavals = []
         self._crs = None
-        self._crs_wkt = None
         self._read = False
     
     def __repr__(self):
@@ -83,7 +83,6 @@ cdef class DatasetReader(object):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         # touch self.meta
         _ = self.meta
@@ -119,7 +118,7 @@ cdef class DatasetReader(object):
         cdef void *osr = NULL
         if self._hds == NULL:
             raise ValueError("Null dataset")
-        crs = {}
+        crs = CRS()
         cdef const char * wkt = _gdal.GDALGetProjectionRef(self._hds)
         if wkt is NULL:
             raise ValueError("Unexpected NULL spatial reference")
@@ -176,36 +175,6 @@ cdef class DatasetReader(object):
         else:
             log.debug("GDAL dataset has no projection.")
         return crs
-
-    def read_crs_wkt(self):
-        cdef char *proj_c = NULL
-        cdef char *key_c = NULL
-        cdef void *osr = NULL
-        cdef const char * wkt = NULL
-        if self._hds == NULL:
-            raise ValueError("Null dataset")
-        wkt = _gdal.GDALGetProjectionRef(self._hds)
-        if wkt is NULL:
-            raise ValueError("Unexpected NULL spatial reference")
-        wkt_b = wkt
-        if len(wkt_b) > 0:
-            osr = _gdal.OSRNewSpatialReference(wkt)
-            log.debug("Got coordinate system")
-            if osr != NULL:
-                retval = _gdal.OSRAutoIdentifyEPSG(osr)
-                if retval > 0:
-                    log.info("Failed to auto identify EPSG: %d", retval)
-                _gdal.OSRExportToWkt(osr, &proj_c)
-                if proj_c == NULL:
-                    raise ValueError("Null projection")
-                proj_b = proj_c
-                crs_wkt = proj_b.decode('utf-8')
-                _gdal.CPLFree(proj_c)
-                _gdal.OSRDestroySpatialReference(osr)
-        else:
-            log.debug("GDAL dataset has no projection.")
-            crs_wkt = None
-        return crs_wkt
 
     def read_transform(self):
         if self._hds == NULL:
@@ -552,15 +521,6 @@ cdef class DatasetReader(object):
         def __get__(self):
             return self.get_crs()
 
-    property crs_wkt:
-        """An OGC WKT string representation of the coordinate reference
-        system.
-        """
-        def __get__(self):
-            if not self._read and self._crs_wkt is None:
-                self._crs = self.read_crs_wkt()
-            return self._crs_wkt
-
     def get_transform(self):
         """Returns a GDAL geotransform in its native form."""
         if not self._read and self._transform is None:
@@ -873,40 +833,6 @@ def tastes_like_gdal(t):
     return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
 
-cdef void *_osr_from_crs(object crs):
-    """Returns a reference to memory that must be deallocated
-    by the caller."""
-    cdef char *proj_c = NULL
-    cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
-    params = []
-    # Normally, we expect a CRS dict.
-    if isinstance(crs, dict):
-        # EPSG is a special case.
-        init = crs.get('init')
-        if init:
-            auth, val = init.split(':')
-            if auth.upper() == 'EPSG':
-                _gdal.OSRImportFromEPSG(osr, int(val))
-        else:
-            crs['wktext'] = True
-            for k, v in crs.items():
-                if v is True or (k in ('no_defs', 'wktext') and v):
-                    params.append("+%s" % k)
-                else:
-                    params.append("+%s=%s" % (k, v))
-            proj = " ".join(params)
-            log.debug("PROJ.4 to be imported: %r", proj)
-            proj_b = proj.encode('utf-8')
-            proj_c = proj_b
-            _gdal.OSRImportFromProj4(osr, proj_c)
-    # Fall back for CRS strings like "EPSG:3857."
-    else:
-        proj_b = crs.encode('utf-8')
-        proj_c = proj_b
-        _gdal.OSRSetFromUserInput(osr, proj_c)
-    return osr
-
-
 def _transform(src_crs, dst_crs, xs, ys, zs):
     cdef double *x = NULL
     cdef double *y = NULL
@@ -964,24 +890,86 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     return retval
 
 
-def is_geographic_crs(crs):
-    cdef void *osr_crs = _osr_from_crs(crs)
-    cdef int retval = _gdal.OSRIsGeographic(osr_crs)
-    _gdal.OSRDestroySpatialReference(osr_crs)
-    return retval == 1
+cdef void *_osr_from_crs(object crs) except NULL:
+    """Returns a reference to memory that must be deallocated
+    by the caller."""
 
+    if crs is None:
+        raise CRSError('CRS cannot be None')
 
-def is_projected_crs(crs):
-    cdef void *osr_crs = _osr_from_crs(crs)
-    cdef int retval = _gdal.OSRIsProjected(osr_crs)
-    _gdal.OSRDestroySpatialReference(osr_crs)
-    return retval == 1
+    cdef char *proj_c = NULL
+    cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
+    params = []
 
+    try:
+        with CPLErrors() as cple:
+            # Normally, we expect a CRS dict.
+            if isinstance(crs, dict):
+                crs = CRS(crs)
+            if isinstance(crs, CRS):
+                # EPSG is a special case.
+                init = crs.get('init')
+                if init:
+                    auth, val = init.split(':')
+                    if auth.upper() == 'EPSG':
+                        _gdal.OSRImportFromEPSG(osr, int(val))
+                else:
+                    crs['wktext'] = True
+                    for k, v in crs.items():
+                        if v is True or (k in ('no_defs', 'wktext') and v):
+                            params.append("+%s" % k)
+                        else:
+                            params.append("+%s=%s" % (k, v))
+                    proj = " ".join(params)
+                    log.debug("PROJ.4 to be imported: %r", proj)
+                    proj_b = proj.encode('utf-8')
+                    proj_c = proj_b
+                    _gdal.OSRImportFromProj4(osr, proj_c)
+            # Fall back for CRS strings like "EPSG:3857."
+            else:
+                proj_b = crs.encode('utf-8')
+                proj_c = proj_b
+                _gdal.OSRSetFromUserInput(osr, proj_c)
+            cple.check()
 
-def is_same_crs(crs1, crs2):
-    cdef void *osr_crs1 = _osr_from_crs(crs1)
-    cdef void *osr_crs2 = _osr_from_crs(crs2)
-    cdef int retval = _gdal.OSRIsSame(osr_crs1, osr_crs2)
-    _gdal.OSRDestroySpatialReference(osr_crs1)
-    _gdal.OSRDestroySpatialReference(osr_crs2)
-    return retval == 1
+    except:
+        raise CRSError('Invalid CRS')
+    
+    return osr
+
+def _can_create_osr(crs):
+    """
+    Returns True if valid OGRSpatialReference could be created from crs.
+    Specifically, it must not be NULL or empty string.
+
+    Parameters
+    ----------
+    crs: Source coordinate reference system, in rasterio dict format.
+
+    Returns
+    -------
+    out: bool
+        True if source coordinate reference appears valid.
+
+    """
+
+    cdef char *wkt = NULL
+    cdef void *osr = NULL
+
+    try:
+        osr = _osr_from_crs(crs)
+        if osr == NULL:
+            return False
+
+        _gdal.OSRExportToWkt(osr, &wkt)
+
+        # If input was empty, WKT can be too; otherwise the conversion didn't
+        # work properly and indicates an error.
+        return wkt != NULL and bool(crs) == (wkt[0] != '\0')
+
+    except CRSError:
+        return False
+
+    finally:
+        _gdal.OSRDestroySpatialReference(osr)
+        _gdal.CPLFree(wkt)

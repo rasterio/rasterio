@@ -11,6 +11,7 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     zip_longest = itertools.zip_longest
     import configparser
     from urllib.parse import urlparse
+    from collections import UserDict
 else:  # pragma: no cover
     string_types = basestring,
     text_type = unicode
@@ -18,3 +19,4 @@ else:  # pragma: no cover
     zip_longest = itertools.izip_longest
     import ConfigParser as configparser
     from urlparse import urlparse
+    from UserDict import UserDict

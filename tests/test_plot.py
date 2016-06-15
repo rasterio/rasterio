@@ -1,8 +1,13 @@
 """Unittests for rasterio.plot"""
 
 
+import pytest
+
 try:
+    import matplotlib as mpl
+    mpl.use('agg')
     import matplotlib.pyplot as plt
+    plt.show = lambda :None
 except ImportError:
     plt = None
 
@@ -10,7 +15,8 @@ import rasterio
 from rasterio.plot import show
 from rasterio.plot import show_hist
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_raster():
     """
     This test only verifies that code up to the point of plotting with
@@ -24,7 +30,8 @@ def test_show_raster():
         except ImportError:
             pass
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_raster_no_bounds():
     """
     This test only verifies that code up to the point of plotting with
@@ -39,8 +46,8 @@ def test_show_raster_no_bounds():
             pass
 
 
-
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_array():
     """
     This test only verifies that code up to the point of plotting with
@@ -54,7 +61,8 @@ def test_show_array():
         except ImportError:
             pass
 
-
+@pytest.mark.skipif(plt is None,
+                    reason="requires matplotlib")
 def test_show_hist():
     """
     This test only verifies that code up to the point of plotting with

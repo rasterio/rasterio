@@ -4,6 +4,7 @@ import sys
 import pytest
 from affine import Affine
 import numpy as np
+from packaging.version import parse
 
 import rasterio
 from rasterio.enums import Resampling
@@ -17,6 +18,27 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708,
                        0.0, -300.0, 2943560.235)
+
+
+def supported_resampling(method):
+    if method == Resampling.gauss:
+        return False
+    gdal110plus_only = (
+        Resampling.mode, Resampling.average)
+    gdal2plus_only = (
+        Resampling.max, Resampling.min, Resampling.med,
+        Resampling.q1, Resampling.q3)
+    version = parse(rasterio.__gdal_version__)
+    if version < parse('1.10'):
+        return method not in gdal2plus_only and method not in gdal110plus_only
+    if version < parse('2.0'):
+        return method not in gdal2plus_only
+    return True
+
+
+reproj_expected = (
+    ({'CHECK_WITH_INVERT_PROJ': False}, 6215),
+    ({'CHECK_WITH_INVERT_PROJ': True}, 4005))
 
 
 class ReprojectParams(object):
@@ -255,11 +277,12 @@ def test_reproject_out_of_bounds():
         assert not out.any()
 
 
-def test_reproject_nodata():
+@pytest.mark.parametrize("options, expected", reproj_expected)
+def test_reproject_nodata(options, expected):
     params = default_reproject_params()
     nodata = 215
 
-    with rasterio.Env():
+    with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
@@ -276,15 +299,16 @@ def test_reproject_nodata():
             dst_nodata=nodata
         )
 
-        assert (out == 1).sum() == 6215
+        assert (out == 1).sum() == expected
         assert (out == nodata).sum() == (params.dst_width *
-                                         params.dst_height - 6215)
+                                         params.dst_height - expected)
 
 
-def test_reproject_nodata_nan():
+@pytest.mark.parametrize("options, expected", reproj_expected)
+def test_reproject_nodata_nan(options, expected):
     params = default_reproject_params()
 
-    with rasterio.Env():
+    with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.float32)
         out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
@@ -301,16 +325,17 @@ def test_reproject_nodata_nan():
             dst_nodata=np.nan
         )
 
-        assert (out == 1).sum() == 6215
+        assert (out == 1).sum() == expected
         assert np.isnan(out).sum() == (params.dst_width *
-                                       params.dst_height - 6215)
+                                       params.dst_height - expected)
 
 
-def test_reproject_dst_nodata_default():
+@pytest.mark.parametrize("options, expected", reproj_expected)
+def test_reproject_dst_nodata_default(options, expected):
     """If nodata is not provided, destination will be filled with 0."""
     params = default_reproject_params()
 
-    with rasterio.Env():
+    with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
                           dtype=source.dtype)
@@ -325,9 +350,9 @@ def test_reproject_dst_nodata_default():
             dst_crs=params.dst_crs
         )
 
-        assert (out == 1).sum() == 6215
+        assert (out == 1).sum() == expected
         assert (out == 0).sum() == (params.dst_width *
-                                    params.dst_height - 6215)
+                                    params.dst_height - expected)
 
 
 def test_reproject_invalid_dst_nodata():
@@ -596,3 +621,137 @@ def test_reproject_unsupported_resampling_guass():
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs,
                 resampling=Resampling.gauss)
+
+
+@pytest.mark.parametrize("method", Resampling)
+def test_resample_default_invert_proj(method):
+    """Nearest and bilinear should produce valid results
+    with the default Env
+    """
+    if not supported_resampling(method):
+        pytest.skip()
+
+    with rasterio.Env():
+        with rasterio.open('tests/data/world.rgb.tif') as src:
+            source = src.read(1)
+            profile = src.profile.copy()
+
+        dst_crs = {'init': 'EPSG:32619'}
+
+        # Calculate the ideal dimensions and transformation in the new crs
+        dst_affine, dst_width, dst_height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds)
+
+        profile['height'] = dst_height
+        profile['width'] = dst_width
+
+        out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
+
+        out = np.empty(src.shape, dtype=np.uint8)
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=method)
+
+        assert out.mean() > 0
+
+
+@pytest.mark.xfail()
+@pytest.mark.parametrize("method", Resampling)
+def test_resample_no_invert_proj(method):
+    """Nearest and bilinear should produce valid results with
+    CHECK_WITH_INVERT_PROJ = False
+    """
+    if not supported_resampling(method):
+        pytest.skip()
+
+    with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
+        with rasterio.open('tests/data/world.rgb.tif') as src:
+            source = src.read(1)
+            profile = src.profile.copy()
+
+        dst_crs = {'init': 'EPSG:32619'}
+
+        # Calculate the ideal dimensions and transformation in the new crs
+        dst_affine, dst_width, dst_height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds)
+
+        profile['height'] = dst_height
+        profile['width'] = dst_width
+
+        out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
+
+        # see #614, some resamplin methods succeed but produce blank images
+        out = np.empty(src.shape, dtype=np.uint8)
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=method)
+
+        assert out.mean() > 0
+
+
+def test_reproject_crs_none():
+    """Reproject with crs is None should not cause segfault"""
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(1.1, 0.0, 0.0, 0.0, 1.1, 0.0)
+    srccrs = None
+    dst = np.empty(shape=(1, 11, 11))
+    dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    dstcrs = None
+
+    with rasterio.Env():
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=srccrs,
+            dst_transform=dstaff,
+            dst_crs=dstcrs,
+            resampling=Resampling.nearest)
+
+
+def test_reproject_identity():
+    """Reproject with an identity matrix."""
+    # note the affines are both positive e, src is identity
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 10, 10))
+    dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    dstcrs = {'init': 'epsg:3857'}
+
+    with rasterio.Env():
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=srccrs,
+            dst_transform=dstaff,
+            dst_crs=dstcrs,
+            resampling=Resampling.nearest)
+
+    # note the affines are both positive e, dst is identity
+    src = np.random.random(100).reshape((1, 10, 10))
+    srcaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 5, 5))
+    dstaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
+    dstcrs = {'init': 'epsg:3857'}
+
+    with rasterio.Env():
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=srccrs,
+            dst_transform=dstaff,
+            dst_crs=dstcrs,
+            resampling=Resampling.nearest)

@@ -10,6 +10,7 @@ import cligj
 from rasterio.rio import options
 from rasterio.rio.helpers import coords, write_features
 from rasterio.transform import Affine
+from rasterio.crs import CRS
 
 
 logger = logging.getLogger('rio')
@@ -186,7 +187,7 @@ def shapes(
                 ys = [bounds[1], bounds[3]]
                 if projection == 'geographic':
                     xs, ys = rasterio.warp.transform(
-                        src.crs, {'init': 'epsg:4326'}, xs, ys)
+                        src.crs, CRS({'init': 'epsg:4326'}), xs, ys)
                 if precision >= 0:
                     xs = [round(v, precision) for v in xs]
                     ys = [round(v, precision) for v in ys]

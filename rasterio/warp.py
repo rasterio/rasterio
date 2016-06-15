@@ -25,10 +25,10 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
 
     Parameters
     ------------
-    src_crs: dict
-        Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+    src_crs: CRS or dict
+        Source coordinate reference system, as a rasterio CRS object.
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     xs: array_like
         Contains x values.  Will be cast to double floating point values.
@@ -58,10 +58,10 @@ def transform_geom(
 
     Parameters
     ------------
-    src_crs: dict
+    src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     geom: GeoJSON like dict object
     antimeridian_cutting: bool, optional
@@ -108,10 +108,10 @@ def transform_bounds(
 
     Parameters
     ----------
-    src_crs: dict
+    src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     left, bottom, right, top: float
         Bounding coordinates in src_crs, from the bounds property of a raster.
@@ -189,11 +189,11 @@ def reproject(
     src_transform: affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
-    src_crs: dict, optional
+    src_crs: CRS or dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
         Will be derived from source if it is a rasterio Band.
-        Example: {'init': 'EPSG:4326'}
+        Example: CRS({'init': 'EPSG:4326'})
     src_nodata: int or float, optional
         The source nodata value.  Pixels with this value will not be used
         for interpolation.  If not set, it will be default to the
@@ -202,7 +202,7 @@ def reproject(
     dst_transform: affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
-    dst_crs: dict, optional
+    dst_crs: CRS or dict, optional
         Target coordinate reference system.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
     dst_nodata: int or float, optional
@@ -238,10 +238,24 @@ def reproject(
                 ['Resampling.{0}'.format(k) for k in
                  Resampling.__members__.keys() if k != 'gauss'])))
 
+    # If working with identity transform, assume it is crs-less data
+    # and that translating the matrix very slightly will avoid #674
+    eps = 1e-100
+    if src_transform and guard_transform(src_transform).is_identity:
+        src_transform = src_transform.translation(eps, eps)
+    if dst_transform and guard_transform(dst_transform).is_identity:
+        dst_transform = dst_transform.translation(eps, eps)
+
     if src_transform:
         src_transform = guard_transform(src_transform).to_gdal()
     if dst_transform:
         dst_transform = guard_transform(dst_transform).to_gdal()
+
+    # Passing None can cause segfault, use empty dict
+    if src_crs is None:
+        src_crs = {}
+    if dst_crs is None:
+        dst_crs = {}
 
     _reproject(
         source,
@@ -280,10 +294,10 @@ def calculate_default_transform(
 
     Parameters
     ----------
-    src_crs: dict
+    src_crs: CRS or dict
         Source coordinate reference system, in rasterio dict format.
-        Example: {'init': 'EPSG:4326'}
-    dst_crs: dict
+        Example: CRS({'init': 'EPSG:4326'})
+    dst_crs: CRS or dict
         Target coordinate reference system.
     width: int
         Source raster width.
@@ -301,7 +315,7 @@ def calculate_default_transform(
 
     Note
     ----
-    Should be called within a raster.env.Env() context
+    Should be called within a rasterio.Env() context
 
     Some behavior of this function is determined by the
     CHECK_WITH_INVERT_PROJ environment variable

@@ -9,15 +9,14 @@ import os.path
 import warnings
 
 import numpy as np
-cimport numpy as np
 
-from rasterio cimport _base
-from rasterio cimport _gdal
-from rasterio._base import crop_window
-from rasterio._base import eval_window
-from rasterio._err import CPLErrors
-from rasterio._err import CPLE_OpenFailed
+cimport numpy as np
+from rasterio cimport _base, _gdal
+
 from rasterio import dtypes
+from rasterio._base import crop_window, eval_window
+from rasterio._err import CPLErrors, CPLE_OpenFailed
+from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import DriverRegistrationError
@@ -29,6 +28,11 @@ from rasterio.vfs import parse_path, vsi_path
 
 
 log = logging.getLogger(__name__)
+
+
+# These drivers are known to produce invalid results with
+# IndirectRasterUpdater. Save users the trouble and fail fast.
+BAD_WRITE_DRIVERS = ("netCDF", )
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -1380,7 +1384,6 @@ cdef class RasterUpdater(RasterReader):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         if options != NULL:
             _gdal.CSLDestroy(options)
@@ -1406,6 +1409,8 @@ cdef class RasterUpdater(RasterReader):
 
         # Normally, we expect a CRS dict.
         if isinstance(crs, dict):
+            crs = CRS(crs)
+        if isinstance(crs, CRS):
             # EPSG is a special case.
             init = crs.get('init')
             if init:
@@ -1996,7 +2001,6 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        self._crs_wkt = self.read_crs_wkt()
 
         # touch self.meta
         _ = self.meta
@@ -2057,6 +2061,24 @@ cdef class IndirectRasterUpdater(RasterUpdater):
 
 
 def writer(path, mode, **kwargs):
+    """Get a writer instance for path
+
+    Parameters
+    ----------
+    path: Path to new raster (for mode=='w') or existing raster to be updated
+    mode: string, open mode, one of ('w', 'r+')
+
+    Returns
+    -------
+    RasterUpdater in the case of GeoTiff
+        writes directly to disk
+    IndirectRasterUpdater for any other driver
+        using temporary MEM driver before copying data
+        to the final destination
+
+    Raises ``RasterioIOError` if driver is blacklisted from writing
+    due to known bugs in the IndirectRasterUpdater approach
+    """
     # Dispatch to direct or indirect writer/updater according to the
     # format driver's capabilities.
     cdef void *hds = NULL
@@ -2073,6 +2095,10 @@ def writer(path, mode, **kwargs):
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':
             return RasterUpdater(path, mode, **kwargs)
+        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
+            raise RasterioIOError(
+                "Rasterio does not support writing "
+                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode, **kwargs)
     else:
@@ -2095,6 +2121,10 @@ def writer(path, mode, **kwargs):
 
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
+        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
+            raise RasterioIOError(
+                "Rasterio does not support updating "
+                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode)
 

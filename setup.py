@@ -187,7 +187,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.pyx'], **ext_options)],
+            'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
+        Extension(
+            'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options)],
         quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -210,7 +212,9 @@ else:
         Extension(
             'rasterio._err', ['rasterio/_err.c'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.c'], **ext_options)]
+            'rasterio._example', ['rasterio/_example.c'], **ext_options),
+        Extension(
+            'rasterio._crs', ['rasterio/_crs.c'], **ext_options)]
 
 with open('README.rst') as f:
     readme = f.read()

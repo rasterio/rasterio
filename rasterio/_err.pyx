@@ -46,7 +46,7 @@ cdef extern from "cpl_error.h":
 
 class CPLError(Exception):
     """Base CPL error class
-    
+
     Exceptions deriving from this class are intended for use only in
     Rasterio's Cython code. Let's not expose API users to them.
     """
@@ -55,6 +55,12 @@ class CPLError(Exception):
         self.errtype = errtype
         self.errno = errno
         self.errmsg = errmsg
+
+    def __str__(self):
+        return self.__unicode__()
+
+    def __unicode__(self):
+        return "{}".format(self.errmsg)
 
     @property
     def args(self):
@@ -138,7 +144,7 @@ exception_map = {
     9: CPLE_UserInterrupt,
     10: ObjectNull,
 
-    # error numbers 11-16 are introduced in GDAL 2.1. See 
+    # error numbers 11-16 are introduced in GDAL 2.1. See
     # https://github.com/OSGeo/gdal/pull/98.
     11: CPLE_HttpResponse,
     12: CPLE_AWSBucketNotFound,
