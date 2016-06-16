@@ -33,16 +33,6 @@ def bounds_handler(ctx, param, value):
     return value
 
 
-def x_dst_bounds_handler(ctx, param, value):
-    """Warn about future usage changes."""
-    if value:
-        click.echo(
-            "Future Warning: "
-            "the `--x-dst-bounds` option will be removed in Rasterio version "
-            "1.0 in favor of `--bounds`.", err=True)
-    return value
-
-
 @click.command(short_help='Warp a raster dataset.')
 @files_inout_arg
 @options.output_opt
@@ -58,19 +48,11 @@ def x_dst_bounds_handler(ctx, param, value):
 @click.option(
     '--src-bounds',
     nargs=4, type=float, default=None,
-    help="Determine output extent from source bounds: left bottom right top "
-         "(note: for future backwards compatibility in 1.0).")
-@click.option(
-    '--x-dst-bounds',
-    nargs=4, type=float, default=None, callback=x_dst_bounds_handler,
-    help="Set output extent from bounding values: left bottom right top "
-         "(note: this option will be removed in 1.0).")
+    help="Determine output extent from source bounds: left bottom right top ")
 @click.option(
     '--bounds',
     nargs=4, type=float, default=None, callback=bounds_handler,
-    help="Determine output extent from source bounds: left bottom right top "
-         "(note: the semantics of this option will change to those of "
-         "`--x-dst-bounds` in version 1.0).")
+    help="Determine output extent from destination bounds: left bottom right top")
 @options.resolution_opt
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
               default='nearest', help="Resampling method.",
@@ -87,7 +69,7 @@ def x_dst_bounds_handler(ctx, param, value):
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         x_dst_bounds, bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
+         bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -151,8 +133,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             out_kwargs['driver'] = driver
 
             # Sort out the bounds options.
-            src_bounds = bounds or src_bounds
-            dst_bounds = x_dst_bounds
+            dst_bounds = bounds
             if src_bounds and dst_bounds:
                 raise click.BadParameter(
                     "Source and destination bounds may not be specified "
