@@ -40,11 +40,7 @@ MAX_OUTPUT_HEIGHT = 100000
     help="Determine output extent from source bounds: left bottom right top "
          ". Cannot be used with destination --bounds")
 @click.option(
-    '--dst-bounds', nargs=4, type=float, default=None,
-    help="alias for --bounds")
-@click.option(
-    '--bounds',
-    nargs=4, type=float, default=None,
+    '--bounds', '--dst-bounds', nargs=4, type=float, default=None,
     help="Determine output extent from destination bounds: left bottom right top")
 @options.resolution_opt
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
@@ -62,7 +58,7 @@ MAX_OUTPUT_HEIGHT = 100000
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         bounds, dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
+         dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -126,7 +122,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             out_kwargs['driver'] = driver
 
             # Sort out the bounds options.
-            dst_bounds = bounds or dst_bounds
             if src_bounds and dst_bounds:
                 raise click.BadParameter(
                     "--src-bounds and destination --bounds may not be specified "
