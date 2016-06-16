@@ -199,6 +199,19 @@ def test_warp_no_reproject_bounds_res(runner, tmpdir):
             assert output.height == 67
 
 
+    # dst-bounds should be an alias to bounds
+    outputname = str(tmpdir.join('test2.tif'))
+    out_bounds = [-11850000, 4810000, -11849000, 4812000]
+    result = runner.invoke(warp.warp,[srcname, outputname,
+                                      '--res', 30,
+                                      '--dst-bounds', ] + out_bounds)
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(srcname) as src:
+        with rasterio.open(outputname) as output:
+            assert np.allclose(output.bounds, out_bounds)
+
+
 def test_warp_reproject_dst_crs(runner, tmpdir):
     srcname = 'tests/data/RGB.byte.tif'
     outputname = str(tmpdir.join('test.tif'))

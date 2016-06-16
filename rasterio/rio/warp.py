@@ -22,17 +22,6 @@ MAX_OUTPUT_WIDTH = 100000
 MAX_OUTPUT_HEIGHT = 100000
 
 
-def bounds_handler(ctx, param, value):
-    """Warn about future usage changes."""
-    if value:
-        click.echo(
-            "Future Warning: "
-            "the semantics of the `--bounds` option will change in Rasterio "
-            "version 1.0 from bounds of the source dataset to bounds of the "
-            "destination dataset.", err=True)
-    return value
-
-
 @click.command(short_help='Warp a raster dataset.')
 @files_inout_arg
 @options.output_opt
@@ -48,10 +37,14 @@ def bounds_handler(ctx, param, value):
 @click.option(
     '--src-bounds',
     nargs=4, type=float, default=None,
-    help="Determine output extent from source bounds: left bottom right top ")
+    help="Determine output extent from source bounds: left bottom right top "
+         ". Cannot be used with destination --bounds")
+@click.option(
+    '--dst-bounds', nargs=4, type=float, default=None,
+    help="alias for --bounds")
 @click.option(
     '--bounds',
-    nargs=4, type=float, default=None, callback=bounds_handler,
+    nargs=4, type=float, default=None,
     help="Determine output extent from destination bounds: left bottom right top")
 @options.resolution_opt
 @click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
@@ -69,7 +62,7 @@ def bounds_handler(ctx, param, value):
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
+         bounds, dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
          force_overwrite, creation_options):
     """
     Warp a raster dataset.
@@ -133,10 +126,10 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             out_kwargs['driver'] = driver
 
             # Sort out the bounds options.
-            dst_bounds = bounds
+            dst_bounds = bounds or dst_bounds
             if src_bounds and dst_bounds:
                 raise click.BadParameter(
-                    "Source and destination bounds may not be specified "
+                    "--src-bounds and destination --bounds may not be specified "
                     "simultaneously.")
 
             if like:
