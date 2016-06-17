@@ -10,14 +10,17 @@ except ImportError:  # pragma: no cover
     class NullHandler(logging.Handler):
         def emit(self, record):
             pass
+import math
 import warnings
 
 from rasterio._base import (
-    eval_window, window_shape, window_index, gdal_version)
+    eval_window, window_shape, window_index, gdal_version,
+    crop_window, get_index, get_window)
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
+from rasterio.coords import BoundingBox
 from rasterio.compat import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
@@ -324,3 +327,88 @@ def window_intersection(data):
 def windows_intersect(data):
     warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
     return windows.intersect(data)
+
+
+
+class GeoArray(object):
+    def __init__(self, image, transform, crs=None):
+        self.image = image
+        self.transform = guard_transform(transform)  # must be an Affine
+        self.crs = crs
+
+    @property
+    def bounds(self):
+        a, b, c, d, e, f, _, _, _ = self.transform
+        return BoundingBox(c, f + e * self.height, c + a * self.width, f)
+
+    @property
+    def count(self):
+        if len(self.image.shape) == 2:
+            return 1
+        else:
+            return self.image.shape[0]
+
+    @property
+    def dtypes(self):
+        return (self.image.dtype.name, ) * self.count
+
+    @property
+    def height(self):
+        return self.image.shape[-2]
+
+    def index(self, x, y, op=math.floor, precision=6):
+        """Returns the (row, col) index of the pixel containing (x, y)."""
+        return get_index(x, y, self.transform, op=op, precision=precision)
+
+    @property
+    def shape(self):
+        return self.image.shape[-2:]
+
+    @property
+    def res(self):
+        """Returns the (width, height) of pixels in the units of its
+        coordinate reference system."""
+        a, b, c, d, e, f, _, _, _ = self.transform
+        if b == d == 0:
+            return a, -e
+        else:
+            return math.sqrt(a * a + d * d), math.sqrt(b * b + e * e)
+
+    def ul(self, row, col):
+        """Returns the coordinates (x, y) of the upper left corner of a
+        pixel at `row` and `col` in the units of the dataset's
+        coordinate reference system.
+        """
+        a, b, c, d, e, f, _, _, _ = self.transform
+        if col < 0:
+            col += self.width
+        if row < 0:
+            row += self.height
+        return c + a * col, f + e * row
+
+    @property
+    def width(self):
+        return self.image.shape[-1]
+
+    def window(self, left, bottom, right, top, boundless=False):
+        """Returns the window corresponding to the world bounding box.
+        If boundless is False, window is limited to extent of this dataset."""
+
+        window = get_window(left, bottom, right, top, self.transform)
+        if boundless:
+            return window
+        else:
+            return crop_window(window, self.height, self.width)
+
+    def window_bounds(self, window):
+        """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
+        ((row_min, row_max), (col_min, col_max)) = window
+        x_min, y_min = self.transform * (col_min, row_max)
+        x_max, y_max = self.transform * (col_max, row_min)
+        return x_min, y_min, x_max, y_max
+
+    def window_transform(self, window):
+        """Returns the affine transform for a dataset window."""
+        (r, _), (c, _) = window
+        return self.transform * Affine.translation(c or 0, r or 0)
+
