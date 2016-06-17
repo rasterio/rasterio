@@ -10,6 +10,7 @@ except ImportError:
     plt = None
 
 import rasterio
+from rasterio import GeoArray
 from rasterio.plot import show, show_hist, get_plt, plotting_extent
 from rasterio.enums import ColorInterp
 
@@ -145,7 +146,7 @@ def test_show_array():
     """
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
-            show(src.read(1))
+            show(GeoArray(src.read(1), src.transform))
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:
@@ -159,7 +160,7 @@ def test_show_array3D():
     """
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
-            show(src.read((1, 2, 3)))
+            show(GeoArray(src.read((1, 2, 3)), src.transform))
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:
@@ -254,18 +255,5 @@ def test_get_plt():
 @pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_plt_transform():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        show(src.read(), transform=src.transform)
-        show(src.read(1), transform=src.transform)
-
-def test_plotting_extent():
-    from rasterio.plot import reshape_as_image
-    expected = (101985.0, 339315.0, 2611485.0, 2826915.0)
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        assert plotting_extent(src) == expected
-        assert plotting_extent(
-            reshape_as_image(src.read()), transform=src.affine) == expected
-        assert plotting_extent(
-            src.read(1), transform=src.transform) == expected
-        # array requires a transform
-        with pytest.raises(ValueError):
-            plotting_extent(src.read(1))
+        show(GeoArray(src.read(), src.transform))
+        show(GeoArray(src.read(1), src.transform))

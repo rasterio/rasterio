@@ -10,6 +10,7 @@ except ImportError:
     plt = None
 
 import rasterio
+from rasterio import GeoArray
 from rasterio.plot import show, show_hist
 from rasterio.rio.insp import stats
 
@@ -62,7 +63,7 @@ def test_show_array():
     """
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
-            show(src.read(1))
+            show(GeoArray(src.read(1), src.transform))
             fig = plt.gcf()
             plt.close(fig)
         except ImportError:

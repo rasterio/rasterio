@@ -34,12 +34,12 @@ def get_plt():
 
 
 def show(source, with_bounds=True, contour=False, contour_label_kws=None,
-         ax=None, title=None, transform=None, **kwargs):
+         ax=None, title=None,  **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
     ----------
-    source : array-like in raster axis order,
+    source : GeoArray,
         or (raster dataset, bidx) tuple,
         or raster dataset,
         If the tuple (raster dataset, bidx),
@@ -58,8 +58,6 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         Axis to plot on, otherwise uses current axis.
     title : str, optional
         Title for the figure.
-    transform : Affine, optional
-        Defines the affine transform if source is an array
     **kwargs : key, value pairings optional
         These will be passed to the matplotlib imshow or contour method
         depending on contour argument.
@@ -96,14 +94,12 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             except KeyError:
                 arr = source.read(1, masked=True)
     else:
-        # The source is a numpy array reshape it to image if it has 3+ bands
-        source = np.ma.squeeze(source)
-        if len(source.shape) >= 3:
-            arr = reshape_as_image(source)
-        else:
-            arr = source
-        if transform and with_bounds:
-            kwargs['extent'] = plotting_extent(arr, transform)
+        # The source is a GeoArray, reshape its data to image if it has 3+ bands
+        arr = np.ma.squeeze(source.image)
+        if len(arr.shape) >= 3:
+            arr = reshape_as_image(arr)
+        if with_bounds:
+            kwargs['extent'] = plotting_extent(source)
 
     show = False
     if not ax:
@@ -134,30 +130,21 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     return ax
 
 
-def plotting_extent(source, transform=None):
+def plotting_extent(source):
     """Returns an extent in the format needed
      for matplotlib's imshow (left, right, bottom, top)
      instead of rasterio's bounds (left, bottom, top, right)
 
     Parameters
     ----------
-    source : raster dataset or array in image order (see reshape_as_image)
+    source : raster dataset or GeoArray
     transform: Affine, required if source is array
     """
-    if hasattr(source, 'bounds'):
-        extent = (source.bounds.left, source.bounds.right,
-                  source.bounds.bottom, source.bounds.top)
-    elif not transform:
-        raise ValueError(
-            "transform is required if source is an array")
-    else:
-        transform = guard_transform(transform)
-        rows, cols = source.shape[0:2]
-        left, top = transform * (0, 0)
-        right, bottom = transform * (cols, rows)
-        extent = (left, right, bottom, top)
+    if not hasattr(source, 'bounds'):
+        raise ValueError('Source must have a bounds attribute')
 
-    return extent
+    return (source.bounds.left, source.bounds.right,
+            source.bounds.bottom, source.bounds.top)
 
 
 def reshape_as_image(arr):
