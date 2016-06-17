@@ -199,6 +199,19 @@ def test_warp_no_reproject_bounds_res(runner, tmpdir):
             assert output.height == 67
 
 
+    # dst-bounds should be an alias to bounds
+    outputname = str(tmpdir.join('test2.tif'))
+    out_bounds = [-11850000, 4810000, -11849000, 4812000]
+    result = runner.invoke(warp.warp,[srcname, outputname,
+                                      '--res', 30,
+                                      '--dst-bounds', ] + out_bounds)
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(srcname) as src:
+        with rasterio.open(outputname) as output:
+            assert np.allclose(output.bounds, out_bounds)
+
+
 def test_warp_reproject_dst_crs(runner, tmpdir):
     srcname = 'tests/data/RGB.byte.tif'
     outputname = str(tmpdir.join('test.tif'))
@@ -276,13 +289,13 @@ def test_warp_reproject_bounds_no_res(runner, tmpdir):
 
 
 def test_warp_reproject_multi_bounds_fail(runner, tmpdir):
-    """Mixing --bounds and --x-dst-bounds fails."""
+    """Mixing --bounds and --src-bounds fails."""
     srcname = 'tests/data/shade.tif'
     outputname = str(tmpdir.join('test.tif'))
     out_bounds = [-11850000, 4810000, -11849000, 4812000]
     result = runner.invoke(warp.warp, [srcname, outputname,
                                        '--dst-crs', 'EPSG:4326',
-                                       '--x-dst-bounds'] + out_bounds +
+                                       '--src-bounds'] + out_bounds +
                                        ['--bounds'] + out_bounds)
     assert result.exit_code == 2
 
@@ -294,20 +307,9 @@ def test_warp_reproject_bounds_crossup_fail(runner, tmpdir):
     out_bounds = [-11850000, 4810000, -11849000, 4812000]
     result = runner.invoke(warp.warp, [srcname, outputname,
                                        '--dst-crs', 'EPSG:4326',
-                                       '--res', 0.001, '--x-dst-bounds', ]
+                                       '--res', 0.001, '--bounds', ]
                                        + out_bounds)
     assert result.exit_code == 2
-
-
-def test_warp_reproject_bounds_res_future_warning(runner, tmpdir):
-    """Use of --bounds results in a warning from the 1.0 future."""
-    srcname = 'tests/data/shade.tif'
-    outputname = str(tmpdir.join('test.tif'))
-    out_bounds = [-11850000, 4810000, -11849000, 4812000]
-    result = runner.invoke(
-                warp.warp, [srcname, outputname, '--dst-crs', 'EPSG:4326',
-                            '--res', 0.001, '--bounds'] + out_bounds)
-    assert "Future Warning" in result.output
 
 
 def test_warp_reproject_src_bounds_res(runner, tmpdir):
@@ -333,13 +335,13 @@ def test_warp_reproject_src_bounds_res(runner, tmpdir):
 
 
 def test_warp_reproject_dst_bounds(runner, tmpdir):
-    """--x-dst-bounds option works."""
+    """--bounds option works."""
     srcname = 'tests/data/shade.tif'
     outputname = str(tmpdir.join('test.tif'))
     out_bounds = [-106.45036, 39.6138, -106.44136, 39.6278]
     result = runner.invoke(
         warp.warp, [srcname, outputname, '--dst-crs', 'EPSG:4326',
-                    '--res', 0.001, '--x-dst-bounds'] + out_bounds)
+                    '--res', 0.001, '--bounds'] + out_bounds)
     assert result.exit_code == 0
     assert os.path.exists(outputname)
 
