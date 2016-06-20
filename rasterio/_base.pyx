@@ -560,11 +560,13 @@ cdef class DatasetReader(object):
         """
 
         def __get__(self):
-            warnings.warn(
+            with warnings.catch_warnings():
+                warnings.simplefilter('always')
+                warnings.warn(
                 "'src.affine' is deprecated.  Please switch to "
                 "'src.transform'. See "
                 "https://github.com/mapbox/rasterio/issues/86 for details.",
-                RuntimeWarning,
+                DeprecationWarning,
                 stacklevel=2)
             return Affine.from_gdal(*self.get_transform())
 

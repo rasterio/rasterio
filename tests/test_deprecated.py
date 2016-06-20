@@ -27,8 +27,9 @@ def test_open_transform_not_Affine(path_rgb_byte_tif):
             pass
 
 
-def test_affine_warning(path_rgb_byte_tif):
-    with pytest.warns(RuntimeWarning):
+def test_open_affine_kwarg_warning(path_rgb_byte_tif):
+    """Passing the 'affine' kwarg to rasterio.open() should raise a warning."""
+    with pytest.warns(DeprecationWarning):
         with rasterio.open(
                 path_rgb_byte_tif,
                 affine=affine.Affine.identity()) as src:
@@ -41,3 +42,10 @@ def test_guard_transform_gdal_exception(path_rgb_byte_tif):
         transform = src.transform
     with pytest.raises(ValueError):
         guard_transform(transform.to_gdal())
+
+
+def test_src_affine_warning(path_rgb_byte_tif):
+    """Calling src.affine should raise a warning."""
+    with pytest.warns(DeprecationWarning):
+        with rasterio.open(path_rgb_byte_tif) as src:
+            src.affine

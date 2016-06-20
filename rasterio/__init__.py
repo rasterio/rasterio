@@ -12,8 +12,6 @@ except ImportError:  # pragma: no cover
         def emit(self, record):
             pass
 
-import affine
-
 from rasterio._base import (
     eval_window, window_shape, window_index, gdal_version)
 from rasterio.dtypes import (
@@ -164,12 +162,14 @@ def open(path, mode='r', driver=None, width=None, height=None,
         raise ValueError("The 'affine' and 'transform' arguments are exclusive")
     elif 'affine' in kwargs:
         transform = kwargs.pop('affine')
-        warnings.warn(
-            "The affine kwarg is deprecated as of 1.0 and only exists to ease "
-            "the transition.  Please switch to the transform kwarg.  See "
-            "https://github.com/mapbox/rasterio/issues/86 for details.",
-            RuntimeWarning,
-            stacklevel=2)
+        with warnings.catch_warnings():
+            warnings.simplefilter('always')
+            warnings.warn(
+                "The affine kwarg is deprecated as of 1.0 and only exists to "
+                "ease the transition.  Please switch to the transform kwarg.  "
+                "See https://github.com/mapbox/rasterio/issues/86 for details.",
+                DeprecationWarning,
+                stacklevel=2)
 
     if transform is not None:
         transform = guard_transform(transform)
