@@ -53,10 +53,10 @@ Moving forward:
 * ``rasterio.open()`` will still accept ``affine`` and ``transform``, but the
   former now issues a deprecation warning and the latter raises an exception if
   it does not receive an ``Affine()``.
-* If ``rasterio.open()`` receives both ``affine`` and ``transform`` an exception
-  is raised.
+* If ``rasterio.open()`` receives both ``affine`` and ``transform`` a warning
+  is issued and ``transform`` is used.
 * ``src.affine`` remains but issues a deprecation warning.
-* ``src.transform`` property returns an ``Affine()``.
+* ``src.transform`` returns an ``Affine()``.
 * All other Rasterio functions with a ``transform`` argument now raise an
   exception if they receive a GDAL geotransform.
 

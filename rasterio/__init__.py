@@ -158,20 +158,27 @@ def open(path, mode='r', driver=None, width=None, height=None,
     if dtype and not check_dtype(dtype):
         raise TypeError("invalid dtype: {0!r}".format(dtype))
 
-    if 'affine' in kwargs and transform is not None:
-        raise ValueError("The 'affine' and 'transform' arguments are exclusive")
-    elif 'affine' in kwargs:
-        transform = kwargs.pop('affine')
+    if 'affine' in kwargs:
+        # DeprecationWarning's are ignored by default
         with warnings.catch_warnings():
             warnings.simplefilter('always')
             warnings.warn(
-                "The affine kwarg is deprecated as of 1.0 and only exists to "
-                "ease the transition.  Please switch to the transform kwarg.  "
-                "See https://github.com/mapbox/rasterio/issues/86 for details.",
+                "The 'affine' kwarg in rasterio.open() is deprecated as of 1.0 "
+                "and only remains to ease the transition.  Please switch to "
+                "the 'transform' kwarg.  See "
+                "https://github.com/mapbox/rasterio/issues/86 for details.",
                 DeprecationWarning,
                 stacklevel=2)
 
-    if transform is not None:
+            if transform:
+                warnings.warn(
+                    "Found both 'affine' and 'transform' in rasterio.open() - "
+                    "choosing 'transform'")
+                transform = transform
+            else:
+                transform = kwargs.pop('affine')
+
+    if transform:
         transform = guard_transform(transform)
 
     # Get AWS credentials if we're attempting to access a raster
