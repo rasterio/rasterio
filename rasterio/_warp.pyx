@@ -229,7 +229,6 @@ def _reproject(
     """
 
     cdef int retval=0, rows, cols, src_count
-    cdef void *hrdriver = NULL
     cdef void *hdsin = NULL
     cdef void *hdsout = NULL
     cdef void *hbandin = NULL
@@ -237,9 +236,6 @@ def _reproject(
     cdef _io.RasterReader rdr
     cdef _io.RasterUpdater udr
     cdef _io.GDALAccess GA
-    cdef double gt[6]
-    cdef char *srcwkt = NULL
-    cdef char *dstwkt= NULL
     cdef const char *proj_c = NULL
     cdef void *osr = NULL
     cdef char **warp_extras = NULL
@@ -251,59 +247,13 @@ def _reproject(
     # We need a src_transform and src_dst in this case. These will
     # be copied to the MEM dataset.
     if dtypes.is_ndarray(source):
-        # Convert 2D single-band arrays to 3D multi-band.
         if len(source.shape) == 2:
             source = source.reshape(1, *source.shape)
         src_count = source.shape[0]
-        rows = source.shape[1]
-        cols = source.shape[2]
-        dtype = np.dtype(source.dtype).name
+        hdsin = _create_MEM_dataset(source, src_transform, src_crs, 'source')
         if src_nodata is None and hasattr(source, 'fill_value'):
             # source is a masked array
             src_nodata = source.fill_value
-
-        try:
-            with CPLErrors() as cple:
-                hrdriver = _gdal.GDALGetDriverByName("MEM")
-                cple.check()
-        except:
-            raise DriverRegistrationError(
-                "'MEM' driver not found. Check that this call is contained "
-                "in a `with rasterio.Env()` or `with rasterio.open()` "
-                "block.")
-
-        try:
-            with CPLErrors() as cple:
-                hdsin = _gdal.GDALCreate(
-                    hrdriver, "input", cols, rows,
-                    src_count, dtypes.dtype_rev[dtype], NULL)
-                cple.check()
-        except:
-            raise
-        _gdal.GDALSetDescription(
-            hdsin, "Temporary source dataset for _reproject()")
-        log.debug("Created temp source dataset")
-
-        for i in range(6):
-            gt[i] = src_transform[i]
-        retval = _gdal.GDALSetGeoTransform(hdsin, gt)
-        log.debug("Set transform on temp source dataset: %d", retval)
-
-        try:
-            osr = _base._osr_from_crs(src_crs)
-            _gdal.OSRExportToWkt(osr, &srcwkt)
-            _gdal.GDALSetProjection(hdsin, srcwkt)
-            log.debug("Set CRS on temp source dataset: %s", srcwkt)
-        finally:
-            _gdal.CPLFree(srcwkt)
-            _gdal.OSRDestroySpatialReference(osr)
-
-        # Copy arrays to the dataset.
-        retval = _io.io_auto(source, hdsin, 1)
-        # TODO: handle errors (by retval).
-        log.debug("Wrote array to temp source dataset")
-
-    # If the source is a rasterio Band, no copy necessary.
     elif isinstance(source, tuple):
         rdr = source.ds
         hdsin = rdr._hds
@@ -317,54 +267,7 @@ def _reproject(
     if dtypes.is_ndarray(destination):
         if len(destination.shape) == 2:
             destination = destination.reshape(1, *destination.shape)
-        if destination.shape[0] != src_count:
-            raise ValueError("Destination's shape is invalid")
-
-        try:
-            with CPLErrors() as cple:
-                hrdriver = _gdal.GDALGetDriverByName("MEM")
-                cple.check()
-        except:
-            raise DriverRegistrationError(
-                "'MEM' driver not found. Check that this call is contained "
-                "in a `with rasterio.Env()` or `with rasterio.open()` "
-                "block.")
-
-        _, rows, cols = destination.shape
-        try:
-            with CPLErrors() as cple:
-                hdsout = _gdal.GDALCreate(
-                    hrdriver, "output", cols, rows, src_count,
-                    dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
-                cple.check()
-        except:
-            raise
-        _gdal.GDALSetDescription(
-            hdsout, "Temporary destination dataset for _reproject()")
-        log.debug("Created temp destination dataset.")
-
-        for i in range(6):
-            gt[i] = dst_transform[i]
-
-        if not GDALError.none == _gdal.GDALSetGeoTransform(hdsout, gt):
-            raise ValueError(
-                "Failed to set transform on temp destination dataset.")
-
-        try:
-            osr = _base._osr_from_crs(dst_crs)
-            _gdal.OSRExportToWkt(osr, &dstwkt)
-            log.debug("CRS for temp destination dataset: %s.", dstwkt)
-            if not GDALError.none == _gdal.GDALSetProjection(
-                    hdsout, dstwkt):
-                raise ("Failed to set projection on temp destination dataset.")
-        finally:
-            _gdal.OSRDestroySpatialReference(osr)
-            _gdal.CPLFree(dstwkt)
-
-        if dst_nodata is None and hasattr(destination, "fill_value"):
-            # destination is a masked array
-            dst_nodata = destination.fill_value
-
+        hdsout = _create_MEM_dataset(destination, dst_transform, dst_crs, 'destination', src_count=src_count)
     elif isinstance(destination, tuple):
         udr = destination.ds
         hdsout = udr._hds
@@ -585,3 +488,83 @@ def _calculate_default_transform(
     dst_height = nlines
 
     return dst_affine, dst_width, dst_height
+
+cdef void *_create_MEM_dataset(data, transform, crs, desc, src_count=None) except *:
+    """
+    If the data is an ndarray, we copy to a MEM dataset.
+    We need a transform and dst in this case. These will
+    be copied to the MEM dataset.
+    """
+    cdef int retval=0, rows, cols
+    cdef void *hrdriver = NULL
+    cdef void *hds = NULL
+    cdef char *wkt = NULL
+    cdef double gt[6]
+
+    desc_dict = {"source": "input",
+                 "destination": "output"}
+    assert desc in desc_dict.keys(), "Must use 'source' or 'destination' as description"
+    if desc == 'source':
+        assert src_count is None, "src_count for 'source' must be None"
+
+    # Find MEM driver
+    try:
+        with CPLErrors() as cple:
+            hrdriver = _gdal.GDALGetDriverByName("MEM")
+            cple.check()
+    except:
+        raise DriverRegistrationError(
+            "'MEM' driver not found. Check that this call is contained "
+            "in a `with rasterio.Env()` or `with rasterio.open()` "
+            "block.")
+
+    # Convert 2D single-band arrays to 3D multi-band.
+
+
+    if src_count is None:
+        src_count = data.shape[0]
+    elif data.shape[0] != src_count:
+        raise ValueError("Destination's shape is invalid: {} vs {}".format(data.shape[0], src_count))
+    else:
+        pass
+
+    _, rows, cols = data.shape
+
+    dtype = np.dtype(data.dtype).name
+    try:
+        with CPLErrors() as cple:
+            hds = _gdal.GDALCreate(hrdriver, desc_dict[desc], cols, rows, src_count, dtypes.dtype_rev[dtype], NULL)
+            cple.check()
+    except:
+        raise
+    _gdal.GDALSetDescription(hds, "Temporary {} dataset for _reproject()".format(desc))
+    log.debug("Created temp {} dataset".format(desc))
+
+    for i in range(6):
+        gt[i] = transform[i]
+
+    if desc == 'source':
+        retval = _gdal.GDALSetGeoTransform(hds, gt)
+        log.debug("Set transform on temp source dataset: %d", retval)
+    else:
+        if not GDALError.none == _gdal.GDALSetGeoTransform(hds, gt):
+            raise ValueError("Failed to set transform on temp destination dataset.")
+
+    try:
+        osr = _base._osr_from_crs(crs)
+        _gdal.OSRExportToWkt(osr, &wkt)
+        if desc == 'source':
+            _gdal.GDALSetProjection(hds, wkt)
+            log.debug("Set CRS on temp source dataset: %s", wkt)
+        else:
+            log.debug("CRS on temp destination dataset: %s", wkt)
+            if not GDALError.none == _gdal.GDALSetProjection(hds, wkt):
+                raise ("Failed to set projection on temp destination dataset.")
+    finally:
+        _gdal.CPLFree(wkt)
+        _gdal.OSRDestroySpatialReference(osr)
+    # Copy arrays to the dataset.
+    retval = _io.io_auto(data, hds, 1)
+    # TODO: handle errors (by retval).
+    log.debug("Wrote array to temp {} dataset".format(desc))
+    return hds
