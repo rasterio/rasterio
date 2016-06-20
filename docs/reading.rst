@@ -3,8 +3,6 @@ Reading Datasets
 
 .. todo::
 
-    * use of context manager
-    * ndarray shape is (band, cols, rows)
     * Discuss and/or link to topics
         - supported formats, drivers
         - vsi
@@ -13,7 +11,6 @@ Reading Datasets
         - crs
         - transforms
         - dtypes
-        - block windows
 
 
 Dataset objects provide read, read-write, and write access to raster data files
@@ -73,6 +70,22 @@ elsewhere.
 
 .. image:: http://farm6.staticflickr.com/5032/13938576006_b99b23271b_o_d.png
 
+Instead of reading single bands, all bands of the input dataset can be read into
+a 3-dimensonal ndarray. Note that the interpretation of the 3 axes is
+``(bands, rows, columns)``. See
+:ref:`imageorder` for more details on how to convert to the ordering expected by
+some software.
+
+.. code-block:: python
+
+    >>> array = src.read()
+    >>> array.shape
+    (3, 718, 791)
+
+
+In order to read smaller chunks of the dataset, refer to :ref:`windowrw`.
+
+
 The indexes, Numpy data types, and nodata values of all a dataset's bands can
 be had from its ``indexes``, ``dtypes``, and ``nodatavals`` attributes.
 
@@ -113,8 +126,8 @@ This is the same behavior as Python's ``file``.
      ...
     ValueError: I/O operation on closed file.
 
-As Python ``file`` objects can, Rasterio datasets can manage the entry into 
-and exit from runtime contexts created using a ``with`` statement. This 
+As Python ``file`` objects can, Rasterio datasets can manage the entry into
+and exit from runtime contexts created using a ``with`` statement. This
 ensures that files are closed no matter what exceptions may be raised within
 the the block.
 
