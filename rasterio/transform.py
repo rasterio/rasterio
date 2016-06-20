@@ -20,7 +20,7 @@ def guard_transform(transform):
     """Return an Affine transformation instance."""
     if not isinstance(transform, Affine):
         if tastes_like_gdal(transform):
-            raise ValueError(
+            raise TypeError(
                 "GDAL-style transforms have been deprecated.  This "
                 "exception will be raised for a period of time to highlight "
                 "potentially confusing errors, but will eventually be removed.")

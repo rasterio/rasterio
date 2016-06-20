@@ -150,3 +150,14 @@ def test_from_bounds_two():
     # pixelwidth, rotation, ULX, rotation, pixelheight, ULY
     expected = Affine(0.5, 0.0, -120.0, 0.0, -0.5, 70.0)
     assert [round(v, 7) for v in tr] == [round(v, 7) for v in expected]
+
+
+def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
+    """As part of the 1.0 migration, guard_transform() should raise a TypeError
+    if a GDAL geotransform is encountered"""
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        aff = src.transform
+
+    with pytest.raises(TypeError):
+        transform.guard_transform(aff.to_gdal())
