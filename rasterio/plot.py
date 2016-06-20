@@ -14,7 +14,7 @@ import numpy as np
 
 import rasterio
 from rasterio._io import RasterReader
-
+from rasterio.transform import guard_transform
 from rasterio.compat import zip_longest
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def get_plt():
 
 
 def show(source, with_bounds=True, contour=False, contour_label_kws=None,
-         ax=None, title=None, **kwargs):
+         ax=None, title=None, transform=None, **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -58,6 +58,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         Axis to plot on, otherwise uses current axis.
     title : str, optional
         Title for the figure.
+    transform : Affine, optional
+        Defines the affine transform if source is an array
     **kwargs : key, value pairings optional
         These will be passed to the matplotlib imshow or contour method
         depending on contour argument.
@@ -100,6 +102,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             arr = reshape_as_image(source)
         else:
             arr = source
+        if transform and with_bounds:
+            kwargs['extent'] = plotting_extent(arr, transform)
 
     show = False
     if not ax:
@@ -130,17 +134,29 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     return ax
 
 
-def plotting_extent(source):
+def plotting_extent(source, transform=None):
     """Returns an extent in the format needed
      for matplotlib's imshow (left, right, bottom, top)
      instead of rasterio's bounds (left, bottom, top, right)
 
     Parameters
     ----------
-    source : raster dataset
+    source : raster dataset or array in image order (see reshape_as_image)
+    transform: Affine, required if source is array
     """
-    extent = (source.bounds.left, source.bounds.right,
-              source.bounds.bottom, source.bounds.top)
+    if hasattr(source, 'bounds'):
+        extent = (source.bounds.left, source.bounds.right,
+                  source.bounds.bottom, source.bounds.top)
+    elif not transform:
+        raise ValueError(
+            "transform is required if source is an array")
+    else:
+        transform = guard_transform(transform)
+        rows, cols = source.shape[0:2]
+        left, top = transform * (0, 0)
+        right, bottom = transform * (cols, rows)
+        extent = (left, right, bottom, top)
+
     return extent
 
 
@@ -216,7 +232,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
         arr = arr.reshape(arr.shape[0], -1).T
         colors = ['red', 'green', 'blue', 'violet', 'gold', 'saddlebrown']
 
-    #The goal is to provide a curated set of colors for working with
+    # The goal is to provide a curated set of colors for working with
     # smaller datasets and let matplotlib define additional colors when
     # working with larger datasets.
     if arr.shape[-1] > len(colors):
@@ -241,11 +257,11 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     fig = ax.get_figure()
 
     ax.hist(arr,
-             bins=bins,
-             color=colors,
-             label=labels,
-             range=rng,
-             **kwargs)
+            bins=bins,
+            color=colors,
+            label=labels,
+            range=rng,
+            **kwargs)
 
     ax.legend(loc="upper right")
     ax.set_title(title, fontweight='bold')

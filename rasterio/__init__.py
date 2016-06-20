@@ -32,7 +32,7 @@ from rasterio import _err, coords, enums, vfs
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
-__version__ = "0.36.0"
+__version__ = "1.0.dev1"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
