@@ -16,7 +16,7 @@ from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.errors import RasterioIOError, CRSError
-from rasterio.transform import Affine
+from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path, vsi_path
 
 
@@ -780,6 +780,10 @@ def get_index(x, y, transform, op=math.floor, precision=6):
     col : int
         col index
     """
+
+    # Ensure a GDAL geotransform doesn't sneak in
+    transform = guard_transform(transform)
+
     # Use an epsilon, magnitude determined by the precision parameter
     # and sign determined by the op function: positive for floor, negative
     # for ceil.
@@ -809,6 +813,10 @@ def get_window(left, bottom, right, top, transform, precision=6):
     precision : int
         Decimal places of precision in indexing, as in `round()`.
     """
+
+    # Ensure a GDAL geotransform doesn't sneak in
+    transform = guard_transform(transform)
+
     window_start = get_index(
         left, top, transform, op=math.floor, precision=precision)
     window_stop = get_index(
