@@ -94,14 +94,13 @@ def test_edit_transform_affine(data):
 def test_edit_transform_gdal(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    input_t = '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
+    gdal_geotransform = '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'
     result = runner.invoke(edit, [
         inputfile,
-        '--transform', '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'])
-    assert result.exit_code == 0
-    with rasterio.open(inputfile) as src:
-        for a, b in zip(src.transform, json.loads(input_t)):
-            assert round(a, 6) == round(b, 6)
+        '--transform', gdal_geotransform])
+    assert result.exit_code != 0
+    assert 'not recognized as an Affine array' in result.output
+    assert gdal_geotransform in result.output
 
 
 def test_edit_tags(data):
