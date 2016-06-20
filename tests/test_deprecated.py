@@ -1,25 +1,38 @@
 """Unittests for deprecated features"""
 
 
+import warnings
+
 import affine
 import pytest
 
 import rasterio
-from rasterio.transform import guard_transform
 
 
 def test_open_affine_and_transform(path_rgb_byte_tif):
-    with pytest.raises(ValueError) as e:
+    """Passsing both 'affine' and 'transform' to rasterio.open() should issue
+    some helpful warnings.
+
+    By settings the 'affine' kwarg to a wacky value we ensure that the
+    'transform' kwarg is used while ignoring the 'affine' kwarg.
+    """
+    with warnings.catch_warnings(record=True) as w:
         with rasterio.open(
                 path_rgb_byte_tif,
-                affine=affine.Affine.identity(),
+                affine=rasterio,
                 transform=affine.Affine.identity()) as src:
             pass
-        for word in 'affine', 'transform', 'exclusive':
-            assert word in str(e)
+        assert len(w) == 2
+        assert "'affine' kwarg in rasterio.open() is deprecated" \
+               in str(w[0].message)
+        assert "Found both 'affine' and 'transform'" in str(w[1].message)
+        assert "choosing 'transform'" in str(w[1].message)
 
 
-def test_open_transform_not_Affine(path_rgb_byte_tif):
+def test_open_transform_gdal_geotransform(path_rgb_byte_tif):
+    """Passing a GDAL geotransform to rasterio.open(transform=...) should raise
+    an exception.
+    """
     with pytest.raises(TypeError):
         with rasterio.open(
                 path_rgb_byte_tif,
@@ -36,16 +49,8 @@ def test_open_affine_kwarg_warning(path_rgb_byte_tif):
             pass
 
 
-def test_guard_transform_gdal_exception(path_rgb_byte_tif):
-    """A GDAL-style transform passed to `guard_transform()` should fail."""
-    with rasterio.open(path_rgb_byte_tif) as src:
-        transform = src.transform
-    with pytest.raises(ValueError):
-        guard_transform(transform.to_gdal())
-
-
 def test_src_affine_warning(path_rgb_byte_tif):
     """Calling src.affine should raise a warning."""
     with pytest.warns(DeprecationWarning):
         with rasterio.open(path_rgb_byte_tif) as src:
-            src.affine
+            assert src.affine == src.transform
