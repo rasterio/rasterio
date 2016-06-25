@@ -285,8 +285,9 @@ setup_args = dict(
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.shapes:shapes
         stack=rasterio.rio.stack:stack
-        warp=rasterio.rio.warp:warp
         transform=rasterio.rio.transform:transform
+        warp=rasterio.rio.warp:warp
+        windows=rasterio.rio.windows:windows
     ''',
     include_package_data=True,
     ext_modules=ext_modules,
