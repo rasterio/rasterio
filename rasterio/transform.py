@@ -1,19 +1,19 @@
 """Geospatial transforms"""
 
-from __future__ import absolute_import
-from __future__ import division
 
-import warnings
+from __future__ import division
 
 from affine import Affine
 
 
 IDENTITY = Affine.identity()
+GDAL_IDENTITY = IDENTITY.to_gdal()
 
 
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
-    return seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0
+    return tuple(seq) == GDAL_IDENTITY or (
+        seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0)
 
 
 def guard_transform(transform):

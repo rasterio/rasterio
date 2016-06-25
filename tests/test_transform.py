@@ -161,3 +161,9 @@ def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
 
     with pytest.raises(TypeError):
         transform.guard_transform(aff.to_gdal())
+
+
+def test_tastes_like_gdal_identity():
+    aff = Affine.identity()
+    assert not transform.tastes_like_gdal(aff)
+    assert transform.tastes_like_gdal(aff.to_gdal())
