@@ -334,19 +334,55 @@ cdef class DatasetReader(object):
         indexes.
 
         The positional parameter `bidx` takes the index (starting at 1)
-        of the desired band. Block windows are tuples
+        of the desired band. Block windows are tuples:
 
             ((row_start, row_stop), (col_start, col_stop))
 
-        For example, ((0, 2), (0, 2)) defines a 2 x 2 block at the upper
-        left corner of the raster dataset.
+        For example, ``((0, 2), (0, 2))`` defines a ``2 x 2`` block at the
+        upper left corner of the raster dataset.
 
         This iterator yields blocks "left to right" and "top to bottom"
         and is similar to Python's enumerate() in that it also returns
         indexes.
 
         The primary use of this function is to obtain windows to pass to
-        read() for highly efficient access to raster block data.
+        `read()` for highly efficient access to raster block data.
+
+        Given an image that is ``512 x 512`` with windows that are
+        ``256 x 256``, its block's and windows would look like:
+
+            Blocks:
+
+                    0       256     512
+                  0 +--------+--------+
+                    |        |        |
+                    | (0, 0) | (0, 1) |
+                    |        |        |
+                256 +--------+--------+
+                    |        |        |
+                    | (1, 0) | (1, 1) |
+                    |        |        |
+                512 +--------+--------+
+
+
+            Windows:
+
+                UL: ((0, 256), (0, 256))
+                UR: ((0, 256), (256, 512))
+                LL: ((256, 512), (0, 256))
+                LR: ((256, 512), (256, 512))
+
+        Parameters
+        ----------
+        bidx : int
+           Extract windows from this band.  1 indexing.  A value less than 1
+           uses the first band if all bands have homogeneous windows and raises
+           an exception otherwise.
+
+        Yields
+        ------
+        tuple
+            ``(block, window)``
         """
         cdef int i, j
         block_shapes = self.block_shapes
