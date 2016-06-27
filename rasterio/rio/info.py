@@ -61,10 +61,9 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     Optionally print a single metadata item as a string.
     """
     verbosity = ctx.obj.get('verbosity')
-    mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     with Env(CPL_DEBUG=(verbosity > 2)):
         try:
-            dataset = rasterio.open(input, mode)
+            dataset = rasterio.open(input)
         except IOError as err:
             raise click.BadParameter(str(err))
         with dataset as src:

@@ -19,6 +19,8 @@ from rasterio.dtypes import (
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
 from rasterio.five import string_types
+from rasterio.io import (
+    RasterDataReader, get_writer_for_path, get_writer_for_driver)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
@@ -173,16 +175,13 @@ def open(path, mode='r', driver=None, width=None, height=None,
     # be taken over by the dataset's context manager if it is not
     # None.
     if mode == 'r':
-        from rasterio.dataio import RasterDataReader
+        s = RasterDataReader(path)
+    elif mode == 'r-':
+        warnings.warn("'r-' mode is deprecated, use 'r'", DeprecationWarning)
         s = RasterDataReader(path)
     elif mode == 'r+':
-        from rasterio.dataio import get_writer_for_path
         s = get_writer_for_path(path)(path, mode)
-    elif mode == 'r-':
-        from rasterio.metadataio import RasterMetadataReader
-        s = RasterMetadataReader(path)
     elif mode == 'w':
-        from rasterio.dataio import get_writer_for_driver
         s = get_writer_for_driver(driver)(
                 path, mode, driver=driver, width=width, height=height,
                 count=count, crs=crs, transform=transform, dtype=dtype,
