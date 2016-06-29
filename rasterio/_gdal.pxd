@@ -237,6 +237,7 @@ cdef extern from "gdal_alg.h":
     void *GDALCreateApproxTransformer( GDALTransformerFunc pfnRawTransformer, void *pRawTransformerArg, double dfMaxError )
     int  GDALApproxTransform(void *pTransformArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess )
     void GDALDestroyApproxTransformer( void * )
+    void GDALApproxTransformerOwnsSubtransformer(void *, int)
 
     int GDALFillNodata(void *dst_band, void *mask_band, double max_search_distance, int deprecated, int smoothing_iterations, char **options, void *progress_func, void *progress_data)
     int GDALChecksumImage(void *band, int xoff, int yoff, int width, int height)

@@ -60,6 +60,10 @@ cdef extern from "ogr_spatialref.h":
         pass
 
 
+cdef extern from "gdal_alg.h":
+     ctypedef int (*GDALTransformerFunc)( void *pTransformerArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess )
+
+
 log = logging.getLogger(__name__)
 
 
@@ -246,6 +250,8 @@ def _reproject(
     cdef char *key_c = NULL
     cdef char *val_c = NULL
     cdef const char* pszWarpThread = NULL
+    cdef int i
+    cdef double tolerance = 0.125
 
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
@@ -255,6 +261,7 @@ def _reproject(
         if len(source.shape) == 2:
             source = source.reshape(1, *source.shape)
         src_count = source.shape[0]
+        src_bidx = range(1, src_count + 1)
         rows = source.shape[1]
         cols = source.shape[2]
         dtype = np.dtype(source.dtype).name
@@ -303,11 +310,15 @@ def _reproject(
         # TODO: handle errors (by retval).
         log.debug("Wrote array to temp source dataset")
 
-    # If the source is a rasterio Band, no copy necessary.
+    # If the source is a rasterio MultiBand, no copy necessary.
+    # A MultiBand is a tuple: (dataset, bidx, dtype, shape(2d)).
     elif isinstance(source, tuple):
-        rdr = source.ds
+        rdr, src_bidx, dtype, shape = source
         hdsin = rdr._hds
-        src_count = 1
+        if isinstance(src_bidx, int):
+            src_bidx = [src_bidx]
+        src_count = len(src_bidx)
+        rows, cols = shape
         if src_nodata is None:
             src_nodata = rdr.nodata
     else:
@@ -319,6 +330,7 @@ def _reproject(
             destination = destination.reshape(1, *destination.shape)
         if destination.shape[0] != src_count:
             raise ValueError("Destination's shape is invalid")
+        dst_bidx = src_bidx
 
         try:
             with CPLErrors() as cple:
@@ -366,7 +378,9 @@ def _reproject(
             dst_nodata = destination.fill_value
 
     elif isinstance(destination, tuple):
-        udr = destination.ds
+        udr, dst_bidx, _, _ = destination
+        if isinstance(dst_bidx, int):
+            dst_bidx = [dst_bidx]
         hdsout = udr._hds
         if dst_nodata is None:
             dst_nodata = udr.nodata
@@ -374,6 +388,7 @@ def _reproject(
         raise ValueError("Invalid destination")
 
     cdef void *hTransformArg = NULL
+    cdef GDALTransformerFunc pfnTransformer = NULL
     cdef _gdal.GDALWarpOptions *psWOptions = NULL
 
     try:
@@ -381,12 +396,16 @@ def _reproject(
             hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
                                 hdsin, NULL, hdsout, NULL,
                                 1, 1000.0, 0)
+            pfnTransformer = _gdal.GDALGenImgProjTransform
+            hTransformArg = _gdal.GDALCreateApproxTransformer(_gdal.GDALGenImgProjTransform, hTransformArg, tolerance)
+            pfnTransformer = _gdal.GDALApproxTransform
+            _gdal.GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
             cple.check()
             psWOptions = _gdal.GDALCreateWarpOptions()
             cple.check()
         log.debug("Created transformer and options.")
     except:
-        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyApproxTransformer(hTransformArg)
         _gdal.GDALDestroyWarpOptions(psWOptions)
         raise
 
@@ -415,7 +434,7 @@ def _reproject(
     # Set src_nodata and dst_nodata
     if src_nodata is None and dst_nodata is not None:
         psWOptions.papszWarpOptions = warp_extras
-        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyApproxTransformer(hTransformArg)
         _gdal.GDALDestroyWarpOptions(psWOptions)
         raise ValueError("src_nodata must be provided because dst_nodata "
                          "is not None")
@@ -432,7 +451,7 @@ def _reproject(
     if src_nodata is not None:
         if not _io.in_dtype_range(src_nodata, source.dtype):
             psWOptions.papszWarpOptions = warp_extras
-            _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+            _gdal.GDALDestroyApproxTransformer(hTransformArg)
             _gdal.GDALDestroyWarpOptions(psWOptions)
             raise ValueError("src_nodata must be in valid range for "
                             "source dtype")
@@ -451,7 +470,7 @@ def _reproject(
     if dst_nodata is not None and not _io.in_dtype_range(
             dst_nodata, destination.dtype):
         psWOptions.papszWarpOptions = warp_extras
-        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyApproxTransformer(hTransformArg)
         _gdal.GDALDestroyWarpOptions(psWOptions)
         raise ValueError("dst_nodata must be in valid range for "
                          "destination dtype")
@@ -467,23 +486,18 @@ def _reproject(
     # This is because CSLSetNameValue returns a new list each time
     psWOptions.papszWarpOptions = warp_extras
 
-    psWOptions.pfnTransformer = _gdal.GDALGenImgProjTransform
+    psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
     psWOptions.hSrcDS = hdsin
     psWOptions.hDstDS = hdsout
     psWOptions.nBandCount = src_count
     psWOptions.panSrcBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
     psWOptions.panDstBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
-    if isinstance(source, tuple):
-        psWOptions.panSrcBands[0] = source.bidx
-    else:
-        for i in range(src_count):
-            psWOptions.panSrcBands[i] = i+1
-    if isinstance(destination, tuple):
-        psWOptions.panDstBands[0] = destination.bidx
-    else:
-        for i in range(src_count):
-            psWOptions.panDstBands[i] = i+1
+
+    for i in range(src_count):
+        psWOptions.panSrcBands[i] = src_bidx[i]
+        psWOptions.panDstBands[i] = dst_bidx[i]
+
     log.debug("Set transformer options")
 
     # TODO: alpha band.
@@ -517,7 +531,7 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
-        _gdal.GDALDestroyGenImgProjTransformer(hTransformArg)
+        _gdal.GDALDestroyApproxTransformer(hTransformArg)
         _gdal.GDALDestroyWarpOptions(psWOptions)
         if dtypes.is_ndarray(source):
             if hdsin != NULL:

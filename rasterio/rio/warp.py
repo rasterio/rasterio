@@ -1,5 +1,5 @@
 import logging
-from math import ceil
+from math import ceil, floor, log
 import warnings
 
 import click
@@ -22,9 +22,44 @@ MAX_OUTPUT_WIDTH = 100000
 MAX_OUTPUT_HEIGHT = 100000
 
 
-def warp_main(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
-         force_overwrite, creation_options):
+@click.command(short_help='Warp a raster dataset.')
+@files_inout_arg
+@options.output_opt
+@format_opt
+@click.option(
+    '--like',
+    type=click.Path(exists=True),
+    help='Raster dataset to use as a template for obtaining affine '
+         'transform (bounds and resolution), and crs.')
+@click.option('--dst-crs', default=None,
+              help='Target coordinate reference system.')
+@options.dimensions_opt
+@click.option(
+    '--src-bounds',
+    nargs=4, type=float, default=None,
+    help="Determine output extent from source bounds: left bottom right top "
+         ". Cannot be used with destination --bounds")
+@click.option(
+    '--bounds', '--dst-bounds', nargs=4, type=float, default=None,
+    help="Determine output extent from destination bounds: left bottom right top")
+@options.resolution_opt
+@click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
+              default='nearest', help="Resampling method.",
+              show_default=True)
+@click.option('--src-nodata', default=None, show_default=True,
+              type=float, help="Manually override source nodata")
+@click.option('--dst-nodata', default=None, show_default=True,
+              type=float, help="Manually override destination nodata")
+@click.option('--threads', type=int, default=1,
+              help='Number of processing threads.')
+@click.option('--check-invert-proj', is_flag=True, default=True,
+              help='Constrain output to valid coordinate region in dst-crs')
+@options.force_overwrite_opt
+@options.creation_options
+@click.pass_context
+def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
+         dst_bounds, res, resampling, src_nodata, dst_nodata, threads,
+         check_invert_proj, force_overwrite, creation_options):
     """
     Warp a raster dataset.
 
@@ -83,7 +118,7 @@ def warp_main(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                       CHECK_WITH_INVERT_PROJ=check_invert_proj):
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
-            out_kwargs = src.meta.copy()
+            out_kwargs = src.profile.copy()
             out_kwargs['driver'] = driver
 
             # Sort out the bounds options.
@@ -204,9 +239,7 @@ def warp_main(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         "--src-nodata must be provided because dst-nodata is not None")
                 else:
                     # Update the dst nodata value
-                    out_kwargs.update({
-                        'nodata': dst_nodata
-                        })
+                    out_kwargs.update({'nodata': dst_nodata})
 
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
@@ -225,65 +258,26 @@ def warp_main(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 'height': dst_height
             })
 
+            # Adjust block size if necessary.
+            if ('blockxsize' in out_kwargs and
+                    dst_width < out_kwargs['blockxsize']):
+                del out_kwargs['blockxsize']
+            if ('blockysize' in out_kwargs and
+                    dst_height < out_kwargs['blockysize']):
+                del out_kwargs['blockysize']
+
             out_kwargs.update(**creation_options)
 
             with rasterio.open(output, 'w', **out_kwargs) as dst:
-                for i in range(1, src.count + 1):
-
-                    reproject(
-                        source=rasterio.band(src, i),
-                        destination=rasterio.band(dst, i),
-                        src_transform=src.affine,
-                        src_crs=src.crs,
-                        src_nodata=src_nodata,
-                        dst_transform=out_kwargs['transform'],
-                        dst_crs=out_kwargs['crs'],
-                        dst_nodata=dst_nodata,
-                        resampling=resampling,
-                        num_threads=threads)
-
-
-@click.command(short_help='Warp a raster dataset.')
-@files_inout_arg
-@options.output_opt
-@format_opt
-@click.option(
-    '--like',
-    type=click.Path(exists=True),
-    help='Raster dataset to use as a template for obtaining affine '
-         'transform (bounds and resolution), and crs.')
-@click.option('--dst-crs', default=None,
-              help='Target coordinate reference system.')
-@options.dimensions_opt
-@click.option(
-    '--src-bounds',
-    nargs=4, type=float, default=None,
-    help="Determine output extent from source bounds: left bottom right top "
-         ". Cannot be used with destination --bounds")
-@click.option(
-    '--bounds', '--dst-bounds', nargs=4, type=float, default=None,
-    help="Determine output extent from destination bounds: left bottom right top")
-@options.resolution_opt
-@click.option('--resampling', type=click.Choice([r.name for r in Resampling]),
-              default='nearest', help="Resampling method.",
-              show_default=True)
-@click.option('--src-nodata', default=None, show_default=True,
-              type=float, help="Manually override source nodata")
-@click.option('--dst-nodata', default=None, show_default=True,
-              type=float, help="Manually override destination nodata")
-@click.option('--threads', type=int, default=1,
-              help='Number of processing threads.')
-@click.option('--check-invert-proj', is_flag=True, default=True,
-              help='Constrain output to valid coordinate region in dst-crs')
-@options.force_overwrite_opt
-@options.creation_options
-@click.option('--profile', is_flag=True, default=False)
-@click.pass_context
-def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
-         force_overwrite, creation_options, profile):
-    if profile:
-        from cProfile import runctx
-        runctx('warp_main(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds, dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj, force_overwrite, creation_options)', globals(), locals(), sort='time')
-    else:
-        warp_main(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds, dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj, force_overwrite, creation_options)
+                reproject(
+                    source=rasterio.band(src, list(range(1, src.count + 1))),
+                    destination=rasterio.band(
+                        dst, list(range(1, src.count + 1))),
+                    src_transform=src.affine,
+                    src_crs=src.crs,
+                    src_nodata=src_nodata,
+                    dst_transform=out_kwargs['transform'],
+                    dst_crs=out_kwargs['crs'],
+                    dst_nodata=dst_nodata,
+                    resampling=resampling,
+                    num_threads=threads)
