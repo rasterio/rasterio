@@ -51,8 +51,6 @@ def _shapes(image, mask, connectivity, transform):
     cdef void *hfs = NULL
     cdef void *hlayer = NULL
     cdef void *fielddefn = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterReader mrdr
     cdef char **options = NULL
 
     cdef InMemoryRaster mem_ds = None
@@ -74,7 +72,7 @@ def _shapes(image, mask, connectivity, transform):
         hband = mem_ds.band
     elif isinstance(image, tuple):
         rdr = image.ds
-        hband = rdr.band(image.bidx)
+        hband = (<_io.DatasetReaderBase?>rdr).band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
@@ -93,7 +91,7 @@ def _shapes(image, mask, connectivity, transform):
 
         elif isinstance(mask, tuple):
             mrdr = mask.ds
-            hmaskband = mrdr.band(mask.bidx)
+            hmaskband = (<_io.DatasetReaderBase?>mrdr).band(mask.bidx)
 
     # Create an in-memory feature store.
     hfdriver = _ogr.OGRGetDriverByName("Memory")
@@ -171,9 +169,6 @@ def _sieve(image, size, out, mask, connectivity):
     cdef void *in_band = NULL
     cdef void *out_band = NULL
     cdef void *mask_band = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterUpdater udr
-    cdef _io.RasterReader mask_reader
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
 
@@ -203,7 +198,7 @@ def _sieve(image, size, out, mask, connectivity):
         in_band = in_mem_ds.band
     elif isinstance(image, tuple):
         rdr = image.ds
-        in_band = rdr.band(image.bidx)
+        in_band = (<_io.DatasetReaderBase?>rdr).band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
@@ -213,7 +208,7 @@ def _sieve(image, size, out, mask, connectivity):
         out_band = out_mem_ds.band
     elif isinstance(out, tuple):
         udr = out.ds
-        out_band = udr.band(out.bidx)
+        out_band = (<_io.DatasetReaderBase?>udr).band(out.bidx)
     else:
         raise ValueError("Invalid out image")
 
@@ -232,7 +227,7 @@ def _sieve(image, size, out, mask, connectivity):
 
         elif isinstance(mask, tuple):
             mask_reader = mask.ds
-            mask_band = mask_reader.band(mask.bidx)
+            mask_band = (<_io.DatasetReaderBase?>mask_reader).band(mask.bidx)
 
     _gdal.GDALSieveFilter(
         in_band,

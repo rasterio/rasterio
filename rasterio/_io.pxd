@@ -2,52 +2,28 @@ cimport numpy as np
 
 from rasterio cimport _base
 
-
-cdef extern from "gdal.h":
-
-    ctypedef enum GDALDataType:
-        GDT_Unknown
-        GDT_Byte
-        GDT_UInt16
-        GDT_Int16
-        GDT_UInt32
-        GDT_Int32
-        GDT_Float32
-        GDT_Float64
-        GDT_CInt16
-        GDT_CInt32
-        GDT_CFloat32
-        GDT_CFloat64
-        GDT_TypeCount
-
-    ctypedef enum GDALAccess:
-        GA_ReadOnly
-        GA_Update
-
-    ctypedef enum GDALRWFlag:
-        GF_Read
-        GF_Write
+include "gdal.pxi"
 
 
-cdef class RasterReader(_base.DatasetReader):
+cdef class DatasetReaderBase(_base.DatasetBase):
     # Read-only access to raster data and metadata.
     pass
 
 
-cdef class RasterUpdater(RasterReader):
+cdef class DatasetWriterBase(DatasetReaderBase):
     # Read-write access to raster data and metadata.
     cdef readonly object _init_dtype
     cdef readonly object _init_nodata
     cdef readonly object _options
 
 
-cdef class IndirectRasterUpdater(RasterUpdater):
+cdef class BufferedDatasetWriterBase(DatasetWriterBase):
     pass
 
 
 cdef class InMemoryRaster:
-    cdef void *dataset
-    cdef void *band
+    cdef GDALDatasetH dataset
+    cdef GDALRasterBandH band
     cdef double transform[6]
     cdef int band_ids[1]
     cdef np.ndarray _image
@@ -62,7 +38,9 @@ ctypedef np.int32_t DTYPE_INT32_t
 ctypedef np.float32_t DTYPE_FLOAT32_t
 ctypedef np.float64_t DTYPE_FLOAT64_t
 
+
 cdef bint in_dtype_range(value, dtype)
+
 
 cdef int io_ubyte(
         void *hband, 
@@ -73,6 +51,7 @@ cdef int io_ubyte(
         int height, 
         np.uint8_t[:, :] buffer)
 
+
 cdef int io_uint16(
         void *hband, 
         int mode, 
@@ -81,6 +60,7 @@ cdef int io_uint16(
         int width, 
         int height,
         np.uint16_t[:, :] buffer)
+
 
 cdef int io_int16(
         void *hband, 
