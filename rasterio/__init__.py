@@ -13,10 +13,12 @@ except ImportError:  # pragma: no cover
 import warnings
 
 from rasterio._base import gdal_version
+from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
+from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
@@ -183,6 +185,12 @@ def open(path, mode='r', driver=None, width=None, height=None,
     if scheme == 's3':
         Env().get_aws_credentials()
         log.debug("AWS credentials have been obtained")
+
+    # Check driver/mode blacklist.
+    if driver and is_blacklisted(driver, mode):
+        raise RasterioIOError(
+            "Blacklisted: file cannot be opened by "
+            "driver '{0}' in '{1}' mode".format(driver, mode))
 
     # Create dataset instances and pass the given env, which will
     # be taken over by the dataset's context manager if it is not

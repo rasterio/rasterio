@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.drivers import blacklist
 from rasterio.errors import RasterioIOError
-from rasterio._io import BAD_WRITE_DRIVERS
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -276,11 +276,11 @@ def test_write_noncontiguous(tmpdir):
             dst.write(arr[:, :, i], indexes=i + 1)
 
 
-@pytest.mark.parametrize("driver", BAD_WRITE_DRIVERS)
+@pytest.mark.parametrize("driver", list(blacklist.keys()))
 def test_write_blacklist(tmpdir, driver):
     name = str(tmpdir.join("data.test"))
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open(name, 'w', driver=driver, width=100, height=100,
                       count=1, dtype='uint8')
     exc = str(exc_info.value)
-    assert "Rasterio does not support writing with {} driver".format(driver) in exc
+    assert exc.startswith("Blacklisted")
