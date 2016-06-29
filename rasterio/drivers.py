@@ -10,8 +10,14 @@ should use netcdf4-python instead:
 http://unidata.github.io/netcdf4-python/.
 """
 
-blacklist = {'netCDF': ('r+', 'w')}
+# Methods like `rasterio.open()` may use this blacklist to preempt
+# combinations of drivers and file modes.
+blacklist = {
+    # See https://github.com/mapbox/rasterio/issues/638 for discussion
+    # about writing NetCDF files.
+    'netCDF': ('r+', 'w')}
 
 
 def is_blacklisted(name, mode):
+    """Returns True if driver `name` and `mode` are blacklisted."""
     return mode in blacklist.get(name, ())
