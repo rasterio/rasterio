@@ -34,11 +34,6 @@ from rasterio.vfs import parse_path, vsi_path
 log = logging.getLogger(__name__)
 
 
-# These drivers are known to produce invalid results with
-# IndirectRasterUpdater. Save users the trouble and fail fast.
-BAD_WRITE_DRIVERS = ("netCDF", )
-
-
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
@@ -1356,10 +1351,6 @@ cdef class RasterUpdater(RasterReader):
         kwds = []
 
         if self.mode == 'w':
-            # GDAL can Create() GTiffs. Many other formats only support
-            # CreateCopy(). Rasterio lets you write GTiffs *only* for now.
-            if self.driver not in ['GTiff']:
-                raise ValueError("only GTiffs can be opened in 'w' mode")
 
             # Delete existing file, create.
             if os.path.exists(path):
@@ -1367,14 +1358,13 @@ cdef class RasterUpdater(RasterReader):
 
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
-            
             try:
                 with CPLErrors() as cple:
                     drv = _gdal.GDALGetDriverByName(drv_name)
                     cple.check()
             except Exception as err:
                 raise DriverRegistrationError(str(err))
-            
+
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
@@ -2178,10 +2168,6 @@ def writer(path, mode, **kwargs):
     if mode == 'w' and 'driver' in kwargs:
         if kwargs['driver'] == 'GTiff':
             return RasterUpdater(path, mode, **kwargs)
-        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
-            raise RasterioIOError(
-                "Rasterio does not support writing "
-                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode, **kwargs)
     else:
@@ -2204,10 +2190,6 @@ def writer(path, mode, **kwargs):
 
         if driver == 'GTiff':
             return RasterUpdater(path, mode)
-        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
-            raise RasterioIOError(
-                "Rasterio does not support updating "
-                "with {} driver".format(kwargs['driver']))
         else:
             return IndirectRasterUpdater(path, mode)
 
