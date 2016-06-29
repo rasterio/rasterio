@@ -10,6 +10,7 @@ import functools
 import math
 
 from affine import Affine
+import numpy as np
 
 
 def iter_args(function):
@@ -26,7 +27,8 @@ def iter_args(function):
 
 
 def get_data_window(arr, nodata=None):
-    """Return a window for the non-nodata pixels within the input array.
+    """
+    Returns a window for the non-nodata pixels within the input array.
 
     Parameters
     ----------
@@ -42,13 +44,42 @@ def get_data_window(arr, nodata=None):
     ((row_start, row_stop), (col_start, col_stop))
 
     """
-    from rasterio._io import get_data_window
-    return get_data_window(arr, nodata)
+
+    num_dims = len(arr.shape)
+    if num_dims > 3:
+        raise ValueError('get_data_window input array must have no more than '
+                         '3 dimensions')
+
+    if nodata is None:
+        if not hasattr(arr, 'mask'):
+            return ((0, arr.shape[-2]), (0, arr.shape[-1]))
+    else:
+        arr = np.ma.masked_array(arr, arr == nodata)
+
+    if num_dims == 2:
+        data_rows, data_cols = np.where(arr.mask == False)
+    else:
+        data_rows, data_cols = np.where(
+            np.any(np.rollaxis(arr.mask, 0, 3) == False, axis=2)
+        )
+
+    if data_rows.size:
+        row_range = (data_rows.min(), data_rows.max() + 1)
+    else:
+        row_range = (0, 0)
+
+    if data_cols.size:
+        col_range = (data_cols.min(), data_cols.max() + 1)
+    else:
+        col_range = (0, 0)
+
+    return (row_range, col_range)
 
 
 @iter_args
 def union(*windows):
-    """Union windows and return the outermost extent they cover.
+    """
+    Union windows and return the outermost extent they cover.
 
     Parameters
     ----------
@@ -59,13 +90,18 @@ def union(*windows):
     -------
     ((row_start, row_stop), (col_start, col_stop))
     """
-    from rasterio._io import window_union
-    return window_union(windows)
+
+    stacked = np.dstack(windows)
+    return (
+        (stacked[0, 0].min(), stacked[0, 1].max()),
+        (stacked[1, 0].min(), stacked[1, 1]. max())
+    )
 
 
 @iter_args
 def intersection(*windows):
-    """Intersect windows and return the innermost extent they cover.
+    """
+    Intersect windows and return the innermost extent they cover.
 
     Will raise ValueError if windows do not intersect.
 
@@ -78,13 +114,21 @@ def intersection(*windows):
     -------
     ((row_start, row_stop), (col_start, col_stop))
     """
-    from rasterio._io import window_intersection
-    return window_intersection(windows)
+
+    if not intersect(windows):
+        raise ValueError('windows do not intersect')
+
+    stacked = np.dstack(windows)
+    return (
+        (stacked[0, 0].max(), stacked[0, 1].min()),
+        (stacked[1, 0].max(), stacked[1, 1]. min())
+    )
 
 
 @iter_args
 def intersect(*windows):
-    """Test if windows intersect.
+    """
+    Test if windows intersect.
 
     Parameters
     ----------
@@ -96,8 +140,22 @@ def intersect(*windows):
     boolean:
         True if all windows intersect.
     """
-    from rasterio._io import windows_intersect
-    return windows_intersect(windows)
+
+    from itertools import combinations
+
+    def intersects(range1, range2):
+        return not (
+            range1[0] >= range2[1] or range1[1] <= range2[0]
+        )
+
+    windows = np.array(windows)
+
+    for i in (0, 1):
+        for c in combinations(windows[:, i], 2):
+            if not intersects(*c):
+                return False
+
+    return True
 
 
 def window(transform, left, bottom, right, top,
