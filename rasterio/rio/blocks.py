@@ -1,4 +1,4 @@
-"""$ rio windows"""
+"""$ rio blocks"""
 
 
 import json
@@ -96,7 +96,7 @@ class _Collection(object):
     '--bidx', type=click.INT, default=0,
     help="Index of the band that is the source of shapes.")
 @click.pass_context
-def windows(
+def blocks(
         ctx, input, output, precision, indent, compact, projection, sequence,
         use_rs, bidx):
 

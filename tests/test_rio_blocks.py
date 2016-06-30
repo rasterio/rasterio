@@ -1,4 +1,4 @@
-"""Unittests for $ rio windows"""
+"""Unittests for $ rio blocks"""
 
 
 import itertools as it
@@ -43,7 +43,7 @@ def check_features_block_windows(features, src, bidx):
 
 def test_windows(runner, path_rgb_byte_tif):
     result = runner.invoke(main_group, [
-        'windows', path_rgb_byte_tif])
+        'blocks', path_rgb_byte_tif])
     assert result.exit_code == 0
 
     fc = json.loads(result.output)
@@ -56,7 +56,7 @@ def test_windows(runner, path_rgb_byte_tif):
 
 def test_windows_sequence(runner, path_rgb_byte_tif):
     result = runner.invoke(main_group, [
-        'windows',
+        'blocks',
         path_rgb_byte_tif,
         '--sequence'])
     assert result.exit_code == 0
@@ -69,7 +69,7 @@ def test_windows_sequence(runner, path_rgb_byte_tif):
 
 def test_windows_precision(runner, path_rgb_byte_tif):
     result = runner.invoke(main_group, [
-        'windows',
+        'blocks',
         path_rgb_byte_tif,
         '--precision', 1])
     assert result.exit_code == 0
@@ -80,7 +80,7 @@ def test_windows_precision(runner, path_rgb_byte_tif):
 
 def test_windows_indent(runner, path_rgb_byte_tif):
     result = runner.invoke(main_group, [
-        'windows',
+        'blocks',
         path_rgb_byte_tif,
         '--indent', 4])
     assert result.exit_code == 0
@@ -96,7 +96,7 @@ def test_windows_indent(runner, path_rgb_byte_tif):
 
 def test_windows_compact(runner, path_rgb_byte_tif):
     result = runner.invoke(main_group, [
-        'windows',
+        'blocks',
         path_rgb_byte_tif,
         '--compact'])
     assert result.exit_code == 0
@@ -112,7 +112,7 @@ def test_windows_exception(runner, path_rgb_byte_tif):
     not have 4 bands.
     """
     result = runner.invoke(main_group, [
-        'windows',
+        'blocks',
         path_rgb_byte_tif,
         '--bidx', 4])
     assert result.exit_code == 1
@@ -120,7 +120,7 @@ def test_windows_exception(runner, path_rgb_byte_tif):
 
 def test_windows_projected(runner, path_rgb_byte_tif):
     result = runner.invoke(main_group, [
-        'windows',
+        'blocks',
         path_rgb_byte_tif,
         '--projected'])
     assert result.exit_code == 0

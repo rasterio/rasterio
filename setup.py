@@ -270,6 +270,7 @@ setup_args = dict(
         rio=rasterio.rio.main:main_group
 
         [rasterio.rio_commands]
+        blocks=rasterio.rio.blocks:blocks
         bounds=rasterio.rio.bounds:bounds
         calc=rasterio.rio.calc:calc
         clip=rasterio.rio.clip:clip
@@ -287,7 +288,6 @@ setup_args = dict(
         stack=rasterio.rio.stack:stack
         transform=rasterio.rio.transform:transform
         warp=rasterio.rio.warp:warp
-        windows=rasterio.rio.windows:windows
     ''',
     include_package_data=True,
     ext_modules=ext_modules,
