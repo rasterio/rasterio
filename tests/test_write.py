@@ -8,8 +8,10 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioIOError
-from rasterio._io import BAD_WRITE_DRIVERS
+from rasterio.drivers import blacklist
+from rasterio.env import Env
+from rasterio.errors import RasterioIOError, DriverRegistrationError
+from rasterio._base import driver_supports_mode
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -61,13 +63,13 @@ def test_context(tmpdir):
         assert s.height == 100
         assert s.shape == (100, 100)
         assert s.indexes == (1,)
-        assert repr(s) == "<open RasterUpdater name='%s' mode='w'>" % name
+        assert repr(s) == "<open DatasetWriter name='%s' mode='w'>" % name
     assert s.closed
     assert s.count == 1
     assert s.width == 100
     assert s.height == 100
     assert s.shape == (100, 100)
-    assert repr(s) == "<closed RasterUpdater name='%s' mode='w'>" % name
+    assert repr(s) == "<closed DatasetWriter name='%s' mode='w'>" % name
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "GTiff" in info
     assert "Size is 100, 100" in info
@@ -279,11 +281,16 @@ def test_write_noncontiguous(tmpdir):
             dst.write(arr[:, :, i], indexes=i + 1)
 
 
-@pytest.mark.parametrize("driver", BAD_WRITE_DRIVERS)
+@pytest.mark.parametrize("driver", list(blacklist.keys()))
 def test_write_blacklist(tmpdir, driver):
+
+    # Skip if we don't have driver support built in.
+    if driver not in Env().drivers():
+        pytest.skip()
+
     name = str(tmpdir.join("data.test"))
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open(name, 'w', driver=driver, width=100, height=100,
                       count=1, dtype='uint8')
     exc = str(exc_info.value)
-    assert "Rasterio does not support writing with {} driver".format(driver) in exc
+    assert exc.startswith("Blacklisted")

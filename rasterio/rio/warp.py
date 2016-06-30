@@ -1,7 +1,8 @@
 """$ rio warp"""
 
-
-from math import ceil
+import logging
+from math import ceil, floor, log
+import warnings
 
 import click
 from cligj import files_inout_arg, format_opt
@@ -53,14 +54,14 @@ MAX_OUTPUT_HEIGHT = 100000
               type=float, help="Manually override destination nodata")
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
-@click.option('--check-invert-proj', type=bool, default=True,
+@click.option('--check-invert-proj', is_flag=True, default=True,
               help='Constrain output to valid coordinate region in dst-crs')
 @options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
-         dst_bounds, res, resampling, src_nodata, dst_nodata, threads, check_invert_proj,
-         force_overwrite, creation_options):
+         dst_bounds, res, resampling, src_nodata, dst_nodata, threads,
+         check_invert_proj, force_overwrite, creation_options):
     """
     Warp a raster dataset.
 
@@ -119,7 +120,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                       CHECK_WITH_INVERT_PROJ=check_invert_proj):
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
-            out_kwargs = src.meta.copy()
+            out_kwargs = src.profile.copy()
             out_kwargs['driver'] = driver
 
             # Sort out the bounds options.
@@ -240,9 +241,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         "--src-nodata must be provided because dst-nodata is not None")
                 else:
                     # Update the dst nodata value
-                    out_kwargs.update({
-                        'nodata': dst_nodata
-                        })
+                    out_kwargs.update({'nodata': dst_nodata})
 
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
@@ -260,19 +259,26 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 'height': dst_height
             })
 
+            # Adjust block size if necessary.
+            if ('blockxsize' in out_kwargs and
+                    dst_width < out_kwargs['blockxsize']):
+                del out_kwargs['blockxsize']
+            if ('blockysize' in out_kwargs and
+                    dst_height < out_kwargs['blockysize']):
+                del out_kwargs['blockysize']
+
             out_kwargs.update(**creation_options)
 
             with rasterio.open(output, 'w', **out_kwargs) as dst:
-                for i in range(1, src.count + 1):
-
-                    reproject(
-                        source=rasterio.band(src, i),
-                        destination=rasterio.band(dst, i),
-                        src_transform=src.transform,
-                        src_crs=src.crs,
-                        src_nodata=src_nodata,
-                        dst_transform=out_kwargs['transform'],
-                        dst_crs=out_kwargs['crs'],
-                        dst_nodata=dst_nodata,
-                        resampling=resampling,
-                        num_threads=threads)
+                reproject(
+                    source=rasterio.band(src, list(range(1, src.count + 1))),
+                    destination=rasterio.band(
+                        dst, list(range(1, src.count + 1))),
+                    src_transform=src.transform,
+                    src_crs=src.crs,
+                    src_nodata=src_nodata,
+                    dst_transform=out_kwargs['transform'],
+                    dst_crs=out_kwargs['crs'],
+                    dst_nodata=dst_nodata,
+                    resampling=resampling,
+                    num_threads=threads)

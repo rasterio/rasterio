@@ -47,7 +47,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.meta['crs'], s.crs)
             self.assertEqual(
                 repr(s),
-                "<open RasterReader name='tests/data/RGB.byte.tif' "
+                "<open DatasetReader name='tests/data/RGB.byte.tif' "
                 "mode='r'>")
         self.assertEqual(s.closed, True)
         self.assertEqual(s.count, 3)
@@ -64,7 +64,7 @@ class ReaderContextTest(unittest.TestCase):
              0, 0, 1.0))
         self.assertEqual(
             repr(s),
-            "<closed RasterReader name='tests/data/RGB.byte.tif' "
+            "<closed DatasetReader name='tests/data/RGB.byte.tif' "
             "mode='r'>")
 
     def test_derived_spatial(self):

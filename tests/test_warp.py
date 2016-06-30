@@ -37,7 +37,7 @@ def supported_resampling(method):
 
 
 reproj_expected = (
-    ({'CHECK_WITH_INVERT_PROJ': False}, 6215),
+    ({'CHECK_WITH_INVERT_PROJ': False}, 6217),
     ({'CHECK_WITH_INVERT_PROJ': True}, 4005))
 
 
@@ -234,7 +234,7 @@ def test_reproject_ndarray():
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
-        assert (out > 0).sum() == 438146
+        assert (out > 0).sum() == 438113
 
 
 def test_reproject_epsg():
@@ -252,7 +252,7 @@ def test_reproject_epsg():
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
-        assert (out > 0).sum() == 438146
+        assert (out > 0).sum() == 438113
 
 
 def test_reproject_out_of_bounds():

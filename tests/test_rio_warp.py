@@ -460,7 +460,7 @@ def test_warp_reproject_check_invert(runner, tmpdir):
     srcname = 'tests/data/world.rgb.tif'
     outputname = str(tmpdir.join('test.tif'))
     result = runner.invoke(warp.warp, [srcname, outputname,
-                                       '--check-invert-proj', 'yes',
+                                       '--check-invert-proj',
                                        '--dst-crs', 'EPSG:3759'])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -471,7 +471,6 @@ def test_warp_reproject_check_invert(runner, tmpdir):
 
     output2name = str(tmpdir.join('test2.tif'))
     result = runner.invoke(warp.warp, [srcname, output2name,
-                                       '--check-invert-proj', 'no',
                                        '--dst-crs', 'EPSG:3759'])
     assert result.exit_code == 0
     assert os.path.exists(output2name)

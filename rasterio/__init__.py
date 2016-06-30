@@ -14,11 +14,15 @@ except ImportError:  # pragma: no cover
 
 from rasterio._base import (
     eval_window, window_shape, window_index, gdal_version)
+from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
+from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
+from rasterio.io import (
+    DatasetReader, get_writer_for_path, get_writer_for_driver)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
@@ -188,24 +192,28 @@ def open(path, mode='r', driver=None, width=None, height=None,
         Env().get_aws_credentials()
         log.debug("AWS credentials have been obtained")
 
+    # Check driver/mode blacklist.
+    if driver and is_blacklisted(driver, mode):
+        raise RasterioIOError(
+            "Blacklisted: file cannot be opened by "
+            "driver '{0}' in '{1}' mode".format(driver, mode))
+
     # Create dataset instances and pass the given env, which will
     # be taken over by the dataset's context manager if it is not
     # None.
     if mode == 'r':
-        from rasterio._io import RasterReader
-        s = RasterReader(path)
-    elif mode == 'r+':
-        from rasterio._io import writer
-        s = writer(path, mode)
-    elif mode == 'r-':
-        from rasterio._base import DatasetReader
         s = DatasetReader(path)
+    elif mode == 'r-':
+        warnings.warn("'r-' mode is deprecated, use 'r'", DeprecationWarning)
+        s = DatasetReader(path)
+    elif mode == 'r+':
+        s = get_writer_for_path(path)(path, mode)
     elif mode == 'w':
-        from rasterio._io import writer
-        s = writer(path, mode, driver=driver,
-                   width=width, height=height, count=count,
-                   crs=crs, transform=transform, dtype=dtype,
-                   nodata=nodata, **kwargs)
+        s = get_writer_for_driver(driver)(path, mode, driver=driver,
+                                          width=width, height=height,
+                                          count=count, crs=crs,
+                                          transform=transform, dtype=dtype,
+                                          nodata=nodata, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
@@ -255,7 +263,7 @@ def band(ds, bidx):
     ----------
     ds: rasterio.RasterReader
         Open rasterio dataset
-    bidx: int
+    bidx: int or sequence of ints
         Band number, index starting at 1
 
     Returns

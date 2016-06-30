@@ -30,11 +30,6 @@ from rasterio.vfs import parse_path, vsi_path
 log = logging.getLogger(__name__)
 
 
-# These drivers are known to produce invalid results with
-# IndirectRasterUpdater. Save users the trouble and fail fast.
-BAD_WRITE_DRIVERS = ("netCDF", )
-
-
 cdef bint in_dtype_range(value, dtype):
     """Returns True if value is in the range of dtype, else False."""
     infos = {
@@ -617,7 +612,7 @@ cdef int io_auto(image, void *hband, bint write):
         raise ValueError("Specified image must have 2 or 3 dimensions")
 
 
-cdef class RasterReader(_base.DatasetReader):
+cdef class DatasetReaderBase(_base.DatasetBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False):
@@ -1208,7 +1203,7 @@ cdef class RasterReader(_base.DatasetReader):
         return sample_gen(self, xy, indexes)
 
 
-cdef class RasterUpdater(RasterReader):
+cdef class DatasetWriterBase(DatasetReaderBase):
     # Read-write access to raster data and metadata.
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
@@ -1281,10 +1276,6 @@ cdef class RasterUpdater(RasterReader):
         kwds = []
 
         if self.mode == 'w':
-            # GDAL can Create() GTiffs. Many other formats only support
-            # CreateCopy(). Rasterio lets you write GTiffs *only* for now.
-            if self.driver not in ['GTiff']:
-                raise ValueError("only GTiffs can be opened in 'w' mode")
 
             # Delete existing file, create.
             if os.path.exists(path):
@@ -1292,14 +1283,13 @@ cdef class RasterUpdater(RasterReader):
 
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
-            
             try:
                 with CPLErrors() as cple:
                     drv = _gdal.GDALGetDriverByName(drv_name)
                     cple.check()
             except Exception as err:
                 raise DriverRegistrationError(str(err))
-            
+
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
@@ -1915,7 +1905,7 @@ cdef class InMemoryRaster:
         io_auto(image, self.band, True)
 
 
-cdef class IndirectRasterUpdater(RasterUpdater):
+cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __repr__(self):
         return "<%s IndirectRasterUpdater name='%s' mode='%s'>" % (
@@ -2058,75 +2048,6 @@ cdef class IndirectRasterUpdater(RasterUpdater):
                 _gdal.CSLDestroy(options)
             if temp != NULL:
                 _gdal.GDALClose(temp)
-
-
-def writer(path, mode, **kwargs):
-    """Get a writer instance for path
-
-    Parameters
-    ----------
-    path: Path to new raster (for mode=='w') or existing raster to be updated
-    mode: string, open mode, one of ('w', 'r+')
-
-    Returns
-    -------
-    RasterUpdater in the case of GeoTiff
-        writes directly to disk
-    IndirectRasterUpdater for any other driver
-        using temporary MEM driver before copying data
-        to the final destination
-
-    Raises ``RasterioIOError` if driver is blacklisted from writing
-    due to known bugs in the IndirectRasterUpdater approach
-    """
-    # Dispatch to direct or indirect writer/updater according to the
-    # format driver's capabilities.
-    cdef void *hds = NULL
-    cdef void *drv = NULL
-    cdef const char *drv_name = NULL
-    cdef const char *fname = NULL
-
-    path, archive, scheme = parse_path(path)
-    if scheme and scheme != 'file':
-        raise TypeError(
-            "VFS '{0}' datasets can not be created or updated.".format(
-                scheme))
-
-    if mode == 'w' and 'driver' in kwargs:
-        if kwargs['driver'] == 'GTiff':
-            return RasterUpdater(path, mode, **kwargs)
-        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
-            raise RasterioIOError(
-                "Rasterio does not support writing "
-                "with {} driver".format(kwargs['driver']))
-        else:
-            return IndirectRasterUpdater(path, mode, **kwargs)
-    else:
-        # Peek into the dataset at path to determine it's format
-        # driver.
-        name_b = path.encode('utf-8')
-        fname = name_b
-        try:
-            with CPLErrors() as cple:
-                hds = _gdal.GDALOpen(fname, 0)
-                cple.check()
-        except CPLE_OpenFailed as exc:
-            raise RasterioIOError(str(exc))
-
-        drv = _gdal.GDALGetDatasetDriver(hds)
-        drv_name = _gdal.GDALGetDriverShortName(drv)
-        drv_name_b = drv_name
-        driver = drv_name_b.decode('utf-8')
-        _gdal.GDALClose(hds)
-
-        if driver == 'GTiff':
-            return RasterUpdater(path, mode)
-        elif kwargs['driver'] in BAD_WRITE_DRIVERS:
-            raise RasterioIOError(
-                "Rasterio does not support updating "
-                "with {} driver".format(kwargs['driver']))
-        else:
-            return IndirectRasterUpdater(path, mode)
 
 
 def virtual_file_to_buffer(filename):
