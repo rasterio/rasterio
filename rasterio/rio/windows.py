@@ -23,8 +23,7 @@ class _Collection(object):
 
     def __init__(self, src, bidx, precision, geographic):
 
-        """Produce a series of GeoJSON polygon features from a `RasterReader()`
-        representing dataset windows.
+        """Export raster dataset windows to GeoJSON polygon features.
 
         Parameters
         ----------
@@ -53,7 +52,7 @@ class _Collection(object):
         bounds = self._src.bounds
         if self._geographic:
             bounds = transform_bounds(self._src.crs, 'EPSG:4326', *bounds)
-        if self._precision > 0:
+        if self._precision >= 0:
             bounds = (round(v, self._precision) for v in bounds)
         return tuple(bounds)
 
@@ -63,7 +62,7 @@ class _Collection(object):
             bounds = self._src.window_bounds(window)
             if self._geographic:
                 bounds = transform_bounds(self._src.crs, 'EPSG:4326', *bounds)
-            if self._precision > 0:
+            if self._precision >= 0:
                 bounds = (round(v, self._precision) for v in bounds)
             xmin, ymin, xmax, ymax = bounds
             yield {
