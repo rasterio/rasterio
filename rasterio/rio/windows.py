@@ -21,7 +21,7 @@ class _Collection(object):
 
     """For use with `rasterio.rio.helpers.write_features()`."""
 
-    def __init__(self, src, bidx, precision, geographic):
+    def __init__(self, src, bidx, precision=6, geographic=True):
 
         """Export raster dataset windows to GeoJSON polygon features.
 
@@ -31,9 +31,9 @@ class _Collection(object):
             An open datasource.
         bidx : int
             Extract windows from this band.
-        precision : int
+        precision : int, optional
             Coordinate precision.
-        geographic : bool
+        geographic : bool, optional
             Reproject geometries to ``EPSG:4326`` if ``True``.
 
         Yields
@@ -47,23 +47,21 @@ class _Collection(object):
         self._precision = precision
         self._geographic = geographic
 
-    @property
-    def bbox(self):
-        bounds = self._src.bounds
+    def _normalize_bounds(self, bounds):
         if self._geographic:
             bounds = transform_bounds(self._src.crs, 'EPSG:4326', *bounds)
         if self._precision >= 0:
             bounds = (round(v, self._precision) for v in bounds)
-        return tuple(bounds)
+        return bounds
+
+    @property
+    def bbox(self):
+        return tuple(self._normalize_bounds(self._src.bounds))
 
     def __call__(self):
         gen = self._src.block_windows(bidx=self._bidx)
         for idx, (block, window) in enumerate(gen):
-            bounds = self._src.window_bounds(window)
-            if self._geographic:
-                bounds = transform_bounds(self._src.crs, 'EPSG:4326', *bounds)
-            if self._precision >= 0:
-                bounds = (round(v, self._precision) for v in bounds)
+            bounds = self._normalize_bounds(self._src.window_bounds(window))
             xmin, ymin, xmax, ymax = bounds
             yield {
                 'type': 'Feature',
@@ -102,7 +100,7 @@ def windows(
         ctx, input, output, precision, indent, compact, projection, sequence,
         use_rs, bidx):
 
-    """Write dataset windows as GeoJSON.
+    """Write dataset blocks as GeoJSON features.
 
     This command writes features describing a rasters internal tiling scheme,
     which are often used to visually get a feel for how a windowed operation
@@ -117,8 +115,9 @@ def windows(
     describes the range of pixels the window covers in the input band.  Values
     are JSON encoded for better interoperability.
 
-    The first band is used by default, but any other band can be specified
-    using the `--bidx` option:
+    Block windows are extracted from the dataset (all bands must have matching
+    block windows) by default, or from the band specified using the `--bidx`
+    option:
     \b
 
         $ rio shapes --bidx 3 tests/data/RGB.byte.tif
@@ -134,7 +133,7 @@ def windows(
     coordinate reference system.
 
     For more information on exactly what blocks and windows represent, see
-    `RasterReader.block_windows()`.
+    `src.block_windows()`.
     """
 
     verbosity = ctx.obj['verbosity'] if ctx.obj else 1
