@@ -20,12 +20,15 @@ from rasterio.coords import BoundingBox
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.env import Env
-from rasterio.errors import RasterioIOError, CRSError
+from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
 from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
 
+include "gdal.pxi"
+
 
 log = logging.getLogger(__name__)
+
 
 
 def check_gdal_version(major, minor):
@@ -35,13 +38,70 @@ def check_gdal_version(major, minor):
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
-    cdef const char *ver_c = NULL
-    ver_c = _gdal.GDALVersionInfo("RELEASE_NAME")
-    ver_b = ver_c
-    return ver_b.decode('utf-8')
+    #cdef const char *releasename = _gdal.GDALVersionInfo("RELEASE_NAME")
+    releasename = <bytes> _gdal.GDALVersionInfo("RELEASE_NAME")
+    return releasename.decode('utf-8')
 
 
-cdef class DatasetReader(object):
+def get_dataset_driver(path):
+    """Return the name of the driver that would be used to open the
+    dataset at the given path."""
+    cdef GDALDatasetH hds = NULL
+    cdef GDALDriverH drv = NULL
+    cdef const char *drivername = NULL
+    cdef const char *filename = NULL
+
+    path, archive, scheme = parse_path(path)
+    path = vsi_path(path, archive, scheme)
+    name_b = path.encode('utf-8')
+    filename = name_b
+    try:
+        with CPLErrors() as cple:
+            hds = _gdal.GDALOpen(filename, 0)
+            cple.check()
+    except CPLE_OpenFailed as exc:
+        raise RasterioIOError(str(exc))
+
+    drv = _gdal.GDALGetDatasetDriver(hds)
+    drivername = _gdal.GDALGetDriverShortName(drv)
+    drivername_b = drivername
+    driver = drivername_b.decode('utf-8')
+    _gdal.GDALClose(hds)
+
+    return driver
+
+
+def driver_supports_mode(name, mode):
+    """Return True if the driver supports the mode"""
+    cdef GDALDriverH drv = NULL
+    cdef const char *drivername = NULL
+    cdef const char *drivermode = NULL
+    cdef char **metadata = NULL
+
+    name_b = name.encode('utf-8')
+    drivername = name_b
+    drv = _gdal.GDALGetDriverByName(drivername)
+    if drv == NULL:
+        raise DriverRegistrationError("No such driver: %s", name)
+
+    mode_b = mode.encode('utf-8')
+    drivermode = mode_b
+
+    metadata = _gdal.GDALGetMetadata(drv, NULL)
+    return bool(_gdal.CSLFetchBoolean(metadata, drivermode, 0))
+
+
+def driver_can_create(driver_name):
+    """Return True if the driver has CREATE capability"""
+    return driver_supports_mode(driver_name, 'DCAP_CREATE')
+
+
+def driver_can_create_copy(driver_name):
+    """Return True if the driver has CREATE_COPY capability"""
+    return driver_supports_mode(driver_name, 'DCAP_CREATECOPY')
+
+
+cdef class DatasetBase(object):
 
     def __init__(self, path, options=None):
         self.name = path
@@ -95,9 +155,11 @@ cdef class DatasetReader(object):
         self._closed = False
         log.debug("Dataset %r is started.", self)
 
+    cdef GDALDatasetH handle(self) except NULL:
+        return self._hds
 
-    cdef void *band(self, int bidx) except NULL:
-        cdef void *hband = NULL
+    cdef GDALRasterBandH band(self, int bidx) except NULL:
+        cdef GDALRasterBandH hband = NULL
         try:
             with CPLErrors() as cple:
                 hband = _gdal.GDALGetRasterBand(self._hds, bidx)
@@ -107,14 +169,10 @@ cdef class DatasetReader(object):
         return hband
 
     def _has_band(self, bidx):
-        cdef void *hband = NULL
         try:
-            with CPLErrors() as cple:
-                hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-                cple.check()
-        except CPLE_IllegalArg:
+            return self.band(bidx) != NULL
+        except IndexError:
             return False
-        return True
 
     def read_crs(self):
         cdef char *proj_c = NULL
@@ -583,7 +641,7 @@ cdef class DatasetReader(object):
         a namespace other than the default.
         """
         cdef char *item_c
-        cdef void *hobj
+        cdef GDALRasterBandH hobj
         cdef const char *domain_c
         cdef char **papszStrList
 
@@ -654,8 +712,8 @@ cdef class DatasetReader(object):
 
     # Overviews.
     def overviews(self, bidx):
-        cdef void *hovband = NULL
-        cdef void *hband = self.band(bidx)
+        cdef GDALRasterBandH hovband = NULL
+        cdef GDALRasterBandH hband = self.band(bidx)
         num_overviews = _gdal.GDALGetOverviewCount(hband)
         factors = []
         for i in range(num_overviews):

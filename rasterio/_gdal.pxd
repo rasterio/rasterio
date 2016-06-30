@@ -11,8 +11,8 @@ cdef extern from "cpl_string.h":
     int CSLCount (char **papszStrList)
     char ** CSLAddNameValue (char **papszStrList, const char *pszName, const char *pszValue)
     char ** CSLDuplicate (char ** papszStrList)
-
     int CSLFindName (char **papszStrList, const char *pszName)
+    int CSLFetchBoolean (char **papszStrList, const char *pszName, int default)
     const char * CSLFetchNameValue (char **papszStrList, const char *pszName)
     char ** CSLSetNameValue (char **list, char *name, char *val)
     void    CSLDestroy (char **list)
@@ -48,6 +48,14 @@ cdef extern from "ogr_srs_api.h":
 
 
 cdef extern from "gdal.h" nogil:
+    ctypedef void * GDALMajorObjectH
+    ctypedef void * GDALDatasetH
+    ctypedef void * GDALRasterBandH
+    ctypedef void * GDALDriverH
+    ctypedef void * GDALColorTableH
+    ctypedef void * GDALRasterAttributeTableH
+    ctypedef void * GDALAsyncReaderH
+
     void GDALAllRegister()
     int GDALGetDriverCount()
     void * GDALGetDriver(int)

@@ -616,7 +616,7 @@ cdef int io_auto(image, void *hband, bint write):
         raise ValueError("Specified image must have 2 or 3 dimensions")
 
 
-cdef class RasterReader(_base.DatasetReader):
+cdef class DatasetReaderBase(_base.DatasetBase):
 
     def read_band(self, bidx, out=None, window=None, masked=False):
         """Read the `bidx` band into an `out` array if provided, 
@@ -1278,7 +1278,7 @@ cdef class RasterReader(_base.DatasetReader):
         return sample_gen(self, xy, indexes)
 
 
-cdef class RasterUpdater(RasterReader):
+cdef class DatasetWriterBase(DatasetReaderBase):
     # Read-write access to raster data and metadata.
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
@@ -1988,7 +1988,7 @@ cdef class InMemoryRaster:
         io_auto(image, self.band, True)
 
 
-cdef class IndirectRasterUpdater(RasterUpdater):
+cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __repr__(self):
         return "<%s IndirectRasterUpdater name='%s' mode='%s'>" % (
@@ -2131,67 +2131,6 @@ cdef class IndirectRasterUpdater(RasterUpdater):
                 _gdal.CSLDestroy(options)
             if temp != NULL:
                 _gdal.GDALClose(temp)
-
-
-def writer(path, mode, **kwargs):
-    """Get a writer instance for path
-
-    Parameters
-    ----------
-    path: Path to new raster (for mode=='w') or existing raster to be updated
-    mode: string, open mode, one of ('w', 'r+')
-
-    Returns
-    -------
-    RasterUpdater in the case of GeoTiff
-        writes directly to disk
-    IndirectRasterUpdater for any other driver
-        using temporary MEM driver before copying data
-        to the final destination
-
-    Raises ``RasterioIOError` if driver is blacklisted from writing
-    due to known bugs in the IndirectRasterUpdater approach
-    """
-    # Dispatch to direct or indirect writer/updater according to the
-    # format driver's capabilities.
-    cdef void *hds = NULL
-    cdef void *drv = NULL
-    cdef const char *drv_name = NULL
-    cdef const char *fname = NULL
-
-    path, archive, scheme = parse_path(path)
-    if scheme and scheme != 'file':
-        raise TypeError(
-            "VFS '{0}' datasets can not be created or updated.".format(
-                scheme))
-
-    if mode == 'w' and 'driver' in kwargs:
-        if kwargs['driver'] == 'GTiff':
-            return RasterUpdater(path, mode, **kwargs)
-        else:
-            return IndirectRasterUpdater(path, mode, **kwargs)
-    else:
-        # Peek into the dataset at path to determine it's format
-        # driver.
-        name_b = path.encode('utf-8')
-        fname = name_b
-        try:
-            with CPLErrors() as cple:
-                hds = _gdal.GDALOpen(fname, 0)
-                cple.check()
-        except CPLE_OpenFailed as exc:
-            raise RasterioIOError(str(exc))
-
-        drv = _gdal.GDALGetDatasetDriver(hds)
-        drv_name = _gdal.GDALGetDriverShortName(drv)
-        drv_name_b = drv_name
-        driver = drv_name_b.decode('utf-8')
-        _gdal.GDALClose(hds)
-
-        if driver == 'GTiff':
-            return RasterUpdater(path, mode)
-        else:
-            return IndirectRasterUpdater(path, mode)
 
 
 def virtual_file_to_buffer(filename):

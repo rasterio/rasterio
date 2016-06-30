@@ -238,8 +238,6 @@ def _reproject(
     cdef void *hdsout = NULL
     cdef void *hbandin = NULL
     cdef void *hbandout = NULL
-    cdef _io.RasterReader rdr
-    cdef _io.RasterUpdater udr
     cdef _io.GDALAccess GA
     cdef double gt[6]
     cdef char *srcwkt = NULL
@@ -314,11 +312,11 @@ def _reproject(
     # A MultiBand is a tuple: (dataset, bidx, dtype, shape(2d)).
     elif isinstance(source, tuple):
         rdr, src_bidx, dtype, shape = source
-        hdsin = rdr._hds
         if isinstance(src_bidx, int):
             src_bidx = [src_bidx]
         src_count = len(src_bidx)
         rows, cols = shape
+        hdsin = (<_io.DatasetReaderBase?>rdr).handle()
         if src_nodata is None:
             src_nodata = rdr.nodata
     else:
@@ -381,7 +379,8 @@ def _reproject(
         udr, dst_bidx, _, _ = destination
         if isinstance(dst_bidx, int):
             dst_bidx = [dst_bidx]
-        hdsout = udr._hds
+        udr = destination.ds
+        hdsout = (<_io.DatasetReaderBase?>udr).handle()
         if dst_nodata is None:
             dst_nodata = udr.nodata
     else:
