@@ -268,7 +268,7 @@ def band(ds, bidx):
     ----------
     ds: rasterio.RasterReader
         Open rasterio dataset
-    bidx: int
+    bidx: int or sequence of ints
         Band number, index starting at 1
 
     Returns
