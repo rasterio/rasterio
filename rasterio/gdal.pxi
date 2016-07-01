@@ -28,3 +28,12 @@ cdef extern from "gdal.h":
     ctypedef enum GDALRWFlag:
         GF_Read
         GF_Write
+    ctypedef struct GDALColorEntry:
+        short c1
+        short c2
+        short c3
+        short c4
+
+cdef extern from "ogr_srs_api.h":
+    ctypedef void * OGRSpatialReferenceH
+    ctypedef void * OGRCoordinateTransformationH

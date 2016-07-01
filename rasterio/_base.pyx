@@ -1,4 +1,5 @@
-# cython: boundscheck=False
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
+
 """Numpy-free base classes."""
 
 from __future__ import absolute_import
@@ -38,70 +39,74 @@ def check_gdal_version(major, minor):
 
 def gdal_version():
     """Return the version as a major.minor.patchlevel string."""
-    #cdef const char *releasename = _gdal.GDALVersionInfo("RELEASE_NAME")
-    releasename = <bytes> _gdal.GDALVersionInfo("RELEASE_NAME")
-    return releasename.decode('utf-8')
+    return _gdal.GDALVersionInfo("RELEASE_NAME")
+
+
+cdef get_driver_name(GDALDriverH driver):
+    """Return Python name of the driver"""
+    return _gdal.GDALGetDriverShortName(driver)
 
 
 def get_dataset_driver(path):
     """Return the name of the driver that would be used to open the
     dataset at the given path."""
-    cdef GDALDatasetH hds = NULL
-    cdef GDALDriverH drv = NULL
-    cdef const char *drivername = NULL
-    cdef const char *filename = NULL
+    cdef GDALDatasetH dataset = NULL
+    cdef GDALDriverH driver = NULL
 
     path, archive, scheme = parse_path(path)
     path = vsi_path(path, archive, scheme)
-    name_b = path.encode('utf-8')
-    filename = name_b
+    path = path.encode('utf-8')
+
     try:
         with CPLErrors() as cple:
-            hds = _gdal.GDALOpen(filename, 0)
+            dataset = _gdal.GDALOpen(<const char *>path, 0)
             cple.check()
     except CPLE_OpenFailed as exc:
+        if dataset != NULL:
+            _gdal.GDALClose(dataset)
         raise RasterioIOError(str(exc))
 
-    drv = _gdal.GDALGetDatasetDriver(hds)
-    drivername = _gdal.GDALGetDriverShortName(drv)
-    drivername_b = drivername
-    driver = drivername_b.decode('utf-8')
-    _gdal.GDALClose(hds)
+    driver = _gdal.GDALGetDatasetDriver(dataset)
+    drivername = get_driver_name(driver)
 
-    return driver
+    _gdal.GDALClose(dataset)
+
+    return drivername
 
 
-def driver_supports_mode(name, mode):
+def driver_supports_mode(drivername, creation_mode):
     """Return True if the driver supports the mode"""
-    cdef GDALDriverH drv = NULL
-    cdef const char *drivername = NULL
-    cdef const char *drivermode = NULL
+    cdef GDALDriverH driver = NULL
     cdef char **metadata = NULL
 
-    name_b = name.encode('utf-8')
-    drivername = name_b
-    drv = _gdal.GDALGetDriverByName(drivername)
-    if drv == NULL:
-        raise DriverRegistrationError("No such driver: %s", name)
+    drivername = drivername.encode('utf-8')
+    creation_mode = creation_mode.encode('utf-8')
 
-    mode_b = mode.encode('utf-8')
-    drivermode = mode_b
+    driver = _gdal.GDALGetDriverByName(<const char *>drivername)
+    if driver == NULL:
+        raise DriverRegistrationError(
+            "No such driver registered: %s", drivername)
 
-    metadata = _gdal.GDALGetMetadata(drv, NULL)
-    return bool(_gdal.CSLFetchBoolean(metadata, drivermode, 0))
+    metadata = _gdal.GDALGetMetadata(driver, NULL)
+    if metadata == NULL:
+        raise ValueError("Driver has no metadata")
+
+    return bool(
+        _gdal.CSLFetchBoolean(metadata, <const char *>creation_mode, 0))
 
 
-def driver_can_create(driver_name):
+def driver_can_create(drivername):
     """Return True if the driver has CREATE capability"""
-    return driver_supports_mode(driver_name, 'DCAP_CREATE')
+    return driver_supports_mode(drivername, 'DCAP_CREATE')
 
 
-def driver_can_create_copy(driver_name):
+def driver_can_create_copy(drivername):
     """Return True if the driver has CREATE_COPY capability"""
-    return driver_supports_mode(driver_name, 'DCAP_CREATECOPY')
+    return driver_supports_mode(drivername, 'DCAP_CREATECOPY')
 
 
 cdef class DatasetBase(object):
+    """Dataset base class."""
 
     def __init__(self, path, options=None):
         self.name = path
@@ -124,22 +129,21 @@ cdef class DatasetBase(object):
 
     def start(self):
         """Start of the dataset reader life cycle."""
+        cdef GDALDriverH driver
+
         path, archive, scheme = parse_path(self.name)
         path = vsi_path(path, archive=archive, scheme=scheme)
-        name_b = path.encode('utf-8')
-        cdef const char *fname = name_b
+        path = path.encode('utf-8')
+
         try:
             with CPLErrors() as cple:
-                self._hds = _gdal.GDALOpen(fname, 0)
+                self._hds = _gdal.GDALOpen(<const char *>path, 0)
                 cple.check()
         except CPLE_OpenFailed as err:
             raise RasterioIOError(err.errmsg)
 
-        cdef void *drv
-        cdef const char *drv_name
-        drv = _gdal.GDALGetDatasetDriver(self._hds)
-        drv_name = _gdal.GDALGetDriverShortName(drv)
-        self.driver = drv_name.decode('utf-8')
+        driver = _gdal.GDALGetDatasetDriver(self._hds)
+        self.driver = get_driver_name(driver)
 
         self._count = _gdal.GDALGetRasterCount(self._hds)
         self.width = _gdal.GDALGetRasterXSize(self._hds)
@@ -156,17 +160,24 @@ cdef class DatasetBase(object):
         log.debug("Dataset %r is started.", self)
 
     cdef GDALDatasetH handle(self) except NULL:
+        """Return the object's GDAL dataset handle"""
         return self._hds
 
     cdef GDALRasterBandH band(self, int bidx) except NULL:
-        cdef GDALRasterBandH hband = NULL
+        """Return a GDAL raster band handle"""
+        cdef GDALRasterBandH band = NULL
+
         try:
             with CPLErrors() as cple:
-                hband = _gdal.GDALGetRasterBand(self._hds, bidx)
+                band = _gdal.GDALGetRasterBand(self._hds, bidx)
                 cple.check()
         except CPLE_IllegalArg as exc:
             raise IndexError(str(exc))
-        return hband
+
+        if band == NULL:
+            raise ValueError("NULL band")
+
+        return band
 
     def _has_band(self, bidx):
         try:
@@ -175,45 +186,45 @@ cdef class DatasetBase(object):
             return False
 
     def read_crs(self):
-        cdef char *proj_c = NULL
-        cdef const char * auth_key = NULL
-        cdef const char * auth_val = NULL
-        cdef void *osr = NULL
+        """Return the GDAL dataset's stored CRS"""
+        cdef char *proj = NULL
+        cdef const char *wkt = NULL
+        cdef OGRSpatialReferenceH osr = NULL
+
         if self._hds == NULL:
             raise ValueError("Null dataset")
-        crs = CRS()
-        cdef const char * wkt = _gdal.GDALGetProjectionRef(self._hds)
+
+        wkt = _gdal.GDALGetProjectionRef(self.handle())
         if wkt is NULL:
             raise ValueError("Unexpected NULL spatial reference")
-        wkt_b = wkt
-        if len(wkt_b) > 0:
+
+        crs = CRS()
+
+        # Test that the WKT definition isn't just an empty string, which
+        # can happen when the source dataset is not georeferenced.
+        wkt_string = wkt
+        if len(wkt_string) > 0:
+
             osr = _gdal.OSRNewSpatialReference(wkt)
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             log.debug("Got coordinate system")
 
-            retval = _gdal.OSRAutoIdentifyEPSG(osr)
-            if retval > 0:
-                log.info("Failed to auto identify EPSG: %d", retval)
-            
-            auth_key = _gdal.OSRGetAuthorityName(osr, NULL)
-            auth_val = _gdal.OSRGetAuthorityCode(osr, NULL)
-
-            if auth_key != NULL and auth_val != NULL:
-                key_b = auth_key
-                key = key_b.decode('utf-8')
-                if key == 'EPSG':
-                    val_b = auth_val
-                    val = val_b.decode('utf-8')
-                    crs['init'] = "epsg:" + val
+            # Try to find an EPSG code in the spatial referencing.
+            if _gdal.OSRAutoIdentifyEPSG(osr) == 0:
+                key = _gdal.OSRGetAuthorityName(osr, NULL)
+                val = _gdal.OSRGetAuthorityCode(osr, NULL)
+                log.info("Authority key: %s, value: %s", key, val)
+                crs['init'] = u'epsg:' + val
             else:
-                _gdal.OSRExportToProj4(osr, &proj_c)
-                if proj_c == NULL:
+                log.info("Failed to auto identify EPSG")
+                _gdal.OSRExportToProj4(osr, &proj)
+                if proj == NULL:
                     raise ValueError("Unexpected Null spatial reference")
-                proj_b = proj_c
-                log.debug("Params: %s", proj_b)
-                value = proj_b.decode()
+
+                value = proj
                 value = value.strip()
+
                 for param in value.split():
                     kv = param.split("=")
                     if len(kv) == 2:
@@ -233,31 +244,30 @@ cdef class DatasetBase(object):
                     k = k.lstrip("+")
                     crs[k] = v
 
-            _gdal.CPLFree(proj_c)
+            _gdal.CPLFree(proj)
             _gdal.OSRDestroySpatialReference(osr)
         else:
             log.debug("GDAL dataset has no projection.")
         return crs
 
     def read_transform(self):
+        """Return the stored GDAL GeoTransform"""
+        cdef double gt[6]
+
         if self._hds == NULL:
             raise ValueError("Null dataset")
-        cdef double gt[6]
         err = _gdal.GDALGetGeoTransform(self._hds, gt)
-
         if err == GDALError.failure:
             warnings.warn(
-                "Dataset has no geotransform set.  Default transform "
+                "Dataset has no geotransform set. Default transform "
                 "will be applied (Affine.identity())",
                 UserWarning
             )
 
-        transform = [0]*6
-        for i in range(6):
-            transform[i] = gt[i]
-        return transform
+        return [gt[i] for i in range(6)]
 
     def stop(self):
+        """Ends the dataset's life cycle"""
         if self._hds != NULL:
             _gdal.GDALFlushCache(self._hds)
             _gdal.GDALClose(self._hds)
@@ -269,7 +279,6 @@ cdef class DatasetBase(object):
         self._closed = True
         log.debug("Dataset %r has been closed.", self)
 
-    
     def __enter__(self):
         log.debug("Entering Dataset %r context.", self)
         return self
@@ -277,7 +286,6 @@ cdef class DatasetBase(object):
     def __exit__(self, type, value, traceback):
         self.close()
         log.debug("Exited Dataset %r context.", self)
-
 
     def __dealloc__(self):
         if self._hds != NULL:
@@ -302,14 +310,14 @@ cdef class DatasetBase(object):
     @property
     def dtypes(self):
         """Returns an ordered tuple of all band data types."""
-        cdef void *hband = NULL
+        cdef GDALRasterBandH band = NULL
+
         if not self._dtypes:
-            if self._hds == NULL:
-                raise ValueError("can't read closed raster file")
             for i in range(self._count):
-                hband = _gdal.GDALGetRasterBand(self._hds, i+1)
+                band = self.band(i + 1)
                 self._dtypes.append(
-                    dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)])
+                    dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(band)])
+
         return tuple(self._dtypes)
     
     @property
@@ -319,34 +327,30 @@ cdef class DatasetBase(object):
         Shapes are tuples and have the same ordering as the dataset's
         shape: (count of image rows, count of image columns).
         """
-        cdef void *hband = NULL
+        cdef GDALRasterBandH band = NULL
         cdef int xsize, ysize
+
         if self._block_shapes is None:
-            if self._hds == NULL:
-                raise ValueError("can't read closed raster file")
             self._block_shapes = []
+
             for i in range(self._count):
-                hband = _gdal.GDALGetRasterBand(self._hds, i+1)
-                if hband == NULL:
-                    raise ValueError("Null band")
-                _gdal.GDALGetBlockSize(hband, &xsize, &ysize)
+                band = self.band(i + 1)
+                _gdal.GDALGetBlockSize(band, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
+
         return tuple(self._block_shapes)
 
     def get_nodatavals(self):
-        cdef void *hband = NULL
+        cdef GDALRasterBandH band = NULL
         cdef double nodataval
         cdef int success = 0
 
         if not self._nodatavals:
-            if self._hds == NULL:
-                raise ValueError("can't read closed raster file")
+
             for i in range(self._count):
-                hband = _gdal.GDALGetRasterBand(self._hds, i+1)
-                if hband == NULL:
-                    raise ValueError("Null band")
-                dtype = dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(hband)]
-                nodataval = _gdal.GDALGetRasterNoDataValue(hband, &success)
+                band = self.band(i + 1)
+                dtype = dtypes.dtype_fwd[_gdal.GDALGetRasterDataType(band)]
+                nodataval = _gdal.GDALGetRasterNoDataValue(band, &success)
                 val = nodataval
                 # GDALGetRasterNoDataValue() has two ways of telling you that
                 # there's no nodata value. The success flag might come back
@@ -366,7 +370,6 @@ cdef class DatasetBase(object):
 
     property nodatavals:
         """Nodata values for each band."""
-
         def __get__(self):
             return self.get_nodatavals()
 
@@ -379,13 +382,9 @@ cdef class DatasetBase(object):
 
     property mask_flags:
         """Mask flags for each band."""
-
         def __get__(self):
-            flags = [0]*self.count
-            for i, j in zip(range(self.count), self.indexes):
-                hband = _gdal.GDALGetRasterBand(self._hds, j)
-                flags[i] = _gdal.GDALGetMaskFlags(hband)
-            return flags
+            cdef GDALRasterBandH band = NULL
+            return [_gdal.GDALGetMaskFlags(self.band(j)) for j in self.indexes]
 
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's block windows and their
@@ -407,6 +406,7 @@ cdef class DatasetBase(object):
         read() for highly efficient access to raster block data.
         """
         cdef int i, j
+
         block_shapes = self.block_shapes
         if bidx < 1:
             if len(set(block_shapes)) > 1:
@@ -419,6 +419,7 @@ cdef class DatasetBase(object):
         nrows = d + int(m>0)
         d, m = divmod(self.width, w)
         ncols = d + int(m>0)
+
         for j in range(nrows):
             row = j * h
             height = min(h, self.height - row)
@@ -467,7 +468,6 @@ cdef class DatasetBase(object):
     def window(self, left, bottom, right, top, boundless=False):
         """Returns the window corresponding to the world bounding box.
         If boundless is False, window is limited to extent of this dataset."""
-
         window = get_window(left, bottom, right, top, self.affine)
         if boundless:
             return window
@@ -505,6 +505,7 @@ cdef class DatasetBase(object):
             'affine': self.affine,
         }
         self._read = True
+
         return m
 
     @property
@@ -562,6 +563,7 @@ cdef class DatasetBase(object):
                 m['interleave'] = self.interleaving.name
             if self.photometric:
                 m['photometric'] = self.photometric.name
+
             return m
 
     def lnglat(self):
@@ -640,70 +642,63 @@ cdef class DatasetBase(object):
         a specific band. The optional ns argument can be used to select
         a namespace other than the default.
         """
-        cdef char *item_c
-        cdef GDALRasterBandH hobj
-        cdef const char *domain_c
-        cdef char **papszStrList
+        cdef char *item = NULL
+        cdef GDALMajorObjectH obj = NULL
+        cdef char **metadata = NULL
+        cdef char *domain = NULL
 
         if bidx > 0:
-            hobj = self.band(bidx)
+            obj = self.band(bidx)
         else:
-            hobj = self._hds
+            obj = self.handle()
         if ns:
-            domain_b = ns.encode('utf-8')
-            domain_c = domain_b
+            ns_bytes = ns.encode('utf-8')
+            domain = ns_bytes
         else:
-            domain_c = NULL
-        papszStrList = _gdal.GDALGetMetadata(hobj, domain_c)
-        num_items = _gdal.CSLCount(papszStrList)
+            domain = NULL
+
+        metadata = _gdal.GDALGetMetadata(obj, domain)
+        num_items = _gdal.CSLCount(metadata)
         retval = {}
+
         for i in range(num_items):
-            item_c = papszStrList[i]
-            item_b = item_c
-            item = item_b.decode('utf-8')
+            item = metadata[i]
             key, value = item.split('=', 1)
             retval[key] = value
+
         return retval
     
     def colorinterp(self, bidx):
         """Returns the color interpretation for a band or None."""
-        cdef void *hBand
+        cdef GDALRasterBandH band = NULL
         
-        if self._hds == NULL:
-          raise ValueError("can't read closed raster file")
-        if bidx not in self.indexes:
-            raise ValueError("Invalid band index")
-        hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hBand == NULL:
-            raise ValueError("NULL band")
-        value = _gdal.GDALGetRasterColorInterpretation(hBand)
+        band = self.band(bidx)
+        value = _gdal.GDALGetRasterColorInterpretation(band)
         return ColorInterp(value)
-    
+
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""
-        cdef void *hBand
-        cdef void *hTable
+        cdef GDALRasterBandH band = NULL
+        cdef GDALColorTableH colortable = NULL
+        cdef GDALColorEntry *color = NULL
         cdef int i
-        cdef const _gdal.GDALColorEntry * color
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        if bidx not in self.indexes:
-            raise ValueError("Invalid band index")
-        hBand = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hBand == NULL:
-            raise ValueError("NULL band")
-        hTable = _gdal.GDALGetRasterColorTable(hBand)
-        if hTable == NULL:
+
+        band = self.band(bidx)
+        colortable = _gdal.GDALGetRasterColorTable(band)
+        if colortable == NULL:
             raise ValueError("NULL color table")
         retval = {}
 
-        for i in range(_gdal.GDALGetColorEntryCount(hTable)):
-            color = _gdal.GDALGetColorEntry(hTable, i)
+        for i in range(_gdal.GDALGetColorEntryCount(colortable)):
+            color = _gdal.GDALGetColorEntry(colortable, i)
             if color == NULL:
                 log.warn("NULL color at %d, skipping", i)
                 continue
-            log.info("Color: (%d, %d, %d, %d)", color.c1, color.c2, color.c3, color.c4)
+            log.info(
+                "Color: (%d, %d, %d, %d)",
+                color.c1, color.c2, color.c3, color.c4)
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
+
         return retval
 
     @property
@@ -712,15 +707,19 @@ cdef class DatasetBase(object):
 
     # Overviews.
     def overviews(self, bidx):
-        cdef GDALRasterBandH hovband = NULL
-        cdef GDALRasterBandH hband = self.band(bidx)
-        num_overviews = _gdal.GDALGetOverviewCount(hband)
+        cdef GDALRasterBandH ovrband = NULL
+        cdef GDALRasterBandH band = NULL
+
+        band = self.band(bidx)
+        num_overviews = _gdal.GDALGetOverviewCount(band)
         factors = []
+
         for i in range(num_overviews):
-            hovband = _gdal.GDALGetOverview(hband, i)
+            ovrband = _gdal.GDALGetOverview(band, i)
             # Compute the overview factor only from the xsize (width).
-            xsize = _gdal.GDALGetRasterBandXSize(hovband)
+            xsize = _gdal.GDALGetRasterBandXSize(ovrband)
             factors.append(int(round(float(self.width)/float(xsize))))
+
         return factors
 
     def checksum(self, bidx, window=None):
@@ -737,13 +736,10 @@ cdef class DatasetBase(object):
         -------
         An int.
         """
-        cdef void *hband = NULL
+        cdef GDALRasterBandH band = NULL
         cdef int xoff, yoff, width, height
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        hband = _gdal.GDALGetRasterBand(self._hds, bidx)
-        if hband == NULL:
-            raise ValueError("NULL band")
+
+        band = self.band(bidx)
         if not window:
             xoff = yoff = 0
             width, height = self.width, self.height
@@ -754,7 +750,8 @@ cdef class DatasetBase(object):
             width = window[1][1] - xoff
             yoff = window[0][0]
             height = window[0][1] - yoff
-        return _gdal.GDALChecksumImage(hband, xoff, yoff, width, height)
+
+        return _gdal.GDALChecksumImage(band, xoff, yoff, width, height)
 
 
 # Window utils
@@ -764,6 +761,7 @@ cdef class DatasetBase(object):
 cpdef crop_window(object window, int height, int width):
     """Returns a window cropped to fall within height and width."""
     cdef int r_start, r_stop, c_start, c_stop
+
     (r_start, r_stop), (c_start, c_stop) = window
     return (
         (min(max(r_start, 0), height), max(0, min(r_stop, height))),
@@ -775,6 +773,7 @@ cpdef eval_window(object window, int height, int width):
     """Evaluates a window tuple that might contain negative values
     in the context of a raster height and width."""
     cdef int r_start, r_stop, c_start, c_stop
+
     try:
         r, c = window
         assert len(r) == 2
@@ -896,10 +895,9 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     cdef double *x = NULL
     cdef double *y = NULL
     cdef double *z = NULL
-    cdef char *proj_c = NULL
-    cdef void *src = NULL
-    cdef void *dst = NULL
-    cdef void *transform = NULL
+    cdef OGRSpatialReferenceH src = NULL
+    cdef OGRSpatialReferenceH dst = NULL
+    cdef OGRCoordinateTransformationH transform = NULL
     cdef int i
 
     assert len(xs) == len(ys)
@@ -949,15 +947,17 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     return retval
 
 
-cdef void *_osr_from_crs(object crs) except NULL:
+cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
+
+    cdef OGRSpatialReferenceH osr = NULL
 
     if crs is None:
         raise CRSError('CRS cannot be None')
 
-    cdef char *proj_c = NULL
-    cdef void *osr = _gdal.OSRNewSpatialReference(NULL)
+    osr = _gdal.OSRNewSpatialReference(NULL)
+
     params = []
 
     try:
@@ -981,20 +981,19 @@ cdef void *_osr_from_crs(object crs) except NULL:
                             params.append("+%s=%s" % (k, v))
                     proj = " ".join(params)
                     log.debug("PROJ.4 to be imported: %r", proj)
-                    proj_b = proj.encode('utf-8')
-                    proj_c = proj_b
-                    _gdal.OSRImportFromProj4(osr, proj_c)
+                    proj = proj.encode('utf-8')
+                    _gdal.OSRImportFromProj4(osr, <const char *>proj)
             # Fall back for CRS strings like "EPSG:3857."
             else:
-                proj_b = crs.encode('utf-8')
-                proj_c = proj_b
-                _gdal.OSRSetFromUserInput(osr, proj_c)
+                proj = crs.encode('utf-8')
+                _gdal.OSRSetFromUserInput(osr, <const char *>proj)
             cple.check()
 
     except:
         raise CRSError('Invalid CRS')
-    
+
     return osr
+
 
 def _can_create_osr(crs):
     """
@@ -1013,7 +1012,7 @@ def _can_create_osr(crs):
     """
 
     cdef char *wkt = NULL
-    cdef void *osr = NULL
+    cdef OGRSpatialReferenceH osr = NULL
 
     try:
         osr = _osr_from_crs(crs)
