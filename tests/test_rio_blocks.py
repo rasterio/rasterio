@@ -1,16 +1,14 @@
 """Unittests for $ rio blocks"""
 
 
-import itertools as it
 import json
-import os
 import re
 
 import numpy as np
-import six
 
 import rasterio
 from rasterio.warp import transform_bounds
+from rasterio.compat import zip_longest
 from rasterio.rio.main import main_group
 
 
@@ -24,10 +22,15 @@ def check_features_block_windows(features, src, bidx):
         GeoJSON features.
     src : RasterReader
         Open input datasource.
+
+    Returns
+    -------
+    bool
+        ``True`` if the two block/window streams match and ``False`` otherwise.
     """
 
     out = []
-    iterator = six.moves.zip_longest(features, src.block_windows(bidx=bidx))
+    iterator = zip_longest(features, src.block_windows(bidx=bidx))
     for feat, (block, window) in iterator:
 
         out.append(np.array_equal(
@@ -49,8 +52,18 @@ def test_windows(runner, path_rgb_byte_tif):
     fc = json.loads(result.output)
 
     with rasterio.open(path_rgb_byte_tif) as src:
-        num_windows = len(tuple(src.block_windows()))
-        assert len(fc['features']) == num_windows
+        block_windows = tuple(src.block_windows())
+
+        # Check the coordinates of the first output feature
+        actual_first = fc['features'][0]
+        expected_first = block_windows[0]
+        bounds = src.window_bounds(expected_first[1])
+        xmin, ymin, xmax, ymax = transform_bounds(src.crs, 'EPSG:4326', *bounds)
+        coordinates = [[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]]
+        assert np.array_equal(
+            actual_first['geometry']['coordinates'][0], coordinates)
+
+        assert len(fc['features']) == len(block_windows)
         assert check_features_block_windows(fc['features'], src, bidx=1)
 
 
@@ -61,9 +74,19 @@ def test_windows_sequence(runner, path_rgb_byte_tif):
         '--sequence'])
     assert result.exit_code == 0
 
-    features = map(json.loads, result.output.splitlines())
+    features = tuple(map(json.loads, result.output.splitlines()))
 
     with rasterio.open(path_rgb_byte_tif) as src:
+
+        # Check the coordinates of the first output feature
+        actual_first = features[0]
+        expected_first = next(src.block_windows())
+        bounds = src.window_bounds(expected_first[1])
+        xmin, ymin, xmax, ymax = transform_bounds(src.crs, 'EPSG:4326', *bounds)
+        coordinates = [[xmin, ymin], [xmin, ymax], [xmax, ymax], [xmax, ymin]]
+        assert np.array_equal(
+            actual_first['geometry']['coordinates'][0], coordinates)
+
         assert check_features_block_windows(features, src, bidx=1)
 
 
@@ -91,7 +114,7 @@ def test_windows_indent(runner, path_rgb_byte_tif):
     assert len(lines) == 7451
     for l in lines:
         if l.strip() not in ('{', '}'):
-            assert '    ' in l
+            assert l.startswith('    ')
 
 
 def test_windows_compact(runner, path_rgb_byte_tif):

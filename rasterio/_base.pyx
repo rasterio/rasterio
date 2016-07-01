@@ -340,20 +340,21 @@ cdef class DatasetReader(object):
         bottom" and is similar to Python's ``enumerate()`` in that the first
         element is the block index and the second is the dataset window.
 
-        Blocks describe how pixels are grouped within each band and provide a
-        mechanism for efficient I/O.  A window is a range of pixels within a
-        single band defined by row start, row stop, column start, and column
-        stop.  For example, ``((0, 2), (0, 2))`` defines a ``2 x 2`` block at
-        the upper left corner of a raster band.  Blocks are also tuples like
-        ``(0, 0)``, which would be a band's upper left block.
+        Blocks are built-in to a dataset and describe how pixels are grouped
+        within each band and provide a mechanism for efficient I/O.  A window
+        is a range of pixels within a single band defined by row start, row
+        stop, column start, and column stop.  For example, ``((0, 2), (0, 2))``
+        defines a ``2 x 2`` window at the upper left corner of a raster band.
+        Blocks are referenced by an ``(i, j)`` tuple where ``(0, 0)`` would be
+        a band's upper left block.
 
         Raster I/O is performed at the block level, so accessing a window
         spanning multiple rows in a striped raster requires reading each row.
         Accessing a ``2 x 2`` window at the center of a ``1800 x 3600`` image
         requires reading 2 rows, or 7200 pixels just to get the target 4.  The
-        same image with internal ``256 x 256`` tiles would require reading at
-        least 1 tile (if the window entire window falls within a single tile)
-        and at most 4 tiles, or at least 512 pixels and at most 2048.
+        same image with internal ``256 x 256`` blocks would require reading at
+        least 1 block (if the window entire window falls within a single block)
+        and at most 4 blocks, or at least 512 pixels and at most 2048.
 
         Given an image that is ``512 x 512`` with blocks that are
         ``256 x 256``, its blocks and windows would look like:

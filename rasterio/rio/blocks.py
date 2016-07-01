@@ -88,7 +88,6 @@ class _Collection(object):
 @cligj.precision_opt
 @cligj.indent_opt
 @cligj.compact_opt
-@cligj.projection_geographic_opt
 @cligj.projection_projected_opt
 @cligj.sequence_opt
 @cligj.use_rs_opt
@@ -102,38 +101,36 @@ def blocks(
 
     """Write dataset blocks as GeoJSON features.
 
-    This command writes features describing a rasters internal tiling scheme,
-    which are often used to visually get a feel for how a windowed operation
-    might work.  Rasters that are not tiled internally can still have internal
-    blocks that are not square, and this command does not differentiate between
-    the two.
+    This command writes features describing a raster's internal blocks, which
+    are used directly for raster I/O.  These features can be used to visualize
+    how a windowed operation would operate using those blocks.
 
     Output features have two JSON encoded properties: block and window.  Block
-    is a two element array like `[0, 0]` describing the window's position
+    is a two element array like '[0, 0]' describing the window's position
     in the input band's window layout.  Window is a two element array
-    containing two more two element arrays like `[[0, 256], [0, 256]]` and
+    containing two more two element arrays like '[[0, 256], [0, 256]' and
     describes the range of pixels the window covers in the input band.  Values
     are JSON encoded for better interoperability.
 
     Block windows are extracted from the dataset (all bands must have matching
-    block windows) by default, or from the band specified using the `--bidx`
+    block windows) by default, or from the band specified using the '--bidx
     option:
     \b
 
         $ rio shapes --bidx 3 tests/data/RGB.byte.tif
 
-    By default a GeoJSON `FeatureCollection` is written, but the `--sequence`
+    By default a GeoJSON 'FeatureCollection' is written, but the --sequence'
     option produces a GeoJSON feature stream instead.
     \b
 
         $ rio shapes tests/data/RGB.byte.tif --sequence
 
-    Output features are reprojected to `WGS84` unless the `--projected` flag is
-    provided, which causes the outupt to be kept in the input datasource's
+    Output features are reprojected to 'WGS84' unless the '--projected' flag is
+    provided, which causes the output to be kept in the input datasource's
     coordinate reference system.
 
     For more information on exactly what blocks and windows represent, see
-    `src.block_windows()`.
+    'src.block_windows()'.
     """
 
     verbosity = ctx.obj['verbosity'] if ctx.obj else 1
@@ -156,7 +153,7 @@ def blocks(
                     src=src,
                     bidx=bidx,
                     precision=precision,
-                    geographic=projection == 'geographic')
+                    geographic=projection != 'projected')
 
                 write_features(
                     stdout, collection,
