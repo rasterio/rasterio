@@ -11,8 +11,8 @@ cdef extern from "cpl_string.h":
     int CSLCount (char **papszStrList)
     char ** CSLAddNameValue (char **papszStrList, const char *pszName, const char *pszValue)
     char ** CSLDuplicate (char ** papszStrList)
-
     int CSLFindName (char **papszStrList, const char *pszName)
+    int CSLFetchBoolean (char **papszStrList, const char *pszName, int default)
     const char * CSLFetchNameValue (char **papszStrList, const char *pszName)
     char ** CSLSetNameValue (char **list, char *name, char *val)
     void    CSLDestroy (char **list)
@@ -48,6 +48,14 @@ cdef extern from "ogr_srs_api.h":
 
 
 cdef extern from "gdal.h" nogil:
+    ctypedef void * GDALMajorObjectH
+    ctypedef void * GDALDatasetH
+    ctypedef void * GDALRasterBandH
+    ctypedef void * GDALDriverH
+    ctypedef void * GDALColorTableH
+    ctypedef void * GDALRasterAttributeTableH
+    ctypedef void * GDALAsyncReaderH
+
     void GDALAllRegister()
     int GDALGetDriverCount()
     void * GDALGetDriver(int)
@@ -237,6 +245,7 @@ cdef extern from "gdal_alg.h":
     void *GDALCreateApproxTransformer( GDALTransformerFunc pfnRawTransformer, void *pRawTransformerArg, double dfMaxError )
     int  GDALApproxTransform(void *pTransformArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess )
     void GDALDestroyApproxTransformer( void * )
+    void GDALApproxTransformerOwnsSubtransformer(void *, int)
 
     int GDALFillNodata(void *dst_band, void *mask_band, double max_search_distance, int deprecated, int smoothing_iterations, char **options, void *progress_func, void *progress_data)
     int GDALChecksumImage(void *band, int xoff, int yoff, int width, int height)

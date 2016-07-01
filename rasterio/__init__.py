@@ -20,6 +20,8 @@ from rasterio.dtypes import (
 from rasterio.env import ensure_env, Env
 from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
+from rasterio.io import (
+    DatasetReader, get_writer_for_path, get_writer_for_driver)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
@@ -196,20 +198,18 @@ def open(path, mode='r', driver=None, width=None, height=None,
     # be taken over by the dataset's context manager if it is not
     # None.
     if mode == 'r':
-        from rasterio._io import RasterReader
-        s = RasterReader(path)
-    elif mode == 'r+':
-        from rasterio._io import writer
-        s = writer(path, mode)
-    elif mode == 'r-':
-        from rasterio._base import DatasetReader
         s = DatasetReader(path)
+    elif mode == 'r-':
+        warnings.warn("'r-' mode is deprecated, use 'r'", DeprecationWarning)
+        s = DatasetReader(path)
+    elif mode == 'r+':
+        s = get_writer_for_path(path)(path, mode)
     elif mode == 'w':
-        from rasterio._io import writer
-        s = writer(path, mode, driver=driver,
-                   width=width, height=height, count=count,
-                   crs=crs, transform=transform, dtype=dtype,
-                   nodata=nodata, **kwargs)
+        s = get_writer_for_driver(driver)(path, mode, driver=driver,
+                                          width=width, height=height,
+                                          count=count, crs=crs,
+                                          transform=transform, dtype=dtype,
+                                          nodata=nodata, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
@@ -283,7 +283,7 @@ def band(ds, bidx):
     ----------
     ds: rasterio.RasterReader
         Open rasterio dataset
-    bidx: int
+    bidx: int or sequence of ints
         Band number, index starting at 1
 
     Returns
