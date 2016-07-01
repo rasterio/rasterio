@@ -11,7 +11,7 @@ from rasterio.windows import (
     window, window_transform, window_bounds)
 
 
-class DatasetCommonBase(object):
+class WindowMethodsMixin(object):
     # TODO do we copy the function signature here or
     #     just take *args, **kwargs
     # TODO get docstring from base function or copy
@@ -35,7 +35,7 @@ class DatasetCommonBase(object):
         return window_bounds(transform, window)
 
 
-class DatasetReader(DatasetReaderBase, DatasetCommonBase):
+class DatasetReader(DatasetReaderBase, WindowMethodsMixin):
     """An unbuffered data and metadata reader"""
 
     def __repr__(self):
@@ -43,7 +43,7 @@ class DatasetReader(DatasetReaderBase, DatasetCommonBase):
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class DatasetWriter(DatasetWriterBase, DatasetCommonBase):
+class DatasetWriter(DatasetWriterBase, WindowMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
     directly to disk.
     """
@@ -53,7 +53,7 @@ class DatasetWriter(DatasetWriterBase, DatasetCommonBase):
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class BufferedDatasetWriter(BufferedDatasetWriterBase, DatasetCommonBase):
+class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin):
     """Maintains data and metadata in a buffer, writing to disk or
     network only when `close()` is called.
 
