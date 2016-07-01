@@ -7,9 +7,35 @@ from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
+from rasterio.windows import (
+    window, window_transform, window_bounds)
 
 
-class DatasetReader(DatasetReaderBase):
+class DatasetCommonBase(object):
+    # TODO do we copy the function signature here or
+    #     just take *args, **kwargs
+    # TODO get docstring from base function or copy
+
+    def window(self, left, bottom, right, top, boundless=False):
+        # TODO switch to transform
+        return window(self.affine, left, bottom, right, top,
+                      height=self.height, width=self.width,
+                      boundless=boundless)
+
+    def window_transform(self, window):
+        """Returns the affine transform for a dataset window."""
+        # TODO switch to transform
+        transform = self.affine
+        return window_transform(transform, window)
+
+    def window_bounds(self, window):
+        """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
+        # TODO switch to transform
+        transform = self.affine
+        return window_bounds(transform, window)
+
+
+class DatasetReader(DatasetReaderBase, DatasetCommonBase):
     """An unbuffered data and metadata reader"""
 
     def __repr__(self):
@@ -17,7 +43,7 @@ class DatasetReader(DatasetReaderBase):
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class DatasetWriter(DatasetWriterBase):
+class DatasetWriter(DatasetWriterBase, DatasetCommonBase):
     """An unbuffered data and metadata writer. Its methods write data
     directly to disk.
     """
@@ -27,7 +53,7 @@ class DatasetWriter(DatasetWriterBase):
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class BufferedDatasetWriter(BufferedDatasetWriterBase):
+class BufferedDatasetWriter(BufferedDatasetWriterBase, DatasetCommonBase):
     """Maintains data and metadata in a buffer, writing to disk or
     network only when `close()` is called.
 
