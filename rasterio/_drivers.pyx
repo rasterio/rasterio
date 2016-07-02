@@ -7,6 +7,7 @@ import sys
 
 from rasterio.compat import string_types
 
+include "gdal.pxi"
 
 cdef extern from "cpl_conv.h":
     void    CPLFree (void *ptr)
@@ -23,7 +24,7 @@ cdef extern from "gdal.h":
     void GDALAllRegister()
     void GDALDestroyDriverManager()
     int GDALGetDriverCount()
-    void * GDALGetDriver(int i)
+    GDALDriverH GDALGetDriver(int i)
     const char * GDALGetDriverShortName(void *driver)
     const char * GDALGetDriverLongName(void *driver)
 
@@ -81,6 +82,7 @@ def driver_count():
 cpdef get_gdal_config(key):
     cdef const char *key_c = NULL
     cdef const char *val_c = NULL
+
     key_b = key.upper().encode('utf-8')
     key_c = key_b
     val_c = CPLGetConfigOption(key_c, NULL)
@@ -100,6 +102,7 @@ cpdef get_gdal_config(key):
 cpdef set_gdal_config(key, val):
     cdef const char *key_c = NULL
     cdef const char *val_c = NULL
+
     key_b = key.upper().encode('utf-8')
     key_c = key_b
     if isinstance(val, string_types):
@@ -112,6 +115,7 @@ cpdef set_gdal_config(key, val):
 
 cpdef del_gdal_config(key):
     cdef const char *key_c = NULL
+
     key_b = key.upper().encode('utf-8')
     key_c = key_b
     CPLSetConfigOption(key_c, NULL)
@@ -178,16 +182,19 @@ cdef class GDALEnv(ConfigEnv):
         log.debug("Env %r has been stopped", self)
 
     def drivers(self):
-        cdef void *drv = NULL
+        cdef GDALDriverH driver = NULL
         cdef const char *key = NULL
         cdef const char *val = NULL
         cdef int i
+
         result = {}
+
         for i in range(GDALGetDriverCount()):
-            drv = GDALGetDriver(i)
-            key = GDALGetDriverShortName(drv)
+            driver = GDALGetDriver(i)
+            key = GDALGetDriverShortName(driver)
             key_b = key
-            val = GDALGetDriverLongName(drv)
+            val = GDALGetDriverLongName(driver)
             val_b = val
             result[key_b.decode('utf-8')] = val_b.decode('utf-8')
+
         return result
