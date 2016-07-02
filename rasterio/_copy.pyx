@@ -6,47 +6,52 @@ import os.path
 
 from rasterio cimport _gdal
 
+include "gdal.pxi"
+
 
 log = logging.getLogger(__name__)
 
 
 cdef class RasterCopier:
 
-    def __call__(self, src, dst, **kw):
+    def __call__(self, src, dst, **kwds):
         cdef char **options = NULL
-        src_b = src.encode('utf-8')
-        cdef const char *src_c = src_b
-        dst_b = dst.encode('utf-8')
-        cdef const char *dst_c = dst_b
-        cdef void *src_ds = _gdal.GDALOpen(src_c, 0)
-        if src_ds == NULL:
+        cdef GDALDatasetH src_dataset = NULL
+        cdef GDALDatasetH dst_dataset = NULL
+        cdef GDALDriverH driver = NULL
+
+        src = src.encode('utf-8')
+        dst = dst.encode('utf-8')
+
+        src_dataset = _gdal.GDALOpen(<const char *>src, 0)
+        if src_dataset == NULL:
             raise ValueError("NULL source dataset")
-        driver = kw.pop('driver', 'GTiff')
-        driver_b = driver.encode('utf-8')
-        cdef const char *driver_c = driver_b
-        cdef void *drv = _gdal.GDALGetDriverByName(driver_c)
-        if drv == NULL:
+
+        drivername = kwds.pop('driver', 'GTiff').encode('utf-8')
+        driver = _gdal.GDALGetDriverByName(<const char *>drivername)
+        if driver == NULL:
             raise ValueError("NULL driver")
+
         strictness = 0
-        if kw.pop('strict', None):
+        if kwds.pop('strict', None):
             strictness = 1
 
         # Creation options
-        for k, v in kw.items():
+        for k, v in kwds.items():
             k, v = k.upper(), v.upper()
-            key_b = k.encode('utf-8')
-            val_b = v.encode('utf-8')
-            key_c = key_b
-            val_c = val_b
-            options = _gdal.CSLSetNameValue(options, key_c, val_c)
+            key = k.encode('utf-8')
+            val = v.encode('utf-8')
+            options = _gdal.CSLSetNameValue(
+                options, <const char *>key, <const char *>val)
             log.debug("Option: %r\n", (k, v))
 
-        cdef void *dst_ds = _gdal.GDALCreateCopy(
-            drv, dst_c, src_ds, strictness, NULL, NULL, NULL)
-        if dst_ds == NULL:
+        dst_dataset = _gdal.GDALCreateCopy(
+            driver, dst, src_dataset, strictness, NULL, NULL, NULL)
+        if dst_dataset == NULL:
             raise ValueError("NULL destination dataset")
-        _gdal.GDALClose(src_ds)
-        _gdal.GDALClose(dst_ds)
 
-        if options:
+        if options != NULL:
             _gdal.CSLDestroy(options)
+
+        _gdal.GDALClose(src_dataset)
+        _gdal.GDALClose(dst_dataset)
