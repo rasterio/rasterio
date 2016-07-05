@@ -278,6 +278,24 @@ def test_warp_reproject_dimensions(runner, tmpdir):
                                   [output.affine.a, -output.affine.e])
 
 
+def test_warp_reproject_dimensions_invalid_params(runner, tmpdir):
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    bad_params = [
+        ['--bounds', '0', '0', '10', '10'],
+        ['--res', '10']
+    ]
+
+    for param in bad_params:
+        result = runner.invoke(warp.warp,
+                               [srcname, outputname, '--dst-crs', 'EPSG:4326',
+                                '--dimensions', '100', '100'] +
+                               param)
+
+        assert result.exit_code == 2
+        assert '--dimensions cannot be used with' in result.output
+
+
 def test_warp_reproject_bounds_no_res(runner, tmpdir):
     srcname = 'tests/data/shade.tif'
     outputname = str(tmpdir.join('test.tif'))
@@ -392,6 +410,25 @@ def test_warp_reproject_like(runner, tmpdir):
         assert np.allclose([0.001, 0.001], [output.affine.a, -output.affine.e])
         assert output.width == 10
         assert output.height == 10
+
+
+def test_warp_reproject_like_invalid_params(runner, tmpdir):
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    bad_params = [
+        ['--dimensions', '10', '10'],
+        ['--dst-crs', 'EPSG:4326'],
+        ['--bounds', '0', '0', '10', '10'],
+        ['--res', '10']
+    ]
+
+    for param in bad_params:
+        result = runner.invoke(warp.warp,
+                               [srcname, outputname, '--like', srcname] +
+                               param)
+
+        assert result.exit_code == 2
+        assert '--like cannot be used with any of' in result.output
 
 
 def test_warp_reproject_nolostdata(runner, tmpdir):
