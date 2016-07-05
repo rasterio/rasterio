@@ -19,7 +19,7 @@ from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
 from rasterio.crs import CRS
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
+from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailedError
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.errors import (
@@ -1435,7 +1435,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 with CPLErrors() as cple:
                     self._hds = _gdal.GDALOpen(fname, 1)
                     cple.check()
-            except CPLE_OpenFailed as err:
+            except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
         drv = _gdal.GDALGetDatasetDriver(self._hds)

@@ -9,31 +9,6 @@ from rasterio.compat import string_types
 
 include "gdal.pxi"
 
-cdef extern from "cpl_conv.h":
-    void    CPLFree (void *ptr)
-    void    CPLSetThreadLocalConfigOption (char *key, char *val)
-    void    CPLSetConfigOption (char *key, char *val)
-    const char * CPLGetConfigOption ( const char *key, const char *default)
-
-
-cdef extern from "cpl_error.h":
-    void CPLSetErrorHandler(void *handler)
-
-
-cdef extern from "gdal.h":
-    void GDALAllRegister()
-    void GDALDestroyDriverManager()
-    int GDALGetDriverCount()
-    GDALDriverH GDALGetDriver(int i)
-    const char * GDALGetDriverShortName(void *driver)
-    const char * GDALGetDriverLongName(void *driver)
-
-
-cdef extern from "ogr_api.h":
-    void OGRRegisterAll()
-    void OGRCleanupAll()
-    int OGRGetDriverCount()
-
 
 level_map = {
     0: 0,
@@ -67,12 +42,12 @@ code_map = {
 log = logging.getLogger(__name__)
 
 
-cdef void * errorHandler(int eErrClass, int err_no, char *msg):
+cdef void errorHandler(CPLErr err_class, int err_no, const char* msg):
     if err_no in code_map:
         # 'rasterio._gdal' is the name in our logging hierarchy for
         # messages coming direct from CPLError().
         logger = logging.getLogger('rasterio._gdal')
-        logger.log(level_map[eErrClass], "%s in %s", code_map[err_no], msg)
+        logger.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
 
 
 def driver_count():
@@ -157,7 +132,7 @@ cdef class GDALEnv(ConfigEnv):
     def start(self):
         GDALAllRegister()
         OGRRegisterAll()
-        CPLSetErrorHandler(<void *>errorHandler)
+        CPLSetErrorHandler(errorHandler)
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
 

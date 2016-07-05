@@ -9,11 +9,14 @@ cimport numpy as np
 
 from rasterio cimport _base, _gdal, _ogr, _io, _features
 from rasterio import dtypes
-from rasterio._err import CPLErrors, GDALError, CPLE_NotSupported, CPLE_AppDefined
+from rasterio._err import (
+    CPLErrors, GDALError, CPLE_NotSupportedError, CPLE_AppDefinedError)
 from rasterio._io cimport InMemoryRaster
 from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError
 from rasterio.transform import Affine, from_bounds
+
+include "gdal.pxi"
 
 
 cdef extern from "gdalwarper.h" nogil:
@@ -61,7 +64,7 @@ cdef extern from "ogr_spatialref.h":
 
 
 cdef extern from "gdal_alg.h":
-     ctypedef int (*GDALTransformerFunc)( void *pTransformerArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess )
+     ctypedef int (*GDALTransformerFunc)(void *pTransformerArg, int bDstToSrc, int nPointCount, double *x, double *y, double *z, int *panSuccess)
 
 
 log = logging.getLogger(__name__)
@@ -79,12 +82,12 @@ def _transform_geom(
     cdef char *key_c = NULL
     cdef char *val_c = NULL
     cdef char **options = NULL
-    cdef void *src = NULL
-    cdef void *dst = NULL
-    cdef void *transform = NULL
+    cdef OGRSpatialReferenceH src = NULL
+    cdef OGRSpatialReferenceH dst = NULL
+    cdef OGRCoordinateTransformationH transform = NULL
     cdef OGRGeometryFactory *factory = NULL
-    cdef void *src_ogr_geom = NULL
-    cdef void *dst_ogr_geom = NULL
+    cdef OGRGeometryH src_ogr_geom = NULL
+    cdef OGRGeometryH dst_ogr_geom = NULL
     cdef int i
 
     src = _base._osr_from_crs(src_crs)
@@ -231,19 +234,19 @@ def _reproject(
     out: None
         Output is written to destination.
     """
-
-    cdef int retval=0, rows, cols, src_count
-    cdef void *hrdriver = NULL
-    cdef void *hdsin = NULL
-    cdef void *hdsout = NULL
-    cdef void *hbandin = NULL
-    cdef void *hbandout = NULL
+    cdef int retval
+    cdef int rows
+    cdef int cols
+    cdef int src_count
+    cdef GDALDriverH driver = NULL
+    cdef GDALDatasetH indataset = NULL
+    cdef GDALDatasetH outdataset = NULL
     cdef _io.GDALAccess GA
     cdef double gt[6]
     cdef char *srcwkt = NULL
     cdef char *dstwkt= NULL
     cdef const char *proj_c = NULL
-    cdef void *osr = NULL
+    cdef OGRSpatialReferenceH osr = NULL
     cdef char **warp_extras = NULL
     cdef char *key_c = NULL
     cdef char *val_c = NULL
@@ -269,7 +272,7 @@ def _reproject(
 
         try:
             with CPLErrors() as cple:
-                hrdriver = _gdal.GDALGetDriverByName("MEM")
+                driver = _gdal.GDALGetDriverByName("MEM")
                 cple.check()
         except:
             raise DriverRegistrationError(
@@ -279,32 +282,32 @@ def _reproject(
 
         try:
             with CPLErrors() as cple:
-                hdsin = _gdal.GDALCreate(
-                    hrdriver, "input", cols, rows,
+                indataset = _gdal.GDALCreate(
+                    driver, "input", cols, rows,
                     src_count, dtypes.dtype_rev[dtype], NULL)
                 cple.check()
         except:
             raise
         _gdal.GDALSetDescription(
-            hdsin, "Temporary source dataset for _reproject()")
+            indataset, "Temporary source dataset for _reproject()")
         log.debug("Created temp source dataset")
 
         for i in range(6):
             gt[i] = src_transform[i]
-        retval = _gdal.GDALSetGeoTransform(hdsin, gt)
+        retval = _gdal.GDALSetGeoTransform(indataset, gt)
         log.debug("Set transform on temp source dataset: %d", retval)
 
         try:
             osr = _base._osr_from_crs(src_crs)
             _gdal.OSRExportToWkt(osr, &srcwkt)
-            _gdal.GDALSetProjection(hdsin, srcwkt)
+            _gdal.GDALSetProjection(indataset, srcwkt)
             log.debug("Set CRS on temp source dataset: %s", srcwkt)
         finally:
             _gdal.CPLFree(srcwkt)
             _gdal.OSRDestroySpatialReference(osr)
 
         # Copy arrays to the dataset.
-        retval = _io.io_auto(source, hdsin, 1)
+        retval = _io.io_auto(source, indataset, 1)
         # TODO: handle errors (by retval).
         log.debug("Wrote array to temp source dataset")
 
@@ -316,7 +319,7 @@ def _reproject(
             src_bidx = [src_bidx]
         src_count = len(src_bidx)
         rows, cols = shape
-        hdsin = (<_io.DatasetReaderBase?>rdr).handle()
+        indataset = (<_io.DatasetReaderBase?>rdr).handle()
         if src_nodata is None:
             src_nodata = rdr.nodata
     else:
@@ -332,7 +335,7 @@ def _reproject(
 
         try:
             with CPLErrors() as cple:
-                hrdriver = _gdal.GDALGetDriverByName("MEM")
+                driver = _gdal.GDALGetDriverByName("MEM")
                 cple.check()
         except:
             raise DriverRegistrationError(
@@ -343,20 +346,20 @@ def _reproject(
         _, rows, cols = destination.shape
         try:
             with CPLErrors() as cple:
-                hdsout = _gdal.GDALCreate(
-                    hrdriver, "output", cols, rows, src_count,
+                outdataset = _gdal.GDALCreate(
+                    driver, "output", cols, rows, src_count,
                     dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
                 cple.check()
         except:
             raise
         _gdal.GDALSetDescription(
-            hdsout, "Temporary destination dataset for _reproject()")
+            outdataset, "Temporary destination dataset for _reproject()")
         log.debug("Created temp destination dataset.")
 
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.none == _gdal.GDALSetGeoTransform(hdsout, gt):
+        if not GDALError.none == _gdal.GDALSetGeoTransform(outdataset, gt):
             raise ValueError(
                 "Failed to set transform on temp destination dataset.")
 
@@ -365,7 +368,7 @@ def _reproject(
             _gdal.OSRExportToWkt(osr, &dstwkt)
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
             if not GDALError.none == _gdal.GDALSetProjection(
-                    hdsout, dstwkt):
+                    outdataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
             _gdal.OSRDestroySpatialReference(osr)
@@ -380,7 +383,7 @@ def _reproject(
         if isinstance(dst_bidx, int):
             dst_bidx = [dst_bidx]
         udr = destination.ds
-        hdsout = (<_io.DatasetReaderBase?>udr).handle()
+        outdataset = (<_io.DatasetReaderBase?>udr).handle()
         if dst_nodata is None:
             dst_nodata = udr.nodata
     else:
@@ -393,7 +396,7 @@ def _reproject(
     try:
         with CPLErrors() as cple:
             hTransformArg = _gdal.GDALCreateGenImgProjTransformer(
-                                hdsin, NULL, hdsout, NULL,
+                                indataset, NULL, outdataset, NULL,
                                 1, 1000.0, 0)
             pfnTransformer = _gdal.GDALGenImgProjTransform
             hTransformArg = _gdal.GDALCreateApproxTransformer(_gdal.GDALGenImgProjTransform, hTransformArg, tolerance)
@@ -487,8 +490,8 @@ def _reproject(
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
-    psWOptions.hSrcDS = hdsin
-    psWOptions.hDstDS = hdsout
+    psWOptions.hSrcDS = indataset
+    psWOptions.hDstDS = outdataset
     psWOptions.nBandCount = src_count
     psWOptions.panSrcBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
     psWOptions.panDstBands = <int *>_gdal.CPLMalloc(src_count*sizeof(int))
@@ -522,31 +525,30 @@ def _reproject(
             cple.check()
 
         if dtypes.is_ndarray(destination):
-            retval = _io.io_auto(destination, hdsout, 0)
+            retval = _io.io_auto(destination, outdataset, 0)
             # TODO: handle errors (by retval).
 
-            if hdsout != NULL:
-                _gdal.GDALClose(hdsout)
+            if outdataset != NULL:
+                _gdal.GDALClose(outdataset)
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
         _gdal.GDALDestroyApproxTransformer(hTransformArg)
         _gdal.GDALDestroyWarpOptions(psWOptions)
         if dtypes.is_ndarray(source):
-            if hdsin != NULL:
-                _gdal.GDALClose(hdsin)
+            if indataset != NULL:
+                _gdal.GDALClose(indataset)
 
 
 def _calculate_default_transform(
         src_crs, dst_crs, width, height, left, bottom, right, top, **kwargs):
     """Wraps GDAL's algorithm."""
-
     cdef void *hTransformArg = NULL
     cdef int npixels = 0
     cdef int nlines = 0
     cdef double extent[4]
     cdef double geotransform[6]
-    cdef void *osr = NULL
+    cdef OGRSpatialReferenceH osr = NULL
     cdef char *wkt = NULL
     cdef InMemoryRaster temp = None
 
@@ -575,9 +577,9 @@ def _calculate_default_transform(
                     geotransform, &npixels, &nlines, extent, 0)
                 cple.check()
             log.debug("Created transformer and warp output.")
-        except CPLE_NotSupported as err:
+        except CPLE_NotSupportedError as err:
             raise CRSError(err.errmsg)
-        except CPLE_AppDefined as err:
+        except CPLE_AppDefinedError as err:
             if "Reprojection failed" in str(err):
                 # This "exception" should be treated as a debug msg, not error
                 # "Reprojection failed, err = -14, further errors will be

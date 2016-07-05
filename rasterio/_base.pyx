@@ -15,7 +15,8 @@ from libc.stdlib cimport malloc, free
 from rasterio cimport _gdal, _ogr
 from rasterio.crs import CRS
 from rasterio._err import (
-    CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
+    CPLErrors, GDALError, CPLE_IllegalArgError, CPLE_OpenFailedError,
+    CPLE_NotSupportedError)
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.enums import (
@@ -61,7 +62,7 @@ def get_dataset_driver(path):
         with CPLErrors() as cple:
             dataset = _gdal.GDALOpen(<const char *>path, 0)
             cple.check()
-    except CPLE_OpenFailed as exc:
+    except CPLE_OpenFailedError as exc:
         if dataset != NULL:
             _gdal.GDALClose(dataset)
         raise RasterioIOError(str(exc))
@@ -139,7 +140,7 @@ cdef class DatasetBase(object):
             with CPLErrors() as cple:
                 self._hds = _gdal.GDALOpen(<const char *>path, 0)
                 cple.check()
-        except CPLE_OpenFailed as err:
+        except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
 
         driver = _gdal.GDALGetDatasetDriver(self._hds)
@@ -171,7 +172,7 @@ cdef class DatasetBase(object):
             with CPLErrors() as cple:
                 band = _gdal.GDALGetRasterBand(self._hds, bidx)
                 cple.check()
-        except CPLE_IllegalArg as exc:
+        except CPLE_IllegalArgError as exc:
             raise IndexError(str(exc))
 
         if band == NULL:
@@ -935,7 +936,7 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
                 retval = (res_xs, res_ys, res_zs)
             else:
                 retval = (res_xs, res_ys)
-    except CPLE_NotSupported as err:
+    except CPLE_NotSupportedError as err:
         raise CRSError(err.errmsg)
     finally:
         _gdal.CPLFree(x)
