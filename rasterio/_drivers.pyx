@@ -7,6 +7,8 @@ import sys
 
 from rasterio.compat import string_types
 
+from rasterio cimport _gdal
+
 include "gdal.pxi"
 
 
@@ -51,7 +53,7 @@ cdef void errorHandler(CPLErr err_class, int err_no, const char* msg):
 
 
 def driver_count():
-    return GDALGetDriverCount() + OGRGetDriverCount()
+    return _gdal.GDALGetDriverCount() + _gdal.OGRGetDriverCount()
 
 
 cpdef get_gdal_config(key):
@@ -130,9 +132,9 @@ cdef class GDALEnv(ConfigEnv):
         self.start()
 
     def start(self):
-        GDALAllRegister()
-        OGRRegisterAll()
-        CPLSetErrorHandler(errorHandler)
+        _gdal.GDALAllRegister()
+        _gdal.OGRRegisterAll()
+        _gdal.CPLSetErrorHandler(<CPLErrorHandler>errorHandler)
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
 
@@ -164,11 +166,11 @@ cdef class GDALEnv(ConfigEnv):
 
         result = {}
 
-        for i in range(GDALGetDriverCount()):
-            driver = GDALGetDriver(i)
-            key = GDALGetDriverShortName(driver)
+        for i in range(_gdal.GDALGetDriverCount()):
+            driver = _gdal.GDALGetDriver(i)
+            key = _gdal.GDALGetDriverShortName(driver)
             key_b = key
-            val = GDALGetDriverLongName(driver)
+            val = _gdal.GDALGetDriverLongName(driver)
             val_b = val
             result[key_b.decode('utf-8')] = val_b.decode('utf-8')
 

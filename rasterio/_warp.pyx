@@ -391,7 +391,7 @@ def _reproject(
 
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
-    cdef _gdal.GDALWarpOptions *psWOptions = NULL
+    cdef GDALWarpOptions *psWOptions = NULL
 
     try:
         with CPLErrors() as cple:
