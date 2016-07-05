@@ -161,7 +161,8 @@ def intersect(*windows):
 def window(transform, left, bottom, right, top,
            height=None, width=None, boundless=False):
     """Returns the window corresponding to the world bounding box.
-    If boundless is False, window is limited to extent of this dataset."""
+    If boundless is False, window is limited to extent of the
+    data (determined by transform, height and width)."""
 
     window = get_window(left, bottom, right, top, transform)
     if boundless:

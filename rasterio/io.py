@@ -12,26 +12,33 @@ from rasterio.windows import (
 
 
 class WindowMethodsMixin(object):
-    # TODO do we copy the function signature here or
-    #     just take *args, **kwargs
-    # TODO get docstring from base function or copy
+    """Mixin providing methods for window-related calculations.
+    These methods are wrappers for the functionality in
+    `rasterio.windows` module.
+
+    A subclass with this mixin MUST provide the following
+    properties: `transform`, `height` and `width`
+    """
 
     def window(self, left, bottom, right, top, boundless=False):
-        # TODO switch to transform
-        return window(self.affine, left, bottom, right, top,
+        """Returns the window corresponding to the bounding coordinates.
+        If boundless is False, window is limited to extent of this dataset."""
+
+        transform = self.affine  # TODO
+        return window(transform, left, bottom, right, top,
                       height=self.height, width=self.width,
                       boundless=boundless)
 
     def window_transform(self, window):
         """Returns the affine transform for a dataset window."""
-        # TODO switch to transform
-        transform = self.affine
+
+        transform = self.affine # TODO
         return window_transform(transform, window)
 
     def window_bounds(self, window):
         """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
-        # TODO switch to transform
-        transform = self.affine
+
+        transform = self.affine  # TODO
         return window_bounds(transform, window)
 
 
