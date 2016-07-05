@@ -9,6 +9,7 @@ from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
 from rasterio.windows import (
     window, window_transform, window_bounds)
+from rasterio.transform import guard_transform
 
 
 class WindowMethodsMixin(object):
@@ -24,7 +25,7 @@ class WindowMethodsMixin(object):
         """Returns the window corresponding to the bounding coordinates.
         If boundless is False, window is limited to extent of this dataset."""
 
-        transform = self.affine  # TODO
+        transform = guard_transform(self.transform)
         return window(transform, left, bottom, right, top,
                       height=self.height, width=self.width,
                       boundless=boundless)
@@ -32,13 +33,13 @@ class WindowMethodsMixin(object):
     def window_transform(self, window):
         """Returns the affine transform for a dataset window."""
 
-        transform = self.affine # TODO
+        transform = guard_transform(self.transform)
         return window_transform(transform, window)
 
     def window_bounds(self, window):
         """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
 
-        transform = self.affine  # TODO
+        transform = guard_transform(self.transform)
         return window_bounds(transform, window)
 
 
