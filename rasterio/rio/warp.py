@@ -84,7 +84,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
     \b
         --dst-crs '{"proj": "utm", "zone": 18, ...}'
 
-    If --dimensions are provided, --res and --bounds are ignored.
+    If --dimensions are provided, --res and --bounds are not applicable and an
+    exception will be raised.
     Resolution is calculated based on the relationship between the
     raster bounds in the target coordinate system and the dimensions,
     and may produce rectangular rather than square pixels.
