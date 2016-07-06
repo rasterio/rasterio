@@ -1,3 +1,5 @@
+"""$ rio warp"""
+
 import logging
 from math import ceil, floor, log
 import warnings
@@ -5,11 +7,11 @@ import warnings
 import click
 from cligj import files_inout_arg, format_opt
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
 from rasterio.transform import Affine
 from rasterio.warp import (
     reproject, Resampling, calculate_default_transform, transform_bounds)
@@ -146,7 +148,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             if like:
                 with rasterio.open(like) as template_ds:
                     dst_crs = template_ds.crs
-                    dst_transform = template_ds.affine
+                    dst_transform = template_ds.transform
                     dst_height = template_ds.height
                     dst_width = template_ds.width
 
@@ -218,7 +220,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 # Same projection, different dimensions and possibly
                 # different resolution.
                 if not res:
-                    res = (src.affine.a, -src.affine.e)
+                    res = (src.transform.a, -src.transform.e)
 
                 dst_crs = src.crs
                 xmin, ymin, xmax, ymax = (src_bounds or dst_bounds)
@@ -235,7 +237,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
             else:
                 dst_crs = src.crs
-                dst_transform = src.affine
+                dst_transform = src.transform
                 dst_width = src.width
                 dst_height = src.height
 
@@ -269,7 +271,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             out_kwargs.update({
                 'crs': dst_crs,
                 'transform': dst_transform,
-                'affine': dst_transform,
                 'width': dst_width,
                 'height': dst_height
             })
@@ -289,7 +290,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     source=rasterio.band(src, list(range(1, src.count + 1))),
                     destination=rasterio.band(
                         dst, list(range(1, src.count + 1))),
-                    src_transform=src.affine,
+                    src_transform=src.transform,
                     src_crs=src.crs,
                     src_nodata=src_nodata,
                     dst_transform=out_kwargs['transform'],

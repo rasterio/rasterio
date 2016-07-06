@@ -1,9 +1,13 @@
+"""Unittests for $ rio merge"""
+
+
 import sys
 import os
 import logging
-import click
-import numpy as np
+
+import affine
 from click.testing import CliRunner
+import numpy as np
 from pytest import fixture
 
 import rasterio
@@ -19,7 +23,8 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_data_dir_1(tmpdir):
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": (-114, 0.2, 0, 46, 0, -0.2),
+        "transform": affine.Affine(0.2, 0, -114,
+                                   0, -0.2, 46),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
@@ -45,7 +50,8 @@ def test_data_dir_1(tmpdir):
 def test_data_dir_2(tmpdir):
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": (-114, 0.2, 0, 46, 0, -0.1),
+        "transform": affine.Affine(0.2, 0, -114,
+                                   0, -0.2, 46),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
@@ -191,7 +197,8 @@ def test_format_jpeg(tmpdir):
 def test_data_dir_overlapping(tmpdir):
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": (-114, 0.2, 0, 46, 0, -0.2),
+        "transform": affine.Affine(0.2, 0, -114,
+                                   0, -0.2, 46),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
@@ -204,7 +211,8 @@ def test_data_dir_overlapping(tmpdir):
         data = np.ones((10, 10), dtype=rasterio.uint8)
         dst.write(data, indexes=1)
 
-    kwargs['transform'] = (-113, 0.2, 0, 45, 0, -0.2)
+    kwargs['transform'] = affine.Affine(0.2, 0, -113,
+                                        0, -0.2, 45)
     with rasterio.open(str(tmpdir.join('nw.tif')), 'w', **kwargs) as dst:
         data = np.ones((10, 10), dtype=rasterio.uint8) * 2
         dst.write(data, indexes=1)
@@ -236,7 +244,8 @@ def test_merge_overlapping(test_data_dir_overlapping):
 def test_data_dir_float(tmpdir):
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": (-114, 0.2, 0, 46, 0, -0.2),
+        "transform": affine.Affine(0.2, 0, -114,
+                                   0, -0.2, 46),
         "count": 1,
         "dtype": rasterio.float64,
         "driver": "GTiff",

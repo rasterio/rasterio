@@ -40,7 +40,7 @@ class ReaderContextTest(unittest.TestCase):
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
-                s.affine,
+                s.transform,
                 (300.0379266750948, 0.0, 101985.0,
                  0.0, -300.041782729805, 2826915.0,
                  0, 0, 1.0))
@@ -58,7 +58,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.nodatavals, (0, 0, 0))
         self.assertEqual(s.crs['init'], 'epsg:32618')
         self.assertEqual(
-            s.affine,
+            s.transform,
             (300.0379266750948, 0.0, 101985.0,
              0.0, -300.041782729805, 2826915.0,
              0, 0, 1.0))
