@@ -66,7 +66,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
     If a template raster is provided using the --like option, the
     coordinate reference system, affine transform, and dimensions of
     that raster will be used for the output.  In this case --dst-crs,
-    --bounds, --res, and --dimensions options are ignored.
+    --bounds, --res, and --dimensions options are not applicable and
+    an exception will be raised.
 
     \b
         $ rio warp input.tif output.tif --like template.tif
@@ -83,7 +84,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
     \b
         --dst-crs '{"proj": "utm", "zone": 18, ...}'
 
-    If --dimensions are provided, --res and --bounds are ignored.
+    If --dimensions are provided, --res and --bounds are not applicable and an
+    exception will be raised.
     Resolution is calculated based on the relationship between the
     raster bounds in the target coordinate system and the dimensions,
     and may produce rectangular rather than square pixels.
@@ -113,6 +115,20 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
     else:
         # Expand one value to two if needed
         res = (res[0], res[0]) if len(res) == 1 else res
+
+    # Check invalid parameter combinations
+    if like:
+        invalid_combos = (dimensions, dst_bounds, dst_crs, res)
+        if any(p for p in invalid_combos if p is not None):
+            raise click.BadParameter(
+                "--like cannot be used with any of --dimensions, --bounds, "
+                "--dst-crs, or --res")
+
+    elif dimensions:
+        invalid_combos = (dst_bounds, res)
+        if any(p for p in invalid_combos if p is not None):
+            raise click.BadParameter(
+                "--dimensions cannot be used with --bounds or --res")
 
     with rasterio.Env(CPL_DEBUG=verbosity > 2,
                       CHECK_WITH_INVERT_PROJ=check_invert_proj):
