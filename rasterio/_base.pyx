@@ -5,23 +5,19 @@ from __future__ import absolute_import
 
 import logging
 import math
-import os
-import sys
 import warnings
 
-from libc.stdlib cimport malloc, free
-
-from rasterio cimport _gdal, _ogr
-from rasterio.crs import CRS
+from rasterio import dtypes
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArg, CPLE_OpenFailed, CPLE_NotSupported)
-from rasterio import dtypes
+from rasterio cimport _gdal
 from rasterio.coords import BoundingBox
+from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
-from rasterio.transform import Affine
+from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path, vsi_path
 from rasterio.windows import (
     crop_window, eval_window, get_index, get_window,
@@ -438,14 +434,14 @@ cdef class DatasetBase(object):
         (lower left x, lower left y, upper right x, upper right y)
         """
         def __get__(self):
-            a, b, c, d, e, f, _, _, _ = self.affine
+            a, b, c, d, e, f, _, _, _ = self.transform
             return BoundingBox(c, f+e*self.height, c+a*self.width, f)
     
     property res:
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
         def __get__(self):
-            a, b, c, d, e, f, _, _, _ = self.affine
+            a, b, c, d, e, f, _, _, _ = self.transform
             if b == d == 0:
                 return a, -e
             else:
@@ -456,7 +452,7 @@ cdef class DatasetBase(object):
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
-        a, b, c, d, e, f, _, _, _ = self.affine
+        a, b, c, d, e, f, _, _, _ = self.transform
         if col < 0:
             col += self.width
         if row < 0:
@@ -465,7 +461,7 @@ cdef class DatasetBase(object):
 
     def index(self, x, y, op=math.floor, precision=6):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        return get_index(x, y, self.affine, op=op, precision=precision)
+        return get_index(x, y, self.transform, op=op, precision=precision)
 
     @property
     def meta(self):
@@ -482,8 +478,7 @@ cdef class DatasetBase(object):
             'height': self.height,
             'count': self.count,
             'crs': self.crs,
-            'transform': self.affine.to_gdal(),
-            'affine': self.affine,
+            'transform': self.transform,
         }
         self._read = True
         return m
@@ -573,39 +568,46 @@ cdef class DatasetBase(object):
         return self._transform
 
     property transform:
-        """Coefficients of the affine transformation that maps col,row
-        pixel coordinates to x,y coordinates in the specified crs. The
-        coefficients of the augmented matrix are shown below.
+        """An instance of ``affine.Affine``, which is a ``namedtuple`` with
+        coefficients in the order ``(a, b, c, d, e, f)``.
+
+        Coefficients of the affine transformation that maps ``col,row``
+        pixel coordinates to ``x,y`` coordinates in the specified crs. The
+        coefficients of the augmented matrix are:
         
           | x |   | a  b  c | | r |
           | y | = | d  e  f | | c |
           | 1 |   | 0  0  1 | | 1 |
-        
-        In Rasterio versions before 1.0 the value of this property
-        is a list of coefficients ``[c, a, b, f, d, e]``. This form
-        is *deprecated* beginning in 0.9 and in version 1.0 this 
-        property will be replaced by an instance of ``affine.Affine``,
-        which is a namedtuple with coefficients in the order
-        ``(a, b, c, d, e, f)``.
-
-        Please see https://github.com/mapbox/rasterio/issues/86
-        for more details.
         """
         def __get__(self):
-            warnings.warn(
-                    "The value of this property will change in version 1.0. "
-                    "Please see https://github.com/mapbox/rasterio/issues/86 "
-                    "for details.",
-                    FutureWarning,
-                    stacklevel=2)
-            return self.get_transform()
+            return Affine.from_gdal(*self.get_transform())
 
     property affine:
-        """An instance of ``affine.Affine``. This property is a
+        """This property is deprecated.
+
+        An instance of ``affine.Affine``. This property is a
         transitional feature: see the docstring of ``transform``
         (above) for more details.
+
+        This property was added in ``0.9`` as a transitional feature to aid the
+        transition of the `transform` parameter.  Rasterio ``1.0`` completes
+        this transition by converting `transform` to an instance of
+        ``affine.Affine()``.
+
+        See the `transform`'s docstring for more information.
+
+        See https://github.com/mapbox/rasterio/issues/86 for more details.
         """
+
         def __get__(self):
+            with warnings.catch_warnings():
+                warnings.simplefilter('always')
+                warnings.warn(
+                "'src.affine' is deprecated.  Please switch to "
+                "'src.transform'. See "
+                "https://github.com/mapbox/rasterio/issues/86 for details.",
+                DeprecationWarning,
+                stacklevel=2)
             return Affine.from_gdal(*self.get_transform())
 
     def tags(self, bidx=0, ns=None):

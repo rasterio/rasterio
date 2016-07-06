@@ -1,13 +1,12 @@
-"""Merge command."""
+"""$ rio merge"""
 
-import logging
 
 import click
 from cligj import files_inout_arg, format_opt
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
@@ -57,7 +56,6 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
                                             nodata=nodata, precision=precision)
 
         profile = sources[0].profile
-        profile.pop('affine')
         profile['transform'] = output_transform
         profile['height'] = dest.shape[1]
         profile['width'] = dest.shape[2]

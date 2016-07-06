@@ -30,7 +30,7 @@ def main(raster_file, vector_file, driver, mask_value):
             {'properties': {'raster_val': v}, 'geometry': s}
             for i, (s, v)
             in enumerate(
-                shapes(image, mask=mask, transform=src.affine)))
+                shapes(image, mask=mask, transform=src.transform)))
 
         with fiona.open(
                 vector_file, 'w',
@@ -68,5 +68,5 @@ if __name__ == '__main__':
 
     name = main(args.input, args.output, args.output_driver, args.mask_value)
 
-    print subprocess.check_output(
-            ['ogrinfo', '-so', args.output, name])
+    print(subprocess.check_output(
+            ['ogrinfo', '-so', args.output, name]))

@@ -167,7 +167,7 @@ cdef class CPLErrors:
     """A manager for GDAL error handling contexts."""
 
     def check(self):
-        """Check the errror stack and raise or exit as appropriate."""
+        """Check the error stack and raise or exit as appropriate."""
         cdef const char *msg_c = NULL
 
         err_type = CPLGetLastErrorType()

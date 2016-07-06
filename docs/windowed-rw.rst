@@ -177,7 +177,6 @@ a dataset:
         # window = ((3, 714), (13, 770))
 
         kwargs = src.meta.copy()
-        del kwargs['transform']
         kwargs.update({
             'height': window[0][1] - window[0][0],
             'width': window[1][1] - window[1][0],

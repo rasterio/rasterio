@@ -69,7 +69,7 @@ Rasterio gives access to properties of a geospatial raster file.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         print(src.width, src.height)
         print(src.crs)
-        print(src.affine)
+        print(src.transform)
         print(src.count)
         print(src.indexes)
 

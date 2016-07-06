@@ -8,7 +8,6 @@ def test_write(tmpdir):
     name = str(tmpdir.join("test.png"))
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         kwargs = src.meta.copy()
-        del kwargs['affine']
         del kwargs['transform']
         del kwargs['crs']
         kwargs['driver'] = 'PNG'
@@ -21,7 +20,6 @@ def test_read_write(tmpdir):
     tif2 = str(tmpdir.join("test2.tif"))
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         kwargs = src.meta.copy()
-        del kwargs['affine']
         del kwargs['transform']
         del kwargs['crs']
         with rasterio.open(tif1, 'w', **kwargs) as dst:

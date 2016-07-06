@@ -4,30 +4,26 @@
 from __future__ import absolute_import
 
 import logging
-import math
 import os
 import os.path
-import sys
 import warnings
 
-from libc.stdlib cimport malloc, free
 import numpy as np
-cimport numpy as np
 
-from rasterio cimport _base, _gdal, _ogr, _io
-from rasterio._base import (
-    crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
-from rasterio.crs import CRS
-from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailed
+cimport numpy as np
+from rasterio cimport _base, _gdal
+
 from rasterio import dtypes
-from rasterio.coords import BoundingBox
-from rasterio.errors import (
-    DriverRegistrationError, RasterioIOError, NodataShadowWarning)
+from rasterio._base import crop_window, eval_window
+from rasterio._err import CPLErrors, CPLE_OpenFailed
+from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
-from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.errors import DriverRegistrationError
+from rasterio.errors import RasterioIOError
+from rasterio.errors import NodataShadowWarning
 from rasterio.sample import sample_gen
+from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
 
 
@@ -618,27 +614,6 @@ cdef int io_auto(image, void *hband, bint write):
 
 cdef class DatasetReaderBase(_base.DatasetBase):
 
-    def read_band(self, bidx, out=None, window=None, masked=False):
-        """Read the `bidx` band into an `out` array if provided, 
-        otherwise return a new array.
-
-        Band indexes begin with 1: read_band(1) returns the first band.
-
-        The optional `window` argument is a 2 item tuple. The first item
-        is a tuple containing the indexes of the rows at which the
-        window starts and stops and the second is a tuple containing the
-        indexes of the columns at which the window starts and stops. For
-        example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
-        of the raster dataset.
-        """
-        warnings.warn(
-            "read_band() is deprecated and will be removed by Rasterio 1.0. "
-            "Please use read() instead.",
-            FutureWarning,
-            stacklevel=2)
-        return self.read(bidx, out=out, window=window, masked=masked)
-
-
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False):
         """Read raster bands as a multidimensional array
@@ -1201,56 +1176,6 @@ cdef class DatasetReaderBase(_base.DatasetBase):
             for i in range(1, self.count):
                 mask = mask | self.read_masks(i, **kwargs)
             return mask
-        
-
-    def read_mask(self, indexes=None, out=None, window=None, boundless=False):
-        """Read the mask band into an `out` array if provided, 
-        otherwise return a new array containing the dataset's
-        valid data mask.
-
-        The optional `window` argument takes a tuple like:
-        
-            ((row_start, row_stop), (col_start, col_stop))
-            
-        specifying a raster subset to write into.
-        """
-        cdef void *hband
-        cdef void *hmask
-
-        warnings.warn(
-            "read_mask() is deprecated and will be removed by Rasterio 1.0. "
-            "Please use read_masks() instead.",
-            FutureWarning,
-            stacklevel=2)
-
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        hband = _gdal.GDALGetRasterBand(self._hds, 1)
-        if hband == NULL:
-            raise ValueError("NULL band mask")
-        hmask = _gdal.GDALGetMaskBand(hband)
-        if hmask == NULL:
-            return None
-        if out is None:
-            out_shape = (
-                window 
-                and window_shape(window, self.height, self.width) 
-                or self.shape)
-            out = np.empty(out_shape, np.uint8)
-        if window:
-            window = eval_window(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
-        else:
-            xoff = yoff = 0
-            width = self.width
-            height = self.height
-
-        io_ubyte(
-            hmask, 0, xoff, yoff, width, height, out)
-        return out
 
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
@@ -1579,14 +1504,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __get__(self):
             return self.get_nodatavals()
-
-        def __set__(self, value):
-            warnings.warn(
-                "nodatavals.__set__() is deprecated and will be removed by "
-                "Rasterio 1.0. Please use nodata.__set__() instead.",
-                FutureWarning,
-                stacklevel=2)
-            self.set_nodatavals(value)
 
     property nodata:
         """The dataset's single nodata value."""

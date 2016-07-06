@@ -1,31 +1,29 @@
 """Geospatial transforms"""
 
-from __future__ import absolute_import
-from __future__ import division
 
-import warnings
+from __future__ import division
 
 from affine import Affine
 
 
 IDENTITY = Affine.identity()
+GDAL_IDENTITY = IDENTITY.to_gdal()
 
 
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
-    return seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0
+    return tuple(seq) == GDAL_IDENTITY or (
+        seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0)
 
 
 def guard_transform(transform):
     """Return an Affine transformation instance."""
     if not isinstance(transform, Affine):
         if tastes_like_gdal(transform):
-            warnings.warn(
-                "GDAL-style transforms are deprecated and will not "
-                "be supported in Rasterio 1.0.",
-                FutureWarning,
-                stacklevel=2)
-            transform = Affine.from_gdal(*transform)
+            raise TypeError(
+                "GDAL-style transforms have been deprecated.  This "
+                "exception will be raised for a period of time to highlight "
+                "potentially confusing errors, but will eventually be removed.")
         else:
             transform = Affine(*transform)
     return transform

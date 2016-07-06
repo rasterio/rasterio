@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from __future__ import division
 
 from math import ceil
-import warnings
 
 from affine import Affine
 import numpy as np
@@ -15,11 +14,6 @@ from rasterio._warp import (
 from rasterio.enums import Resampling
 from rasterio.env import ensure_env
 from rasterio.transform import guard_transform
-
-
-RESAMPLING = Resampling
-warnings.warn(
-    "RESAMPLING is deprecated, use Resampling instead.", DeprecationWarning)
 
 
 @ensure_env
@@ -192,7 +186,7 @@ def reproject(
         Source raster.
     destination: ndarray or rasterio Band
         Target raster.
-    src_transform: affine transform object, optional
+    src_transform: affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
     src_crs: CRS or dict, optional
@@ -205,7 +199,7 @@ def reproject(
         for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
         if available.  Must be provided if dst_nodata is not None.
-    dst_transform: affine transform object, optional
+    dst_transform: affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
     dst_crs: CRS or dict, optional
@@ -316,7 +310,8 @@ def calculate_default_transform(
 
     Returns
     -------
-    tuple of destination affine transform, width, and height
+    tuple
+        Three elements: ``affine transform, width, and height``
 
     Note
     ----

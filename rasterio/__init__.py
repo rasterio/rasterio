@@ -4,13 +4,13 @@ from __future__ import absolute_import
 
 from collections import namedtuple
 import logging
+import warnings
 try:
     from logging import NullHandler
 except ImportError:  # pragma: no cover
     class NullHandler(logging.Handler):
         def emit(self, record):
             pass
-import warnings
 
 from rasterio._base import gdal_version
 from rasterio.drivers import is_blacklisted
@@ -167,6 +167,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     within that container.
 
     """
+
     if not isinstance(path, string_types):
         raise TypeError("invalid path: {0!r}".format(path))
     if mode and not isinstance(mode, string_types):
@@ -175,11 +176,29 @@ def open(path, mode='r', driver=None, width=None, height=None,
         raise TypeError("invalid driver: {0!r}".format(driver))
     if dtype and not check_dtype(dtype):
         raise TypeError("invalid dtype: {0!r}".format(dtype))
+
+    if 'affine' in kwargs:
+        # DeprecationWarning's are ignored by default
+        with warnings.catch_warnings():
+            warnings.simplefilter('always')
+            warnings.warn(
+                "The 'affine' kwarg in rasterio.open() is deprecated as of 1.0 "
+                "and only remains to ease the transition.  Please switch to "
+                "the 'transform' kwarg.  See "
+                "https://github.com/mapbox/rasterio/issues/86 for details.",
+                DeprecationWarning,
+                stacklevel=2)
+
+            if transform:
+                warnings.warn(
+                    "Found both 'affine' and 'transform' in rasterio.open() - "
+                    "choosing 'transform'")
+                transform = transform
+            else:
+                transform = kwargs.pop('affine')
+
     if transform:
         transform = guard_transform(transform)
-    elif 'affine' in kwargs:
-        affine = kwargs.pop('affine')
-        transform = guard_transform(affine)
 
     # Get AWS credentials if we're attempting to access a raster
     # on S3.
@@ -249,32 +268,8 @@ def copy(src, dst, **kw):
     return RasterCopier()(src, dst, **kw)
 
 
-def drivers(**kwargs):
-    """Create a gdal environment with registered drivers and creation
-    options.
-
-    This function is deprecated; please use ``env.Env`` instead.
-
-    Parameters
-    ----------
-    **kwargs:: keyword arguments
-        Configuration options that define GDAL driver behavior
-
-        See https://trac.osgeo.org/gdal/wiki/ConfigOptions
-
-    Returns
-    -------
-    GDALEnv responsible for managing the environment.
-
-    Notes
-    -----
-    Use as a context manager, ``with rasterio.drivers(): ...``
-    """
-    warnings.warn("Deprecated; Use env.Env instead", DeprecationWarning)
-    return Env(**kwargs)
-
-
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+
 
 def band(ds, bidx):
     """Wraps a dataset and a band index up as a 'Band'
@@ -328,22 +323,3 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans[2] -= pad_width * padded_trans[0]
     padded_trans[5] -= pad_width * padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
-
-
-def get_data_window(arr, nodata=None):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.get_data_window(arr, nodata)
-
-
-def window_union(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.union(data)
-
-
-def window_intersection(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.intersection(data)
-
-def windows_intersect(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.intersect(data)
