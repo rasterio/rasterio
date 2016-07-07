@@ -9,13 +9,14 @@ from rasterio.dtypes import uint8
 class Profile(UserDict):
     """Base class for Rasterio dataset profiles.
 
-    Subclasses will declare a format driver and driver-specific
-    creation options.
+    Subclasses will declare driver-specific creation options.
     """
 
     defaults = {}
 
     def __init__(self, data={}, **kwds):
+        """Create a new profile based on the class defaults, which are
+        overlaid with items from the `data` dict and keyword arguments."""
         UserDict.__init__(self)
         initdata = self.defaults.copy()
         initdata.update(data)
