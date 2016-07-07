@@ -67,13 +67,15 @@ def test_window_bounds_function():
         assert bounds(((0, rows), (0, cols)), src.transform) == src.bounds
 
 
-def test_eval_window_bad_structure():
+bad_windows = (
+    (1, 2, 3),
+    (1, 2),
+    ((1, 0), 2))
+
+@pytest.mark.parametrize("window", bad_windows)
+def test_eval_window_bad_structure(window):
     with pytest.raises(ValueError):
-        evaluate((1, 2, 3), 10, 10)
-    with pytest.raises(ValueError):
-        evaluate((1, 2), 10, 10)
-    with pytest.raises(ValueError):
-        evaluate(((1, 0), 2), 10, 10)
+        evaluate(window, 10, 10)
 
 
 def test_eval_window_invalid_dims():
@@ -91,8 +93,10 @@ def test_eval_window_invalid_dims():
         evaluate(((0, 5), (10, 5)), 10, 10)
 
 
-def test_evaluate():
+def test_windows_evaluate():
     assert evaluate(((2, 4), (2, 4)), 10, 10) == ((2, 4), (2, 4))
+    assert evaluate(((-10, None), (-10, None)), 100, 90) == ((90, 100), (80, 90))
+    assert evaluate(((None, -10), (None, -10)), 100, 90) == ((0, 90), (0, 80))
 
 
 def test_window_index():
@@ -105,11 +109,6 @@ def test_window_index():
     assert c.stop == 12
     arr = np.ones((20, 20))
     assert arr[idx].shape == (4, 11)
-
-
-def test_eval():
-    assert evaluate(((-10, None), (-10, None)), 100, 90) == ((90, 100), (80, 90))
-    assert evaluate(((None, -10), (None, -10)), 100, 90) == ((0, 90), (0, 80))
 
 
 def test_window_shape_errors():
