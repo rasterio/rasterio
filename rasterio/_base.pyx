@@ -658,8 +658,6 @@ cdef class DatasetBase(object):
         if ns:
             ns_bytes = ns.encode('utf-8')
             domain = ns_bytes
-        else:
-            domain = NULL
 
         metadata = GDALGetMetadata(obj, domain)
         num_items = CSLCount(metadata)
