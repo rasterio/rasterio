@@ -49,7 +49,7 @@ print("%f usec\n" % (1000*t/n))
 # Rasterio
 s = """
 with rasterio.open('tests/data/RGB.byte.tif') as src:
-    transform = src.affine
+    transform = src.transform
     proj = src.crs
     wkt = src.crs_wkt
     arr = src.read(1, masked=False)

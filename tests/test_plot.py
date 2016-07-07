@@ -1,3 +1,6 @@
+"""Unittests for rasterio.plot"""
+
+
 import numpy as np
 import pytest
 
@@ -12,6 +15,7 @@ except ImportError:
 import rasterio
 from rasterio.plot import show, show_hist, get_plt, plotting_extent
 from rasterio.enums import ColorInterp
+
 
 @pytest.mark.skipif(plt is None,
                     reason="requires matplotlib")
@@ -79,6 +83,7 @@ def test_show_raster_no_bounds():
             plt.close(fig)
         except ImportError:
             pass
+
 
 @pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_raster_title():
@@ -150,6 +155,7 @@ def test_show_array():
             plt.close(fig)
         except ImportError:
             pass
+
 
 @pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_array3D():

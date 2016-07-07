@@ -1,6 +1,5 @@
 """Copy valid pixels from input files to an output file."""
 
-from __future__ import absolute_import
 
 import logging
 import math
@@ -46,11 +45,16 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
     Returns
     -------
-    dest: numpy ndarray
-        Contents of all input rasters in single array.
-    out_transform: affine object
-        Information for mapping pixel coordinates in `dest` to another
-        coordinate system
+    tuple
+
+        Two elements:
+
+            dest: numpy ndarray
+                Contents of all input rasters in single array.
+
+            out_transform: affine.Affine()
+                Information for mapping pixel coordinates in `dest` to another
+                coordinate system
     """
     first = sources[0]
     first_res = first.res
@@ -136,7 +140,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
         # 2. Compute the source window.
         src_window = get_window(
-            int_w, int_s, int_e, int_n, src.affine, precision=precision)
+            int_w, int_s, int_e, int_n, src.transform, precision=precision)
         logger.debug("Src %s window: %r", src.name, src_window)
 
         # 3. Compute the destination window.

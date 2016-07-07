@@ -30,7 +30,7 @@ by ``x``, you need to *divide* the affine parameters defining the cell size by `
                              round(arr.shape[2] * 1.5)))
 
     # adjust the new affine transform to the 150% smaller cell size
-    aff = src.affine
+    aff = src.transform
     newaff = Affine(aff.a / 1.5, aff.b, aff.c,
                     aff.d, aff.e / 1.5, aff.f)
 
@@ -60,7 +60,7 @@ that differs from the resampling methods available in GDAL. This may not be appr
     newarr = zoom(arr, zoom=[1, 1.5, 1.5], order=3, prefilter=False)
 
     # Adjust original affine transform
-    aff = src.affine
+    aff = src.transform
     newaff = Affine(aff.a / 1.5, aff.b, aff.c,
                     aff.d, aff.e / 1.5, aff.f)
 
