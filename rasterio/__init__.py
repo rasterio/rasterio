@@ -29,17 +29,17 @@ from rasterio import windows
 
 # TODO deprecate or remove in factor of rasterio.windows.___
 def eval_window(*args, **kwargs):
-    from rasterio._base import eval_window
+    from rasterio.windows import evaluate
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
-    return eval_window(*args, **kwargs)
+    return evaluate(*args, **kwargs)
 
 def window_shape(*args, **kwargs):
-    from rasterio._base import window_shape
+    from rasterio.windows import shape
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
-    return window_shape(*args, **kwargs)
+    return shape(*args, **kwargs)
 
 def window_index(*args, **kwargs):
-    from rasterio._base import window_index
+    from rasterio.windows import window_index
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return window_index(*args, **kwargs)
 

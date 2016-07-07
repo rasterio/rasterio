@@ -158,28 +158,35 @@ def intersect(*windows):
     return True
 
 
-def window(transform, left, bottom, right, top,
-           height=None, width=None, boundless=False):
+def from_bounds(left, bottom, right, top, transform,
+                height=None, width=None, boundless=False, precision=6):
     """Returns the window corresponding to the world bounding box.
     If boundless is False, window is limited to extent of the
     data (determined by transform, height and width)."""
 
-    window = get_window(left, bottom, right, top, transform)
+    window_start = get_index(
+        left, top, transform, op=math.floor, precision=precision)
+
+    window_stop = get_index(
+        right, bottom, transform, op=math.ceil, precision=precision)
+
+    window = tuple(zip(window_start, window_stop))
+
     if boundless:
         return window
     else:
         if None in (height, width):
             raise ValueError("Must supply height and width unless boundless")
-        return crop_window(window, height, width)
+        return crop(window, height, width)
 
 
-def window_transform(transform, window):
+def transform(window, transform):
     """Returns the affine transform for a dataset window."""
     (r, _), (c, _) = window
     return transform * Affine.translation(c or 0, r or 0)
 
 
-def window_bounds(transform, window):
+def bounds(window, transform):
     """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
     ((row_min, row_max), (col_min, col_max)) = window
     x_min, y_min = transform * (col_min, row_max)
@@ -187,7 +194,7 @@ def window_bounds(transform, window):
     return x_min, y_min, x_max, y_max
 
 
-def crop_window(window, height, width):
+def crop(window, height, width):
     """Returns a window cropped to fall within height and width."""
     (r_start, r_stop), (c_start, c_stop) = window
     return (
@@ -195,7 +202,7 @@ def crop_window(window, height, width):
         (min(max(c_start, 0), width), max(0, min(c_stop, width))))
 
 
-def eval_window(window, height, width):
+def evaluate(window, height, width):
     """Evaluates a window tuple that might contain negative values
     in the context of a raster height and width."""
     try:
@@ -234,7 +241,7 @@ def eval_window(window, height, width):
     return (r_start, r_stop), (c_start, c_stop)
 
 
-def get_index(x, y, affine, op=math.floor, precision=6):
+def get_index(x, y, transform, op=math.floor, precision=6):
     """
     Returns the (row, col) index of the pixel containing (x, y) given a
     coordinate reference system.
@@ -245,7 +252,7 @@ def get_index(x, y, affine, op=math.floor, precision=6):
         x value in coordinate reference system
     y : float
         y value in coordinate reference system
-    affine : tuple
+    transform : Affine
         Coefficients mapping pixel coordinates to coordinate reference system.
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
@@ -264,48 +271,23 @@ def get_index(x, y, affine, op=math.floor, precision=6):
     # and sign determined by the op function: positive for floor, negative
     # for ceil.
     eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
-    row = int(op((y - eps - affine[5]) / affine[4]))
-    col = int(op((x + eps - affine[2]) / affine[0]))
+    fcol, frow = ~transform * (x + eps, y - eps)
+    col = int(op(fcol))
+    row = int(op(frow))
     return row, col
 
 
-def get_window(left, bottom, right, top, affine, precision=6):
-    """
-    Returns a window tuple given coordinate bounds and the coordinate reference
-    system.
-
-    Parameters
-    ----------
-    left : float
-        Left edge of window
-    bottom : float
-        Bottom edge of window
-    right : float
-        Right edge of window
-    top : float
-        top edge of window
-    affine : tuple
-        Coefficients mapping pixel coordinates to coordinate reference system.
-    precision : int
-        Decimal places of precision in indexing, as in `round()`.
-    """
-    window_start = get_index(
-        left, top, affine, op=math.floor, precision=precision)
-    window_stop = get_index(
-        right, bottom, affine, op=math.ceil, precision=precision)
-    window = tuple(zip(window_start, window_stop))
-    return window
-
-
-def window_shape(window, height=-1, width=-1):
+def shape(window, height=-1, width=-1):
     """Returns shape of a window.
 
     height and width arguments are optional if there are no negative
     values in the window.
     """
-    (a, b), (c, d) = eval_window(window, height, width)
+    (a, b), (c, d) = evaluate(window, height, width)
     return b-a, d-c
 
 
 def window_index(window):
+    # "window_" is necessary here to redundancy to disambiguate
+    # from get_index which provides src.index
     return tuple(slice(*w) for w in window)

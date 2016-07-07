@@ -21,9 +21,7 @@ from rasterio.env import Env
 from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path, vsi_path
-from rasterio.windows import (
-    crop_window, eval_window, get_index, get_window,
-    window_shape, window_index)
+from rasterio import windows
 
 
 from rasterio._gdal cimport (
@@ -469,7 +467,7 @@ cdef class DatasetBase(object):
 
     def index(self, x, y, op=math.floor, precision=6):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        return get_index(x, y, self.transform, op=op, precision=precision)
+        return windows.get_index(x, y, self.transform, op=op, precision=precision)
 
     @property
     def meta(self):
@@ -725,8 +723,8 @@ cdef class DatasetBase(object):
             xoff = yoff = 0
             width, height = self.width, self.height
         else:
-            window = eval_window(window, self.height, self.width)
-            window = crop_window(window, self.height, self.width)
+            window = windows.evaluate(window, self.height, self.width)
+            window = windows.crop(window, self.height, self.width)
             xoff = window[1][0]
             width = window[1][1] - xoff
             yoff = window[0][0]

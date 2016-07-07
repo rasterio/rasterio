@@ -12,8 +12,7 @@ import warnings
 
 import numpy as np
 
-from rasterio._base import (
-    crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
+from rasterio._base import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError)
@@ -27,6 +26,7 @@ from rasterio.errors import NodataShadowWarning
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
+from rasterio import windows
 
 cimport numpy as np
 
@@ -739,8 +739,8 @@ cdef class DatasetReaderBase(DatasetBase):
                 win_shape += (
                         window[0][1]-window[0][0], window[1][1]-window[1][0])
             else:
-                window = crop_window(
-                    eval_window(window, self.height, self.width),
+                window = windows.crop(
+                    windows.evaluate(window, self.height, self.width),
                     self.height, self.width
                 )
                 (r_start, r_stop), (c_start, c_stop) = window
@@ -958,7 +958,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 win_shape += (
                         window[0][1]-window[0][0], window[1][1]-window[1][0])
             else:
-                w = eval_window(window, self.height, self.width)
+                w = windows.evaluate(window, self.height, self.width)
                 minr = min(max(w[0][0], 0), self.height)
                 maxr = max(0, min(w[0][1], self.height))
                 minc = min(max(w[1][0], 0), self.width)
@@ -1062,7 +1062,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # Prepare the IO window.
         if window:
-            window = eval_window(window, self.height, self.width)
+            window = windows.evaluate(window, self.height, self.width)
             yoff = <int>window[0][0]
             xoff = <int>window[1][0]
             height = <int>window[0][1] - yoff
@@ -1216,11 +1216,11 @@ cdef class DatasetReaderBase(DatasetBase):
         if out is None:
             out_shape = (
                 window
-                and window_shape(window, self.height, self.width)
+                and windows.shape(window, self.height, self.width)
                 or self.shape)
             out = np.empty(out_shape, np.uint8)
         if window:
-            window = eval_window(window, self.height, self.width)
+            window = windows.evaluate(window, self.height, self.width)
             yoff = window[0][0]
             xoff = window[1][0]
             height = window[0][1] - yoff
@@ -1618,7 +1618,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Prepare the IO window.
         if window:
-            window = eval_window(window, self.height, self.width)
+            window = windows.evaluate(window, self.height, self.width)
             yoff = <int>window[0][0]
             xoff = <int>window[1][0]
             height = <int>window[0][1] - yoff
@@ -1803,7 +1803,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             raise RasterioIOError("Failed to get mask.")
 
         if window:
-            window = eval_window(window, self.height, self.width)
+            window = windows.evaluate(window, self.height, self.width)
             yoff = window[0][0]
             xoff = window[1][0]
             height = window[0][1] - yoff

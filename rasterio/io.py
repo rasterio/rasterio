@@ -7,8 +7,7 @@ from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
-from rasterio.windows import (
-    window, window_transform, window_bounds)
+from rasterio import windows
 from rasterio.transform import guard_transform
 
 
@@ -26,21 +25,21 @@ class WindowMethodsMixin(object):
         If boundless is False, window is limited to extent of this dataset."""
 
         transform = guard_transform(self.transform)
-        return window(transform, left, bottom, right, top,
-                      height=self.height, width=self.width,
-                      boundless=boundless)
+        return windows.from_bounds(
+            left, bottom, right, top, transform=transform,
+            height=self.height, width=self.width, boundless=boundless)
 
     def window_transform(self, window):
         """Returns the affine transform for a dataset window."""
 
         transform = guard_transform(self.transform)
-        return window_transform(transform, window)
+        return windows.transform(window, transform)
 
     def window_bounds(self, window):
         """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
 
         transform = guard_transform(self.transform)
-        return window_bounds(transform, window)
+        return windows.bounds(window, transform)
 
 
 class DatasetReader(DatasetReaderBase, WindowMethodsMixin):
