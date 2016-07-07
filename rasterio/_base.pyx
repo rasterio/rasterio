@@ -664,8 +664,7 @@ cdef class DatasetBase(object):
         retval = {}
 
         for i in range(num_items):
-            item = metadata[i]
-            key, value = item.split('=', 1)
+            key, value = metadata[i].split('=', 1)
             retval[key] = value
 
         return retval

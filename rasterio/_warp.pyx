@@ -205,8 +205,8 @@ def _reproject(
     cdef int cols
     cdef int src_count
     cdef GDALDriverH driver = NULL
-    cdef GDALDatasetH indataset = NULL
-    cdef GDALDatasetH outdataset = NULL
+    cdef GDALDatasetH src_dataset = NULL
+    cdef GDALDatasetH dst_dataset = NULL
     cdef GDALAccess GA
     cdef double gt[6]
     cdef char *srcwkt = NULL
@@ -246,32 +246,32 @@ def _reproject(
         try:
             with CPLErrors() as cple:
                 datasetname = str(uuid.uuid4()).encode('utf-8')
-                indataset = GDALCreate(
+                src_dataset = GDALCreate(
                     driver, <const char *>datasetname, cols, rows,
                     src_count, dtypes.dtype_rev[dtype], NULL)
                 cple.check()
         except:
             raise
         GDALSetDescription(
-            indataset, "Temporary source dataset for _reproject()")
+            src_dataset, "Temporary source dataset for _reproject()")
         log.debug("Created temp source dataset")
 
         for i in range(6):
             gt[i] = src_transform[i]
-        retval = GDALSetGeoTransform(indataset, gt)
+        retval = GDALSetGeoTransform(src_dataset, gt)
         log.debug("Set transform on temp source dataset: %d", retval)
 
         try:
             osr = osr_from_crs(src_crs)
             OSRExportToWkt(osr, &srcwkt)
-            GDALSetProjection(indataset, srcwkt)
+            GDALSetProjection(src_dataset, srcwkt)
             log.debug("Set CRS on temp source dataset: %s", srcwkt)
         finally:
             CPLFree(srcwkt)
             OSRDestroySpatialReference(osr)
 
         # Copy arrays to the dataset.
-        retval = io_auto(source, indataset, 1)
+        retval = io_auto(source, src_dataset, 1)
         # TODO: handle errors (by retval).
         log.debug("Wrote array to temp source dataset")
 
@@ -283,7 +283,7 @@ def _reproject(
             src_bidx = [src_bidx]
         src_count = len(src_bidx)
         rows, cols = shape
-        indataset = (<DatasetReaderBase?>rdr).handle()
+        src_dataset = (<DatasetReaderBase?>rdr).handle()
         if src_nodata is None:
             src_nodata = rdr.nodata
     else:
@@ -311,20 +311,20 @@ def _reproject(
         try:
             with CPLErrors() as cple:
                 datasetname = str(uuid.uuid4()).encode('utf-8')
-                outdataset = GDALCreate(
+                dst_dataset = GDALCreate(
                     driver, <const char *>datasetname, cols, rows, src_count,
                     dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
                 cple.check()
         except:
             raise
         GDALSetDescription(
-            outdataset, "Temporary destination dataset for _reproject()")
+            dst_dataset, "Temporary destination dataset for _reproject()")
         log.debug("Created temp destination dataset.")
 
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.none == GDALSetGeoTransform(outdataset, gt):
+        if not GDALError.none == GDALSetGeoTransform(dst_dataset, gt):
             raise ValueError(
                 "Failed to set transform on temp destination dataset.")
 
@@ -333,7 +333,7 @@ def _reproject(
             OSRExportToWkt(osr, &dstwkt)
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
             if not GDALError.none == GDALSetProjection(
-                    outdataset, dstwkt):
+                    dst_dataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
             OSRDestroySpatialReference(osr)
@@ -348,7 +348,7 @@ def _reproject(
         if isinstance(dst_bidx, int):
             dst_bidx = [dst_bidx]
         udr = destination.ds
-        outdataset = (<DatasetReaderBase?>udr).handle()
+        dst_dataset = (<DatasetReaderBase?>udr).handle()
         if dst_nodata is None:
             dst_nodata = udr.nodata
     else:
@@ -361,7 +361,7 @@ def _reproject(
     try:
         with CPLErrors() as cple:
             hTransformArg = GDALCreateGenImgProjTransformer(
-                indataset, NULL, outdataset, NULL, 1, 1000.0, 0)
+                src_dataset, NULL, dst_dataset, NULL, 1, 1000.0, 0)
             hTransformArg = GDALCreateApproxTransformer(
                 GDALGenImgProjTransform, hTransformArg, tolerance)
             pfnTransformer = GDALApproxTransform
@@ -453,8 +453,8 @@ def _reproject(
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
-    psWOptions.hSrcDS = indataset
-    psWOptions.hDstDS = outdataset
+    psWOptions.hSrcDS = src_dataset
+    psWOptions.hDstDS = dst_dataset
     psWOptions.nBandCount = src_count
     psWOptions.panSrcBands = <int *>CPLMalloc(src_count*sizeof(int))
     psWOptions.panDstBands = <int *>CPLMalloc(src_count*sizeof(int))
@@ -487,19 +487,19 @@ def _reproject(
             cple.check()
 
         if dtypes.is_ndarray(destination):
-            retval = io_auto(destination, outdataset, 0)
+            retval = io_auto(destination, dst_dataset, 0)
             # TODO: handle errors (by retval).
 
-            if outdataset != NULL:
-                GDALClose(outdataset)
+            if dst_dataset != NULL:
+                GDALClose(dst_dataset)
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
         if dtypes.is_ndarray(source):
-            if indataset != NULL:
-                GDALClose(indataset)
+            if src_dataset != NULL:
+                GDALClose(src_dataset)
 
 
 def _calculate_default_transform(
