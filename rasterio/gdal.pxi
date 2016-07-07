@@ -24,6 +24,11 @@ cdef extern from "cpl_error.h":
     ctypedef void (*CPLErrorHandler)(CPLErr, int, const char*)
 
 
+cdef extern from "cpl_vsi.h":
+
+    ctypedef int vsi_l_offset
+
+
 cdef extern from "gdal.h":
 
     ctypedef void * GDALMajorObjectH
@@ -64,16 +69,23 @@ cdef extern from "gdal.h":
         short c4
 
 
-
 cdef extern from "ogr_api.h":
 
+    ctypedef void * OGRLayerH
     ctypedef void * OGRDataSourceH
+    ctypedef void * OGRSFDriverH
+    ctypedef void * OGRFieldDefnH
     ctypedef void * OGRFeatureDefnH
     ctypedef void * OGRFeatureH
-    ctypedef void * OGRFieldDefnH
     ctypedef void * OGRGeometryH
-    ctypedef void * OGRLayerH
-    ctypedef void * OGRSFDriverH
+
+    ctypedef int OGRErr
+
+    ctypedef struct OGREnvelope:
+        double MinX
+        double MaxX
+        double MinY
+        double MaxY
 
 
 cdef extern from "ogr_srs_api.h":

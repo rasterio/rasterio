@@ -3,11 +3,16 @@
 
 import logging
 
-from rasterio cimport _gdal, _base
 from rasterio.compat import UserDict
 from rasterio.compat import string_types
 
+from rasterio._base cimport _osr_from_crs as osr_from_crs
+from rasterio._gdal cimport (
+    CPLFree, OSRDestroySpatialReference, OSRExportToWkt, OSRIsGeographic,
+    OSRIsProjected, OSRIsSame)
+
 include "gdal.pxi"
+
 
 log = logging.getLogger(__name__)
 
@@ -21,11 +26,11 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            osr_crs = _base._osr_from_crs(self)
-            retval = _gdal.OSRIsGeographic(osr_crs)
+            osr_crs = osr_from_crs(self)
+            retval = OSRIsGeographic(osr_crs)
             return bool(retval == 1)
         finally:
-            _gdal.OSRDestroySpatialReference(osr_crs)
+            OSRDestroySpatialReference(osr_crs)
 
     @property
     def is_projected(self):
@@ -33,11 +38,11 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            osr_crs = _base._osr_from_crs(self)
-            retval = _gdal.OSRIsProjected(osr_crs)
+            osr_crs = osr_from_crs(self)
+            retval = OSRIsProjected(osr_crs)
             return bool(retval == 1)
         finally:
-            _gdal.OSRDestroySpatialReference(osr_crs)
+            OSRDestroySpatialReference(osr_crs)
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
@@ -45,13 +50,13 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            osr_crs1 = _base._osr_from_crs(self)
-            osr_crs2 = _base._osr_from_crs(other)
-            retval = _gdal.OSRIsSame(osr_crs1, osr_crs2)
+            osr_crs1 = osr_from_crs(self)
+            osr_crs2 = osr_from_crs(other)
+            retval = OSRIsSame(osr_crs1, osr_crs2)
             return bool(retval == 1)
         finally:
-            _gdal.OSRDestroySpatialReference(osr_crs1)
-            _gdal.OSRDestroySpatialReference(osr_crs2)
+            OSRDestroySpatialReference(osr_crs1)
+            OSRDestroySpatialReference(osr_crs2)
 
     @property
     def wkt(self):
@@ -62,10 +67,9 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr = NULL
 
         try:
-            osr = _base._osr_from_crs(self)
-            _gdal.OSRExportToWkt(osr, &srcwkt)
-            wkt = srcwkt.decode('utf-8')
+            osr = osr_from_crs(self)
+            OSRExportToWkt(osr, &srcwkt)
+            return srcwkt.decode('utf-8')
         finally:
-            _gdal.CPLFree(srcwkt)
-            _gdal.OSRDestroySpatialReference(osr)
-        return wkt
+            CPLFree(srcwkt)
+            OSRDestroySpatialReference(osr)

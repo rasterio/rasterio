@@ -8,18 +8,17 @@ import math
 import os
 import os.path
 import sys
+import uuid
 import warnings
 
-from libc.stdlib cimport malloc, free
 import numpy as np
-cimport numpy as np
 
-from rasterio cimport _base, _gdal, _ogr, _io
 from rasterio._base import (
     crop_window, eval_window, window_shape, window_index, tastes_like_gdal)
-from rasterio.crs import CRS
 from rasterio._drivers import driver_count, GDALEnv
-from rasterio._err import CPLErrors, GDALError, CPLE_OpenFailedError
+from rasterio._err import (
+    CPLErrors, GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError)
+from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.errors import (
@@ -29,6 +28,25 @@ from rasterio.transform import Affine
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.sample import sample_gen
 from rasterio.vfs import parse_path, vsi_path
+
+cimport numpy as np
+
+from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
+from rasterio._gdal cimport (
+    CPLFree, CPLMalloc, CSLDestroy, CSLDuplicate, CSLFetchNameValue,
+    CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
+    GDALCreateColorTable, GDALCreateCopy, GDALCreateMaskBand,
+    GDALDatasetRasterIO, GDALDestroyColorTable, GDALFillRaster,
+    GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDriverByName,
+    GDALGetDriverShortName, GDALGetMaskBand, GDALGetMaskFlags, GDALGetMetadata,
+    GDALGetRasterBand, GDALGetRasterCount, GDALGetRasterXSize,
+    GDALGetRasterYSize, GDALOpen, GDALRasterIO, GDALSetColorEntry,
+    GDALSetGeoTransform, GDALSetMetadata, GDALSetProjection,
+    GDALSetRasterColorInterpretation, GDALSetRasterColorTable,
+    GDALSetRasterNoDataValue, GDALSetRasterNoDataValue,
+    OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
+    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
+    VSIGetMemFileBuffer, vsi_l_offset)
 
 include "gdal.pxi"
 
@@ -67,7 +85,7 @@ cdef int io_ubyte(
         int height,
         np.uint8_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
 
@@ -80,7 +98,7 @@ cdef int io_uint16(
         int height,
         np.uint16_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
 
@@ -93,7 +111,7 @@ cdef int io_int16(
         int height,
         np.int16_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
 
@@ -106,7 +124,7 @@ cdef int io_uint32(
         int height,
         np.uint32_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
 
@@ -119,7 +137,7 @@ cdef int io_int32(
         int height,
         np.int32_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
 
@@ -132,7 +150,7 @@ cdef int io_float32(
         int height,
         np.float32_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
 
@@ -145,7 +163,7 @@ cdef int io_float64(
         int height,
         np.float64_t[:, :] buffer):
     with nogil:
-        return _gdal.GDALRasterIO(
+        return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
             &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
 
@@ -165,14 +183,13 @@ cdef int io_multi_ubyte(
     cdef GDALRasterBandH band
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buffer[0, 0, 0], buffer.shape[2], buffer.shape[1],
-                        1, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buffer[0, 0, 0],
+            buffer.shape[2], buffer.shape[1], 1, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 cdef int io_multi_uint16(
@@ -189,14 +206,13 @@ cdef int io_multi_uint16(
     cdef GDALRasterBandH band = NULL
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0, 0], buf.shape[2], buf.shape[1],
-                        2, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
+            buf.shape[1], 2, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 cdef int io_multi_int16(
@@ -213,14 +229,13 @@ cdef int io_multi_int16(
     cdef GDALRasterBandH band = NULL
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0, 0], buf.shape[2], buf.shape[1],
-                        3, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
+            buf.shape[1], 3, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 cdef int io_multi_uint32(
@@ -237,14 +252,13 @@ cdef int io_multi_uint32(
     cdef GDALRasterBandH band = NULL
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0, 0], buf.shape[2], buf.shape[1],
-                        4, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
+            buf.shape[1], 4, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 cdef int io_multi_int32(
@@ -261,14 +275,13 @@ cdef int io_multi_int32(
     cdef GDALRasterBandH band = NULL
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0, 0], buf.shape[2], buf.shape[1],
-                        5, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
+            buf.shape[1], 5, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 
@@ -286,14 +299,13 @@ cdef int io_multi_float32(
     cdef GDALRasterBandH band = NULL
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0, 0], buf.shape[2], buf.shape[1],
-                        6, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
+            buf.shape[1], 6, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 cdef int io_multi_float64(
@@ -306,18 +318,18 @@ cdef int io_multi_float64(
         np.float64_t[:, :, :] buf,
         long[:] indexes,
         int count) nogil:
+
     cdef int i, retval=0
     cdef GDALRasterBandH band = NULL
     cdef int *bandmap
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf[0, 0, 0], buf.shape[2], buf.shape[1],
-                        7, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
+            buf.shape[1], 7, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
     return retval
 
 cdef int io_multi_cint16(
@@ -330,7 +342,6 @@ cdef int io_multi_cint16(
         np.complex_t[:, :, :] out,
         long[:] indexes,
         int count):
-
     cdef int retval=0
     cdef int *bandmap
     cdef int I, J, K
@@ -342,16 +353,14 @@ cdef int io_multi_cint16(
             dtype=np.int16)
     cdef np.int16_t[:, :] buf_view = buf
 
-
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf_view[0, 0], out.shape[2], out.shape[1],
-                        8, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
+            out.shape[2], out.shape[1], 8, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
 
         if retval > 0:
             return retval
@@ -392,14 +401,13 @@ cdef int io_multi_cint32(
     cdef np.int32_t[:, :] buf_view = buf
 
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf_view[0, 0], out.shape[2], out.shape[1],
-                        9, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
+            out.shape[2], out.shape[1], 9, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
 
         if retval > 0:
             return retval
@@ -440,14 +448,13 @@ cdef int io_multi_cfloat32(
     cdef np.float32_t[:, :] buf_view = buf
 
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf_view[0, 0], out.shape[2], out.shape[1],
-                        10, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
+            out.shape[2], out.shape[1], 10, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
 
         if retval > 0:
             return retval
@@ -488,14 +495,13 @@ cdef int io_multi_cfloat64(
     cdef np.float64_t[:, :] buf_view = buf
 
     with nogil:
-        bandmap = <int *>_gdal.CPLMalloc(count*sizeof(int))
+        bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
-        retval = _gdal.GDALDatasetRasterIO(
-                        hds, mode, xoff, yoff, width, height,
-                        &buf_view[0, 0], out.shape[2], out.shape[1],
-                        11, count, bandmap, 0, 0, 0)
-        _gdal.CPLFree(bandmap)
+        retval = GDALDatasetRasterIO(
+            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
+            out.shape[2], out.shape[1], 11, count, bandmap, 0, 0, 0)
+        CPLFree(bandmap)
 
         if retval > 0:
             return retval
@@ -530,14 +536,14 @@ cdef int io_multi_mask(
 
     for i in range(count):
         j = indexes[i]
-        band = _gdal.GDALGetRasterBand(hds, j)
+        band = GDALGetRasterBand(hds, j)
         if band == NULL:
             raise ValueError("Null band")
-        hmask = _gdal.GDALGetMaskBand(band)
+        hmask = GDALGetMaskBand(band)
         if hmask == NULL:
             raise ValueError("Null mask band")
         with nogil:
-            retval = _gdal.GDALRasterIO(
+            retval = GDALRasterIO(
                 hmask, mode, xoff, yoff, width, height,
                 &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 1, 0, 0)
             if retval:
@@ -618,7 +624,7 @@ cdef int io_auto(image, GDALRasterBandH band, bint write):
         raise ValueError("Specified image must have 2 or 3 dimensions")
 
 
-cdef class DatasetReaderBase(_base.DatasetBase):
+cdef class DatasetReaderBase(DatasetBase):
 
     def read_band(self, bidx, out=None, window=None, masked=False):
         """Read the `bidx` band into an `out` array if provided,
@@ -696,7 +702,7 @@ cdef class DatasetReaderBase(_base.DatasetBase):
         preferentially used by callers.
         """
 
-        cdef GDALRasterBandH hband = NULL
+        cdef GDALRasterBandH band = NULL
 
         return2d = False
         if indexes is None:
@@ -795,8 +801,8 @@ cdef class DatasetReaderBase(_base.DatasetBase):
 
             mask_flags = [0]*self.count
             for i, j in zip(range(self.count), self.indexes):
-                hband = _gdal.GDALGetRasterBand(self._hds, j)
-                mask_flags[i] = _gdal.GDALGetMaskFlags(hband)
+                band = self.band(j)
+                mask_flags[i] = GDALGetMaskFlags(band)
 
             all_valid = all([flag & 0x01 == 1 for flag in mask_flags])
 
@@ -1225,12 +1231,9 @@ cdef class DatasetReaderBase(_base.DatasetBase):
             FutureWarning,
             stacklevel=2)
 
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
-        hband = _gdal.GDALGetRasterBand(self._hds, 1)
-        if hband == NULL:
-            raise ValueError("NULL band mask")
-        hmask = _gdal.GDALGetMaskBand(hband)
+        hband = self.band(1)
+
+        hmask = GDALGetMaskBand(hband)
         if hmask == NULL:
             return None
         if out is None:
@@ -1340,7 +1343,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
         path, archive, scheme = parse_path(self.name)
-        path = vsi_path(path, archive=archive, scheme=scheme)
+        path = vsi_path(path, archive, scheme)
 
         if scheme and scheme != 'file':
             raise TypeError(
@@ -1362,7 +1365,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             drv_name = driver_b
             try:
                 with CPLErrors() as cple:
-                    drv = _gdal.GDALGetDriverByName(drv_name)
+                    drv = GDALGetDriverByName(drv_name)
                     cple.check()
             except Exception as err:
                 raise DriverRegistrationError(str(err))
@@ -1398,20 +1401,20 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 val_b = v.encode('utf-8')
                 key_c = key_b
                 val_c = val_b
-                options = _gdal.CSLSetNameValue(options, key_c, val_c)
+                options = CSLSetNameValue(options, key_c, val_c)
                 log.debug(
                     "Option: %r\n",
-                    (k, _gdal.CSLFetchNameValue(options, key_c)))
+                    (k, CSLFetchNameValue(options, key_c)))
 
             try:
                 with CPLErrors() as cple:
-                    self._hds = _gdal.GDALCreate(
+                    self._hds = GDALCreate(
                         drv, fname, self.width, self.height, self._count,
                         gdal_dtype, options)
                     cple.check()
             except Exception as err:
                 if options != NULL:
-                    _gdal.CSLDestroy(options)
+                    CSLDestroy(options)
                 raise
 
             if self._init_nodata is not None:
@@ -1423,9 +1426,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                             self._init_nodata, self._init_dtype))
 
                 for i in range(self._count):
-                    hband = _gdal.GDALGetRasterBand(self._hds, i+1)
-                    success = _gdal.GDALSetRasterNoDataValue(
-                                    hband, self._init_nodata)
+                    hband = self.band(i + 1)
+                    success = GDALSetRasterNoDataValue(hband,
+                                                       self._init_nodata)
 
             if self._transform:
                 self.write_transform(self._transform)
@@ -1435,25 +1438,25 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         elif self.mode == 'r+':
             try:
                 with CPLErrors() as cple:
-                    self._hds = _gdal.GDALOpen(fname, 1)
+                    self._hds = GDALOpen(fname, 1)
                     cple.check()
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
-        drv = _gdal.GDALGetDatasetDriver(self._hds)
-        drv_name = _gdal.GDALGetDriverShortName(drv)
+        drv = GDALGetDatasetDriver(self._hds)
+        drv_name = GDALGetDriverShortName(drv)
         self.driver = drv_name.decode('utf-8')
 
-        self._count = _gdal.GDALGetRasterCount(self._hds)
-        self.width = _gdal.GDALGetRasterXSize(self._hds)
-        self.height = _gdal.GDALGetRasterYSize(self._hds)
+        self._count = GDALGetRasterCount(self._hds)
+        self.width = GDALGetRasterXSize(self._hds)
+        self.height = GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
 
         self._transform = self.read_transform()
         self._crs = self.read_crs()
 
         if options != NULL:
-            _gdal.CSLDestroy(options)
+            CSLDestroy(options)
 
         # touch self.meta
         _ = self.meta
@@ -1467,7 +1470,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef char *wkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
 
-        osr = _gdal.OSRNewSpatialReference(NULL)
+        osr = OSRNewSpatialReference(NULL)
         if osr == NULL:
             raise ValueError("Null spatial reference")
         params = []
@@ -1483,7 +1486,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if init:
                 auth, val = init.split(':')
                 if auth.upper() == 'EPSG':
-                    _gdal.OSRImportFromEPSG(osr, int(val))
+                    OSRImportFromEPSG(osr, int(val))
             else:
                 crs['wktext'] = True
                 for k, v in crs.items():
@@ -1495,22 +1498,22 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 log.debug("PROJ.4 to be imported: %r", proj)
                 proj_b = proj.encode('utf-8')
                 proj_c = proj_b
-                _gdal.OSRImportFromProj4(osr, proj_c)
+                OSRImportFromProj4(osr, proj_c)
         # Fall back for CRS strings like "EPSG:3857."
         else:
             proj_b = crs.encode('utf-8')
             proj_c = proj_b
-            _gdal.OSRSetFromUserInput(osr, proj_c)
+            OSRSetFromUserInput(osr, proj_c)
 
         # Fixup, export to WKT, and set the GDAL dataset's projection.
-        _gdal.OSRFixup(osr)
-        _gdal.OSRExportToWkt(osr, &wkt)
+        OSRFixup(osr)
+        OSRExportToWkt(osr, &wkt)
         wkt_b = wkt
         log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
-        _gdal.GDALSetProjection(self._hds, wkt)
+        GDALSetProjection(self._hds, wkt)
 
-        _gdal.CPLFree(wkt)
-        _gdal.OSRDestroySpatialReference(osr)
+        CPLFree(wkt)
+        OSRDestroySpatialReference(osr)
         self._crs = crs
         log.debug("Self CRS: %r", self._crs)
 
@@ -1538,7 +1541,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef double gt[6]
         for i in range(6):
             gt[i] = transform[i]
-        err = _gdal.GDALSetGeoTransform(self._hds, gt)
+        err = GDALSetGeoTransform(self._hds, gt)
         if err:
             raise ValueError("transform not set: %s" % transform)
         self._transform = transform
@@ -1568,9 +1571,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef int success
 
         for i, val in zip(self.indexes, vals):
-            hband = _gdal.GDALGetRasterBand(self._hds, i)
+            hband = self.band(i)
             nodataval = val
-            success = _gdal.GDALSetRasterNoDataValue(hband, nodataval)
+            success = GDALSetRasterNoDataValue(hband, nodataval)
             if success:
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
@@ -1751,20 +1754,20 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         else:
             domain_c = NULL
 
-        papszStrList = _gdal.CSLDuplicate(
-            _gdal.GDALGetMetadata(hobj, domain_c))
+        papszStrList = CSLDuplicate(
+            GDALGetMetadata(hobj, domain_c))
 
         for key, value in kwargs.items():
             key_b = text_type(key).encode('utf-8')
             value_b = text_type(value).encode('utf-8')
             key_c = key_b
             value_c = value_b
-            papszStrList = _gdal.CSLSetNameValue(
+            papszStrList = CSLSetNameValue(
                     papszStrList, key_c, value_c)
 
-        retval = _gdal.GDALSetMetadata(hobj, papszStrList, domain_c)
+        retval = GDALSetMetadata(hobj, papszStrList, domain_c)
         if papszStrList != NULL:
-            _gdal.CSLDestroy(papszStrList)
+            CSLDestroy(papszStrList)
 
         if retval == 2:
             log.warn("Tags accepted but may not be persisted.")
@@ -1781,7 +1784,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # RGB only for now. TODO: the other types.
         # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2,     GPI_HLS=3
-        hTable = _gdal.GDALCreateColorTable(1)
+        hTable = GDALCreateColorTable(1)
         vals = range(256)
 
         for i, rgba in colormap.items():
@@ -1798,13 +1801,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 continue
 
             color.c1, color.c2, color.c3, color.c4 = rgba
-            _gdal.GDALSetColorEntry(hTable, i, &color)
+            GDALSetColorEntry(hTable, i, &color)
 
         # TODO: other color interpretations?
-        _gdal.GDALSetRasterColorInterpretation(hBand, 1)
-        _gdal.GDALSetRasterColorTable(hBand, hTable)
-
-        _gdal.GDALDestroyColorTable(hTable)
+        GDALSetRasterColorInterpretation(hBand, 1)
+        GDALSetRasterColorTable(hBand, hTable)
+        GDALDestroyColorTable(hTable)
 
     def write_mask(self, mask, window=None):
         """Write the valid data mask src array into the dataset's band
@@ -1823,9 +1825,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         try:
             with CPLErrors() as cple:
-                retval = _gdal.GDALCreateMaskBand(hband, 0x02)
+                retval = GDALCreateMaskBand(hband, 0x02)
                 cple.check()
-                hmask = _gdal.GDALGetMaskBand(hband)
+                hmask = GDALGetMaskBand(hband)
                 cple.check()
                 log.debug("Created mask band")
         except:
@@ -1843,9 +1845,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             height = self.height
 
         if mask is True:
-            _gdal.GDALFillRaster(hmask, 255, 0)
+            GDALFillRaster(hmask, 255, 0)
         elif mask is False:
-            _gdal.GDALFillRaster(hmask, 0, 0)
+            GDALFillRaster(hmask, 0, 0)
         elif mask.dtype == np.bool:
             array = 255 * mask.astype(np.uint8)
             retval = io_ubyte(
@@ -1881,19 +1883,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Allocate arrays.
         if factors:
-            factors_c = <int *>_gdal.CPLMalloc(len(factors)*sizeof(int))
+            factors_c = <int *>CPLMalloc(len(factors)*sizeof(int))
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
             try:
                 with CPLErrors() as cple:
                     resampling_b = resampling_alg.encode('utf-8')
                     resampling_c = resampling_b
-                    err = _gdal.GDALBuildOverviews(self._hds, resampling_c,
+                    err = GDALBuildOverviews(self._hds, resampling_c,
                         len(factors), factors_c, 0, NULL, NULL, NULL)
                     cple.check()
             finally:
                 if factors_c != NULL:
-                    _gdal.CPLFree(factors_c)
+                    CPLFree(factors_c)
 
 
 cdef class InMemoryRaster:
@@ -1929,46 +1931,45 @@ cdef class InMemoryRaster:
         """
 
         self._image = image
-        self.dataset = NULL
 
         cdef int i = 0  # avoids Cython warning in for loop below
         cdef const char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
 
-        # Several GDAL operations require the array of band IDs as input
+        if len(image.shape) == 3:
+            count, height, width = image.shape
+        elif len(image.shape) == 2:
+            count = 1
+            height, width = image.shape
+
         self.band_ids[0] = 1
 
         with CPLErrors() as cple:
-            memdriver = _gdal.GDALGetDriverByName("MEM")
+            memdriver = GDALGetDriverByName("MEM")
             cple.check()
-            self.dataset = _gdal.GDALCreate(
-                memdriver, "output", image.shape[1], image.shape[0],
-                1, <_gdal.GDALDataType>dtypes.dtype_rev[image.dtype.name],
-                NULL)
+            datasetname = str(uuid.uuid4()).encode('utf-8')
+            self._hds = GDALCreate(
+                memdriver, <const char *>datasetname, width, height, count,
+                <GDALDataType>dtypes.dtype_rev[image.dtype.name], NULL)
             cple.check()
 
         if transform is not None:
             for i in range(6):
                 self.transform[i] = transform[i]
-            err = _gdal.GDALSetGeoTransform(self.dataset, self.transform)
+            err = GDALSetGeoTransform(self._hds, self.transform)
             if err:
                 raise ValueError("transform not set: %s" % transform)
 
         # Set projection if specified (for use with
         # GDALSuggestedWarpOutput2()).
         if crs:
-            osr = _base._osr_from_crs(crs)
-            _gdal.OSRExportToWkt(osr, &srcwkt)
-            _gdal.GDALSetProjection(self.dataset, srcwkt)
+            osr = _osr_from_crs(crs)
+            OSRExportToWkt(osr, &srcwkt)
+            GDALSetProjection(self._hds, srcwkt)
             log.debug("Set CRS on temp source dataset: %s", srcwkt)
-            _gdal.CPLFree(srcwkt)
-            _gdal.OSRDestroySpatialReference(osr)
-
-
-        self.band = _gdal.GDALGetRasterBand(self.dataset, 1)
-        if self.band == NULL:
-            raise ValueError("NULL output band: {0}".format(i))
+            CPLFree(srcwkt)
+            OSRDestroySpatialReference(osr)
 
         self.write(image)
 
@@ -1978,17 +1979,36 @@ cdef class InMemoryRaster:
     def __exit__(self, *args, **kwargs):
         self.close()
 
+    cdef GDALDatasetH handle(self) except NULL:
+        """Return the object's GDAL dataset handle"""
+        return self._hds
+
+    cdef GDALRasterBandH band(self, int bidx) except NULL:
+        """Return a GDAL raster band handle"""
+        cdef GDALRasterBandH band = NULL
+
+        try:
+            with CPLErrors() as cple:
+                band = GDALGetRasterBand(self._hds, bidx)
+                cple.check()
+        except CPLE_IllegalArgError as exc:
+            raise IndexError(str(exc))
+        if band == NULL:
+            raise ValueError("NULL band")
+
+        return band
+
     def close(self):
-        if self.dataset != NULL:
-            _gdal.GDALClose(self.dataset)
-            self.dataset = NULL
+        if self._hds != NULL:
+            GDALClose(self._hds)
+            self._hds = NULL
 
     def read(self):
-        io_auto(self._image, self.band, False)
+        io_auto(self._image, self.band(1), False)
         return self._image
 
     def write(self, image):
-        io_auto(image, self.band, True)
+        io_auto(image, self.band(1), True)
 
 
 cdef class BufferedDatasetWriterBase(DatasetWriterBase):
@@ -2009,12 +2029,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path, archive, scheme = parse_path(self.name)
-        path = vsi_path(path, archive=archive, scheme=scheme)
+        path = vsi_path(*parse_path(self.name))
         name_b = path.encode('utf-8')
         cdef const char *fname = name_b
 
-        memdrv = _gdal.GDALGetDriverByName("MEM")
+        memdrv = GDALGetDriverByName("MEM")
 
         if self.mode == 'w':
             # Find the equivalent GDAL data type or raise an exception
@@ -2032,7 +2051,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             try:
                 with CPLErrors() as cple:
-                    self._hds = _gdal.GDALCreate(
+                    self._hds = GDALCreate(
                         memdrv, "temp", self.width, self.height, self._count,
                         gdal_dtype, NULL)
                     cple.check()
@@ -2042,7 +2061,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             if self._init_nodata is not None:
                 for i in range(self._count):
                     hband = self.band(i+1)
-                    success = _gdal.GDALSetRasterNoDataValue(
+                    success = GDALSetRasterNoDataValue(
                                     hband, self._init_nodata)
             if self._transform:
                 self.write_transform(self._transform)
@@ -2052,27 +2071,26 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         elif self.mode == 'r+':
             try:
                 with CPLErrors() as cple:
-                    temp = _gdal.GDALOpen(fname, 0)
+                    temp = GDALOpen(fname, 0)
                     cple.check()
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 
             try:
                 with CPLErrors() as cple:
-                    self._hds = _gdal.GDALCreateCopy(
+                    self._hds = GDALCreateCopy(
                         memdrv, "temp", temp, 1, NULL, NULL, NULL)
                     cple.check()
             except:
                 raise
 
-            drv = _gdal.GDALGetDatasetDriver(temp)
-            drv_name = _gdal.GDALGetDriverShortName(drv)
-            self.driver = drv_name.decode('utf-8')
-            _gdal.GDALClose(temp)
+            drv = GDALGetDatasetDriver(temp)
+            self.driver = get_driver_name(drv)
+            GDALClose(temp)
 
-        self._count = _gdal.GDALGetRasterCount(self._hds)
-        self.width = _gdal.GDALGetRasterXSize(self._hds)
-        self.height = _gdal.GDALGetRasterYSize(self._hds)
+        self._count = GDALGetRasterCount(self._hds)
+        self.width = GDALGetRasterXSize(self._hds)
+        self.height = GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
 
         self._transform = self.read_transform()
@@ -2100,7 +2118,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         driver_b = self.driver.encode('utf-8')
         drv_name = driver_b
-        drv = _gdal.GDALGetDriverByName(drv_name)
+        drv = GDALGetDriverByName(drv_name)
         if drv == NULL:
             raise ValueError("NULL driver for %s", self.driver)
 
@@ -2116,38 +2134,38 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             val_b = v.encode('utf-8')
             key_c = key_b
             val_c = val_b
-            options = _gdal.CSLSetNameValue(options, key_c, val_c)
+            options = CSLSetNameValue(options, key_c, val_c)
             log.debug(
                 "Option: %r\n",
-                (k, _gdal.CSLFetchNameValue(options, key_c)))
+                (k, CSLFetchNameValue(options, key_c)))
 
         #self.update_tags(ns='rio_creation_kwds', **kwds)
         try:
             with CPLErrors() as cple:
-                temp = _gdal.GDALCreateCopy(
+                temp = GDALCreateCopy(
                     drv, fname, self._hds, 1, options, NULL, NULL)
                 cple.check()
         except:
             raise
         finally:
             if options != NULL:
-                _gdal.CSLDestroy(options)
+                CSLDestroy(options)
             if temp != NULL:
-                _gdal.GDALClose(temp)
+                GDALClose(temp)
 
 
 def virtual_file_to_buffer(filename):
     """Read content of a virtual file into a Python bytes buffer."""
     cdef unsigned char *buff = NULL
     cdef const char *cfilename = NULL
-    cdef _gdal.vsi_l_offset buff_len = 0
+    cdef vsi_l_offset buff_len = 0
 
     filename_b = filename if not isinstance(filename, string_types) else filename.encode('utf-8')
     cfilename = filename_b
 
     try:
         with CPLErrors() as cple:
-            buff = _gdal.VSIGetMemFileBuffer(cfilename, &buff_len, 0)
+            buff = VSIGetMemFileBuffer(cfilename, &buff_len, 0)
             cple.check()
     except:
         raise

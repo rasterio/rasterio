@@ -1,3 +1,4 @@
+# cython: c_string_type=unicode, c_string_encoding=utf8
 """GDAL and OGR driver management."""
 
 import logging
@@ -7,7 +8,10 @@ import sys
 
 from rasterio.compat import string_types
 
-from rasterio cimport _gdal
+from rasterio._gdal cimport (
+    CPLSetConfigOption, CPLSetErrorHandler, GDALAllRegister, GDALGetDriver,
+    GDALGetDriverCount, GDALGetDriverLongName, GDALGetDriverShortName,
+    OGRGetDriverCount, OGRRegisterAll)
 
 include "gdal.pxi"
 
@@ -45,6 +49,7 @@ log = logging.getLogger(__name__)
 
 
 cdef void errorHandler(CPLErr err_class, int err_no, const char* msg):
+    """Send GDAL errors and warnings to the Python logger."""
     if err_no in code_map:
         # 'rasterio._gdal' is the name in our logging hierarchy for
         # messages coming direct from CPLError().
@@ -53,52 +58,43 @@ cdef void errorHandler(CPLErr err_class, int err_no, const char* msg):
 
 
 def driver_count():
-    return _gdal.GDALGetDriverCount() + _gdal.OGRGetDriverCount()
+    """Return the count of all drivers"""
+    return GDALGetDriverCount() + OGRGetDriverCount()
 
 
 cpdef get_gdal_config(key):
-    cdef const char *key_c = NULL
-    cdef const char *val_c = NULL
-
-    key_b = key.upper().encode('utf-8')
-    key_c = key_b
-    val_c = CPLGetConfigOption(key_c, NULL)
-    if val_c == NULL:
+    """Get the value of a GDAL configuration option"""
+    keyb = key.upper().encode('utf-8')
+    val = CPLGetConfigOption(<const char *>keyb, NULL)
+    if not val:
         return None
     else:
-        val_b = val_c
-        val = val_b.decode('utf-8')
-        if val == 'ON':
+        if val == u'ON':
             return True
-        elif val == 'OFF':
+        elif val == u'OFF':
             return False
         else:
             return val
 
 
 cpdef set_gdal_config(key, val):
-    cdef const char *key_c = NULL
-    cdef const char *val_c = NULL
-
-    key_b = key.upper().encode('utf-8')
-    key_c = key_b
+    """Set a GDAL configuration option's value"""
+    keyb = key.upper().encode('utf-8')
     if isinstance(val, string_types):
-        val_b = val.encode('utf-8')
+        valb = val.encode('utf-8')
     else:
-        val_b = ('ON' if val else 'OFF').encode('utf-8')
-    val_c = val_b
-    CPLSetConfigOption(key_c, val_c)
+        valb = ('ON' if val else 'OFF').encode('utf-8')
+    CPLSetConfigOption(<const char *>keyb, <const char *>valb)
 
 
 cpdef del_gdal_config(key):
-    cdef const char *key_c = NULL
-
-    key_b = key.upper().encode('utf-8')
-    key_c = key_b
-    CPLSetConfigOption(key_c, NULL)
+    """Delete a GDAL configuration option"""
+    keyb = key.upper().encode('utf-8')
+    CPLSetConfigOption(<const char *>keyb, NULL)
 
 
 cdef class ConfigEnv(object):
+    """Configuration option management"""
 
     cdef public object options
 
@@ -110,31 +106,32 @@ cdef class ConfigEnv(object):
         """Update GDAL config options."""
         for key, val in kwargs.items():
             set_gdal_config(key, val)
+            self.options[key] = val
             # Redact AWS credentials for logs
             if key.upper() in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                                'AWS_SESSION_TOKEN']:
                 val = '******'
             log.debug("Set option %s=%s in env %r", key, val, self)
-        self.options.update(**kwargs)
 
     def clear_config_options(self):
         """Clear GDAL config options."""
-        for key in self.options:
+        while self.options:
+            key, val = self.options.popitem()
             del_gdal_config(key)
             log.debug("Unset option %s in env %r", key, self)
-        self.options = {}
 
 
 cdef class GDALEnv(ConfigEnv):
+    """Configuration and driver management"""
 
     def __init__(self, **options):
         super(GDALEnv, self).__init__(**options)
         self.start()
 
     def start(self):
-        _gdal.GDALAllRegister()
-        _gdal.OGRRegisterAll()
-        _gdal.CPLSetErrorHandler(<CPLErrorHandler>errorHandler)
+        GDALAllRegister()
+        OGRRegisterAll()
+        CPLSetErrorHandler(<CPLErrorHandler>errorHandler)
         if driver_count() == 0:
             raise ValueError("Drivers not registered")
 
@@ -160,18 +157,13 @@ cdef class GDALEnv(ConfigEnv):
 
     def drivers(self):
         cdef GDALDriverH driver = NULL
-        cdef const char *key = NULL
-        cdef const char *val = NULL
         cdef int i
 
         result = {}
-
-        for i in range(_gdal.GDALGetDriverCount()):
-            driver = _gdal.GDALGetDriver(i)
-            key = _gdal.GDALGetDriverShortName(driver)
-            key_b = key
-            val = _gdal.GDALGetDriverLongName(driver)
-            val_b = val
-            result[key_b.decode('utf-8')] = val_b.decode('utf-8')
+        for i in range(GDALGetDriverCount()):
+            driver = GDALGetDriver(i)
+            key = GDALGetDriverShortName(driver)
+            val = GDALGetDriverLongName(driver)
+            result[key] = val
 
         return result

@@ -33,7 +33,9 @@ manager raises a more useful and informative error:
 from enums import IntEnum
 import sys
 
-from rasterio cimport _gdal
+from rasterio._gdal cimport (
+    CPLErrorReset, CPLGetLastErrorMsg, CPLGetLastErrorNo,
+    CPLGetLastErrorType)
 
 include "gdal.pxi"
 
@@ -166,16 +168,16 @@ cdef class CPLErrors:
         """Check the errror stack and raise or exit as appropriate."""
         cdef const char *msg_c = NULL
 
-        err_type = _gdal.CPLGetLastErrorType()
+        err_type = CPLGetLastErrorType()
         # Return True if there's no error.
         # Debug and warnings are already picked up by the drivers()
         # context manager.
         if err_type < 3:
-            _gdal.CPLErrorReset()
+            CPLErrorReset()
             return
 
-        err_no = _gdal.CPLGetLastErrorNo()
-        msg_c = _gdal.CPLGetLastErrorMsg()
+        err_no = CPLGetLastErrorNo()
+        msg_c = CPLGetLastErrorMsg()
         if msg_c == NULL:
             msg = "No error message."
         else:
@@ -188,12 +190,13 @@ cdef class CPLErrors:
         if err_type == 4:
             sys.exit("Fatal error: {0}".format((err_type, err_no, msg)))
         else:
-            _gdal.CPLErrorReset()
-            raise exception_map.get(err_no, CPLE_BaseError)(err_type, err_no, msg)
+            CPLErrorReset()
+            raise exception_map.get(err_no, CPLE_BaseError)(
+                err_type, err_no, msg)
 
     def __enter__(self):
-        _gdal.CPLErrorReset()
+        CPLErrorReset()
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        _gdal.CPLErrorReset()
+        CPLErrorReset()

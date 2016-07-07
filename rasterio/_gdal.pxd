@@ -18,8 +18,7 @@ cdef extern from "cpl_string.h" nogil:
 
 cdef extern from "cpl_vsi.h" nogil:
 
-    ctypedef int vsi_l_offset
-    unsigned char *VSIGetMemFileBuffer(const char *filename,
+    unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
                                        int take_ownership)
 
@@ -38,15 +37,16 @@ cdef extern from "ogr_srs_api.h" nogil:
     OGRCoordinateTransformationH OCTNewCoordinateTransformation(
                                         OGRSpatialReferenceH source,
                                         OGRSpatialReferenceH dest)
-    void OCTDestroyCoordinateTransformation(OGRCoordinateTransformationH source)
+    void OCTDestroyCoordinateTransformation(
+        OGRCoordinateTransformationH source)
     int OCTTransform(OGRCoordinateTransformationH ct, int nCount, double *x,
                      double *y, double *z)
     int OSRAutoIdentifyEPSG(OGRSpatialReferenceH srs)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
     void OSRDestroySpatialReference(OGRSpatialReferenceH srs)
-    int OSRExportToProj4(OGRSpatialReferenceH, char **params)
-    int OSRExportToWkt(OGRSpatialReferenceH, char **params)
+    int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
+    int OSRExportToWkt(OGRSpatialReferenceH srs, char **params)
     int OSRFixup(OGRSpatialReferenceH srs)
     const char *OSRGetAuthorityName(OGRSpatialReferenceH srs, const char *key)
     const char *OSRGetAuthorityCode(OGRSpatialReferenceH srs, const char *key)
@@ -79,20 +79,20 @@ cdef extern from "gdal.h" nogil:
     void GDALSetDescription(GDALMajorObjectH obj, const char *)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, int access) # except -1
-    void GDALFlushCache(GDALDatasetH ds)
-    void GDALClose(GDALDatasetH ds)
-    GDALDriverH GDALGetDatasetDriver(GDALDatasetH ds)
-    int GDALGetGeoTransform(GDALDatasetH ds, double *transform)
-    const char *GDALGetProjectionRef(GDALDatasetH ds)
-    int GDALGetRasterXSize(GDALDatasetH ds)
-    int GDALGetRasterYSize(GDALDatasetH ds)
-    int GDALGetRasterCount(GDALDatasetH ds)
-    GDALRasterBandH GDALGetRasterBand(GDALDatasetH ds, int num)
+    void GDALFlushCache(GDALDatasetH hds)
+    void GDALClose(GDALDatasetH hds)
+    GDALDriverH GDALGetDatasetDriver(GDALDatasetH hds)
+    int GDALGetGeoTransform(GDALDatasetH hds, double *transform)
+    const char *GDALGetProjectionRef(GDALDatasetH hds)
+    int GDALGetRasterXSize(GDALDatasetH hds)
+    int GDALGetRasterYSize(GDALDatasetH hds)
+    int GDALGetRasterCount(GDALDatasetH hds)
+    GDALRasterBandH GDALGetRasterBand(GDALDatasetH hds, int num)
     GDALRasterBandH GDALGetOverview(GDALRasterBandH hband, int num)
     int GDALGetRasterBandXSize(GDALRasterBandH hband)
     int GDALGetRasterBandYSize(GDALRasterBandH hband)
-    int GDALSetGeoTransform(GDALDatasetH ds, double *transform)
-    int GDALSetProjection(GDALDatasetH ds, const char *wkt)
+    int GDALSetGeoTransform(GDALDatasetH hds, double *transform)
+    int GDALSetProjection(GDALDatasetH hds, const char *wkt)
     void GDALGetBlockSize(GDALRasterBandH , int *xsize, int *ysize)
     int GDALGetRasterDataType(GDALRasterBandH band)
     double GDALGetRasterNoDataValue(GDALRasterBandH band, int *success)
@@ -105,11 +105,11 @@ cdef extern from "gdal.h" nogil:
                      int ysize, void *buffer, int width, int height, int,
                      int poff, int loff)
     int GDALFillRaster(GDALRasterBandH band, double rvalue, double ivalue)
-    GDALDatasetH GDALCreate(GDALDriverH driver, const char *filename, int width,
+    GDALDatasetH GDALCreate(GDALDriverH driver, const char *path, int width,
                             int height, int nbands, GDALDataType dtype,
                             const char **options)
-    GDALDatasetH GDALCreateCopy(GDALDriverH driver, const char *filename,
-                                GDALDatasetH ds, int strict, char **options,
+    GDALDatasetH GDALCreateCopy(GDALDriverH driver, const char *path,
+                                GDALDatasetH hds, int strict, char **options,
                                 void *progress_func, void *progress_data)
     char** GDALGetMetadata(GDALMajorObjectH obj, const char *pszDomain)
     int GDALSetMetadata(GDALMajorObjectH obj, char **papszMD,
@@ -130,11 +130,12 @@ cdef extern from "gdal.h" nogil:
     int GDALSetRasterColorInterpretation(GDALRasterBandH band, int)
     int GDALGetMaskFlags(GDALRasterBandH band)
     void *GDALGetMaskBand(GDALRasterBandH band)
-    int GDALCreateMaskBand(GDALDatasetH ds, int flags)
+    int GDALCreateMaskBand(GDALDatasetH hds, int flags)
     int GDALGetOverviewCount(GDALRasterBandH band)
-    int GDALBuildOverviews(GDALDatasetH hDS, const char *resampling,
+    int GDALBuildOverviews(GDALDatasetH hds, const char *resampling,
                            int nOverviews, int *overviews, int nBands,
-                           int *bands, void *progress_func, void *progress_data)
+                           int *bands, void *progress_func,
+                           void *progress_data)
     int GDALCheckVersion(int nVersionMajor, int nVersionMinor,
                          const char *pszCallingComponentName)
     const char* GDALVersionInfo(const char *pszRequest)
@@ -148,39 +149,39 @@ cdef extern from "gdalwarper.h":
 
 cdef extern from "gdal_alg.h":
 
-    int GDALPolygonize(GDALRasterBandH src_band, GDALRasterBandH mask_band,
+    int GDALPolygonize(GDALRasterBandH band, GDALRasterBandH mask_band,
                        OGRLayerH layer, int fidx, char **options,
                        void *progress_func, void *progress_data)
-    int GDALFPolygonize(GDALRasterBandH src_band, GDALRasterBandH mask_band,
+    int GDALFPolygonize(GDALRasterBandH band, GDALRasterBandH mask_band,
                         OGRLayerH layer, int fidx, char **options,
                         void *progress_func, void *progress_data)
     int GDALSieveFilter(GDALRasterBandH src_band, GDALRasterBandH mask_band,
                         GDALRasterBandH dst_band, int size, int connectivity,
                         char **options, void *progress_func,
                         void *progress_data)
-    int GDALRasterizeGeometries(GDALDatasetH out_ds, int band_count,
+    int GDALRasterizeGeometries(GDALDatasetH hds, int band_count,
                                 int *dst_bands, int geom_count,
                                 OGRGeometryH *geometries,
                                 GDALTransformerFunc transform_func,
                                 void *transform, double *pixel_values,
                                 char **options, void *progress_func,
                                 void *progress_data)
-    void *GDALCreateGenImgProjTransformer(GDALDatasetH hSrcDS,
-                                 const char *pszSrcWKT, GDALDatasetH hDstDS,
+    void *GDALCreateGenImgProjTransformer(GDALDatasetH src_hds,
+                                 const char *pszSrcWKT, GDALDatasetH dst_hds,
                                  const char *pszDstWKT,
                                  int bGCPUseOK, double dfGCPErrorThreshold,
                                  int nOrder)
-    void *GDALCreateGenImgProjTransformer3(const char *pszSrcWKT,
-            const double *padfSrcGeoTransform, const char *pszDstWKT,
-            const double *padfDstGeoTransform)
+    void *GDALCreateGenImgProjTransformer3(
+            const char *pszSrcWKT, const double *padfSrcGeoTransform,
+            const char *pszDstWKT, const double *padfDstGeoTransform)
     int GDALGenImgProjTransform(void *pTransformArg, int bDstToSrc,
                                 int nPointCount, double *x, double *y,
                                 double *z, int *panSuccess)
     void GDALDestroyGenImgProjTransformer(void *)
-
     void *GDALCreateApproxTransformer(GDALTransformerFunc pfnRawTransformer,
-                                      void *pRawTransformerArg, double dfMaxError)
-    int  GDALApproxTransform(void *pTransformArg, int bDstToSrc, int nPointCount,
+                                      void *pRawTransformerArg,
+                                      double dfMaxError)
+    int  GDALApproxTransform(void *pTransformArg, int bDstToSrc, int npoints,
                              double *x, double *y, double *z, int *panSuccess)
     void GDALDestroyApproxTransformer(void *)
     void GDALApproxTransformerOwnsSubtransformer(void *, int)
