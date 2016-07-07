@@ -126,10 +126,14 @@ def test_profile_affine_stashing(recwarn):
     assert profile['transform'] == 'foo'
 
 
-def test_profile_mixed_error():
-    """Passing both affine and transform raises TypeError"""
-    with pytest.raises(TypeError):
-        Profile(affine='foo', transform='bar')
+def test_profile_mixed_error(recwarn):
+    """Warn if both affine and transform are passed"""
+    warnings.simplefilter('always')
+    profile = Profile(affine='foo', transform='bar')
+    assert len(recwarn) == 1
+    assert recwarn.pop(DeprecationWarning)
+    assert 'affine' not in profile
+    assert profile['transform'] == 'bar'
 
 
 def test_profile_affine_alias(recwarn):

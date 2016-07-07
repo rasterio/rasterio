@@ -22,7 +22,9 @@ class Profile(UserDict):
         initdata.update(**kwds)
 
         if 'affine' in initdata and 'transform' in initdata:
-            raise TypeError("affine and transform cannot both be specified")
+            warnings.warn("affine item is deprecated, use transform only",
+                          DeprecationWarning)
+            del initdata['affine']
         elif 'affine' in initdata:
             warnings.warn("affine item is deprecated, use transform instead",
                           DeprecationWarning)
