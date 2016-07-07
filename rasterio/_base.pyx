@@ -19,7 +19,7 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
-from rasterio.transform import Affine, guard_transform
+from rasterio.transform import Affine, guard_transform, get_index
 from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
 
@@ -458,6 +458,7 @@ cdef class DatasetBase(object):
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
+        # TODO move to rasterio.io.TransformMethodsMixin
         a, b, c, d, e, f, _, _, _ = self.transform
         if col < 0:
             col += self.width
@@ -467,7 +468,8 @@ cdef class DatasetBase(object):
 
     def index(self, x, y, op=math.floor, precision=6):
         """Returns the (row, col) index of the pixel containing (x, y)."""
-        return windows.get_index(x, y, self.transform, op=op, precision=precision)
+        # TODO move to rasterio.io.TransformMethodsMixin
+        return get_index(x, y, self.transform, op=op, precision=precision)
 
     @property
     def meta(self):
