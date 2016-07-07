@@ -3,11 +3,27 @@
 import logging
 
 import numpy as np
-cimport numpy as np
 
-from rasterio._io cimport InMemoryRaster
-from rasterio cimport _gdal, _ogr, _io
+from rasterio._err import CPLErrors
 from rasterio import dtypes
+
+cimport numpy as np
+from rasterio._gdal cimport (
+    CPLFree, CPLMalloc, CSLDestroy, CSLSetNameValue, GDALFPolygonize,
+    GDALPolygonize, GDALRasterizeGeometries, GDALSieveFilter)
+from rasterio._io cimport DatasetReaderBase, InMemoryRaster, io_auto
+from rasterio._ogr cimport (
+    OGRGetDriverByName, OGR_DS_CreateLayer, OGR_DS_Destroy,
+    OGR_Dr_CreateDataSource, OGR_F_Destroy, OGR_F_GetFieldAsDouble,
+    OGR_F_GetFieldAsInteger, OGR_F_GetGeometryRef, OGR_Fld_Create,
+    OGR_Fld_Destroy, OGR_G_AddGeometryDirectly, OGR_G_AddPoint,
+    OGR_G_AddPoint_2D, OGR_G_CloseRings, OGR_G_CreateGeometry,
+    OGR_G_DestroyGeometry, OGR_G_GetCoordinateDimension,
+    OGR_G_GetGeometryCount, OGR_G_GetGeometryRef, OGR_G_GetGeometryType,
+    OGR_G_GetPointCount, OGR_G_GetX, OGR_G_GetY, OGR_G_GetZ, OGR_L_CreateField,
+    OGR_L_GetNextFeature, OGR_L_ResetReading)
+
+include "gdal.pxi"
 
 
 log = logging.getLogger(__name__)
@@ -43,36 +59,38 @@ def _shapes(image, mask, connectivity, transform):
         floating point image may not exactly match the original values.
 
     """
-
-    cdef int retval, rows, cols
-    cdef void *hband = NULL
-    cdef void *hmaskband = NULL
-    cdef void *hfdriver = NULL
-    cdef void *hfs = NULL
-    cdef void *hlayer = NULL
-    cdef void *fielddefn = NULL
+    cdef int retval
+    cdef int rows
+    cdef int cols
+    cdef GDALRasterBandH band = NULL
+    cdef GDALRasterBandH maskband = NULL
+    cdef GDALDriverH driver = NULL
+    cdef OGRDataSourceH fs = NULL
+    cdef OGRLayerH layer = NULL
+    cdef OGRFieldDefnH fielddefn = NULL
     cdef char **options = NULL
-
     cdef InMemoryRaster mem_ds = None
     cdef InMemoryRaster mask_ds = None
+    cdef ShapeIterator shape_iter = None
+
     cdef bint is_float = np.dtype(image.dtype).kind == 'f'
     cdef int fieldtp = 2 if is_float else 0
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16', 'float32')
 
     if np.dtype(image.dtype).name not in valid_dtypes:
-        raise ValueError('image dtype must be one of: %s'
-                         % (', '.join(valid_dtypes)))
+        raise ValueError("image dtype must be one of: {0}".format(
+            ', '.join(valid_dtypes)))
 
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
 
     if dtypes.is_ndarray(image):
         mem_ds = InMemoryRaster(image, transform)
-        hband = mem_ds.band
+        band = mem_ds.band(1)
     elif isinstance(image, tuple):
         rdr = image.ds
-        hband = (<_io.DatasetReaderBase?>rdr).band(image.bidx)
+        band = (<DatasetReaderBase?>rdr).band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
@@ -87,44 +105,42 @@ def _shapes(image, mask, connectivity, transform):
         if dtypes.is_ndarray(mask):
             # A boolean mask must be converted to uint8 for GDAL
             mask_ds = InMemoryRaster(mask.astype('uint8'), transform)
-            hmaskband = mask_ds.band
-
+            maskband = mask_ds.band(1)
         elif isinstance(mask, tuple):
             mrdr = mask.ds
-            hmaskband = (<_io.DatasetReaderBase?>mrdr).band(mask.bidx)
+            maskband = (<DatasetReaderBase?>mrdr).band(mask.bidx)
 
     # Create an in-memory feature store.
-    hfdriver = _ogr.OGRGetDriverByName("Memory")
-    if hfdriver == NULL:
+    driver = OGRGetDriverByName("Memory")
+    if driver == NULL:
         raise ValueError("NULL driver")
-    hfs = _ogr.OGR_Dr_CreateDataSource(hfdriver, "temp", NULL)
-    if hfs == NULL:
+    fs = OGR_Dr_CreateDataSource(driver, "temp", NULL)
+    if fs == NULL:
         raise ValueError("NULL feature dataset")
 
     # And a layer.
-    hlayer = _ogr.OGR_DS_CreateLayer(hfs, "polygons", NULL, 3, NULL)
-    if hlayer == NULL:
+    layer = OGR_DS_CreateLayer(fs, "polygons", NULL, 3, NULL)
+    if layer == NULL:
         raise ValueError("NULL layer")
 
-    fielddefn = _ogr.OGR_Fld_Create("image_value", fieldtp)
+    fielddefn = OGR_Fld_Create("image_value", fieldtp)
     if fielddefn == NULL:
         raise ValueError("NULL field definition")
-    _ogr.OGR_L_CreateField(hlayer, fielddefn, 1)
-    _ogr.OGR_Fld_Destroy(fielddefn)
+    OGR_L_CreateField(layer, fielddefn, 1)
+    OGR_Fld_Destroy(fielddefn)
 
     if connectivity == 8:
-        options = _gdal.CSLSetNameValue(options, "8CONNECTED", "8")
+        options = CSLSetNameValue(options, "8CONNECTED", "8")
 
     if is_float:
-        _gdal.GDALFPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
+        GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
     else:
-        _gdal.GDALPolygonize(hband, hmaskband, hlayer, 0, options, NULL, NULL)
+        GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
 
     # Yield Fiona-style features
-    cdef ShapeIterator shape_iter = ShapeIterator()
-    shape_iter.hfs = hfs
-    shape_iter.hlayer = hlayer
-    shape_iter.fieldtp = fieldtp
+    shape_iter = ShapeIterator()
+    shape_iter.layer = layer
+    shape_iter.fieldtype = fieldtp
     for s, v in shape_iter:
         yield s, v
 
@@ -132,10 +148,10 @@ def _shapes(image, mask, connectivity, transform):
         mem_ds.close()
     if mask_ds is not None:
         mask_ds.close()
-    if hfs != NULL:
-        _ogr.OGR_DS_Destroy(hfs)
+    if fs != NULL:
+        OGR_DS_Destroy(fs)
     if options:
-        _gdal.CSLDestroy(options)
+        CSLDestroy(options)
 
 
 def _sieve(image, size, out, mask, connectivity):
@@ -161,21 +177,23 @@ def _sieve(image, size, out, mask, connectivity):
         Use 4 or 8 pixel connectivity for grouping pixels into features.
 
     """
-
-    cdef int retval, rows, cols
+    cdef int retval
+    cdef int rows
+    cdef int cols
     cdef InMemoryRaster in_mem_ds = None
     cdef InMemoryRaster out_mem_ds = None
     cdef InMemoryRaster mask_mem_ds = None
-    cdef void *in_band = NULL
-    cdef void *out_band = NULL
-    cdef void *mask_band = NULL
+    cdef GDALRasterBandH in_band = NULL
+    cdef GDALRasterBandH out_band = NULL
+    cdef GDALRasterBandH mask_band = NULL
 
     valid_dtypes = ('int16', 'int32', 'uint8', 'uint16')
 
     if np.dtype(image.dtype).name not in valid_dtypes:
         valid_types_str = ', '.join(('rasterio.{0}'.format(t) for t
                                      in valid_dtypes))
-        raise ValueError('image dtype must be one of: %s' % valid_types_str)
+        raise ValueError(
+            "image dtype must be one of: {0}".format(valid_types_str))
 
     if size <= 0:
         raise ValueError('size must be greater than 0')
@@ -195,20 +213,20 @@ def _sieve(image, size, out, mask, connectivity):
 
     if dtypes.is_ndarray(image):
         in_mem_ds = InMemoryRaster(image)
-        in_band = in_mem_ds.band
+        in_band = in_mem_ds.band(1)
     elif isinstance(image, tuple):
         rdr = image.ds
-        in_band = (<_io.DatasetReaderBase?>rdr).band(image.bidx)
+        in_band = (<DatasetReaderBase?>rdr).band(image.bidx)
     else:
         raise ValueError("Invalid source image")
 
     if dtypes.is_ndarray(out):
         log.debug("out array: %r", out)
         out_mem_ds = InMemoryRaster(out)
-        out_band = out_mem_ds.band
+        out_band = out_mem_ds.band(1)
     elif isinstance(out, tuple):
         udr = out.ds
-        out_band = (<_io.DatasetReaderBase?>udr).band(out.bidx)
+        out_band = (<DatasetReaderBase?>udr).band(out.bidx)
     else:
         raise ValueError("Invalid out image")
 
@@ -223,25 +241,17 @@ def _sieve(image, size, out, mask, connectivity):
         if dtypes.is_ndarray(mask):
             # A boolean mask must be converted to uint8 for GDAL
             mask_mem_ds = InMemoryRaster(mask.astype('uint8'))
-            mask_band = mask_mem_ds.band
+            mask_band = mask_mem_ds.band(1)
 
         elif isinstance(mask, tuple):
             mask_reader = mask.ds
-            mask_band = (<_io.DatasetReaderBase?>mask_reader).band(mask.bidx)
+            mask_band = (<DatasetReaderBase?>mask_reader).band(mask.bidx)
 
-    _gdal.GDALSieveFilter(
-        in_band,
-        mask_band,
-        out_band,
-        size,
-        connectivity,
-        NULL,
-        NULL,
-        NULL
-    )
+    GDALSieveFilter(in_band, mask_band, out_band, size, connectivity,
+                          NULL, NULL, NULL)
 
     # Read from out_band into out
-    _io.io_auto(out, out_band, False)
+    io_auto(out, out_band, False)
 
     if in_mem_ds is not None:
         in_mem_ds.close()
@@ -271,54 +281,53 @@ def _rasterize(shapes, image, transform, all_touched):
         that are selected by Bresenham's line algorithm will be burned
         in.
     """
-
     cdef int retval
     cdef size_t i
-    cdef size_t num_geometries = 0
-    cdef void **ogr_geoms = NULL
+    cdef size_t num_geoms = 0
+    cdef OGRGeometryH *geoms = NULL
     cdef char **options = NULL
-    cdef double *pixel_values = NULL  # requires one value per geometry
-    cdef InMemoryRaster mem
+    cdef double *pixel_values = NULL
+    cdef InMemoryRaster mem = None
 
     try:
         if all_touched:
-            options = _gdal.CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
+            options = CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
 
         # GDAL needs an array of geometries.
         # For now, we'll build a Python list on the way to building that
         # C array. TODO: make this more efficient.
         all_shapes = list(shapes)
-        num_geometries = len(all_shapes)
+        num_geoms = len(all_shapes)
 
-        ogr_geoms = <void **>_gdal.CPLMalloc(num_geometries * sizeof(void*))
-        pixel_values = <double *>_gdal.CPLMalloc(
-                            num_geometries * sizeof(double))
+        geoms = <OGRGeometryH *>CPLMalloc(
+            num_geoms * sizeof(OGRGeometryH))
+        pixel_values = <double *>CPLMalloc(num_geoms * sizeof(double))
 
         for i, (geometry, value) in enumerate(all_shapes):
             try:
-                ogr_geoms[i] = OGRGeomBuilder().build(geometry)
+                geoms[i] = OGRGeomBuilder().build(geometry)
                 pixel_values[i] = <double>value
             except:
                 log.error("Geometry %r at index %d with value %d skipped",
                     geometry, i, value)
 
         with InMemoryRaster(image, transform) as mem:
-            _gdal.GDALRasterizeGeometries(
-                        mem.dataset, 1, mem.band_ids,
-                        num_geometries, ogr_geoms,
-                        NULL, mem.transform, pixel_values,
-                        options, NULL, NULL)
+            with CPLErrors() as cple:
+                GDALRasterizeGeometries(
+                    mem.handle(), 1, mem.band_ids,num_geoms, geoms, NULL,
+                    mem.transform, pixel_values, options, NULL, NULL)
+                cple.check()
 
             # Read in-memory data back into image
             image = mem.read()
 
     finally:
-        for i in range(num_geometries):
-            _deleteOgrGeom(ogr_geoms[i])
-        _gdal.CPLFree(ogr_geoms)
-        _gdal.CPLFree(pixel_values)
+        for i in range(num_geoms):
+            _deleteOgrGeom(geoms[i])
+        CPLFree(geoms)
+        CPLFree(pixel_values)
         if options:
-            _gdal.CSLDestroy(options)
+            CSLDestroy(options)
 
 
 def _explode(coords):
@@ -339,7 +348,6 @@ def _bounds(geometry):
     From Fiona 1.4.8 with updates here to handle feature collections.
     TODO: add to Fiona.
     """
-
     if 'features' in geometry:
         xmins = []
         ymins = []
@@ -387,57 +395,53 @@ GEOJSON2OGR_GEOMETRY_TYPES = dict(
 # Geometry related functions and classes follow.
 
 
-cdef _deleteOgrGeom(void *cogr_geometry):
+cdef _deleteOgrGeom(OGRGeometryH geom):
     """Delete an OGR geometry"""
-
-    if cogr_geometry != NULL:
-        _ogr.OGR_G_DestroyGeometry(cogr_geometry)
-    cogr_geometry = NULL
+    if geom != NULL:
+        OGR_G_DestroyGeometry(geom)
+    geom = NULL
 
 
 cdef class GeomBuilder:
     """Builds a GeoJSON (Fiona-style) geometry from an OGR geometry."""
 
-    cdef _buildCoords(self, void *geom):
+    cdef _buildCoords(self, OGRGeometryH geom):
         # Build a coordinate sequence
         cdef int i
         if geom == NULL:
             raise ValueError("Null geom")
-        npoints = _ogr.OGR_G_GetPointCount(geom)
+        npoints = OGR_G_GetPointCount(geom)
         coords = []
         for i in range(npoints):
-            values = [_ogr.OGR_G_GetX(geom, i), _ogr.OGR_G_GetY(geom, i)]
+            values = [OGR_G_GetX(geom, i), OGR_G_GetY(geom, i)]
             if self.ndims > 2:
-                values.append(_ogr.OGR_G_GetZ(geom, i))
+                values.append(OGR_G_GetZ(geom, i))
             coords.append(tuple(values))
         return coords
 
     cpdef _buildPoint(self):
         return {
             'type': 'Point',
-            'coordinates': self._buildCoords(self.geom)[0]
-        }
+            'coordinates': self._buildCoords(self.geom)[0]}
 
     cpdef _buildLineString(self):
         return {
             'type': 'LineString',
-            'coordinates': self._buildCoords(self.geom)
-        }
+            'coordinates': self._buildCoords(self.geom)}
 
     cpdef _buildLinearRing(self):
         return {
             'type': 'LinearRing',
-            'coordinates': self._buildCoords(self.geom)
-        }
+            'coordinates': self._buildCoords(self.geom)}
 
-    cdef _buildParts(self, void *geom):
+    cdef _buildParts(self, OGRGeometryH geom):
         cdef int j
-        cdef void *part
+        cdef OGRGeometryH part
         if geom == NULL:
             raise ValueError("Null geom")
         parts = []
-        for j in range(_ogr.OGR_G_GetGeometryCount(geom)):
-            part = _ogr.OGR_G_GetGeometryRef(geom, j)
+        for j in range(OGR_G_GetGeometryCount(geom)):
+            part = OGR_G_GetGeometryRef(geom, j)
             parts.append(GeomBuilder().build(part))
         return parts
 
@@ -449,17 +453,16 @@ cdef class GeomBuilder:
         coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
         return {'type': 'MultiPolygon', 'coordinates': coordinates}
 
-    cdef build(self, void *geom):
+    cdef build(self, OGRGeometryH geom):
         """Builds a GeoJSON object from an OGR geometry object."""
-
         if geom == NULL:
             raise ValueError("Null geom")
-
-        cdef unsigned int etype = _ogr.OGR_G_GetGeometryType(geom)
+        cdef unsigned int etype = OGR_G_GetGeometryType(geom)
         self.code = etype
         self.geomtypename = GEOMETRY_TYPES[self.code & (~0x80000000)]
-        self.ndims = _ogr.OGR_G_GetCoordinateDimension(geom)
+        self.ndims = OGR_G_GetCoordinateDimension(geom)
         self.geom = geom
+
         return getattr(self, '_build' + self.geomtypename)()
 
 
@@ -469,101 +472,94 @@ cdef class OGRGeomBuilder:
     From Fiona: https://github.com/Toblerity/Fiona/blob/master/src/fiona/ogrext.pyx
     """
 
-    cdef void * _createOgrGeometry(self, int geom_type) except NULL:
-        cdef void *cogr_geometry = _ogr.OGR_G_CreateGeometry(geom_type)
-        if cogr_geometry is NULL:
+    cdef OGRGeometryH _createOgrGeometry(self, int geom_type) except NULL:
+        cdef OGRGeometryH geom = OGR_G_CreateGeometry(geom_type)
+        if geom is NULL:
             raise Exception(
-                "Could not create OGR Geometry of type: %i" % geom_type
-            )
-        return cogr_geometry
+                "Could not create OGR Geometry of type: %i" % geom_type)
+        return geom
 
-    cdef _addPointToGeometry(self, void *cogr_geometry, object coordinate):
+    cdef _addPointToGeometry(self, OGRGeometryH geom, object coordinate):
         if len(coordinate) == 2:
             x, y = coordinate
-            _ogr.OGR_G_AddPoint_2D(cogr_geometry, x, y)
+            OGR_G_AddPoint_2D(geom, x, y)
         else:
             x, y, z = coordinate[:3]
-            _ogr.OGR_G_AddPoint(cogr_geometry, x, y, z)
+            OGR_G_AddPoint(geom, x, y, z)
 
-    cdef void * _buildPoint(self, object coordinates) except NULL:
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['Point']
-        )
-        self._addPointToGeometry(cogr_geometry, coordinates)
-        return cogr_geometry
+    cdef OGRGeometryH _buildPoint(self, object coordinates) except NULL:
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['Point'])
+        self._addPointToGeometry(geom, coordinates)
+        return geom
 
-    cdef void * _buildLineString(self, object coordinates) except NULL:
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['LineString']
-        )
+    cdef OGRGeometryH _buildLineString(self, object coordinates) except NULL:
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['LineString'])
         for coordinate in coordinates:
-            self._addPointToGeometry(cogr_geometry, coordinate)
-        return cogr_geometry
+            self._addPointToGeometry(geom, coordinate)
+        return geom
 
-    cdef void * _buildLinearRing(self, object coordinates) except NULL:
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['LinearRing']
-        )
+    cdef OGRGeometryH _buildLinearRing(self, object coordinates) except NULL:
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['LinearRing'])
         for coordinate in coordinates:
-            self._addPointToGeometry(cogr_geometry, coordinate)
-        _ogr.OGR_G_CloseRings(cogr_geometry)
-        return cogr_geometry
+            self._addPointToGeometry(geom, coordinate)
+        OGR_G_CloseRings(geom)
+        return geom
 
-    cdef void * _buildPolygon(self, object coordinates) except NULL:
-        cdef void *cogr_ring
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['Polygon']
-        )
-        for ring in coordinates:
-            cogr_ring = self._buildLinearRing(ring)
-            _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_ring)
-        return cogr_geometry
+    cdef OGRGeometryH _buildPolygon(self, object coordinates) except NULL:
+        cdef OGRGeometryH ring = NULL
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['Polygon'])
+        for r in coordinates:
+            ring = self._buildLinearRing(r)
+            OGR_G_AddGeometryDirectly(geom, ring)
+        return geom
 
-    cdef void * _buildMultiPoint(self, object coordinates) except NULL:
-        cdef void *cogr_part
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['MultiPoint']
-        )
+    cdef OGRGeometryH _buildMultiPoint(self, object coordinates) except NULL:
+        cdef OGRGeometryH part = NULL
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['MultiPoint'])
         for coordinate in coordinates:
-            cogr_part = self._buildPoint(coordinate)
-            _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-        return cogr_geometry
+            part = self._buildPoint(coordinate)
+            OGR_G_AddGeometryDirectly(geom, part)
+        return geom
 
-    cdef void * _buildMultiLineString(self, object coordinates) except NULL:
-        cdef void *cogr_part
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['MultiLineString']
-        )
+    cdef OGRGeometryH _buildMultiLineString(
+            self, object coordinates) except NULL:
+        cdef OGRGeometryH part = NULL
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['MultiLineString'])
         for line in coordinates:
-            cogr_part = self._buildLineString(line)
-            _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-        return cogr_geometry
+            part = self._buildLineString(line)
+            OGR_G_AddGeometryDirectly(geom, part)
+        return geom
 
-    cdef void * _buildMultiPolygon(self, object coordinates) except NULL:
-        cdef void *cogr_part
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['MultiPolygon']
-        )
-        for part in coordinates:
-            cogr_part = self._buildPolygon(part)
-            _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-        return cogr_geometry
+    cdef OGRGeometryH _buildMultiPolygon(self, object coordinates) except NULL:
+        cdef OGRGeometryH part = NULL
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['MultiPolygon'])
+        for poly in coordinates:
+            part = self._buildPolygon(poly)
+            OGR_G_AddGeometryDirectly(geom, part)
+        return geom
 
-    cdef void * _buildGeometryCollection(self, object coordinates) except NULL:
-        cdef void *cogr_part
-        cdef void *cogr_geometry = self._createOgrGeometry(
-            GEOJSON2OGR_GEOMETRY_TYPES['GeometryCollection']
-        )
-        for part in coordinates:
-            cogr_part = OGRGeomBuilder().build(part)
-            _ogr.OGR_G_AddGeometryDirectly(cogr_geometry, cogr_part)
-        return cogr_geometry
+    cdef OGRGeometryH _buildGeometryCollection(
+            self, object coordinates) except NULL:
+        cdef OGRGeometryH part = NULL
+        cdef OGRGeometryH geom = self._createOgrGeometry(
+            GEOJSON2OGR_GEOMETRY_TYPES['GeometryCollection'])
+        for colxn in coordinates:
+            part = OGRGeomBuilder().build(colxn)
+            OGR_G_AddGeometryDirectly(geom, part)
+        return geom
 
-    cdef void * build(self, object geometry) except NULL:
+    cdef OGRGeometryH build(self, object geometry) except NULL:
         """Builds an OGR geometry from GeoJSON geometry."""
-
         cdef object typename = geometry['type']
         cdef object coordinates = geometry.get('coordinates')
+
         if not typename or not coordinates:
             raise ValueError("Input is not a valid geometry object")
         if typename == 'Point':
@@ -589,41 +585,41 @@ cdef class OGRGeomBuilder:
 
 # Feature extension classes and functions follow.
 
-cdef _deleteOgrFeature(void *cogr_feature):
+cdef _deleteOgrFeature(OGRFeatureH feat):
     """Delete an OGR feature"""
-    if cogr_feature != NULL:
-        _ogr.OGR_F_Destroy(cogr_feature)
-    cogr_feature = NULL
+    if feat != NULL:
+        OGR_F_Destroy(feat)
+    feat = NULL
 
 
 cdef class ShapeIterator:
     """Provides an iterator over shapes in an OGR feature layer."""
 
-    # Reference to its Collection
-    cdef void *hfs
-    cdef void *hlayer
-
-    cdef int fieldtp  # OGR Field Type: 0=int, 2=double
-
     def __iter__(self):
-        _ogr.OGR_L_ResetReading(self.hlayer)
+        OGR_L_ResetReading(self.layer)
         return self
 
     def __next__(self):
-        cdef long fid
-        cdef void *ftr
-        cdef void *geom
-        ftr = _ogr.OGR_L_GetNextFeature(self.hlayer)
-        if ftr == NULL:
+        cdef OGRFeatureH feat = NULL
+        cdef OGRGeometryH geom = NULL
+
+        with CPLErrors() as cple:
+            feat = OGR_L_GetNextFeature(self.layer)
+            cple.check()
+
+        if feat == NULL:
             raise StopIteration
-        if self.fieldtp == 0:
-            image_value = _ogr.OGR_F_GetFieldAsInteger(ftr, 0)
-        else:
-            image_value = _ogr.OGR_F_GetFieldAsDouble(ftr, 0)
-        geom = _ogr.OGR_F_GetGeometryRef(ftr)
-        if geom != NULL:
-            shape = GeomBuilder().build(geom)
-        else:
-            shape = None
-        _deleteOgrFeature(ftr)
-        return shape, image_value
+
+        try:
+            if self.fieldtype == 0:
+                image_value = OGR_F_GetFieldAsInteger(feat, 0)
+            else:
+                image_value = OGR_F_GetFieldAsDouble(feat, 0)
+            geom = OGR_F_GetGeometryRef(feat)
+            if geom != NULL:
+                shape = GeomBuilder().build(geom)
+            else:
+                shape = None
+            return shape, image_value
+        finally:
+            _deleteOgrFeature(feat)
