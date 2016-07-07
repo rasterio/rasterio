@@ -384,13 +384,11 @@ def _reproject(
     warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
     log.debug("Setting NUM_THREADS option: %d", num_threads)
 
-    for k, v in kwargs.items():
-        k, v = k.upper(), str(v).upper()
-        keyb = k.encode('utf-8')
-        valb = v.encode('utf-8')
+    for key, val in kwargs.items():
+        key = key.upper().encode('utf-8')
+        val = str(val).upper().encode('utf-8')
         warp_extras = CSLSetNameValue(
-            warp_extras, <const char *>keyb, <const char *>valb)
-        log.debug("Setting warp option  %s: %s" % (k, v))
+            warp_extras, <const char *>key, <const char *>val)
 
     log.debug("Created warp options")
 

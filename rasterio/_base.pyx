@@ -646,33 +646,26 @@ cdef class DatasetBase(object):
         a specific band. The optional ns argument can be used to select
         a namespace other than the default.
         """
-        cdef char *item = NULL
         cdef GDALMajorObjectH obj = NULL
         cdef char **metadata = NULL
-        cdef char *domain = NULL
+        cdef const char *domain = NULL
 
         if bidx > 0:
             obj = self.band(bidx)
         else:
-            obj = self.handle()
+            obj = self._hds
         if ns:
-            ns_bytes = ns.encode('utf-8')
-            domain = ns_bytes
+            ns = ns.encode('utf-8')
+            domain = ns
 
         metadata = GDALGetMetadata(obj, domain)
         num_items = CSLCount(metadata)
-        retval = {}
-
-        for i in range(num_items):
-            key, value = metadata[i].split('=', 1)
-            retval[key] = value
-
-        return retval
+        return dict(metadata[i].split('=', 1) for i in range(num_items))
 
     def colorinterp(self, bidx):
         """Returns the color interpretation for a band or None."""
         cdef GDALRasterBandH band = NULL
-        
+
         band = self.band(bidx)
         value = GDALGetRasterColorInterpretation(band)
         return ColorInterp(value)

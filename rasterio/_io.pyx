@@ -1222,8 +1222,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
         specifying a raster subset to write into.
         """
-        cdef GDALRasterBandH hband
-        cdef GDALRasterBandH hmask
+        cdef GDALRasterBandH band
+        cdef GDALRasterBandH mask
 
         warnings.warn(
             "read_mask() is deprecated and will be removed by Rasterio 1.0. "
@@ -1231,11 +1231,11 @@ cdef class DatasetReaderBase(DatasetBase):
             FutureWarning,
             stacklevel=2)
 
-        hband = self.band(1)
-
-        hmask = GDALGetMaskBand(hband)
-        if hmask == NULL:
+        band = self.band(1)
+        mask = GDALGetMaskBand(band)
+        if mask == NULL:
             return None
+
         if out is None:
             out_shape = (
                 window
@@ -1254,7 +1254,7 @@ cdef class DatasetReaderBase(DatasetBase):
             height = self.height
 
         io_ubyte(
-            hmask, 0, xoff, yoff, width, height, out)
+            mask, 0, xoff, yoff, width, height, out)
         return out
 
     def sample(self, xy, indexes=None):
@@ -1337,7 +1337,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef char *key_c = NULL
         cdef char *val_c = NULL
         cdef GDALDriverH drv = NULL
-        cdef GDALRasterBandH hband = NULL
+        cdef GDALRasterBandH band = NULL
         cdef int success
 
         # Parse the path to determine if there is scheme-specific
@@ -1426,8 +1426,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                             self._init_nodata, self._init_dtype))
 
                 for i in range(self._count):
-                    hband = self.band(i + 1)
-                    success = GDALSetRasterNoDataValue(hband,
+                    band = self.band(i + 1)
+                    success = GDALSetRasterNoDataValue(band,
                                                        self._init_nodata)
 
             if self._transform:
@@ -1566,14 +1566,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             self.write_transform(value.to_gdal())
 
     def set_nodatavals(self, vals):
-        cdef GDALRasterBandH hband = NULL
+        cdef GDALRasterBandH band = NULL
         cdef double nodataval
         cdef int success
 
         for i, val in zip(self.indexes, vals):
-            hband = self.band(i)
+            band = self.band(i)
             nodataval = val
-            success = GDALSetRasterNoDataValue(hband, nodataval)
+            success = GDALSetRasterNoDataValue(band, nodataval)
             if success:
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
@@ -1808,7 +1808,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         GDALSetRasterColorTable(hBand, hTable)
         GDALDestroyColorTable(hTable)
 
-    def write_mask(self, mask, window=None):
+    def write_mask(self, mask_array, window=None):
         """Write the valid data mask src array into the dataset's band
         mask.
 
@@ -1818,16 +1818,16 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         specifying a raster subset to write into.
         """
-        cdef GDALRasterBandH hband = NULL
-        cdef GDALRasterBandH hmask = NULL
+        cdef GDALRasterBandH band = NULL
+        cdef GDALRasterBandH mask = NULL
 
-        hband = self.band(1)
+        band = self.band(1)
 
         try:
             with CPLErrors() as cple:
-                retval = GDALCreateMaskBand(hband, 0x02)
+                retval = GDALCreateMaskBand(band, 0x02)
                 cple.check()
-                hmask = GDALGetMaskBand(hband)
+                mask = GDALGetMaskBand(band)
                 cple.check()
                 log.debug("Created mask band")
         except:
@@ -1844,17 +1844,17 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = self.width
             height = self.height
 
-        if mask is True:
-            GDALFillRaster(hmask, 255, 0)
-        elif mask is False:
-            GDALFillRaster(hmask, 0, 0)
-        elif mask.dtype == np.bool:
-            array = 255 * mask.astype(np.uint8)
+        if mask_array is True:
+            GDALFillRaster(mask, 255, 0)
+        elif mask_array is False:
+            GDALFillRaster(mask, 0, 0)
+        elif mask_array.dtype == np.bool:
+            array = 255 * mask_array.astype(np.uint8)
             retval = io_ubyte(
-                hmask, 1, xoff, yoff, width, height, array)
+                mask, 1, xoff, yoff, width, height, array)
         else:
             retval = io_ubyte(
-                hmask, 1, xoff, yoff, width, height, mask)
+                mask, 1, xoff, yoff, width, height, mask_array)
 
     def build_overviews(self, factors, resampling=Resampling.nearest):
         """Build overviews at one or more decimation factors for all
@@ -2023,7 +2023,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef const char *drv_name = NULL
         cdef GDALDriverH drv = NULL
         cdef GDALDriverH memdrv = NULL
-        cdef GDALRasterBandH hband = NULL
+        cdef GDALRasterBandH band = NULL
         cdef GDALDatasetH temp = NULL
         cdef int success
 
@@ -2060,9 +2060,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             if self._init_nodata is not None:
                 for i in range(self._count):
-                    hband = self.band(i+1)
+                    band = self.band(i+1)
                     success = GDALSetRasterNoDataValue(
-                                    hband, self._init_nodata)
+                        band, self._init_nodata)
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:

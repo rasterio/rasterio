@@ -64,8 +64,8 @@ def driver_count():
 
 cpdef get_gdal_config(key):
     """Get the value of a GDAL configuration option"""
-    keyb = key.upper().encode('utf-8')
-    val = CPLGetConfigOption(<const char *>keyb, NULL)
+    key = key.upper().encode('utf-8')
+    val = CPLGetConfigOption(<const char *>key, NULL)
     if not val:
         return None
     else:
@@ -79,18 +79,18 @@ cpdef get_gdal_config(key):
 
 cpdef set_gdal_config(key, val):
     """Set a GDAL configuration option's value"""
-    keyb = key.upper().encode('utf-8')
+    key = key.upper().encode('utf-8')
     if isinstance(val, string_types):
-        valb = val.encode('utf-8')
+        val = val.encode('utf-8')
     else:
-        valb = ('ON' if val else 'OFF').encode('utf-8')
-    CPLSetConfigOption(<const char *>keyb, <const char *>valb)
+        val = ('ON' if val else 'OFF').encode('utf-8')
+    CPLSetConfigOption(<const char *>key, <const char *>val)
 
 
 cpdef del_gdal_config(key):
     """Delete a GDAL configuration option"""
-    keyb = key.upper().encode('utf-8')
-    CPLSetConfigOption(<const char *>keyb, NULL)
+    key = key.upper().encode('utf-8')
+    CPLSetConfigOption(<const char *>key, NULL)
 
 
 cdef class ConfigEnv(object):
