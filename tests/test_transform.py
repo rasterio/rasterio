@@ -159,17 +159,17 @@ def test_xy():
     ul_x, ul_y = aff * (0, 0)
     xoff = aff.a
     yoff = aff.e
-    assert xy(0, 0, transform=aff, offset='ul') == (ul_x, ul_y)
-    assert xy(0, 0, transform=aff, offset='ur') == (ul_x + xoff, ul_y)
-    assert xy(0, 0, transform=aff, offset='ll') == (ul_x, ul_y + yoff)
+    assert xy(aff, 0, 0, offset='ul') == (ul_x, ul_y)
+    assert xy(aff, 0, 0, offset='ur') == (ul_x + xoff, ul_y)
+    assert xy(aff, 0, 0, offset='ll') == (ul_x, ul_y + yoff)
     expected = (ul_x + xoff, ul_y + yoff)
-    assert xy(0, 0, transform=aff, offset='lr') == expected
+    assert xy(aff, 0, 0, offset='lr') == expected
     expected = (ul_x + xoff / 2, ul_y + yoff / 2)
-    assert xy(0, 0, transform=aff, offset='center') == expected
-    assert xy(0, 0, transform=aff, offset='lr') == \
-        xy(0, 1, transform=aff, offset='ll') == \
-        xy(1, 1, transform=aff, offset='ul') == \
-        xy(1, 0, transform=aff, offset='ur')
+    assert xy(aff, 0, 0, offset='center') == expected
+    assert xy(aff, 0, 0, offset='lr') == \
+        xy(aff, 0, 1, offset='ll') == \
+        xy(aff, 1, 1, offset='ul') == \
+        xy(aff, 1, 0, offset='ur')
 
 
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):

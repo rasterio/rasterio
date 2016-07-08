@@ -11,7 +11,7 @@ from rasterio._base import (
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
 from rasterio import windows
-from rasterio.transform import guard_transform, xy, get_index
+from rasterio.transform import guard_transform, xy, rowcol
 
 
 class TransformMethodsMixin(object):
@@ -46,7 +46,7 @@ class TransformMethodsMixin(object):
         tuple
             ``(x, y)``
         """
-        return xy(row, col, self.transform, offset=offset)
+        return xy(self.tranform, row, col, offset=offset)
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a
@@ -57,7 +57,7 @@ class TransformMethodsMixin(object):
         """
         warnings.warn("ul method is deprecated. Use xy(row, col, offset='ul')",
                       DeprecationWarning)
-        return xy(row, col, self.transform, offset='ul')
+        return xy(self.transform, row, col, offset='ul')
 
     def index(self, x, y, op=math.floor, precision=6):
         """
@@ -85,8 +85,7 @@ class TransformMethodsMixin(object):
         tuple
             (row index, col index)
         """
-        return get_index(x, y, self.transform, op=op, precision=precision)
-
+        return rowcol(self.transform, x, y, op=op, precision=precision)
 
 
 class WindowMethodsMixin(object):

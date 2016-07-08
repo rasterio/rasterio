@@ -20,7 +20,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
 from rasterio.profiles import Profile
-from rasterio.transform import Affine, guard_transform, get_index
+from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
 
