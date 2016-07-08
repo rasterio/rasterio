@@ -392,23 +392,68 @@ cdef class DatasetBase(object):
             return [GDALGetMaskFlags(self.band(j)) for j in self.indexes]
 
     def block_windows(self, bidx=0):
-        """Returns an iterator over a band's block windows and their
-        indexes.
+        """Returns an iterator over a band's blocks and their corresponding
+        windows.  Produces tuples like ``(block, window)``.  The primary use
+        of this method is to obtain windows to pass to `read()` for highly
+        efficient access to raster block data.
 
-        The positional parameter `bidx` takes the index (starting at 1)
-        of the desired band. Block windows are tuples
+        The positional parameter `bidx` takes the index (starting at 1) of the
+        desired band.  This iterator yields blocks "left to right" and "top to
+        bottom" and is similar to Python's ``enumerate()`` in that the first
+        element is the block index and the second is the dataset window.
 
-            ((row_start, row_stop), (col_start, col_stop))
+        Blocks are built-in to a dataset and describe how pixels are grouped
+        within each band and provide a mechanism for efficient I/O.  A window
+        is a range of pixels within a single band defined by row start, row
+        stop, column start, and column stop.  For example, ``((0, 2), (0, 2))``
+        defines a ``2 x 2`` window at the upper left corner of a raster band.
+        Blocks are referenced by an ``(i, j)`` tuple where ``(0, 0)`` would be
+        a band's upper left block.
 
-        For example, ((0, 2), (0, 2)) defines a 2 x 2 block at the upper
-        left corner of the raster dataset.
+        Raster I/O is performed at the block level, so accessing a window
+        spanning multiple rows in a striped raster requires reading each row.
+        Accessing a ``2 x 2`` window at the center of a ``1800 x 3600`` image
+        requires reading 2 rows, or 7200 pixels just to get the target 4.  The
+        same image with internal ``256 x 256`` blocks would require reading at
+        least 1 block (if the window entire window falls within a single block)
+        and at most 4 blocks, or at least 512 pixels and at most 2048.
 
-        This iterator yields blocks "left to right" and "top to bottom"
-        and is similar to Python's enumerate() in that it also returns
-        indexes.
+        Given an image that is ``512 x 512`` with blocks that are
+        ``256 x 256``, its blocks and windows would look like:
 
-        The primary use of this function is to obtain windows to pass to
-        read() for highly efficient access to raster block data.
+            Blocks:
+
+                    0       256     512
+                  0 +--------+--------+
+                    |        |        |
+                    | (0, 0) | (0, 1) |
+                    |        |        |
+                256 +--------+--------+
+                    |        |        |
+                    | (1, 0) | (1, 1) |
+                    |        |        |
+                512 +--------+--------+
+
+
+            Windows:
+
+                UL: ((0, 256), (0, 256))
+                UR: ((0, 256), (256, 512))
+                LL: ((256, 512), (0, 256))
+                LR: ((256, 512), (256, 512))
+
+
+        Parameters
+        ----------
+        bidx : int
+            The band index (using 1-based indexing) from which to extract
+            windows. A value less than 1 uses the first band if all bands have
+            homogeneous windows and raises an exception otherwise.
+
+        Yields
+        ------
+        tuple
+            ``(block, window)``
         """
         cdef int i, j
 
