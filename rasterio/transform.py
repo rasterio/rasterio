@@ -62,6 +62,45 @@ def array_bounds(height, width, transform):
     return w, s, e, n
 
 
+def xy(row, col, transform, offset='center'):
+    """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
+    The pixel's center is returned by default, but a corner can be returned
+    by setting `offset` to one of `ul, ur, ll, lr`.
+
+    Parameters
+    ----------
+    row : int
+        Pixel row.
+    col : int
+        Pixel column.
+    transform : affine.Affine
+        Transformation from pixel coordinates to coordinate reference system.
+    offset : str, optional
+        Determines if the returned coordinates are for the center of the
+        pixel or for a corner.
+
+    Returns
+    -------
+    tuple
+        ``(x, y)``
+    """
+
+    cr = (col, row)
+
+    if offset == 'center':
+        return transform * transform.translation(0.5, 0.5) * cr
+    elif offset == 'ul':
+        return transform * cr
+    elif offset == 'ur':
+        return transform * transform.translation(1, 0) * cr
+    elif offset == 'll':
+        return transform * transform.translation(0, 1) * cr
+    elif offset == 'lr':
+        return transform * transform.translation(1, 1) * cr
+    else:
+        raise ValueError("Invalid offset")
+
+
 def get_index(x, y, transform, op=math.floor, precision=6):
     """
     Returns the (row, col) index of the pixel containing (x, y) given a
@@ -98,4 +137,3 @@ def get_index(x, y, transform, op=math.floor, precision=6):
     col = int(op(fcol))
     row = int(op(frow))
     return row, col
-

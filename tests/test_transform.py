@@ -2,6 +2,7 @@ from affine import Affine
 import pytest
 import rasterio
 from rasterio import transform
+from rasterio.transform import xy
 
 
 def test_window_transform():
@@ -150,6 +151,25 @@ def test_from_bounds_two():
     # pixelwidth, rotation, ULX, rotation, pixelheight, ULY
     expected = Affine(0.5, 0.0, -120.0, 0.0, -0.5, 70.0)
     assert [round(v, 7) for v in tr] == [round(v, 7) for v in expected]
+
+
+def test_xy():
+    aff = Affine(300.0379266750948, 0.0, 101985.0,
+                 0.0, -300.041782729805, 2826915.0)
+    ul_x, ul_y = aff * (0, 0)
+    xoff = aff.a
+    yoff = aff.e
+    assert xy(0, 0, transform=aff, offset='ul') == (ul_x, ul_y)
+    assert xy(0, 0, transform=aff, offset='ur') == (ul_x + xoff, ul_y)
+    assert xy(0, 0, transform=aff, offset='ll') == (ul_x, ul_y + yoff)
+    expected = (ul_x + xoff, ul_y + yoff)
+    assert xy(0, 0, transform=aff, offset='lr') == expected
+    expected = (ul_x + xoff / 2, ul_y + yoff / 2)
+    assert xy(0, 0, transform=aff, offset='center') == expected
+    assert xy(0, 0, transform=aff, offset='lr') == \
+        xy(0, 1, transform=aff, offset='ll') == \
+        xy(1, 1, transform=aff, offset='ul') == \
+        xy(1, 0, transform=aff, offset='ur')
 
 
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
