@@ -138,6 +138,7 @@ def _reproject(
         dst_crs=None,
         dst_nodata=None,
         resampling=Resampling.nearest,
+        init_dest_nodata=True,
         num_threads=1,
         **kwargs):
     """
@@ -190,6 +191,9 @@ def _reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
+    init_dest_nodata: bool
+        Flag to specify initialization of nodata in destination;
+        prevents overwrite of previous warps. Defaults to True.
     num_threads: int
         Number of worker threads.
     kwargs:  dict, optional
@@ -339,6 +343,9 @@ def _reproject(
             OSRDestroySpatialReference(osr)
             CPLFree(dstwkt)
 
+        retval = io_auto(destination, dst_dataset, 1)
+        log.debug("Wrote array to temp output dataset")
+
         if dst_nodata is None and hasattr(destination, "fill_value"):
             # destination is a masked array
             dst_nodata = destination.fill_value
@@ -443,7 +450,9 @@ def _reproject(
     for i in range(src_count):
         psWOptions.padfDstNoDataReal[i] = dst_nodata
         psWOptions.padfDstNoDataImag[i] = 0.0
-    warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
+
+    if init_dest_nodata:
+        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time

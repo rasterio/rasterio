@@ -168,6 +168,7 @@ def reproject(
         dst_crs=None,
         dst_nodata=None,
         resampling=Resampling.nearest,
+        init_dest_nodata=True,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -219,6 +220,9 @@ def reproject(
             Resampling.lanczos,
             Resampling.average,
             Resampling.mode
+    init_dest_nodata: bool
+        Flag to specify initialization of nodata in destination;
+        prevents overwrite of previous warps. Defaults to True.
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 
@@ -267,6 +271,7 @@ def reproject(
         dst_crs,
         dst_nodata,
         resampling,
+        init_dest_nodata,
         **kwargs)
 
 
