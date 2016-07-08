@@ -43,8 +43,8 @@ def get_data_window(arr, nodata=None):
 
     Returns
     -------
-    ((row_start, row_stop), (col_start, col_stop))
-
+    window: tuple
+        ((row_start, row_stop), (col_start, col_stop))
     """
 
     num_dims = len(arr.shape)
@@ -162,9 +162,36 @@ def intersect(*windows):
 
 def from_bounds(left, bottom, right, top, transform,
                 height=None, width=None, boundless=False, precision=6):
-    """Returns the window corresponding to the world bounding box.
-    If boundless is False, window is limited to extent of the
-    data (determined by transform, height and width)."""
+    """Get the window corresponding to the bounding coordinates.
+
+    Parameters
+    ----------
+    left : float
+        Left (west) bounding coordinate
+    bottom : float
+        Bottom (south) bounding coordinate
+    right : float
+        Right (east) bounding coordinate
+    top : float
+        Top (north) bounding coordinate
+    transform : Affine
+        Affine transform matrix
+    height : int
+        Number of rows
+    width : int
+        Number of columns
+    boundless : boolean, optional
+        If boundless is False, window is limited
+        to extent of this dataset.
+    precision : int, optional
+        float precision
+
+    Returns
+    -------
+    window: tuple
+        ((row_start, row_stop), (col_start, col_stop))
+        corresponding to the bounding coordinates
+    """
 
     window_start = get_index(
         left, top, transform, op=math.floor, precision=precision)
@@ -183,13 +210,39 @@ def from_bounds(left, bottom, right, top, transform,
 
 
 def transform(window, transform):
-    """Returns the affine transform for a dataset window."""
+    """Get the affine transform for a dataset window.
+
+    Parameters
+    ----------
+    window: tuple
+        Dataset window tuple
+    transform: Affine
+        The affine transform matrix for the entire dataset
+
+    Returns
+    -------
+    transform: Affine
+        The affine transform matrix for the given window
+    """
     (r, _), (c, _) = window
     return transform * Affine.translation(c or 0, r or 0)
 
 
 def bounds(window, transform):
-    """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
+    """Get the bounds of a window
+
+    Parameters
+    ----------
+    window: tuple
+        Dataset window tuple
+    transform: Affine
+        The affine transform matrix for the entire dataset
+
+    Returns
+    -------
+    bounds : tuple
+        x_min, y_min, x_max, y_max for the given window
+    """
     ((row_min, row_max), (col_min, col_max)) = window
     x_min, y_min = transform * (col_min, row_max)
     x_max, y_max = transform * (col_max, row_min)

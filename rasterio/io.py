@@ -21,8 +21,29 @@ class WindowMethodsMixin(object):
     """
 
     def window(self, left, bottom, right, top, boundless=False):
-        """Returns the window corresponding to the bounding coordinates.
-        If boundless is False, window is limited to extent of this dataset."""
+        """Get the window corresponding to the bounding coordinates.
+
+        Parameters
+        ----------
+        left : float
+            Left (west) bounding coordinate
+        bottom : float
+            Bottom (south) bounding coordinate
+        right : float
+            Right (east) bounding coordinate
+        top : float
+            Top (north) bounding coordinate
+        boundless: boolean, optional
+            If boundless is False, window is limited
+            to extent of this dataset.
+
+        Returns
+        -------
+        window: tuple
+            ((row_start, row_stop), (col_start, col_stop))
+            corresponding to the bounding coordinates
+
+        """
 
         transform = guard_transform(self.transform)
         return windows.from_bounds(
@@ -30,13 +51,35 @@ class WindowMethodsMixin(object):
             height=self.height, width=self.width, boundless=boundless)
 
     def window_transform(self, window):
-        """Returns the affine transform for a dataset window."""
+        """Get the affine transform for a dataset window.
+
+        Parameters
+        ----------
+        window: tuple
+            Dataset window tuple
+
+        Returns
+        -------
+        transform: Affine
+            The affine transform matrix for the given window
+        """
 
         transform = guard_transform(self.transform)
         return windows.transform(window, transform)
 
     def window_bounds(self, window):
-        """Returns the bounds of a window as x_min, y_min, x_max, y_max."""
+        """Get the bounds of a window
+
+        Parameters
+        ----------
+        window: tuple
+            Dataset window tuple
+
+        Returns
+        -------
+        bounds : tuple
+            x_min, y_min, x_max, y_max for the given window
+        """
 
         transform = guard_transform(self.transform)
         return windows.bounds(window, transform)
