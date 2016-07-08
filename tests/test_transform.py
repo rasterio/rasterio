@@ -2,7 +2,7 @@ from affine import Affine
 import pytest
 import rasterio
 from rasterio import transform
-from rasterio.transform import xy
+from rasterio.transform import xy, rowcol
 
 
 def test_window_transform():
@@ -187,3 +187,24 @@ def test_tastes_like_gdal_identity():
     aff = Affine.identity()
     assert not transform.tastes_like_gdal(aff)
     assert transform.tastes_like_gdal(aff.to_gdal())
+
+
+def test_rowcol():
+    with rasterio.open("tests/data/RGB.byte.tif", 'r') as src:
+        aff = src.transform
+        left, bottom, right, top = src.bounds
+        assert rowcol(aff, left, top) == (0, 0)
+        assert rowcol(aff, right, top) == (0, src.width)
+        assert rowcol(aff, right, bottom) == (src.height, src.width)
+        assert rowcol(aff, left, bottom) == (src.height, 0)
+        assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
+        assert rowcol(aff, 101985.0+400.0, 2826915.0) == (0, 1)
+
+
+def test_xy_rowcol_inverse():
+    # TODO this is an ideal candiate for
+    # property-based testing with hypothesis
+    aff = Affine.identity()
+    rows_cols = ([0, 0, 10, 10],
+                 [0, 10, 0, 10])
+    assert rows_cols == rowcol(aff, *xy(aff, *rows_cols))
