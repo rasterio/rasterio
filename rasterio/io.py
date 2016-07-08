@@ -4,6 +4,7 @@ Instances of these classes are called dataset objects.
 """
 
 import math
+import warnings
 
 from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
@@ -34,7 +35,8 @@ class TransformMethodsMixin(object):
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
         """
-        # TODO Deprecate
+        warnings.warn("ul method is deprecated. Use xy(..., offset='ul')",
+                      DeprecationWarning)
         return xy(row, col, self.transform, offset='ul')
 
     def index(self, x, y, op=math.floor, precision=6):

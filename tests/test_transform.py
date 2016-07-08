@@ -164,8 +164,12 @@ def test_xy():
     assert xy(0, 0, transform=aff, offset='ll') == (ul_x, ul_y + yoff)
     expected = (ul_x + xoff, ul_y + yoff)
     assert xy(0, 0, transform=aff, offset='lr') == expected
-    expeected = (ul_x + xoff / 2, ul_y + yoff / 2)
-    assert xy(0, 0, transform=aff, offset='center') == expeected
+    expected = (ul_x + xoff / 2, ul_y + yoff / 2)
+    assert xy(0, 0, transform=aff, offset='center') == expected
+    assert xy(0, 0, transform=aff, offset='lr') == \
+        xy(0, 1, transform=aff, offset='ll') == \
+        xy(1, 1, transform=aff, offset='ul') == \
+        xy(1, 0, transform=aff, offset='ur')
 
 
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
