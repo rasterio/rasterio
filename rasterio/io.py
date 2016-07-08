@@ -25,8 +25,26 @@ class TransformMethodsMixin(object):
     A subclass with this mixin MUST provide a `transform`
     property.
     """
+
     def xy(self, row, col, offset="center"):
-        """TODO docstring
+        """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
+        The pixel's center is returned by default, but a corner can be returned
+        by setting `offset` to one of `ul, ur, ll, lr`.
+
+        Parameters
+        ----------
+        row : int
+            Pixel row.
+        col : int
+            Pixel column.
+        offset : str, optional
+            Determines if the returned coordinates are for the center of the
+            pixel or for a corner.
+
+        Returns
+        -------
+        tuple
+            ``(x, y)``
         """
         return xy(row, col, self.transform, offset=offset)
 
@@ -34,13 +52,39 @@ class TransformMethodsMixin(object):
         """Returns the coordinates (x, y) of the upper left corner of a
         pixel at `row` and `col` in the units of the dataset's
         coordinate reference system.
+
+        Deprecated; Use `xy(row, col, offset='ul')` instead.
         """
-        warnings.warn("ul method is deprecated. Use xy(..., offset='ul')",
+        warnings.warn("ul method is deprecated. Use xy(row, col, offset='ul')",
                       DeprecationWarning)
         return xy(row, col, self.transform, offset='ul')
 
     def index(self, x, y, op=math.floor, precision=6):
-        """Returns the (row, col) index of the pixel containing (x, y)."""
+        """
+        Returns the (row, col) index of the pixel containing (x, y) given a
+        coordinate reference system.
+
+        Use an epsilon, magnitude determined by the precision parameter
+        and sign determined by the op function:
+            positive for floor, negative for ceil.
+
+        Parameters
+        ----------
+        x : float
+            x value in coordinate reference system
+        y : float
+            y value in coordinate reference system
+        op : function, optional (default: math.floor)
+            Function to convert fractional pixels to whole numbers (floor, ceiling,
+            round)
+        precision : int, optional (default: 6)
+            Decimal places of precision in indexing, as in `round()`.
+
+        Returns
+        -------
+        tuple
+            (row index, col index)
+        """
         return get_index(x, y, self.transform, op=op, precision=precision)
 
 
