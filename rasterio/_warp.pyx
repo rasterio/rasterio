@@ -365,6 +365,9 @@ def _reproject(
             _gdal.OSRDestroySpatialReference(osr)
             _gdal.CPLFree(dstwkt)
 
+        retval = _io.io_auto(destination, hdsout, 1)
+        log.debug("Wrote array to temp output dataset")
+
         if dst_nodata is None and hasattr(destination, "fill_value"):
             # destination is a masked array
             dst_nodata = destination.fill_value
