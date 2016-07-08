@@ -66,7 +66,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     try:
         with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
             with rasterio.open(input, mode) as src:
-                info = src.profile
+                info = dict(src.profile)
                 info['shape'] = info['height'], info['width']
                 info['bounds'] = src.bounds
                 proj4 = src.crs.to_string()
