@@ -12,8 +12,7 @@ except ImportError:  # pragma: no cover
         def emit(self, record):
             pass
 
-from rasterio._base import (
-    eval_window, window_shape, window_index, gdal_version)
+from rasterio._base import gdal_version
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
@@ -27,6 +26,22 @@ from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
 from rasterio import windows
+
+# TODO deprecate or remove in factor of rasterio.windows.___
+def eval_window(*args, **kwargs):
+    from rasterio.windows import evaluate
+    warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
+    return evaluate(*args, **kwargs)
+
+def window_shape(*args, **kwargs):
+    from rasterio.windows import shape
+    warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
+    return shape(*args, **kwargs)
+
+def window_index(*args, **kwargs):
+    from rasterio.windows import window_index
+    warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
+    return window_index(*args, **kwargs)
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically

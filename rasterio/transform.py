@@ -2,6 +2,7 @@
 
 
 from __future__ import division
+import math
 
 from affine import Affine
 
@@ -59,3 +60,42 @@ def array_bounds(height, width, transform):
     w, n = transform.xoff, transform.yoff
     e, s = transform * (width, height)
     return w, s, e, n
+
+
+def get_index(x, y, transform, op=math.floor, precision=6):
+    """
+    Returns the (row, col) index of the pixel containing (x, y) given a
+    coordinate reference system.
+
+    Use an epsilon, magnitude determined by the precision parameter
+    and sign determined by the op function:
+        positive for floor, negative for ceil.
+
+    Parameters
+    ----------
+    x : float
+        x value in coordinate reference system
+    y : float
+        y value in coordinate reference system
+    transform : Affine
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    op : function
+        Function to convert fractional pixels to whole numbers (floor, ceiling,
+        round)
+    precision : int
+        Decimal places of precision in indexing, as in `round()`.
+
+    Returns
+    -------
+    row : int
+        row index
+    col : int
+        col index
+    """
+
+    eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
+    fcol, frow = ~transform * (x + eps, y - eps)
+    col = int(op(fcol))
+    row = int(op(frow))
+    return row, col
+
