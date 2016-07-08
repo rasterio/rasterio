@@ -4,25 +4,44 @@ from __future__ import absolute_import
 
 from collections import namedtuple
 import logging
+import warnings
 try:
     from logging import NullHandler
 except ImportError:  # pragma: no cover
     class NullHandler(logging.Handler):
         def emit(self, record):
             pass
-import warnings
 
-from rasterio._base import (
-    eval_window, window_shape, window_index, gdal_version)
+from rasterio._base import gdal_version
+from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
+from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
+from rasterio.io import (
+    DatasetReader, get_writer_for_path, get_writer_for_driver)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
 from rasterio import windows
+
+# TODO deprecate or remove in factor of rasterio.windows.___
+def eval_window(*args, **kwargs):
+    from rasterio.windows import evaluate
+    warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
+    return evaluate(*args, **kwargs)
+
+def window_shape(*args, **kwargs):
+    from rasterio.windows import shape
+    warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
+    return shape(*args, **kwargs)
+
+def window_index(*args, **kwargs):
+    from rasterio.windows import window_index
+    warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
+    return window_index(*args, **kwargs)
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
@@ -148,6 +167,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     within that container.
 
     """
+
     if not isinstance(path, string_types):
         raise TypeError("invalid path: {0!r}".format(path))
     if mode and not isinstance(mode, string_types):
@@ -156,11 +176,29 @@ def open(path, mode='r', driver=None, width=None, height=None,
         raise TypeError("invalid driver: {0!r}".format(driver))
     if dtype and not check_dtype(dtype):
         raise TypeError("invalid dtype: {0!r}".format(dtype))
+
+    if 'affine' in kwargs:
+        # DeprecationWarning's are ignored by default
+        with warnings.catch_warnings():
+            warnings.simplefilter('always')
+            warnings.warn(
+                "The 'affine' kwarg in rasterio.open() is deprecated as of 1.0 "
+                "and only remains to ease the transition.  Please switch to "
+                "the 'transform' kwarg.  See "
+                "https://github.com/mapbox/rasterio/issues/86 for details.",
+                DeprecationWarning,
+                stacklevel=2)
+
+            if transform:
+                warnings.warn(
+                    "Found both 'affine' and 'transform' in rasterio.open() - "
+                    "choosing 'transform'")
+                transform = transform
+            else:
+                transform = kwargs.pop('affine')
+
     if transform:
         transform = guard_transform(transform)
-    elif 'affine' in kwargs:
-        affine = kwargs.pop('affine')
-        transform = guard_transform(affine)
 
     # Get AWS credentials if we're attempting to access a raster
     # on S3.
@@ -169,24 +207,28 @@ def open(path, mode='r', driver=None, width=None, height=None,
         Env().get_aws_credentials()
         log.debug("AWS credentials have been obtained")
 
+    # Check driver/mode blacklist.
+    if driver and is_blacklisted(driver, mode):
+        raise RasterioIOError(
+            "Blacklisted: file cannot be opened by "
+            "driver '{0}' in '{1}' mode".format(driver, mode))
+
     # Create dataset instances and pass the given env, which will
     # be taken over by the dataset's context manager if it is not
     # None.
     if mode == 'r':
-        from rasterio._io import RasterReader
-        s = RasterReader(path)
-    elif mode == 'r+':
-        from rasterio._io import writer
-        s = writer(path, mode)
-    elif mode == 'r-':
-        from rasterio._base import DatasetReader
         s = DatasetReader(path)
+    elif mode == 'r-':
+        warnings.warn("'r-' mode is deprecated, use 'r'", DeprecationWarning)
+        s = DatasetReader(path)
+    elif mode == 'r+':
+        s = get_writer_for_path(path)(path, mode)
     elif mode == 'w':
-        from rasterio._io import writer
-        s = writer(path, mode, driver=driver,
-                   width=width, height=height, count=count,
-                   crs=crs, transform=transform, dtype=dtype,
-                   nodata=nodata, **kwargs)
+        s = get_writer_for_driver(driver)(path, mode, driver=driver,
+                                          width=width, height=height,
+                                          count=count, crs=crs,
+                                          transform=transform, dtype=dtype,
+                                          nodata=nodata, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
@@ -226,32 +268,8 @@ def copy(src, dst, **kw):
     return RasterCopier()(src, dst, **kw)
 
 
-def drivers(**kwargs):
-    """Create a gdal environment with registered drivers and creation
-    options.
-
-    This function is deprecated; please use ``env.Env`` instead.
-
-    Parameters
-    ----------
-    **kwargs:: keyword arguments
-        Configuration options that define GDAL driver behavior
-
-        See https://trac.osgeo.org/gdal/wiki/ConfigOptions
-
-    Returns
-    -------
-    GDALEnv responsible for managing the environment.
-
-    Notes
-    -----
-    Use as a context manager, ``with rasterio.drivers(): ...``
-    """
-    warnings.warn("Deprecated; Use env.Env instead", DeprecationWarning)
-    return Env(**kwargs)
-
-
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
+
 
 def band(ds, bidx):
     """Wraps a dataset and a band index up as a 'Band'
@@ -260,7 +278,7 @@ def band(ds, bidx):
     ----------
     ds: rasterio.RasterReader
         Open rasterio dataset
-    bidx: int
+    bidx: int or sequence of ints
         Band number, index starting at 1
 
     Returns
@@ -305,22 +323,3 @@ def pad(array, transform, pad_width, mode=None, **kwargs):
     padded_trans[2] -= pad_width * padded_trans[0]
     padded_trans[5] -= pad_width * padded_trans[4]
     return padded_array, Affine(*padded_trans[:6])
-
-
-def get_data_window(arr, nodata=None):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.get_data_window(arr, nodata)
-
-
-def window_union(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.union(data)
-
-
-def window_intersection(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.intersection(data)
-
-def windows_intersect(data):
-    warnings.warn("Deprecated; Use rasterio.windows instead", DeprecationWarning)
-    return windows.intersect(data)

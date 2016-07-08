@@ -22,7 +22,6 @@ with rasterio.Env(CHECK_WITH_INVERT_PROJ=True):
         profile.update({
             'crs': dst_crs,
             'transform': dst_affine,
-            'affine': dst_affine,
             'width': dst_width,
             'height': dst_height
         })
@@ -37,7 +36,7 @@ with rasterio.Env(CHECK_WITH_INVERT_PROJ=True):
                     # Source parameters
                     source=src_array,
                     src_crs=src.crs,
-                    src_transform=src.affine,
+                    src_transform=src.transform,
                     # Destination paramaters
                     destination=dst_array,
                     dst_transform=dst_affine,

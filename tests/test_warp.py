@@ -16,7 +16,8 @@ from rasterio.warp import (
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
-DST_TRANSFORM = Affine.from_gdal(-8789636.708, 300.0, 0.0, 2943560.235, 0.0, -300.0)
+DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708,
+                       0.0, -300.0, 2943560.235)
 
 
 def supported_resampling(method):
@@ -36,7 +37,7 @@ def supported_resampling(method):
 
 
 reproj_expected = (
-    ({'CHECK_WITH_INVERT_PROJ': False}, 6215),
+    ({'CHECK_WITH_INVERT_PROJ': False}, 6217),
     ({'CHECK_WITH_INVERT_PROJ': True}, 4005))
 
 
@@ -233,7 +234,7 @@ def test_reproject_ndarray():
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
-        assert (out > 0).sum() == 438146
+        assert (out > 0).sum() == 438113
 
 
 def test_reproject_epsg():
@@ -251,7 +252,7 @@ def test_reproject_epsg():
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
-        assert (out > 0).sum() == 438146
+        assert (out > 0).sum() == 438113
 
 
 def test_reproject_out_of_bounds():

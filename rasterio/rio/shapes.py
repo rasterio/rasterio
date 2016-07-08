@@ -1,14 +1,17 @@
+"""$ rio shapes"""
+
+
 import logging
 import os
 
 import click
 import cligj
 
-from .helpers import coords, write_features
-from . import options
-import rasterio
+from rasterio.rio import options
+from rasterio.rio.helpers import coords, write_features
 from rasterio.transform import Affine
 from rasterio.crs import CRS
+
 
 logger = logging.getLogger('rio')
 
@@ -126,7 +129,7 @@ def shapes(
                 msk = None
 
                 # Adjust transforms.
-                transform = src.affine
+                transform = src.transform
                 if sampling > 1:
                     # Decimation of the raster produces a georeferencing
                     # shift that we correct with a translation.

@@ -1,31 +1,30 @@
 """Geospatial transforms"""
 
-from __future__ import absolute_import
-from __future__ import division
 
-import warnings
+from __future__ import division
+import math
 
 from affine import Affine
 
 
 IDENTITY = Affine.identity()
+GDAL_IDENTITY = IDENTITY.to_gdal()
 
 
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
-    return seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0
+    return tuple(seq) == GDAL_IDENTITY or (
+        seq[2] == seq[4] == 0.0 and seq[1] > 0 and seq[5] < 0)
 
 
 def guard_transform(transform):
     """Return an Affine transformation instance."""
     if not isinstance(transform, Affine):
         if tastes_like_gdal(transform):
-            warnings.warn(
-                "GDAL-style transforms are deprecated and will not "
-                "be supported in Rasterio 1.0.",
-                FutureWarning,
-                stacklevel=2)
-            transform = Affine.from_gdal(*transform)
+            raise TypeError(
+                "GDAL-style transforms have been deprecated.  This "
+                "exception will be raised for a period of time to highlight "
+                "potentially confusing errors, but will eventually be removed.")
         else:
             transform = Affine(*transform)
     return transform
@@ -100,3 +99,41 @@ def xy(row, col, transform, offset='center'):
         return transform * transform.translation(1, 1) * rc
     else:
         raise ValueError("Invalid offset")
+
+
+def get_index(x, y, transform, op=math.floor, precision=6):
+    """
+    Returns the (row, col) index of the pixel containing (x, y) given a
+    coordinate reference system.
+
+    Use an epsilon, magnitude determined by the precision parameter
+    and sign determined by the op function:
+        positive for floor, negative for ceil.
+
+    Parameters
+    ----------
+    x : float
+        x value in coordinate reference system
+    y : float
+        y value in coordinate reference system
+    transform : Affine
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    op : function
+        Function to convert fractional pixels to whole numbers (floor, ceiling,
+        round)
+    precision : int
+        Decimal places of precision in indexing, as in `round()`.
+
+    Returns
+    -------
+    row : int
+        row index
+    col : int
+        col index
+    """
+
+    eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
+    fcol, frow = ~transform * (x + eps, y - eps)
+    col = int(op(fcol))
+    row = int(op(frow))
+    return row, col

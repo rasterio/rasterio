@@ -1,7 +1,11 @@
+"""Unittests for $ rio warp"""
+
+
 import logging
 import os
 import sys
 
+import affine
 import numpy as np
 import pytest
 
@@ -124,7 +128,7 @@ def test_warp_no_reproject(runner, tmpdir):
             assert output.crs == src.crs
             assert output.nodata == src.nodata
             assert np.allclose(output.bounds, src.bounds)
-            assert output.affine.almost_equals(src.affine)
+            assert output.transform.almost_equals(src.transform)
             assert np.allclose(output.read(1), src.read(1))
 
 
@@ -142,7 +146,7 @@ def test_warp_no_reproject_dimensions(runner, tmpdir):
             assert output.width == 100
             assert output.height == 100
             assert np.allclose([97.839396, 97.839396],
-                                  [output.affine.a, -output.affine.e])
+                                  [output.transform.a, -output.transform.e])
 
 
 def test_warp_no_reproject_res(runner, tmpdir):
@@ -156,7 +160,7 @@ def test_warp_no_reproject_res(runner, tmpdir):
     with rasterio.open(srcname) as src:
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
-            assert np.allclose([30, 30], [output.affine.a, -output.affine.e])
+            assert np.allclose([30, 30], [output.transform.a, -output.transform.e])
             assert output.width == 327
             assert output.height == 327
 
@@ -174,8 +178,8 @@ def test_warp_no_reproject_bounds(runner, tmpdir):
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
             assert np.allclose(output.bounds, out_bounds)
-            assert np.allclose([src.affine.a, src.affine.e],
-                                  [output.affine.a, output.affine.e])
+            assert np.allclose([src.transform.a, src.transform.e],
+                                  [output.transform.a, output.transform.e])
             assert output.width == 105
             assert output.height == 210
 
@@ -194,7 +198,7 @@ def test_warp_no_reproject_bounds_res(runner, tmpdir):
         with rasterio.open(outputname) as output:
             assert output.crs == src.crs
             assert np.allclose(output.bounds, out_bounds)
-            assert np.allclose([30, 30], [output.affine.a, -output.affine.e])
+            assert np.allclose([30, 30], [output.transform.a, -output.transform.e])
             assert output.width == 34
             assert output.height == 67
 
@@ -255,7 +259,7 @@ def test_warp_reproject_res(runner, tmpdir):
 
     with rasterio.open(outputname) as output:
         assert output.crs == {'init': 'epsg:4326'}
-        assert np.allclose([0.01, 0.01], [output.affine.a, -output.affine.e])
+        assert np.allclose([0.01, 0.01], [output.transform.a, -output.transform.e])
         assert output.width == 9
         assert output.height == 7
 
@@ -275,7 +279,25 @@ def test_warp_reproject_dimensions(runner, tmpdir):
             assert output.width == 100
             assert output.height == 100
             assert np.allclose([0.0008789062498762235, 0.0006771676143921468],
-                                  [output.affine.a, -output.affine.e])
+                                  [output.transform.a, -output.transform.e])
+
+
+def test_warp_reproject_dimensions_invalid_params(runner, tmpdir):
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    bad_params = [
+        ['--bounds', '0', '0', '10', '10'],
+        ['--res', '10']
+    ]
+
+    for param in bad_params:
+        result = runner.invoke(warp.warp,
+                               [srcname, outputname, '--dst-crs', 'EPSG:4326',
+                                '--dimensions', '100', '100'] +
+                               param)
+
+        assert result.exit_code == 2
+        assert '--dimensions cannot be used with' in result.output
 
 
 def test_warp_reproject_bounds_no_res(runner, tmpdir):
@@ -329,7 +351,7 @@ def test_warp_reproject_src_bounds_res(runner, tmpdir):
             assert np.allclose(output.bounds[:],
                                   [-106.45036, 39.6138, -106.44136, 39.6278])
             assert np.allclose([0.001, 0.001],
-                                  [output.affine.a, -output.affine.e])
+                                  [output.transform.a, -output.transform.e])
             assert output.width == 9
             assert output.height == 14
 
@@ -351,7 +373,7 @@ def test_warp_reproject_dst_bounds(runner, tmpdir):
             assert np.allclose(output.bounds[0::3],
                                   [-106.45036, 39.6278])
             assert np.allclose([0.001, 0.001],
-                                  [output.affine.a, -output.affine.e])
+                                  [output.transform.a, -output.transform.e])
 
             # XXX: an extra row and column is produced in the dataset
             # because we're using ceil instead of floor internally.
@@ -366,7 +388,8 @@ def test_warp_reproject_like(runner, tmpdir):
     likename = str(tmpdir.join('like.tif'))
     kwargs = {
         "crs": {'init': 'epsg:4326'},
-        "transform": (-106.523, 0.001, 0, 39.6395, 0, -0.001),
+        "transform": affine.Affine(0.001, 0, -106.523,
+                                   0, -0.001, 39.6395),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
@@ -389,9 +412,29 @@ def test_warp_reproject_like(runner, tmpdir):
 
     with rasterio.open(outputname) as output:
         assert output.crs == {'init': 'epsg:4326'}
-        assert np.allclose([0.001, 0.001], [output.affine.a, -output.affine.e])
+        assert np.allclose(
+            [0.001, 0.001], [output.transform.a, -output.transform.e])
         assert output.width == 10
         assert output.height == 10
+
+
+def test_warp_reproject_like_invalid_params(runner, tmpdir):
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    bad_params = [
+        ['--dimensions', '10', '10'],
+        ['--dst-crs', 'EPSG:4326'],
+        ['--bounds', '0', '0', '10', '10'],
+        ['--res', '10']
+    ]
+
+    for param in bad_params:
+        result = runner.invoke(warp.warp,
+                               [srcname, outputname, '--like', srcname] +
+                               param)
+
+        assert result.exit_code == 2
+        assert '--like cannot be used with any of' in result.output
 
 
 def test_warp_reproject_nolostdata(runner, tmpdir):
@@ -454,7 +497,7 @@ def test_warp_reproject_check_invert(runner, tmpdir):
     srcname = 'tests/data/world.rgb.tif'
     outputname = str(tmpdir.join('test.tif'))
     result = runner.invoke(warp.warp, [srcname, outputname,
-                                       '--check-invert-proj', 'yes',
+                                       '--check-invert-proj',
                                        '--dst-crs', 'EPSG:3759'])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -465,7 +508,6 @@ def test_warp_reproject_check_invert(runner, tmpdir):
 
     output2name = str(tmpdir.join('test2.tif'))
     result = runner.invoke(warp.warp, [srcname, output2name,
-                                       '--check-invert-proj', 'no',
                                        '--dst-crs', 'EPSG:3759'])
     assert result.exit_code == 0
     assert os.path.exists(output2name)
