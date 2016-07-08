@@ -454,24 +454,6 @@ cdef class DatasetBase(object):
             else:
                 return math.sqrt(a*a+d*d), math.sqrt(b*b+e*e)
 
-    def ul(self, row, col):
-        """Returns the coordinates (x, y) of the upper left corner of a 
-        pixel at `row` and `col` in the units of the dataset's
-        coordinate reference system.
-        """
-        # TODO move to rasterio.io.TransformMethodsMixin
-        a, b, c, d, e, f, _, _, _ = self.transform
-        if col < 0:
-            col += self.width
-        if row < 0:
-            row += self.height
-        return c+a*col, f+e*row
-
-    def index(self, x, y, op=math.floor, precision=6):
-        """Returns the (row, col) index of the pixel containing (x, y)."""
-        # TODO move to rasterio.io.TransformMethodsMixin
-        return get_index(x, y, self.transform, op=op, precision=precision)
-
     @property
     def meta(self):
         """The basic metadata of this dataset."""

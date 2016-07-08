@@ -85,18 +85,18 @@ def xy(row, col, transform, offset='center'):
         ``(x, y)``
     """
 
-    rc = (row, col)
+    cr = (col, row)
 
     if offset == 'center':
-        return transform * transform.translation(0.5, 0.5) * rc
+        return transform * transform.translation(0.5, 0.5) * cr
     elif offset == 'ul':
-        return transform * rc
+        return transform * cr
     elif offset == 'ur':
-        return transform * transform.translation(1, 0) * rc
+        return transform * transform.translation(1, 0) * cr
     elif offset == 'll':
-        return transform * transform.translation(0, 1) * rc
+        return transform * transform.translation(0, 1) * cr
     elif offset == 'lr':
-        return transform * transform.translation(1, 1) * rc
+        return transform * transform.translation(1, 1) * cr
     else:
         raise ValueError("Invalid offset")
 

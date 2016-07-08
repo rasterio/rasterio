@@ -3,12 +3,44 @@
 Instances of these classes are called dataset objects.
 """
 
+import math
+
 from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
 from rasterio import windows
-from rasterio.transform import guard_transform
+from rasterio.transform import guard_transform, xy, get_index
+
+
+class TransformMethodsMixin(object):
+    """Mixin providing methods for calculations related
+    to tranforming between rows and columns of the raster
+    array and the coordinates.
+
+    These methods are wrappers for the functionality in
+    `rasterio.transform` module.
+
+    A subclass with this mixin MUST provide a `transform`
+    property.
+    """
+    def xy(self, row, col, offset="center"):
+        """TODO docstring
+        """
+        return xy(row, col, self.transform, offset=offset)
+
+    def ul(self, row, col):
+        """Returns the coordinates (x, y) of the upper left corner of a
+        pixel at `row` and `col` in the units of the dataset's
+        coordinate reference system.
+        """
+        # TODO Deprecate
+        return xy(row, col, self.transform, offset='ul')
+
+    def index(self, x, y, op=math.floor, precision=6):
+        """Returns the (row, col) index of the pixel containing (x, y)."""
+        return get_index(x, y, self.transform, op=op, precision=precision)
+
 
 
 class WindowMethodsMixin(object):
@@ -85,7 +117,8 @@ class WindowMethodsMixin(object):
         return windows.bounds(window, transform)
 
 
-class DatasetReader(DatasetReaderBase, WindowMethodsMixin):
+class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
+                    TransformMethodsMixin):
     """An unbuffered data and metadata reader"""
 
     def __repr__(self):
@@ -93,7 +126,8 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin):
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class DatasetWriter(DatasetWriterBase, WindowMethodsMixin):
+class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
+                    TransformMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
     directly to disk.
     """
@@ -103,7 +137,8 @@ class DatasetWriter(DatasetWriterBase, WindowMethodsMixin):
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
-class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin):
+class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
+                            TransformMethodsMixin):
     """Maintains data and metadata in a buffer, writing to disk or
     network only when `close()` is called.
 
