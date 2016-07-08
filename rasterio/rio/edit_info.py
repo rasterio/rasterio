@@ -1,14 +1,18 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
-import json
-import logging
 
+import json
+
+import affine
 import click
 
-from . import options
 import rasterio
 import rasterio.crs
-from rasterio.transform import guard_transform
+from rasterio.compat import string_types
+from rasterio.crs import CRS
+from rasterio.errors import CRSError
+from rasterio.rio import options
+from rasterio.transform import guard_transform, tastes_like_gdal
 
 
 # Handlers for info module options.
@@ -29,7 +33,12 @@ def crs_handler(ctx, param, value):
             retval = json.loads(value)
         except ValueError:
             retval = value
-        if not rasterio.crs.is_valid_crs(retval):
+        try:
+            if isinstance(retval, dict):
+                retval = CRS(retval)
+            elif isinstance(retval, string_types):
+                retval = CRS.from_string(retval)
+        except CRSError:
             raise click.BadParameter(
                 "'%s' is not a recognized CRS." % retval,
                 param=param, param_hint='crs')
@@ -61,8 +70,7 @@ def transform_handler(ctx, param, value):
             retval = guard_transform(value)
         except:
             raise click.BadParameter(
-                "'%s' is not recognized as an Affine or GDAL "
-                "geotransform array." % value,
+                "'%s' is not recognized as an Affine array." % value,
                 param=param, param_hint='transform')
     return retval
 
@@ -96,13 +104,12 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
 
       --crs '{"proj": "utm", "zone": 18, ...}'
 
-    Transforms are either JSON-encoded Affine objects (preferred),
+    Transforms are JSON-encoded Affine objects like:
 
       --transform '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
 
-    or JSON text-encoded GDAL geotransform arrays.
-
-      --transform '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'
+    Prior to Rasterio 1.0 GDAL geotransforms were supported for --transform,
+    but are no longer supported.
 
     Metadata items may also be read from an existing dataset using a
     combination of the --like option with at least one of --all,

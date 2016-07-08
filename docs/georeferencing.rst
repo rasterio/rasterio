@@ -17,15 +17,15 @@ attribute.
     >>> import rasterio
     >>> src = rasterio.open('tests/data/RGB.byte.tif')
     >>> src.crs
-    {'init': u'epsg:32618'}
+    CRS({'init': u'epsg:32618'})
 
 Rasterio follows pyproj and uses PROJ.4 syntax in dict form as its native
-CRS syntax. If you want a WKT representation of the CRS, see the ``crs_wkt``
-attribute.
+CRS syntax. If you want a WKT representation of the CRS, see the CRS
+class's ``wkt`` attribute.
 
 .. code-block:: python
 
-    >>> src.crs_wkt
+    >>> src.crs.wkt
     u'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["Unknown datum based upon the WGS 84 ellipsoid",DATUM["Not_specified_based_on_WGS_84_spheroid",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","32618"]]'
 
 When opening a new file for writing, you may also use a CRS string as an
@@ -63,9 +63,3 @@ a pixel's image coordinates are ``x, y`` and its world coordinates are
 
 The ``Affine`` class has some useful properties and methods
 described at https://github.com/sgillies/affine.
-
-Earlier versions of Rasterio had a ``transform`` attribute which was a 6-element
-tuple. This usage is deprecated, please see https://github.com/mapbox/rasterio/issues/86 for details. 
-In Rasterio 1.0, the value of a  ``transform`` attribute will be an instance
-of ``Affine`` and the ``affine`` attribute will remain as an alias.
-

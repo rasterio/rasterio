@@ -4,11 +4,18 @@ import sys
 import numpy as np
 import pytest
 
+try:
+    import matplotlib as mpl
+    mpl.use('agg')
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
 from affine import Affine
 import rasterio
 from rasterio.enums import MaskFlags
 from rasterio.errors import NodataShadowWarning
-
+from rasterio.crs import CRS
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -51,9 +58,8 @@ alp_shift_lr = np.array([[1, 1, 0],
 def tiffs(tmpdir):
 
     _profile = {
-        'affine': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
         'transform': Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0),
-        'crs': {'init': 'epsg:4326'},
+        'crs': CRS({'init': 'epsg:4326'}),
         'driver': 'GTiff',
         'dtype': 'uint8',
         'height': 3,

@@ -76,7 +76,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 
     $ sudo add-apt-repository ppa:ubuntugis/ppa
     $ sudo apt-get update
-    $ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    $ sudo apt-get install python-numpy gdal-bin libgdal-dev
     $ pip install rasterio
 
 Adapt them as necessary for your Linux system.
@@ -155,7 +155,7 @@ GitHub as done in `rio-plugin-example
     before_install:
       - sudo add-apt-repository -y ppa:ubuntugis/ppa
       - sudo apt-get update -qq
-      - sudo apt-get install -y libgdal1h gdal-bin
+      - sudo apt-get install -y libgdal-dev gdal-bin
       - curl -L https://github.com/mapbox/rasterio/releases/download/$RASTERIO_VERSION/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz > /tmp/wheelhouse.tar.gz
       - tar -xzvf /tmp/wheelhouse.tar.gz -C $HOME
     install:

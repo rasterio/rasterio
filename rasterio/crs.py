@@ -1,111 +1,131 @@
-"""Coordinate reference systems and functions.
-
-PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
-coordinate reference systems are described by strings of parameters such as
-
-    +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
-
-here we use mappings:
-
-    {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
-"""
-
 import json
 
-from rasterio._base import is_geographic_crs, is_projected_crs, is_same_crs
+from rasterio._crs import _CRS
 from rasterio.errors import CRSError
 from rasterio.compat import string_types
 
 
-def is_valid_crs(crs):
-    """Check if valid geographic or projected coordinate reference system."""
-    return is_geographic_crs(crs) or is_projected_crs(crs)
+class CRS(_CRS):
+    """A container class for coordinate reference system info
 
+    PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4
+    coordinate reference systems are described by strings of parameters such as
 
-def to_string(crs):
-    """Turn a parameter mapping into a more conventional PROJ.4 string.
+        +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs
 
-    Mapping keys are tested against the ``all_proj_keys`` list. Values of
-    ``True`` are omitted, leaving the key bare: {'no_defs': True} -> "+no_defs"
-    and items where the value is otherwise not a str, int, or float are
-    omitted.
+    here we use mappings:
+
+        {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84', 'no_defs': True}
+
+    One can set/get any PROJ.4 parameter using a dict-like key/value pair on the
+    object. You can instantiate the object by simply passing a dict to the
+    constructor. E.g.
+
+        crs = CRS({'init': 'epsg:3005'})
+
     """
-    items = []
-    for k, v in sorted(filter(
-            lambda x: x[0] in all_proj_keys and x[1] is not False and (
-                isinstance(x[1], (bool, int, float)) or
-                isinstance(x[1], string_types)),
-            crs.items())):
-        items.append(
-            "+" + "=".join(
-                map(str, filter(
-                    lambda y: (y or y == 0) and y is not True, (k, v)))))
-    return " ".join(items)
 
+    @property
+    def is_valid(self):
+        """Check if valid geographic or projected coordinate reference system."""
+        return self.is_geographic or self.is_projected
 
-def from_string(prjs):
-    """Turn a PROJ.4 string into a mapping of parameters.
+    @property
+    def is_epsg_code(self):
+        for val in self.values():
+            if isinstance(val, string_types) and val.lower().startswith('epsg'):
+                return True
+        return False
 
-    Bare parameters like "+no_defs" are given a value of ``True``. All keys
-    are checked against the ``all_proj_keys`` list.
+    def to_string(self):
+        """Turn a parameter mapping into a more conventional PROJ.4 string.
 
-    EPSG:nnnn is allowed.
+        Mapping keys are tested against the ``all_proj_keys`` list. Values of
+        ``True`` are omitted, leaving the key bare: {'no_defs': True} -> "+no_defs"
+        and items where the value is otherwise not a str, int, or float are
+        omitted.
+        """
+        items = []
+        for k, v in sorted(filter(
+                lambda x: x[0] in all_proj_keys and x[1] is not False and (
+                    isinstance(x[1], (bool, int, float)) or
+                    isinstance(x[1], string_types)),
+                self.items())):
+            items.append("+" + "=".join(map(str, filter(
+                lambda y: (y or y == 0) and y is not True, (k, v)))))
+        return " ".join(items)
 
-    JSON text-encoded strings are allowed.
-    """
-    if '{' in prjs:
-        # may be json, try to decode it
-        try:
-            val = json.loads(prjs, strict=False)
-        except ValueError:
-            raise CRSError('crs appears to be JSON but is not valid')
+    @staticmethod
+    def from_string(prjs):
+        """Turn a PROJ.4 string into a mapping of parameters.
 
-        if not val:
-            raise CRSError("crs is empty JSON")
-        else:
-            return val
+        Bare parameters like "+no_defs" are given a value of ``True``. All keys
+        are checked against the ``all_proj_keys`` list.
 
-    if prjs.strip().upper().startswith('EPSG:'):
-        return from_epsg(prjs.split(':')[1])
+        EPSG:nnnn is allowed.
 
-    parts = [o.lstrip('+') for o in prjs.strip().split()]
-
-    def parse(v):
-        if v in ('True', 'true'):
-            return True
-        elif v in ('False', 'false'):
-            return False
-        else:
+        JSON text-encoded strings are allowed.
+        """
+        if '{' in prjs:
+            # may be json, try to decode it
             try:
-                return int(v)
+                val = json.loads(prjs, strict=False)
             except ValueError:
-                pass
-            try:
-                return float(v)
-            except ValueError:
-                return v
+                raise CRSError('crs appears to be JSON but is not valid')
 
-    items = map(
-        lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
-        (p.split('=') for p in parts))
+            if not val:
+                raise CRSError("crs is empty JSON")
+            else:
+                return val
 
-    out = dict((k, v) for k, v in items if k in all_proj_keys)
+        if prjs.strip().upper().startswith('EPSG:'):
+            return CRS.from_epsg(prjs.split(':')[1])
 
-    if not out:
-        raise CRSError("crs is empty or invalid: {}".format(prjs))
+        parts = [o.lstrip('+') for o in prjs.strip().split()]
 
-    return out
+        def parse(v):
+            if v in ('True', 'true'):
+                return True
+            elif v in ('False', 'false'):
+                return False
+            else:
+                try:
+                    return int(v)
+                except ValueError:
+                    pass
+                try:
+                    return float(v)
+                except ValueError:
+                    return v
 
+        items = map(
+            lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
+            (p.split('=') for p in parts))
 
-def from_epsg(code):
-    """Given an integer code, returns an EPSG-like mapping.
+        out = CRS((k, v) for k, v in items if k in all_proj_keys)
 
-    Note: the input code is not validated against an EPSG database.
-    """
-    if int(code) <= 0:
-        raise ValueError("EPSG codes are positive integers")
-    return {'init': "epsg:%s" % code, 'no_defs': True}
+        if not out:
+            raise CRSError("crs is empty or invalid: {}".format(prjs))
 
+        return out
+
+    @staticmethod
+    def from_epsg(code):
+        """Given an integer code, returns an EPSG-like mapping.
+
+        Note: the input code is not validated against an EPSG database.
+        """
+        if int(code) <= 0:
+            raise ValueError("EPSG codes are positive integers")
+        return CRS(init="epsg:%s" % code, no_defs=True)
+
+    def __repr__(self):
+        # Should use super() here, but what's the best way to be compatible
+        # between Python 2 and 3?
+        return "CRS({})".format(dict.__repr__(self.data))
+
+    def to_dict(self):
+        return self.data
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
@@ -220,6 +240,5 @@ _param_data = """
 """
 
 _lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
-all_proj_keys = list(
-    set(line.split()[0].lstrip("+").strip() for line in _lines)
-    ) + ['no_mayo']
+all_proj_keys = list(set(line.split()[0].lstrip("+").strip()
+                         for line in _lines)) + ['no_mayo']

@@ -33,26 +33,24 @@ manager raises a more useful and informative error:
 from enums import IntEnum
 import sys
 
+from rasterio._gdal cimport (
+    CPLErrorReset, CPLGetLastErrorMsg, CPLGetLastErrorNo,
+    CPLGetLastErrorType)
 
-# CPL function declarations.
-cdef extern from "cpl_error.h":
-    int CPLGetLastErrorNo()
-    const char* CPLGetLastErrorMsg()
-    int CPLGetLastErrorType()
-    void CPLErrorReset()
+include "gdal.pxi"
 
 
 # Python exceptions expressing the CPL error numbers.
 
-class CPLError(Exception):
+class CPLE_BaseError(Exception):
     """Base CPL error class
 
     Exceptions deriving from this class are intended for use only in
     Rasterio's Cython code. Let's not expose API users to them.
     """
 
-    def __init__(self, errtype, errno, errmsg):
-        self.errtype = errtype
+    def __init__(self, error, errno, errmsg):
+        self.error = error
         self.errno = errno
         self.errmsg = errmsg
 
@@ -64,110 +62,110 @@ class CPLError(Exception):
 
     @property
     def args(self):
-        return self.errtype, self.errno, self.errmsg
+        return self.error, self.errno, self.errmsg
 
 
-class CPLE_AppDefined(CPLError):
+class CPLE_AppDefinedError(CPLE_BaseError):
     pass
 
 
-class CPLE_OutOfMemory(CPLError):
+class CPLE_OutOfMemoryError(CPLE_BaseError):
     pass
 
 
-class CPLE_FileIO(CPLError):
+class CPLE_FileIOError(CPLE_BaseError):
     pass
 
 
-class CPLE_OpenFailed(CPLError):
+class CPLE_OpenFailedError(CPLE_BaseError):
     pass
 
 
-class CPLE_IllegalArg(CPLError):
+class CPLE_IllegalArgError(CPLE_BaseError):
     pass
 
 
-class CPLE_NotSupported(CPLError):
+class CPLE_NotSupportedError(CPLE_BaseError):
     pass
 
 
-class CPLE_AssertionFailed(CPLError):
+class CPLE_AssertionFailedError(CPLE_BaseError):
     pass
 
 
-class CPLE_NoWriteAccess(CPLError):
+class CPLE_NoWriteAccessError(CPLE_BaseError):
     pass
 
 
-class CPLE_UserInterrupt(CPLError):
+class CPLE_UserInterruptError(CPLE_BaseError):
     pass
 
 
-class ObjectNull(CPLError):
+class ObjectNullError(CPLE_BaseError):
     pass
 
 
-class CPLE_HttpResponse(CPLError):
+class CPLE_HttpResponseError(CPLE_BaseError):
     pass
 
 
-class CPLE_AWSBucketNotFound(CPLError):
+class CPLE_AWSBucketNotFoundError(CPLE_BaseError):
     pass
 
 
-class CPLE_AWSObjectNotFound(CPLError):
+class CPLE_AWSObjectNotFoundError(CPLE_BaseError):
     pass
 
 
-class CPLE_AWSAccessDenied(CPLError):
+class CPLE_AWSAccessDeniedError(CPLE_BaseError):
     pass
 
 
-class CPLE_AWSInvalidCredentials(CPLError):
+class CPLE_AWSInvalidCredentialsError(CPLE_BaseError):
     pass
 
 
-class CPLE_AWSSignatureDoesNotMatch(CPLError):
+class CPLE_AWSSignatureDoesNotMatchError(CPLE_BaseError):
     pass
 
 
 # Map of GDAL error numbers to the Python exceptions.
 exception_map = {
-    1: CPLE_AppDefined,
-    2: CPLE_OutOfMemory,
-    3: CPLE_FileIO,
-    4: CPLE_OpenFailed,
-    5: CPLE_IllegalArg,
-    6: CPLE_NotSupported,
-    7: CPLE_AssertionFailed,
-    8: CPLE_NoWriteAccess,
-    9: CPLE_UserInterrupt,
-    10: ObjectNull,
+    1: CPLE_AppDefinedError,
+    2: CPLE_OutOfMemoryError,
+    3: CPLE_FileIOError,
+    4: CPLE_OpenFailedError,
+    5: CPLE_IllegalArgError,
+    6: CPLE_NotSupportedError,
+    7: CPLE_AssertionFailedError,
+    8: CPLE_NoWriteAccessError,
+    9: CPLE_UserInterruptError,
+    10: ObjectNullError,
 
     # error numbers 11-16 are introduced in GDAL 2.1. See
     # https://github.com/OSGeo/gdal/pull/98.
-    11: CPLE_HttpResponse,
-    12: CPLE_AWSBucketNotFound,
-    13: CPLE_AWSObjectNotFound,
-    14: CPLE_AWSAccessDenied,
-    15: CPLE_AWSInvalidCredentials,
-    16: CPLE_AWSSignatureDoesNotMatch}
+    11: CPLE_HttpResponseError,
+    12: CPLE_AWSBucketNotFoundError,
+    13: CPLE_AWSObjectNotFoundError,
+    14: CPLE_AWSAccessDeniedError,
+    15: CPLE_AWSInvalidCredentialsError,
+    16: CPLE_AWSSignatureDoesNotMatchError}
 
 
 # CPL Error types as an enum.
 class GDALError(IntEnum):
-    none = 0    # CE_None
-    debug = 1   # CE_Debug
-    warning= 2  # CE_Warning
-    failure = 3 # CE_Failure
-    fatal = 4   # CE_Fatal
+    none = CE_None
+    debug = CE_Debug
+    warning = CE_Warning
+    failure = CE_Failure
+    fatal = CE_Fatal
 
 
 cdef class CPLErrors:
     """A manager for GDAL error handling contexts."""
 
     def check(self):
-        """Check the errror stack and raise or exit as appropriate."""
+        """Check the error stack and raise or exit as appropriate."""
         cdef const char *msg_c = NULL
 
         err_type = CPLGetLastErrorType()
@@ -193,7 +191,8 @@ cdef class CPLErrors:
             sys.exit("Fatal error: {0}".format((err_type, err_no, msg)))
         else:
             CPLErrorReset()
-            raise exception_map.get(err_no, CPLError)(err_type, err_no, msg)
+            raise exception_map.get(err_no, CPLE_BaseError)(
+                err_type, err_no, msg)
 
     def __enter__(self):
         CPLErrorReset()

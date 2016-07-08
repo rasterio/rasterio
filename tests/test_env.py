@@ -12,6 +12,7 @@ import rasterio
 from rasterio._drivers import (del_gdal_config, get_gdal_config,
                                set_gdal_config)
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
+from rasterio.env import default_options
 from rasterio.errors import EnvError
 from rasterio.rio.main import main_group
 
@@ -48,7 +49,10 @@ def test_env_accessors(gdalenv):
     """High level GDAL env access."""
     defenv()
     setenv(foo='1', bar='2')
-    assert getenv() == rasterio.env._env.options == {'foo': '1', 'bar': '2'}
+    expected = default_options.copy()
+    expected.update({'foo': '1', 'bar': '2'})
+    assert getenv() == rasterio.env._env.options
+    assert getenv() == expected
     assert get_gdal_config('foo') == '1'
     assert get_gdal_config('bar') == '2'
     delenv()
@@ -84,10 +88,13 @@ def test_env_options(gdalenv):
     env = rasterio.Env(foo='x')
     assert env.options == {'foo': 'x'}
     assert not env.previous_options
-    assert getenv() == rasterio.env._env.options == {}
+    expected = default_options.copy()
+    assert getenv() == rasterio.env._env.options == expected
+    expected.update({'foo': 'x'})
     with env:
-        assert getenv() == rasterio.env._env.options == {'foo': 'x'}
-    assert getenv() == rasterio.env._env.options == {}
+        assert getenv() == rasterio.env._env.options == expected
+    del expected['foo']
+    assert getenv() == rasterio.env._env.options == expected
 
 
 def test_aws_session(gdalenv):
@@ -108,22 +115,26 @@ def test_aws_session_credentials(gdalenv):
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
     s = rasterio.env.Env(aws_session=aws_session)
-    assert getenv() == rasterio.env._env.options == {}
+    expected = default_options.copy()
+    assert getenv() == rasterio.env._env.options == expected
     s.get_aws_credentials()
-    assert getenv() == rasterio.env._env.options == {
+    expected.update({
         'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
-        'aws_secret_access_key': 'key', 'aws_session_token': 'token'}
+        'aws_secret_access_key': 'key', 'aws_session_token': 'token'})
+    assert getenv() == rasterio.env._env.options == expected
 
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
     with rasterio.Env(aws_access_key_id='id', aws_secret_access_key='key',
              aws_session_token='token', region_name='null-island-1') as s:
-        assert getenv() == rasterio.env._env.options == {}
+        expected = default_options.copy()
+        assert getenv() == rasterio.env._env.options == expected
         s.get_aws_credentials()
-        assert getenv() == rasterio.env._env.options == {
+        expected.update({
             'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
-            'aws_secret_access_key': 'key', 'aws_session_token': 'token'}
+            'aws_secret_access_key': 'key', 'aws_session_token': 'token'})
+        assert getenv() == rasterio.env._env.options == expected
 
 
 def test_session_env_lazy(monkeypatch, gdalenv):

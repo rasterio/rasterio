@@ -187,7 +187,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.pyx'], **ext_options)],
+            'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
+        Extension(
+            'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options)],
         quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -210,7 +212,9 @@ else:
         Extension(
             'rasterio._err', ['rasterio/_err.c'], **ext_options),
         Extension(
-            'rasterio._example', ['rasterio/_example.c'], **ext_options)]
+            'rasterio._example', ['rasterio/_example.c'], **ext_options),
+        Extension(
+            'rasterio._crs', ['rasterio/_crs.c'], **ext_options)]
 
 with open('README.rst') as f:
     readme = f.read()
@@ -260,12 +264,13 @@ setup_args = dict(
     url='https://github.com/mapbox/rasterio',
     license='BSD',
     package_dir={'': '.'},
-    packages=['rasterio', 'rasterio.rio', 'rasterio.tools'],
+    packages=['rasterio', 'rasterio.rio'],
     entry_points='''
         [console_scripts]
         rio=rasterio.rio.main:main_group
 
         [rasterio.rio_commands]
+        blocks=rasterio.rio.blocks:blocks
         bounds=rasterio.rio.bounds:bounds
         calc=rasterio.rio.calc:calc
         clip=rasterio.rio.clip:clip
@@ -281,8 +286,8 @@ setup_args = dict(
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.shapes:shapes
         stack=rasterio.rio.stack:stack
-        warp=rasterio.rio.warp:warp
         transform=rasterio.rio.transform:transform
+        warp=rasterio.rio.warp:warp
     ''',
     include_package_data=True,
     ext_modules=ext_modules,

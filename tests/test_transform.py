@@ -2,12 +2,13 @@ from affine import Affine
 import pytest
 import rasterio
 from rasterio import transform
+from rasterio.transform import xy
 
 
 def test_window_transform():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        assert src.window_transform(((0, None), (0, None))) == src.affine
-        assert src.window_transform(((None, None), (None, None))) == src.affine
+        assert src.window_transform(((0, None), (0, None))) == src.transform
+        assert src.window_transform(((None, None), (None, None))) == src.transform
         assert src.window_transform(
                 ((1, None), (1, None))).c == src.bounds.left + src.res[0]
         assert src.window_transform(
@@ -23,14 +24,14 @@ def test_from_origin():
         w, n = src.ul(0, 0)
         xs, ys = src.res
         tr = transform.from_origin(w, n, xs, ys)
-        assert [round(v, 7) for v in tr] == [round(v, 7) for v in src.affine]
+        assert [round(v, 7) for v in tr] == [round(v, 7) for v in src.transform]
 
 
 def test_from_bounds():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         w, s, e, n = src.bounds
         tr = transform.from_bounds(w, s, e, n, src.width, src.height)
-        assert [round(v, 7) for v in tr] == [round(v, 7) for v in src.affine]
+        assert [round(v, 7) for v in tr] == [round(v, 7) for v in src.transform]
 
 
 def test_array_bounds():
@@ -100,10 +101,10 @@ def test_affine_roundtrip(tmpdir):
         height=1,
         transform=out_affine
     ) as out:
-        assert out.affine == out_affine
+        assert out.transform == out_affine
 
     with rasterio.open(output) as out:
-        assert out.affine == out_affine
+        assert out.transform == out_affine
 
 
 def test_affine_identity(tmpdir):
@@ -125,10 +126,10 @@ def test_affine_identity(tmpdir):
         height=1,
         transform=out_affine
     ) as out:
-        assert out.affine == out_affine
+        assert out.transform == out_affine
 
     with rasterio.open(output) as out:
-        assert out.affine == Affine.identity()
+        assert out.transform == Affine.identity()
 
 
 def test_from_bounds_two():
@@ -150,3 +151,39 @@ def test_from_bounds_two():
     # pixelwidth, rotation, ULX, rotation, pixelheight, ULY
     expected = Affine(0.5, 0.0, -120.0, 0.0, -0.5, 70.0)
     assert [round(v, 7) for v in tr] == [round(v, 7) for v in expected]
+
+
+def test_xy():
+    aff = Affine(300.0379266750948, 0.0, 101985.0,
+                 0.0, -300.041782729805, 2826915.0)
+    ul_x, ul_y = aff * (0, 0)
+    xoff = aff.a
+    yoff = aff.e
+    assert xy(0, 0, transform=aff, offset='ul') == (ul_x, ul_y)
+    assert xy(0, 0, transform=aff, offset='ur') == (ul_x + xoff, ul_y)
+    assert xy(0, 0, transform=aff, offset='ll') == (ul_x, ul_y + yoff)
+    expected = (ul_x + xoff, ul_y + yoff)
+    assert xy(0, 0, transform=aff, offset='lr') == expected
+    expected = (ul_x + xoff / 2, ul_y + yoff / 2)
+    assert xy(0, 0, transform=aff, offset='center') == expected
+    assert xy(0, 0, transform=aff, offset='lr') == \
+        xy(0, 1, transform=aff, offset='ll') == \
+        xy(1, 1, transform=aff, offset='ul') == \
+        xy(1, 0, transform=aff, offset='ur')
+
+
+def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
+    """As part of the 1.0 migration, guard_transform() should raise a TypeError
+    if a GDAL geotransform is encountered"""
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        aff = src.transform
+
+    with pytest.raises(TypeError):
+        transform.guard_transform(aff.to_gdal())
+
+
+def test_tastes_like_gdal_identity():
+    aff = Affine.identity()
+    assert not transform.tastes_like_gdal(aff)
+    assert transform.tastes_like_gdal(aff.to_gdal())

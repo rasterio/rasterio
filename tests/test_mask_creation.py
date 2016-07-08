@@ -1,9 +1,8 @@
 """
 Tests of band mask creation, both .msk sidecar and internal.
-
-See https://github.com/mapbox/rasterio/issues/293 for bug report.
 """
 
+import pytest
 import rasterio
 from rasterio.enums import MaskFlags
 
@@ -22,7 +21,7 @@ def test_create_internal_mask(data):
 
     # Check that the mask was saved correctly.
     with rasterio.open(str(data.join('RGB.byte.tif'))) as src:
-        assert (mask == src.read_mask()).all()
+        assert (mask == src.read_masks()).all()
         for flags in src.mask_flags:
             assert flags & MaskFlags.per_dataset
             assert not flags & MaskFlags.alpha
@@ -42,7 +41,7 @@ def test_create_sidecar_mask(data):
 
     # Check that the mask was saved correctly.
     with rasterio.open(str(data.join('RGB.byte.tif'))) as src:
-        assert (mask == src.read_mask()).all()
+        assert (mask == src.read_masks()).all()
         for flags in src.mask_flags:
             assert flags & MaskFlags.per_dataset
             assert not flags & MaskFlags.alpha
@@ -51,3 +50,28 @@ def test_create_sidecar_mask(data):
     # Check the .msk file, too.
     with rasterio.open(str(data.join('RGB.byte.tif.msk'))) as msk:
         assert (mask == msk.read(1, masked=False)).all()
+
+
+def test_create_mask_windowed_sidecar(data):
+    """Writing masks by window succeeds with sidecar mask
+    """
+    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=False):
+        with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
+            for ij, window in dst.block_windows():
+                blue = dst.read(1, window=window, masked=False)
+                mask = 255 * (blue == 0).astype('uint8')
+                dst.write_mask(mask, window=window)
+
+
+@pytest.mark.xfail(reason="https://github.com/mapbox/rasterio/issues/781")
+def test_create_mask_windowed_internal(data):
+    """Writing masks by window with internal mask
+    Currently fails with
+        rasterio.errors.RasterioIOError: Failed to get mask.
+    """
+    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
+        with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
+            for ij, window in dst.block_windows():
+                blue = dst.read(1, window=window, masked=False)
+                mask = 255 * (blue == 0).astype('uint8')
+                dst.write_mask(mask, window=window)
