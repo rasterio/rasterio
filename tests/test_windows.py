@@ -78,19 +78,18 @@ def test_eval_window_bad_structure(window):
         evaluate(window, 10, 10)
 
 
-def test_eval_window_invalid_dims():
+bad_params = (
+    (((-1, 10), (0, 10)), -1, 10),
+    (((1, -1), (0, 10)), -1, 10),
+    (((0, 10), (-1, 10)), 10, -1),
+    (((0, 10), (1, -1)), 10, -1),
+    (((10, 5), (0, 5)), 10, 10),
+    (((0, 5), (10, 5)), 10, 10))
+
+@pytest.mark.parametrize("params", bad_params)
+def test_eval_window_invalid_dims(params):
     with pytest.raises(ValueError):
-        evaluate(((-1, 10), (0, 10)), -1, 10)
-    with pytest.raises(ValueError):
-        evaluate(((1, -1), (0, 10)), -1, 10)
-    with pytest.raises(ValueError):
-        evaluate(((0, 10), (-1, 10)), 10, -1)
-    with pytest.raises(ValueError):
-        evaluate(((0, 10), (1, -1)), 10, -1)
-    with pytest.raises(ValueError):
-        evaluate(((10, 5), (0, 5)), 10, 10)
-    with pytest.raises(ValueError):
-        evaluate(((0, 5), (10, 5)), 10, 10)
+        evaluate(*params)
 
 
 def test_windows_evaluate():
