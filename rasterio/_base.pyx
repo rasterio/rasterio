@@ -19,6 +19,7 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, PhotometricInterp)
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
+from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, get_index
 from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
@@ -531,7 +532,7 @@ cdef class DatasetBase(object):
         create a clone of this dataset.
         """
         def __get__(self):
-            m = self.meta
+            m = Profile(**self.meta)
             m.update((k, v.lower()) for k, v in self.tags(
                 ns='rio_creation_kwds').items())
             if self.is_tiled:
