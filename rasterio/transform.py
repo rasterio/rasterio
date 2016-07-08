@@ -97,24 +97,23 @@ def xy(transform, rows, cols, offset='center'):
         rows = [rows]
         single_row = True
 
+    if offset == 'center':
+        coff, roff = (0.5, 0.5)
+    elif offset == 'ul':
+        coff, roff = (0, 0)
+    elif offset == 'ur':
+        coff, roff = (1, 0)
+    elif offset == 'll':
+        coff, roff = (0, 1)
+    elif offset == 'lr':
+        coff, roff = (1, 1)
+    else:
+        raise ValueError("Invalid offset")
+
     xs = []
     ys = []
     for col, row in zip(cols, rows):
-        cr = (col, row)
-
-        if offset == 'center':
-            x, y = transform * transform.translation(0.5, 0.5) * cr
-        elif offset == 'ul':
-            x, y = transform * cr
-        elif offset == 'ur':
-            x, y = transform * transform.translation(1, 0) * cr
-        elif offset == 'll':
-            x, y = transform * transform.translation(0, 1) * cr
-        elif offset == 'lr':
-            x, y = transform * transform.translation(1, 1) * cr
-        else:
-            raise ValueError("Invalid offset")
-
+        x, y = transform * transform.translation(coff, roff) * (col, row)
         xs.append(x)
         ys.append(y)
 
@@ -166,10 +165,11 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
         ys = [ys]
         single_y = True
 
+    eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+
     rows = []
     cols = []
     for x, y in zip(xs, ys):
-        eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
         fcol, frow = ~transform * (x + eps, y - eps)
         cols.append(int(op(fcol)))
         rows.append(int(op(frow)))
@@ -178,5 +178,5 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
         cols = cols[0]
     if single_y:
         rows = rows[0]
-        
+
     return rows, cols
