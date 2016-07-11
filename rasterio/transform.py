@@ -166,11 +166,12 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
         single_y = True
 
     eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+    invtransform = ~transform
 
     rows = []
     cols = []
     for x, y in zip(xs, ys):
-        fcol, frow = ~transform * (x + eps, y - eps)
+        fcol, frow = invtransform * (x + eps, y - eps)
         cols.append(int(op(fcol)))
         rows.append(int(op(frow)))
 
