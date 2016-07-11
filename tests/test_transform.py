@@ -2,7 +2,7 @@ from affine import Affine
 import pytest
 import rasterio
 from rasterio import transform
-from rasterio.transform import xy
+from rasterio.transform import xy, rowcol
 
 
 def test_window_transform():
@@ -159,17 +159,17 @@ def test_xy():
     ul_x, ul_y = aff * (0, 0)
     xoff = aff.a
     yoff = aff.e
-    assert xy(0, 0, transform=aff, offset='ul') == (ul_x, ul_y)
-    assert xy(0, 0, transform=aff, offset='ur') == (ul_x + xoff, ul_y)
-    assert xy(0, 0, transform=aff, offset='ll') == (ul_x, ul_y + yoff)
+    assert xy(aff, 0, 0, offset='ul') == (ul_x, ul_y)
+    assert xy(aff, 0, 0, offset='ur') == (ul_x + xoff, ul_y)
+    assert xy(aff, 0, 0, offset='ll') == (ul_x, ul_y + yoff)
     expected = (ul_x + xoff, ul_y + yoff)
-    assert xy(0, 0, transform=aff, offset='lr') == expected
+    assert xy(aff, 0, 0, offset='lr') == expected
     expected = (ul_x + xoff / 2, ul_y + yoff / 2)
-    assert xy(0, 0, transform=aff, offset='center') == expected
-    assert xy(0, 0, transform=aff, offset='lr') == \
-        xy(0, 1, transform=aff, offset='ll') == \
-        xy(1, 1, transform=aff, offset='ul') == \
-        xy(1, 0, transform=aff, offset='ur')
+    assert xy(aff, 0, 0, offset='center') == expected
+    assert xy(aff, 0, 0, offset='lr') == \
+        xy(aff, 0, 1, offset='ll') == \
+        xy(aff, 1, 1, offset='ul') == \
+        xy(aff, 1, 0, offset='ur')
 
 
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
@@ -187,3 +187,24 @@ def test_tastes_like_gdal_identity():
     aff = Affine.identity()
     assert not transform.tastes_like_gdal(aff)
     assert transform.tastes_like_gdal(aff.to_gdal())
+
+
+def test_rowcol():
+    with rasterio.open("tests/data/RGB.byte.tif", 'r') as src:
+        aff = src.transform
+        left, bottom, right, top = src.bounds
+        assert rowcol(aff, left, top) == (0, 0)
+        assert rowcol(aff, right, top) == (0, src.width)
+        assert rowcol(aff, right, bottom) == (src.height, src.width)
+        assert rowcol(aff, left, bottom) == (src.height, 0)
+        assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
+        assert rowcol(aff, 101985.0+400.0, 2826915.0) == (0, 1)
+
+
+def test_xy_rowcol_inverse():
+    # TODO this is an ideal candiate for
+    # property-based testing with hypothesis
+    aff = Affine.identity()
+    rows_cols = ([0, 0, 10, 10],
+                 [0, 10, 0, 10])
+    assert rows_cols == rowcol(aff, *xy(aff, *rows_cols))

@@ -12,7 +12,7 @@ import math
 from affine import Affine
 import numpy as np
 
-from rasterio.transform import get_index
+from rasterio.transform import rowcol
 
 
 def iter_args(function):
@@ -193,11 +193,11 @@ def from_bounds(left, bottom, right, top, transform,
         corresponding to the bounding coordinates
     """
 
-    window_start = get_index(
-        left, top, transform, op=math.floor, precision=precision)
+    window_start = rowcol(
+        transform, left, top, op=math.floor, precision=precision)
 
-    window_stop = get_index(
-        right, bottom, transform, op=math.ceil, precision=precision)
+    window_stop = rowcol(
+        transform, right, bottom, op=math.ceil, precision=precision)
 
     window = tuple(zip(window_start, window_stop))
 

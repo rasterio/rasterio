@@ -1,7 +1,8 @@
 """Geospatial transforms"""
 
-
 from __future__ import division
+
+import collections
 import math
 
 from affine import Affine
@@ -62,48 +63,71 @@ def array_bounds(height, width, transform):
     return w, s, e, n
 
 
-def xy(row, col, transform, offset='center'):
-    """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
+def xy(transform, rows, cols, offset='center'):
+    """Returns the x and y coordinates of pixels at `rows` and `cols`.
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
     Parameters
     ----------
-    row : int
-        Pixel row.
-    col : int
-        Pixel column.
     transform : affine.Affine
         Transformation from pixel coordinates to coordinate reference system.
+    rows : list or int
+        Pixel rows.
+    cols : list or int
+        Pixel columns.
     offset : str, optional
         Determines if the returned coordinates are for the center of the
         pixel or for a corner.
 
     Returns
     -------
-    tuple
-        ``(x, y)``
+    xs : list
+        x coordinates in coordinate reference system
+    ys : list
+        y coordinates in coordinate reference system
     """
 
-    cr = (col, row)
+    single_col = False
+    single_row = False
+    if not isinstance(cols, collections.Iterable):
+        cols = [cols]
+        single_col = True
+    if not isinstance(rows, collections.Iterable):
+        rows = [rows]
+        single_row = True
 
     if offset == 'center':
-        return transform * transform.translation(0.5, 0.5) * cr
+        coff, roff = (0.5, 0.5)
     elif offset == 'ul':
-        return transform * cr
+        coff, roff = (0, 0)
     elif offset == 'ur':
-        return transform * transform.translation(1, 0) * cr
+        coff, roff = (1, 0)
     elif offset == 'll':
-        return transform * transform.translation(0, 1) * cr
+        coff, roff = (0, 1)
     elif offset == 'lr':
-        return transform * transform.translation(1, 1) * cr
+        coff, roff = (1, 1)
     else:
         raise ValueError("Invalid offset")
 
+    xs = []
+    ys = []
+    for col, row in zip(cols, rows):
+        x, y = transform * transform.translation(coff, roff) * (col, row)
+        xs.append(x)
+        ys.append(y)
 
-def get_index(x, y, transform, op=math.floor, precision=6):
+    if single_row:
+        ys = ys[0]
+    if single_col:
+        xs = xs[0]
+
+    return xs, ys
+
+
+def rowcol(transform, xs, ys, op=math.floor, precision=6):
     """
-    Returns the (row, col) index of the pixel containing (x, y) given a
+    Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
 
     Use an epsilon, magnitude determined by the precision parameter
@@ -112,12 +136,12 @@ def get_index(x, y, transform, op=math.floor, precision=6):
 
     Parameters
     ----------
-    x : float
-        x value in coordinate reference system
-    y : float
-        y value in coordinate reference system
     transform : Affine
         Coefficients mapping pixel coordinates to coordinate reference system.
+    xs : list or float
+        x values in coordinate reference system
+    ys : list or float
+        y values in coordinate reference system
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
@@ -126,14 +150,34 @@ def get_index(x, y, transform, op=math.floor, precision=6):
 
     Returns
     -------
-    row : int
-        row index
-    col : int
-        col index
+    rows : list of ints
+        list of row indicies
+    cols : list of ints
+        list of column indicies
     """
 
-    eps = 10.0**-precision * (1.0 - 2.0*op(0.1))
-    fcol, frow = ~transform * (x + eps, y - eps)
-    col = int(op(fcol))
-    row = int(op(frow))
-    return row, col
+    single_x = False
+    single_y = False
+    if not isinstance(xs, collections.Iterable):
+        xs = [xs]
+        single_x = True
+    if not isinstance(ys, collections.Iterable):
+        ys = [ys]
+        single_y = True
+
+    eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+    invtransform = ~transform
+
+    rows = []
+    cols = []
+    for x, y in zip(xs, ys):
+        fcol, frow = invtransform * (x + eps, y - eps)
+        cols.append(int(op(fcol)))
+        rows.append(int(op(frow)))
+
+    if single_x:
+        cols = cols[0]
+    if single_y:
+        rows = rows[0]
+
+    return rows, cols
