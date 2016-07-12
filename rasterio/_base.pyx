@@ -20,7 +20,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
 from rasterio.profiles import Profile
-from rasterio.transform import Affine, guard_transform
+from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
 
@@ -133,7 +133,7 @@ cdef class DatasetBase(object):
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
-            self.closed and 'closed' or 'open', 
+            self.closed and 'closed' or 'open',
             self.name,
             self.mode)
 
@@ -323,11 +323,11 @@ cdef class DatasetBase(object):
                     dtypes.dtype_fwd[GDALGetRasterDataType(band)])
 
         return tuple(self._dtypes)
-    
+
     @property
     def block_shapes(self):
         """Returns an ordered list of block shapes for all bands.
-        
+
         Shapes are tuples and have the same ordering as the dataset's
         shape: (count of image rows, count of image columns).
         """
@@ -481,14 +481,14 @@ cdef class DatasetBase(object):
     property bounds:
         """Returns the lower left and upper right bounds of the dataset
         in the units of its coordinate reference system.
-        
+
         The returned value is a tuple:
         (lower left x, lower left y, upper right x, upper right y)
         """
         def __get__(self):
             a, b, c, d, e, f, _, _, _ = self.transform
             return BoundingBox(c, f+e*self.height, c+a*self.width, f)
-    
+
     property res:
         """Returns the (width, height) of pixels in the units of its
         coordinate reference system."""
@@ -612,7 +612,7 @@ cdef class DatasetBase(object):
         Coefficients of the affine transformation that maps ``col,row``
         pixel coordinates to ``x,y`` coordinates in the specified crs. The
         coefficients of the augmented matrix are:
-        
+
           | x |   | a  b  c | | r |
           | y | = | d  e  f | | c |
           | 1 |   | 0  0  1 | | 1 |
@@ -761,10 +761,6 @@ cdef class DatasetBase(object):
             height = window[0][1] - yoff
 
         return GDALChecksumImage(band, xoff, yoff, width, height)
-
-
-def tastes_like_gdal(t):
-    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):

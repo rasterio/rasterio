@@ -12,7 +12,7 @@ from rasterio._err import (
 from rasterio import dtypes
 from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError
-from rasterio.transform import Affine, from_bounds
+from rasterio.transform import Affine, from_bounds, tastes_like_gdal
 
 cimport numpy as np
 
@@ -37,10 +37,6 @@ include "gdal.pxi"
 
 
 log = logging.getLogger(__name__)
-
-
-def tastes_like_gdal(t):
-    return t[2] == t[4] == 0.0 and t[1] > 0 and t[5] < 0
 
 
 def _transform_geom(
