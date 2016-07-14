@@ -1,8 +1,7 @@
-import rasterio
-
 import numpy as np
 import pytest
 
+import rasterio
 from rasterio.windows import (
     from_bounds, bounds, transform, evaluate, window_index, shape)
 

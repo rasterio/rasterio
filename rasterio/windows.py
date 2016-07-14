@@ -193,11 +193,13 @@ def from_bounds(left, bottom, right, top, transform,
         corresponding to the bounding coordinates
     """
 
+    eps = 10.0 ** -precision
+
     window_start = rowcol(
-        transform, left, top, op=math.floor, precision=precision)
+        transform, left + eps, top - eps, op=math.floor)
 
     window_stop = rowcol(
-        transform, right, bottom, op=math.ceil, precision=precision)
+        transform, right - eps, bottom + eps, op=math.ceil)
 
     window = tuple(zip(window_start, window_stop))
 

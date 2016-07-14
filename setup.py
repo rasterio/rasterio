@@ -230,7 +230,8 @@ extra_reqs = {
     's3': ['boto3>=1.2.4'],
     'plot': ['matplotlib'],
     'test': [
-        'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging'],
+        'hypothesis', 'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4',
+        'packaging'],
     'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']}
 
 # Add all extra requirements
