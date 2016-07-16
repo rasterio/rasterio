@@ -1,11 +1,6 @@
 GDAL Option Configuration
 =========================
 
-.. todo::
-
-    When to use with rasterio.Env() instead of a bare rasterio.open()
-
-
 GDAL format drivers and some parts of the library are configurable.
 
 From https://trac.osgeo.org/gdal/wiki/ConfigOptions:
@@ -81,6 +76,17 @@ to a name like so.
     # Prints:
     # ('GTIFF_FORCE_RGBA', True)
     # ('CPL_DEBUG', True)
+
+When to use rasterio.Env()
+--------------------------
+
+Rasterio code is often without the use of an ``Env`` context block. For instance,
+you could use ``rasterio.open()`` directly without explicity creating an ``Env``.
+In that case, the ``open`` function will initialize a default environment in
+which to execute the code. Often this default environment is sufficient for most
+use cases and you only need to create an explicit ``Env`` if you are customizing
+the default GDAL or format options.
+
 
 .. |WITHST| replace:: ``with``
 .. _WITHST: https://docs.python.org/2/reference/compound_stmts.html#withhttps://docs.python.org/2/reference/compound_stmts
