@@ -20,7 +20,6 @@ And an example of use in python
 
     import rasterio
 
-
     with rasterio.open('data.tif') as src:
         array = src.read()
 
@@ -33,7 +32,6 @@ Contents:
    python_manual
    cli
    api_docs
-   community
 
 
 Indices and tables

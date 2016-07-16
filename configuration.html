@@ -130,10 +130,6 @@
             
   <div class="section" id="gdal-option-configuration">
 <h1>GDAL Option Configuration<a class="headerlink" href="#gdal-option-configuration" title="Permalink to this headline">¶</a></h1>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">When to use with rasterio.Env() instead of a bare rasterio.open()</p>
-</div>
 <p>GDAL format drivers and some parts of the library are configurable.</p>
 <p>From <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/ConfigOptions">https://trac.osgeo.org/gdal/wiki/ConfigOptions</a>:</p>
 <blockquote>
@@ -197,6 +193,15 @@ to a name like so.</p>
 <span class="c1"># (&#39;CPL_DEBUG&#39;, True)</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="when-to-use-rasterio-env">
+<h2>When to use rasterio.Env()<a class="headerlink" href="#when-to-use-rasterio-env" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio code is often without the use of an <code class="docutils literal"><span class="pre">Env</span></code> context block. For instance,
+you could use <code class="docutils literal"><span class="pre">rasterio.open()</span></code> directly without explicity creating an <code class="docutils literal"><span class="pre">Env</span></code>.
+In that case, the <code class="docutils literal"><span class="pre">open</span></code> function will initialize a default environment in
+which to execute the code. Often this default environment is sufficient for most
+use cases and you only need to create an explicit <code class="docutils literal"><span class="pre">Env</span></code> if you are customizing
+the default GDAL or format options.</p>
 </div>
 </div>
 

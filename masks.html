@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Masks &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Nodata Masks &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -32,7 +32,6 @@
   
     <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="General Concepts" href="topics.html"/>
-        <link rel="next" title="Nodata" href="nodata.html"/>
         <link rel="prev" title="Vector Features" href="features.html"/> 
 
   
@@ -85,7 +84,6 @@
                 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
@@ -99,13 +97,14 @@
 <li class="toctree-l3"><a class="reference internal" href="overviews.html">Overviews</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plotting.html">Plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="features.html">Vector Features</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Masks</a><ul>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Nodata Masks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#reading-dataset-masks">Reading dataset masks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#writing-masks">Writing masks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#numpy-masked-arrays">Numpy masked arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dataset-masks">Dataset masks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nodata-representations-in-raster-files">Nodata representations in raster files</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="nodata.html">Nodata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
@@ -117,7 +116,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
@@ -158,7 +156,7 @@
       
           <li><a href="topics.html">General Concepts</a> &raquo;</li>
       
-    <li>Masks</li>
+    <li>Nodata Masks</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -172,17 +170,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="masks">
-<h1>Masks<a class="headerlink" href="#masks" title="Permalink to this headline">¶</a></h1>
-<p>In using Rasterio, you&#8217;ll encounter two different kinds of masks. One is the
-the valid data mask from GDAL, an unsigned byte array with the same number of
-rows and columns as the dataset in which non-zero elements indicate that the
+  <div class="section" id="nodata-masks">
+<h1>Nodata Masks<a class="headerlink" href="#nodata-masks" title="Permalink to this headline">¶</a></h1>
+<p>Nodata masks allow you to identify regions of valid data values. In using Rasterio,
+you&#8217;ll encounter two different kinds of masks.</p>
+<p>One is the the valid data mask from GDAL, an unsigned byte array with the same number of
+rows and columns as the dataset in which non-zero elements (typically 255) indicate that the
 corresponding data elements are valid. Other elements are invalid, or <em>nodata</em>
-elements. The other kind of mask is the mask in Numpy&#8217;s [masked
-arrays](<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html">http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html</a>),
-which have the inverse sense: <cite>True</cite> values in a masked array&#8217;s mask indicate
+elements.</p>
+<p>The other kind of mask is Numpy&#8217;s <a href="#id1"><span class="problematic" id="id2">`masked array &lt;http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html`_</span></a>
+which has the inverse sense: <cite>True</cite> values in a masked array&#8217;s mask indicate
 that the corresponding data elements are invalid. With care, you can safely
-navigate this divide.</p>
+navigate convert between the two mask types.</p>
 <p>Consider Rasterio&#8217;s RGB.byte.tif test dataset. It has 718 rows and 791
 columns of pixels. Each pixel has 3 8-bit (uint8) channels or bands. It has a
 trapezoid of image data within a rectangular background of 0,0,0 value pixels.</p>
@@ -203,6 +202,8 @@ inverse relationship in the context of RGB.byte.tif.</p>
 <span class="go">(&#39;uint8&#39;, &#39;uint8&#39;, &#39;uint8&#39;)</span>
 <span class="gp">&gt;</span>&gt;&gt; src.nodatavals
 <span class="go">(0.0, 0.0, 0.0)</span>
+<span class="gp">&gt;</span>&gt;&gt; src.nodata
+<span class="go">0.0</span>
 </pre></div>
 </div>
 <div class="section" id="reading-dataset-masks">
@@ -342,6 +343,41 @@ a mask conforming to GDAL RFC 15, do this:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="dataset-masks">
+<h2>Dataset masks<a class="headerlink" href="#dataset-masks" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes a per-band mask is not appropriate. In this case you can either
+construct a mask out of the component bands (or other auxillary data) manually
+<em>or</em> use the Rasterio dataset&#8217;s <code class="docutils literal"><span class="pre">src.dataset_mask()</span></code> function. This returns
+a 2D array with a GDAL-style mask determined by the following criteria,
+in order of precedence:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>If a .msk file, dataset-wide alpha or internal mask exists,
+it will be used as the dataset mask.</li>
+<li>If a 4-band RGBA with a shadow nodata value,
+band 4 will be used as the dataset mask.</li>
+<li>If a nodata value exists, use the binary OR (|) of the band masks</li>
+<li>If no nodata value exists, return a mask filled with all valid data (255)</li>
+</ol>
+</div></blockquote>
+<p>Note that this differs from read_masks and GDAL RFC15 in that it applies
+per-dataset, not per-band.</p>
+</div>
+<div class="section" id="nodata-representations-in-raster-files">
+<h2>Nodata representations in raster files<a class="headerlink" href="#nodata-representations-in-raster-files" title="Permalink to this headline">¶</a></h2>
+<p>The storage and representation of nodata differs depending on the data format
+and configuration options. While Rasterio provides an abstraction for those
+details when reading, it&#8217;s often important to understand the differences when
+creating, manipulating and writing raster data.</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>Nodata values</strong>: the <code class="docutils literal"><span class="pre">src.nodata</span></code> value is used to define which pixels should be masked.</li>
+<li><strong>Alpha band</strong>: with RGB imagery, an additional 4th band (containing a GDAL-style 8-bit mask) is sometimes provided to explictly define the mask.</li>
+<li><strong>Internal mask band</strong>: GDAL provides the ability to store an additional boolean 1-bit mask that is stored internally to the dataset. This option relies on a GDAL environment with <code class="docutils literal"><span class="pre">GDAL_TIFF_INTERNAL_MASK=True</span></code>. Otherwise the mask will be written externally.</li>
+<li><strong>External mask band</strong>: Same as above but the mask band is stored in a sidecar <code class="docutils literal"><span class="pre">.msk</span></code> file (default).</li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 
 
@@ -350,8 +386,6 @@ a mask conforming to GDAL RFC 15, do this:</p>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="nodata.html" class="btn btn-neutral float-right" title="Nodata" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="features.html" class="btn btn-neutral" title="Vector Features" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
