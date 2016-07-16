@@ -32,6 +32,7 @@ Contents:
    python_manual
    cli
    api_docs
+   contributing
 
 
 Indices and tables
