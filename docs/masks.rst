@@ -9,8 +9,7 @@ rows and columns as the dataset in which non-zero elements (typically 255) indic
 corresponding data elements are valid. Other elements are invalid, or *nodata*
 elements.
 
-The other kind of mask is Numpy's [masked
-array](http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html),
+The other kind of mask is Numpy's `masked array <http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html`_
 which has the inverse sense: `True` values in a masked array's mask indicate
 that the corresponding data elements are invalid. With care, you can safely
 navigate convert between the two mask types.
