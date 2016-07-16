@@ -85,12 +85,12 @@
                 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="topics.html">General Concepts</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Reprojection</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#estimating-optimal-output-shape">Estimating optimal output shape</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#reprojecting-a-geotiff-dataset">Reprojecting a GeoTIFF dataset</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
 </ul>
@@ -116,7 +116,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
@@ -173,7 +172,6 @@
             
   <div class="section" id="reprojection">
 <h1>Reprojection<a class="headerlink" href="#reprojection" title="Permalink to this headline">¶</a></h1>
-<p>TODO calc_default_transform</p>
 <p>Rasterio can map the pixels of a destination raster with an associated
 coordinate reference system and transform to the pixels of a source image with
 a different coordinate reference system and transform. This process is known as
@@ -226,6 +224,14 @@ transform.</p>
 for code that writes the destination array to a GeoTIFF file. I&#8217;ve uploaded the
 resulting file to a Mapbox map to show that the reprojection is
 correct: <a class="reference external" href="https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033">https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033</a>.</p>
+<div class="section" id="estimating-optimal-output-shape">
+<h2>Estimating optimal output shape<a class="headerlink" href="#estimating-optimal-output-shape" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio provides a <code class="docutils literal"><span class="pre">rasterio.warp.calculate_default_transform()</span></code> function to
+determine the optimal resolution and transform for the destination raster.
+Given a source dataset in a known coordinate reference system, this
+function will return a <code class="docutils literal"><span class="pre">transform,</span> <span class="pre">width,</span> <span class="pre">height</span></code> tuple which is calculated
+by libgdal.</p>
+</div>
 <div class="section" id="reprojecting-a-geotiff-dataset">
 <h2>Reprojecting a GeoTIFF dataset<a class="headerlink" href="#reprojecting-a-geotiff-dataset" title="Permalink to this headline">¶</a></h2>
 <p>Reprojecting a GeoTIFF dataset from one coordinate reference system is a common

@@ -1,8 +1,6 @@
 Reprojection
 ************
 
-TODO calc_default_transform
-
 Rasterio can map the pixels of a destination raster with an associated
 coordinate reference system and transform to the pixels of a source image with
 a different coordinate reference system and transform. This process is known as
@@ -60,6 +58,15 @@ See `examples/reproject.py <https://github.com/mapbox/rasterio/blob/master/examp
 for code that writes the destination array to a GeoTIFF file. I've uploaded the
 resulting file to a Mapbox map to show that the reprojection is
 correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.000/0.033.
+
+Estimating optimal output shape
+-------------------------------
+
+Rasterio provides a ``rasterio.warp.calculate_default_transform()`` function to
+determine the optimal resolution and transform for the destination raster.
+Given a source dataset in a known coordinate reference system, this 
+function will return a ``transform, width, height`` tuple which is calculated
+by libgdal.
 
 Reprojecting a GeoTIFF dataset
 ------------------------------
