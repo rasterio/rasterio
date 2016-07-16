@@ -184,7 +184,7 @@ def from_bounds(left, bottom, right, top, transform,
         If boundless is False, window is limited
         to extent of this dataset.
     precision : int, optional
-        float precision
+        
 
     Returns
     -------

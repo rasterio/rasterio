@@ -4,6 +4,7 @@ from __future__ import division
 
 import collections
 import math
+import warnings
 
 from affine import Affine
 
@@ -145,16 +146,24 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
-    precision : int
-        Decimal places of precision in indexing, as in `round()`.
+
+    Deprecated Parameter
+    --------------------
+    precision :
+        This argument is ignored.
 
     Returns
     -------
     rows : list of ints
-        list of row indicies
+        list of row indices
     cols : list of ints
-        list of column indicies
+        list of column indices
     """
+
+    if precision is not None:
+        warnings.warn(
+            "The precision keyword argument is no longer used",
+            DeprecationWarning)
 
     single_x = False
     single_y = False
