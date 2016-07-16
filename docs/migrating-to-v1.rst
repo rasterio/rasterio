@@ -72,13 +72,13 @@ Tickets
 
 
 I/O Operations
---------------
+~~~~~~~~~~~~~~
 
 Methods related to reading band data and dataset masks have changed in 1.0.
 
 
 Deprecated: ``rasterio.drivers()``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Previously users could register GDAL's drivers and open a datasource with:
 
@@ -173,7 +173,7 @@ dataset windows have been moved to ``rasterio.windows.*``:
 * ``rasterio.windows_intersect()``
 
 Tickets
-~~~~~~~
+```````
 
 * `#609 <https://github.com/mapbox/rasterio/pull/609>`__ - Introduction of
   ``rasterio.windows``.
@@ -193,7 +193,7 @@ several different locations:
     rasterio.tool.main()      -> rasterio.rio.insp.main()
 
 Tickets
-~~~~~~~
+```````
 
 * `#609 <https://github.com/mapbox/rasterio/pull/609>`__ - Deprecation of
   ``rasterio.tool``.
@@ -211,7 +211,7 @@ several different locations:
      rasterio.tools.merge.merge() -> rasterio.merge.merge()
 
 Tickets
-~~~~~~~
+```````
 
 * `#609 <https://github.com/mapbox/rasterio/pull/609>`__ - Deprecation of
   ``rasterio.tools``.

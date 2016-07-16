@@ -56,6 +56,7 @@ clean:
 .PHONY: html
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	touch $(BUILDDIR)/html/.nojekyll
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
@@ -217,7 +218,7 @@ pseudoxml:
 
 .PHONY: apidocs
 apidocs:
-	sphinx-apidoc -f -e -T -M -o . ../rasterio ../rasterio/rio ../rasterio/compat.py ../rasterio/tools ../rasterio/tool.py
+	sphinx-apidoc -f -e -T -o . ../rasterio ../rasterio/rio
 
 .PHONY: publish
 publish: html

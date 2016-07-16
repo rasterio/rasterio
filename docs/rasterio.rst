@@ -1,24 +1,22 @@
 rasterio package
 ================
 
-.. automodule:: rasterio
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Submodules
 ----------
 
 .. toctree::
 
+   rasterio.compat
    rasterio.coords
    rasterio.crs
+   rasterio.drivers
    rasterio.dtypes
    rasterio.enums
    rasterio.env
    rasterio.errors
    rasterio.features
    rasterio.fill
+   rasterio.io
    rasterio.mask
    rasterio.merge
    rasterio.plot
@@ -29,3 +27,10 @@ Submodules
    rasterio.warp
    rasterio.windows
 
+Module contents
+---------------
+
+.. automodule:: rasterio
+    :members:
+    :undoc-members:
+    :show-inheritance:
