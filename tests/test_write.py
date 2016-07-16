@@ -3,12 +3,15 @@ import re
 import subprocess
 import sys
 
+import affine
 import numpy as np
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioIOError
-from rasterio._io import BAD_WRITE_DRIVERS
+from rasterio.drivers import blacklist
+from rasterio.env import Env
+from rasterio.errors import RasterioIOError, DriverRegistrationError
+from rasterio._base import driver_supports_mode
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -60,13 +63,13 @@ def test_context(tmpdir):
         assert s.height == 100
         assert s.shape == (100, 100)
         assert s.indexes == (1,)
-        assert repr(s) == "<open RasterUpdater name='%s' mode='w'>" % name
+        assert repr(s) == "<open DatasetWriter name='%s' mode='w'>" % name
     assert s.closed
     assert s.count == 1
     assert s.width == 100
     assert s.height == 100
     assert s.shape == (100, 100)
-    assert repr(s) == "<closed RasterUpdater name='%s' mode='w'>" % name
+    assert repr(s) == "<closed DatasetWriter name='%s' mode='w'>" % name
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "GTiff" in info
     assert "Size is 100, 100" in info
@@ -130,8 +133,9 @@ def test_write_float(tmpdir):
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = [101985.0, 300.0379266750948, 0.0,
-                 2826915.0, 0.0, -300.041782729805]
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
+
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -150,14 +154,14 @@ def test_write_crs_transform(tmpdir):
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = [101985.0, 300.0379266750948, 0.0,
-                 2826915.0, 0.0, -300.041782729805]
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
             crs={'units': 'm', 'no_defs': True, 'ellps': 'WGS84',
                  'proj': 'utm', 'zone': 18},
-            affine=transform,
+            transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
     assert s.crs.to_dict() == {'init': 'epsg:32618'}
@@ -171,8 +175,8 @@ def test_write_crs_transform_2(tmpdir):
     """Using 'EPSG:32618' as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = [101985.0, 300.0379266750948, 0.0,
-                 2826915.0, 0.0, -300.041782729805]
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
     with rasterio.open(
             name, 'w',
             driver='GTiff', width=100, height=100, count=1,
@@ -187,12 +191,13 @@ def test_write_crs_transform_2(tmpdir):
     # (precision varies slightly by platform)
     assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
 
+
 def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    transform = [101985.0, 300.0379266750948, 0.0,
-                 2826915.0, 0.0, -300.041782729805]
+    transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
+                              0.0, -300.041782729805, 2826915.0)
     wkt = 'PROJCS["UTM Zone 18, Northern Hemisphere",GEOGCS["WGS 84",DATUM["unknown",SPHEROID["WGS84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-75],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
     with rasterio.open(
             name, 'w',
@@ -276,11 +281,16 @@ def test_write_noncontiguous(tmpdir):
             dst.write(arr[:, :, i], indexes=i + 1)
 
 
-@pytest.mark.parametrize("driver", BAD_WRITE_DRIVERS)
+@pytest.mark.parametrize("driver", list(blacklist.keys()))
 def test_write_blacklist(tmpdir, driver):
+
+    # Skip if we don't have driver support built in.
+    if driver not in Env().drivers():
+        pytest.skip()
+
     name = str(tmpdir.join("data.test"))
     with pytest.raises(RasterioIOError) as exc_info:
         rasterio.open(name, 'w', driver=driver, width=100, height=100,
                       count=1, dtype='uint8')
     exc = str(exc_info.value)
-    assert "Rasterio does not support writing with {} driver".format(driver) in exc
+    assert exc.startswith("Blacklisted")

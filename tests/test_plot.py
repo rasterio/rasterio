@@ -1,3 +1,6 @@
+"""Unittests for rasterio.plot"""
+
+
 import numpy as np
 import pytest
 
@@ -10,8 +13,9 @@ except ImportError:
     plt = None
 
 import rasterio
-from rasterio.plot import show, show_hist, get_plt
+from rasterio.plot import show, show_hist, get_plt, plotting_extent
 from rasterio.enums import ColorInterp
+
 
 @pytest.mark.skipif(plt is None,
                     reason="requires matplotlib")
@@ -66,8 +70,7 @@ def test_show_cmyk_interp(tmpdir):
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_raster_no_bounds():
     """
     This test only verifies that code up to the point of plotting with
@@ -81,8 +84,8 @@ def test_show_raster_no_bounds():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_raster_title():
     """
     This test only verifies that code up to the point of plotting with
@@ -96,8 +99,7 @@ def test_show_raster_title():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_hist_large():
     """
     This test only verifies that code up to the point of plotting with
@@ -111,8 +113,7 @@ def test_show_hist_large():
     except ImportError:
         pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_raster_cmap():
     """
     This test only verifies that code up to the point of plotting with
@@ -126,8 +127,7 @@ def test_show_raster_cmap():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_raster_ax():
     """
     This test only verifies that code up to the point of plotting with
@@ -142,8 +142,7 @@ def test_show_raster_ax():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_array():
     """
     This test only verifies that code up to the point of plotting with
@@ -157,8 +156,8 @@ def test_show_array():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_array3D():
     """
     This test only verifies that code up to the point of plotting with
@@ -172,8 +171,7 @@ def test_show_array3D():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_hist():
     """
     This test only verifies that code up to the point of plotting with
@@ -202,8 +200,7 @@ def test_show_hist():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_hist_mplargs():
     """
     This test only verifies that code up to the point of plotting with
@@ -218,8 +215,7 @@ def test_show_hist_mplargs():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_contour():
     """
     This test only verifies that code up to the point of plotting with
@@ -233,8 +229,7 @@ def test_show_contour():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_show_contour_mplargs():
     """
     This test only verifies that code up to the point of plotting with
@@ -250,15 +245,33 @@ def test_show_contour_mplargs():
         except ImportError:
             pass
 
-@pytest.mark.skipif(plt is None,
-                    reason="requires matplotlib")
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
 def test_get_plt():
     """
     This test only verifies that code up to the point of plotting with
     matplotlib works correctly.  Tests do not exercise matplotlib.
     """
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    with rasterio.open('tests/data/RGB.byte.tif'):
         try:
             assert plt == get_plt()
         except ImportError:
             pass
+
+@pytest.mark.skipif(plt is None, reason="requires matplotlib")
+def test_plt_transform():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        show(src.read(), transform=src.transform)
+        show(src.read(1), transform=src.transform)
+
+def test_plotting_extent():
+    from rasterio.plot import reshape_as_image
+    expected = (101985.0, 339315.0, 2611485.0, 2826915.0)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        assert plotting_extent(src) == expected
+        assert plotting_extent(
+            reshape_as_image(src.read()), transform=src.affine) == expected
+        assert plotting_extent(
+            src.read(1), transform=src.transform) == expected
+        # array requires a transform
+        with pytest.raises(ValueError):
+            plotting_extent(src.read(1))

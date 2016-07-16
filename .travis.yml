@@ -21,7 +21,6 @@ env:
 addons:
   apt:
     packages:
-    - libgdal1h
     - gdal-bin
     - libproj-dev
     - libhdf5-serial-dev

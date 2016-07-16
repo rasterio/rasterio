@@ -1,6 +1,5 @@
 """Mask the area outside of the input shapes with no data."""
 
-from __future__ import absolute_import
 
 import warnings
 
@@ -40,11 +39,16 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
 
     Returns
     -------
-    masked: numpy ndarray
-        Data contained in raster after applying the mask.
-    out_transform: affine object
-        Information for mapping pixel coordinates in `masked` to another
-        coordinate system.
+    tuple
+
+        Two elements:
+
+            masked : numpy ndarray
+                Data contained in raster after applying the mask.
+
+            out_transform : affine.Affine()
+                Information for mapping pixel coordinates in `masked` to another
+                coordinate system.
     """
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
@@ -58,7 +62,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
     minxs, minys, maxxs, maxys = zip(*all_bounds)
     mask_bounds = (min(minxs), min(minys), max(maxxs), max(maxys))
 
-    invert_y = raster.affine.e > 0
+    invert_y = raster.transform.e > 0
     source_bounds = raster.bounds
     if invert_y:
         source_bounds = [source_bounds[0], source_bounds[3],
@@ -78,7 +82,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         out_transform = raster.window_transform(window)
     else:
         window = None
-        out_transform = raster.affine
+        out_transform = raster.transform
 
     out_image = raster.read(window=window, masked=True)
     out_shape = out_image.shape[1:]

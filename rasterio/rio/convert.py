@@ -1,14 +1,13 @@
 """File translation command"""
 
-import logging
 
 import click
 from cligj import format_opt
 import numpy as np
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
 
 
 @click.command(short_help="Copy and convert raster dataset.")
@@ -66,9 +65,6 @@ def convert(
             # Use the input file's profile, updated by CLI
             # options, as the profile for the output file.
             profile = src.profile
-
-            if 'affine' in profile:
-                profile['transform'] = profile.pop('affine')
 
             if driver:
                 profile['driver'] = driver

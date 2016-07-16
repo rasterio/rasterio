@@ -1,6 +1,5 @@
 """Copy valid pixels from input files to an output file."""
 
-from __future__ import absolute_import
 
 import logging
 import math
@@ -8,7 +7,7 @@ import warnings
 
 import numpy as np
 
-from rasterio._base import get_window
+from rasterio import windows
 from rasterio.transform import Affine
 
 
@@ -46,11 +45,16 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
     Returns
     -------
-    dest: numpy ndarray
-        Contents of all input rasters in single array.
-    out_transform: affine object
-        Information for mapping pixel coordinates in `dest` to another
-        coordinate system
+    tuple
+
+        Two elements:
+
+            dest: numpy ndarray
+                Contents of all input rasters in single array.
+
+            out_transform: affine.Affine()
+                Information for mapping pixel coordinates in `dest` to another
+                coordinate system
     """
     first = sources[0]
     first_res = first.res
@@ -135,13 +139,16 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         int_n = src_n if src_n < dst_n else dst_n
 
         # 2. Compute the source window.
-        src_window = get_window(
-            int_w, int_s, int_e, int_n, src.affine, precision=precision)
+        src_window = windows.from_bounds(
+            int_w, int_s, int_e, int_n, src.transform,
+            boundless=True, precision=precision)
         logger.debug("Src %s window: %r", src.name, src_window)
 
         # 3. Compute the destination window.
-        dst_window = get_window(
-            int_w, int_s, int_e, int_n, output_transform, precision=precision)
+        dst_window = windows.from_bounds(
+            int_w, int_s, int_e, int_n, output_transform,
+            boundless=True, precision=precision)
+
         logger.debug("Dst window: %r", dst_window)
 
         # 4. Initialize temp array.

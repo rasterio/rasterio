@@ -37,35 +37,35 @@ coordinates to coordinates in that reference system.
 
     >>> src.crs
     CRS({'init': 'epsg:32618'})
-    >>> src.affine
+    >>> src.transform
     Affine(300.0379266750948, 0.0, 101985.0,
            0.0, -300.041782729805, 2826915.0)
 
 To get the ``x, y`` world coordinates for the upper left corner of any pixel,
 take the product of the affine transformation matrix and the tuple ``(col,
-row)``.  
+row)``.
 
 .. code-block:: python
 
     >>> col, row = 0, 0
-    >>> src.affine * (col, row)
+    >>> src.transform * (col, row)
     (101985.0, 2826915.0)
     >>> col, row = src.width, src.height
-    >>> src.affine * (col, row)
+    >>> src.transform * (col, row)
     (339315.0, 2611485.0)
 
 
 Profile
 -------
 The ``src.profile`` property is the union of meta, creation options saved as tags, and tiling options.
-The primary use of profile is to provide a canonical way of creating a dataset clone, 
+The primary use of profile is to provide a canonical way of creating a dataset clone,
 encapsulating all the necessary metadata required to recreate a dataset::
 
     with rasterio.open('example.tif') as src:
         with rasterio.open('clone.tif', 'w', **src.profile) as dst:
-            dst.write(src.read()) 
+            dst.write(src.read())
 
-A common pattern for using the profile is to copy a source profile, update it slightly 
+A common pattern for using the profile is to copy a source profile, update it slightly
 to reflect any changes, and use the updated copy to create the output::
 
     # we start with the profile of the source file

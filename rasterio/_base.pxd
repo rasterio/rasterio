@@ -1,14 +1,16 @@
 # Base class.
 
-cdef class DatasetReader:
-    # Read-only access to dataset metadata. No IO!
-    
-    cdef void *_hds
+include "gdal.pxi"
 
+
+cdef class DatasetBase:
+
+    cdef GDALDatasetH _hds
     cdef readonly object name
     cdef readonly object mode
     cdef readonly object options
-    cdef readonly object width, height
+    cdef readonly object width
+    cdef readonly object height
     cdef readonly object shape
     cdef public object driver
     cdef public object _count
@@ -21,7 +23,9 @@ cdef class DatasetReader:
     cdef public object _nodatavals
     cdef public object _read
 
-    cdef void *band(self, int bidx) except NULL
+    cdef GDALDatasetH handle(self) except NULL
+    cdef GDALRasterBandH band(self, int bidx) except NULL
 
 
-cdef void *_osr_from_crs(object crs) except NULL
+cdef const char *get_driver_name(GDALDriverH driver)
+cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL

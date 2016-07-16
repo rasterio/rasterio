@@ -1,17 +1,17 @@
-# Calc command.
+"""$ rio calc"""
+
 
 from distutils.version import LooseVersion
-import logging
 
 import click
-import snuggs
 from cligj import files_inout_arg
+import snuggs
 
-from .helpers import resolve_inout
-from . import options
 import rasterio
-from rasterio.fill import fillnodata
 from rasterio.features import sieve
+from rasterio.fill import fillnodata
+from rasterio.rio import options
+from rasterio.rio.helpers import resolve_inout
 
 
 def get_bands(inputs, d, i=None):
@@ -99,7 +99,6 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
             with rasterio.open(inputs[0][1]) as first:
                 kwargs = first.meta
                 kwargs.update(**creation_options)
-                kwargs['transform'] = kwargs.pop('affine')
                 dtype = dtype or first.meta['dtype']
                 kwargs['dtype'] = dtype
 

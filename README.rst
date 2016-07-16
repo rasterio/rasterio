@@ -69,7 +69,7 @@ Rasterio gives access to properties of a geospatial raster file.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         print(src.width, src.height)
         print(src.crs)
-        print(src.affine)
+        print(src.transform)
         print(src.count)
         print(src.indexes)
 
@@ -235,7 +235,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 
     $ sudo add-apt-repository ppa:ubuntugis/ppa
     $ sudo apt-get update
-    $ sudo apt-get install libgdal1h gdal-bin libgdal-dev
+    $ sudo apt-get install gdal-bin libgdal-dev
     $ pip install -U pip
     $ pip install rasterio
 

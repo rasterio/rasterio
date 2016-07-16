@@ -1,3 +1,6 @@
+"""Unittests for rasterio.mask"""
+
+
 import pytest
 
 import rasterio
