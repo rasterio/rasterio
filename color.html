@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Color &mdash; rasterio 0.35.1 documentation</title>
+  <title>Color &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="General Concepts" href="topics.html"/>
         <link rel="next" title="Concurrent processing" href="concurrency.html"/>
         <link rel="prev" title="Error Handling" href="errors.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -111,6 +111,8 @@
 <li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
@@ -174,8 +176,8 @@
 <div class="section" id="color-interpretation">
 <h2>Color interpretation<a class="headerlink" href="#color-interpretation" title="Permalink to this headline">¶</a></h2>
 <p>Color interpretation of raster bands can be read from the dataset</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">colorinterp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">&lt;ColorInterp.red: 3&gt;</span>
 </pre></div>
@@ -185,14 +187,14 @@ With the <code class="docutils literal"><span class="pre">GTiff</span></code> dr
 4 bands of uint8 will be RGBA by default.</p>
 <p>You cannot set the color interpretation on existing data but you can
 specify a <code class="docutils literal"><span class="pre">photometric</span></code> string when writing a new raster.</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">profile</span><span class="p">[</span><span class="s">&#39;photometric&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;RGB&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/tmp/rgb.tif&quot;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;photometric&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;RGB&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;/tmp/rgb.tif&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </pre></div>
 </div>
 <p>And the resulting raster will be interpretted as RGB.</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/tmp/rgb.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src2</span><span class="p">:</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;/tmp/rgb.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src2</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">src2</span><span class="o">.</span><span class="n">colorinterp</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">&lt;ColorInterp.green: 4&gt;</span>
 </pre></div>
@@ -204,27 +206,27 @@ specify a <code class="docutils literal"><span class="pre">photometric</span></c
 <h3>Writing colormaps<a class="headerlink" href="#writing-colormaps" title="Permalink to this headline">¶</a></h3>
 <p>Mappings from 8-bit (rasterio.uint8) pixel values to RGBA values can be attached
 to bands using the <code class="docutils literal"><span class="pre">write_colormap()</span></code> method.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">drivers</span><span class="p">():</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
 
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/shade.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/shade.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="n">shade</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">meta</span>
 
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/colormap.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/colormap.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">shade</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write_colormap</span><span class="p">(</span>
             <span class="mi">1</span><span class="p">,</span> <span class="p">{</span>
                 <span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
                 <span class="mi">255</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> <span class="p">})</span>
         <span class="n">cmap</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">colormap</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="c"># True</span>
+        <span class="c1"># True</span>
         <span class="k">assert</span> <span class="n">cmap</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
-        <span class="c"># True</span>
+        <span class="c1"># True</span>
         <span class="k">assert</span> <span class="n">cmap</span><span class="p">[</span><span class="mi">255</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
 
-<span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="s">&#39;open&#39;</span><span class="p">,</span> <span class="s">&#39;/tmp/colormap.tif&#39;</span><span class="p">])</span>
+<span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;/tmp/colormap.tif&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>The program above (on OS X, another viewer is needed with a different OS)
@@ -281,7 +283,7 @@ all but two of those would map to (0, 0, 0, 0) in the example above.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

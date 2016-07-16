@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rasterio Documentation &mdash; rasterio 0.35.1 documentation</title>
+  <title>Rasterio Documentation &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="#"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="#"/>
         <link rel="next" title="rasterio Python User’s Manual" href="python_manual.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -131,27 +131,20 @@
             
   <div class="section" id="rasterio-documentation">
 <h1>Rasterio Documentation<a class="headerlink" href="#rasterio-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p>This is not the official documentation. Not yet.
-This is a draft and everything here is subject to change.</p>
-<p class="last">For now, please refer to <a class="reference external" href="https://github.com/mapbox/rasterio">https://github.com/mapbox/rasterio</a>
-for documentation.</p>
-</div>
 <p>Rasterio is for Python programmers and command line users
 who want to read, write and manipulate geospatial raster datasets.</p>
 <p>Rasterio employs <a class="reference external" href="http://gdal.org/">GDAL</a> under the hood for file I/O and raster formatting.
 Its functions typically accept and return Numpy ndarrays.
 Rasterio is designed to make working with geospatial raster data more productive and more fun.</p>
 <p>Install with pip (see the complete <a class="reference internal" href="installation.html"><span class="doc">installation docs</span></a> )</p>
-<div class="code highlight-default"><div class="highlight"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">rasterio</span>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rasterio</span>
 </pre></div>
 </div>
 <p>And an example of use in python</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;data.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;data.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -166,7 +159,6 @@ Rasterio is designed to make working with geospatial raster data more productive
 <li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="topics.html">General Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
@@ -175,7 +167,7 @@ Rasterio is designed to make working with geospatial raster data more productive
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api_docs.html#module-rasterio">rasterio package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_docs.html#rasterio-package">rasterio package</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="community.html">Community</a><ul>
@@ -237,7 +229,7 @@ Rasterio is designed to make working with geospatial raster data more productive
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

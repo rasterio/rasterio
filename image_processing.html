@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Interoperability &mdash; rasterio 0.35.1 documentation</title>
+  <title>Interoperability &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="General Concepts" href="topics.html"/>
         <link rel="next" title="Resampling" href="resampling.html"/>
         <link rel="prev" title="Nodata" href="nodata.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -110,6 +110,8 @@
 <li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
@@ -171,30 +173,34 @@
   <div class="section" id="interoperability">
 <h1>Interoperability<a class="headerlink" href="#interoperability" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="image-processing-software">
-<h2>Image processing software<a class="headerlink" href="#image-processing-software" title="Permalink to this headline">¶</a></h2>
+<span id="imageorder"></span><h2>Image processing software<a class="headerlink" href="#image-processing-software" title="Permalink to this headline">¶</a></h2>
 <p>Some python image processing software packages
 organize arrays differently than rasterio. The interpretation of a
 3-dimension array read from <code class="docutils literal"><span class="pre">rasterio</span></code> is:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>while image processing software like <code class="docutils literal"><span class="pre">scikit-image</span></code>, <code class="docutils literal"><span class="pre">pillow</span></code> and <code class="docutils literal"><span class="pre">matplotlib</span></code> are generally ordered:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">bands</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">bands</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The number of rows defines the dataset&#8217;s height, the columns are the dataset&#8217;s width.</p>
 <p>Numpy provides a way to efficiently swap the axis order and you can use the
-following functions to convert between raster and image axis order:</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;raster order (bands, rows, cols) -&gt; image (rows, cols, bands)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+following reshape functions to convert between raster and image axis order:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.plot</span> <span class="k">import</span> <span class="n">reshape_as_raster</span><span class="p">,</span> <span class="n">reshape_as_image</span>
 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 718, 791)</span>
 
-<span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;image order (rows, cols, bands) -&gt; rasterio (bands, rows, cols)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">reshape_as_image</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(718, 791, 3)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raster2</span> <span class="o">=</span> <span class="n">reshape_as_raster</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raster2</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 718, 791)</span>
 </pre></div>
 </div>
 </div>
@@ -241,7 +247,7 @@ following functions to convert between raster and image axis order:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

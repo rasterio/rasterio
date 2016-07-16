@@ -18,12 +18,12 @@ transform.
 
 .. code-block:: python
 
-    import numpy
+    import numpy as np
     import rasterio
     from rasterio import Affine as A
     from rasterio.warp import reproject, RESAMPLING
 
-    with rasterio.drivers():
+    with rasterio.Env():
 
         # As source: a 512 x 512 raster centered on 0 degrees E and 0
         # degrees N, each pixel covering 15".
@@ -33,14 +33,14 @@ transform.
         # A(d, 0, -cols*d/2, 0, -d, rows*d/2).
         src_transform = A.translation(-cols*d/2, rows*d/2) * A.scale(d, -d)
         src_crs = {'init': 'EPSG:4326'}
-        source = numpy.ones(src_shape, numpy.uint8)*255
+        source = np.ones(src_shape, np.uint8)*255
 
         # Destination: a 1024 x 1024 dataset in Web Mercator (EPSG:3857)
         # with origin at 0.0, 0.0.
         dst_shape = (1024, 1024)
         dst_transform = [-237481.5, 425.0, 0.0, 237536.4, 0.0, -425.0]
         dst_crs = {'init': 'EPSG:3857'}
-        destination = numpy.zeros(dst_shape, numpy.uint8)
+        destination = np.zeros(dst_shape, np.uint8)
 
         reproject(
             source, 
@@ -80,7 +80,7 @@ provided, and returns destination transform and dimensions.
 
 .. code-block:: python
 
-    import numpy
+    import numpy as np
     import rasterio
     from rasterio.warp import calculate_default_transform, reproject, RESAMPLING
 
@@ -123,7 +123,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
 
 .. code-block:: python
 
-    import numpy
+    import numpy as np
     import rasterio
     from rasterio import Affine as A
     from rasterio.warp import reproject, RESAMPLING
@@ -146,7 +146,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
         with rasterio.open('/tmp/zoomed-out.tif', 'w', **kwargs) as dst:
 
             for i, band in enumerate(data, 1):
-                dest = numpy.zeros_like(band)
+                dest = np.zeros_like(band)
 
                 reproject(
                     band,

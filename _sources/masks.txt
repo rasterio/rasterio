@@ -34,9 +34,9 @@ inverse relationship in the context of RGB.byte.tif.
     >>> src.count
     3
     >>> src.dtypes
-    ['uint8', 'uint8', 'uint8']
+    ('uint8', 'uint8', 'uint8')
     >>> src.nodatavals
-    [0.0, 0.0, 0.0]
+    (0.0, 0.0, 0.0)
 
 Reading dataset masks
 ---------------------
@@ -100,8 +100,8 @@ copy of the test data opened in "r+" (update) mode.
     >>> import shutil
     >>> import rasterio
 
-    >>> shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
-    >>> src = rasterio.open("/tmp/RGB.byte.tif", mode="r+")
+    >>> tmp = shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
+    >>> src = rasterio.open(tmp, mode="r+")
 
 To mark that all pixels of all bands are valid (i.e., to override nodata
 metadata values that can't be unset), you'd do this.
@@ -130,8 +130,8 @@ certainly can. Consider a fresh copy of that file.
 .. code-block:: python
 
     >>> src.close()
-    >>> shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
-    >>> src = rasterio.open("/tmp/RGB.byte.tif", mode="r+")
+    >>> tmp = shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
+    >>> src = rasterio.open(tmp, mode="r+")
 
 This time we'll read all 3 band masks 
 (based on the nodata values, not a .msk GeoTIFF) and show them

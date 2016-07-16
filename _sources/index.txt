@@ -1,13 +1,6 @@
 Rasterio Documentation
 ======================
 
-.. warning::
-    This is not the official documentation. Not yet.
-    This is a draft and everything here is subject to change.
-
-    For now, please refer to https://github.com/mapbox/rasterio
-    for documentation.
-
 Rasterio is for Python programmers and command line users
 who want to read, write and manipulate geospatial raster datasets.
 

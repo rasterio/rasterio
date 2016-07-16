@@ -1,24 +1,22 @@
 rasterio package
 ================
 
-.. automodule:: rasterio
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Submodules
 ----------
 
 .. toctree::
 
-   rasterio.aws
+   rasterio.compat
    rasterio.coords
    rasterio.crs
+   rasterio.drivers
    rasterio.dtypes
    rasterio.enums
+   rasterio.env
    rasterio.errors
    rasterio.features
    rasterio.fill
+   rasterio.io
    rasterio.mask
    rasterio.merge
    rasterio.plot
@@ -26,19 +24,13 @@ Submodules
    rasterio.sample
    rasterio.transform
    rasterio.vfs
-   rasterio.warnings
    rasterio.warp
    rasterio.windows
 
+Module contents
+---------------
 
-Source Interface
------------------
-
-Instances of these classes are returned from
-``rasterio.open``
-
-.. autoclass:: rasterio._io.RasterReader
-    :inherited-members:
-
-.. autoclass:: rasterio._io.RasterUpdater
-    :inherited-members:
+.. automodule:: rasterio
+    :members:
+    :undoc-members:
+    :show-inheritance:

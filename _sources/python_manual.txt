@@ -22,5 +22,4 @@ This user's manual is for Python developers who want a clean API for accessing r
     writing
     topics
     developers
-    cookbook
     osgeo_gdal_migration

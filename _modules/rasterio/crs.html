@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.crs &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.crs &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -132,231 +132,250 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.crs</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Coordinate reference systems and functions.</span>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
 
-<span class="sd">PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4</span>
-<span class="sd">coordinate reference systems are described by strings of parameters such as</span>
-
-<span class="sd">    +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</span>
-
-<span class="sd">here we use mappings:</span>
-
-<span class="sd">    {&#39;proj&#39;: &#39;longlat&#39;, &#39;ellps&#39;: &#39;WGS84&#39;, &#39;datum&#39;: &#39;WGS84&#39;, &#39;no_defs&#39;: True}</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="kn">import</span> <span class="nn">json</span>
-
-<span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="n">is_geographic_crs</span><span class="p">,</span> <span class="n">is_projected_crs</span><span class="p">,</span> <span class="n">is_same_crs</span>
+<span class="kn">from</span> <span class="nn">rasterio._crs</span> <span class="kn">import</span> <span class="n">_CRS</span>
 <span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="kn">import</span> <span class="n">CRSError</span>
-<span class="kn">from</span> <span class="nn">rasterio.five</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">string_types</span>
 
 
-<div class="viewcode-block" id="is_valid_crs"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.is_valid_crs">[docs]</a><span class="k">def</span> <span class="nf">is_valid_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if valid geographic or projected coordinate reference system.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">is_geographic_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_projected_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span></div>
+<div class="viewcode-block" id="CRS"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.CRS">[docs]</a><span class="k">class</span> <span class="nc">CRS</span><span class="p">(</span><span class="n">_CRS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A container class for coordinate reference system info</span>
 
+<span class="sd">    PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4</span>
+<span class="sd">    coordinate reference systems are described by strings of parameters such as</span>
 
-<div class="viewcode-block" id="to_string"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.to_string">[docs]</a><span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="n">crs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn a parameter mapping into a more conventional PROJ.4 string.</span>
+<span class="sd">        +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</span>
 
-<span class="sd">    Mapping keys are tested against the ``all_proj_keys`` list. Values of</span>
-<span class="sd">    ``True`` are omitted, leaving the key bare: {&#39;no_defs&#39;: True} -&gt; &quot;+no_defs&quot;</span>
-<span class="sd">    and items where the value is otherwise not a str, int, or float are</span>
-<span class="sd">    omitted.</span>
+<span class="sd">    here we use mappings:</span>
+
+<span class="sd">        {&#39;proj&#39;: &#39;longlat&#39;, &#39;ellps&#39;: &#39;WGS84&#39;, &#39;datum&#39;: &#39;WGS84&#39;, &#39;no_defs&#39;: True}</span>
+
+<span class="sd">    One can set/get any PROJ.4 parameter using a dict-like key/value pair on the</span>
+<span class="sd">    object. You can instantiate the object by simply passing a dict to the</span>
+<span class="sd">    constructor. E.g.</span>
+
+<span class="sd">        crs = CRS({&#39;init&#39;: &#39;epsg:3005&#39;})</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_proj_keys</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">string_types</span><span class="p">)),</span>
-            <span class="n">crs</span><span class="o">.</span><span class="n">items</span><span class="p">())):</span>
-        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s">&quot;+&quot;</span> <span class="o">+</span> <span class="s">&quot;=&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">y</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)))))</span>
-    <span class="k">return</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if valid geographic or projected coordinate reference system.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_geographic</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_projected</span>
 
-<div class="viewcode-block" id="from_string"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.from_string">[docs]</a><span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="n">prjs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn a PROJ.4 string into a mapping of parameters.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_epsg_code</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">val</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;epsg&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
 
-<span class="sd">    Bare parameters like &quot;+no_defs&quot; are given a value of ``True``. All keys</span>
-<span class="sd">    are checked against the ``all_proj_keys`` list.</span>
+<div class="viewcode-block" id="CRS.to_string"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.CRS.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn a parameter mapping into a more conventional PROJ.4 string.</span>
 
-<span class="sd">    EPSG:nnnn is allowed.</span>
+<span class="sd">        Mapping keys are tested against the ``all_proj_keys`` list. Values of</span>
+<span class="sd">        ``True`` are omitted, leaving the key bare: {&#39;no_defs&#39;: True} -&gt; &quot;+no_defs&quot;</span>
+<span class="sd">        and items where the value is otherwise not a str, int, or float are</span>
+<span class="sd">        omitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_proj_keys</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">string_types</span><span class="p">)),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())):</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">y</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)))))</span>
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
 
-<span class="sd">    JSON text-encoded strings are allowed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s">&#39;{&#39;</span> <span class="ow">in</span> <span class="n">prjs</span><span class="p">:</span>
-        <span class="c"># may be json, try to decode it</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">prjs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s">&#39;crs appears to be JSON but is not valid&#39;</span><span class="p">)</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CRS.from_string"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.CRS.from_string">[docs]</a>    <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="n">prjs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn a PROJ.4 string into a mapping of parameters.</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s">&quot;crs is empty JSON&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">val</span>
+<span class="sd">        Bare parameters like &quot;+no_defs&quot; are given a value of ``True``. All keys</span>
+<span class="sd">        are checked against the ``all_proj_keys`` list.</span>
 
-    <span class="k">if</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;EPSG:&#39;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">from_epsg</span><span class="p">(</span><span class="n">prjs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+<span class="sd">        EPSG:nnnn is allowed.</span>
 
-    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&#39;+&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
-
-    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;True&#39;</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">True</span>
-        <span class="k">elif</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;False&#39;</span><span class="p">,</span> <span class="s">&#39;false&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">False</span>
-        <span class="k">else</span><span class="p">:</span>
+<span class="sd">        JSON text-encoded strings are allowed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;{&#39;</span> <span class="ow">in</span> <span class="n">prjs</span><span class="p">:</span>
+            <span class="c1"># may be json, try to decode it</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">prjs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">v</span>
+                <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s1">&#39;crs appears to be JSON but is not valid&#39;</span><span class="p">)</span>
 
-    <span class="n">items</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
-        <span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">kv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">parse</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">True</span><span class="p">),</span>
-        <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s2">&quot;crs is empty JSON&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">val</span>
 
-    <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">all_proj_keys</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;EPSG:&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="n">prjs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s">&quot;crs is empty or invalid: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prjs</span><span class="p">))</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
 
-    <span class="k">return</span> <span class="n">out</span></div>
+        <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">v</span>
 
+        <span class="n">items</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">kv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">parse</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">True</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">))</span>
 
-<div class="viewcode-block" id="from_epsg"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.from_epsg">[docs]</a><span class="k">def</span> <span class="nf">from_epsg</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Given an integer code, returns an EPSG-like mapping.</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">CRS</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">all_proj_keys</span><span class="p">)</span>
 
-<span class="sd">    Note: the input code is not validated against an EPSG database.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;EPSG codes are positive integers&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;init&#39;</span><span class="p">:</span> <span class="s">&quot;epsg:</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">code</span><span class="p">,</span> <span class="s">&#39;no_defs&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s2">&quot;crs is empty or invalid: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prjs</span><span class="p">))</span>
 
+        <span class="k">return</span> <span class="n">out</span></div>
 
-<span class="c"># Below is the big list of PROJ4 parameters from</span>
-<span class="c"># http://trac.osgeo.org/proj/wiki/GenParms.</span>
-<span class="c"># It is parsed into a list of parameter keys ``all_proj_keys``.</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CRS.from_epsg"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.CRS.from_epsg">[docs]</a>    <span class="k">def</span> <span class="nf">from_epsg</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given an integer code, returns an EPSG-like mapping.</span>
 
-<span class="n">_param_data</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
-<span class="s">+a         Semimajor radius of the ellipsoid axis</span>
-<span class="s">+alpha     ? Used with Oblique Mercator and possibly a few others</span>
-<span class="s">+axis      Axis orientation (new in 4.8.0)</span>
-<span class="s">+b         Semiminor radius of the ellipsoid axis</span>
-<span class="s">+datum     Datum name (see `proj -ld`)</span>
-<span class="s">+ellps     Ellipsoid name (see `proj -le`)</span>
-<span class="s">+init      Initialize from a named CRS</span>
-<span class="s">+k         Scaling factor (old name)</span>
-<span class="s">+k_0       Scaling factor (new name)</span>
-<span class="s">+lat_0     Latitude of origin</span>
-<span class="s">+lat_1     Latitude of first standard parallel</span>
-<span class="s">+lat_2     Latitude of second standard parallel</span>
-<span class="s">+lat_ts    Latitude of true scale</span>
-<span class="s">+lon_0     Central meridian</span>
-<span class="s">+lonc      ? Longitude used with Oblique Mercator and possibly a few others</span>
-<span class="s">+lon_wrap  Center longitude to use for wrapping (see below)</span>
-<span class="s">+nadgrids  Filename of NTv2 grid file to use for datum transforms (see below)</span>
-<span class="s">+no_defs   Don&#39;t use the /usr/share/proj/proj_def.dat defaults file</span>
-<span class="s">+over      Allow longitude output outside -180 to 180 range, disables wrapping (see below)</span>
-<span class="s">+pm        Alternate prime meridian (typically a city name, see below)</span>
-<span class="s">+proj      Projection name (see `proj -l`)</span>
-<span class="s">+south     Denotes southern hemisphere UTM zone</span>
-<span class="s">+to_meter  Multiplier to convert map units to 1.0m</span>
-<span class="s">+towgs84   3 or 7 term datum transform parameters (see below)</span>
-<span class="s">+units     meters, US survey feet, etc.</span>
-<span class="s">+vto_meter vertical conversion to meters.</span>
-<span class="s">+vunits    vertical units.</span>
-<span class="s">+x_0       False easting</span>
-<span class="s">+y_0       False northing</span>
-<span class="s">+zone      UTM zone</span>
-<span class="s">+a         Semimajor radius of the ellipsoid axis</span>
-<span class="s">+alpha     ? Used with Oblique Mercator and possibly a few others</span>
-<span class="s">+azi</span>
-<span class="s">+b         Semiminor radius of the ellipsoid axis</span>
-<span class="s">+belgium</span>
-<span class="s">+beta</span>
-<span class="s">+czech</span>
-<span class="s">+e         Eccentricity of the ellipsoid = sqrt(1 - b^2/a^2) = sqrt( f*(2-f) )</span>
-<span class="s">+ellps     Ellipsoid name (see `proj -le`)</span>
-<span class="s">+es        Eccentricity of the ellipsoid squared</span>
-<span class="s">+f         Flattening of the ellipsoid (often presented as an inverse, e.g. 1/298)</span>
-<span class="s">+gamma</span>
-<span class="s">+geoc</span>
-<span class="s">+guam</span>
-<span class="s">+h</span>
-<span class="s">+k         Scaling factor (old name)</span>
-<span class="s">+K</span>
-<span class="s">+k_0       Scaling factor (new name)</span>
-<span class="s">+lat_0     Latitude of origin</span>
-<span class="s">+lat_1     Latitude of first standard parallel</span>
-<span class="s">+lat_2     Latitude of second standard parallel</span>
-<span class="s">+lat_b</span>
-<span class="s">+lat_t</span>
-<span class="s">+lat_ts    Latitude of true scale</span>
-<span class="s">+lon_0     Central meridian</span>
-<span class="s">+lon_1</span>
-<span class="s">+lon_2</span>
-<span class="s">+lonc      ? Longitude used with Oblique Mercator and possibly a few others</span>
-<span class="s">+lsat</span>
-<span class="s">+m</span>
-<span class="s">+M</span>
-<span class="s">+n</span>
-<span class="s">+no_cut</span>
-<span class="s">+no_off</span>
-<span class="s">+no_rot</span>
-<span class="s">+ns</span>
-<span class="s">+o_alpha</span>
-<span class="s">+o_lat_1</span>
-<span class="s">+o_lat_2</span>
-<span class="s">+o_lat_c</span>
-<span class="s">+o_lat_p</span>
-<span class="s">+o_lon_1</span>
-<span class="s">+o_lon_2</span>
-<span class="s">+o_lon_c</span>
-<span class="s">+o_lon_p</span>
-<span class="s">+o_proj</span>
-<span class="s">+over</span>
-<span class="s">+p</span>
-<span class="s">+path</span>
-<span class="s">+proj      Projection name (see `proj -l`)</span>
-<span class="s">+q</span>
-<span class="s">+R</span>
-<span class="s">+R_a</span>
-<span class="s">+R_A       Compute radius such that the area of the sphere is the same as the area of the ellipsoid</span>
-<span class="s">+rf        Reciprocal of the ellipsoid flattening term (e.g. 298)</span>
-<span class="s">+R_g</span>
-<span class="s">+R_h</span>
-<span class="s">+R_lat_a</span>
-<span class="s">+R_lat_g</span>
-<span class="s">+rot</span>
-<span class="s">+R_V</span>
-<span class="s">+s</span>
-<span class="s">+south     Denotes southern hemisphere UTM zone</span>
-<span class="s">+sym</span>
-<span class="s">+t</span>
-<span class="s">+theta</span>
-<span class="s">+tilt</span>
-<span class="s">+to_meter  Multiplier to convert map units to 1.0m</span>
-<span class="s">+units     meters, US survey feet, etc.</span>
-<span class="s">+vopt</span>
-<span class="s">+W</span>
-<span class="s">+westo</span>
-<span class="s">+x_0       False easting</span>
-<span class="s">+y_0       False northing</span>
-<span class="s">+zone      UTM zone</span>
-<span class="s">&quot;&quot;&quot;</span>
+<span class="sd">        Note: the input code is not validated against an EPSG database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;EPSG codes are positive integers&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CRS</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="s2">&quot;epsg:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">code</span><span class="p">,</span> <span class="n">no_defs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
 
-<span class="n">_lines</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">_param_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">))</span>
-<span class="n">all_proj_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-    <span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&quot;+&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_lines</span><span class="p">)</span>
-    <span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;no_mayo&#39;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Should use super() here, but what&#39;s the best way to be compatible</span>
+        <span class="c1"># between Python 2 and 3?</span>
+        <span class="k">return</span> <span class="s2">&quot;CRS({})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+<div class="viewcode-block" id="CRS.to_dict"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.CRS.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span></div></div>
+
+<span class="c1"># Below is the big list of PROJ4 parameters from</span>
+<span class="c1"># http://trac.osgeo.org/proj/wiki/GenParms.</span>
+<span class="c1"># It is parsed into a list of parameter keys ``all_proj_keys``.</span>
+
+<span class="n">_param_data</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">+a         Semimajor radius of the ellipsoid axis</span>
+<span class="s2">+alpha     ? Used with Oblique Mercator and possibly a few others</span>
+<span class="s2">+axis      Axis orientation (new in 4.8.0)</span>
+<span class="s2">+b         Semiminor radius of the ellipsoid axis</span>
+<span class="s2">+datum     Datum name (see `proj -ld`)</span>
+<span class="s2">+ellps     Ellipsoid name (see `proj -le`)</span>
+<span class="s2">+init      Initialize from a named CRS</span>
+<span class="s2">+k         Scaling factor (old name)</span>
+<span class="s2">+k_0       Scaling factor (new name)</span>
+<span class="s2">+lat_0     Latitude of origin</span>
+<span class="s2">+lat_1     Latitude of first standard parallel</span>
+<span class="s2">+lat_2     Latitude of second standard parallel</span>
+<span class="s2">+lat_ts    Latitude of true scale</span>
+<span class="s2">+lon_0     Central meridian</span>
+<span class="s2">+lonc      ? Longitude used with Oblique Mercator and possibly a few others</span>
+<span class="s2">+lon_wrap  Center longitude to use for wrapping (see below)</span>
+<span class="s2">+nadgrids  Filename of NTv2 grid file to use for datum transforms (see below)</span>
+<span class="s2">+no_defs   Don&#39;t use the /usr/share/proj/proj_def.dat defaults file</span>
+<span class="s2">+over      Allow longitude output outside -180 to 180 range, disables wrapping (see below)</span>
+<span class="s2">+pm        Alternate prime meridian (typically a city name, see below)</span>
+<span class="s2">+proj      Projection name (see `proj -l`)</span>
+<span class="s2">+south     Denotes southern hemisphere UTM zone</span>
+<span class="s2">+to_meter  Multiplier to convert map units to 1.0m</span>
+<span class="s2">+towgs84   3 or 7 term datum transform parameters (see below)</span>
+<span class="s2">+units     meters, US survey feet, etc.</span>
+<span class="s2">+vto_meter vertical conversion to meters.</span>
+<span class="s2">+vunits    vertical units.</span>
+<span class="s2">+x_0       False easting</span>
+<span class="s2">+y_0       False northing</span>
+<span class="s2">+zone      UTM zone</span>
+<span class="s2">+a         Semimajor radius of the ellipsoid axis</span>
+<span class="s2">+alpha     ? Used with Oblique Mercator and possibly a few others</span>
+<span class="s2">+azi</span>
+<span class="s2">+b         Semiminor radius of the ellipsoid axis</span>
+<span class="s2">+belgium</span>
+<span class="s2">+beta</span>
+<span class="s2">+czech</span>
+<span class="s2">+e         Eccentricity of the ellipsoid = sqrt(1 - b^2/a^2) = sqrt( f*(2-f) )</span>
+<span class="s2">+ellps     Ellipsoid name (see `proj -le`)</span>
+<span class="s2">+es        Eccentricity of the ellipsoid squared</span>
+<span class="s2">+f         Flattening of the ellipsoid (often presented as an inverse, e.g. 1/298)</span>
+<span class="s2">+gamma</span>
+<span class="s2">+geoc</span>
+<span class="s2">+guam</span>
+<span class="s2">+h</span>
+<span class="s2">+k         Scaling factor (old name)</span>
+<span class="s2">+K</span>
+<span class="s2">+k_0       Scaling factor (new name)</span>
+<span class="s2">+lat_0     Latitude of origin</span>
+<span class="s2">+lat_1     Latitude of first standard parallel</span>
+<span class="s2">+lat_2     Latitude of second standard parallel</span>
+<span class="s2">+lat_b</span>
+<span class="s2">+lat_t</span>
+<span class="s2">+lat_ts    Latitude of true scale</span>
+<span class="s2">+lon_0     Central meridian</span>
+<span class="s2">+lon_1</span>
+<span class="s2">+lon_2</span>
+<span class="s2">+lonc      ? Longitude used with Oblique Mercator and possibly a few others</span>
+<span class="s2">+lsat</span>
+<span class="s2">+m</span>
+<span class="s2">+M</span>
+<span class="s2">+n</span>
+<span class="s2">+no_cut</span>
+<span class="s2">+no_off</span>
+<span class="s2">+no_rot</span>
+<span class="s2">+ns</span>
+<span class="s2">+o_alpha</span>
+<span class="s2">+o_lat_1</span>
+<span class="s2">+o_lat_2</span>
+<span class="s2">+o_lat_c</span>
+<span class="s2">+o_lat_p</span>
+<span class="s2">+o_lon_1</span>
+<span class="s2">+o_lon_2</span>
+<span class="s2">+o_lon_c</span>
+<span class="s2">+o_lon_p</span>
+<span class="s2">+o_proj</span>
+<span class="s2">+over</span>
+<span class="s2">+p</span>
+<span class="s2">+path</span>
+<span class="s2">+proj      Projection name (see `proj -l`)</span>
+<span class="s2">+q</span>
+<span class="s2">+R</span>
+<span class="s2">+R_a</span>
+<span class="s2">+R_A       Compute radius such that the area of the sphere is the same as the area of the ellipsoid</span>
+<span class="s2">+rf        Reciprocal of the ellipsoid flattening term (e.g. 298)</span>
+<span class="s2">+R_g</span>
+<span class="s2">+R_h</span>
+<span class="s2">+R_lat_a</span>
+<span class="s2">+R_lat_g</span>
+<span class="s2">+rot</span>
+<span class="s2">+R_V</span>
+<span class="s2">+s</span>
+<span class="s2">+south     Denotes southern hemisphere UTM zone</span>
+<span class="s2">+sym</span>
+<span class="s2">+t</span>
+<span class="s2">+theta</span>
+<span class="s2">+tilt</span>
+<span class="s2">+to_meter  Multiplier to convert map units to 1.0m</span>
+<span class="s2">+units     meters, US survey feet, etc.</span>
+<span class="s2">+vopt</span>
+<span class="s2">+W</span>
+<span class="s2">+westo</span>
+<span class="s2">+x_0       False easting</span>
+<span class="s2">+y_0       False northing</span>
+<span class="s2">+zone      UTM zone</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">_lines</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">_param_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+<span class="n">all_proj_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_lines</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;no_mayo&#39;</span><span class="p">]</span>
 </pre></div>
 
            </div>
@@ -390,7 +409,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

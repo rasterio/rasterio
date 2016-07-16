@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.mask &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.mask &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -132,9 +132,8 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.mask</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Mask the area outside of the input shapes with no data.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Mask the area outside of the input shapes with no data.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 
@@ -174,14 +173,19 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    masked: numpy ndarray</span>
-<span class="sd">        Data contained in raster after applying the mask.</span>
-<span class="sd">    out_transform: affine object</span>
-<span class="sd">        Information for mapping pixel coordinates in `masked` to another</span>
-<span class="sd">        coordinate system.</span>
+<span class="sd">    tuple</span>
+
+<span class="sd">        Two elements:</span>
+
+<span class="sd">            masked : numpy ndarray</span>
+<span class="sd">                Data contained in raster after applying the mask.</span>
+
+<span class="sd">            out_transform : affine.Affine()</span>
+<span class="sd">                Information for mapping pixel coordinates in `masked` to another</span>
+<span class="sd">                coordinate system.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">crop</span> <span class="ow">and</span> <span class="n">invert</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;crop and invert cannot both be True.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;crop and invert cannot both be True.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">raster</span><span class="o">.</span><span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">nodata</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">nodata</span>
@@ -192,18 +196,18 @@
     <span class="n">minxs</span><span class="p">,</span> <span class="n">minys</span><span class="p">,</span> <span class="n">maxxs</span><span class="p">,</span> <span class="n">maxys</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">all_bounds</span><span class="p">)</span>
     <span class="n">mask_bounds</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">minxs</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">minys</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxxs</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxys</span><span class="p">))</span>
 
-    <span class="n">invert_y</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">affine</span><span class="o">.</span><span class="n">e</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">invert_y</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">e</span> <span class="o">&gt;</span> <span class="mi">0</span>
     <span class="n">source_bounds</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">bounds</span>
     <span class="k">if</span> <span class="n">invert_y</span><span class="p">:</span>
         <span class="n">source_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">source_bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
                          <span class="n">source_bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">source_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
     <span class="k">if</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">disjoint_bounds</span><span class="p">(</span><span class="n">source_bounds</span><span class="p">,</span> <span class="n">mask_bounds</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">crop</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Input shapes do not overlap raster.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input shapes do not overlap raster.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;GeoJSON outside bounds of existing output &quot;</span> <span class="o">+</span>
-                          <span class="s">&quot;raster. Are they in different coordinate &quot;</span> <span class="o">+</span>
-                          <span class="s">&quot;reference systems?&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;GeoJSON outside bounds of existing output &quot;</span> <span class="o">+</span>
+                          <span class="s2">&quot;raster. Are they in different coordinate &quot;</span> <span class="o">+</span>
+                          <span class="s2">&quot;reference systems?&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">invert_y</span><span class="p">:</span>
         <span class="n">mask_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">mask_bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mask_bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
                        <span class="n">mask_bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mask_bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
@@ -212,7 +216,7 @@
         <span class="n">out_transform</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">window</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="n">out_transform</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">affine</span>
+        <span class="n">out_transform</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">transform</span>
 
     <span class="n">out_image</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">out_shape</span> <span class="o">=</span> <span class="n">out_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
@@ -259,7 +263,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

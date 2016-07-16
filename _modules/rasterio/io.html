@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.io &mdash; rasterio 1.0.dev1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../../index.html"/>
+        <link rel="up" title="rasterio" href="../rasterio.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.dev1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
+      
+    <li>rasterio.io</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.io</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Classes capable of reading and writing datasets</span>
+
+<span class="sd">Instances of these classes are called dataset objects.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_dataset_driver</span><span class="p">,</span> <span class="n">driver_can_create</span><span class="p">,</span> <span class="n">driver_can_create_copy</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DatasetReaderBase</span><span class="p">,</span> <span class="n">DatasetWriterBase</span><span class="p">,</span> <span class="n">BufferedDatasetWriterBase</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">windows</span>
+<span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">guard_transform</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">rowcol</span>
+
+
+<div class="viewcode-block" id="TransformMethodsMixin"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.TransformMethodsMixin">[docs]</a><span class="k">class</span> <span class="nc">TransformMethodsMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin providing methods for calculations related</span>
+<span class="sd">    to tranforming between rows and columns of the raster</span>
+<span class="sd">    array and the coordinates.</span>
+
+<span class="sd">    These methods are wrappers for the functionality in</span>
+<span class="sd">    `rasterio.transform` module.</span>
+
+<span class="sd">    A subclass with this mixin MUST provide a `transform`</span>
+<span class="sd">    property.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TransformMethodsMixin.xy"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.TransformMethodsMixin.xy">[docs]</a>    <span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.</span>
+<span class="sd">        The pixel&#39;s center is returned by default, but a corner can be returned</span>
+<span class="sd">        by setting `offset` to one of `ul, ur, ll, lr`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        row : int</span>
+<span class="sd">            Pixel row.</span>
+<span class="sd">        col : int</span>
+<span class="sd">            Pixel column.</span>
+<span class="sd">        offset : str, optional</span>
+<span class="sd">            Determines if the returned coordinates are for the center of the</span>
+<span class="sd">            pixel or for a corner.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            ``(x, y)``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tranform</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransformMethodsMixin.ul"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.TransformMethodsMixin.ul">[docs]</a>    <span class="k">def</span> <span class="nf">ul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the coordinates (x, y) of the upper left corner of a</span>
+<span class="sd">        pixel at `row` and `col` in the units of the dataset&#39;s</span>
+<span class="sd">        coordinate reference system.</span>
+
+<span class="sd">        Deprecated; Use `xy(row, col, offset=&#39;ul&#39;)` instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;ul method is deprecated. Use xy(row, col, offset=&#39;ul&#39;)&quot;</span><span class="p">,</span>
+                      <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s1">&#39;ul&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransformMethodsMixin.index"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.TransformMethodsMixin.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the (row, col) index of the pixel containing (x, y) given a</span>
+<span class="sd">        coordinate reference system.</span>
+
+<span class="sd">        Use an epsilon, magnitude determined by the precision parameter</span>
+<span class="sd">        and sign determined by the op function:</span>
+<span class="sd">            positive for floor, negative for ceil.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">            x value in coordinate reference system</span>
+<span class="sd">        y : float</span>
+<span class="sd">            y value in coordinate reference system</span>
+<span class="sd">        op : function, optional (default: math.floor)</span>
+<span class="sd">            Function to convert fractional pixels to whole numbers (floor, ceiling,</span>
+<span class="sd">            round)</span>
+<span class="sd">        precision : int, optional (default: 6)</span>
+<span class="sd">            Decimal places of precision in indexing, as in `round()`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (row index, col index)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">rowcol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="WindowMethodsMixin"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.WindowMethodsMixin">[docs]</a><span class="k">class</span> <span class="nc">WindowMethodsMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin providing methods for window-related calculations.</span>
+<span class="sd">    These methods are wrappers for the functionality in</span>
+<span class="sd">    `rasterio.windows` module.</span>
+
+<span class="sd">    A subclass with this mixin MUST provide the following</span>
+<span class="sd">    properties: `transform`, `height` and `width`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WindowMethodsMixin.window"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.WindowMethodsMixin.window">[docs]</a>    <span class="k">def</span> <span class="nf">window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the window corresponding to the bounding coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        left : float</span>
+<span class="sd">            Left (west) bounding coordinate</span>
+<span class="sd">        bottom : float</span>
+<span class="sd">            Bottom (south) bounding coordinate</span>
+<span class="sd">        right : float</span>
+<span class="sd">            Right (east) bounding coordinate</span>
+<span class="sd">        top : float</span>
+<span class="sd">            Top (north) bounding coordinate</span>
+<span class="sd">        boundless: boolean, optional</span>
+<span class="sd">            If boundless is False, window is limited</span>
+<span class="sd">            to extent of this dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        window: tuple</span>
+<span class="sd">            ((row_start, row_stop), (col_start, col_stop))</span>
+<span class="sd">            corresponding to the bounding coordinates</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+            <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="n">boundless</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WindowMethodsMixin.window_transform"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.WindowMethodsMixin.window_transform">[docs]</a>    <span class="k">def</span> <span class="nf">window_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the affine transform for a dataset window.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        window: tuple</span>
+<span class="sd">            Dataset window tuple</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        transform: Affine</span>
+<span class="sd">            The affine transform matrix for the given window</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WindowMethodsMixin.window_bounds"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.WindowMethodsMixin.window_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">window_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the bounds of a window</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        window: tuple</span>
+<span class="sd">            Dataset window tuple</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bounds : tuple</span>
+<span class="sd">            x_min, y_min, x_max, y_max for the given window</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">bounds</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DatasetReader"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.DatasetReader">[docs]</a><span class="k">class</span> <span class="nc">DatasetReader</span><span class="p">(</span><span class="n">DatasetReaderBase</span><span class="p">,</span> <span class="n">WindowMethodsMixin</span><span class="p">,</span>
+                    <span class="n">TransformMethodsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An unbuffered data and metadata reader&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;{} DatasetReader name=&#39;{}&#39; mode=&#39;{}&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">and</span> <span class="s1">&#39;closed&#39;</span> <span class="ow">or</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DatasetWriter"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.DatasetWriter">[docs]</a><span class="k">class</span> <span class="nc">DatasetWriter</span><span class="p">(</span><span class="n">DatasetWriterBase</span><span class="p">,</span> <span class="n">WindowMethodsMixin</span><span class="p">,</span>
+                    <span class="n">TransformMethodsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An unbuffered data and metadata writer. Its methods write data</span>
+<span class="sd">    directly to disk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;{} DatasetWriter name=&#39;{}&#39; mode=&#39;{}&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">and</span> <span class="s1">&#39;closed&#39;</span> <span class="ow">or</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BufferedDatasetWriter"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.BufferedDatasetWriter">[docs]</a><span class="k">class</span> <span class="nc">BufferedDatasetWriter</span><span class="p">(</span><span class="n">BufferedDatasetWriterBase</span><span class="p">,</span> <span class="n">WindowMethodsMixin</span><span class="p">,</span>
+                            <span class="n">TransformMethodsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Maintains data and metadata in a buffer, writing to disk or</span>
+<span class="sd">    network only when `close()` is called.</span>
+
+<span class="sd">    This allows incremental updates to datasets using formats that don&#39;t</span>
+<span class="sd">    otherwise support updates, such as JPEG.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;{} BufferedDatasetWriter name=&#39;{}&#39; mode=&#39;{}&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">and</span> <span class="s1">&#39;closed&#39;</span> <span class="ow">or</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_writer_for_driver"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.get_writer_for_driver">[docs]</a><span class="k">def</span> <span class="nf">get_writer_for_driver</span><span class="p">(</span><span class="n">driver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the writer class appropriate for the specified driver.&quot;&quot;&quot;</span>
+    <span class="n">cls</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">driver_can_create</span><span class="p">(</span><span class="n">driver</span><span class="p">):</span>
+        <span class="n">cls</span> <span class="o">=</span> <span class="n">DatasetWriter</span>
+    <span class="k">elif</span> <span class="n">driver_can_create_copy</span><span class="p">(</span><span class="n">driver</span><span class="p">):</span>  <span class="c1"># pragma: no branch</span>
+        <span class="n">cls</span> <span class="o">=</span> <span class="n">BufferedDatasetWriter</span>
+    <span class="k">return</span> <span class="n">cls</span></div>
+
+
+<div class="viewcode-block" id="get_writer_for_path"><a class="viewcode-back" href="../../rasterio.io.html#rasterio.io.get_writer_for_path">[docs]</a><span class="k">def</span> <span class="nf">get_writer_for_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the writer class appropriate for the existing dataset.&quot;&quot;&quot;</span>
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">get_dataset_driver</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_writer_for_driver</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0.dev1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

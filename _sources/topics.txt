@@ -20,4 +20,6 @@ General Concepts
     georeferencing
     windowed-rw
     vsi
+    masking-by-shapefile
+    migrating-to-v1
 

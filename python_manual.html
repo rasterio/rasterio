@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio Python User’s Manual &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio Python User’s Manual &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="next" title="Installation" href="installation.html"/>
         <link rel="prev" title="Rasterio Documentation" href="index.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -90,7 +90,6 @@
 <li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="topics.html">General Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
@@ -167,7 +166,10 @@
 <li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html#profile">Profile</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing.html">Writing Datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="writing.html#supported-drivers">Supported Drivers</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="topics.html">General Concepts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="errors.html">Error Handling</a></li>
@@ -186,28 +188,25 @@
 <li class="toctree-l2"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="developers.html">Developers guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#generating-summary-statistics-for-each-band">Generating summary statistics for each band</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#raster-algebra">Raster algebra</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#resampling-rasters-to-a-different-cell-size">Resampling rasters to a different cell size</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#reproject-warp-a-raster-to-a-different-crs">Reproject/warp a raster to a different CRS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#raster-to-polygon-features">Raster to polygon features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#rasterizing-geojson-features">Rasterizing GeoJSON features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#masking-raster-with-a-polygon-feature">Masking raster with a polygon feature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#creating-valid-data-bounding-polygons">Creating valid data bounding polygons</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#raster-to-vector-line-feature">Raster to vector line feature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#creating-raster-from-numpy-array">Creating raster from numpy array</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#creating-a-least-cost-path">Creating a least cost path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#using-a-scipy-filter-to-smooth-a-raster">Using a scipy filter to smooth a raster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#using-skimage-to-adjust-the-saturation-of-a-rgb-raster">Using skimage to adjust the saturation of a RGB raster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html#generating-a-kmz-from-a-raster">Generating a KMZ from a raster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">Developers guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#code-of-conduct">Code of Conduct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#rights">Rights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#issue-conventions">Issue Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#design-principles">Design Principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#git-conventions">Git Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#code-conventions">Code Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#development-environment">Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html#additional-information">Additional Information</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html#differences-between-rasterio-and-osgeo-gdal">Differences between rasterio and osgeo.gdal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html#osgeo-gdal-gotchas"><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html#command-line-interface">Command Line Interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html#migrating">Migrating</a></li>
 </ul>
 </li>
@@ -256,7 +255,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

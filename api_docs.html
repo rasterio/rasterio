@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Documentation &mdash; rasterio 0.35.1 documentation</title>
+  <title>API Documentation &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,8 +30,8 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
-        <link rel="next" title="rasterio.aws module" href="rasterio.aws.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
+        <link rel="next" title="rasterio.compat module" href="rasterio.compat.html"/>
         <link rel="prev" title="Using rio-calc" href="calc.html"/> 
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -85,16 +85,19 @@
 <li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-rasterio">rasterio package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rasterio-package">rasterio package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="rasterio.aws.html">rasterio.aws module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.compat.html">rasterio.compat module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.coords.html">rasterio.coords module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.crs.html">rasterio.crs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.drivers.html">rasterio.drivers module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.dtypes.html">rasterio.dtypes module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.enums.html">rasterio.enums module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.env.html">rasterio.env module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.errors.html">rasterio.errors module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.features.html">rasterio.features module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.fill.html">rasterio.fill module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.io.html">rasterio.io module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.mask.html">rasterio.mask module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.merge.html">rasterio.merge module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.plot.html">rasterio.plot module</a></li>
@@ -102,12 +105,11 @@
 <li class="toctree-l4"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="rasterio.warnings.html">rasterio.warnings module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#source-interface">Source Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-rasterio">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -159,8 +161,47 @@
             
   <div class="section" id="api-documentation">
 <h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rasterio-package">
+<h2>rasterio package<a class="headerlink" href="#rasterio-package" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="submodules">
+<h3>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.compat.html">rasterio.compat module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.coords.html">rasterio.coords module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.crs.html">rasterio.crs module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.drivers.html">rasterio.drivers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.dtypes.html">rasterio.dtypes module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.enums.html">rasterio.enums module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.env.html">rasterio.env module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.errors.html">rasterio.errors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.features.html">rasterio.features module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.fill.html">rasterio.fill module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.io.html">rasterio.io module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.mask.html">rasterio.mask module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.merge.html">rasterio.merge module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.plot.html">rasterio.plot module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.profiles.html">rasterio.profiles module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
+</ul>
+</div>
+</div>
 <div class="section" id="module-rasterio">
-<span id="rasterio-package"></span><h2>rasterio package<a class="headerlink" href="#module-rasterio" title="Permalink to this headline">¶</a></h2>
+<span id="module-contents"></span><h3>Module contents<a class="headerlink" href="#module-rasterio" title="Permalink to this headline">¶</a></h3>
 <p>Rasterio</p>
 <dl class="function">
 <dt id="rasterio.band">
@@ -174,7 +215,7 @@
 <blockquote>
 <div><p>Open rasterio dataset</p>
 </div></blockquote>
-<p><strong>bidx: int</strong></p>
+<p><strong>bidx: int or sequence of ints</strong></p>
 <blockquote>
 <div><p>Band number, index starting at 1</p>
 </div></blockquote>
@@ -264,28 +305,28 @@ space (optional, recommended for writing).</p>
 <p>A coordinate reference system for raster datasets in write mode
 can be defined by the <code class="docutils literal"><span class="pre">crs</span></code> argument. It takes Proj4 style
 mappings like</p>
-<div class="code highlight-default"><div class="highlight"><pre><span class="p">{</span><span class="s">&#39;proj&#39;</span><span class="p">:</span> <span class="s">&#39;longlat&#39;</span><span class="p">,</span> <span class="s">&#39;ellps&#39;</span><span class="p">:</span> <span class="s">&#39;WGS84&#39;</span><span class="p">,</span> <span class="s">&#39;datum&#39;</span><span class="p">:</span> <span class="s">&#39;WGS84&#39;</span><span class="p">,</span>
- <span class="s">&#39;no_defs&#39;</span><span class="p">:</span> <span class="k">True</span><span class="p">}</span>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;proj&#39;</span><span class="p">:</span> <span class="s1">&#39;longlat&#39;</span><span class="p">,</span> <span class="s1">&#39;ellps&#39;</span><span class="p">:</span> <span class="s1">&#39;WGS84&#39;</span><span class="p">,</span> <span class="s1">&#39;datum&#39;</span><span class="p">:</span> <span class="s1">&#39;WGS84&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;no_defs&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>An affine transformation that maps <code class="docutils literal"><span class="pre">col,row</span></code> pixel coordinates
 to <code class="docutils literal"><span class="pre">x,y</span></code> coordinates in the coordinate reference system can be
 specified using the <code class="docutils literal"><span class="pre">transform</span></code> argument. The value should be
 an instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code></p>
-<div class="code python highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">affine</span> <span class="k">import</span> <span class="n">Affine</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">Affine</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">180.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">90.0</span><span class="p">)</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">affine</span> <span class="k">import</span> <span class="n">Affine</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transform</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">180.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">90.0</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>These coefficients are shown in the figure below.</p>
-<div class="code highlight-default"><div class="highlight"><pre><span class="o">|</span> <span class="n">x</span> <span class="o">|</span>   <span class="o">|</span> <span class="n">a</span>  <span class="n">b</span>  <span class="n">c</span> <span class="o">|</span> <span class="o">|</span> <span class="n">c</span> <span class="o">|</span>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">x</span> <span class="o">|</span>   <span class="o">|</span> <span class="n">a</span>  <span class="n">b</span>  <span class="n">c</span> <span class="o">|</span> <span class="o">|</span> <span class="n">c</span> <span class="o">|</span>
 <span class="o">|</span> <span class="n">y</span> <span class="o">|</span> <span class="o">=</span> <span class="o">|</span> <span class="n">d</span>  <span class="n">e</span>  <span class="n">f</span> <span class="o">|</span> <span class="o">|</span> <span class="n">r</span> <span class="o">|</span>
 <span class="o">|</span> <span class="mi">1</span> <span class="o">|</span>   <span class="o">|</span> <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span> <span class="o">|</span> <span class="o">|</span> <span class="mi">1</span> <span class="o">|</span>
 
 <span class="n">a</span><span class="p">:</span> <span class="n">rate</span> <span class="n">of</span> <span class="n">change</span> <span class="n">of</span> <span class="n">X</span> <span class="k">with</span> <span class="n">respect</span> <span class="n">to</span> <span class="n">increasing</span> <span class="n">column</span><span class="p">,</span>
    <span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="n">pixel</span> <span class="n">width</span>
-<span class="n">b</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">the</span> <span class="n">raster</span> <span class="ow">is</span> <span class="n">oriented</span> <span class="s">&quot;north up&quot;</span>
+<span class="n">b</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">the</span> <span class="n">raster</span> <span class="ow">is</span> <span class="n">oriented</span> <span class="s2">&quot;north up&quot;</span>
 <span class="n">c</span><span class="p">:</span> <span class="n">X</span> <span class="n">coordinate</span> <span class="n">of</span> <span class="n">the</span> <span class="n">top</span> <span class="n">left</span> <span class="n">corner</span> <span class="n">of</span> <span class="n">the</span> <span class="n">top</span> <span class="n">left</span> <span class="n">pixel</span>
-<span class="n">d</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">the</span> <span class="n">raster</span> <span class="ow">is</span> <span class="n">oriented</span> <span class="s">&quot;north up&quot;</span>
+<span class="n">d</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">the</span> <span class="n">raster</span> <span class="ow">is</span> <span class="n">oriented</span> <span class="s2">&quot;north up&quot;</span>
 <span class="n">e</span><span class="p">:</span> <span class="n">rate</span> <span class="n">of</span> <span class="n">change</span> <span class="n">of</span> <span class="n">Y</span> <span class="k">with</span> <span class="n">respect</span> <span class="n">to</span> <span class="n">increasing</span> <span class="n">row</span><span class="p">,</span>
    <span class="n">usually</span> <span class="n">a</span> <span class="n">negative</span> <span class="n">number</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pixel</span> <span class="n">height</span><span class="p">)</span> <span class="k">if</span>
    <span class="n">north</span><span class="o">-</span><span class="n">up</span><span class="o">.</span>
@@ -376,936 +417,6 @@ used to control the output format.</p>
 <a class="reference external" href="http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html">http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html</a></p>
 </dd></dl>
 
-<div class="section" id="submodules">
-<h3>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h3>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.aws.html">rasterio.aws module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.coords.html">rasterio.coords module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.crs.html">rasterio.crs module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.dtypes.html">rasterio.dtypes module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.enums.html">rasterio.enums module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.errors.html">rasterio.errors module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.features.html">rasterio.features module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.fill.html">rasterio.fill module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.mask.html">rasterio.mask module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.merge.html">rasterio.merge module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.plot.html">rasterio.plot module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.profiles.html">rasterio.profiles module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.warnings.html">rasterio.warnings module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
-</ul>
-</div>
-</div>
-<div class="section" id="source-interface">
-<h3>Source Interface<a class="headerlink" href="#source-interface" title="Permalink to this headline">¶</a></h3>
-<p>Instances of these classes are returned from
-<code class="docutils literal"><span class="pre">rasterio.open</span></code></p>
-<dl class="class">
-<dt id="rasterio._io.RasterReader">
-<em class="property">class </em><code class="descclassname">rasterio._io.</code><code class="descname">RasterReader</code><a class="headerlink" href="#rasterio._io.RasterReader" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Attributes</p>
-<p class="rubric">Methods</p>
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.affine">
-<code class="descname">affine</code><a class="headerlink" href="#rasterio._io.RasterReader.affine" title="Permalink to this definition">¶</a></dt>
-<dd><p>An instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code>. This property is a
-transitional feature: see the docstring of <code class="docutils literal"><span class="pre">transform</span></code>
-(above) for more details.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.block_shapes">
-<code class="descname">block_shapes</code><a class="headerlink" href="#rasterio._io.RasterReader.block_shapes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an ordered list of block shapes for all bands.</p>
-<p>Shapes are tuples and have the same ordering as the dataset&#8217;s
-shape: (count of image rows, count of image columns).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.block_windows">
-<code class="descname">block_windows</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.block_windows" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an iterator over a band&#8217;s block windows and their
-indexes.</p>
-<p>The positional parameter <cite>bidx</cite> takes the index (starting at 1)
-of the desired band. Block windows are tuples</p>
-<blockquote>
-<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
-<p>For example, ((0, 2), (0, 2)) defines a 2 x 2 block at the upper
-left corner of the raster dataset.</p>
-<p>This iterator yields blocks &#8220;left to right&#8221; and &#8220;top to bottom&#8221;
-and is similar to Python&#8217;s enumerate() in that it also returns
-indexes.</p>
-<p>The primary use of this function is to obtain windows to pass to
-read() for highly efficient access to raster block data.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.bounds">
-<code class="descname">bounds</code><a class="headerlink" href="#rasterio._io.RasterReader.bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the lower left and upper right bounds of the dataset
-in the units of its coordinate reference system.</p>
-<p>The returned value is a tuple:
-(lower left x, lower left y, upper right x, upper right y)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.checksum">
-<code class="descname">checksum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.checksum" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute an integer checksum for the stored band</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bidx</strong> : int</p>
-<blockquote>
-<div><p>The band&#8217;s index (1-indexed).</p>
-</div></blockquote>
-<p><strong>window: tuple, optional</strong></p>
-<blockquote>
-<div><p>A window of the band. Default is the entire extent of the band.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An int.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.colorinterp">
-<code class="descname">colorinterp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.colorinterp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the color interpretation for a band or None.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.colormap">
-<code class="descname">colormap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.colormap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dict containing the colormap for a band or None.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.crs">
-<code class="descname">crs</code><a class="headerlink" href="#rasterio._io.RasterReader.crs" title="Permalink to this definition">¶</a></dt>
-<dd><p>A mapping of PROJ.4 coordinate reference system params.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.crs_wkt">
-<code class="descname">crs_wkt</code><a class="headerlink" href="#rasterio._io.RasterReader.crs_wkt" title="Permalink to this definition">¶</a></dt>
-<dd><p>An OGC WKT string representation of the coordinate reference
-system.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.dataset_mask">
-<code class="descname">dataset_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.dataset_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the dataset&#8217;s 2D mask. Derived from the individual band masks
-provided by read_masks().</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window and boundless are passed directly to read_masks()</strong></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray, shape=(self.height, self.width), dtype=&#8217;uint8&#8217;</p>
-<p>0 = nodata, 255 = valid data</p>
-<p>The dataset mask is calculate based on the individual band masks according to</p>
-<p>the following logic, in order of precedence:</p>
-<ol class="arabic">
-<li><p class="first">If a .msk file, dataset-wide alpha or internal mask exists,</p>
-<blockquote>
-<div><p>it will be used as the dataset mask.</p>
-</div></blockquote>
-</li>
-<li><p class="first">If an 4-band RGBA with a shadow nodata value,</p>
-<blockquote>
-<div><p>band 4 will be used as the dataset mask.</p>
-</div></blockquote>
-</li>
-<li><p class="first">If a nodata value exists, use the binary OR (|) of the band masks</p>
-</li>
-<li><p class="first">If no nodata value exists, return a mask filled with 255</p>
-</li>
-</ol>
-<p>Note that this differs from read_masks and GDAL RFC15</p>
-<p>in that it applies per-dataset, not per-band</p>
-<p class="last">(see <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask">https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask</a>)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.dtypes">
-<code class="descname">dtypes</code><a class="headerlink" href="#rasterio._io.RasterReader.dtypes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an ordered tuple of all band data types.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.get_transform">
-<code class="descname">get_transform</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.get_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a GDAL geotransform in its native form.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.index">
-<code class="descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the (row, col) index of the pixel containing (x, y).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.mask_flags">
-<code class="descname">mask_flags</code><a class="headerlink" href="#rasterio._io.RasterReader.mask_flags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mask flags for each band.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.meta">
-<code class="descname">meta</code><a class="headerlink" href="#rasterio._io.RasterReader.meta" title="Permalink to this definition">¶</a></dt>
-<dd><p>The basic metadata of this dataset.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.nodata">
-<code class="descname">nodata</code><a class="headerlink" href="#rasterio._io.RasterReader.nodata" title="Permalink to this definition">¶</a></dt>
-<dd><p>The dataset&#8217;s single nodata value.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.nodatavals">
-<code class="descname">nodatavals</code><a class="headerlink" href="#rasterio._io.RasterReader.nodatavals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Nodata values for each band.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.profile">
-<code class="descname">profile</code><a class="headerlink" href="#rasterio._io.RasterReader.profile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Basic metadata and creation options of this dataset.</p>
-<p>May be passed as keyword arguments to <cite>rasterio.open()</cite> to
-create a clone of this dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.read">
-<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read raster bands as a multidimensional array</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>indexes</strong> : list of ints or a single int, optional</p>
-<blockquote>
-<div><p>If <cite>indexes</cite> is a list, the result is a 3D array, but is
-a 2D array if it is a band index number.</p>
-</div></blockquote>
-<p><strong>out: numpy ndarray, optional</strong></p>
-<blockquote>
-<div><p>As with Numpy ufuncs, this is an optional reference to an
-output array with the same dimensions and shape into which
-data will be placed.</p>
-<p><em>Note</em>: the method&#8217;s return value may be a view on this
-array. In other words, <cite>out</cite> is likely to be an
-incomplete representation of the method&#8217;s results.</p>
-</div></blockquote>
-<p><strong>window</strong> : a pair (tuple) of pairs of ints, optional</p>
-<blockquote>
-<div><p>The optional <cite>window</cite> argument is a 2 item tuple. The first
-item is a tuple containing the indexes of the rows at which
-the window starts and stops and the second is a tuple
-containing the indexes of the columns at which the window
-starts and stops. For example, ((0, 2), (0, 2)) defines
-a 2x2 window at the upper left of the raster dataset.</p>
-</div></blockquote>
-<p><strong>masked</strong> : bool, optional</p>
-<blockquote>
-<div><p>If <cite>masked</cite> is <cite>True</cite> the return value will be a masked
-array. Otherwise (the default) the return value will be a 
-regular array. Masks will be exactly the inverse of the
-GDAL RFC 15 conforming arrays returned by read_masks().</p>
-</div></blockquote>
-<p><strong>boundless</strong> : bool, optional (default <cite>False</cite>)</p>
-<blockquote>
-<div><p>If <cite>True</cite>, windows that extend beyond the dataset&#8217;s extent
-are permitted and partially or completely filled arrays will
-be returned as appropriate.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Numpy ndarray or a view on a Numpy ndarray</p>
-<p>Note: as with Numpy ufuncs, an object is returned even if you</p>
-<p>use the optional <cite>out</cite> argument and the return value shall be</p>
-<p class="last">preferentially used by callers.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.read_band">
-<code class="descname">read_band</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.read_band" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the <cite>bidx</cite> band into an <cite>out</cite> array if provided, 
-otherwise return a new array.</p>
-<p>Band indexes begin with 1: read_band(1) returns the first band.</p>
-<p>The optional <cite>window</cite> argument is a 2 item tuple. The first item
-is a tuple containing the indexes of the rows at which the
-window starts and stops and the second is a tuple containing the
-indexes of the columns at which the window starts and stops. For
-example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
-of the raster dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.read_mask">
-<code class="descname">read_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.read_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the mask band into an <cite>out</cite> array if provided, 
-otherwise return a new array containing the dataset&#8217;s
-valid data mask.</p>
-<p>The optional <cite>window</cite> argument takes a tuple like:</p>
-<blockquote>
-<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
-<p>specifying a raster subset to write into.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.read_masks">
-<code class="descname">read_masks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.read_masks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read raster band masks as a multidimensional array</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>indexes</strong> : list of ints or a single int, optional</p>
-<blockquote>
-<div><p>If <cite>indexes</cite> is a list, the result is a 3D array, but is
-a 2D array if it is a band index number.</p>
-</div></blockquote>
-<p><strong>out: numpy ndarray, optional</strong></p>
-<blockquote>
-<div><p>As with Numpy ufuncs, this is an optional reference to an
-output array with the same dimensions and shape into which
-data will be placed.</p>
-<p><em>Note</em>: the method&#8217;s return value may be a view on this
-array. In other words, <cite>out</cite> is likely to be an
-incomplete representation of the method&#8217;s results.</p>
-</div></blockquote>
-<p><strong>window</strong> : a pair (tuple) of pairs of ints, optional</p>
-<blockquote>
-<div><p>The optional <cite>window</cite> argument is a 2 item tuple. The first
-item is a tuple containing the indexes of the rows at which
-the window starts and stops and the second is a tuple
-containing the indexes of the columns at which the window
-starts and stops. For example, ((0, 2), (0, 2)) defines
-a 2x2 window at the upper left of the raster dataset.</p>
-</div></blockquote>
-<p><strong>boundless</strong> : bool, optional (default <cite>False</cite>)</p>
-<blockquote>
-<div><p>If <cite>True</cite>, windows that extend beyond the dataset&#8217;s extent
-are permitted and partially or completely filled arrays will
-be returned as appropriate.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Numpy ndarray or a view on a Numpy ndarray</p>
-<p>Note: as with Numpy ufuncs, an object is returned even if you</p>
-<p>use the optional <cite>out</cite> argument and the return value shall be</p>
-<p class="last">preferentially used by callers.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.res">
-<code class="descname">res</code><a class="headerlink" href="#rasterio._io.RasterReader.res" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the (width, height) of pixels in the units of its
-coordinate reference system.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.sample">
-<code class="descname">sample</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the values of a dataset at certain positions</p>
-<p>Values are from the nearest pixel. They are not interpolated.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>xy</strong> : iterable, pairs of floats</p>
-<blockquote>
-<div><p>A sequence or generator of (x, y) pairs.</p>
-</div></blockquote>
-<p><strong>indexes</strong> : list of ints or a single int, optional</p>
-<blockquote>
-<div><p>If <cite>indexes</cite> is a list, the result is a 3D array, but is
-a 2D array if it is a band index number.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Iterable, yielding dataset values for the specified <cite>indexes</cite></p>
-<p class="last">as an ndarray.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.start">
-<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Start of the dataset reader life cycle.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.tags">
-<code class="descname">tags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.tags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dict containing copies of the dataset or band&#8217;s
-tags.</p>
-<p>Tags are pairs of key and value strings. Tags belong to
-namespaces.  The standard namespaces are: default (None) and
-&#8216;IMAGE_STRUCTURE&#8217;.  Applications can create their own additional
-namespaces.</p>
-<p>The optional bidx argument can be used to select the tags of
-a specific band. The optional ns argument can be used to select
-a namespace other than the default.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterReader.transform">
-<code class="descname">transform</code><a class="headerlink" href="#rasterio._io.RasterReader.transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Coefficients of the affine transformation that maps col,row
-pixel coordinates to x,y coordinates in the specified crs. The
-coefficients of the augmented matrix are shown below.</p>
-<blockquote>
-<div><div class="line-block">
-<div class="line">x |   | a  b  c | | r |</div>
-<div class="line">y | = | d  e  f | | c |</div>
-<div class="line">1 |   | 0  0  1 | | 1 |</div>
-</div>
-</div></blockquote>
-<p>In Rasterio versions before 1.0 the value of this property
-is a list of coefficients <code class="docutils literal"><span class="pre">[c,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">f,</span> <span class="pre">d,</span> <span class="pre">e]</span></code>. This form
-is <em>deprecated</em> beginning in 0.9 and in version 1.0 this 
-property will be replaced by an instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code>,
-which is a namedtuple with coefficients in the order
-<code class="docutils literal"><span class="pre">(a,</span> <span class="pre">b,</span> <span class="pre">c,</span> <span class="pre">d,</span> <span class="pre">e,</span> <span class="pre">f)</span></code>.</p>
-<p>Please see <a class="reference external" href="https://github.com/mapbox/rasterio/issues/86">https://github.com/mapbox/rasterio/issues/86</a>
-for more details.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.ul">
-<code class="descname">ul</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.ul" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the coordinates (x, y) of the upper left corner of a 
-pixel at <cite>row</cite> and <cite>col</cite> in the units of the dataset&#8217;s
-coordinate reference system.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.window">
-<code class="descname">window</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the window corresponding to the world bounding box.
-If boundless is False, window is limited to extent of this dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.window_bounds">
-<code class="descname">window_bounds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.window_bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the bounds of a window as x_min, y_min, x_max, y_max.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterReader.window_transform">
-<code class="descname">window_transform</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterReader.window_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the affine transform for a dataset window.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rasterio._io.RasterUpdater">
-<em class="property">class </em><code class="descclassname">rasterio._io.</code><code class="descname">RasterUpdater</code><a class="headerlink" href="#rasterio._io.RasterUpdater" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Attributes</p>
-<p class="rubric">Methods</p>
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.affine">
-<code class="descname">affine</code><a class="headerlink" href="#rasterio._io.RasterUpdater.affine" title="Permalink to this definition">¶</a></dt>
-<dd><p>An instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code>. This property is a
-transitional feature: see the docstring of <code class="docutils literal"><span class="pre">transform</span></code>
-(above) for more details.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.block_shapes">
-<code class="descname">block_shapes</code><a class="headerlink" href="#rasterio._io.RasterUpdater.block_shapes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an ordered list of block shapes for all bands.</p>
-<p>Shapes are tuples and have the same ordering as the dataset&#8217;s
-shape: (count of image rows, count of image columns).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.block_windows">
-<code class="descname">block_windows</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.block_windows" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an iterator over a band&#8217;s block windows and their
-indexes.</p>
-<p>The positional parameter <cite>bidx</cite> takes the index (starting at 1)
-of the desired band. Block windows are tuples</p>
-<blockquote>
-<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
-<p>For example, ((0, 2), (0, 2)) defines a 2 x 2 block at the upper
-left corner of the raster dataset.</p>
-<p>This iterator yields blocks &#8220;left to right&#8221; and &#8220;top to bottom&#8221;
-and is similar to Python&#8217;s enumerate() in that it also returns
-indexes.</p>
-<p>The primary use of this function is to obtain windows to pass to
-read() for highly efficient access to raster block data.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.bounds">
-<code class="descname">bounds</code><a class="headerlink" href="#rasterio._io.RasterUpdater.bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the lower left and upper right bounds of the dataset
-in the units of its coordinate reference system.</p>
-<p>The returned value is a tuple:
-(lower left x, lower left y, upper right x, upper right y)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.build_overviews">
-<code class="descname">build_overviews</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.build_overviews" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build overviews at one or more decimation factors for all
-bands of the dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.checksum">
-<code class="descname">checksum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.checksum" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute an integer checksum for the stored band</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bidx</strong> : int</p>
-<blockquote>
-<div><p>The band&#8217;s index (1-indexed).</p>
-</div></blockquote>
-<p><strong>window: tuple, optional</strong></p>
-<blockquote>
-<div><p>A window of the band. Default is the entire extent of the band.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An int.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.colorinterp">
-<code class="descname">colorinterp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.colorinterp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the color interpretation for a band or None.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.colormap">
-<code class="descname">colormap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.colormap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dict containing the colormap for a band or None.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.crs">
-<code class="descname">crs</code><a class="headerlink" href="#rasterio._io.RasterUpdater.crs" title="Permalink to this definition">¶</a></dt>
-<dd><p>A mapping of PROJ.4 coordinate reference system params.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.crs_wkt">
-<code class="descname">crs_wkt</code><a class="headerlink" href="#rasterio._io.RasterUpdater.crs_wkt" title="Permalink to this definition">¶</a></dt>
-<dd><p>An OGC WKT string representation of the coordinate reference
-system.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.dataset_mask">
-<code class="descname">dataset_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.dataset_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the dataset&#8217;s 2D mask. Derived from the individual band masks
-provided by read_masks().</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window and boundless are passed directly to read_masks()</strong></p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray, shape=(self.height, self.width), dtype=&#8217;uint8&#8217;</p>
-<p>0 = nodata, 255 = valid data</p>
-<p>The dataset mask is calculate based on the individual band masks according to</p>
-<p>the following logic, in order of precedence:</p>
-<ol class="arabic">
-<li><p class="first">If a .msk file, dataset-wide alpha or internal mask exists,</p>
-<blockquote>
-<div><p>it will be used as the dataset mask.</p>
-</div></blockquote>
-</li>
-<li><p class="first">If an 4-band RGBA with a shadow nodata value,</p>
-<blockquote>
-<div><p>band 4 will be used as the dataset mask.</p>
-</div></blockquote>
-</li>
-<li><p class="first">If a nodata value exists, use the binary OR (|) of the band masks</p>
-</li>
-<li><p class="first">If no nodata value exists, return a mask filled with 255</p>
-</li>
-</ol>
-<p>Note that this differs from read_masks and GDAL RFC15</p>
-<p>in that it applies per-dataset, not per-band</p>
-<p class="last">(see <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask">https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask</a>)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.dtypes">
-<code class="descname">dtypes</code><a class="headerlink" href="#rasterio._io.RasterUpdater.dtypes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an ordered tuple of all band data types.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.get_transform">
-<code class="descname">get_transform</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.get_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a GDAL geotransform in its native form.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.index">
-<code class="descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the (row, col) index of the pixel containing (x, y).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.mask_flags">
-<code class="descname">mask_flags</code><a class="headerlink" href="#rasterio._io.RasterUpdater.mask_flags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mask flags for each band.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.meta">
-<code class="descname">meta</code><a class="headerlink" href="#rasterio._io.RasterUpdater.meta" title="Permalink to this definition">¶</a></dt>
-<dd><p>The basic metadata of this dataset.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.nodata">
-<code class="descname">nodata</code><a class="headerlink" href="#rasterio._io.RasterUpdater.nodata" title="Permalink to this definition">¶</a></dt>
-<dd><p>The dataset&#8217;s single nodata value.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.nodatavals">
-<code class="descname">nodatavals</code><a class="headerlink" href="#rasterio._io.RasterUpdater.nodatavals" title="Permalink to this definition">¶</a></dt>
-<dd><p>A list by band of a dataset&#8217;s nodata values.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.profile">
-<code class="descname">profile</code><a class="headerlink" href="#rasterio._io.RasterUpdater.profile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Basic metadata and creation options of this dataset.</p>
-<p>May be passed as keyword arguments to <cite>rasterio.open()</cite> to
-create a clone of this dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.read">
-<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read raster bands as a multidimensional array</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>indexes</strong> : list of ints or a single int, optional</p>
-<blockquote>
-<div><p>If <cite>indexes</cite> is a list, the result is a 3D array, but is
-a 2D array if it is a band index number.</p>
-</div></blockquote>
-<p><strong>out: numpy ndarray, optional</strong></p>
-<blockquote>
-<div><p>As with Numpy ufuncs, this is an optional reference to an
-output array with the same dimensions and shape into which
-data will be placed.</p>
-<p><em>Note</em>: the method&#8217;s return value may be a view on this
-array. In other words, <cite>out</cite> is likely to be an
-incomplete representation of the method&#8217;s results.</p>
-</div></blockquote>
-<p><strong>window</strong> : a pair (tuple) of pairs of ints, optional</p>
-<blockquote>
-<div><p>The optional <cite>window</cite> argument is a 2 item tuple. The first
-item is a tuple containing the indexes of the rows at which
-the window starts and stops and the second is a tuple
-containing the indexes of the columns at which the window
-starts and stops. For example, ((0, 2), (0, 2)) defines
-a 2x2 window at the upper left of the raster dataset.</p>
-</div></blockquote>
-<p><strong>masked</strong> : bool, optional</p>
-<blockquote>
-<div><p>If <cite>masked</cite> is <cite>True</cite> the return value will be a masked
-array. Otherwise (the default) the return value will be a 
-regular array. Masks will be exactly the inverse of the
-GDAL RFC 15 conforming arrays returned by read_masks().</p>
-</div></blockquote>
-<p><strong>boundless</strong> : bool, optional (default <cite>False</cite>)</p>
-<blockquote>
-<div><p>If <cite>True</cite>, windows that extend beyond the dataset&#8217;s extent
-are permitted and partially or completely filled arrays will
-be returned as appropriate.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Numpy ndarray or a view on a Numpy ndarray</p>
-<p>Note: as with Numpy ufuncs, an object is returned even if you</p>
-<p>use the optional <cite>out</cite> argument and the return value shall be</p>
-<p class="last">preferentially used by callers.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.read_band">
-<code class="descname">read_band</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.read_band" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the <cite>bidx</cite> band into an <cite>out</cite> array if provided, 
-otherwise return a new array.</p>
-<p>Band indexes begin with 1: read_band(1) returns the first band.</p>
-<p>The optional <cite>window</cite> argument is a 2 item tuple. The first item
-is a tuple containing the indexes of the rows at which the
-window starts and stops and the second is a tuple containing the
-indexes of the columns at which the window starts and stops. For
-example, ((0, 2), (0, 2)) defines a 2x2 window at the upper left
-of the raster dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.read_mask">
-<code class="descname">read_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.read_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the mask band into an <cite>out</cite> array if provided, 
-otherwise return a new array containing the dataset&#8217;s
-valid data mask.</p>
-<p>The optional <cite>window</cite> argument takes a tuple like:</p>
-<blockquote>
-<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
-<p>specifying a raster subset to write into.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.read_masks">
-<code class="descname">read_masks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.read_masks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read raster band masks as a multidimensional array</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>indexes</strong> : list of ints or a single int, optional</p>
-<blockquote>
-<div><p>If <cite>indexes</cite> is a list, the result is a 3D array, but is
-a 2D array if it is a band index number.</p>
-</div></blockquote>
-<p><strong>out: numpy ndarray, optional</strong></p>
-<blockquote>
-<div><p>As with Numpy ufuncs, this is an optional reference to an
-output array with the same dimensions and shape into which
-data will be placed.</p>
-<p><em>Note</em>: the method&#8217;s return value may be a view on this
-array. In other words, <cite>out</cite> is likely to be an
-incomplete representation of the method&#8217;s results.</p>
-</div></blockquote>
-<p><strong>window</strong> : a pair (tuple) of pairs of ints, optional</p>
-<blockquote>
-<div><p>The optional <cite>window</cite> argument is a 2 item tuple. The first
-item is a tuple containing the indexes of the rows at which
-the window starts and stops and the second is a tuple
-containing the indexes of the columns at which the window
-starts and stops. For example, ((0, 2), (0, 2)) defines
-a 2x2 window at the upper left of the raster dataset.</p>
-</div></blockquote>
-<p><strong>boundless</strong> : bool, optional (default <cite>False</cite>)</p>
-<blockquote>
-<div><p>If <cite>True</cite>, windows that extend beyond the dataset&#8217;s extent
-are permitted and partially or completely filled arrays will
-be returned as appropriate.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Numpy ndarray or a view on a Numpy ndarray</p>
-<p>Note: as with Numpy ufuncs, an object is returned even if you</p>
-<p>use the optional <cite>out</cite> argument and the return value shall be</p>
-<p class="last">preferentially used by callers.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.res">
-<code class="descname">res</code><a class="headerlink" href="#rasterio._io.RasterUpdater.res" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the (width, height) of pixels in the units of its
-coordinate reference system.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.sample">
-<code class="descname">sample</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the values of a dataset at certain positions</p>
-<p>Values are from the nearest pixel. They are not interpolated.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>xy</strong> : iterable, pairs of floats</p>
-<blockquote>
-<div><p>A sequence or generator of (x, y) pairs.</p>
-</div></blockquote>
-<p><strong>indexes</strong> : list of ints or a single int, optional</p>
-<blockquote>
-<div><p>If <cite>indexes</cite> is a list, the result is a 3D array, but is
-a 2D array if it is a band index number.</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Iterable, yielding dataset values for the specified <cite>indexes</cite></p>
-<p class="last">as an ndarray.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.set_crs">
-<code class="descname">set_crs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.set_crs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes a coordinate reference system to the dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.tags">
-<code class="descname">tags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.tags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dict containing copies of the dataset or band&#8217;s
-tags.</p>
-<p>Tags are pairs of key and value strings. Tags belong to
-namespaces.  The standard namespaces are: default (None) and
-&#8216;IMAGE_STRUCTURE&#8217;.  Applications can create their own additional
-namespaces.</p>
-<p>The optional bidx argument can be used to select the tags of
-a specific band. The optional ns argument can be used to select
-a namespace other than the default.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="rasterio._io.RasterUpdater.transform">
-<code class="descname">transform</code><a class="headerlink" href="#rasterio._io.RasterUpdater.transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>An affine transformation that maps pixel row/column
-coordinates to coordinates in the specified crs. The affine
-transformation is represented by a six-element sequence.
-Reference system coordinates can be calculated by the
-following formula</p>
-<p>X = Item 0 + Column * Item 1 + Row * Item 2
-Y = Item 3 + Column * Item 4 + Row * Item 5</p>
-<p>See also this class&#8217;s ul() method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.ul">
-<code class="descname">ul</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.ul" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the coordinates (x, y) of the upper left corner of a 
-pixel at <cite>row</cite> and <cite>col</cite> in the units of the dataset&#8217;s
-coordinate reference system.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.update_tags">
-<code class="descname">update_tags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.update_tags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates the tags of a dataset or one of its bands.</p>
-<p>Tags are pairs of key and value strings. Tags belong to
-namespaces.  The standard namespaces are: default (None) and
-&#8216;IMAGE_STRUCTURE&#8217;.  Applications can create their own additional
-namespaces.</p>
-<p>The optional bidx argument can be used to select the dataset
-band. The optional ns argument can be used to select a namespace
-other than the default.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.window">
-<code class="descname">window</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the window corresponding to the world bounding box.
-If boundless is False, window is limited to extent of this dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.window_bounds">
-<code class="descname">window_bounds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.window_bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the bounds of a window as x_min, y_min, x_max, y_max.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.window_transform">
-<code class="descname">window_transform</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.window_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the affine transform for a dataset window.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.write">
-<code class="descname">write</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the src array into indexed bands of the dataset.</p>
-<p>If <cite>indexes</cite> is a list, the src must be a 3D array of
-matching shape. If an int, the src must be a 2D array.</p>
-<p>See <cite>read()</cite> for usage of the optional <cite>window</cite> argument.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.write_band">
-<code class="descname">write_band</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.write_band" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the src array into the <cite>bidx</cite> band.</p>
-<p>Band indexes begin with 1: read_band(1) returns the first band.</p>
-<p>The optional <cite>window</cite> argument takes a tuple like:</p>
-<blockquote>
-<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
-<p>specifying a raster subset to write into.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.write_colormap">
-<code class="descname">write_colormap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.write_colormap" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write a colormap for a band to the dataset.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="rasterio._io.RasterUpdater.write_mask">
-<code class="descname">write_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio._io.RasterUpdater.write_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the valid data mask src array into the dataset&#8217;s band
-mask.</p>
-<p>The optional <cite>window</cite> argument takes a tuple like:</p>
-<blockquote>
-<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
-<p>specifying a raster subset to write into.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 </div>
 </div>
@@ -1317,7 +428,7 @@ mask.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rasterio.aws.html" class="btn btn-neutral float-right" title="rasterio.aws module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rasterio.compat.html" class="btn btn-neutral float-right" title="rasterio.compat module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="calc.html" class="btn btn-neutral" title="Using rio-calc" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -1351,7 +462,7 @@ mask.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

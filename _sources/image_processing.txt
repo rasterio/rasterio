@@ -1,6 +1,8 @@
 Interoperability
 ****************
 
+.. _imageorder: 
+
 Image processing software
 -------------------------
 Some python image processing software packages
@@ -16,18 +18,22 @@ while image processing software like ``scikit-image``, ``pillow`` and ``matplotl
 The number of rows defines the dataset's height, the columns are the dataset's width.
 
 Numpy provides a way to efficiently swap the axis order and you can use the
-following functions to convert between raster and image axis order:
+following reshape functions to convert between raster and image axis order:
 
 .. code:: python
 
-    def reshape_as_image(arr):
-        """raster order (bands, rows, cols) -> image (rows, cols, bands)
-        """
-        return np.swapaxes(np.swapaxes(arr, 0, 2), 0, 1)
+    >>> import rasterio
+    >>> from rasterio.plot import reshape_as_raster, reshape_as_image
 
+    >>> raster = rasterio.open("tests/data/RGB.byte.tif").read()
+    >>> raster.shape
+    (3, 718, 791)
 
-    def reshape_as_raster(arr):
-        """image order (rows, cols, bands) -> rasterio (bands, rows, cols)
-        """
-        return np.swapaxes(np.swapaxes(arr, 2, 0), 2, 1)
+    >>> image = reshape_as_image(raster)
+    >>> image.shape
+    (718, 791, 3)
+
+    >>> raster2 = reshape_as_raster(image)
+    >>> raster2.shape
+    (3, 718, 791)
 

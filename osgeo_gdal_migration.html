@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migration Guide for osgeo.gdal users &mdash; rasterio 0.35.1 documentation</title>
+  <title>Migration Guide for osgeo.gdal users &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="rasterio Python User’s Manual" href="python_manual.html"/>
         <link rel="next" title="rio Command Line User’s Manual" href="cli.html"/>
         <link rel="prev" title="Rasterio Cookbook" href="cookbook.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -94,7 +94,13 @@
 <li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Migration Guide for osgeo.gdal users</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#differences-between-rasterio-and-osgeo-gdal">Differences between rasterio and osgeo.gdal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#migrating">Migrating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#osgeo-gdal-gotchas"><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-interface">Command Line Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#migrating">Migrating</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reading">Reading</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#writing">Writing</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -152,60 +158,169 @@
 <h1>Migration Guide for osgeo.gdal users<a class="headerlink" href="#migration-guide-for-osgeo-gdal-users" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="differences-between-rasterio-and-osgeo-gdal">
 <h2>Differences between rasterio and osgeo.gdal<a class="headerlink" href="#differences-between-rasterio-and-osgeo-gdal" title="Permalink to this headline">¶</a></h2>
-<p>Rasterio uses GDAL&#8217;s shared library under the hood to provide a significant portion of its functionality.
-But GDAL also ships with its own python bindings, <code class="docutils literal"><span class="pre">osgeo.gdal</span></code>.
-This section will discuss the differences between <code class="docutils literal"><span class="pre">rasterio</span></code> and <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> and reasons why you might
-choose to use one over the other.</p>
+<p>Rasterio uses the <code class="docutils literal"><span class="pre">libgdal</span></code> shared library under the hood to provide a significant portion
+of functionality.  GDAL itself ships with its own python bindings, <code class="docutils literal"><span class="pre">osgeo.gdal</span></code>.
+This section will discuss the differences between <code class="docutils literal"><span class="pre">rasterio</span></code> and <code class="docutils literal"><span class="pre">osgeo.gdal</span></code>
+and reasons why you might choose to use one over the other.</p>
+<p>Rasterio is, by design, a library for reading and writing raster datasets.
+Rasterio <em>uses</em> GDAL but is not a &#8220;Python binding for GDAL.&#8221;</p>
 <p><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> is automatically-generated using swig. As a result, the interface and method names are
-similar to the native C++ API.  The <code class="docutils literal"><span class="pre">rasterio</span></code> library is built with Cython which allows
-us to create an interface that follows the style and conventions of familiar Python code.</p>
-<p>This is best illustrated by example.  Opening a raster file with <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> involves using gdal constants and the programmer must provide their own error handling and memory management</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
+similar to the C API. Virtually all of the GDAL C API is exposed through the library.</p>
+<p>The <code class="docutils literal"><span class="pre">rasterio</span></code> library is built from the ground up to provide an interface for reading,
+writing and manipulating geospatial raster data that follows the style and convention
+of idiomatic Python code.  We use a selected subset of the GDAL C API in order to
+provide this functionality.</p>
+<p>In practice, while many similar tasks can be performed by both libraries,
+the difference in coding style is significant. For example, opening a raster file
+with <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> involves using gdal constants and the programmer must provide
+their own error handling and memory management</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
 <span class="kn">from</span> <span class="nn">osgeo.gdalconst</span> <span class="k">import</span> <span class="o">*</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span> <span class="n">filename</span><span class="p">,</span> <span class="n">GA_ReadOnly</span> <span class="p">)</span>
-<span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
-    <span class="c"># ... handle a non-existant dataset</span>
-<span class="c"># ... work with dataset</span>
+<span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># ... handle a non-existant dataset</span>
+<span class="c1"># ... work with dataset</span>
 <span class="k">del</span> <span class="n">dataset</span>
 </pre></div>
 </div>
 <p>Compared to the similar code in <code class="docutils literal"><span class="pre">rasterio</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">drivers</span><span class="p">():</span>
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
-        <span class="c"># ... work with dataset</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="c1"># ... work with dataset</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal"><span class="pre">rasterio</span></code> code:</p>
 <ul class="simple">
 <li>Uses pep8 compliant module, method and property names</li>
-<li>follows the conventions of python file handles</li>
-<li>uses context managers to safely manage memory, environment variables and file resources</li>
-<li>will raise proper exceptions (i.e. <code class="docutils literal"><span class="pre">IOError</span></code> if the file does not exist)</li>
-<li>uses a driver context to avoid reliance on environment variables to define behavior</li>
-<li>readability is subjective but most Python programmers would agree that the <code class="docutils literal"><span class="pre">rasterio</span></code> example is easier to read and understand.</li>
+<li>Follows the conventions of python file handles</li>
+<li>Uses context managers to safely manage memory, global environment and file resources</li>
+<li>Will raise proper exceptions (i.e. <code class="docutils literal"><span class="pre">RasterioIOError</span></code> if the file does not exist)</li>
 </ul>
-<p>For a more detailed look at some unexpected behaviors of the <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> module, see the <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/PythonGotchas">Python Gotchas</a> page on the GDAL wiki.</p>
+</div>
+<div class="section" id="osgeo-gdal-gotchas">
+<h2><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas<a class="headerlink" href="#osgeo-gdal-gotchas" title="Permalink to this headline">¶</a></h2>
+<p>Beyond idiomatic python coding conventions, the need for Rasterio arose as a
+result of several quirks of the <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> module which made it difficult to manage
+as a software dependency or as part of a production system.</p>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
 <ul class="last simple">
 <li>global state makes osgeo.gdal unsafe with other python modules</li>
-<li>hidden behavior with env vars vs explicit GDALEnv</li>
+<li>hidden behavior with environm vars vs explicit GDALEnv</li>
 <li>vsi vs URIs</li>
-<li>limited scope of rasterio, what does osgeo.gdal do that rasterio can&#8217;t</li>
-<li>installation issues</li>
-<li>crs handling</li>
+<li>installation and packaging issues</li>
 <li>examples of unsafe memory situations</li>
-<li>rio and the relationship to gdal CLI tools</li>
+</ul>
+</div>
+<p>For a more detailed look at some unexpected behaviors of the <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> module, see the <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/PythonGotchas">Python Gotchas</a> page on the GDAL wiki.</p>
+</div>
+<div class="section" id="command-line-interface">
+<h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the python library, Rasterio also provides the <code class="docutils literal"><span class="pre">rio</span></code> command which
+contains several subcommands whose functionality overlaps what is provided by
+the <code class="docutils literal"><span class="pre">gdal*</span></code> commands</p>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<ul class="last simple">
+<li>differences between similar commands</li>
+<li>what rio doesn&#8217;t do</li>
+<li>what gdal* doesn&#8217;t do</li>
 </ul>
 </div>
 </div>
 <div class="section" id="migrating">
 <h2>Migrating<a class="headerlink" href="#migrating" title="Permalink to this headline">¶</a></h2>
-<div class="admonition-todo admonition" id="index-1">
+<p>So maybe we&#8217;ve convinced you to give Rasterio a try. How do you go about migrating an
+existing script or a project that uses <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> to <code class="docutils literal"><span class="pre">rasterio</span></code>? This section will
+walk through several common examples of <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> code and show the equivalent
+process using <code class="docutils literal"><span class="pre">rasterio</span></code>.</p>
+<div class="section" id="reading">
+<h3>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h3>
+<p>We&#8217;ll start with a raster dataset to work with, our trusty test fixture</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span>
+</pre></div>
+</div>
+<img alt="_images/rgb.jpg" src="_images/rgb.jpg" />
+<p>The most basic operation is reading the raster into a numpy array</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">osgeo.gdalconst</span> <span class="kn">import</span> <span class="n">GA_ReadOnly</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">GA_ReadOnly</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="ow">not</span> <span class="n">g_ds</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Cannot open </span><span class="si">%r</span><span class="s2"> as GDAL raster&quot;</span> <span class="o">%</span> <span class="n">raster</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_arr</span> <span class="o">=</span> <span class="n">g_ds</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The similar operation in rasterio</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">r_arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The result is the same 3D <code class="docutils literal"><span class="pre">numpy.ndarray</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r_arr</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 719, 791)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">g_arr</span><span class="p">,</span> <span class="n">r_arr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we want to grab a subset of the raster, say from row 300 to 400 and column 200 to 400.
+In gdal you would express this in terms of the offset (200, 300) and size (200, 100)</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_arr2</span> <span class="o">=</span> <span class="n">g_ds</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_arr2</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 100, 200)</span>
+</pre></div>
+</div>
+<p>In Rasterio, we use a windows tuple which explicitly defines the start/stop row and columns</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">r_arr2</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">400</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">r_arr2</span><span class="p">,</span> <span class="n">g_arr2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Reading a single band into a 2D array follows a different pattern. In gdal, you get a
+reference to a <code class="docutils literal"><span class="pre">RasterBand</span></code> and use its <code class="docutils literal"><span class="pre">ReadAsArray</span></code> method</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_band1</span> <span class="o">=</span> <span class="n">g_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_band1_arr</span> <span class="o">=</span> <span class="n">g_band1</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g_band1_arr</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(718, 791)</span>
+</pre></div>
+</div>
+<p>With Rasterio, you pass the raster band index to the <code class="docutils literal"><span class="pre">read()</span></code> method. Note that
+both Rasterio and gdal use a 1-based index to defined bands</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">r_band1_arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">r_band1_arr</span><span class="p">,</span> <span class="n">g_band1_arr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With the gdal objects you have to manually manage the object&#8217;s lifecycle</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># clean up reference to dateset to close</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">g_band1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">g_ds</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing">
+<h3>Writing<a class="headerlink" href="#writing" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s take the arrays that we&#8217;ve read from the original dataset and write them out
+to a new GeoTIFF file.</p>
+<div class="admonition-todo admonition" id="index-2">
 <p class="first admonition-title">Todo</p>
-<p class="last">Practical tips and examples of porting common use cases in both python and cli.
-Some overlap with the cookbook here, so probably best to reference it when appropriate.</p>
+<ul class="last simple">
+<li>write a 3D array to a multiband raster</li>
+<li>write a 3D subset to a raster with proper georeferencing (affine vs transform discussion)</li>
+<li>write a 2D array to a single-band raster</li>
+</ul>
+</div>
+<p>For a real-world example of a Python project making the osgeo.gdal-to-rasterio switch,
+see the pull request for the <a class="reference external" href="https://github.com/perrygeo/python-rasterstats/pull/63">rasterstats migration</a>.</p>
 </div>
 </div>
 </div>
@@ -251,7 +366,7 @@ Some overlap with the cookbook here, so probably best to reference it when appro
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

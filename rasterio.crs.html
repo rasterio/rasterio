@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.crs module &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.crs module &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,10 +30,8 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
-        <link rel="up" title="API Documentation" href="api_docs.html"/>
-        <link rel="next" title="rasterio.dtypes module" href="rasterio.dtypes.html"/>
-        <link rel="prev" title="rasterio.coords module" href="rasterio.coords.html"/> 
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
+        <link rel="up" title="API Documentation" href="api_docs.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -61,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -135,7 +133,11 @@
             
   <div class="section" id="module-rasterio.crs">
 <span id="rasterio-crs-module"></span><h1>rasterio.crs module<a class="headerlink" href="#module-rasterio.crs" title="Permalink to this headline">¶</a></h1>
-<p>Coordinate reference systems and functions.</p>
+<dl class="class">
+<dt id="rasterio.crs.CRS">
+<em class="property">class </em><code class="descclassname">rasterio.crs.</code><code class="descname">CRS</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#CRS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.CRS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._crs._CRS</span></code></p>
+<p>A container class for coordinate reference system info</p>
 <p>PROJ.4 is the law of this land: <a class="reference external" href="http://proj.osgeo.org/">http://proj.osgeo.org/</a>. But whereas PROJ.4
 coordinate reference systems are described by strings of parameters such as</p>
 <blockquote>
@@ -143,16 +145,99 @@ coordinate reference systems are described by strings of parameters such as</p>
 <p>here we use mappings:</p>
 <blockquote>
 <div>{&#8216;proj&#8217;: &#8216;longlat&#8217;, &#8216;ellps&#8217;: &#8216;WGS84&#8217;, &#8216;datum&#8217;: &#8216;WGS84&#8217;, &#8216;no_defs&#8217;: True}</div></blockquote>
-<dl class="function">
-<dt id="rasterio.crs.from_epsg">
-<code class="descclassname">rasterio.crs.</code><code class="descname">from_epsg</code><span class="sig-paren">(</span><em>code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#from_epsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.from_epsg" title="Permalink to this definition">¶</a></dt>
+<p>One can set/get any PROJ.4 parameter using a dict-like key/value pair on the
+object. You can instantiate the object by simply passing a dict to the
+constructor. E.g.</p>
+<blockquote>
+<div>crs = CRS({&#8216;init&#8217;: &#8216;epsg:3005&#8217;})</div></blockquote>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.crs.CRS.is_epsg_code" title="rasterio.crs.CRS.is_epsg_code"><code class="xref py py-obj docutils literal"><span class="pre">is_epsg_code</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_geographic</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_projected</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.crs.CRS.is_valid" title="rasterio.crs.CRS.is_valid"><code class="xref py py-obj docutils literal"><span class="pre">is_valid</span></code></a></td>
+<td>Check if valid geographic or projected coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">wkt</span></code></td>
+<td>An OGC WKT string representation of the coordinate reference system.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">clear</span></code>(()&nbsp;-&gt;&nbsp;None.&nbsp;&nbsp;Remove&nbsp;all&nbsp;items&nbsp;from&nbsp;D.)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.crs.CRS.from_epsg" title="rasterio.crs.CRS.from_epsg"><code class="xref py py-obj docutils literal"><span class="pre">from_epsg</span></code></a>(code)</td>
+<td>Given an integer code, returns an EPSG-like mapping.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.crs.CRS.from_string" title="rasterio.crs.CRS.from_string"><code class="xref py py-obj docutils literal"><span class="pre">from_string</span></code></a>(prjs)</td>
+<td>Turn a PROJ.4 string into a mapping of parameters.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">fromkeys</span></code>(iterable[,&nbsp;value])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get</span></code>((k[,d])&nbsp;-&gt;&nbsp;D[k]&nbsp;if&nbsp;k&nbsp;in&nbsp;D,&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">items</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">keys</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">pop</span></code>((k[,d])&nbsp;-&gt;&nbsp;v,&nbsp;...)</td>
+<td>If key is not found, d is returned if given, otherwise KeyError is raised.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">popitem</span></code>(()&nbsp;-&gt;&nbsp;(k,&nbsp;v),&nbsp;...)</td>
+<td>as a 2-tuple; but raise KeyError if D is empty.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">setdefault</span></code>((k[,d])&nbsp;-&gt;&nbsp;D.get(k,d),&nbsp;...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.crs.CRS.to_dict" title="rasterio.crs.CRS.to_dict"><code class="xref py py-obj docutils literal"><span class="pre">to_dict</span></code></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.crs.CRS.to_string" title="rasterio.crs.CRS.to_string"><code class="xref py py-obj docutils literal"><span class="pre">to_string</span></code></a>()</td>
+<td>Turn a parameter mapping into a more conventional PROJ.4 string.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">update</span></code>(([E,&nbsp;...)</td>
+<td>If E present and has a .keys() method, does:     for k in E: D[k] = E[k]</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">values</span></code>(...)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="staticmethod">
+<dt id="rasterio.crs.CRS.from_epsg">
+<em class="property">static </em><code class="descname">from_epsg</code><span class="sig-paren">(</span><em>code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#CRS.from_epsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.CRS.from_epsg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an integer code, returns an EPSG-like mapping.</p>
 <p>Note: the input code is not validated against an EPSG database.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rasterio.crs.from_string">
-<code class="descclassname">rasterio.crs.</code><code class="descname">from_string</code><span class="sig-paren">(</span><em>prjs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.from_string" title="Permalink to this definition">¶</a></dt>
+<dl class="staticmethod">
+<dt id="rasterio.crs.CRS.from_string">
+<em class="property">static </em><code class="descname">from_string</code><span class="sig-paren">(</span><em>prjs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#CRS.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.CRS.from_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn a PROJ.4 string into a mapping of parameters.</p>
 <p>Bare parameters like &#8220;+no_defs&#8221; are given a value of <code class="docutils literal"><span class="pre">True</span></code>. All keys
 are checked against the <code class="docutils literal"><span class="pre">all_proj_keys</span></code> list.</p>
@@ -160,20 +245,32 @@ are checked against the <code class="docutils literal"><span class="pre">all_pro
 <p>JSON text-encoded strings are allowed.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rasterio.crs.is_valid_crs">
-<code class="descclassname">rasterio.crs.</code><code class="descname">is_valid_crs</code><span class="sig-paren">(</span><em>crs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#is_valid_crs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.is_valid_crs" title="Permalink to this definition">¶</a></dt>
+<dl class="attribute">
+<dt id="rasterio.crs.CRS.is_epsg_code">
+<code class="descname">is_epsg_code</code><a class="headerlink" href="#rasterio.crs.CRS.is_epsg_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rasterio.crs.CRS.is_valid">
+<code class="descname">is_valid</code><a class="headerlink" href="#rasterio.crs.CRS.is_valid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if valid geographic or projected coordinate reference system.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="rasterio.crs.to_string">
-<code class="descclassname">rasterio.crs.</code><code class="descname">to_string</code><span class="sig-paren">(</span><em>crs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#to_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.to_string" title="Permalink to this definition">¶</a></dt>
+<dl class="method">
+<dt id="rasterio.crs.CRS.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#CRS.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.CRS.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rasterio.crs.CRS.to_string">
+<code class="descname">to_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/crs.html#CRS.to_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.crs.CRS.to_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn a parameter mapping into a more conventional PROJ.4 string.</p>
 <p>Mapping keys are tested against the <code class="docutils literal"><span class="pre">all_proj_keys</span></code> list. Values of
 <code class="docutils literal"><span class="pre">True</span></code> are omitted, leaving the key bare: {&#8216;no_defs&#8217;: True} -&gt; &#8220;+no_defs&#8221;
 and items where the value is otherwise not a str, int, or float are
 omitted.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -182,15 +279,6 @@ omitted.</p>
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="rasterio.dtypes.html" class="btn btn-neutral float-right" title="rasterio.dtypes module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="rasterio.coords.html" class="btn btn-neutral" title="rasterio.coords module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
@@ -219,7 +307,7 @@ omitted.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.features module &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.features module &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="API Documentation" href="api_docs.html"/>
         <link rel="next" title="rasterio.fill module" href="rasterio.fill.html"/>
         <link rel="prev" title="rasterio.errors module" href="rasterio.errors.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -204,7 +204,7 @@ False by default.</p>
 
 <dl class="function">
 <dt id="rasterio.features.rasterize">
-<code class="descclassname">rasterio.features.</code><code class="descname">rasterize</code><span class="sig-paren">(</span><em>shapes</em>, <em>out_shape=None</em>, <em>fill=0</em>, <em>out=None</em>, <em>output=None</em>, <em>transform=Affine(1.0</em>, <em>0.0</em>, <em>0.0</em>, <em>0.0</em>, <em>1.0</em>, <em>0.0)</em>, <em>all_touched=False</em>, <em>default_value=1</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/features.html#rasterize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.rasterize" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.features.</code><code class="descname">rasterize</code><span class="sig-paren">(</span><em>shapes</em>, <em>out_shape=None</em>, <em>fill=0</em>, <em>out=None</em>, <em>transform=Affine(1.0</em>, <em>0.0</em>, <em>0.0</em>, <em>0.0</em>, <em>1.0</em>, <em>0.0)</em>, <em>all_touched=False</em>, <em>default_value=1</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/features.html#rasterize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.rasterize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an image array with input geometries burned in.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -229,7 +229,6 @@ geometries.</p>
 <div><p>Array of same shape and data type as <cite>image</cite> in which to store
 results.</p>
 </div></blockquote>
-<p><strong>output</strong> : older alias for <cite>out</cite>, will be removed before 1.0.</p>
 <p><strong>transform</strong> : Affine transformation object, optional</p>
 <blockquote>
 <div><p>Transformation from pixel coordinates of <cite>image</cite> to the
@@ -319,7 +318,7 @@ memory.</p>
 
 <dl class="function">
 <dt id="rasterio.features.sieve">
-<code class="descclassname">rasterio.features.</code><code class="descname">sieve</code><span class="sig-paren">(</span><em>image</em>, <em>size</em>, <em>out=None</em>, <em>output=None</em>, <em>mask=None</em>, <em>connectivity=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/features.html#sieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.sieve" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.features.</code><code class="descname">sieve</code><span class="sig-paren">(</span><em>image</em>, <em>size</em>, <em>out=None</em>, <em>mask=None</em>, <em>connectivity=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/features.html#sieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.sieve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replace small polygons in <cite>image</cite> with value of their largest neighbor.</p>
 <p>Polygons are found for each set of neighboring pixels of the same value.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -340,8 +339,6 @@ rasterio.uint16, or rasterio.float32</p>
 <blockquote>
 <div><p>Array of same shape and data type as <cite>image</cite> in which to store results.</p>
 </div></blockquote>
-<p><strong>output</strong> : older alias for <cite>out</cite>, will be removed before 1.0.</p>
-<p><strong>output</strong> : numpy ndarray, optional</p>
 <p><strong>mask</strong> : numpy ndarray or rasterio Band object, optional</p>
 <blockquote>
 <div><p>Values of False or 0 will be excluded from feature generation
@@ -414,7 +411,7 @@ large amounts of memory.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

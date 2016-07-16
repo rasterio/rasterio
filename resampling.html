@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Resampling &mdash; rasterio 0.35.1 documentation</title>
+  <title>Resampling &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="General Concepts" href="topics.html"/>
         <link rel="next" title="Tagging datasets and bands" href="tags.html"/>
         <link rel="prev" title="Interoperability" href="image_processing.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -111,6 +111,8 @@
 <li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
@@ -186,13 +188,13 @@ to resample your data.</p>
 <p>This involves coordinating the size of your output array with the
 cell size in it&#8217;s associated affine transform. In other words, if you <em>multiply</em> the resolution
 by <code class="docutils literal"><span class="pre">x</span></code>, you need to <em>divide</em> the affine parameters defining the cell size by <code class="docutils literal"><span class="pre">x</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="n">newarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c"># same number of bands</span>
-                         <span class="nb">round</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">),</span> <span class="c"># 150% resolution</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">newarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># same number of bands</span>
+                         <span class="nb">round</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">),</span> <span class="c1"># 150% resolution</span>
                          <span class="nb">round</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">)))</span>
 
-<span class="c"># adjust the new affine transform to the 150% smaller cell size</span>
-<span class="n">aff</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">affine</span>
+<span class="c1"># adjust the new affine transform to the 150% smaller cell size</span>
+<span class="n">aff</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span>
 <span class="n">newaff</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="n">aff</span><span class="o">.</span><span class="n">a</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">c</span><span class="p">,</span>
                 <span class="n">aff</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">e</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
 
@@ -210,16 +212,16 @@ by <code class="docutils literal"><span class="pre">x</span></code>, you need to
 <h3>Use scipy<a class="headerlink" href="#use-scipy" title="Permalink to this headline">¶</a></h3>
 <p>You can also use <a class="reference external" href="http://docs.scipy.org/doc/scipy-0.16.1/reference/generated/scipy.ndimage.interpolation.zoom.html">scipy.ndimage.interpolation.zoom</a> to &#8220;zoom&#8221; with a configurable spline interpolation
 that differs from the resampling methods available in GDAL. This may not be appropriate for all data so check the results carefully. You must adjust the affine transform just as we did above.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">scipy.ndimage.interpolation</span> <span class="kn">import</span> <span class="n">zoom</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.ndimage.interpolation</span> <span class="kn">import</span> <span class="n">zoom</span>
 
-<span class="c"># Increase resolution, decrease cell size by 150%</span>
-<span class="c"># Note we only zoom on axis 1 and 2</span>
-<span class="c"># axis 0 (our band axis) stays fixed</span>
+<span class="c1"># Increase resolution, decrease cell size by 150%</span>
+<span class="c1"># Note we only zoom on axis 1 and 2</span>
+<span class="c1"># axis 0 (our band axis) stays fixed</span>
 <span class="n">arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="n">newarr</span> <span class="o">=</span> <span class="n">zoom</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">prefilter</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
-<span class="c"># Adjust original affine transform</span>
-<span class="n">aff</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">affine</span>
+<span class="c1"># Adjust original affine transform</span>
+<span class="n">aff</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span>
 <span class="n">newaff</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="n">aff</span><span class="o">.</span><span class="n">a</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">c</span><span class="p">,</span>
                 <span class="n">aff</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">e</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">aff</span><span class="o">.</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
@@ -239,11 +241,11 @@ you are upsampling by an integer factor.</p>
 </div>
 <p>As per the previous two examples, you must also adjust the affine accordingly.</p>
 <p>Note that this method is only recommended for <em>increasing</em> resolution by an integer factor.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">newarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c"># same number of bands</span>
-                         <span class="nb">round</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="c"># double resolution</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">newarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># same number of bands</span>
+                         <span class="nb">round</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="c1"># double resolution</span>
                          <span class="nb">round</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)))</span>
 
-<span class="n">arr</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">newarr</span><span class="p">)</span>  <span class="c"># newarr is changed in-place</span>
+<span class="n">arr</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">newarr</span><span class="p">)</span>  <span class="c1"># newarr is changed in-place</span>
 </pre></div>
 </div>
 </div>
@@ -300,7 +302,7 @@ useful when certain numerical properties of the data are to be retained.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

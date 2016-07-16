@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.merge module &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.merge module &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="API Documentation" href="api_docs.html"/>
         <link rel="next" title="rasterio.plot module" href="rasterio.plot.html"/>
         <link rel="prev" title="rasterio.mask module" href="rasterio.mask.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -174,14 +174,20 @@ in the first input raster.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dest: numpy ndarray</p>
-<blockquote>
-<div><p>Contents of all input rasters in single array.</p>
-</div></blockquote>
-<p>out_transform: affine object</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
 <blockquote class="last">
-<div><p>Information for mapping pixel coordinates in <cite>dest</cite> to another
+<div><p>Two elements:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>dest: numpy ndarray</dt>
+<dd><p class="first last">Contents of all input rasters in single array.</p>
+</dd>
+<dt>out_transform: affine.Affine()</dt>
+<dd><p class="first last">Information for mapping pixel coordinates in <cite>dest</cite> to another
 coordinate system</p>
+</dd>
+</dl>
+</div></blockquote>
 </div></blockquote>
 </td>
 </tr>
@@ -232,7 +238,7 @@ coordinate system</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

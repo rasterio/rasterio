@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tagging datasets and bands &mdash; rasterio 0.35.1 documentation</title>
+  <title>Tagging datasets and bands &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="General Concepts" href="topics.html"/>
         <link rel="next" title="Georeferencing" href="georeferencing.html"/>
         <link rel="prev" title="Resampling" href="resampling.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -111,6 +111,8 @@
 <li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
@@ -178,7 +180,7 @@ pairs are called &#8220;tags&#8221; in rasterio.</p>
 <div class="section" id="reading-tags">
 <h2>Reading tags<a class="headerlink" href="#reading-tags" title="Permalink to this headline">¶</a></h2>
 <p>I&#8217;m going to use the rasterio interactive inspector in these examples below.</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> rasterio.insp tests/data/RGB.byte.tif
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rasterio.insp tests/data/RGB.byte.tif
 <span class="go">Rasterio 0.6 Interactive Inspector (Python 2.7.5)</span>
 <span class="go">Type &quot;src.name&quot;, &quot;src.read(1)&quot;, or &quot;help(src)&quot; for more information.</span>
 <span class="gp">&gt;</span>&gt;&gt;
@@ -186,16 +188,16 @@ pairs are called &#8220;tags&#8221; in rasterio.</p>
 </div>
 <p>Tags belong to namespaces. To get a copy of a dataset&#8217;s tags from the default
 namespace, call <code class="docutils literal"><span class="pre">tags()</span></code> with no arguments.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span>
-<span class="go">{u&#39;AREA_OR_POINT&#39;: u&#39;Area&#39;}</span>
+<span class="go">{&#39;AREA_OR_POINT&#39;: &#39;Area&#39;}</span>
 </pre></div>
 </div>
 <p>A dataset&#8217;s bands may have tags, too. Here are the tags from the default namespace
 for the first band, accessed using the positional band index argument of <code class="docutils literal"><span class="pre">tags()</span></code>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="go">{u&#39;STATISTICS_MEAN&#39;: u&#39;29.947726688477&#39;, u&#39;STATISTICS_MINIMUM&#39;: u&#39;0&#39;, u&#39;STATISTICS_MAXIMUM&#39;: u&#39;255&#39;, u&#39;STATISTICS_STDDEV&#39;: u&#39;52.340921626611&#39;}</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="s1">&#39;STATISTICS_MEAN&#39;</span><span class="p">]</span>
+<span class="go">&#39;29.947726688477&#39;</span>
 </pre></div>
 </div>
 <p>These are the tags that came with the sample data I&#8217;m using to test rasterio. In
@@ -204,11 +206,11 @@ update of the tags when the band&#8217;s image data changes.</p>
 <p>The 3 standard, non-default GDAL tag namespaces are &#8216;SUBDATASETS&#8217;, &#8216;IMAGE_STRUCTURE&#8217;,
 and &#8216;RPC&#8217;. You can get the tags from these namespaces using the <cite>ns</cite> keyword of
 <code class="docutils literal"><span class="pre">tags()</span></code>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;IMAGE_STRUCTURE&#39;</span><span class="p">)</span>
-<span class="go">{u&#39;INTERLEAVE&#39;: u&#39;PIXEL&#39;}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;SUBDATASETS&#39;</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;IMAGE_STRUCTURE&#39;</span><span class="p">)</span>
+<span class="go">{&#39;INTERLEAVE&#39;: &#39;PIXEL&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;SUBDATASETS&#39;</span><span class="p">)</span>
 <span class="go">{}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;RPC&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;RPC&#39;</span><span class="p">)</span>
 <span class="go">{}</span>
 </pre></div>
 </div>
@@ -218,30 +220,30 @@ and &#8216;RPC&#8217;. You can get the tags from these namespaces using the <cit
 <p>You can add new tags to a dataset or band, in the default or another namespace,
 using the <code class="docutils literal"><span class="pre">update_tags()</span></code> method. Unicode tag values, too, at least for TIFF
 files.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-        <span class="s">&#39;/tmp/test.tif&#39;</span><span class="p">,</span>
-        <span class="s">&#39;w&#39;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;/tmp/test.tif&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;w&#39;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
         <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
         <span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
         <span class="n">height</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
 
-    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">&#39;2&#39;</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s1">&#39;2&#39;</span><span class="p">)</span>
     <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
-    <span class="c"># True</span>
-    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="s">&#39;2&#39;</span><span class="p">}</span>
-    <span class="c"># True</span>
-    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="s">&#39;3&#39;</span> <span class="p">}</span>
+    <span class="c1"># True</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">}</span>
+    <span class="c1"># True</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="s1">&#39;3&#39;</span> <span class="p">}</span>
 
-    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;rasterio_testing&#39;</span><span class="p">,</span> <span class="n">rus</span><span class="o">=</span><span class="s">u&#39;другая строка&#39;</span><span class="p">)</span>
-    <span class="c"># True</span>
-    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s">&#39;rasterio_testing&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s">&#39;rus&#39;</span><span class="p">:</span> <span class="s">u&#39;другая строка&#39;</span><span class="p">}</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rasterio_testing&#39;</span><span class="p">,</span> <span class="n">rus</span><span class="o">=</span><span class="s1">u&#39;другая строка&#39;</span><span class="p">)</span>
+    <span class="c1"># True</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rasterio_testing&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;rus&#39;</span><span class="p">:</span> <span class="s1">u&#39;другая строка&#39;</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>As with image data, tags aren&#8217;t written to the file on disk until the dataset
@@ -290,7 +292,7 @@ is closed.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

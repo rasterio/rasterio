@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.warp module &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.warp module &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,10 +30,10 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="API Documentation" href="api_docs.html"/>
         <link rel="next" title="rasterio.windows module" href="rasterio.windows.html"/>
-        <link rel="prev" title="rasterio.warnings module" href="rasterio.warnings.html"/> 
+        <link rel="prev" title="rasterio.vfs module" href="rasterio.vfs.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -150,12 +150,12 @@ calculated using GDAL&#8217;s method for suggest warp output.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: dict</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Source coordinate reference system, in rasterio dict format.
-Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 </div></blockquote>
-<p><strong>dst_crs: dict</strong></p>
+<p><strong>dst_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Target coordinate reference system.</p>
 </div></blockquote>
@@ -177,7 +177,10 @@ Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple of destination affine transform, width, and height</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<blockquote class="last">
+<div><p>Three elements: <code class="docutils literal"><span class="pre">affine</span> <span class="pre">transform,</span> <span class="pre">width,</span> <span class="pre">and</span> <span class="pre">height</span></code></p>
+</div></blockquote>
 </td>
 </tr>
 </tbody>
@@ -186,7 +189,7 @@ Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
 
 <dl class="function">
 <dt id="rasterio.warp.reproject">
-<code class="descclassname">rasterio.warp.</code><code class="descname">reproject</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em>, <em>src_transform=None</em>, <em>src_crs=None</em>, <em>src_nodata=None</em>, <em>dst_transform=None</em>, <em>dst_crs=None</em>, <em>dst_nodata=None</em>, <em>resampling=&lt;Resampling.nearest: 0&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/warp.html#reproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.reproject" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.warp.</code><code class="descname">reproject</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em>, <em>src_transform=None</em>, <em>src_crs=None</em>, <em>src_nodata=None</em>, <em>dst_transform=None</em>, <em>dst_crs=None</em>, <em>dst_nodata=None</em>, <em>resampling=&lt;Resampling.nearest: 0&gt;</em>, <em>init_dest_nodata=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/warp.html#reproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.reproject" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reproject a source raster to a destination raster.</p>
 <p>If the source and destination are ndarrays, coordinate reference
 system definitions and affine transformation parameters are required
@@ -206,17 +209,17 @@ transforms will be read from the appropriate datasets.</p>
 <blockquote>
 <div><p>Target raster.</p>
 </div></blockquote>
-<p><strong>src_transform: affine transform object, optional</strong></p>
+<p><strong>src_transform: affine.Affine(), optional</strong></p>
 <blockquote>
 <div><p>Source affine transformation.  Required if source and destination
 are ndarrays.  Will be derived from source if it is a rasterio Band.</p>
 </div></blockquote>
-<p><strong>src_crs: dict, optional</strong></p>
+<p><strong>src_crs: CRS or dict, optional</strong></p>
 <blockquote>
 <div><p>Source coordinate reference system, in rasterio dict format.
 Required if source and destination are ndarrays.
 Will be derived from source if it is a rasterio Band.
-Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 </div></blockquote>
 <p><strong>src_nodata: int or float, optional</strong></p>
 <blockquote>
@@ -225,12 +228,12 @@ for interpolation.  If not set, it will be default to the
 nodata value of the source image if a masked ndarray or rasterio band,
 if available.  Must be provided if dst_nodata is not None.</p>
 </div></blockquote>
-<p><strong>dst_transform: affine transform object, optional</strong></p>
+<p><strong>dst_transform: affine.Affine(), optional</strong></p>
 <blockquote>
 <div><p>Target affine transformation.  Required if source and destination
 are ndarrays.  Will be derived from target if it is a rasterio Band.</p>
 </div></blockquote>
-<p><strong>dst_crs: dict, optional</strong></p>
+<p><strong>dst_crs: CRS or dict, optional</strong></p>
 <blockquote>
 <div><p>Target coordinate reference system.  Required if source and destination
 are ndarrays.  Will be derived from target if it is a rasterio Band.</p>
@@ -255,6 +258,11 @@ Resampling.average,
 Resampling.mode</p>
 </dd>
 </dl>
+</div></blockquote>
+<p><strong>init_dest_nodata: bool</strong></p>
+<blockquote>
+<div><p>Flag to specify initialization of nodata in destination;
+prevents overwrite of previous warps. Defaults to True.</p>
 </div></blockquote>
 <p><strong>kwargs:  dict, optional</strong></p>
 <blockquote>
@@ -282,12 +290,12 @@ coordinate reference system into target.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: dict</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
 <blockquote>
-<div><p>Source coordinate reference system, in rasterio dict format.
-Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
+<div><p>Source coordinate reference system, as a rasterio CRS object.
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 </div></blockquote>
-<p><strong>dst_crs: dict</strong></p>
+<p><strong>dst_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Target coordinate reference system.</p>
 </div></blockquote>
@@ -325,12 +333,12 @@ along these edges) and extracting the outermost bounds.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: dict</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Source coordinate reference system, in rasterio dict format.
-Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 </div></blockquote>
-<p><strong>dst_crs: dict</strong></p>
+<p><strong>dst_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Target coordinate reference system.</p>
 </div></blockquote>
@@ -364,12 +372,12 @@ worse performance.  Default: 21 (gdal default).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: dict</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Source coordinate reference system, in rasterio dict format.
-Example: {&#8216;init&#8217;: &#8216;EPSG:4326&#8217;}</p>
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 </div></blockquote>
-<p><strong>dst_crs: dict</strong></p>
+<p><strong>dst_crs: CRS or dict</strong></p>
 <blockquote>
 <div><p>Target coordinate reference system.</p>
 </div></blockquote>
@@ -414,7 +422,7 @@ values will be preserved (default).</p>
         <a href="rasterio.windows.html" class="btn btn-neutral float-right" title="rasterio.windows module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rasterio.warnings.html" class="btn btn-neutral" title="rasterio.warnings module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rasterio.vfs.html" class="btn btn-neutral" title="rasterio.vfs module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -445,7 +453,7 @@ values will be preserved (default).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.warnings module &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.drivers module &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -30,10 +30,9 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="up" title="API Documentation" href="api_docs.html"/>
-        <link rel="next" title="rasterio.warp module" href="rasterio.warp.html"/>
-        <link rel="prev" title="rasterio.vfs module" href="rasterio.vfs.html"/> 
+        <link rel="next" title="rasterio.dtypes module" href="rasterio.dtypes.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -61,7 +60,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0.dev1
               </div>
             
           
@@ -119,11 +118,11 @@
       
           <li><a href="api_docs.html">API Documentation</a> &raquo;</li>
       
-    <li>rasterio.warnings module</li>
+    <li>rasterio.drivers module</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/rasterio.warnings.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rasterio.drivers.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -133,14 +132,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-rasterio.warnings">
-<span id="rasterio-warnings-module"></span><h1>rasterio.warnings module<a class="headerlink" href="#module-rasterio.warnings" title="Permalink to this headline">¶</a></h1>
-<p>Rasterio warnings.</p>
-<dl class="exception">
-<dt id="rasterio.warnings.NodataShadowWarning">
-<em class="property">exception </em><code class="descclassname">rasterio.warnings.</code><code class="descname">NodataShadowWarning</code><a class="headerlink" href="#rasterio.warnings.NodataShadowWarning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/exceptions.html#exceptions.Warning" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">exceptions.Warning</span></code></a></p>
-<p>Warn that a dataset&#8217;s nodata attribute is shadowing its alpha band.</p>
+  <div class="section" id="module-rasterio.drivers">
+<span id="rasterio-drivers-module"></span><h1>rasterio.drivers module<a class="headerlink" href="#module-rasterio.drivers" title="Permalink to this headline">¶</a></h1>
+<p>Driver policies and utilities</p>
+<p>GDAL has many standard and extension format drivers and completeness of
+these drivers varies greatly. It&#8217;s possible to succeed poorly with some
+formats and drivers, meaning that easy problems can be solved but that
+harder problems are blocked by limitations of the drivers and formats.</p>
+<p>NetCDF writing, for example, is presently blacklisted. Rasterio users
+should use netcdf4-python instead:
+<a class="reference external" href="http://unidata.github.io/netcdf4-python/">http://unidata.github.io/netcdf4-python/</a>.</p>
+<dl class="function">
+<dt id="rasterio.drivers.is_blacklisted">
+<code class="descclassname">rasterio.drivers.</code><code class="descname">is_blacklisted</code><span class="sig-paren">(</span><em>name</em>, <em>mode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/drivers.html#is_blacklisted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.drivers.is_blacklisted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if driver <cite>name</cite> and <cite>mode</cite> are blacklisted.</p>
 </dd></dl>
 
 </div>
@@ -152,10 +157,8 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rasterio.warp.html" class="btn btn-neutral float-right" title="rasterio.warp module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rasterio.dtypes.html" class="btn btn-neutral float-right" title="rasterio.dtypes module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="rasterio.vfs.html" class="btn btn-neutral" title="rasterio.vfs module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -186,7 +189,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.35.1',
+            VERSION:'1.0.dev1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
