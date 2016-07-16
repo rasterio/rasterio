@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
-        <link rel="up" title="API Documentation" href="api_docs.html"/>
-        <link rel="next" title="Community" href="community.html"/>
+        <link rel="up" title="API Reference" href="api_docs.html"/>
+        <link rel="next" title="Contributing" href="contributing.html"/>
         <link rel="prev" title="rasterio.warp module" href="rasterio.warp.html"/> 
 
   
@@ -85,8 +85,8 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -117,7 +117,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="api_docs.html">API Documentation</a> &raquo;</li>
+          <li><a href="api_docs.html">API Reference</a> &raquo;</li>
       
     <li>rasterio.windows module</li>
       <li class="wy-breadcrumbs-aside">
@@ -268,7 +268,7 @@ of the input array.</p>
 
 <dl class="function">
 <dt id="rasterio.windows.intersect">
-<code class="descclassname">rasterio.windows.</code><code class="descname">intersect</code><span class="sig-paren">(</span><em>*windows</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.intersect" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.windows.</code><code class="descname">intersect</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.intersect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test if windows intersect.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -292,7 +292,7 @@ of the input array.</p>
 
 <dl class="function">
 <dt id="rasterio.windows.intersection">
-<code class="descclassname">rasterio.windows.</code><code class="descname">intersection</code><span class="sig-paren">(</span><em>*windows</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.intersection" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.windows.</code><code class="descname">intersection</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.intersection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Intersect windows and return the innermost extent they cover.</p>
 <p>Will raise ValueError if windows do not intersect.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -357,7 +357,7 @@ values in the window.</p>
 
 <dl class="function">
 <dt id="rasterio.windows.union">
-<code class="descclassname">rasterio.windows.</code><code class="descname">union</code><span class="sig-paren">(</span><em>*windows</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.union" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.windows.</code><code class="descname">union</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.union" title="Permalink to this definition">¶</a></dt>
 <dd><p>Union windows and return the outermost extent they cover.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -390,7 +390,7 @@ values in the window.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="community.html" class="btn btn-neutral float-right" title="Community" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rasterio.warp.html" class="btn btn-neutral" title="rasterio.warp module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
