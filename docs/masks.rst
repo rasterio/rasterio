@@ -1,15 +1,19 @@
-Masks
-*****
+Nodata Masks
+************
 
-In using Rasterio, you'll encounter two different kinds of masks. One is the
-the valid data mask from GDAL, an unsigned byte array with the same number of
-rows and columns as the dataset in which non-zero elements indicate that the
+Nodata masks allow you to identify regions of valid data values. In using Rasterio,
+you'll encounter two different kinds of masks.
+
+One is the the valid data mask from GDAL, an unsigned byte array with the same number of
+rows and columns as the dataset in which non-zero elements (typically 255) indicate that the
 corresponding data elements are valid. Other elements are invalid, or *nodata*
-elements. The other kind of mask is the mask in Numpy's [masked
-arrays](http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html),
-which have the inverse sense: `True` values in a masked array's mask indicate
+elements.
+
+The other kind of mask is Numpy's [masked
+array](http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html),
+which has the inverse sense: `True` values in a masked array's mask indicate
 that the corresponding data elements are invalid. With care, you can safely
-navigate this divide.
+navigate convert between the two mask types.
 
 Consider Rasterio's RGB.byte.tif test dataset. It has 718 rows and 791
 columns of pixels. Each pixel has 3 8-bit (uint8) channels or bands. It has a
@@ -37,6 +41,8 @@ inverse relationship in the context of RGB.byte.tif.
     ('uint8', 'uint8', 'uint8')
     >>> src.nodatavals
     (0.0, 0.0, 0.0)
+    >>> src.nodata
+    0.0
 
 Reading dataset masks
 ---------------------
@@ -125,7 +131,7 @@ return mask arrays based on the .msk file.
     -rw-r--r--  1 sean  staff      916 Mar 24 14:25 copy.tif.msk
 
 Can Rasterio help fix buggy nodata masks like the ones in RGB.byte.tif? It
-certainly can. Consider a fresh copy of that file. 
+certainly can. Consider a fresh copy of that file.
 
 .. code-block:: python
 
@@ -133,7 +139,7 @@ certainly can. Consider a fresh copy of that file.
     >>> tmp = shutil.copy("tests/data/RGB.byte.tif", "/tmp/RGB.byte.tif")
     >>> src = rasterio.open(tmp, mode="r+")
 
-This time we'll read all 3 band masks 
+This time we'll read all 3 band masks
 (based on the nodata values, not a .msk GeoTIFF) and show them
 as an RGB image (with the help of `numpy.dstack()`):
 
@@ -209,3 +215,37 @@ You can rely on this Rasterio identity for any integer value ``N``.
     >>> N = 1
     >>> (~src.read(N, masked=True).mask * 255 == src.read_masks(N)).all()
     True
+
+
+Dataset masks
+-------------
+
+Sometimes a per-band mask is not appropriate. In this case you can either
+construct a mask out of the component bands (or other auxillary data) manually
+*or* use the Rasterio dataset's ``src.dataset_mask()`` function. This returns
+a 2D array with a GDAL-style mask determined by the following criteria,
+in order of precedence:
+
+    1. If a .msk file, dataset-wide alpha or internal mask exists,
+       it will be used as the dataset mask.
+    2. If a 4-band RGBA with a shadow nodata value,
+       band 4 will be used as the dataset mask.
+    3. If a nodata value exists, use the binary OR (|) of the band masks
+    4. If no nodata value exists, return a mask filled with all valid data (255)
+
+Note that this differs from read_masks and GDAL RFC15 in that it applies
+per-dataset, not per-band.
+
+
+Nodata representations in raster files
+--------------------------------------
+
+The storage and representation of nodata differs depending on the data format
+and configuration options. While Rasterio provides an abstraction for those
+details when reading, it's often important to understand the differences when
+creating, manipulating and writing raster data.
+
+   * **Nodata values**: the ``src.nodata`` value is used to define which pixels should be masked.
+   * **Alpha band**: with RGB imagery, an additional 4th band (containing a GDAL-style 8-bit mask) is sometimes provided to explictly define the mask.
+   * **Internal mask band**: GDAL provides the ability to store an additional boolean 1-bit mask that is stored internally to the dataset. This option relies on a GDAL environment with ``GDAL_TIFF_INTERNAL_MASK=True``. Otherwise the mask will be written externally.
+   * **External mask band**: Same as above but the mask band is stored in a sidecar ``.msk`` file (default).
