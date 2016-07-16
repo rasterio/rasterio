@@ -83,7 +83,7 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_docs.html">API Reference</a></li>
 </ul>
 
             
@@ -195,7 +195,7 @@
 
 
 <span class="nd">@ensure_env</span>
-<div class="viewcode-block" id="open"><a class="viewcode-back" href="../rasterio.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+<div class="viewcode-block" id="open"><a class="viewcode-back" href="../api_docs.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
          <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
          <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Open file at ``path`` in ``mode`` &#39;r&#39; (read), &#39;r+&#39; (read and</span>
@@ -368,7 +368,7 @@
 
 
 <span class="nd">@ensure_env</span>
-<div class="viewcode-block" id="copy"><a class="viewcode-back" href="../rasterio.html#rasterio.copy">[docs]</a><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<div class="viewcode-block" id="copy"><a class="viewcode-back" href="../api_docs.html#rasterio.copy">[docs]</a><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy a source raster to a new destination with driver specific</span>
 <span class="sd">    creation options.</span>
 
@@ -402,7 +402,7 @@
 <span class="n">Band</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Band&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ds&#39;</span><span class="p">,</span> <span class="s1">&#39;bidx&#39;</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;shape&#39;</span><span class="p">])</span>
 
 
-<div class="viewcode-block" id="band"><a class="viewcode-back" href="../rasterio.html#rasterio.band">[docs]</a><span class="k">def</span> <span class="nf">band</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">bidx</span><span class="p">):</span>
+<div class="viewcode-block" id="band"><a class="viewcode-back" href="../api_docs.html#rasterio.band">[docs]</a><span class="k">def</span> <span class="nf">band</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">bidx</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Wraps a dataset and a band index up as a &#39;Band&#39;</span>
 
 <span class="sd">    Parameters</span>
@@ -423,7 +423,7 @@
         <span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="pad"><a class="viewcode-back" href="../rasterio.html#rasterio.pad">[docs]</a><span class="k">def</span> <span class="nf">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="pad"><a class="viewcode-back" href="../api_docs.html#rasterio.pad">[docs]</a><span class="k">def</span> <span class="nf">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;pad array and adjust affine transform matrix.</span>
 
 <span class="sd">    Parameters</span>
