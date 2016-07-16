@@ -20,5 +20,4 @@ This user's manual is for Python developers who want a clean API for accessing r
     working_with_datasets
     writing
     topics
-    developers
     osgeo_gdal_migration
