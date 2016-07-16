@@ -3,8 +3,8 @@ Virtual Files
 
 .. todo::
 
-    Support for URIs describing zip, s3, etc resources. Relationship to GDAL
-    vsicurl et al.
+    Support for URIs describing zip, s3, https resources.
+    Relationship to GDAL vsicurl, vsis3 et al.
 
 AWS S3
 ======
@@ -29,9 +29,7 @@ your code.
         print(src.profile)
 
     # Printed:
-    # {'affine': Affine(30.0, 0.0, 381885.0,
-    #        0.0, -30.0, 2512815.0),
-    #  'blockxsize': 512,
+    # {'blockxsize': 512,
     #  'blockysize': 512,
     #  'compress': 'deflate',
     #  'count': 1,
@@ -42,7 +40,8 @@ your code.
     #  'interleave': 'band',
     #  'nodata': None,
     #  'tiled': True,
-    #  'transform': (381885.0, 30.0, 0.0, 2512815.0, 0.0, -30.0),
+    #  'transform': Affine(30.0, 0.0, 381885.0,
+    #        0.0, -30.0, 2512815.0),
     #  'width': 7621}
 
 .. note:: AWS pricing concerns

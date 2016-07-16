@@ -2,6 +2,7 @@ General Concepts
 ================
 
 .. toctree::
+    :maxdepth: 2
 
     reproject
     errors

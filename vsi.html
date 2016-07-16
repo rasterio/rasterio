@@ -85,7 +85,6 @@
                 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
@@ -99,8 +98,7 @@
 <li class="toctree-l3"><a class="reference internal" href="overviews.html">Overviews</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plotting.html">Plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="features.html">Vector Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="masks.html">Masks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="nodata.html">Nodata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
@@ -114,14 +112,12 @@
 <li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -174,8 +170,8 @@
 <h1>Virtual Files<a class="headerlink" href="#virtual-files" title="Permalink to this headline">¶</a></h1>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
-<p class="last">Support for URIs describing zip, s3, etc resources. Relationship to GDAL
-vsicurl et al.</p>
+<p class="last">Support for URIs describing zip, s3, https resources.
+Relationship to GDAL vsicurl, vsis3 et al.</p>
 </div>
 <div class="section" id="aws-s3">
 <h2>AWS S3<a class="headerlink" href="#aws-s3" title="Permalink to this headline">¶</a></h2>
@@ -194,9 +190,7 @@ your code.</p>
     <span class="k">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
 
 <span class="c1"># Printed:</span>
-<span class="c1"># {&#39;affine&#39;: Affine(30.0, 0.0, 381885.0,</span>
-<span class="c1">#        0.0, -30.0, 2512815.0),</span>
-<span class="c1">#  &#39;blockxsize&#39;: 512,</span>
+<span class="c1"># {&#39;blockxsize&#39;: 512,</span>
 <span class="c1">#  &#39;blockysize&#39;: 512,</span>
 <span class="c1">#  &#39;compress&#39;: &#39;deflate&#39;,</span>
 <span class="c1">#  &#39;count&#39;: 1,</span>
@@ -207,7 +201,8 @@ your code.</p>
 <span class="c1">#  &#39;interleave&#39;: &#39;band&#39;,</span>
 <span class="c1">#  &#39;nodata&#39;: None,</span>
 <span class="c1">#  &#39;tiled&#39;: True,</span>
-<span class="c1">#  &#39;transform&#39;: (381885.0, 30.0, 0.0, 2512815.0, 0.0, -30.0),</span>
+<span class="c1">#  &#39;transform&#39;: Affine(30.0, 0.0, 381885.0,</span>
+<span class="c1">#        0.0, -30.0, 2512815.0),</span>
 <span class="c1">#  &#39;width&#39;: 7621}</span>
 </pre></div>
 </div>

@@ -111,8 +111,8 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -159,13 +159,15 @@
             
   <div class="section" id="rio-command-line-user-s-manual">
 <h1><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual<a class="headerlink" href="#rio-command-line-user-s-manual" title="Permalink to this headline">¶</a></h1>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Introduce the command line interface main concepts,
-when you should and should not use the command line,
-Overview of the general design pholosophy,</p>
-</div>
-<p>Rasterio&#8217;s command line interface is a program named &#8220;rio&#8221;.</p>
+<p>Rasterio&#8217;s command line interface is a program named <code class="docutils literal"><span class="pre">rio</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">rio</span></code> allows you to build workflows using shell commands, either
+interactively at the command prompt or with a script. Most common
+cases are covered by <code class="docutils literal"><span class="pre">rio</span></code> commands and it is often more convenient
+to use a ready-made command as opposed to implementing similar functionality
+as a python script.</p>
+<p><code class="docutils literal"><span class="pre">rio</span></code> is developed using the <a class="reference external" href="http://click.pocoo.org/">Click</a>  architecture.
+Its plugin system allows external modules to share a common namespace and
+handling of context variables.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio --help
 <span class="go">Usage: rio [OPTIONS] COMMAND [ARGS]...</span>
 
@@ -197,7 +199,6 @@ Overview of the general design pholosophy,</p>
 <span class="go">  warp       Warp a raster dataset.</span>
 </pre></div>
 </div>
-<p>It is developed using <a class="reference external" href="http://click.pocoo.org/">Click</a>.</p>
 <div class="section" id="commands">
 <h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
 <p>Commands are shown below. See <code class="docutils literal"><span class="pre">--help</span></code> of individual commands for more

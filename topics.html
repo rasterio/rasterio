@@ -109,13 +109,12 @@
 <li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -175,11 +174,7 @@
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="color.html#color-interpretation">Color interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="color.html#colormaps">Colormaps</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="color.html#writing-colormaps">Writing colormaps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="color.html#reading-colormaps">Reading colormaps</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="color.html#colormaps">Colormaps</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
@@ -209,12 +204,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="resampling.html#up-and-downsampling">Up and Downsampling</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="resampling.html#use-reproject">Use reproject</a></li>
-<li class="toctree-l3"><a class="reference internal" href="resampling.html#use-scipy">Use scipy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="resampling.html#use-decimated-reads">Use decimated reads</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="resampling.html#up-and-downsampling">Up and Downsampling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="resampling.html#resampling-methods">Resampling Methods</a></li>
 </ul>
 </li>
@@ -245,37 +235,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#affine-affine-vs-gdal-style-geotransforms">affine.Affine() vs. GDAL-style geotransforms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#tickets">Tickets</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="migrating-to-v1.html#i-o-operations">I/O Operations</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#deprecated-rasterio-drivers">Deprecated: <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#id1">Tickets</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="migrating-to-v1.html#removed-src-read-band">Removed: <code class="docutils literal"><span class="pre">src.read_band()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#id2">Tickets</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="migrating-to-v1.html#removed-src-read-mask">Removed: <code class="docutils literal"><span class="pre">src.read_mask()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#id3">Tickets</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-functions-for-working-with-dataset-windows">Moved: Functions for working with dataset windows</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#id4">Tickets</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tool">Moved: <code class="docutils literal"><span class="pre">rasterio.tool</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#id5">Tickets</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tools">Moved: <code class="docutils literal"><span class="pre">rasterio.tools</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html#id6">Tickets</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#affine-affine-vs-gdal-style-geotransforms">affine.Affine() vs. GDAL-style geotransforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#deprecated-rasterio-drivers">Deprecated: <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-functions-for-working-with-dataset-windows">Moved: Functions for working with dataset windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tool">Moved: <code class="docutils literal"><span class="pre">rasterio.tool</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tools">Moved: <code class="docutils literal"><span class="pre">rasterio.tools</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#removed-rasterio-warp-resampling">Removed: <code class="docutils literal"><span class="pre">rasterio.warp.RESAMPLING</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#signature-changes">Signature Changes</a></li>
 </ul>

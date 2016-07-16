@@ -1,10 +1,6 @@
 Working with Datasets
 ======================
 
-.. todo::
-
-    * working with ndarrays
-
 Attributes
 ----------
 
