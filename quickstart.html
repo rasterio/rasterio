@@ -286,6 +286,19 @@ keyword argument.</p>
 <span class="go">(1, 44.434478650699106, 255)</span>
 </pre></div>
 </div>
+<p>Pixels of the array can be had by their row, column index.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="mi">150</span><span class="p">,</span> <span class="mi">300</span><span class="p">]</span>
+<span class="go">21</span>
+</pre></div>
+</div>
+<p>Datasets have a method of getting indexes for spatial points. To get the value
+for the pixel 100 kilometers east and 50 kilometers south of the dataset&#8217;s
+upper left corner, do the following.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">101985.0</span> <span class="o">+</span> <span class="mf">100000.0</span><span class="p">,</span> <span class="mf">2826915.0</span> <span class="o">-</span> <span class="mf">50000.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>
+<span class="go">12</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="writing-data">
 <h2>Writing data<a class="headerlink" href="#writing-data" title="Permalink to this headline">¶</a></h2>
