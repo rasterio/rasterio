@@ -2,7 +2,7 @@
 Rasterio
 ========
 
-Rasterio reads and writes geospatial raster data files.
+Rasterio reads and writes geospatial raster data.
 
 .. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
    :target: https://travis-ci.org/mapbox/rasterio
@@ -10,11 +10,13 @@ Rasterio reads and writes geospatial raster data files.
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
 
-Rasterio employs GDAL to read and writes files using GeoTIFF and many other
-formats. Its API uses familiar Python and SciPy interfaces and idioms like
-context managers, iterators, and ndarrays.
+Geographic information systems use GeoTIFF and other formats to organize and
+store gridded, or raster, datasets. Rasterio reads and writes these formats and
+provides a Python API based on N-D arrays.
 
-Documentation is published at https://mapbox.github.io/rasterio/.
+Rasterio supports Python 2.7 and 3.3-3.5 on Linux and Mac OS X.
+
+Read the documentation for more details: https://mapbox.github.io/rasterio/.
 
 Example
 =======
@@ -82,7 +84,7 @@ Rasterio gives access to properties of a geospatial raster file.
     # [1, 2, 3]
 
 A rasterio dataset also provides methods for getting extended array slices given
-georeferenced coordinates and vice versa.
+georeferenced coordinates.
 
 
 .. code-block:: python
@@ -159,9 +161,8 @@ tamper with your system's Python.
 Dependencies
 ------------
 
-Rasterio has a C library dependency: GDAL >=1.9. GDAL itself depends on a
-number of other libraries provided by most major operating systems and also
-depends on the non standard GEOS and PROJ4 libraries. How to meet this
+Rasterio has a C library dependency: GDAL >=1.9. GDAL itself depends on some other libraries provided by most major operating systems and also
+depends on the non standard GEOS and PROJ4 libraries. How to meet these
 requirement will be explained below.
 
 Rasterio's Python dependencies are listed in its requirements.txt file.
