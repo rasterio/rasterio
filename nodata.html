@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Nodata &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Nodata &mdash; rasterio 0.35.1 documentation</title>
   
 
   
@@ -30,10 +30,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
         <link rel="up" title="General Concepts" href="topics.html"/>
         <link rel="next" title="Interoperability" href="image_processing.html"/>
-        <link rel="prev" title="Nodata Masks" href="masks.html"/> 
+        <link rel="prev" title="Masks" href="masks.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                0.35.1
               </div>
             
           
@@ -85,6 +85,7 @@
                 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
@@ -98,7 +99,7 @@
 <li class="toctree-l3"><a class="reference internal" href="overviews.html">Overviews</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plotting.html">Plotting</a></li>
 <li class="toctree-l3"><a class="reference internal" href="features.html">Vector Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masks.html">Masks</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Nodata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
 <li class="toctree-l3"><a class="reference internal" href="resampling.html">Resampling</a></li>
@@ -106,11 +107,10 @@
 <li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 </li>
@@ -167,8 +167,14 @@
             
   <div class="section" id="nodata">
 <h1>Nodata<a class="headerlink" href="#nodata" title="Permalink to this headline">¶</a></h1>
-<p>This section covers the different representations of nodataSee the <code class="docutils literal"><span class="pre">Masks</span></code> section for more discussion on how to nodata masks represented
-as numpy arrays.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<ul class="last simple">
+<li>nodata value</li>
+<li>alpha band</li>
+</ul>
+</div>
+<img alt="https://cloud.githubusercontent.com/assets/5084513/9670961/4f04da04-5244-11e5-93e5-86b69694f82f.jpg" src="https://cloud.githubusercontent.com/assets/5084513/9670961/4f04da04-5244-11e5-93e5-86b69694f82f.jpg" />
 </div>
 
 
@@ -181,7 +187,7 @@ as numpy arrays.</p>
         <a href="image_processing.html" class="btn btn-neutral float-right" title="Interoperability" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="masks.html" class="btn btn-neutral" title="Nodata Masks" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="masks.html" class="btn btn-neutral" title="Masks" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -212,7 +218,7 @@ as numpy arrays.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.dev1',
+            VERSION:'0.35.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

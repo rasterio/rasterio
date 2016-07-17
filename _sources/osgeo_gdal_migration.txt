@@ -207,7 +207,7 @@ With Rasterio, you open the dataset, read the data and the
     >>> # rasterio
     >>> with rasterio.open('/tmp/newraster.tif', 'w', **profile) as dst:
     ...     dst.write(arr)
-
+   
 
  The equivalent operation in osgeo.gdal requires a more procedural approach:
 

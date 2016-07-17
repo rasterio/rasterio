@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rasterio Cookbook &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Rasterio Cookbook &mdash; rasterio 0.35.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
         <link rel="up" title="rasterio Python User’s Manual" href="python_manual.html"/>
         <link rel="next" title="Migration Guide for osgeo.gdal users" href="osgeo_gdal_migration.html"/>
         <link rel="prev" title="Developers guide" href="developers.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                0.35.1
               </div>
             
           
@@ -190,26 +190,26 @@ the fundamentals.</p>
 14
 15
 16
-17</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+17</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
-<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s">&quot;tests/data/RGB.byte.tif&quot;</span>
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
 <span class="n">stats</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="n">array</span><span class="p">:</span>
     <span class="n">stats</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-        <span class="s1">&#39;min&#39;</span><span class="p">:</span> <span class="n">band</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
-        <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="n">band</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-        <span class="s1">&#39;median&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">band</span><span class="p">),</span>
-        <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="n">band</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
+        <span class="s">&#39;min&#39;</span><span class="p">:</span> <span class="n">band</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+        <span class="s">&#39;mean&#39;</span><span class="p">:</span> <span class="n">band</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="s">&#39;median&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">band</span><span class="p">),</span>
+        <span class="s">&#39;max&#39;</span><span class="p">:</span> <span class="n">band</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
 
 <span class="n">pprint</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
-<div class="code highlight-default"><div class="highlight"><pre><span></span>$ python docs/recipes/band_summary_stats.py
+<div class="code highlight-default"><div class="highlight"><pre>$ python docs/recipes/band_summary_stats.py
 [{&#39;max&#39;: 255, &#39;mean&#39;: 29.94772668847656, &#39;median&#39;: 13.0, &#39;min&#39;: 0},
  {&#39;max&#39;: 255, &#39;mean&#39;: 44.516147889382289, &#39;median&#39;: 30.0, &#39;min&#39;: 0},
  {&#39;max&#39;: 255, &#39;mean&#39;: 48.113056354742945, &#39;median&#39;: 30.0, &#39;min&#39;: 0}]
@@ -273,57 +273,59 @@ aka EPSG code 3759.</p>
 45
 46
 47
-48</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+48
+49</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">calculate_default_transform</span><span class="p">,</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">Resampling</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">crs</span>
 
-<span class="n">rgb</span> <span class="o">=</span> <span class="s1">&#39;tests/data/world.tif&#39;</span>
-<span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;/tmp/reproj.tif&#39;</span>
+<span class="n">rgb</span> <span class="o">=</span> <span class="s">&#39;tests/data/world.tif&#39;</span>
+<span class="n">out</span> <span class="o">=</span> <span class="s">&#39;/tmp/reproj.tif&#39;</span>
 
-<span class="c1"># Reproject to NAD83(HARN) / Hawaii zone 3 (ftUS) - Transverse Mercator</span>
-<span class="n">dst_crs</span> <span class="o">=</span> <span class="n">crs</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s2">&quot;EPSG:3759&quot;</span><span class="p">)</span>
+<span class="c"># Reproject to NAD83(HARN) / Hawaii zone 3 (ftUS) - Transverse Mercator</span>
+<span class="n">dst_crs</span> <span class="o">=</span> <span class="n">crs</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s">&quot;EPSG:3759&quot;</span><span class="p">)</span>
 
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">CHECK_WITH_INVERT_PROJ</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">drivers</span><span class="p">(</span><span class="n">CHECK_WITH_INVERT_PROJ</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
 
-        <span class="c1"># Calculate the ideal dimensions and transformation in the new crs</span>
+        <span class="c"># Calculate the ideal dimensions and transformation in the new crs</span>
         <span class="n">dst_affine</span><span class="p">,</span> <span class="n">dst_width</span><span class="p">,</span> <span class="n">dst_height</span> <span class="o">=</span> <span class="n">calculate_default_transform</span><span class="p">(</span>
             <span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="o">*</span><span class="n">src</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
 
-        <span class="c1"># update the relevant parts of the profile</span>
+        <span class="c"># update the relevant parts of the profile</span>
         <span class="n">profile</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-            <span class="s1">&#39;crs&#39;</span><span class="p">:</span> <span class="n">dst_crs</span><span class="p">,</span>
-            <span class="s1">&#39;transform&#39;</span><span class="p">:</span> <span class="n">dst_affine</span><span class="p">,</span>
-            <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">dst_width</span><span class="p">,</span>
-            <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">dst_height</span>
+            <span class="s">&#39;crs&#39;</span><span class="p">:</span> <span class="n">dst_crs</span><span class="p">,</span>
+            <span class="s">&#39;transform&#39;</span><span class="p">:</span> <span class="n">dst_affine</span><span class="p">,</span>
+            <span class="s">&#39;affine&#39;</span><span class="p">:</span> <span class="n">dst_affine</span><span class="p">,</span>
+            <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="n">dst_width</span><span class="p">,</span>
+            <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="n">dst_height</span>
         <span class="p">})</span>
 
-        <span class="c1"># Reproject and write each band</span>
-        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="c"># Reproject and write each band</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="n">src_array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-                <span class="n">dst_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">dst_height</span><span class="p">,</span> <span class="n">dst_width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+                <span class="n">dst_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">dst_height</span><span class="p">,</span> <span class="n">dst_width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
 
                 <span class="n">reproject</span><span class="p">(</span>
-                    <span class="c1"># Source parameters</span>
+                    <span class="c"># Source parameters</span>
                     <span class="n">source</span><span class="o">=</span><span class="n">src_array</span><span class="p">,</span>
                     <span class="n">src_crs</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
-                    <span class="n">src_transform</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
-                    <span class="c1"># Destination paramaters</span>
+                    <span class="n">src_transform</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span>
+                    <span class="c"># Destination paramaters</span>
                     <span class="n">destination</span><span class="o">=</span><span class="n">dst_array</span><span class="p">,</span>
                     <span class="n">dst_transform</span><span class="o">=</span><span class="n">dst_affine</span><span class="p">,</span>
                     <span class="n">dst_crs</span><span class="o">=</span><span class="n">dst_crs</span><span class="p">,</span>
-                    <span class="c1"># Configuration</span>
+                    <span class="c"># Configuration</span>
                     <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span>
                     <span class="n">num_threads</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
                 <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dst_array</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
-<div class="code highlight-default"><div class="highlight"><pre><span></span>$ python docs/recipes/reproject.py
+<div class="code highlight-default"><div class="highlight"><pre>$ python docs/recipes/reproject.py
 </pre></div>
 </div>
 <p>The original image</p>
@@ -366,27 +368,27 @@ to write the masked raster to a new file.</p>
 15
 16
 17
-18</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">fiona</span>
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">fiona</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio.tools.mask</span> <span class="kn">import</span> <span class="n">mask</span>
 
-<span class="k">with</span> <span class="n">fiona</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/box.shp&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">shapefile</span><span class="p">:</span>
-    <span class="n">geoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">shapefile</span><span class="p">]</span>
+<span class="k">with</span> <span class="n">fiona</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/box.shp&quot;</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">shapefile</span><span class="p">:</span>
+    <span class="n">geoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="p">[</span><span class="s">&quot;geometry&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">shapefile</span><span class="p">]</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">out_image</span><span class="p">,</span> <span class="n">out_transform</span> <span class="o">=</span> <span class="n">mask</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">geoms</span><span class="p">,</span> <span class="n">crop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">out_meta</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-<span class="n">out_meta</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
-                 <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="n">out_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                 <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">out_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-                 <span class="s2">&quot;transform&quot;</span><span class="p">:</span> <span class="n">out_transform</span><span class="p">})</span>
+<span class="n">out_meta</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&quot;driver&quot;</span><span class="p">:</span> <span class="s">&quot;GTiff&quot;</span><span class="p">,</span>
+                 <span class="s">&quot;height&quot;</span><span class="p">:</span> <span class="n">out_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                 <span class="s">&quot;width&quot;</span><span class="p">:</span> <span class="n">out_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                 <span class="s">&quot;transform&quot;</span><span class="p">:</span> <span class="n">out_transform</span><span class="p">})</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;/tmp/masked.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">out_meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dest</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;/tmp/masked.tif&quot;</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">out_meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dest</span><span class="p">:</span>
     <span class="n">dest</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">out_image</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
-<div class="code highlight-default"><div class="highlight"><pre><span></span>$ python docs/recipes/mask_shp.py
+<div class="code highlight-default"><div class="highlight"><pre>$ python docs/recipes/mask_shp.py
 </pre></div>
 </div>
 <p>The original image with the shapefile overlayed</p>
@@ -426,25 +428,25 @@ the image and remove small inclusions (at the expense of some sharpness and deta
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">medfilt</span>
 
-<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span>
-<span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;/tmp/filtered.tif&quot;</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s">&quot;tests/data/RGB.byte.tif&quot;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="s">&quot;/tmp/filtered.tif&quot;</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
 
-<span class="c1"># apply a 5x5 median filter to each band</span>
-<span class="n">filtered</span> <span class="o">=</span> <span class="n">medfilt</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+<span class="c"># apply a 5x5 median filter to each band</span>
+<span class="n">filtered</span> <span class="o">=</span> <span class="n">medfilt</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
 
-<span class="c1"># Write to tif, using the same profile as the source</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+<span class="c"># Write to tif, using the same profile as the source</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">filtered</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
-<div class="code highlight-default"><div class="highlight"><pre><span></span>$ python docs/recipes/filter.py
+<div class="code highlight-default"><div class="highlight"><pre>$ python docs/recipes/filter.py
 </pre></div>
 </div>
 <p>The original image</p>
@@ -509,37 +511,37 @@ the image and remove small inclusions (at the expense of some sharpness and deta
 52
 53
 54
-55</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+55</pre></div></td><td class="code"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">skimage.color</span> <span class="kn">import</span> <span class="n">rgb2lab</span><span class="p">,</span> <span class="n">lab2lch</span><span class="p">,</span> <span class="n">lch2lab</span><span class="p">,</span> <span class="n">lab2rgb</span>
 
-<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span>
-<span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;/tmp/saturation.tif&quot;</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s">&quot;tests/data/RGB.byte.tif&quot;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="s">&quot;/tmp/saturation.tif&quot;</span>
 
 
 <span class="k">def</span> <span class="nf">saturation</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">sat</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Multiple saturation/chroma in LCH color space</span>
 <span class="sd">    Input and output are 3-band RGB scaled 0 to 255</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># scale image 0 to 1</span>
+    <span class="c"># scale image 0 to 1</span>
     <span class="n">arr_norm</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">/</span> <span class="mf">255.0</span>
-    <span class="c1"># Convert colorspace</span>
+    <span class="c"># Convert colorspace</span>
     <span class="n">lch</span> <span class="o">=</span> <span class="n">rgb2lch</span><span class="p">(</span><span class="n">arr_norm</span><span class="p">)</span>
-    <span class="c1"># Adjust chroma, band at index=1</span>
+    <span class="c"># Adjust chroma, band at index=1</span>
     <span class="n">lch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">lch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span>
-    <span class="c1"># Convert colorspace and rescale</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">lch2rgb</span><span class="p">(</span><span class="n">lch</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+    <span class="c"># Convert colorspace and rescale</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">lch2rgb</span><span class="p">(</span><span class="n">lch</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">rgb2lch</span><span class="p">(</span><span class="n">rgb</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert RBG to LCH colorspace (via LAB)</span>
 <span class="sd">    Input and output are in (bands, cols, rows) order</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># reshape for skimage (bands, cols, rows) -&gt; (cols, rows, bands)</span>
+    <span class="c"># reshape for skimage (bands, cols, rows) -&gt; (cols, rows, bands)</span>
     <span class="n">srgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="c1"># convert colorspace</span>
+    <span class="c"># convert colorspace</span>
     <span class="n">lch</span> <span class="o">=</span> <span class="n">lab2lch</span><span class="p">(</span><span class="n">rgb2lab</span><span class="p">(</span><span class="n">srgb</span><span class="p">))</span>
-    <span class="c1"># return in (bands, cols, rows) order</span>
+    <span class="c"># return in (bands, cols, rows) order</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">lch</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 
@@ -547,11 +549,11 @@ the image and remove small inclusions (at the expense of some sharpness and deta
     <span class="sd">&quot;&quot;&quot;Convert LCH to RGB colorspace (via LAB)</span>
 <span class="sd">    Input and output are in (bands, cols, rows) order</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># reshape for skimage (bands, cols, rows) -&gt; (cols, rows, bands)</span>
+    <span class="c"># reshape for skimage (bands, cols, rows) -&gt; (cols, rows, bands)</span>
     <span class="n">slch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">lch</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="c1"># convert colorspace</span>
+    <span class="c"># convert colorspace</span>
     <span class="n">rgb</span> <span class="o">=</span> <span class="n">lab2rgb</span><span class="p">(</span><span class="n">lch2lab</span><span class="p">(</span><span class="n">slch</span><span class="p">))</span>
-    <span class="c1"># return in (bands, cols, rows) order</span>
+    <span class="c"># return in (bands, cols, rows) order</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 
@@ -559,14 +561,14 @@ the image and remove small inclusions (at the expense of some sharpness and deta
     <span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
 
-<span class="c1"># Increase color saturation by 60%</span>
+<span class="c"># Increase color saturation by 60%</span>
 <span class="n">array_sat</span> <span class="o">=</span> <span class="n">saturation</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">array_sat</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
-<div class="code highlight-default"><div class="highlight"><pre><span></span>$ python docs/recipes/saturation.py
+<div class="code highlight-default"><div class="highlight"><pre>$ python docs/recipes/saturation.py
 </pre></div>
 </div>
 <p>The original image</p>
@@ -577,7 +579,7 @@ the image and remove small inclusions (at the expense of some sharpness and deta
 <div class="section" id="generating-a-kmz-from-a-raster">
 <h2>Generating a KMZ from a raster<a class="headerlink" href="#generating-a-kmz-from-a-raster" title="Permalink to this headline">¶</a></h2>
 <p>A raster can be converted to a KMZ and opened in Google Earth using <code class="docutils literal"><span class="pre">rasterio</span></code> to access the raster metadata. Executing</p>
-<div class="code highlight-default"><div class="highlight"><pre><span></span>$ python docs/recipes/raster_to_kmz.py
+<div class="code highlight-default"><div class="highlight"><pre>$ python docs/recipes/raster_to_kmz.py
 </pre></div>
 </div>
 <p>creates the file <code class="docutils literal"><span class="pre">green_box.tif</span></code>, which is a green image that extends from longitude -36 to -35 and latitude 74 to 75 in <code class="docutils literal"><span class="pre">EPSG:4326</span></code> projection, and then embeds this raster in a KMZ file <code class="docutils literal"><span class="pre">green_box.kmz</span></code>. In Google Earth, we can see the box inside Greenland (screenshot below).</p>
@@ -626,7 +628,7 @@ the image and remove small inclusions (at the expense of some sharpness and deta
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.dev1',
+            VERSION:'0.35.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

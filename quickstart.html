@@ -141,14 +141,14 @@
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <p>Have a new satellite image or other raster data to dig into? Here are some
-examples using an imaginary GeoTIFF file named &#8220;rgb.tif&#8221;.</p>
+examples using an imaginary GeoTIFF file named &#8220;example.tif&#8221;.</p>
 <div class="section" id="opening-a-dataset">
 <h2>Opening a dataset<a class="headerlink" href="#opening-a-dataset" title="Permalink to this headline">¶</a></h2>
 <p>First, import rasterio.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 </pre></div>
 </div>
-<p>Now, open the imaginary file.</p>
+<p>Now, open the file.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -159,11 +159,20 @@ examples using an imaginary GeoTIFF file named &#8220;rgb.tif&#8221;.</p>
 <span class="go">&lt;open DatasetReader name=&#39;example.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
-<p>In this case it is an instance of <code class="docutils literal"><span class="pre">DatasetReader</span></code>.</p>
+<p>In this case it is an instance of <code class="docutils literal"><span class="pre">DatasetReader</span></code>. Dataset objects have
+some of the same properties as Python file objects.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;example.tif&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">mode</span>
+<span class="go">&#39;r&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">closed</span>
+<span class="go">False</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="dataset-properties">
 <h2>Dataset properties<a class="headerlink" href="#dataset-properties" title="Permalink to this headline">¶</a></h2>
-<p>Properties of the raster dataset in &#8220;example.tif&#8221; can be accessed through
+<p>Properties of the raster data stored in &#8220;example.tif&#8221; can be accessed through
 properties of <cite>dataset</cite>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
 <span class="go">3</span>
@@ -174,17 +183,23 @@ properties of <cite>dataset</cite>.</p>
 <span class="go">(791, 718)</span>
 </pre></div>
 </div>
-<p>Each band is a raster grid 791 cells (or pixels) wide and 718 pixels tall.</p>
+<p>Each example band is a raster array with 791 columns and 718 rows.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">dtypes</span>
+<span class="go">(&#39;uint8&#39;, &#39;uint8&#39;, &#39;uint8&#39;)</span>
+</pre></div>
+</div>
+<p>The raster grids contain unsigned 8-bit integer values. The GeoTIFF format
+also supports signed integers and floats of different size.</p>
+<p>The thing that makes GIS raster data unique is that its pixels are mapped to
+some region in the world.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
 <span class="go">BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)</span>
 </pre></div>
 </div>
-<p>The thing that makes GIS raster data unique is that its pixels are mapped to
-some region in the world. Our example covers the world from 101985 meters (in
-this case) to 339315 meters, left to right, and 2611485 meters to 2826915
-meters bottom to top. It covers a region 237.33 kilometers wide by 215.43
-kilometers high.</p>
-<p>The <code class="docutils literal"><span class="pre">bounds</span></code> property is derived from a more fundamental property, the
+<p>Our example covers the world from 101985 meters (in this case) to 339315
+meters, left to right, and 2611485 meters to 2826915 meters bottom to top. It
+covers a region 237.33 kilometers wide by 215.43 kilometers high.</p>
+<p>The <code class="docutils literal"><span class="pre">bounds</span></code> property is derived from a more fundamental property: the
 dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">transform</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span>
 <span class="go">Affine(300.0379266750948, 0.0, 101985.0,</span>
@@ -192,19 +207,34 @@ dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">tran
 </pre></div>
 </div>
 <p>This is an affine transformation matrix that maps pixel locations in (row, col)
-coordinates to (x, y) world coordinates.</p>
+coordinates to (x, y) spatial positions. The product of this matrix and <code class="docutils literal"><span class="pre">(0,</span>
+<span class="pre">0)</span></code>, the row and column coordinates of the upper left corner of the dataset,
+is the spatial position of the upper left corner.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">(101985.0, 2826915.0)</span>
+</pre></div>
+</div>
+<p>The position of the lower right corner is obtained similarly.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+<span class="go">(339315.0, 2611485.0)</span>
+</pre></div>
+</div>
 <p>But where exactly does the image cover? 101985 meters from where? These
 bounding box coordinates are relative to a coordinate reference system (CRS).</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
 <span class="go">CRS({&#39;init&#39;: &#39;epsg:32618&#39;})</span>
 </pre></div>
 </div>
-<p>&#8220;epsg:32618&#8221; identifies a particular coordinate reference system: UTM zone 18N.
-This system is used for mapping areas in the Northern Hemisphere between 72 and
-78 degrees west.</p>
+<p>&#8220;epsg:32618&#8221; identifies a particular coordinate reference system: <a class="reference external" href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">UTM</a>
+zone 18N.  This system is used for mapping areas in the Northern Hemisphere
+between 72 and 78 degrees west. The upper left corner of the example dataset,
+<code class="docutils literal"><span class="pre">(101985.0,</span> <span class="pre">2826915.0)</span></code>, is 398 kilometers west of zone 18&#8217;s central meridian
+(75 degrees west) and 2827 kilometers north of the equator.</p>
 <p>Coordinate reference systems are an advanced topic. Suffice it to say that
-between the <code class="docutils literal"><span class="pre">crs</span></code> and the <code class="docutils literal"><span class="pre">transform</span></code> a raster dataset is fully
-georeferenced and can be compared to other GIS datasets.</p>
+between the <code class="docutils literal"><span class="pre">crs</span></code> and the <code class="docutils literal"><span class="pre">transform</span></code> a raster dataset is geo-referenced
+and can be compared to other GIS datasets.</p>
+<img alt="_images/RGB.byte.jpg" src="_images/RGB.byte.jpg" />
+<p>The example raster covers the Bahamas.</p>
 </div>
 <div class="section" id="reading-raster-data">
 <h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
