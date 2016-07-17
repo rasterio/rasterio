@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Quickstart &mdash; rasterio 1.0.dev1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
+        <link rel="next" title="rasterio Python User’s Manual" href="python_manual.html"/>
+        <link rel="prev" title="Introduction" href="intro.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.dev1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset">Opening a dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-properties">Dataset properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reading-raster-data">Reading raster data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-data">Writing data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/quickstart.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>Have a new satellite image or other raster data to dig into? Here are some
+examples using an imaginary GeoTIFF file named &#8220;rgb.tif&#8221;.</p>
+<div class="section" id="opening-a-dataset">
+<h2>Opening a dataset<a class="headerlink" href="#opening-a-dataset" title="Permalink to this headline">¶</a></h2>
+<p>First, import rasterio.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+</pre></div>
+</div>
+<p>Now, open the imaginary file.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">rasterio.open()</span></code> function behaves like Python&#8217;s <code class="docutils literal"><span class="pre">open()</span></code>. Read
+(<code class="docutils literal"><span class="pre">'r'</span></code>) mode is the default. The response is a dataset object named
+<code class="docutils literal"><span class="pre">dataset</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span>
+<span class="go">&lt;open DatasetReader name=&#39;example.tif&#39; mode=&#39;r&#39;&gt;</span>
+</pre></div>
+</div>
+<p>In this case it is an instance of <code class="docutils literal"><span class="pre">DatasetReader</span></code>.</p>
+</div>
+<div class="section" id="dataset-properties">
+<h2>Dataset properties<a class="headerlink" href="#dataset-properties" title="Permalink to this headline">¶</a></h2>
+<p>Properties of the raster dataset in &#8220;example.tif&#8221; can be accessed through
+properties of <cite>dataset</cite>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<p>Rasters have &#8220;bands&#8221; and this example has three.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
+<span class="go">(791, 718)</span>
+</pre></div>
+</div>
+<p>Each band is a raster grid 791 cells (or pixels) wide and 718 pixels tall.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
+<span class="go">BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)</span>
+</pre></div>
+</div>
+<p>The thing that makes GIS raster data unique is that its pixels are mapped to
+some region in the world. Our example covers the world from 101985 meters (in
+this case) to 339315 meters, left to right, and 2611485 meters to 2826915
+meters bottom to top. It covers a region 237.33 kilometers wide by 215.43
+kilometers high.</p>
+<p>The <code class="docutils literal"><span class="pre">bounds</span></code> property is derived from a more fundamental property, the
+dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">transform</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span>
+<span class="go">Affine(300.0379266750948, 0.0, 101985.0,</span>
+<span class="go">       0.0, -300.041782729805, 2826915.0)</span>
+</pre></div>
+</div>
+<p>This is an affine transformation matrix that maps pixel locations in (row, col)
+coordinates to (x, y) world coordinates.</p>
+<p>But where exactly does the image cover? 101985 meters from where? These
+bounding box coordinates are relative to a coordinate reference system (CRS).</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
+<span class="go">CRS({&#39;init&#39;: &#39;epsg:32618&#39;})</span>
+</pre></div>
+</div>
+<p>&#8220;epsg:32618&#8221; identifies a particular coordinate reference system: UTM zone 18N.
+This system is used for mapping areas in the Northern Hemisphere between 72 and
+78 degrees west.</p>
+<p>Coordinate reference systems are an advanced topic. Suffice it to say that
+between the <code class="docutils literal"><span class="pre">crs</span></code> and the <code class="docutils literal"><span class="pre">transform</span></code> a raster dataset is fully
+georeferenced and can be compared to other GIS datasets.</p>
+</div>
+<div class="section" id="reading-raster-data">
+<h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
+<p>TODO.</p>
+</div>
+<div class="section" id="writing-data">
+<h2>Writing data<a class="headerlink" href="#writing-data" title="Permalink to this headline">¶</a></h2>
+<p>TODO.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="python_manual.html" class="btn btn-neutral float-right" title="rasterio Python User’s Manual" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="intro.html" class="btn btn-neutral" title="Introduction" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.dev1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
