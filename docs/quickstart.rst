@@ -90,6 +90,10 @@ Coordinate reference systems are an advanced topic. Suffice it to say that
 between the ``crs`` and the ``transform`` a raster dataset is fully
 georeferenced and can be compared to other GIS datasets.
 
+.. image:: img/RGB.byte.jpg
+
+The example raster covers the Bahamas.
+
 Reading raster data
 -------------------
 
