@@ -189,6 +189,23 @@ Calculations on such a masked array do not consider the invalid pixels.
     >>> band_one.min(), band_one.mean(), band_one.max()
     (1, 44.434478650699106, 255)
 
+Pixels of the array can be had by their row, column index.
+
+.. code-block:: pycon
+
+    >>> band_one[150, 300]
+    21
+
+Datasets have a method of getting indexes for spatial points. To get the value
+for the pixel 100 kilometers east and 50 kilometers south of the dataset's
+upper left corner, do the following.
+
+.. code-block:: pycon
+
+    >>> x, y = (101985.0 + 100000.0, 2826915.0 - 50000.0)
+    >>> band_one[dataset.index(x, y)]
+    12
+
 Writing data
 ------------
 
