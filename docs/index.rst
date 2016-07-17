@@ -29,6 +29,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   intro
+   quickstart
    python_manual
    cli
    api_docs
