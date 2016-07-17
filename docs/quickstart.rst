@@ -157,7 +157,7 @@ By GDAL convention, bands are indexed from 1.
 
 A Numpy N-D array is returned by ``read()``. Notice in the image shown above
 that the dataset has a trapezoid of valid data pixels and a collar of invalid
-or "no data" pixels. The no data pixels can be masked when reading using a
+or "no data" pixels. The no data pixels can be masked when reading by using a
 keyword argument.
 
 .. code-block:: pycon
@@ -182,12 +182,12 @@ keyword argument.
      [ True  True  True ...,  True  True  True]],
            fill_value = 0)
 
+Calculations on such a masked array do not consider the invalid pixels.
+
 .. code-block:: pycon
 
     >>> band_one.min(), band_one.mean(), band_one.max()
     (1, 44.434478650699106, 255)
-
-Calculations on such a masked array do not consider the invalid pixels.
 
 Writing data
 ------------
