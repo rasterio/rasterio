@@ -258,7 +258,7 @@ with one of the values from <code class="docutils literal"><span class="pre">dat
 </div>
 <p>A Numpy N-D array is returned by <code class="docutils literal"><span class="pre">read()</span></code>. Notice in the image shown above
 that the dataset has a trapezoid of valid data pixels and a collar of invalid
-or &#8220;no data&#8221; pixels. The no data pixels can be masked when reading using a
+or &#8220;no data&#8221; pixels. The no data pixels can be masked when reading by using a
 keyword argument.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span>
@@ -281,11 +281,11 @@ keyword argument.</p>
 <span class="go">       fill_value = 0)</span>
 </pre></div>
 </div>
+<p>Calculations on such a masked array do not consider the invalid pixels.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 <span class="go">(1, 44.434478650699106, 255)</span>
 </pre></div>
 </div>
-<p>Calculations on such a masked array do not consider the invalid pixels.</p>
 </div>
 <div class="section" id="writing-data">
 <h2>Writing data<a class="headerlink" href="#writing-data" title="Permalink to this headline">¶</a></h2>
