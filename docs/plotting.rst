@@ -1,9 +1,6 @@
 Plotting
 ********
 
-.. todo::
-
-
 Rasterio reads raster data into numpy arrays so plotting a single band as
 two dimensional data can be accomplished directly with ``pyplot``.
 

@@ -2,14 +2,17 @@
 ``rio`` Command Line User's Manual
 ==================================
 
-.. todo:: 
- 
-    Introduce the command line interface main concepts, 
-    when you should and should not use the command line,
-    Overview of the general design pholosophy,
+Rasterio's command line interface is a program named ``rio``.
 
+``rio`` allows you to build workflows using shell commands, either
+interactively at the command prompt or with a script. Most common
+cases are covered by ``rio`` commands and it is often more convenient
+to use a ready-made command as opposed to implementing similar functionality
+as a python script.
 
-Rasterio's command line interface is a program named "rio".
+``rio`` is developed using the `Click <http://click.pocoo.org/>`__  architecture.
+Its plugin system allows external modules to share a common namespace and
+handling of context variables.
 
 .. code-block:: console
 
@@ -43,7 +46,6 @@ Rasterio's command line interface is a program named "rio".
       transform  Transform coordinates.
       warp       Warp a raster dataset.
 
-It is developed using `Click <http://click.pocoo.org/>`__.
 
 Commands
 ========
@@ -120,7 +122,7 @@ use with, e.g., `geojsonio-cli <https://github.com/mapbox/geojsonio-cli>`__.
       "type": "FeatureCollection"
     }
 
-Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing 
+Shoot the GeoJSON into a Leaflet map using geojsonio-cli by typing
 ``rio bounds tests/data/RGB.byte.tif | geojsonio``.
 
 
@@ -564,7 +566,7 @@ New in 0.10.
 The ``transform`` command reads a JSON array of coordinates, interleaved, and
 writes another array of transformed coordinates to stdout.
 
-To transform a longitude, latitude point (EPSG:4326 is the default) to 
+To transform a longitude, latitude point (EPSG:4326 is the default) to
 another coordinate system with 2 decimal places of output precision, do the
 following.
 

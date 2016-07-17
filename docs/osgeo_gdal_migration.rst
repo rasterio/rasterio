@@ -124,7 +124,7 @@ The result is the same 3D ``numpy.ndarray``
 
     >>> import numpy as np
     >>> r_arr.shape
-    (3, 719, 791)
+    (3, 718, 791)
     >>> assert np.array_equal(g_arr, r_arr)
 
 If we want to grab a subset of the raster, say from row 300 to 400 and column 200 to 400.
@@ -187,11 +187,52 @@ Writing
 Let's take the arrays that we've read from the original dataset and write them out
 to a new GeoTIFF file.
 
-.. todo::
+With Rasterio, you open the dataset, read the data and the
+``profile`` which contains the metadata necessary to write a similar dataset.
 
-    * write a 3D array to a multiband raster
-    * write a 3D subset to a raster with proper georeferencing (affine vs transform discussion)
-    * write a 2D array to a single-band raster
+.. code-block:: python
+
+    >>> # rasterio
+    >>> with rasterio.open(raster) as src:
+    ...     arr = src.read()
+    ...     profile = src.profile
+    >>> profile['height'], profile['width']
+    (718, 791)
+
+ Writing the 3D array with Rasterio is similar to Python's file interface
+ with some additional metadata to handle geospatial datasets:
+
+.. code-block:: python
+
+    >>> # rasterio
+    >>> with rasterio.open('/tmp/newraster.tif', 'w', **profile) as dst:
+    ...     dst.write(arr)
+   
+
+ The equivalent operation in osgeo.gdal requires a more procedural approach:
+
+.. code-block:: python
+
+    >>> driver = gdal.GetDriverByName('GTiff')
+    >>> out_raster = driver.Create('/tmp/newraster_gdal.tif',
+    ...                            profile['width'], profile['height'],
+    ...                            profile['count'], gdal.GDT_Byte)
+    >>> out_raster.SetGeoTransform(profile['transform'].to_gdal())
+    0
+    >>> for bidx in range(1, profile['count'] + 1):
+    ...     band = out_raster.GetRasterBand(bidx)
+    ...     band.WriteArray(arr[bidx - 1])
+    ...     band.FlushCache()
+    0
+    0
+    0
+    >>> from osgeo import osr
+    >>> srs = osr.SpatialReference()
+    >>> srs.ImportFromWkt(profile['crs'].wkt)
+    0
+    >>> out_raster.SetProjection(srs.ExportToWkt())
+    0
+    >>> out_raster.FlushCache()
 
 
 For a real-world example of a Python project making the osgeo.gdal-to-rasterio switch,

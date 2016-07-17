@@ -1,5 +1,5 @@
-Developers guide
-================
+Contributing
+============
 
 .. include:: ../CONTRIBUTING.rst
 

@@ -14,10 +14,10 @@ Writing Datasets
         * block windows
 
 Opening a file in writing mode is a little more complicated than opening
-a text file in Python. The dimensions of the raster dataset, the 
+a text file in Python. The dimensions of the raster dataset, the
 data types, and the specific format must be specified.
 
-Here's an example of basic rasterio functionality. 
+Here's an example of basic rasterio functionality.
 An array is written to a new single band TIFF.
 
 .. code-block:: python
@@ -49,8 +49,8 @@ specific differences.
 Supported Drivers
 -----------------
 ``GTiff`` is the only driver that supports writing directly to disk.
-GeoTiffs use the ``RasterUpdater`` and leverage the full capabilities 
-of the ``GDALCreate`` function. We highly recommend using GeoTiff 
+GeoTiffs use the ``RasterUpdater`` and leverage the full capabilities
+of the ``GDALCreate`` function. We highly recommend using GeoTiff
 driver for writing as it is the best-tested and best-supported format.
 
 Some other formats that are writable by GDAL can also be written by
