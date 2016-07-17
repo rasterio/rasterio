@@ -133,8 +133,61 @@ The example raster covers the Bahamas.
 Reading raster data
 -------------------
 
-TODO.
+How can the pixels of a raster band be accessed? By calling ``dataset.read()``
+with one of the values from ``dataset.indexes``.
 
+.. code-block:: pycon
+
+    >>> dataset.indexes
+    (1, 2, 3)
+    >>> band_one = dataset.read(1)
+
+By GDAL convention, bands are indexed from 1.
+
+.. code-block:: pycon
+
+    >>> band_one
+    array([[0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0],
+           ...,
+           [0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0],
+           [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
+
+A Numpy N-D array is returned by ``read()``. Notice in the image shown above
+that the dataset has a trapezoid of valid data pixels and a collar of invalid
+or "no data" pixels. The no data pixels can be masked when reading using a
+keyword argument.
+
+.. code-block:: pycon
+
+    >>> band_one = dataset.read(1, masked=True)
+    >>> band_one
+    masked_array(data =
+     [[-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     ...,
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]
+     [-- -- -- ..., -- -- --]],
+                 mask =
+     [[ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     ...,
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]
+     [ True  True  True ...,  True  True  True]],
+           fill_value = 0)
+
+.. code-block:: pycon
+
+    >>> band_one.min(), band_one.mean(), band_one.max()
+    (1, 44.434478650699106, 255)
+
+Calculations on such a masked array do not consider the invalid pixels.
 
 Writing data
 ------------

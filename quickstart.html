@@ -238,7 +238,54 @@ and can be compared to other GIS datasets.</p>
 </div>
 <div class="section" id="reading-raster-data">
 <h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
-<p>TODO.</p>
+<p>How can the pixels of a raster band be accessed? By calling <code class="docutils literal"><span class="pre">dataset.read()</span></code>
+with one of the values from <code class="docutils literal"><span class="pre">dataset.indexes</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">indexes</span>
+<span class="go">(1, 2, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By GDAL convention, bands are indexed from 1.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span>
+<span class="go">array([[0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       ...,</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)</span>
+</pre></div>
+</div>
+<p>A Numpy N-D array is returned by <code class="docutils literal"><span class="pre">read()</span></code>. Notice in the image shown above
+that the dataset has a trapezoid of valid data pixels and a collar of invalid
+or &#8220;no data&#8221; pixels. The no data pixels can be masked when reading using a
+keyword argument.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span>
+<span class="go">masked_array(data =</span>
+<span class="go"> [[-- -- -- ..., -- -- --]</span>
+<span class="go"> [-- -- -- ..., -- -- --]</span>
+<span class="go"> [-- -- -- ..., -- -- --]</span>
+<span class="go"> ...,</span>
+<span class="go"> [-- -- -- ..., -- -- --]</span>
+<span class="go"> [-- -- -- ..., -- -- --]</span>
+<span class="go"> [-- -- -- ..., -- -- --]],</span>
+<span class="go">             mask =</span>
+<span class="go"> [[ True  True  True ...,  True  True  True]</span>
+<span class="go"> [ True  True  True ...,  True  True  True]</span>
+<span class="go"> [ True  True  True ...,  True  True  True]</span>
+<span class="go"> ...,</span>
+<span class="go"> [ True  True  True ...,  True  True  True]</span>
+<span class="go"> [ True  True  True ...,  True  True  True]</span>
+<span class="go"> [ True  True  True ...,  True  True  True]],</span>
+<span class="go">       fill_value = 0)</span>
+</pre></div>
+</div>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="go">(1, 44.434478650699106, 255)</span>
+</pre></div>
+</div>
+<p>Calculations on such a masked array do not consider the invalid pixels.</p>
 </div>
 <div class="section" id="writing-data">
 <h2>Writing data<a class="headerlink" href="#writing-data" title="Permalink to this headline">¶</a></h2>
