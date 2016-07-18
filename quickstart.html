@@ -86,6 +86,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset">Opening a dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dataset-properties">Dataset properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-georeferencing">Dataset georeferencing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reading-raster-data">Reading raster data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-data">Writing data</a></li>
 </ul>
@@ -140,27 +141,24 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>Have a new satellite image or other raster data to dig into? Here are some
-examples using an imaginary GeoTIFF file named &#8220;example.tif&#8221;.</p>
+<p>Have a new satellite image or other raster data to dig into? Here are
+examples using an imaginary GeoTIFF file named &#8220;example.tif&#8221;. The examples
+presume that Rasterio has been <a class="reference external" href="./installation">installed</a>.</p>
+<img alt="_images/RGB.byte.jpg" src="_images/RGB.byte.jpg" />
+<p>The &#8220;example.tif&#8221; raster covers the Bahamas.</p>
 <div class="section" id="opening-a-dataset">
 <h2>Opening a dataset<a class="headerlink" href="#opening-a-dataset" title="Permalink to this headline">¶</a></h2>
-<p>First, import rasterio.</p>
+<p>Import rasterio to begin.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 </pre></div>
 </div>
-<p>Now, open the file.</p>
+<p>Next, open the file.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal"><span class="pre">rasterio.open()</span></code> function behaves like Python&#8217;s <code class="docutils literal"><span class="pre">open()</span></code>. Read
-(<code class="docutils literal"><span class="pre">'r'</span></code>) mode is the default. The response is a dataset object named
-<code class="docutils literal"><span class="pre">dataset</span></code>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span>
-<span class="go">&lt;open DatasetReader name=&#39;example.tif&#39; mode=&#39;r&#39;&gt;</span>
-</pre></div>
-</div>
-<p>In this case it is an instance of <code class="docutils literal"><span class="pre">DatasetReader</span></code>. Dataset objects have
-some of the same properties as Python file objects.</p>
+<p>Rasterio&#8217;s <code class="docutils literal"><span class="pre">rasterio.open()</span></code> takes a path and returns a dataset object. The
+path may point to a file of any supported raster format. Rasterio will open it
+using the appropriate GDAL format driver.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span>
 <span class="go">&#39;example.tif&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">mode</span>
@@ -169,6 +167,7 @@ some of the same properties as Python file objects.</p>
 <span class="go">False</span>
 </pre></div>
 </div>
+<p>Dataset objects have some of the same properties as Python file objects.</p>
 </div>
 <div class="section" id="dataset-properties">
 <h2>Dataset properties<a class="headerlink" href="#dataset-properties" title="Permalink to this headline">¶</a></h2>
@@ -178,7 +177,7 @@ properties of <cite>dataset</cite>.</p>
 <span class="go">3</span>
 </pre></div>
 </div>
-<p>Rasters have &#8220;bands&#8221; and this example has three.</p>
+<p>Dataset objects have &#8220;bands&#8221; and this example has three.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
 <span class="go">(791, 718)</span>
 </pre></div>
@@ -188,17 +187,21 @@ properties of <cite>dataset</cite>.</p>
 <span class="go">(&#39;uint8&#39;, &#39;uint8&#39;, &#39;uint8&#39;)</span>
 </pre></div>
 </div>
-<p>The raster grids contain unsigned 8-bit integer values. The GeoTIFF format
-also supports signed integers and floats of different size.</p>
-<p>The thing that makes GIS raster data unique is that its pixels are mapped to
-some region in the world.</p>
+<p>The arrays contain unsigned 8-bit integer values. The GeoTIFF format also
+supports signed integers and floats of different size.</p>
+</div>
+<div class="section" id="dataset-georeferencing">
+<h2>Dataset georeferencing<a class="headerlink" href="#dataset-georeferencing" title="Permalink to this headline">¶</a></h2>
+<p>A GIS raster dataset is different from an ordinary image. The pixels in our
+example are mapped to regions on the earth&#8217;s surface.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
 <span class="go">BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)</span>
 </pre></div>
 </div>
-<p>Our example covers the world from 101985 meters (in this case) to 339315
-meters, left to right, and 2611485 meters to 2826915 meters bottom to top. It
-covers a region 237.33 kilometers wide by 215.43 kilometers high.</p>
+<p>A raster dataset has a spatial bounding box. Our example covers the world from
+101985 meters (in this case) to 339315 meters, left to right, and 2611485
+meters to 2826915 meters bottom to top. It covers a region 237.33 kilometers
+wide by 215.43 kilometers high.</p>
 <p>The <code class="docutils literal"><span class="pre">bounds</span></code> property is derived from a more fundamental property: the
 dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">transform</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span>
@@ -219,8 +222,9 @@ is the spatial position of the upper left corner.</p>
 <span class="go">(339315.0, 2611485.0)</span>
 </pre></div>
 </div>
-<p>But where exactly does the image cover? 101985 meters from where? These
-bounding box coordinates are relative to a coordinate reference system (CRS).</p>
+<p>But what do these numbers mean? 101985 meters from where?</p>
+<p>These bounding box coordinates are relative to a coordinate reference system
+(CRS).</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
 <span class="go">CRS({&#39;init&#39;: &#39;epsg:32618&#39;})</span>
 </pre></div>
@@ -233,8 +237,6 @@ between 72 and 78 degrees west. The upper left corner of the example dataset,
 <p>Coordinate reference systems are an advanced topic. Suffice it to say that
 between the <code class="docutils literal"><span class="pre">crs</span></code> and the <code class="docutils literal"><span class="pre">transform</span></code> a raster dataset is geo-referenced
 and can be compared to other GIS datasets.</p>
-<img alt="_images/RGB.byte.jpg" src="_images/RGB.byte.jpg" />
-<p>The example raster covers the Bahamas.</p>
 </div>
 <div class="section" id="reading-raster-data">
 <h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
@@ -281,7 +283,7 @@ keyword argument.</p>
 <span class="go">       fill_value = 0)</span>
 </pre></div>
 </div>
-<p>Calculations on such a masked array do not consider the invalid pixels.</p>
+<p>Calculations on a masked array do not consider the invalid pixels.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 <span class="go">(1, 44.434478650699106, 255)</span>
 </pre></div>
@@ -294,9 +296,16 @@ keyword argument.</p>
 <p>Datasets have a method of getting indexes for spatial points. To get the value
 for the pixel 100 kilometers east and 50 kilometers south of the dataset&#8217;s
 upper left corner, do the following.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">101985.0</span> <span class="o">+</span> <span class="mf">100000.0</span><span class="p">,</span> <span class="mf">2826915.0</span> <span class="o">-</span> <span class="mf">50000.0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">201985.0</span><span class="p">,</span> <span class="mf">2776915.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
 <span class="go">12</span>
+</pre></div>
+</div>
+<p>To get the spatial coordinates of a pixel, use the dataset&#8217;s <code class="docutils literal"><span class="pre">xy()</span></code> method.
+The coordinates of the center of the image are</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">(209848.63463969657, 2708098.454038997)</span>
 </pre></div>
 </div>
 </div>
