@@ -2,35 +2,32 @@
 Quickstart
 ==========
 
-Have a new satellite image or other raster data to dig into? Here are some
-examples using an imaginary GeoTIFF file named "example.tif".
+Have a new satellite image or other raster data to dig into? Here are
+examples using an imaginary GeoTIFF file named "example.tif". The examples
+presume that Rasterio has been `installed <./installation>`__.
+
+.. image:: img/RGB.byte.jpg
+
+The "example.tif" raster covers the Bahamas.
 
 Opening a dataset
 -----------------
 
-First, import rasterio.
+Import rasterio to begin.
 
 .. code-block:: pycon
 
     >>> import rasterio
 
-Now, open the file.
+Next, open the file.
 
 .. code-block:: pycon
 
     >>> dataset = rasterio.open('example.tif')
 
-The ``rasterio.open()`` function behaves like Python's ``open()``. Read
-(``'r'``) mode is the default. The response is a dataset object named
-``dataset``.
-
-.. code-block:: pycon
-
-    >>> dataset
-    <open DatasetReader name='example.tif' mode='r'>
-
-In this case it is an instance of ``DatasetReader``. Dataset objects have
-some of the same properties as Python file objects.
+Rasterio's ``rasterio.open()`` takes a path and returns a dataset object. The
+path may point to a file of any supported raster format. Rasterio will open it
+using the appropriate GDAL format driver.
 
 .. code-block:: pycon
 
@@ -40,6 +37,8 @@ some of the same properties as Python file objects.
     'r'
     >>> dataset.closed
     False
+
+Dataset objects have some of the same properties as Python file objects.
 
 Dataset properties
 ------------------
@@ -52,7 +51,7 @@ properties of `dataset`.
     >>> dataset.count
     3
 
-Rasters have "bands" and this example has three.
+Dataset objects have "bands" and this example has three.
 
 .. code-block:: pycon
 
@@ -66,20 +65,24 @@ Each example band is a raster array with 791 columns and 718 rows.
     >>> dataset.dtypes
     ('uint8', 'uint8', 'uint8')
 
-The raster grids contain unsigned 8-bit integer values. The GeoTIFF format
-also supports signed integers and floats of different size.
+The arrays contain unsigned 8-bit integer values. The GeoTIFF format also
+supports signed integers and floats of different size.
 
-The thing that makes GIS raster data unique is that its pixels are mapped to
-some region in the world.
+Dataset georeferencing
+----------------------
+
+A GIS raster dataset is different from an ordinary image. The pixels in our
+example are mapped to regions on the earth's surface.
 
 .. code-block:: pycon
 
     >>> dataset.bounds
     BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)
 
-Our example covers the world from 101985 meters (in this case) to 339315
-meters, left to right, and 2611485 meters to 2826915 meters bottom to top. It
-covers a region 237.33 kilometers wide by 215.43 kilometers high.
+A raster dataset has a spatial bounding box. Our example covers the world from
+101985 meters (in this case) to 339315 meters, left to right, and 2611485
+meters to 2826915 meters bottom to top. It covers a region 237.33 kilometers
+wide by 215.43 kilometers high.
 
 The ``bounds`` property is derived from a more fundamental property: the
 dataset's geospatial ``transform``.
@@ -107,8 +110,10 @@ The position of the lower right corner is obtained similarly.
     >>> dataset.transform * (dataset.width, dataset.height)
     (339315.0, 2611485.0)
 
-But where exactly does the image cover? 101985 meters from where? These
-bounding box coordinates are relative to a coordinate reference system (CRS).
+But what do these numbers mean? 101985 meters from where?
+
+These bounding box coordinates are relative to a coordinate reference system
+(CRS).
 
 .. code-block:: pycon
 
@@ -125,10 +130,6 @@ between 72 and 78 degrees west. The upper left corner of the example dataset,
 Coordinate reference systems are an advanced topic. Suffice it to say that
 between the ``crs`` and the ``transform`` a raster dataset is geo-referenced
 and can be compared to other GIS datasets.
-
-.. image:: img/RGB.byte.jpg
-
-The example raster covers the Bahamas.
 
 Reading raster data
 -------------------
@@ -182,7 +183,7 @@ keyword argument.
      [ True  True  True ...,  True  True  True]],
            fill_value = 0)
 
-Calculations on such a masked array do not consider the invalid pixels.
+Calculations on a masked array do not consider the invalid pixels.
 
 .. code-block:: pycon
 
@@ -202,9 +203,18 @@ upper left corner, do the following.
 
 .. code-block:: pycon
 
-    >>> x, y = (101985.0 + 100000.0, 2826915.0 - 50000.0)
-    >>> band_one[dataset.index(x, y)]
+    >>> x, y = (201985.0, 2776915.0)
+    >>> row, col = dataset.index(x, y)
+    >>> band_one[row, col]
     12
+
+To get the spatial coordinates of a pixel, use the dataset's ``xy()`` method.
+The coordinates of the center of the image are
+
+.. code-block:: pycon
+
+    >>> dataset.xy(dataset.width / 2, dataset.height / 2)
+    (209848.63463969657, 2708098.454038997)
 
 Writing data
 ------------

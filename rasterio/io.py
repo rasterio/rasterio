@@ -16,7 +16,7 @@ from rasterio.transform import guard_transform, xy, rowcol
 
 class TransformMethodsMixin(object):
     """Mixin providing methods for calculations related
-    to tranforming between rows and columns of the raster
+    to transforming between rows and columns of the raster
     array and the coordinates.
 
     These methods are wrappers for the functionality in
@@ -46,7 +46,7 @@ class TransformMethodsMixin(object):
         tuple
             ``(x, y)``
         """
-        return xy(self.tranform, row, col, offset=offset)
+        return xy(self.transform, row, col, offset=offset)
 
     def ul(self, row, col):
         """Returns the coordinates (x, y) of the upper left corner of a
