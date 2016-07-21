@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.plot</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Implementations of various common operations.</span>
+<span class="sd">&quot;&quot;&quot;Implementations of various common operations.</span>
 
 <span class="sd">Including `show()` for displaying an array or with matplotlib.</span>
 <span class="sd">Most can handle a numpy array or `rasterio.Band()`.</span>
@@ -163,9 +163,9 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
         <span class="k">return</span> <span class="n">plt</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Could not import matplotlib</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;matplotlib required for plotting functions&quot;</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Could not import matplotlib</span><span class="se">\n</span><span class="s">&quot;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s">&quot;matplotlib required for plotting functions&quot;</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
@@ -214,7 +214,7 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">with_bounds</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">DatasetReader</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -228,18 +228,18 @@
                 <span class="n">arr</span> <span class="o">=</span> <span class="n">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">with_bounds</span><span class="p">:</span>
-                    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
                 <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># The source is a numpy array reshape it to image if it has 3+ bands</span>
+        <span class="c"># The source is a numpy array reshape it to image if it has 3+ bands</span>
         <span class="n">source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="n">arr</span> <span class="o">=</span> <span class="n">reshape_as_image</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
         <span class="k">if</span> <span class="n">transform</span> <span class="ow">and</span> <span class="n">with_bounds</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
 
     <span class="n">show</span> <span class="o">=</span> <span class="bp">False</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
@@ -247,14 +247,14 @@
         <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">contour</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s1">&#39;cmap&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;colors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;colors&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;linewidths&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;linewidths&#39;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s">&#39;cmap&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;colors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;colors&#39;</span><span class="p">,</span> <span class="s">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;linewidths&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;linewidths&#39;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
 
-        <span class="n">C</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;upper&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;upper&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">contour_label_kws</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># no explicit label kws passed use defaults</span>
+            <span class="c"># no explicit label kws passed use defaults</span>
             <span class="n">contour_label_kws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                                      <span class="n">inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">contour_label_kws</span><span class="p">:</span>
@@ -262,7 +262,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -280,12 +280,12 @@
 <span class="sd">    source : raster dataset or array in image order (see reshape_as_image)</span>
 <span class="sd">    transform: Affine, required if source is array</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s">&#39;bounds&#39;</span><span class="p">):</span>
         <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
                   <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">transform</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;transform is required if source is an array&quot;</span><span class="p">)</span>
+            <span class="s">&quot;transform is required if source is an array&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
@@ -307,7 +307,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    source : array-like in a of format (bands, rows, columns)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># swap the axes order from (bands, rows, columns) to (rows, columns, bands)</span>
+    <span class="c"># swap the axes order from (bands, rows, columns) to (rows, columns, bands)</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">im</span></div>
 
@@ -322,12 +322,12 @@
 <span class="sd">    ----------</span>
 <span class="sd">    arr : array-like in the image form of (rows, columns, bands)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># swap the axes order from (rows, columns, bands) to (bands, rows, columns)</span>
+    <span class="c"># swap the axes order from (rows, columns, bands) to (bands, rows, columns)</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">im</span></div>
 
 
-<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;Histogram&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Easily display a histogram with matplotlib.</span>
 
 <span class="sd">    Parameters</span>
@@ -357,28 +357,28 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
 
-    <span class="c1"># The histogram is computed individually for each &#39;band&#39; in the array</span>
-    <span class="c1"># so we need the overall min/max to constrain the plot</span>
+    <span class="c"># The histogram is computed individually for each &#39;band&#39; in the array</span>
+    <span class="c"># so we need the overall min/max to constrain the plot</span>
     <span class="n">rng</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gold&#39;</span><span class="p">]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;gold&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;violet&#39;</span><span class="p">,</span> <span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;saddlebrown&#39;</span><span class="p">]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;red&#39;</span><span class="p">,</span> <span class="s">&#39;green&#39;</span><span class="p">,</span> <span class="s">&#39;blue&#39;</span><span class="p">,</span> <span class="s">&#39;violet&#39;</span><span class="p">,</span> <span class="s">&#39;gold&#39;</span><span class="p">,</span> <span class="s">&#39;saddlebrown&#39;</span><span class="p">]</span>
 
-    <span class="c1"># The goal is to provide a curated set of colors for working with</span>
-    <span class="c1"># smaller datasets and let matplotlib define additional colors when</span>
-    <span class="c1"># working with larger datasets.</span>
+    <span class="c"># The goal is to provide a curated set of colors for working with</span>
+    <span class="c"># smaller datasets and let matplotlib define additional colors when</span>
+    <span class="c"># working with larger datasets.</span>
     <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">):</span>
         <span class="n">n</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
-        <span class="n">colors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Accent&#39;</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))))</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s">&#39;Accent&#39;</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[:</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
 
-    <span class="c1"># If a rasterio.Band() is given make sure the proper index is displayed</span>
-    <span class="c1"># in the legend.</span>
+    <span class="c"># If a rasterio.Band() is given make sure the proper index is displayed</span>
+    <span class="c"># in the legend.</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Band</span><span class="p">)):</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -399,11 +399,11 @@
             <span class="nb">range</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">&quot;upper right&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;DN&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;DN&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;Frequency&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 </pre></div>

@@ -177,26 +177,26 @@ a text file in Python. The dimensions of the raster dataset, the
 data types, and the specific format must be specified.</p>
 <p>Here&#8217;s an example of basic rasterio functionality.
 An array is written to a new single band TIFF.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Register GDAL format drivers and configuration options with a</span>
-<span class="c1"># context manager.</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Register GDAL format drivers and configuration options with a</span>
+<span class="c"># context manager.</span>
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
 
-    <span class="c1"># Write an array as a raster band to a new 8-bit file. For</span>
-    <span class="c1"># the new file&#39;s profile, we start with the profile of the source</span>
+    <span class="c"># Write an array as a raster band to a new 8-bit file. For</span>
+    <span class="c"># the new file&#39;s profile, we start with the profile of the source</span>
     <span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
 
-    <span class="c1"># And then change the band count to 1, set the</span>
-    <span class="c1"># dtype to uint8, and specify LZW compression.</span>
+    <span class="c"># And then change the band count to 1, set the</span>
+    <span class="c"># dtype to uint8, and specify LZW compression.</span>
     <span class="n">profile</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
         <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">compress</span><span class="o">=</span><span class="s1">&#39;lzw&#39;</span><span class="p">)</span>
+        <span class="n">compress</span><span class="o">=</span><span class="s">&#39;lzw&#39;</span><span class="p">)</span>
 
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;example.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># At the end of the ``with rasterio.Env()`` block, context</span>
-<span class="c1"># manager exits and all drivers are de-registered.</span>
+<span class="c"># At the end of the ``with rasterio.Env()`` block, context</span>
+<span class="c"># manager exits and all drivers are de-registered.</span>
 </pre></div>
 </div>
 <p>Writing data mostly works as with a Python file. There are a few format-

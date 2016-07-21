@@ -194,7 +194,7 @@ scenes, we&#8217;d like to ignore the nodata pixels and have only valid image da
 our final mosaic.</p>
 <p>Let&#8217;s look at the two kinds of masks and their
 inverse relationship in the context of RGB.byte.tif.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; import rasterio
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">&gt;</span>&gt;&gt; import rasterio
 <span class="gp">&gt;</span>&gt;&gt; <span class="nv">src</span> <span class="o">=</span> rasterio.open<span class="o">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="o">)</span>
 <span class="gp">&gt;</span>&gt;&gt; src.shape
 <span class="go">(718, 791)</span>
@@ -213,7 +213,7 @@ inverse relationship in the context of RGB.byte.tif.</p>
 <p>For every band of a dataset there is a mask. These masks can be had as arrays
 using the dataset&#8217;s <cite>read_masks()`</cite> method. Below, <code class="docutils literal"><span class="pre">msk</span></code> is the valid data
 mask corresponding to the first dataset band.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(718, 791)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span>
@@ -229,7 +229,7 @@ mask corresponding to the first dataset band.</p>
 <p>This 2D array is a valid data mask in the sense of <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask">GDAL RFC 15</a>. The <code class="docutils literal"><span class="pre">0</span></code> values in its
 corners represent <em>nodata</em> regions. Zooming in on the interior of the mask
 array shows the <code class="docutils literal"><span class="pre">255</span></code> values that indicate <em>valid data</em> regions.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">205</span><span class="p">,</span><span class="mi">200</span><span class="p">:</span><span class="mi">205</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">205</span><span class="p">,</span><span class="mi">200</span><span class="p">:</span><span class="mi">205</span><span class="p">]</span>
 <span class="go">array([[255, 255, 255, 255, 255],</span>
 <span class="go">       [255, 255, 255, 255, 255],</span>
 <span class="go">       [255, 255, 255, 255, 255],</span>
@@ -254,16 +254,16 @@ really have to be careful with 8-bit per band datasets and their nodata values.<
 pass an ndarray with <code class="docutils literal"><span class="pre">True</span></code> (or values that evaluate to <code class="docutils literal"><span class="pre">True</span></code> to indicate
 valid data and <code class="docutils literal"><span class="pre">False</span></code> to indicate no data to <code class="docutils literal"><span class="pre">write_mask()</span></code>. Consider a
 copy of the test data opened in &#8220;r+&#8221; (update) mode.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">shutil</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">shutil</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r+&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="s">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&quot;r+&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To mark that all pixels of all bands are valid (i.e., to override nodata
 metadata values that can&#8217;t be unset), you&#8217;d do this.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">write_mask</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">write_mask</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 <span class="go">True</span>
 </pre></div>
@@ -273,22 +273,22 @@ A new band has been added to the dataset to store the valid data mask.  By
 default it is saved to a &#8220;sidecar&#8221; GeoTIFF alongside the dataset file. When
 such a .msk GeoTIFF exists, Rasterio will ignore the nodata metadata values and
 return mask arrays based on the .msk file.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> ls -l copy.tif*
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> ls -l copy.tif*
 <span class="go">-rw-r--r--@ 1 sean  staff  1713704 Mar 24 14:19 copy.tif</span>
 <span class="go">-rw-r--r--  1 sean  staff      916 Mar 24 14:25 copy.tif.msk</span>
 </pre></div>
 </div>
 <p>Can Rasterio help fix buggy nodata masks like the ones in RGB.byte.tif? It
 certainly can. Consider a fresh copy of that file.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r+&quot;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="s">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&quot;r+&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This time we&#8217;ll read all 3 band masks
 (based on the nodata values, not a .msk GeoTIFF) and show them
 as an RGB image (with the help of <cite>numpy.dstack()</cite>):</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">msk</span><span class="p">))</span>  
 </pre></div>
 </div>
@@ -297,21 +297,21 @@ as an RGB image (with the help of <cite>numpy.dstack()</cite>):</p>
 again, an artifact of scaling data down to 8 bits per band. We&#8217;ll begin by
 constructing a new mask array from the logical conjunction of the three band
 masks we&#8217;ve read.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_msk</span> <span class="o">=</span> <span class="p">(</span><span class="n">msk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">msk</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">msk</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_msk</span> <span class="o">=</span> <span class="p">(</span><span class="n">msk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">msk</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">msk</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">new_msk</span><span class="p">)</span>  
 </pre></div>
 </div>
 <img alt="_images/mask_conj.png" src="_images/mask_conj.png" />
 <p>Now we&#8217;ll use <cite>sieve()</cite> to shake out the small buggy regions of the mask. I&#8217;ve
 found the right value for the <code class="docutils literal"><span class="pre">size</span></code> argument empirically.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.features</span> <span class="kn">import</span> <span class="n">sieve</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.features</span> <span class="kn">import</span> <span class="n">sieve</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sieved_msk</span> <span class="o">=</span> <span class="n">sieve</span><span class="p">(</span><span class="n">new_msk</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">sieved_msk</span><span class="p">)</span>  
 </pre></div>
 </div>
 <img alt="_images/mask_sieved.png" src="_images/mask_sieved.png" />
 <p>Last thing to do is write that sieved mask back to the dataset.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">write_mask</span><span class="p">(</span><span class="n">sieved_msk</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">write_mask</span><span class="p">(</span><span class="n">sieved_msk</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -321,7 +321,7 @@ considered valid.</p>
 <div class="section" id="numpy-masked-arrays">
 <h2>Numpy masked arrays<a class="headerlink" href="#numpy-masked-arrays" title="Permalink to this headline">¶</a></h2>
 <p>If you want, you can read dataset bands as numpy masked arrays.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">blue</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">blue</span><span class="o">.</span><span class="n">mask</span>
 <span class="go">array([[ True,  True,  True, ...,  True,  True,  True],</span>
@@ -335,11 +335,11 @@ considered valid.</p>
 </div>
 <p>As mentioned earlier, this mask is the inverse of the GDAL band mask. To get
 a mask conforming to GDAL RFC 15, do this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">blue</span><span class="o">.</span><span class="n">mask</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">blue</span><span class="o">.</span><span class="n">mask</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;uint8&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You can rely on this Rasterio identity for any integer value <code class="docutils literal"><span class="pre">N</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">1</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">~</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span> <span class="o">*</span> <span class="mi">255</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 <span class="go">True</span>
 </pre></div>

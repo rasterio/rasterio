@@ -168,8 +168,8 @@
 and are obtained by calling <code class="docutils literal"><span class="pre">rasterio.open()</span></code>. That function mimics Python&#8217;s
 built-in <code class="docutils literal"><span class="pre">open()</span></code> and the dataset objects it returns mimic Python <code class="docutils literal"><span class="pre">file</span></code>
 objects.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span>
 <span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">name</span>
@@ -182,11 +182,11 @@ objects.</p>
 </div>
 <p>If you try to access a nonexistent path, <code class="docutils literal"><span class="pre">rasterio.open()</span></code> does the same
 thing as <code class="docutils literal"><span class="pre">open()</span></code>, raising an exception immediately.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/lol/wut.tif&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">open</span><span class="p">(</span><span class="s">&#39;/lol/wut.tif&#39;</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
  <span class="c">...</span>
 <span class="gr">FileNotFoundError</span>: <span class="n">[Errno 2] No such file or directory: &#39;/lol/wut.tif&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/lol/wut.tif&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/lol/wut.tif&#39;</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
  <span class="c">...</span>
 <span class="gr">rasterio.errors.RasterioIOError</span>: <span class="n">No such file or directory</span>
@@ -195,7 +195,7 @@ thing as <code class="docutils literal"><span class="pre">open()</span></code>, 
 <p>Datasets generally have one or more bands (or layers). Following the GDAL
 convention, these are indexed starting with the number 1. The first band of
 a file can be read like this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(718, 791)</span>
 </pre></div>
@@ -204,8 +204,8 @@ a file can be read like this:</p>
 that array at the Python prompt is a summary; the GeoTIFF file that
 Rasterio uses for testing has 0 values in the corners, but has nonzero values
 elsewhere.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;pink&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s">&#39;pink&#39;</span><span class="p">)</span>
 <span class="go">&lt;matplotlib.image.AxesImage object at 0x...&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  
 </pre></div>
@@ -216,7 +216,7 @@ a 3-dimensonal ndarray. Note that the interpretation of the 3 axes is
 <code class="docutils literal"><span class="pre">(bands,</span> <span class="pre">rows,</span> <span class="pre">columns)</span></code>. See
 <a class="reference internal" href="image_processing.html#imageorder"><span class="std std-ref">Image processing software</span></a> for more details on how to convert to the ordering expected by
 some software.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(3, 718, 791)</span>
 </pre></div>
@@ -224,7 +224,7 @@ some software.</p>
 <p>In order to read smaller chunks of the dataset, refer to <a class="reference internal" href="windowed-rw.html#windowrw"><span class="std std-ref">Windowed reading and writing</span></a>.</p>
 <p>The indexes, Numpy data types, and nodata values of all a dataset&#8217;s bands can
 be had from its <code class="docutils literal"><span class="pre">indexes</span></code>, <code class="docutils literal"><span class="pre">dtypes</span></code>, and <code class="docutils literal"><span class="pre">nodatavals</span></code> attributes.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">nodataval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">indexes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">nodatavals</span><span class="p">):</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">nodataval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">indexes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">nodatavals</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">nodataval</span><span class="p">)</span>
 <span class="gp">...</span>
 <span class="go">1 uint8 0.0</span>
@@ -233,20 +233,20 @@ be had from its <code class="docutils literal"><span class="pre">indexes</span><
 </pre></div>
 </div>
 <p>To close a dataset, call its <code class="docutils literal"><span class="pre">close()</span></code> method.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span>
 <span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
 <p>After it&#8217;s closed, data can no longer be read.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
  <span class="c">...</span>
 <span class="gr">ValueError</span>: <span class="n">can&#39;t read closed raster file</span>
 </pre></div>
 </div>
 <p>This is the same behavior as Python&#8217;s <code class="docutils literal"><span class="pre">file</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;README.rst&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;README.rst&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
@@ -258,8 +258,8 @@ be had from its <code class="docutils literal"><span class="pre">indexes</span><
 and exit from runtime contexts created using a <code class="docutils literal"><span class="pre">with</span></code> statement. This
 ensures that files are closed no matter what exceptions may be raised within
 the the block.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">one</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">two</span><span class="p">:</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">one</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">two</span><span class="p">:</span>
 <span class="gp">... </span>       <span class="k">print</span><span class="p">(</span><span class="n">two</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
 <span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>

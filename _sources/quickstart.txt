@@ -190,6 +190,9 @@ Calculations on a masked array do not consider the invalid pixels.
     >>> band_one.min(), band_one.mean(), band_one.max()
     (1, 44.434478650699106, 255)
 
+Spatial indexing
+----------------
+
 Pixels of the array can be had by their row, column index.
 
 .. code-block:: pycon
@@ -216,7 +219,107 @@ The coordinates of the center of the image are
     >>> dataset.xy(dataset.width / 2, dataset.height / 2)
     (209848.63463969657, 2708098.454038997)
 
-Writing data
-------------
+Creating data
+-------------
 
-TODO.
+An N-D array of values can be written to a raster data file and thus shared
+with other GIS applications such as QGIS using Rasterio dataset objects.
+
+As an example, consider an array of floating point values representing, e.g.,
+a temperature or pressure anomaly field measured or modeled on a regular grid,
+240 columns by 180 rows. The first and last grid points on the horizontal axis
+are located at 4.0 degrees west and 4.0 degrees east longitude, the first and
+last grid points on the vertical axis are located at 3 degrees south and
+3 degrees north latitude.
+
+.. code-block:: pycon
+
+    >>> import numpy as np
+    >>> x = np.linspace(-4.0, 4.0, 240)
+    >>> y = np.linspace(-3.0, 3.0, 180)
+    >>> X, Y = np.meshgrid(x, y)
+    >>> Z1 = np.exp(-2 * np.log(2) * ((X - 0.5) ** 2 + (Y - 0.5) ** 2) / 1 ** 2)
+    >>> Z2 = np.exp(-3 * np.log(2) * ((X + 0.5) ** 2 + (Y + 0.5) ** 2) / 2.5 ** 2)
+    >>> Z = 10.0 * (Z2 - Z1)
+
+The fictional field for this example consists of the difference of two Gaussian
+distributions and is computed using Numpy. Its contours look like this
+
+.. image:: img/field.png
+
+
+Opening a dataset in writing mode
+---------------------------------
+
+To save this array along with georeferencing information to a new raster data
+file, call ``rasterio.open()`` with a path to the new file to be created,
+``'w'`` to specify writing mode, and keyword arguments specifying
+
+* the name of the desired format driver
+* the width, or number of columns, of the dataset
+* the height, or number of rows, of the dataset
+* a count of the dataset bands
+* the data type of the dataset
+* a coordinate reference system identifier or description
+* an affine transformation matrix, and
+* a "nodata" value
+
+In this example the `crs` will be "+proj=latlong", which describes an
+equirectangular coordinate reference system with units of decimal degrees. The
+appropriate affine transformation matrix can be computed using a function in
+the ``rasterio.transform`` module.
+
+.. code-block:: pycon
+
+   >>> from rasterio.transform import from_origin
+   >>> res = (x[-1] - x[0]) / 240.0
+   >>> transform = from_origin(x[0] - res / 2, y[-1] + res / 2, res, res)
+   >>> transform
+   Affine(0.033333333333333333, 0.0, -4.0166666666666666,
+          0.0, -0.033333333333333333, 3.0166666666666666)
+
+The upper left point in the example grid is at 3 degrees west and 2 degrees
+north. The upper left corner coordinates of the pixel centered on this grid
+point, which is the convention used by Rasterio, are west and north of that
+location by ``res / 2``, or 1/60, degrees. Hence the shift in the expression
+above.
+
+A dataset for storing the example grid is opened like so
+
+.. code-block:: pycon
+
+    >>> new_dataset = rasterio.open('/tmp/new.tif', 'w', driver='GTiff',
+    ...                             height=Z.shape[0], width=Z.shape[1],
+    ...                             count=1, dtype=Z.dtype,
+    ...                             crs='+proj=latlong', transform=transform)
+
+Values for the `height`, `width`, and `dtype` keyword arguments are taken
+directly from properties of the grid, ``Z``. The GeoTIFF format, indicated
+by the "GTiff" driver, supports the 64-bit float values in the grid.
+
+Saving raster data
+------------------
+
+To save the grid, call the new dataset's ``write()`` method with the grid and
+target band number as arguments.
+
+.. code-block:: pycon
+
+    >>> new_dataset.write(Z, 1)
+
+and then call the ``close()`` method to sync data to disk and finish.
+
+.. code-block:: pycon
+
+    >>> new_dataset.close()
+
+Because Rasterio's dataset objects implement Python's context manager protocol,
+it is possible to do the following instead.
+
+.. code-block:: python
+
+    with rasterio.open('/tmp/new.tif', 'w', driver='GTiff', height=Z.shape[0],
+                       width=Z.shape[1], count=1, dtype=Z.dtype,
+                       crs='+proj=latlong', transform=transform) as dst:
+        dst.write(Z, 1)
+

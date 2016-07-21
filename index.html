@@ -139,13 +139,13 @@ who want to read, write and manipulate geospatial raster datasets.</p>
 Its functions typically accept and return Numpy ndarrays.
 Rasterio is designed to make working with geospatial raster data more productive and more fun.</p>
 <p>Install with pip (see the complete <a class="reference internal" href="installation.html"><span class="doc">installation docs</span></a> )</p>
-<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rasterio</span>
+<div class="code highlight-default"><div class="highlight"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">rasterio</span>
 </pre></div>
 </div>
 <p>And an example of use in python</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;data.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;data.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -162,7 +162,10 @@ Rasterio is designed to make working with geospatial raster data more productive
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#dataset-properties">Dataset properties</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#dataset-georeferencing">Dataset georeferencing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#reading-raster-data">Reading raster data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#writing-data">Writing data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#spatial-indexing">Spatial indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#creating-data">Creating data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#opening-a-dataset-in-writing-mode">Opening a dataset in writing mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#saving-raster-data">Saving raster data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul>

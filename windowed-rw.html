@@ -184,27 +184,27 @@ computers RAM or process chunks of large rasters in parallel.</p>
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
 <p>A window is a view onto a rectangular subset of a raster dataset and is
 described in rasterio by a pair of range tuples.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">((</span><span class="n">row_start</span><span class="p">,</span> <span class="n">row_stop</span><span class="p">),</span> <span class="p">(</span><span class="n">col_start</span><span class="p">,</span> <span class="n">col_stop</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="n">row_start</span><span class="p">,</span> <span class="n">row_stop</span><span class="p">),</span> <span class="p">(</span><span class="n">col_start</span><span class="p">,</span> <span class="n">col_stop</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>The first pair contains the indexes of the raster rows at which the window
 starts and stops. The second contains the indexes of the raster columns at
 which the window starts and stops. For example,</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Specifies a 4 x 4 window at the upper left corner of a raster dataset and</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>specifies a 10 x 10 window with origin at row 10 and column 10. Use of <cite>None</cite>
 for a range value indicates either 0 (in the start position) or the full raster
 height or width (in the stop position). The window tuple</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">((</span><span class="bp">None</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="bp">None</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>also specifies a 4 x 4 window at the upper left corner of the raster and</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>specifies a rectangular subset with upper left at row 4, column 4 and
@@ -212,7 +212,7 @@ extending to the lower right corner of the raster dataset.</p>
 <p>Using window tuples should feel like using Python&#8217;s range() and slice()
 functions. Range() selects a range of numbers from the sequence of all integers
 and slice() produces a object that can be used in slicing expressions.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
 <span class="go">[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">)])</span>
 <span class="go">[14, 15, 16, 17, 18, 19]</span>
@@ -223,8 +223,8 @@ and slice() produces a object that can be used in slicing expressions.</p>
 <h2>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h2>
 <p>Here is an example of reading a 100 row x 100 column subset of the rasterio
 test file.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">w</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)))</span>
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -237,11 +237,11 @@ test file.</p>
 <p>Writing works similarly. The following creates a blank 500 column x 300 row
 GeoTIFF and plops 37500 pixels with value 127 into a window 30 pixels down from
 and 50 pixels to the right of the upper left corner of the GeoTIFF.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">150</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">ubyte</span><span class="p">)</span> <span class="o">*</span> <span class="mi">127</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">image</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">150</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">ubyte</span><span class="p">)</span> <span class="o">*</span> <span class="mi">127</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-        <span class="s1">&#39;/tmp/example.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="s">&#39;/tmp/example.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="mi">30</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">300</span><span class="p">)),</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
@@ -253,14 +253,14 @@ and 50 pixels to the right of the upper left corner of the GeoTIFF.</p>
 <h2>Decimation<a class="headerlink" href="#decimation" title="Permalink to this headline">¶</a></h2>
 <p>If the write window is smaller than the data, the data will be decimated.
 Below, the window is scaled to one third of the source image.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">b</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <span class="n">write_window</span> <span class="o">=</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">269</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">313</span><span class="p">)</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-        <span class="s1">&#39;/tmp/example.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="s">&#39;/tmp/example.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">g</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">r</span><span class="p">)]:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">write_window</span><span class="p">)</span>
@@ -273,7 +273,7 @@ Below, the window is scaled to one third of the source image.</p>
 <h2>Advanced windows<a class="headerlink" href="#advanced-windows" title="Permalink to this headline">¶</a></h2>
 <p>Since windows are like slices, you can also use negative numbers in rasterio
 windows.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">((</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">((</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>specifies a 4 x 4 rectangular subset with upper left at 4 rows to the left of
@@ -282,16 +282,16 @@ lower right corner of the dataset.</p>
 <p>Below is an example of reading a raster subset and then writing it into a
 larger subset that is defined relative to the lower right corner of the
 destination dataset.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">read_window</span> <span class="o">=</span> <span class="p">(</span><span class="mi">350</span><span class="p">,</span> <span class="mi">410</span><span class="p">),</span> <span class="p">(</span><span class="mi">350</span><span class="p">,</span> <span class="mi">450</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">read_window</span> <span class="o">=</span> <span class="p">(</span><span class="mi">350</span><span class="p">,</span> <span class="mi">410</span><span class="p">),</span> <span class="p">(</span><span class="mi">350</span><span class="p">,</span> <span class="mi">450</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">b</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">read_window</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <span class="n">write_window</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">240</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">400</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-        <span class="s1">&#39;/tmp/example2.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="s">&#39;/tmp/example2.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">g</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">r</span><span class="p">)]:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">write_window</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
@@ -304,20 +304,20 @@ destination dataset.</p>
 <h2>Data windows<a class="headerlink" href="#data-windows" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes it is desirable to crop off an outer boundary of NODATA values around
 a dataset:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">get_data_window</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">get_data_window</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">window</span> <span class="o">=</span> <span class="n">get_data_window</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
-    <span class="c1"># window = ((3, 714), (13, 770))</span>
+    <span class="c"># window = ((3, 714), (13, 770))</span>
 
     <span class="n">kwargs</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-        <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s1">&#39;affine&#39;</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+        <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+        <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+        <span class="s">&#39;affine&#39;</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
     <span class="p">})</span>
 
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/cropped.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/cropped.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -327,8 +327,8 @@ a dataset:</p>
 <p>Basic union and intersection operations are available for windows, to streamline
 operations across dynamically created windows for a series of bands or datasets
 with the same full extent.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">windows</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Full window is ((0, 1000), (0, 500))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">windows</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Full window is ((0, 1000), (0, 500))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">window1</span> <span class="o">=</span> <span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">window2</span> <span class="o">=</span> <span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">250</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">windows</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">window1</span><span class="p">,</span> <span class="n">window2</span><span class="p">)</span>
@@ -344,7 +344,7 @@ with the same full extent.</p>
 windowed reads and writes are most efficient when the windows match the
 dataset&#8217;s own block structure. When a file is opened to read, the shape
 of blocks for any band can be had from the block_shapes property.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="k">print</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>
 <span class="gp">...</span>
@@ -354,7 +354,7 @@ of blocks for any band can be had from the block_shapes property.</p>
 </pre></div>
 </div>
 <p>The block windows themselves can be had from the block_windows function.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">ji</span><span class="p">,</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">block_windows</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="k">print</span><span class="p">((</span><span class="n">ji</span><span class="p">,</span> <span class="n">window</span><span class="p">))</span>
 <span class="gp">...</span>
@@ -368,7 +368,7 @@ a window tuple that can be used in calls to <cite>read</cite> or <cite>write</ci
 is the pair of row and column indexes of this block within all blocks of the
 dataset.</p>
 <p>You may read windows of data from a file block-by-block like this.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">ji</span><span class="p">,</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">block_windows</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="n">r</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
 <span class="gp">... </span>        <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -379,7 +379,7 @@ dataset.</p>
 </div>
 <p>Well-bred files have identically blocked bands, but GDAL allows otherwise and
 it&#8217;s a good idea to test this assumption in your code.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">ji</span><span class="p">,</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">block_windows</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="n">b</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>

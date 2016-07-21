@@ -88,7 +88,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#dataset-properties">Dataset properties</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dataset-georeferencing">Dataset georeferencing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reading-raster-data">Reading raster data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#writing-data">Writing data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-indexing">Spatial indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-data">Creating data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset-in-writing-mode">Opening a dataset in writing mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-raster-data">Saving raster data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
@@ -149,17 +152,17 @@ presume that Rasterio has been <a class="reference external" href="./installatio
 <div class="section" id="opening-a-dataset">
 <h2>Opening a dataset<a class="headerlink" href="#opening-a-dataset" title="Permalink to this headline">¶</a></h2>
 <p>Import rasterio to begin.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 </pre></div>
 </div>
 <p>Next, open the file.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;example.tif&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Rasterio&#8217;s <code class="docutils literal"><span class="pre">rasterio.open()</span></code> takes a path and returns a dataset object. The
 path may point to a file of any supported raster format. Rasterio will open it
 using the appropriate GDAL format driver.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span>
 <span class="go">&#39;example.tif&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">mode</span>
 <span class="go">&#39;r&#39;</span>
@@ -173,17 +176,17 @@ using the appropriate GDAL format driver.</p>
 <h2>Dataset properties<a class="headerlink" href="#dataset-properties" title="Permalink to this headline">¶</a></h2>
 <p>Properties of the raster data stored in &#8220;example.tif&#8221; can be accessed through
 properties of <cite>dataset</cite>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
 <span class="go">3</span>
 </pre></div>
 </div>
 <p>Dataset objects have &#8220;bands&#8221; and this example has three.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
 <span class="go">(791, 718)</span>
 </pre></div>
 </div>
 <p>Each example band is a raster array with 791 columns and 718 rows.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">dtypes</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">dtypes</span>
 <span class="go">(&#39;uint8&#39;, &#39;uint8&#39;, &#39;uint8&#39;)</span>
 </pre></div>
 </div>
@@ -194,7 +197,7 @@ supports signed integers and floats of different size.</p>
 <h2>Dataset georeferencing<a class="headerlink" href="#dataset-georeferencing" title="Permalink to this headline">¶</a></h2>
 <p>A GIS raster dataset is different from an ordinary image. The pixels in our
 example are mapped to regions on the earth&#8217;s surface.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
 <span class="go">BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)</span>
 </pre></div>
 </div>
@@ -204,7 +207,7 @@ meters to 2826915 meters bottom to top. It covers a region 237.33 kilometers
 wide by 215.43 kilometers high.</p>
 <p>The <code class="docutils literal"><span class="pre">bounds</span></code> property is derived from a more fundamental property: the
 dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">transform</span></code>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span>
 <span class="go">Affine(300.0379266750948, 0.0, 101985.0,</span>
 <span class="go">       0.0, -300.041782729805, 2826915.0)</span>
 </pre></div>
@@ -213,19 +216,19 @@ dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">tran
 coordinates to (x, y) spatial positions. The product of this matrix and <code class="docutils literal"><span class="pre">(0,</span>
 <span class="pre">0)</span></code>, the row and column coordinates of the upper left corner of the dataset,
 is the spatial position of the upper left corner.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="go">(101985.0, 2826915.0)</span>
 </pre></div>
 </div>
 <p>The position of the lower right corner is obtained similarly.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
 <span class="go">(339315.0, 2611485.0)</span>
 </pre></div>
 </div>
 <p>But what do these numbers mean? 101985 meters from where?</p>
 <p>These bounding box coordinates are relative to a coordinate reference system
 (CRS).</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
 <span class="go">CRS({&#39;init&#39;: &#39;epsg:32618&#39;})</span>
 </pre></div>
 </div>
@@ -242,13 +245,13 @@ and can be compared to other GIS datasets.</p>
 <h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
 <p>How can the pixels of a raster band be accessed? By calling <code class="docutils literal"><span class="pre">dataset.read()</span></code>
 with one of the values from <code class="docutils literal"><span class="pre">dataset.indexes</span></code>.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">indexes</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">indexes</span>
 <span class="go">(1, 2, 3)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By GDAL convention, bands are indexed from 1.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span>
 <span class="go">array([[0, 0, 0, ..., 0, 0, 0],</span>
 <span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
 <span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
@@ -262,7 +265,7 @@ with one of the values from <code class="docutils literal"><span class="pre">dat
 that the dataset has a trapezoid of valid data pixels and a collar of invalid
 or &#8220;no data&#8221; pixels. The no data pixels can be masked when reading by using a
 keyword argument.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span>
 <span class="go">masked_array(data =</span>
 <span class="go"> [[-- -- -- ..., -- -- --]</span>
@@ -284,19 +287,22 @@ keyword argument.</p>
 </pre></div>
 </div>
 <p>Calculations on a masked array do not consider the invalid pixels.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">band_one</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 <span class="go">(1, 44.434478650699106, 255)</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="spatial-indexing">
+<h2>Spatial indexing<a class="headerlink" href="#spatial-indexing" title="Permalink to this headline">¶</a></h2>
 <p>Pixels of the array can be had by their row, column index.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="mi">150</span><span class="p">,</span> <span class="mi">300</span><span class="p">]</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="mi">150</span><span class="p">,</span> <span class="mi">300</span><span class="p">]</span>
 <span class="go">21</span>
 </pre></div>
 </div>
 <p>Datasets have a method of getting indexes for spatial points. To get the value
 for the pixel 100 kilometers east and 50 kilometers south of the dataset&#8217;s
 upper left corner, do the following.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">201985.0</span><span class="p">,</span> <span class="mf">2776915.0</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">201985.0</span><span class="p">,</span> <span class="mf">2776915.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">band_one</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
 <span class="go">12</span>
@@ -304,14 +310,96 @@ upper left corner, do the following.</p>
 </div>
 <p>To get the spatial coordinates of a pixel, use the dataset&#8217;s <code class="docutils literal"><span class="pre">xy()</span></code> method.
 The coordinates of the center of the image are</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 <span class="go">(209848.63463969657, 2708098.454038997)</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="writing-data">
-<h2>Writing data<a class="headerlink" href="#writing-data" title="Permalink to this headline">¶</a></h2>
-<p>TODO.</p>
+<div class="section" id="creating-data">
+<h2>Creating data<a class="headerlink" href="#creating-data" title="Permalink to this headline">¶</a></h2>
+<p>An N-D array of values can be written to a raster data file and thus shared
+with other GIS applications such as QGIS using Rasterio dataset objects.</p>
+<p>As an example, consider an array of floating point values representing, e.g.,
+a temperature or pressure anomaly field measured or modeled on a regular grid,
+240 columns by 180 rows. The first and last grid points on the horizontal axis
+are located at 4.0 degrees west and 4.0 degrees east longitude, the first and
+last grid points on the vertical axis are located at 3 degrees south and
+3 degrees north latitude.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">240</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">X</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">X</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Y</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.5</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="mf">10.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z2</span> <span class="o">-</span> <span class="n">Z1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The fictional field for this example consists of the difference of two Gaussian
+distributions and is computed using Numpy. Its contours look like this</p>
+<img alt="_images/field.png" src="_images/field.png" />
+</div>
+<div class="section" id="opening-a-dataset-in-writing-mode">
+<h2>Opening a dataset in writing mode<a class="headerlink" href="#opening-a-dataset-in-writing-mode" title="Permalink to this headline">¶</a></h2>
+<p>To save this array along with georeferencing information to a new raster data
+file, call <code class="docutils literal"><span class="pre">rasterio.open()</span></code> with a path to the new file to be created,
+<code class="docutils literal"><span class="pre">'w'</span></code> to specify writing mode, and keyword arguments specifying</p>
+<ul class="simple">
+<li>the name of the desired format driver</li>
+<li>the width, or number of columns, of the dataset</li>
+<li>the height, or number of rows, of the dataset</li>
+<li>a count of the dataset bands</li>
+<li>the data type of the dataset</li>
+<li>a coordinate reference system identifier or description</li>
+<li>an affine transformation matrix, and</li>
+<li>a &#8220;nodata&#8221; value</li>
+</ul>
+<p>In this example the <cite>crs</cite> will be &#8220;+proj=latlong&#8221;, which describes an
+equirectangular coordinate reference system with units of decimal degrees. The
+appropriate affine transformation matrix can be computed using a function in
+the <code class="docutils literal"><span class="pre">rasterio.transform</span></code> module.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">from_origin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">240.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transform</span> <span class="o">=</span> <span class="n">from_origin</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">res</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">res</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transform</span>
+<span class="go">Affine(0.033333333333333333, 0.0, -4.0166666666666666,</span>
+<span class="go">       0.0, -0.033333333333333333, 3.0166666666666666)</span>
+</pre></div>
+</div>
+<p>The upper left point in the example grid is at 3 degrees west and 2 degrees
+north. The upper left corner coordinates of the pixel centered on this grid
+point, which is the convention used by Rasterio, are west and north of that
+location by <code class="docutils literal"><span class="pre">res</span> <span class="pre">/</span> <span class="pre">2</span></code>, or 1/60, degrees. Hence the shift in the expression
+above.</p>
+<p>A dataset for storing the example grid is opened like so</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/new.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                            <span class="n">height</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>                            <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+<span class="gp">... </span>                            <span class="n">crs</span><span class="o">=</span><span class="s">&#39;+proj=latlong&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Values for the <cite>height</cite>, <cite>width</cite>, and <cite>dtype</cite> keyword arguments are taken
+directly from properties of the grid, <code class="docutils literal"><span class="pre">Z</span></code>. The GeoTIFF format, indicated
+by the &#8220;GTiff&#8221; driver, supports the 64-bit float values in the grid.</p>
+</div>
+<div class="section" id="saving-raster-data">
+<h2>Saving raster data<a class="headerlink" href="#saving-raster-data" title="Permalink to this headline">¶</a></h2>
+<p>To save the grid, call the new dataset&#8217;s <code class="docutils literal"><span class="pre">write()</span></code> method with the grid and
+target band number as arguments.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_dataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and then call the <code class="docutils literal"><span class="pre">close()</span></code> method to sync data to disk and finish.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Because Rasterio&#8217;s dataset objects implement Python&#8217;s context manager protocol,
+it is possible to do the following instead.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/new.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                   <span class="n">width</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                   <span class="n">crs</span><span class="o">=</span><span class="s">&#39;+proj=latlong&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 

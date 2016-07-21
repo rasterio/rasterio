@@ -231,7 +231,7 @@ with C or C++.  See the Windows install instructions in the <a class="reference 
 <div class="section" id="initial-setup">
 <h3>Initial Setup<a class="headerlink" href="#initial-setup" title="Permalink to this headline">¶</a></h3>
 <p>First, clone Rasterio&#8217;s <code class="docutils literal"><span class="pre">git</span></code> repo:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/mapbox/rasterio
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> git clone https://github.com/mapbox/rasterio
 </pre></div>
 </div>
 <p>Development should occur within a <a class="reference external" href="http://docs.python-guide.org/en/latest/dev/virtualenvs/">virtual environment</a> to better isolate
@@ -247,13 +247,13 @@ environment.</p>
 have currently have guidance for any platforms other than Linux and OS X.</p>
 <p>On Linux, GDAL and its headers should be available through your distro&#8217;s
 package manager. For Ubuntu the commands are:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo add-apt-repository ppa:ubuntugis/ppa
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo add-apt-repository ppa:ubuntugis/ppa
 <span class="gp">$</span> sudo apt-get update
 <span class="gp">$</span> sudo apt-get install gdal-bin libgdal-dev
 </pre></div>
 </div>
 <p>On OS X, Homebrew is a reliable way to get GDAL.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> brew install gdal
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> brew install gdal
 </pre></div>
 </div>
 </div>
@@ -263,11 +263,11 @@ package manager. For Ubuntu the commands are:</p>
 <code class="docutils literal"><span class="pre">setup.py</span></code> script will not run unless Cython and Numpy are installed, so do
 this first from the Rasterio repo directory.</p>
 <p>Linux users may need to install some additional Numpy dependencies:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt-get install libatlas-dev libatlas-base-dev gfortran
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo apt-get install libatlas-dev libatlas-base-dev gfortran
 </pre></div>
 </div>
 <p>then:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> pip install -U pip
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install -U pip
 <span class="gp">$</span> pip install -r requirements-dev.txt
 </pre></div>
 </div>
@@ -279,12 +279,12 @@ be installed with <code class="docutils literal"><span class="pre">$</span> <spa
 developing is very but only affects the Python files.  Specifying the
 <code class="docutils literal"><span class="pre">[test]</span></code> extra in the command below tells <code class="docutils literal"><span class="pre">$</span> <span class="pre">pip</span></code> to also install
 Rasterio&#8217;s dev dependencies.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> pip install -e .<span class="o">[</span>test<span class="o">]</span>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install -e .<span class="o">[</span><span class="nb">test</span><span class="o">]</span>
 </pre></div>
 </div>
 <p>Any time a Cython (<code class="docutils literal"><span class="pre">.pyx</span></code> or <code class="docutils literal"><span class="pre">.pxd</span></code>) file is edited the extension modules
 need to be recompiled, which is most easily achieved with:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> pip install -e .
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install -e .
 </pre></div>
 </div>
 <p>When switching between Python versions the extension modules must be recompiled,
@@ -292,7 +292,7 @@ which can be forced with <code class="docutils literal"><span class="pre">$</spa
 the command above.  If this is not done an error claiming that an object <code class="docutils literal"><span class="pre">has</span>
 <span class="pre">the</span> <span class="pre">wrong</span> <span class="pre">size,</span> <span class="pre">try</span> <span class="pre">recompiling</span></code> is raised.</p>
 <p>The dependencies required to build the docs can be installed with:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> pip install -e .<span class="o">[</span>docs<span class="o">]</span>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> pip install -e .<span class="o">[</span>docs<span class="o">]</span>
 </pre></div>
 </div>
 </div>
@@ -301,15 +301,15 @@ the command above.  If this is not done an error claiming that an object <code c
 <p>Rasterio&#8217;s tests live in <code class="docutils literal"><span class="pre">tests</span> <span class="pre">&lt;tests/&gt;</span></code> and generally match the main
 package layout.</p>
 <p>To run the entire suite and the code coverage report:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> py.test --cov rasterio --cov-report term-missing
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> py.test --cov rasterio --cov-report term-missing
 </pre></div>
 </div>
 <p>A single test file:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> py.test tests/test_band.py
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> py.test tests/test_band.py
 </pre></div>
 </div>
 <p>A single test:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> py.test tests/test_band.py::test_band
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> py.test tests/test_band.py::test_band
 </pre></div>
 </div>
 </div>

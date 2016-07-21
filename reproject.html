@@ -182,28 +182,28 @@ to SciPy&#8217;s <code class="docutils literal"><span class="pre">scipy.ndimage.
 datasets.  <code class="docutils literal"><span class="pre">rasterio.warp.reproject()</span></code> has two positional arguments: source
 and destination.  The remaining keyword arguments parameterize the reprojection
 transform.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">Affine</span> <span class="k">as</span> <span class="n">A</span>
 <span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">RESAMPLING</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
 
-    <span class="c1"># As source: a 512 x 512 raster centered on 0 degrees E and 0</span>
-    <span class="c1"># degrees N, each pixel covering 15&quot;.</span>
+    <span class="c"># As source: a 512 x 512 raster centered on 0 degrees E and 0</span>
+    <span class="c"># degrees N, each pixel covering 15&quot;.</span>
     <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">src_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="mi">240</span> <span class="c1"># decimal degrees per pixel</span>
-    <span class="c1"># The following is equivalent to</span>
-    <span class="c1"># A(d, 0, -cols*d/2, 0, -d, rows*d/2).</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="mi">240</span> <span class="c"># decimal degrees per pixel</span>
+    <span class="c"># The following is equivalent to</span>
+    <span class="c"># A(d, 0, -cols*d/2, 0, -d, rows*d/2).</span>
     <span class="n">src_transform</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="o">-</span><span class="n">cols</span><span class="o">*</span><span class="n">d</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">rows</span><span class="o">*</span><span class="n">d</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">A</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="o">-</span><span class="n">d</span><span class="p">)</span>
-    <span class="n">src_crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span> <span class="s1">&#39;EPSG:4326&#39;</span><span class="p">}</span>
+    <span class="n">src_crs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;init&#39;</span><span class="p">:</span> <span class="s">&#39;EPSG:4326&#39;</span><span class="p">}</span>
     <span class="n">source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">src_shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">*</span><span class="mi">255</span>
 
-    <span class="c1"># Destination: a 1024 x 1024 dataset in Web Mercator (EPSG:3857)</span>
-    <span class="c1"># with origin at 0.0, 0.0.</span>
+    <span class="c"># Destination: a 1024 x 1024 dataset in Web Mercator (EPSG:3857)</span>
+    <span class="c"># with origin at 0.0, 0.0.</span>
     <span class="n">dst_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
     <span class="n">dst_transform</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">237481.5</span><span class="p">,</span> <span class="mf">425.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">237536.4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">425.0</span><span class="p">]</span>
-    <span class="n">dst_crs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span> <span class="s1">&#39;EPSG:3857&#39;</span><span class="p">}</span>
+    <span class="n">dst_crs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;init&#39;</span><span class="p">:</span> <span class="s">&#39;EPSG:3857&#39;</span><span class="p">}</span>
     <span class="n">destination</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dst_shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
     <span class="n">reproject</span><span class="p">(</span>
@@ -215,7 +215,7 @@ transform.</p>
         <span class="n">dst_crs</span><span class="o">=</span><span class="n">dst_crs</span><span class="p">,</span>
         <span class="n">resampling</span><span class="o">=</span><span class="n">RESAMPLING</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
 
-    <span class="c1"># Assert that the destination is only partly filled.</span>
+    <span class="c"># Assert that the destination is only partly filled.</span>
     <span class="k">assert</span> <span class="n">destination</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
     <span class="k">assert</span> <span class="ow">not</span> <span class="n">destination</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 </pre></div>
@@ -243,25 +243,25 @@ for non-linear transformations of the edges.</p>
 <p><code class="docutils literal"><span class="pre">calculate_default_transform()</span></code>
 transforms bounds to target coordinate system, calculates resolution if not
 provided, and returns destination transform and dimensions.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">calculate_default_transform</span><span class="p">,</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">RESAMPLING</span>
 
-<span class="n">dst_crs</span> <span class="o">=</span> <span class="s1">&#39;EPSG:4326&#39;</span>
+<span class="n">dst_crs</span> <span class="o">=</span> <span class="s">&#39;EPSG:4326&#39;</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;rasterio/tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;rasterio/tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">affine</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">calculate_default_transform</span><span class="p">(</span>
         <span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="o">*</span><span class="n">src</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-        <span class="s1">&#39;crs&#39;</span><span class="p">:</span> <span class="n">dst_crs</span><span class="p">,</span>
-        <span class="s1">&#39;transform&#39;</span><span class="p">:</span> <span class="n">affine</span><span class="p">,</span>
-        <span class="s1">&#39;affine&#39;</span><span class="p">:</span> <span class="n">affine</span><span class="p">,</span>
-        <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
-        <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">height</span>
+        <span class="s">&#39;crs&#39;</span><span class="p">:</span> <span class="n">dst_crs</span><span class="p">,</span>
+        <span class="s">&#39;transform&#39;</span><span class="p">:</span> <span class="n">affine</span><span class="p">,</span>
+        <span class="s">&#39;affine&#39;</span><span class="p">:</span> <span class="n">affine</span><span class="p">,</span>
+        <span class="s">&#39;width&#39;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span>
+        <span class="s">&#39;height&#39;</span><span class="p">:</span> <span class="n">height</span>
     <span class="p">})</span>
 
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/RGB.byte.wgs84.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/RGB.byte.wgs84.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">reproject</span><span class="p">(</span>
                 <span class="n">source</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">band</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span>
@@ -280,27 +280,27 @@ described
 <p>It is also possible to use <code class="docutils literal"><span class="pre">reproject()</span></code> to create an output dataset zoomed
 out by a factor of 2.  Methods of the <code class="docutils literal"><span class="pre">rasterio.Affine</span></code> class help us generate
 the output dataset&#8217;s transform matrix and, thereby, its spatial extent.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">Affine</span> <span class="k">as</span> <span class="n">A</span>
 <span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">RESAMPLING</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;rasterio/tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;rasterio/tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">src_transform</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">affine</span>
 
-    <span class="c1"># Zoom out by a factor of 2 from the center of the source</span>
-    <span class="c1"># dataset. The destination transform is the product of the</span>
-    <span class="c1"># source transform, a translation down and to the right, and</span>
-    <span class="c1"># a scaling.</span>
+    <span class="c"># Zoom out by a factor of 2 from the center of the source</span>
+    <span class="c"># dataset. The destination transform is the product of the</span>
+    <span class="c"># source transform, a translation down and to the right, and</span>
+    <span class="c"># a scaling.</span>
     <span class="n">dst_transform</span> <span class="o">=</span> <span class="n">src_transform</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span>
         <span class="o">-</span><span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="n">src</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="n">kwargs</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">meta</span>
-    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dst_transform</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dst_transform</span>
 
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/zoomed-out.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/zoomed-out.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">band</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">dest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">band</span><span class="p">)</span>

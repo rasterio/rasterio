@@ -157,8 +157,8 @@ The <code class="docutils literal"><span class="pre">driver</span></code> attrib
 <code class="docutils literal"><span class="pre">height</span></code> and <code class="docutils literal"><span class="pre">width</span></code> are the number of rows and columns of the raster
 dataset and <code class="docutils literal"><span class="pre">shape</span></code> is a <code class="docutils literal"><span class="pre">height,</span> <span class="pre">width</span></code> tuple as used by Numpy. The
 <code class="docutils literal"><span class="pre">count</span></code> attribute tells you the number of bands in the dataset.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">driver</span>
 <span class="go">&#39;GTiff&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">width</span>
@@ -173,7 +173,7 @@ dataset and <code class="docutils literal"><span class="pre">shape</span></code>
 that their pixels map to regions of the Earth. A dataset has a coordinate
 reference system and an affine transformation matrix that maps pixel
 coordinates to coordinates in that reference system.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">crs</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">crs</span>
 <span class="go">CRS({&#39;init&#39;: &#39;epsg:32618&#39;})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">transform</span>
 <span class="go">Affine(300.0379266750948, 0.0, 101985.0,</span>
@@ -183,7 +183,7 @@ coordinates to coordinates in that reference system.</p>
 <p>To get the <code class="docutils literal"><span class="pre">x,</span> <span class="pre">y</span></code> world coordinates for the upper left corner of any pixel,
 take the product of the affine transformation matrix and the tuple <code class="docutils literal"><span class="pre">(col,</span>
 <span class="pre">row)</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">col</span><span class="p">,</span> <span class="n">row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">col</span><span class="p">,</span> <span class="n">row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
 <span class="go">(101985.0, 2826915.0)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">col</span><span class="p">,</span> <span class="n">row</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">height</span>
@@ -197,25 +197,25 @@ take the product of the affine transformation matrix and the tuple <code class="
 <p>The <code class="docutils literal"><span class="pre">src.profile</span></code> property is the union of meta, creation options saved as tags, and tiling options.
 The primary use of profile is to provide a canonical way of creating a dataset clone,
 encapsulating all the necessary metadata required to recreate a dataset:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;clone.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;clone.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </pre></div>
 </div>
 <p>A common pattern for using the profile is to copy a source profile, update it slightly
 to reflect any changes, and use the updated copy to create the output:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># we start with the profile of the source file</span>
+<div class="highlight-default"><div class="highlight"><pre><span class="c"># we start with the profile of the source file</span>
 <span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-<span class="c1"># but then change the band count to 1, set the</span>
-<span class="c1"># dtype to uint8, and specify LZW compression.</span>
+<span class="c"># but then change the band count to 1, set the</span>
+<span class="c"># dtype to uint8, and specify LZW compression.</span>
 <span class="n">profile</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
     <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
     <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">compress</span><span class="o">=</span><span class="s1">&#39;lzw&#39;</span><span class="p">)</span>
+    <span class="n">compress</span><span class="o">=</span><span class="s">&#39;lzw&#39;</span><span class="p">)</span>
 
-<span class="c1"># And use the updated profile as kwargs for our destination file</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;destination.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+<span class="c"># And use the updated profile as kwargs for our destination file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;destination.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="o">...</span>
 </pre></div>
 </div>
