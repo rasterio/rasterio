@@ -96,7 +96,7 @@
 <li class="toctree-l3"><a class="reference internal" href="color.html">Color</a></li>
 <li class="toctree-l3"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Options</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#general-options">General Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creation-options">Creation options</a></li>
 </ul>
 </li>
@@ -175,12 +175,15 @@
 These options come in two flavors:</p>
 <blockquote>
 <div><ul class="simple">
-<li>General GDAL options</li>
-<li>Driver-specific creation options</li>
+<li><strong>Configuration options</strong> are used to alter the default behavior of GDAL
+and OGR and are generally treated as global environment variables by GDAL. These
+are set through a <code class="docutils literal"><span class="pre">rasterio.Env()</span></code> context block in Python.</li>
+<li><strong>Creation options</strong> are passed into the driver at dataset creation time as
+keyword arguments to <code class="docutils literal"><span class="pre">rasterio.open(mode='w')</span></code>.</li>
 </ul>
 </div></blockquote>
-<div class="section" id="general-options">
-<h2>General Options<a class="headerlink" href="#general-options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Permalink to this headline">¶</a></h2>
 <p>GDAL options are typically set as environment variables. While
 environment variables will influence the behavior of <code class="docutils literal"><span class="pre">rasterio</span></code>, we
 highly recommended avoiding them in favor of defining behavior programatically.</p>
@@ -225,6 +228,7 @@ to the <code class="docutils literal"><span class="pre">rasterio.open()</span></
 <div class="highlight-default"><div class="highlight"><pre><span class="n">rio</span> <span class="n">copy</span> <span class="n">source</span><span class="o">.</span><span class="n">tif</span> <span class="n">dest</span><span class="o">.</span><span class="n">tif</span> <span class="o">--</span><span class="n">co</span> <span class="n">tiled</span><span class="o">=</span><span class="n">true</span>
 </pre></div>
 </div>
+<p>Note that some <em>configuration</em> options also have an effect on driver behavior at creation time.</p>
 </div>
 </div>
 

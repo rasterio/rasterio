@@ -4,11 +4,15 @@ Options
 GDAL's format drivers have many `configuration options`_.
 These options come in two flavors:
 
-    * General GDAL options
-    * Driver-specific creation options 
+    * **Configuration options** are used to alter the default behavior of GDAL
+      and OGR and are generally treated as global environment variables by GDAL. These
+      are set through a ``rasterio.Env()`` context block in Python.
 
-General Options
------------------
+    * **Creation options** are passed into the driver at dataset creation time as
+      keyword arguments to ``rasterio.open(mode='w')``.
+
+Configuration Options
+---------------------
 
 GDAL options are typically set as environment variables. While
 environment variables will influence the behavior of ``rasterio``, we
@@ -35,7 +39,7 @@ See the `configuration options`_ page for a complete list of available options.
 
 
 Creation options
------------------
+----------------
 
 Each format has it's own set of driver-specific creation options that can be used to
 fine tune the output rasters. For details on a particular driver, see the `formats list`_.
@@ -59,7 +63,8 @@ Or at the command line, ``rio`` commands will accept multiple ``--co`` options::
 
     rio copy source.tif dest.tif --co tiled=true
 
-                       
+Note that some *configuration* options also have an effect on driver behavior at creation time.
+
 
 .. _configuration options: https://trac.osgeo.org/gdal/wiki/ConfigOptions
 .. _formats list: http://gdal.org/formats_list.html
