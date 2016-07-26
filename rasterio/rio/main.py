@@ -60,12 +60,11 @@ def gdal_version_cb(ctx, param, value):
 @click.group()
 @cligj.verbose_opt
 @cligj.quiet_opt
-@click.option(
-    '--aws-profile',
-    help="Use a specific profile from your shared AWS credentials file")
+@click.option('--aws-profile',
+              help="Selects a profile from your shared AWS credentials file")
 @click.version_option(version=rasterio.__version__, message='%(version)s')
-@click.option(
-    '--gdal-version', is_eager=True, is_flag=True, callback=gdal_version_cb)
+@click.option('--gdal-version', is_eager=True, is_flag=True,
+              callback=gdal_version_cb)
 @click.pass_context
 def main_group(ctx, verbose, quiet, aws_profile, gdal_version):
     """Rasterio command line interface.
@@ -75,3 +74,6 @@ def main_group(ctx, verbose, quiet, aws_profile, gdal_version):
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
     ctx.obj['aws_profile'] = aws_profile
+    env = rasterio.Env(CPL_DEBUG=(verbosity > 2), profile_name=aws_profile)
+    env.get_aws_credentials()
+    ctx.obj['env'] = env
