@@ -126,8 +126,9 @@ def test_aws_session_credentials(gdalenv):
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
-    with rasterio.Env(aws_access_key_id='id', aws_secret_access_key='key',
-             aws_session_token='token', region_name='null-island-1') as s:
+    with rasterio.Env(
+            aws_access_key_id='id', aws_secret_access_key='key',
+            aws_session_token='token', region_name='null-island-1') as s:
         expected = default_options.copy()
         assert getenv() == rasterio.env._env.options == expected
         s.get_aws_credentials()
@@ -211,3 +212,20 @@ def test_https_rio_info(runner):
     result = runner.invoke(main_group, ['info', httpstif])
     assert result.exit_code == 0
     assert '"crs": "EPSG:32645"' in result.output
+
+
+def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):
+    """Confirm that --aws-profile option works."""
+    credentials_file = tmpdir.join('credentials')
+    credentials_file.write("[testing]\n"
+                           "aws_access_key_id = foo\n"
+                           "aws_secret_access_key = bar\n"
+                           "aws_session_token = baz")
+    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
+    result = runner.invoke(
+        main_group, ['--aws-profile', 'testing', 'env', '--credentials'])
+    assert result.exit_code == 0
+    assert '"aws_access_key_id": "foo"' in result.output
+    assert '"aws_secret_access_key": "bar"' in result.output
+    assert '"aws_session_token": "baz"' in result.output
+    monkeypatch.undo()
