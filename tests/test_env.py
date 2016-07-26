@@ -222,6 +222,7 @@ def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):
                            "aws_secret_access_key = bar\n"
                            "aws_session_token = baz")
     monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'ignore_me')
     result = runner.invoke(
         main_group, ['--aws-profile', 'testing', 'env', '--credentials'])
     assert result.exit_code == 0
