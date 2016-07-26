@@ -74,6 +74,5 @@ def main_group(ctx, verbose, quiet, aws_profile, gdal_version):
     ctx.obj = {}
     ctx.obj['verbosity'] = verbosity
     ctx.obj['aws_profile'] = aws_profile
-    env = rasterio.Env(CPL_DEBUG=(verbosity > 2), profile_name=aws_profile)
-    env.get_aws_credentials()
-    ctx.obj['env'] = env
+    ctx.obj['env'] = rasterio.Env(CPL_DEBUG=(verbosity > 2),
+                                  profile_name=aws_profile)
