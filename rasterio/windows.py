@@ -161,7 +161,7 @@ def intersect(*windows):
 
 
 def from_bounds(left, bottom, right, top, transform,
-                height=None, width=None, boundless=False, precision=6):
+                height=None, width=None, boundless=False, precision=None):
     """Get the window corresponding to the bounding coordinates.
 
     Parameters
@@ -183,8 +183,8 @@ def from_bounds(left, bottom, right, top, transform,
     boundless : boolean, optional
         If boundless is False, window is limited
         to extent of this dataset.
-    precision : int, optional
-        
+    precision : ignored
+        This argument is ignored.
 
     Returns
     -------
@@ -192,14 +192,11 @@ def from_bounds(left, bottom, right, top, transform,
         ((row_start, row_stop), (col_start, col_stop))
         corresponding to the bounding coordinates
     """
-
-    eps = 10.0 ** -precision
-
     window_start = rowcol(
-        transform, left + eps, top - eps, op=math.floor)
+        transform, left, top, op=math.floor)
 
     window_stop = rowcol(
-        transform, right - eps, bottom + eps, op=math.ceil)
+        transform, right, bottom, op=math.ceil)
 
     window = tuple(zip(window_start, window_stop))
 

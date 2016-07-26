@@ -1,5 +1,7 @@
+import math
+
 from affine import Affine
-from hypothesis import given, strategies as st
+from hypothesis import assume, given, strategies as st
 import numpy as np
 import pytest
 
@@ -8,7 +10,7 @@ from rasterio.windows import (
     from_bounds, bounds, transform, evaluate, window_index, shape)
 
 
-EPS = 0.0 #1.0e-8
+EPS = 0.0
 
 
 @given(pxsz=st.floats(min_value=1.0, max_value=1000.0),
@@ -16,9 +18,8 @@ EPS = 0.0 #1.0e-8
        yoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
        height=st.integers(min_value=1, max_value=1000),
        width=st.integers(min_value=1, max_value=1000),
-       precision=st.integers(min_value=0, max_value=32),
        denominator_exponent=st.integers(min_value=1, max_value=32))
-def test_window_inner_snap(pxsz, xoff, yoff, height, width, precision,
+def test_window_inner_snap(pxsz, xoff, yoff, height, width,
                            denominator_exponent):
     """When bounds are slightly smaller than the raster's extent the entire
     raster is selected."""
@@ -27,9 +28,15 @@ def test_window_inner_snap(pxsz, xoff, yoff, height, width, precision,
     right, bottom = xoff + width * pxsz, yoff - height * pxsz
     fraction = 10.0 ** -denominator_exponent
     delta = pxsz * fraction
-    assert from_bounds(
-        left + delta, bottom + delta, right - delta, top - delta, aff,
-        height=height, width=width, precision=precision) \
+
+    # Avoid cases of lost significance.
+    assume(left + delta != left and
+           bottom + delta != bottom and
+           right - delta != right and
+           top - delta != top)
+
+    assert from_bounds(left + delta, bottom + delta, right - delta,
+            top - delta, aff, height=height, width=width) \
         == ((0, height), (0, width))
 
 
@@ -38,10 +45,9 @@ def test_window_inner_snap(pxsz, xoff, yoff, height, width, precision,
        yoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
        height=st.integers(min_value=1, max_value=1000),
        width=st.integers(min_value=1, max_value=1000),
-       precision=st.integers(min_value=0, max_value=32),
-       denominator_exponent=st.integers(min_value=1, max_value=32))
-def test_window_outer_snap(pxsz, xoff, yoff, height, width, precision,
-                           denominator_exponent):
+       denominator_exponent=st.integers(min_value=1, max_value=11))
+def test_window_outer_boundless(pxsz, xoff, yoff, height, width,
+                                denominator_exponent):
     """When bounds are slightly larger than the raster's extent the entire
     raster is selected plus one pixel all around."""
     aff = Affine(pxsz, 0.0, xoff, 0.0, -pxsz, yoff)
@@ -49,31 +55,16 @@ def test_window_outer_snap(pxsz, xoff, yoff, height, width, precision,
     right, bottom = xoff + width * pxsz, yoff - height * pxsz
     fraction = 10.0 ** -denominator_exponent
     delta = pxsz * fraction
-    assert from_bounds(
-        left - delta, bottom - delta, right + delta, top + delta, aff,
-        height=height, width=width, boundless=False, precision=precision) \
-        == ((0, height), (0, width))
 
+    # Avoid cases of lost significance.
+    assume(left - delta != left and
+           bottom - delta != bottom and
+           right + delta != right and
+           top + delta != top)
 
-@given(pxsz=st.floats(min_value=1.0, max_value=1000.0),
-       xoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
-       yoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
-       height=st.integers(min_value=1, max_value=1000),
-       width=st.integers(min_value=1, max_value=1000),
-       precision=st.integers(min_value=0, max_value=32),
-       denominator_exponent=st.integers(min_value=1, max_value=32))
-def test_window_outer_boundless(pxsz, xoff, yoff, height, width, precision,
-                           denominator_exponent):
-    """When bounds are slightly larger than the raster's extent the entire
-    raster is selected plus one pixel all around."""
-    aff = Affine(pxsz, 0.0, xoff, 0.0, -pxsz, yoff)
-    left, top = xoff, yoff
-    right, bottom = xoff + width * pxsz, yoff - height * pxsz
-    fraction = 10.0 ** -denominator_exponent
-    delta = pxsz * fraction
-    assert from_bounds(
-        left - delta, bottom - delta, right + delta, top + delta, aff,
-        height=height, width=width, boundless=True, precision=precision) \
+    assert from_bounds(left - delta, bottom - delta, right + delta,
+                       top + delta, aff, height=height, width=width,
+                       boundless=True) \
         == ((-1, height + 1), (-1, width + 1))
 
 
