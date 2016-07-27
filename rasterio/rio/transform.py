@@ -21,7 +21,6 @@ import rasterio
 def transform(ctx, input, src_crs, dst_crs, precision):
     import rasterio.warp
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
 
     # Handle the case of file, stream, or string input.
@@ -31,7 +30,7 @@ def transform(ctx, input, src_crs, dst_crs, precision):
         src = [input]
 
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2):
+        with ctx.obj['env']:
             if src_crs.startswith('EPSG'):
                 src_crs = {'init': src_crs}
             elif os.path.exists(src_crs):

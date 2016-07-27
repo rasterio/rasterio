@@ -73,10 +73,9 @@ def main(banner, dataset, alt_interpreter=None):
 @click.pass_context
 def insp(ctx, input, mode, interpreter):
     """Open the input file in a Python interpreter."""
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2):
+        with ctx.obj['env']:
             with rasterio.open(input, mode) as src:
                 main(
                     'Rasterio %s Interactive Inspector (Python %s)\n'

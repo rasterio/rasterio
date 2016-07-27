@@ -11,7 +11,8 @@ import numpy as np
 from pytest import fixture
 
 import rasterio
-from rasterio.rio.merge import merge
+from rasterio.merge import merge
+from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
 
@@ -83,7 +84,7 @@ def test_merge_with_colormap(test_data_dir_1):
         src.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 0)})
 
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
 
@@ -98,7 +99,7 @@ def test_merge_with_nodata(test_data_dir_1):
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
@@ -115,7 +116,8 @@ def test_merge_warn(test_data_dir_1):
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname] + ['--nodata', '-1'])
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1'])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
     assert "using the --nodata option for better results" in result.output
@@ -126,7 +128,7 @@ def test_merge_without_nodata(test_data_dir_2):
     inputs = [str(x) for x in test_data_dir_2.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
@@ -142,12 +144,10 @@ def test_merge_output_exists(tmpdir):
     outputname = str(tmpdir.join('merged.tif'))
     runner = CliRunner()
     result = runner.invoke(
-        merge,
-        ['tests/data/RGB.byte.tif', outputname])
+        main_group, ['merge', 'tests/data/RGB.byte.tif', outputname])
     assert result.exit_code == 0
     result = runner.invoke(
-        merge,
-        ['tests/data/RGB.byte.tif', outputname])
+        main_group, ['merge', 'tests/data/RGB.byte.tif', outputname])
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
         assert out.count == 3
@@ -157,8 +157,8 @@ def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
     """Fails without --force-overwrite"""
     runner = CliRunner()
     result = runner.invoke(
-        merge,
-        [str(test_data_dir_2.join('a.tif')),
+        main_group, [
+            'merge', str(test_data_dir_2.join('a.tif')),
             str(test_data_dir_2.join('b.tif'))])
     assert result.exit_code == 1
 
@@ -167,8 +167,8 @@ def test_merge_output_exists_without_nodata(test_data_dir_2):
     """Succeeds with --force-overwrite"""
     runner = CliRunner()
     result = runner.invoke(
-        merge,
-        ['--force-overwrite', str(test_data_dir_2.join('a.tif')),
+        main_group, [
+            'merge', '--force-overwrite', str(test_data_dir_2.join('a.tif')),
             str(test_data_dir_2.join('b.tif'))])
     assert result.exit_code == 0
 
@@ -176,8 +176,7 @@ def test_merge_output_exists_without_nodata(test_data_dir_2):
 def test_merge_err():
     runner = CliRunner()
     result = runner.invoke(
-        merge,
-        ['tests'])
+        main_group, ['merge', 'tests'])
     assert result.exit_code == 1
 
 
@@ -185,8 +184,9 @@ def test_format_jpeg(tmpdir):
     outputname = str(tmpdir.join('stacked.jpg'))
     runner = CliRunner()
     result = runner.invoke(
-        merge,
-        ['tests/data/RGB.byte.tif', outputname, '--format', 'JPEG'])
+        main_group, [
+            'merge', 'tests/data/RGB.byte.tif', outputname,
+            '--format', 'JPEG'])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
 
@@ -225,7 +225,7 @@ def test_merge_overlapping(test_data_dir_overlapping):
     inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
@@ -271,7 +271,8 @@ def test_merge_float(test_data_dir_float):
     inputs = [str(x) for x in test_data_dir_float.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname] + ['--nodata', '-1.5'])
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1.5'])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
     with rasterio.open(outputname) as out:
@@ -326,7 +327,7 @@ def test_merge_tiny(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
 
     # Output should be
@@ -349,7 +350,7 @@ def test_merge_tiny_output_opt(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + ['-o', outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + ['-o', outputname])
     assert result.exit_code == 0
 
     # Output should be
@@ -372,7 +373,8 @@ def test_merge_tiny_res_bounds(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
     assert result.exit_code == 0
 
     # Output should be
@@ -393,7 +395,9 @@ def test_merge_tiny_res_high_precision(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname, '--res', 2, '--precision', 15])
+    result = runner.invoke(
+        main_group,
+        ['merge'] + inputs + [outputname, '--res', 2, '--precision', 15])
     assert result.exit_code == 0
 
     # Output should be
@@ -418,7 +422,7 @@ def test_merge_rgb(tmpdir):
         'tests/data/rgb3.tif',
         'tests/data/rgb4.tif']
     runner = CliRunner()
-    result = runner.invoke(merge, inputs + [outputname])
+    result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
 
     with rasterio.open(outputname) as src:
@@ -426,7 +430,6 @@ def test_merge_rgb(tmpdir):
 
 
 def test_merge_tiny_intres(tiffs):
-    from rasterio.merge import merge
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
     sources = [rasterio.open(x) for x in inputs]

@@ -55,10 +55,9 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
       rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. -o stacked.tif
 
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 2
     logger = logging.getLogger('rio')
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2):
+        with ctx.obj['env']:
             output, files = resolve_inout(files=files, output=output,
                                           force_overwrite=force_overwrite)
             output_count = 0

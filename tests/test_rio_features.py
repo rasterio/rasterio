@@ -9,9 +9,8 @@ from affine import Affine
 import numpy as np
 
 import rasterio
-from rasterio.rio.rasterize import rasterize
-from rasterio.rio.main import main_group
 from rasterio.crs import CRS
+from rasterio.rio.main import main_group
 
 DEFAULT_SHAPE = (10, 10)
 
@@ -499,8 +498,8 @@ def test_rasterize_resolution(tmpdir, runner, basic_feature):
 def test_rasterize_multiresolution(tmpdir, runner, basic_feature):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        rasterize,
-        [output, '--res', 0.15, '--res', 0.15],
+        main_group,
+        ['rasterize', output, '--res', 0.15, '--res', 0.15],
         input=json.dumps(basic_feature)
     )
 
@@ -646,10 +645,9 @@ def test_rasterize_featurecollection(tmpdir, runner, basic_feature,
         'type': 'FeatureCollection',
         'features': [basic_feature]}
     result = runner.invoke(
-        rasterize,
-        [output, '--like', pixelated_image_file],
-        input=json.dumps(collection)
-    )
+        main_group,
+        ['rasterize', output, '--like', pixelated_image_file],
+        input=json.dumps(collection))
     assert result.exit_code == 0
 
 
@@ -657,17 +655,14 @@ def test_rasterize_src_crs_mismatch(tmpdir, runner, basic_feature,
                                     pixelated_image_file):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        rasterize,
-        [output, '--like', pixelated_image_file],
-        input=json.dumps(basic_feature)
-    )
+        main_group, ['rasterize', output, '--like', pixelated_image_file],
+        input=json.dumps(basic_feature))
     assert result.exit_code == 0
 
     result = runner.invoke(
-        rasterize,
-        [output, '--force-overwrite', '--src-crs', 'EPSG:3857'],
-        input=json.dumps(basic_feature)
-    )
+        main_group, [
+            'rasterize', output, '--force-overwrite', '--src-crs', 'EPSG:3857'],
+        input=json.dumps(basic_feature))
     assert result.exit_code == 2
     assert 'GeoJSON does not match crs of existing output raster' in result.output
 
@@ -703,8 +698,7 @@ def test_rasterize_like_raster_outside_bounds(tmpdir, runner, basic_feature,
     result = runner.invoke(
         main_group,
         ['rasterize', output, '--like', pixelated_image_file],
-        input=json.dumps(basic_feature)
-    )
+        input=json.dumps(basic_feature))
 
     assert result.exit_code == 0
     assert 'outside bounds' in result.output

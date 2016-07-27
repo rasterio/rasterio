@@ -53,9 +53,7 @@ def clip(
 
     from rasterio.warp import transform_bounds
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
-    with rasterio.Env(CPL_DEBUG=verbosity > 2):
+    with ctx.obj['env']:
 
         output, files = resolve_inout(files=files, output=output)
         input = files[0]

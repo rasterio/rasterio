@@ -46,7 +46,6 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     the projection parameter.
     """
     import rasterio.warp
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -106,7 +105,7 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
                 self._ys.extend(bbox[1::2])
 
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2) as env:
+        with ctx.obj['env'] as env:
             write_features(
                 stdout, Collection(env), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,

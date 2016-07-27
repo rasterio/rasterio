@@ -53,9 +53,7 @@ def convert(
       --co compress=LZW
 
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
-    with rasterio.Env(CPL_DEBUG=verbosity > 2):
+    with ctx.obj['env']:
 
         outputfile, files = resolve_inout(files=files, output=output)
         inputfile = files[0]

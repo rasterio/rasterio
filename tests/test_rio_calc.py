@@ -4,7 +4,7 @@ import logging
 from click.testing import CliRunner
 
 import rasterio
-from rasterio.rio.calc import calc
+from rasterio.rio.main import main_group
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -13,18 +13,18 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_err(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                '($ 0.1 (read 1))', 'tests/data/shade.tif', outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '($ 0.1 (read 1))', 'tests/data/shade.tif', outfile],
+        catch_exceptions=False)
     assert result.exit_code == 1
 
 
 def test_multiband_calc(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                '(+ 125 (* 0.1 (read 1)))', 'tests/data/shade.tif', outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(+ 125 (* 0.1 (read 1)))', 'tests/data/shade.tif', outfile],
+        catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
@@ -38,11 +38,9 @@ def test_multiband_calc(tmpdir):
 def test_singleband_calc_byindex(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(+ 125 (* 0.1 (read 1 1)))',
-                    'tests/data/shade.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(+ 125 (* 0.1 (read 1 1)))', 'tests/data/shade.tif', outfile],
+        catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
@@ -54,11 +52,9 @@ def test_singleband_calc_byindex(tmpdir):
 def test_singleband_calc_byname(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(+ 125 (* 0.1 (take shade 1)))',
-                    '--name', 'shade=tests/data/shade.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(+ 125 (* 0.1 (take shade 1)))', '--name', 'shade=tests/data/shade.tif',
+        outfile], catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
@@ -72,11 +68,9 @@ def test_parts_calc(tmpdir):
     # Red band has bumped up values. Other bands are unchanged.
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(asarray (+ (read 1 1) 125) (read 1 1) (read 1 1))',
-                    'tests/data/shade.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(asarray (+ (read 1 1) 125) (read 1 1) (read 1 1))',
+        'tests/data/shade.tif', outfile], catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 3
@@ -91,11 +85,9 @@ def test_parts_calc_2(tmpdir):
     # Produce greyscale output from the RGB file.
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(+ (+ (/ (read 1 1) 3.0) (/ (read 1 2) 3.0)) (/ (read 1 3) 3.0))',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(+ (+ (/ (read 1 1) 3.0) (/ (read 1 2) 3.0)) (/ (read 1 3) 3.0))',
+        'tests/data/RGB.byte.tif', outfile], catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
@@ -107,11 +99,9 @@ def test_parts_calc_2(tmpdir):
 def test_copy_rgb(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(read 1)',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(read 1)', 'tests/data/RGB.byte.tif', outfile],
+        catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 3
@@ -123,11 +113,9 @@ def test_copy_rgb(tmpdir):
 def test_fillnodata(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(asarray (fillnodata (read 1 1)) (fillnodata (read 1 2)) (fillnodata (read 1 3)))',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(asarray (fillnodata (read 1 1)) (fillnodata (read 1 2)) (fillnodata (read 1 3)))',
+        'tests/data/RGB.byte.tif', outfile], catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 3
@@ -139,11 +127,9 @@ def test_fillnodata(tmpdir):
 def test_fillnodata_map(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(asarray (map fillnodata (read 1)))',
-                    'tests/data/RGB.byte.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(asarray (map fillnodata (read 1)))',
+        'tests/data/RGB.byte.tif', outfile], catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 3
@@ -155,11 +141,9 @@ def test_fillnodata_map(tmpdir):
 def test_sieve_band(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    '(sieve (band 1 1) 42)',
-                    'tests/data/shade.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        '(sieve (band 1 1) 42)', 'tests/data/shade.tif', outfile],
+        catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
@@ -169,11 +153,9 @@ def test_sieve_band(tmpdir):
 def test_sieve_read(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
-    result = runner.invoke(calc, [
-                    "(sieve (read 1 1 'uint8') 42)",
-                    'tests/data/shade.tif',
-                    outfile],
-                catch_exceptions=False)
+    result = runner.invoke(main_group, ['calc'] + [
+        "(sieve (read 1 1 'uint8') 42)",
+        'tests/data/shade.tif', outfile], catch_exceptions=False)
     assert result.exit_code == 0
     with rasterio.open(outfile) as src:
         assert src.count == 1
