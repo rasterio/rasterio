@@ -1,4 +1,4 @@
-"""$ rio info"""
+"""Command access to dataset metadata, stats, and more."""
 
 
 import json
@@ -61,48 +61,45 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
     Optionally print a single metadata item as a string.
     """
-    verbosity = ctx.obj.get('verbosity')
-    mode = 'r' if (verbose or meta_member == 'stats') else 'r-'
     try:
-        with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
-            with rasterio.open(input, mode) as src:
-                info = dict(src.profile)
-                info['shape'] = info['height'], info['width']
-                info['bounds'] = src.bounds
-                proj4 = src.crs.to_string()
-                if proj4.startswith('+init=epsg'):
-                    proj4 = proj4.split('=')[1].upper()
-                info['crs'] = proj4
-                info['res'] = src.res
-                info['colorinterp'] = [src.colorinterp(i).name
-                                       for i in src.indexes]
-                if proj4 != '':
-                    info['lnglat'] = src.lnglat()
-                if verbose:
-                    stats = [{'min': float(b.min()),
-                              'max': float(b.max()),
-                              'mean': float(b.mean())
-                              } for b in src.read(masked=masked)]
-                    info['stats'] = stats
-                    info['checksum'] = [src.checksum(i) for i in src.indexes]
-                if aspect == 'meta':
-                    if meta_member == 'stats':
-                        band = src.read(bidx, masked=masked)
-                        click.echo('%f %f %f' % (
-                            float(band.min()),
-                            float(band.max()),
-                            float(band.mean())))
-                    elif meta_member == 'checksum':
-                        click.echo(str(src.checksum(bidx)))
-                    elif meta_member:
-                        if isinstance(info[meta_member], (list, tuple)):
-                            click.echo(" ".join(map(str, info[meta_member])))
-                        else:
-                            click.echo(info[meta_member])
+        with ctx.obj['env'], rasterio.open(input) as src:
+            info = dict(src.profile)
+            info['shape'] = info['height'], info['width']
+            info['bounds'] = src.bounds
+            proj4 = src.crs.to_string()
+            if proj4.startswith('+init=epsg'):
+                proj4 = proj4.split('=')[1].upper()
+            info['crs'] = proj4
+            info['res'] = src.res
+            info['colorinterp'] = [src.colorinterp(i).name
+                                   for i in src.indexes]
+            if proj4 != '':
+                info['lnglat'] = src.lnglat()
+            if verbose:
+                stats = [{'min': float(b.min()),
+                          'max': float(b.max()),
+                          'mean': float(b.mean())
+                          } for b in src.read(masked=masked)]
+                info['stats'] = stats
+                info['checksum'] = [src.checksum(i) for i in src.indexes]
+            if aspect == 'meta':
+                if meta_member == 'stats':
+                    band = src.read(bidx, masked=masked)
+                    click.echo('%f %f %f' % (
+                        float(band.min()),
+                        float(band.max()),
+                        float(band.mean())))
+                elif meta_member == 'checksum':
+                    click.echo(str(src.checksum(bidx)))
+                elif meta_member:
+                    if isinstance(info[meta_member], (list, tuple)):
+                        click.echo(" ".join(map(str, info[meta_member])))
                     else:
-                        click.echo(json.dumps(info, indent=indent))
-                elif aspect == 'tags':
-                    click.echo(
-                        json.dumps(src.tags(ns=namespace), indent=indent))
+                        click.echo(info[meta_member])
+                else:
+                    click.echo(json.dumps(info, indent=indent))
+            elif aspect == 'tags':
+                click.echo(
+                    json.dumps(src.tags(ns=namespace), indent=indent))
     except Exception:
         raise click.Abort()
