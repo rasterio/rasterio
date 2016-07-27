@@ -52,7 +52,6 @@ def sample(ctx, files, bidx):
         [25, 29]
 
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
     logger = logging.getLogger('rio')
 
     files = list(files)
@@ -66,7 +65,7 @@ def sample(ctx, files, bidx):
         points = [input]
 
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2):
+        with ctx.obj['env']:
             with rasterio.open(source) as src:
                 if bidx is None:
                     indexes = src.indexes

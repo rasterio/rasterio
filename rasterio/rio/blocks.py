@@ -133,8 +133,6 @@ def blocks(
     'src.block_windows()'.
     """
 
-    verbosity = ctx.obj['verbosity'] if ctx.obj else 1
-
     dump_kwds = {'sort_keys': True}
 
     if indent:
@@ -146,21 +144,21 @@ def blocks(
         output, 'w') if output else click.get_text_stream('stdout')
 
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2):
-            with rasterio.open(input) as src:
+        with ctx.obj['env'], rasterio.open(input) as src:
 
-                collection = _Collection(
-                    src=src,
-                    bidx=bidx,
-                    precision=precision,
-                    geographic=projection != 'projected')
+            collection = _Collection(
+                src=src,
+                bidx=bidx,
+                precision=precision,
+                geographic=projection != 'projected')
 
-                write_features(
-                    stdout, collection,
-                    sequence=sequence,
-                    geojson_type='feature' if sequence else 'collection',
-                    use_rs=use_rs,
-                    **dump_kwds)
+            write_features(
+                stdout, collection,
+                sequence=sequence,
+                geojson_type='feature' if sequence else 'collection',
+                use_rs=use_rs,
+                **dump_kwds)
+
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()

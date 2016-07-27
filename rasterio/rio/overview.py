@@ -66,9 +66,7 @@ def overview(ctx, input, build, ls, rebuild, resampling):
       rio overview --ls
 
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
-    with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
+    with ctx.obj['env']:
         with rasterio.open(input, 'r+') as dst:
 
             if ls:

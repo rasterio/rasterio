@@ -45,12 +45,10 @@ def merge(ctx, files, output, driver, bounds, res, nodata, force_overwrite,
     """
     from rasterio.merge import merge as merge_tool
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
 
-    with rasterio.Env(CPL_DEBUG=verbosity > 2):
+    with ctx.obj['env']:
         sources = [rasterio.open(f) for f in files]
         dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
                                             nodata=nodata, precision=precision)

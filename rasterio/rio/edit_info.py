@@ -124,15 +124,13 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
     """
     import numpy as np
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
     def in_dtype_range(value, dtype):
         infos = {'c': np.finfo, 'f': np.finfo, 'i': np.iinfo,
                  'u': np.iinfo}
         rng = infos[np.dtype(dtype).kind](dtype)
         return rng.min <= value <= rng.max
 
-    with rasterio.Env(CPL_DEBUG=(verbosity > 2)):
+    with ctx.obj['env']:
 
         with rasterio.open(input, 'r+') as dst:
 

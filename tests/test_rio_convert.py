@@ -6,7 +6,6 @@ from click.testing import CliRunner
 
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.rio.convert import convert
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -74,8 +73,8 @@ def test_format(tmpdir):
     outputname = str(tmpdir.join('test.jpg'))
     runner = CliRunner()
     result = runner.invoke(
-        convert,
-        ['tests/data/RGB.byte.tif', outputname, '--format', 'JPEG'])
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname, '--format', 'JPEG'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.driver == 'JPEG'
@@ -85,8 +84,8 @@ def test_format_short(tmpdir):
     outputname = str(tmpdir.join('test.jpg'))
     runner = CliRunner()
     result = runner.invoke(
-        convert,
-        ['tests/data/RGB.byte.tif', outputname, '-f', 'JPEG'])
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname, '-f', 'JPEG'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.driver == 'JPEG'
@@ -96,8 +95,8 @@ def test_output_opt(tmpdir):
     outputname = str(tmpdir.join('test.jpg'))
     runner = CliRunner()
     result = runner.invoke(
-        convert,
-        ['tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG'])
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.driver == 'JPEG'
@@ -107,8 +106,8 @@ def test_dtype(tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     runner = CliRunner()
     result = runner.invoke(
-        convert,
-        ['tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16'])
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.dtypes == tuple(['uint16'] * 3)
@@ -119,8 +118,8 @@ def test_dtype_rescaling_uint8_full(tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     runner = CliRunner()
     result = runner.invoke(
-        convert,
-        ['tests/data/RGB.byte.tif', outputname, '--scale-ratio', '1.0'])
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname, '--scale-ratio', '1.0'])
     assert result.exit_code == 0
 
     src_stats = [
@@ -139,8 +138,8 @@ def test_dtype_rescaling_uint8_half(tmpdir):
     """Rescale uint8 [0, 255] to uint8 [0, 127]"""
     outputname = str(tmpdir.join('test.tif'))
     runner = CliRunner()
-    result = runner.invoke(convert, [
-        'tests/data/RGB.byte.tif', outputname, '--scale-ratio', '0.5'])
+    result = runner.invoke(main_group, [
+        'convert', 'tests/data/RGB.byte.tif', outputname, '--scale-ratio', '0.5'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         for band in src.read():
@@ -153,8 +152,8 @@ def test_dtype_rescaling_uint16(tmpdir):
     # NB: 255 * 16 is 4080, we don't actually get to 4095.
     outputname = str(tmpdir.join('test.tif'))
     runner = CliRunner()
-    result = runner.invoke(convert, [
-        'tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16',
+    result = runner.invoke(main_group, [
+        'convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16',
         '--scale-ratio', '16'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
@@ -167,8 +166,8 @@ def test_dtype_rescaling_float64(tmpdir):
     """Rescale uint8 [0, 255] to float64 [-1, 1]"""
     outputname = str(tmpdir.join('test.tif'))
     runner = CliRunner()
-    result = runner.invoke(convert, [
-        'tests/data/RGB.byte.tif', outputname, '--dtype', 'float64',
+    result = runner.invoke(main_group, [
+        'convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'float64',
         '--scale-ratio', str(2.0 / 255), '--scale-offset', '-1.0'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
@@ -181,8 +180,8 @@ def test_rgb(tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     runner = CliRunner()
     result = runner.invoke(
-        convert,
-        ['tests/data/RGB.byte.tif', outputname, '--rgb'])
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname, '--rgb'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.colorinterp(1) == rasterio.enums.ColorInterp.red

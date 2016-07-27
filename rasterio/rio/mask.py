@@ -68,8 +68,6 @@ def mask(
     from rasterio.mask import mask as mask_tool
     from rasterio.features import bounds as calculate_bounds
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
     input = files[0]
@@ -84,7 +82,7 @@ def mask(
         click.echo('Invert option ignored when using --crop', err=True)
         invert = False
 
-    with rasterio.Env(CPL_DEBUG=verbosity > 2):
+    with ctx.obj['env']:
         try:
             with click.open_file(geojson_mask) as fh:
                 geojson = json.loads(fh.read())

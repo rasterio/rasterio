@@ -114,8 +114,6 @@ def rasterize(
     from rasterio.features import rasterize
     from rasterio.features import bounds as calculate_bounds
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
 
@@ -134,7 +132,7 @@ def rasterize(
     if fill == int(fill):
         fill = int(fill)
 
-    with rasterio.Env(CPL_DEBUG=verbosity > 2):
+    with ctx.obj['env']:
 
         def feature_value(feature):
             if prop and 'properties' in feature:

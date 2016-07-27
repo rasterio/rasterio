@@ -9,6 +9,7 @@ from cligj import files_inout_arg, format_opt
 
 import rasterio
 from rasterio.crs import CRS
+from rasterio.env import setenv
 from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
@@ -104,8 +105,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         > --bounds -78 22 -76 24 --res 0.1 --dst-crs EPSG:4326
 
     """
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
 
@@ -132,8 +131,9 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             raise click.BadParameter(
                 "--dimensions cannot be used with --bounds or --res")
 
-    with rasterio.Env(CPL_DEBUG=verbosity > 2,
-                      CHECK_WITH_INVERT_PROJ=check_invert_proj):
+    with ctx.obj['env']:
+        setenv(CHECK_WITH_INVERT_PROJ=check_invert_proj)
+
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.profile.copy()
@@ -142,8 +142,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             # Sort out the bounds options.
             if src_bounds and dst_bounds:
                 raise click.BadParameter(
-                    "--src-bounds and destination --bounds may not be specified "
-                    "simultaneously.")
+                    "--src-bounds and destination --bounds may not be "
+                    "specified simultaneously.")
 
             if like:
                 with rasterio.open(like) as template_ds:

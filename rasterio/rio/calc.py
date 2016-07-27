@@ -86,10 +86,8 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
     """
     import numpy as np
 
-    verbosity = (ctx.obj and ctx.obj.get('verbosity')) or 1
-
     try:
-        with rasterio.Env(CPL_DEBUG=verbosity > 2):
+        with ctx.obj['env']:
             output, files = resolve_inout(files=files, output=output,
                                           force_overwrite=force_overwrite)
 

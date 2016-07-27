@@ -95,7 +95,6 @@ def shapes(
     import rasterio.features
     import rasterio.warp
 
-    verbosity = ctx.obj['verbosity'] if ctx.obj else 1
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -223,7 +222,7 @@ def shapes(
         geojson_type = 'collection'
 
     try:
-        with rasterio.Env(CPL_DEBUG=(verbosity > 2)) as env:
+        with ctx.obj['env'] as env:
             write_features(
                 stdout, Collection(env), sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
