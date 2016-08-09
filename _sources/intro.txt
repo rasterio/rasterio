@@ -18,7 +18,7 @@ Philosophy
 ----------
 
 Rasterio is written with a question in mind: what would it be like to have
-a geospatial data abstraction in the Python standard library?. GDAL's raster
+a geospatial data abstraction in the Python standard library? GDAL's raster
 data model has unique qualities but is not too special to be expressed using
 standard Python language features. Rasterio uses fewer classes specific to GDAL
 and more ordinary mappings, sequences, and generators.
