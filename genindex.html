@@ -81,11 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/reading.html">Reading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/writing.html">Writing Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
@@ -163,27 +193,27 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.MaskFlags.all_valid">all_valid (rasterio.enums.MaskFlags attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.MaskFlags.all_valid">all_valid (rasterio.enums.MaskFlags attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.alpha">alpha (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.alpha">alpha (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.enums.html#rasterio.enums.MaskFlags.alpha">(rasterio.enums.MaskFlags attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.MaskFlags.alpha">(rasterio.enums.MaskFlags attribute)</a>
   </dt>
 
       </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.array_bounds">array_bounds() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.array_bounds">array_bounds() (in module rasterio.transform)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.average">average (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.average">average (rasterio.enums.Resampling attribute)</a>
   </dt>
 
   </dl></td>
@@ -193,49 +223,49 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Interleaving.band">band (rasterio.enums.Interleaving attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Interleaving.band">band (rasterio.enums.Interleaving attribute)</a>
   </dt>
 
       
-  <dt><a href="api_docs.html#rasterio.band">band() (in module rasterio)</a>, <a href="rasterio.html#rasterio.band">[1]</a>
+  <dt><a href="api/index.html#rasterio.band">band() (in module rasterio)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.bilinear">bilinear (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.bilinear">bilinear (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.black">black (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.black">black (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.black">(rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.black">(rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
       </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.blue">blue (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.blue">blue (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.coords.html#rasterio.coords.BoundingBox">BoundingBox (class in rasterio.coords)</a>
+  <dt><a href="api/rasterio.coords.html#rasterio.coords.BoundingBox">BoundingBox (class in rasterio.coords)</a>
   </dt>
 
       
-  <dt><a href="rasterio.features.html#rasterio.features.bounds">bounds() (in module rasterio.features)</a>
+  <dt><a href="api/rasterio.features.html#rasterio.features.bounds">bounds() (in module rasterio.features)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.windows.html#rasterio.windows.bounds">(in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.bounds">(in module rasterio.windows)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="rasterio.io.html#rasterio.io.BufferedDatasetWriter">BufferedDatasetWriter (class in rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.BufferedDatasetWriter">BufferedDatasetWriter (class in rasterio.io)</a>
   </dt>
 
   </dl></td>
@@ -245,81 +275,81 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.warp.html#rasterio.warp.calculate_default_transform">calculate_default_transform() (in module rasterio.warp)</a>
+  <dt><a href="api/rasterio.warp.html#rasterio.warp.calculate_default_transform">calculate_default_transform() (in module rasterio.warp)</a>
   </dt>
 
       
-  <dt><a href="rasterio.dtypes.html#rasterio.dtypes.can_cast_dtype">can_cast_dtype() (in module rasterio.dtypes)</a>
+  <dt><a href="api/rasterio.dtypes.html#rasterio.dtypes.can_cast_dtype">can_cast_dtype() (in module rasterio.dtypes)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.Cb">Cb (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.Cb">Cb (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.ccittfax3">ccittfax3 (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.ccittfax3">ccittfax3 (rasterio.enums.Compression attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.ccittfax4">ccittfax4 (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.ccittfax4">ccittfax4 (rasterio.enums.Compression attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.ccittrle">ccittrle (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.ccittrle">ccittrle (rasterio.enums.Compression attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.dtypes.html#rasterio.dtypes.check_dtype">check_dtype() (in module rasterio.dtypes)</a>
+  <dt><a href="api/rasterio.dtypes.html#rasterio.dtypes.check_dtype">check_dtype() (in module rasterio.dtypes)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.cielab">cielab (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.cielab">cielab (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.cmyk">cmyk (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.cmyk">cmyk (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp">ColorInterp (class in rasterio.enums)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp">ColorInterp (class in rasterio.enums)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression">Compression (class in rasterio.enums)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression">Compression (class in rasterio.enums)</a>
   </dt>
 
       
-  <dt><a href="api_docs.html#rasterio.copy">copy() (in module rasterio)</a>, <a href="rasterio.html#rasterio.copy">[1]</a>
+  <dt><a href="api/index.html#rasterio.copy">copy() (in module rasterio)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.Cr">Cr (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.Cr">Cr (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.crop">crop() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.crop">crop() (in module rasterio.windows)</a>
   </dt>
 
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS">CRS (class in rasterio.crs)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS">CRS (class in rasterio.crs)</a>
   </dt>
 
       
-  <dt><a href="rasterio.errors.html#rasterio.errors.CRSError">CRSError</a>
+  <dt><a href="api/rasterio.errors.html#rasterio.errors.CRSError">CRSError</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.cubic">cubic (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.cubic">cubic (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.cubic_spline">cubic_spline (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.cubic_spline">cubic_spline (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.cyan">cyan (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.cyan">cyan (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
   </dl></td>
@@ -329,51 +359,51 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.io.html#rasterio.io.DatasetReader">DatasetReader (class in rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.DatasetReader">DatasetReader (class in rasterio.io)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.DatasetWriter">DatasetWriter (class in rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.DatasetWriter">DatasetWriter (class in rasterio.io)</a>
   </dt>
 
       
-  <dt><a href="rasterio.profiles.html#rasterio.profiles.DefaultGTiffProfile">DefaultGTiffProfile (class in rasterio.profiles)</a>
+  <dt><a href="api/rasterio.profiles.html#rasterio.profiles.DefaultGTiffProfile">DefaultGTiffProfile (class in rasterio.profiles)</a>
   </dt>
 
       
-  <dt><a href="rasterio.profiles.html#rasterio.profiles.DefaultGTiffProfile.defaults">defaults (rasterio.profiles.DefaultGTiffProfile attribute)</a>
+  <dt><a href="api/rasterio.profiles.html#rasterio.profiles.DefaultGTiffProfile.defaults">defaults (rasterio.profiles.DefaultGTiffProfile attribute)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.profiles.html#rasterio.profiles.Profile.defaults">(rasterio.profiles.Profile attribute)</a>
+  <dt><a href="api/rasterio.profiles.html#rasterio.profiles.Profile.defaults">(rasterio.profiles.Profile attribute)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="rasterio.env.html#rasterio.env.defenv">defenv() (in module rasterio.env)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.defenv">defenv() (in module rasterio.env)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.deflate">deflate (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.deflate">deflate (rasterio.enums.Compression attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#rasterio.env.delenv">delenv() (in module rasterio.env)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.delenv">delenv() (in module rasterio.env)</a>
   </dt>
 
       
-  <dt><a href="rasterio.coords.html#rasterio.coords.disjoint_bounds">disjoint_bounds() (in module rasterio.coords)</a>
+  <dt><a href="api/rasterio.coords.html#rasterio.coords.disjoint_bounds">disjoint_bounds() (in module rasterio.coords)</a>
   </dt>
 
       
-  <dt><a href="rasterio.errors.html#rasterio.errors.DriverRegistrationError">DriverRegistrationError</a>
+  <dt><a href="api/rasterio.errors.html#rasterio.errors.DriverRegistrationError">DriverRegistrationError</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#rasterio.env.Env.drivers">drivers() (rasterio.env.Env method)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.Env.drivers">drivers() (rasterio.env.Env method)</a>
   </dt>
 
   </dl></td>
@@ -383,21 +413,21 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.env.html#rasterio.env.ensure_env">ensure_env() (in module rasterio.env)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.ensure_env">ensure_env() (in module rasterio.env)</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#rasterio.env.Env">Env (class in rasterio.env)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.Env">Env (class in rasterio.env)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.errors.html#rasterio.errors.EnvError">EnvError</a>
+  <dt><a href="api/rasterio.errors.html#rasterio.errors.EnvError">EnvError</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.evaluate">evaluate() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.evaluate">evaluate() (in module rasterio.windows)</a>
   </dt>
 
   </dl></td>
@@ -407,35 +437,35 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.errors.html#rasterio.errors.FileOverwriteError">FileOverwriteError</a>
+  <dt><a href="api/rasterio.errors.html#rasterio.errors.FileOverwriteError">FileOverwriteError</a>
   </dt>
 
       
-  <dt><a href="rasterio.fill.html#rasterio.fill.fillnodata">fillnodata() (in module rasterio.fill)</a>
+  <dt><a href="api/rasterio.fill.html#rasterio.fill.fillnodata">fillnodata() (in module rasterio.fill)</a>
   </dt>
 
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.from_bounds">from_bounds() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.from_bounds">from_bounds() (in module rasterio.transform)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.windows.html#rasterio.windows.from_bounds">(in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.from_bounds">(in module rasterio.windows)</a>
   </dt>
 
       </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS.from_epsg">from_epsg() (rasterio.crs.CRS static method)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS.from_epsg">from_epsg() (rasterio.crs.CRS static method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.from_origin">from_origin() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.from_origin">from_origin() (in module rasterio.transform)</a>
   </dt>
 
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS.from_string">from_string() (rasterio.crs.CRS static method)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS.from_string">from_string() (rasterio.crs.CRS static method)</a>
   </dt>
 
   </dl></td>
@@ -445,57 +475,57 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.gauss">gauss (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.gauss">gauss (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.features.html#rasterio.features.geometry_mask">geometry_mask() (in module rasterio.features)</a>
+  <dt><a href="api/rasterio.features.html#rasterio.features.geometry_mask">geometry_mask() (in module rasterio.features)</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#rasterio.env.Env.get_aws_credentials">get_aws_credentials() (rasterio.env.Env method)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.Env.get_aws_credentials">get_aws_credentials() (rasterio.env.Env method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.get_data_window">get_data_window() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.get_data_window">get_data_window() (in module rasterio.windows)</a>
   </dt>
 
       
-  <dt><a href="rasterio.dtypes.html#rasterio.dtypes.get_minimum_dtype">get_minimum_dtype() (in module rasterio.dtypes)</a>
+  <dt><a href="api/rasterio.dtypes.html#rasterio.dtypes.get_minimum_dtype">get_minimum_dtype() (in module rasterio.dtypes)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#rasterio.plot.get_plt">get_plt() (in module rasterio.plot)</a>
+  <dt><a href="api/rasterio.plot.html#rasterio.plot.get_plt">get_plt() (in module rasterio.plot)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.get_writer_for_driver">get_writer_for_driver() (in module rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.get_writer_for_driver">get_writer_for_driver() (in module rasterio.io)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.io.html#rasterio.io.get_writer_for_path">get_writer_for_path() (in module rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.get_writer_for_path">get_writer_for_path() (in module rasterio.io)</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#rasterio.env.getenv">getenv() (in module rasterio.env)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.getenv">getenv() (in module rasterio.env)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.gray">gray (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.gray">gray (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.green">green (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.green">green (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.grey">grey (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.grey">grey (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.guard_transform">guard_transform() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.guard_transform">guard_transform() (in module rasterio.transform)</a>
   </dt>
 
   </dl></td>
@@ -505,7 +535,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.hue">hue (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.hue">hue (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
   </dl></td>
@@ -515,49 +545,49 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.icclab">icclab (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.icclab">icclab (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.TransformMethodsMixin.index">index() (rasterio.io.TransformMethodsMixin method)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.TransformMethodsMixin.index">index() (rasterio.io.TransformMethodsMixin method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Interleaving">Interleaving (class in rasterio.enums)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Interleaving">Interleaving (class in rasterio.enums)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.intersect">intersect() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.intersect">intersect() (in module rasterio.windows)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.intersection">intersection() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.intersection">intersection() (in module rasterio.windows)</a>
   </dt>
 
       
-  <dt><a href="rasterio.drivers.html#rasterio.drivers.is_blacklisted">is_blacklisted() (in module rasterio.drivers)</a>
+  <dt><a href="api/rasterio.drivers.html#rasterio.drivers.is_blacklisted">is_blacklisted() (in module rasterio.drivers)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS.is_epsg_code">is_epsg_code (rasterio.crs.CRS attribute)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS.is_epsg_code">is_epsg_code (rasterio.crs.CRS attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.dtypes.html#rasterio.dtypes.is_ndarray">is_ndarray() (in module rasterio.dtypes)</a>
+  <dt><a href="api/rasterio.dtypes.html#rasterio.dtypes.is_ndarray">is_ndarray() (in module rasterio.dtypes)</a>
   </dt>
 
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS.is_valid">is_valid (rasterio.crs.CRS attribute)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS.is_valid">is_valid (rasterio.crs.CRS attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.iter_args">iter_args() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.iter_args">iter_args() (in module rasterio.windows)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.itulab">itulab (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.itulab">itulab (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
   </dl></td>
@@ -567,7 +597,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.jpeg">jpeg (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.jpeg">jpeg (rasterio.enums.Compression attribute)</a>
   </dt>
 
   </dl></td>
@@ -577,25 +607,25 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.lanczos">lanczos (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.lanczos">lanczos (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.lightness">lightness (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.lightness">lightness (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Interleaving.line">line (rasterio.enums.Interleaving attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Interleaving.line">line (rasterio.enums.Interleaving attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.lzma">lzma (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.lzma">lzma (rasterio.enums.Compression attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.lzw">lzw (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.lzw">lzw (rasterio.enums.Compression attribute)</a>
   </dt>
 
   </dl></td>
@@ -605,37 +635,37 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.magenta">magenta (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.magenta">magenta (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.mask.html#rasterio.mask.mask">mask() (in module rasterio.mask)</a>
+  <dt><a href="api/rasterio.mask.html#rasterio.mask.mask">mask() (in module rasterio.mask)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.MaskFlags">MaskFlags (class in rasterio.enums)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.MaskFlags">MaskFlags (class in rasterio.enums)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.max">max (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.max">max (rasterio.enums.Resampling attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.med">med (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.med">med (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.merge.html#rasterio.merge.merge">merge() (in module rasterio.merge)</a>
+  <dt><a href="api/rasterio.merge.html#rasterio.merge.merge">merge() (in module rasterio.merge)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.min">min (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.min">min (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.mode">mode (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.mode">mode (rasterio.enums.Resampling attribute)</a>
   </dt>
 
   </dl></td>
@@ -645,21 +675,21 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.nearest">nearest (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.nearest">nearest (rasterio.enums.Resampling attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.MaskFlags.nodata">nodata (rasterio.enums.MaskFlags attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.MaskFlags.nodata">nodata (rasterio.enums.MaskFlags attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.errors.html#rasterio.errors.NodataShadowWarning">NodataShadowWarning</a>
+  <dt><a href="api/rasterio.errors.html#rasterio.errors.NodataShadowWarning">NodataShadowWarning</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.none">none (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.none">none (rasterio.enums.Compression attribute)</a>
   </dt>
 
   </dl></td>
@@ -669,7 +699,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api_docs.html#rasterio.open">open() (in module rasterio)</a>, <a href="rasterio.html#rasterio.open">[1]</a>
+  <dt><a href="api/index.html#rasterio.open">open() (in module rasterio)</a>
   </dt>
 
   </dl></td>
@@ -679,41 +709,41 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Compression.packbits">packbits (rasterio.enums.Compression attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Compression.packbits">packbits (rasterio.enums.Compression attribute)</a>
   </dt>
 
       
-  <dt><a href="api_docs.html#rasterio.pad">pad() (in module rasterio)</a>, <a href="rasterio.html#rasterio.pad">[1]</a>
+  <dt><a href="api/index.html#rasterio.pad">pad() (in module rasterio)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.palette">palette (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.palette">palette (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.vfs.html#rasterio.vfs.parse_path">parse_path() (in module rasterio.vfs)</a>
+  <dt><a href="api/rasterio.vfs.html#rasterio.vfs.parse_path">parse_path() (in module rasterio.vfs)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.MaskFlags.per_dataset">per_dataset (rasterio.enums.MaskFlags attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.MaskFlags.per_dataset">per_dataset (rasterio.enums.MaskFlags attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp">PhotometricInterp (class in rasterio.enums)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp">PhotometricInterp (class in rasterio.enums)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Interleaving.pixel">pixel (rasterio.enums.Interleaving attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Interleaving.pixel">pixel (rasterio.enums.Interleaving attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#rasterio.plot.plotting_extent">plotting_extent() (in module rasterio.plot)</a>
+  <dt><a href="api/rasterio.plot.html#rasterio.plot.plotting_extent">plotting_extent() (in module rasterio.plot)</a>
   </dt>
 
       
-  <dt><a href="rasterio.profiles.html#rasterio.profiles.Profile">Profile (class in rasterio.profiles)</a>
+  <dt><a href="api/rasterio.profiles.html#rasterio.profiles.Profile">Profile (class in rasterio.profiles)</a>
   </dt>
 
   </dl></td>
@@ -723,13 +753,13 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.q1">q1 (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.q1">q1 (rasterio.enums.Resampling attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling.q3">q3 (rasterio.enums.Resampling attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling.q3">q3 (rasterio.enums.Resampling attribute)</a>
   </dt>
 
   </dl></td>
@@ -739,125 +769,125 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api_docs.html#module-rasterio">rasterio (module)</a>, <a href="rasterio.html#module-rasterio">[1]</a>
+  <dt><a href="api/index.html#module-rasterio">rasterio (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.compat.html#module-rasterio.compat">rasterio.compat (module)</a>
+  <dt><a href="api/rasterio.compat.html#module-rasterio.compat">rasterio.compat (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.coords.html#module-rasterio.coords">rasterio.coords (module)</a>
+  <dt><a href="api/rasterio.coords.html#module-rasterio.coords">rasterio.coords (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.crs.html#module-rasterio.crs">rasterio.crs (module)</a>
+  <dt><a href="api/rasterio.crs.html#module-rasterio.crs">rasterio.crs (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.drivers.html#module-rasterio.drivers">rasterio.drivers (module)</a>
+  <dt><a href="api/rasterio.drivers.html#module-rasterio.drivers">rasterio.drivers (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.dtypes.html#module-rasterio.dtypes">rasterio.dtypes (module)</a>
+  <dt><a href="api/rasterio.dtypes.html#module-rasterio.dtypes">rasterio.dtypes (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#module-rasterio.enums">rasterio.enums (module)</a>
+  <dt><a href="api/rasterio.enums.html#module-rasterio.enums">rasterio.enums (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#module-rasterio.env">rasterio.env (module)</a>
+  <dt><a href="api/rasterio.env.html#module-rasterio.env">rasterio.env (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.errors.html#module-rasterio.errors">rasterio.errors (module)</a>
+  <dt><a href="api/rasterio.errors.html#module-rasterio.errors">rasterio.errors (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.features.html#module-rasterio.features">rasterio.features (module)</a>
+  <dt><a href="api/rasterio.features.html#module-rasterio.features">rasterio.features (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.fill.html#module-rasterio.fill">rasterio.fill (module)</a>
+  <dt><a href="api/rasterio.fill.html#module-rasterio.fill">rasterio.fill (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#module-rasterio.io">rasterio.io (module)</a>
+  <dt><a href="api/rasterio.io.html#module-rasterio.io">rasterio.io (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.mask.html#module-rasterio.mask">rasterio.mask (module)</a>
+  <dt><a href="api/rasterio.mask.html#module-rasterio.mask">rasterio.mask (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.merge.html#module-rasterio.merge">rasterio.merge (module)</a>
+  <dt><a href="api/rasterio.merge.html#module-rasterio.merge">rasterio.merge (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#module-rasterio.plot">rasterio.plot (module)</a>
+  <dt><a href="api/rasterio.plot.html#module-rasterio.plot">rasterio.plot (module)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.profiles.html#module-rasterio.profiles">rasterio.profiles (module)</a>
+  <dt><a href="api/rasterio.profiles.html#module-rasterio.profiles">rasterio.profiles (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.sample.html#module-rasterio.sample">rasterio.sample (module)</a>
+  <dt><a href="api/rasterio.sample.html#module-rasterio.sample">rasterio.sample (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.transform.html#module-rasterio.transform">rasterio.transform (module)</a>
+  <dt><a href="api/rasterio.transform.html#module-rasterio.transform">rasterio.transform (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.vfs.html#module-rasterio.vfs">rasterio.vfs (module)</a>
+  <dt><a href="api/rasterio.vfs.html#module-rasterio.vfs">rasterio.vfs (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.warp.html#module-rasterio.warp">rasterio.warp (module)</a>
+  <dt><a href="api/rasterio.warp.html#module-rasterio.warp">rasterio.warp (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#module-rasterio.windows">rasterio.windows (module)</a>
+  <dt><a href="api/rasterio.windows.html#module-rasterio.windows">rasterio.windows (module)</a>
   </dt>
 
       
-  <dt><a href="rasterio.errors.html#rasterio.errors.RasterioIOError">RasterioIOError</a>
+  <dt><a href="api/rasterio.errors.html#rasterio.errors.RasterioIOError">RasterioIOError</a>
   </dt>
 
       
-  <dt><a href="rasterio.features.html#rasterio.features.rasterize">rasterize() (in module rasterio.features)</a>
+  <dt><a href="api/rasterio.features.html#rasterio.features.rasterize">rasterize() (in module rasterio.features)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.red">red (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.red">red (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.warp.html#rasterio.warp.reproject">reproject() (in module rasterio.warp)</a>
+  <dt><a href="api/rasterio.warp.html#rasterio.warp.reproject">reproject() (in module rasterio.warp)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.Resampling">Resampling (class in rasterio.enums)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.Resampling">Resampling (class in rasterio.enums)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#rasterio.plot.reshape_as_image">reshape_as_image() (in module rasterio.plot)</a>
+  <dt><a href="api/rasterio.plot.html#rasterio.plot.reshape_as_image">reshape_as_image() (in module rasterio.plot)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#rasterio.plot.reshape_as_raster">reshape_as_raster() (in module rasterio.plot)</a>
+  <dt><a href="api/rasterio.plot.html#rasterio.plot.reshape_as_raster">reshape_as_raster() (in module rasterio.plot)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.rgb">rgb (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.rgb">rgb (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.rowcol">rowcol() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.rowcol">rowcol() (in module rasterio.transform)</a>
   </dt>
 
   </dl></td>
@@ -867,37 +897,37 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.sample.html#rasterio.sample.sample_gen">sample_gen() (in module rasterio.sample)</a>
+  <dt><a href="api/rasterio.sample.html#rasterio.sample.sample_gen">sample_gen() (in module rasterio.sample)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.saturation">saturation (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.saturation">saturation (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.env.html#rasterio.env.setenv">setenv() (in module rasterio.env)</a>
+  <dt><a href="api/rasterio.env.html#rasterio.env.setenv">setenv() (in module rasterio.env)</a>
   </dt>
 
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.shape">shape() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.shape">shape() (in module rasterio.windows)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.features.html#rasterio.features.shapes">shapes() (in module rasterio.features)</a>
+  <dt><a href="api/rasterio.features.html#rasterio.features.shapes">shapes() (in module rasterio.features)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#rasterio.plot.show">show() (in module rasterio.plot)</a>
+  <dt><a href="api/rasterio.plot.html#rasterio.plot.show">show() (in module rasterio.plot)</a>
   </dt>
 
       
-  <dt><a href="rasterio.plot.html#rasterio.plot.show_hist">show_hist() (in module rasterio.plot)</a>
+  <dt><a href="api/rasterio.plot.html#rasterio.plot.show_hist">show_hist() (in module rasterio.plot)</a>
   </dt>
 
       
-  <dt><a href="rasterio.features.html#rasterio.features.sieve">sieve() (in module rasterio.features)</a>
+  <dt><a href="api/rasterio.features.html#rasterio.features.sieve">sieve() (in module rasterio.features)</a>
   </dt>
 
   </dl></td>
@@ -907,39 +937,39 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.tastes_like_gdal">tastes_like_gdal() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.tastes_like_gdal">tastes_like_gdal() (in module rasterio.transform)</a>
   </dt>
 
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS.to_dict">to_dict() (rasterio.crs.CRS method)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS.to_dict">to_dict() (rasterio.crs.CRS method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.crs.html#rasterio.crs.CRS.to_string">to_string() (rasterio.crs.CRS method)</a>
+  <dt><a href="api/rasterio.crs.html#rasterio.crs.CRS.to_string">to_string() (rasterio.crs.CRS method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.warp.html#rasterio.warp.transform">transform() (in module rasterio.warp)</a>
+  <dt><a href="api/rasterio.warp.html#rasterio.warp.transform">transform() (in module rasterio.warp)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.windows.html#rasterio.windows.transform">(in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.transform">(in module rasterio.windows)</a>
   </dt>
 
       </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.warp.html#rasterio.warp.transform_bounds">transform_bounds() (in module rasterio.warp)</a>
+  <dt><a href="api/rasterio.warp.html#rasterio.warp.transform_bounds">transform_bounds() (in module rasterio.warp)</a>
   </dt>
 
       
-  <dt><a href="rasterio.warp.html#rasterio.warp.transform_geom">transform_geom() (in module rasterio.warp)</a>
+  <dt><a href="api/rasterio.warp.html#rasterio.warp.transform_geom">transform_geom() (in module rasterio.warp)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.TransformMethodsMixin">TransformMethodsMixin (class in rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.TransformMethodsMixin">TransformMethodsMixin (class in rasterio.io)</a>
   </dt>
 
   </dl></td>
@@ -949,17 +979,17 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.io.html#rasterio.io.TransformMethodsMixin.ul">ul() (rasterio.io.TransformMethodsMixin method)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.TransformMethodsMixin.ul">ul() (rasterio.io.TransformMethodsMixin method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.undefined">undefined (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.undefined">undefined (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.union">union() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.union">union() (in module rasterio.windows)</a>
   </dt>
 
   </dl></td>
@@ -969,13 +999,13 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.dtypes.html#rasterio.dtypes.validate_dtype">validate_dtype() (in module rasterio.dtypes)</a>
+  <dt><a href="api/rasterio.dtypes.html#rasterio.dtypes.validate_dtype">validate_dtype() (in module rasterio.dtypes)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.vfs.html#rasterio.vfs.vsi_path">vsi_path() (in module rasterio.vfs)</a>
+  <dt><a href="api/rasterio.vfs.html#rasterio.vfs.vsi_path">vsi_path() (in module rasterio.vfs)</a>
   </dt>
 
   </dl></td>
@@ -985,29 +1015,29 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.white">white (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.white">white (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.WindowMethodsMixin.window">window() (rasterio.io.WindowMethodsMixin method)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.WindowMethodsMixin.window">window() (rasterio.io.WindowMethodsMixin method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.WindowMethodsMixin.window_bounds">window_bounds() (rasterio.io.WindowMethodsMixin method)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.WindowMethodsMixin.window_bounds">window_bounds() (rasterio.io.WindowMethodsMixin method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.windows.html#rasterio.windows.window_index">window_index() (in module rasterio.windows)</a>
+  <dt><a href="api/rasterio.windows.html#rasterio.windows.window_index">window_index() (in module rasterio.windows)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.WindowMethodsMixin.window_transform">window_transform() (rasterio.io.WindowMethodsMixin method)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.WindowMethodsMixin.window_transform">window_transform() (rasterio.io.WindowMethodsMixin method)</a>
   </dt>
 
       
-  <dt><a href="rasterio.io.html#rasterio.io.WindowMethodsMixin">WindowMethodsMixin (class in rasterio.io)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.WindowMethodsMixin">WindowMethodsMixin (class in rasterio.io)</a>
   </dt>
 
   </dl></td>
@@ -1017,12 +1047,12 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.transform.html#rasterio.transform.xy">xy() (in module rasterio.transform)</a>
+  <dt><a href="api/rasterio.transform.html#rasterio.transform.xy">xy() (in module rasterio.transform)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="rasterio.io.html#rasterio.io.TransformMethodsMixin.xy">(rasterio.io.TransformMethodsMixin method)</a>
+  <dt><a href="api/rasterio.io.html#rasterio.io.TransformMethodsMixin.xy">(rasterio.io.TransformMethodsMixin method)</a>
   </dt>
 
       </dl></dd>
@@ -1033,17 +1063,17 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.Y">Y (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.Y">Y (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.PhotometricInterp.ycbcr">ycbcr (rasterio.enums.PhotometricInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.PhotometricInterp.ycbcr">ycbcr (rasterio.enums.PhotometricInterp attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="rasterio.enums.html#rasterio.enums.ColorInterp.yellow">yellow (rasterio.enums.ColorInterp attribute)</a>
+  <dt><a href="api/rasterio.enums.html#rasterio.enums.ColorInterp.yellow">yellow (rasterio.enums.ColorInterp attribute)</a>
   </dt>
 
   </dl></td>

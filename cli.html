@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rio Command Line User’s Manual &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Command Line Users Guide &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -32,7 +32,7 @@
   
     <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
         <link rel="next" title="Using rio-calc" href="calc.html"/>
-        <link rel="prev" title="Migration Guide for osgeo.gdal users" href="osgeo_gdal_migration.html"/> 
+        <link rel="prev" title="rasterio.windows module" href="api/rasterio.windows.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,39 +81,41 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#commands">Commands</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#creation-options">creation options</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#bounds">bounds</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#calc">calc</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="calc.html">Using rio-calc</a></li>
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/quickstart.html">Quickstart</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command Line Users Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creation-options">creation options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bounds">bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calc">calc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="calc.html">Using rio-calc</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#clip">clip</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#convert">convert</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edit-info">edit-info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mask">mask</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#info">info</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#insp">insp</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#merge">merge</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#overview">overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#rasterize">rasterize</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#sample">sample</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#shapes">shapes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#stack">stack</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#transform">transform</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#warp">warp</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#rio-plugins">Rio Plugins</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#other-commands">Other commands?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clip">clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#convert">convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edit-info">edit-info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mask">mask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#info">info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#insp">insp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#merge">merge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rasterize">rasterize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sample">sample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shapes">shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stack">stack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transform">transform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#warp">warp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rio-plugins">Rio Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-commands">Other commands?</a></li>
 </ul>
 </li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
@@ -145,7 +147,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</li>
+    <li>Command Line Users Guide</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -159,8 +161,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rio-command-line-user-s-manual">
-<h1><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual<a class="headerlink" href="#rio-command-line-user-s-manual" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="command-line-users-guide">
+<h1>Command Line Users Guide<a class="headerlink" href="#command-line-users-guide" title="Permalink to this headline">¶</a></h1>
 <p>Rasterio&#8217;s command line interface is a program named <code class="docutils literal"><span class="pre">rio</span></code>.</p>
 <p><code class="docutils literal"><span class="pre">rio</span></code> allows you to build workflows using shell commands, either
 interactively at the command prompt or with a script. Most common
@@ -201,12 +203,10 @@ handling of context variables.</p>
 <span class="go">  warp       Warp a raster dataset.</span>
 </pre></div>
 </div>
-<div class="section" id="commands">
-<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
 <p>Commands are shown below. See <code class="docutils literal"><span class="pre">--help</span></code> of individual commands for more
 details.</p>
 <div class="section" id="creation-options">
-<h3>creation options<a class="headerlink" href="#creation-options" title="Permalink to this headline">¶</a></h3>
+<h2>creation options<a class="headerlink" href="#creation-options" title="Permalink to this headline">¶</a></h2>
 <p>For commands that create new datasets, format specific creation options may
 also be passed using <code class="docutils literal"><span class="pre">--co</span></code>. For example, to tile a new GeoTIFF output file,
 add the following.</p>
@@ -219,7 +219,7 @@ add the following.</p>
 </div>
 </div>
 <div class="section" id="bounds">
-<h3>bounds<a class="headerlink" href="#bounds" title="Permalink to this headline">¶</a></h3>
+<h2>bounds<a class="headerlink" href="#bounds" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.10.</p>
 <p>The <code class="docutils literal"><span class="pre">bounds</span></code> command writes the bounding boxes of raster datasets to GeoJSON for
 use with, e.g., <a class="reference external" href="https://github.com/mapbox/geojsonio-cli">geojsonio-cli</a>.</p>
@@ -269,7 +269,7 @@ use with, e.g., <a class="reference external" href="https://github.com/mapbox/ge
 <code class="docutils literal"><span class="pre">rio</span> <span class="pre">bounds</span> <span class="pre">tests/data/RGB.byte.tif</span> <span class="pre">|</span> <span class="pre">geojsonio</span></code>.</p>
 </div>
 <div class="section" id="calc">
-<h3>calc<a class="headerlink" href="#calc" title="Permalink to this headline">¶</a></h3>
+<h2>calc<a class="headerlink" href="#calc" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.19</p>
 <p>The <code class="docutils literal"><span class="pre">calc</span></code> command reads files as arrays, evaluates lisp-like expressions in
 their context, and writes the result as a new file. Members of the numpy
@@ -318,7 +318,7 @@ efficiently in Python.</p>
 </div>
 </div>
 <div class="section" id="clip">
-<h3>clip<a class="headerlink" href="#clip" title="Permalink to this headline">¶</a></h3>
+<h2>clip<a class="headerlink" href="#clip" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.27</p>
 <p>The <code class="docutils literal"><span class="pre">clip</span></code> command clips a raster using bounds input directly or from a
 template raster.</p>
@@ -335,7 +335,7 @@ coordinate reference system of the input.</p>
 </div>
 </div>
 <div class="section" id="convert">
-<h3>convert<a class="headerlink" href="#convert" title="Permalink to this headline">¶</a></h3>
+<h2>convert<a class="headerlink" href="#convert" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.25</p>
 <p>The <code class="docutils literal"><span class="pre">convert</span></code> command copies and converts raster datasets to other data types
 and formats (similar to <code class="docutils literal"><span class="pre">gdal_translate</span></code>).</p>
@@ -352,7 +352,7 @@ as uint8:</p>
 <p>You can use <cite>&#8211;rgb</cite> as shorthand for <cite>&#8211;co photometric=rgb</cite>.</p>
 </div>
 <div class="section" id="edit-info">
-<h3>edit-info<a class="headerlink" href="#edit-info" title="Permalink to this headline">¶</a></h3>
+<h2>edit-info<a class="headerlink" href="#edit-info" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.24</p>
 <p>The <code class="docutils literal"><span class="pre">edit-info</span></code> command allows you edit a raster dataset&#8217;s metadata, namely</p>
 <ul class="simple">
@@ -378,7 +378,7 @@ Web Mercator (EPSG:3857),</p>
 </div>
 </div>
 <div class="section" id="mask">
-<h3>mask<a class="headerlink" href="#mask" title="Permalink to this headline">¶</a></h3>
+<h2>mask<a class="headerlink" href="#mask" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.21</p>
 <p>The <code class="docutils literal"><span class="pre">mask</span></code> command masks in pixels from all bands of a raster using features
 (masking out all areas not covered by features) and optionally crops the output
@@ -400,7 +400,7 @@ keep pixels not covered by features.</p>
 </div>
 </div>
 <div class="section" id="info">
-<h3>info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h3>
+<h2>info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.13</p>
 <p>The <code class="docutils literal"><span class="pre">info</span></code> command prints structured information about a dataset.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio info tests/data/RGB.byte.tif --indent 2
@@ -484,7 +484,7 @@ option.</p>
 </div>
 </div>
 <div class="section" id="insp">
-<h3>insp<a class="headerlink" href="#insp" title="Permalink to this headline">¶</a></h3>
+<h2>insp<a class="headerlink" href="#insp" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal"><span class="pre">insp</span></code> command opens a dataset and an interpreter.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio insp --ipython tests/data/RGB.byte.tif
 <span class="go">Rasterio 0.32.0 Interactive Inspector (Python 2.7.10)</span>
@@ -498,7 +498,7 @@ option.</p>
 </div>
 </div>
 <div class="section" id="merge">
-<h3>merge<a class="headerlink" href="#merge" title="Permalink to this headline">¶</a></h3>
+<h2>merge<a class="headerlink" href="#merge" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.12.1</p>
 <p>The <code class="docutils literal"><span class="pre">merge</span></code> command can be used to flatten a stack of identically structured
 datasets.</p>
@@ -507,7 +507,7 @@ datasets.</p>
 </div>
 </div>
 <div class="section" id="overview">
-<h3>overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
+<h2>overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.25</p>
 <p>The <code class="docutils literal"><span class="pre">overview</span></code> command creates overviews stored in the dataset, which can
 improve performance in some applications.</p>
@@ -528,7 +528,7 @@ updated when the dataset&#8217;s primary bands are modified.</p>
 </div>
 </div>
 <div class="section" id="rasterize">
-<h3>rasterize<a class="headerlink" href="#rasterize" title="Permalink to this headline">¶</a></h3>
+<h2>rasterize<a class="headerlink" href="#rasterize" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.18.</p>
 <p>The <code class="docutils literal"><span class="pre">rasterize</span></code> command rasterizes GeoJSON features into a new or existing
 raster.</p>
@@ -562,7 +562,7 @@ argument, and dimensions may be provided in place of pixel resolution:</p>
 </div>
 </div>
 <div class="section" id="sample">
-<h3>sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h3>
+<h2>sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.18.</p>
 <p>The sample command reads <code class="docutils literal"><span class="pre">x,</span> <span class="pre">y</span></code> positions from stdin and writes the dataset
 values at that position to stdout.</p>
@@ -575,7 +575,7 @@ values at that position to stdout.</p>
 <p>The output of the transform command (see below) makes good input for sample.</p>
 </div>
 <div class="section" id="shapes">
-<h3>shapes<a class="headerlink" href="#shapes" title="Permalink to this headline">¶</a></h3>
+<h2>shapes<a class="headerlink" href="#shapes" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.11.</p>
 <p>The <code class="docutils literal"><span class="pre">shapes</span></code> command extracts and writes features of a specified dataset band
 out as GeoJSON.</p>
@@ -591,7 +591,7 @@ data region.</p>
 <p>See <a class="reference external" href="http://bl.ocks.org/anonymous/raw/ef244954b719dba97926/">http://bl.ocks.org/anonymous/raw/ef244954b719dba97926/</a>.</p>
 </div>
 <div class="section" id="stack">
-<h3>stack<a class="headerlink" href="#stack" title="Permalink to this headline">¶</a></h3>
+<h2>stack<a class="headerlink" href="#stack" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.15.</p>
 <p>The <code class="docutils literal"><span class="pre">stack</span></code> command stacks a number of bands from one or more input files
 into a multiband dataset. Input datasets must be of a kind: same data type,
@@ -616,7 +616,7 @@ following syntax:</p>
 <p>You can use <cite>&#8211;rgb</cite> as shorthand for <cite>&#8211;co photometric=rgb</cite>.</p>
 </div>
 <div class="section" id="transform">
-<h3>transform<a class="headerlink" href="#transform" title="Permalink to this headline">¶</a></h3>
+<h2>transform<a class="headerlink" href="#transform" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.10.</p>
 <p>The <code class="docutils literal"><span class="pre">transform</span></code> command reads a JSON array of coordinates, interleaved, and
 writes another array of transformed coordinates to stdout.</p>
@@ -635,7 +635,7 @@ a raster dataset, do the following.</p>
 </div>
 </div>
 <div class="section" id="warp">
-<h3>warp<a class="headerlink" href="#warp" title="Permalink to this headline">¶</a></h3>
+<h2>warp<a class="headerlink" href="#warp" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.25</p>
 <p>The <code class="docutils literal"><span class="pre">warp</span></code> command warps (reprojects) a raster based on parameters that can be
 obtained from a template raster, or input directly.  The output is always
@@ -668,7 +668,7 @@ these dimensions:</p>
 </div>
 </div>
 <div class="section" id="rio-plugins">
-<h3>Rio Plugins<a class="headerlink" href="#rio-plugins" title="Permalink to this headline">¶</a></h3>
+<h2>Rio Plugins<a class="headerlink" href="#rio-plugins" title="Permalink to this headline">¶</a></h2>
 <p>Rio uses <code class="docutils literal"><span class="pre">click-plugins</span></code> to provide the ability to create additional
 subcommands using plugins developed outside rasterio.  This is ideal for
 commands that require additional dependencies beyond those used by rasterio, or
@@ -686,9 +686,8 @@ and in <code class="docutils literal"><span class="pre">rasterio/rio/main.py</sp
 for a list of available plugins.</p>
 </div>
 <div class="section" id="other-commands">
-<h3>Other commands?<a class="headerlink" href="#other-commands" title="Permalink to this headline">¶</a></h3>
+<h2>Other commands?<a class="headerlink" href="#other-commands" title="Permalink to this headline">¶</a></h2>
 <p>Suggestions for other commands are welcome!</p>
-</div>
 </div>
 </div>
 
@@ -702,7 +701,7 @@ for a list of available plugins.</p>
         <a href="calc.html" class="btn btn-neutral float-right" title="Using rio-calc" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="osgeo_gdal_migration.html" class="btn btn-neutral" title="Migration Guide for osgeo.gdal users" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="api/rasterio.windows.html" class="btn btn-neutral" title="rasterio.windows module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

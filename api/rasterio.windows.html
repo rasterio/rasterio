@@ -1,0 +1,443 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.windows module &mdash; rasterio 1.0.dev1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.dev1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>rasterio.windows module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/rasterio.windows.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-rasterio.windows">
+<span id="rasterio-windows-module"></span><h1>rasterio.windows module<a class="headerlink" href="#module-rasterio.windows" title="Permalink to this headline">¶</a></h1>
+<p>Window utilities and related functions.</p>
+<p>A window is a 2D ndarray indexer in the form of a tuple:</p>
+<blockquote>
+<div>((row_start, row_stop), (col_start, col_stop))</div></blockquote>
+<dl class="function">
+<dt id="rasterio.windows.bounds">
+<code class="descclassname">rasterio.windows.</code><code class="descname">bounds</code><span class="sig-paren">(</span><em>window</em>, <em>transform</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the bounds of a window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window: tuple</strong></p>
+<blockquote>
+<div><p>Dataset window tuple</p>
+</div></blockquote>
+<p><strong>transform: Affine</strong></p>
+<blockquote>
+<div><p>The affine transform matrix for the entire dataset</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounds</strong> : tuple</p>
+<blockquote class="last">
+<div><p>x_min, y_min, x_max, y_max for the given window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.crop">
+<code class="descclassname">rasterio.windows.</code><code class="descname">crop</code><span class="sig-paren">(</span><em>window</em>, <em>height</em>, <em>width</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.crop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a window cropped to fall within height and width.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.evaluate">
+<code class="descclassname">rasterio.windows.</code><code class="descname">evaluate</code><span class="sig-paren">(</span><em>window</em>, <em>height</em>, <em>width</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates a window tuple that might contain negative values
+in the context of a raster height and width.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.from_bounds">
+<code class="descclassname">rasterio.windows.</code><code class="descname">from_bounds</code><span class="sig-paren">(</span><em>left</em>, <em>bottom</em>, <em>right</em>, <em>top</em>, <em>transform</em>, <em>height=None</em>, <em>width=None</em>, <em>boundless=False</em>, <em>precision=6</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#from_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.from_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the window corresponding to the bounding coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left</strong> : float</p>
+<blockquote>
+<div><p>Left (west) bounding coordinate</p>
+</div></blockquote>
+<p><strong>bottom</strong> : float</p>
+<blockquote>
+<div><p>Bottom (south) bounding coordinate</p>
+</div></blockquote>
+<p><strong>right</strong> : float</p>
+<blockquote>
+<div><p>Right (east) bounding coordinate</p>
+</div></blockquote>
+<p><strong>top</strong> : float</p>
+<blockquote>
+<div><p>Top (north) bounding coordinate</p>
+</div></blockquote>
+<p><strong>transform</strong> : Affine</p>
+<blockquote>
+<div><p>Affine transform matrix</p>
+</div></blockquote>
+<p><strong>height</strong> : int</p>
+<blockquote>
+<div><p>Number of rows</p>
+</div></blockquote>
+<p><strong>width</strong> : int</p>
+<blockquote>
+<div><p>Number of columns</p>
+</div></blockquote>
+<p><strong>boundless</strong> : boolean, optional</p>
+<blockquote>
+<div><p>If boundless is False, window is limited
+to extent of this dataset.</p>
+</div></blockquote>
+<p><strong>precision</strong> : int, optional</p>
+<blockquote>
+<div><p>float precision</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">window: tuple</p>
+<blockquote class="last">
+<div><p>((row_start, row_stop), (col_start, col_stop))
+corresponding to the bounding coordinates</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.get_data_window">
+<code class="descclassname">rasterio.windows.</code><code class="descname">get_data_window</code><span class="sig-paren">(</span><em>arr</em>, <em>nodata=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#get_data_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.get_data_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a window for the non-nodata pixels within the input array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr: numpy ndarray, &lt;= 3 dimensions</strong></p>
+<p><strong>nodata: number</strong></p>
+<blockquote>
+<div><p>If None, will either return a full window if arr is not a masked
+array, or will use the mask to determine non-nodata pixels.
+If provided, it must be a number within the valid range of the dtype
+of the input array.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">window: tuple</p>
+<blockquote class="last">
+<div><p>((row_start, row_stop), (col_start, col_stop))</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.intersect">
+<code class="descclassname">rasterio.windows.</code><code class="descname">intersect</code><span class="sig-paren">(</span><em>*windows</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if windows intersect.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windows: list-like of window objects</strong></p>
+<blockquote>
+<div><p>((row_start, row_stop), (col_start, col_stop))</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">boolean:</p>
+<blockquote class="last">
+<div><p>True if all windows intersect.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.intersection">
+<code class="descclassname">rasterio.windows.</code><code class="descname">intersection</code><span class="sig-paren">(</span><em>*windows</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Intersect windows and return the innermost extent they cover.</p>
+<p>Will raise ValueError if windows do not intersect.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windows: list-like of window objects</strong></p>
+<blockquote>
+<div><p>((row_start, row_stop), (col_start, col_stop))</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">((row_start, row_stop), (col_start, col_stop))</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.iter_args">
+<code class="descclassname">rasterio.windows.</code><code class="descname">iter_args</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#iter_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.iter_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to allow function to take either <a href="#id1"><span class="problematic" id="id2">*</span></a>args or
+a single iterable which gets expanded to <a href="#id3"><span class="problematic" id="id4">*</span></a>args.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.shape">
+<code class="descclassname">rasterio.windows.</code><code class="descname">shape</code><span class="sig-paren">(</span><em>window</em>, <em>height=-1</em>, <em>width=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns shape of a window.</p>
+<p>height and width arguments are optional if there are no negative
+values in the window.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.transform">
+<code class="descclassname">rasterio.windows.</code><code class="descname">transform</code><span class="sig-paren">(</span><em>window</em>, <em>transform</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the affine transform for a dataset window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window: tuple</strong></p>
+<blockquote>
+<div><p>Dataset window tuple</p>
+</div></blockquote>
+<p><strong>transform: Affine</strong></p>
+<blockquote>
+<div><p>The affine transform matrix for the entire dataset</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">transform: Affine</p>
+<blockquote class="last">
+<div><p>The affine transform matrix for the given window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.union">
+<code class="descclassname">rasterio.windows.</code><code class="descname">union</code><span class="sig-paren">(</span><em>*windows</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Union windows and return the outermost extent they cover.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windows: list-like of window objects</strong></p>
+<blockquote>
+<div><p>((row_start, row_stop), (col_start, col_stop))</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">((row_start, row_stop), (col_start, col_stop))</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.windows.window_index">
+<code class="descclassname">rasterio.windows.</code><code class="descname">window_index</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#window_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.window_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.dev1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

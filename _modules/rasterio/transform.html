@@ -81,11 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/reading.html">Reading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/writing.html">Writing Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
 
@@ -148,13 +178,13 @@
 <span class="n">GDAL_IDENTITY</span> <span class="o">=</span> <span class="n">IDENTITY</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="tastes_like_gdal"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.tastes_like_gdal">[docs]</a><span class="k">def</span> <span class="nf">tastes_like_gdal</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+<div class="viewcode-block" id="tastes_like_gdal"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.tastes_like_gdal">[docs]</a><span class="k">def</span> <span class="nf">tastes_like_gdal</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return True if `seq` matches the GDAL geotransform pattern.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">==</span> <span class="n">GDAL_IDENTITY</span> <span class="ow">or</span> <span class="p">(</span>
         <span class="n">seq</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">seq</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">seq</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">seq</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="guard_transform"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.guard_transform">[docs]</a><span class="k">def</span> <span class="nf">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">):</span>
+<div class="viewcode-block" id="guard_transform"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.guard_transform">[docs]</a><span class="k">def</span> <span class="nf">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return an Affine transformation instance.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Affine</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tastes_like_gdal</span><span class="p">(</span><span class="n">transform</span><span class="p">):</span>
@@ -167,7 +197,7 @@
     <span class="k">return</span> <span class="n">transform</span></div>
 
 
-<div class="viewcode-block" id="from_origin"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.from_origin">[docs]</a><span class="k">def</span> <span class="nf">from_origin</span><span class="p">(</span><span class="n">west</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">):</span>
+<div class="viewcode-block" id="from_origin"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.from_origin">[docs]</a><span class="k">def</span> <span class="nf">from_origin</span><span class="p">(</span><span class="n">west</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return an Affine transformation given upper left and pixel sizes.</span>
 
 <span class="sd">    Return an Affine transformation for a georeferenced raster given</span>
@@ -177,7 +207,7 @@
     <span class="k">return</span> <span class="n">Affine</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">west</span><span class="p">,</span> <span class="n">north</span><span class="p">)</span> <span class="o">*</span> <span class="n">Affine</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">xsize</span><span class="p">,</span> <span class="o">-</span><span class="n">ysize</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="from_bounds"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.from_bounds">[docs]</a><span class="k">def</span> <span class="nf">from_bounds</span><span class="p">(</span><span class="n">west</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<div class="viewcode-block" id="from_bounds"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.from_bounds">[docs]</a><span class="k">def</span> <span class="nf">from_bounds</span><span class="p">(</span><span class="n">west</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return an Affine transformation given bounds, width and height.</span>
 
 <span class="sd">    Return an Affine transformation for a georeferenced raster given</span>
@@ -188,7 +218,7 @@
         <span class="p">(</span><span class="n">east</span> <span class="o">-</span> <span class="n">west</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span><span class="p">,</span> <span class="p">(</span><span class="n">south</span> <span class="o">-</span> <span class="n">north</span><span class="p">)</span> <span class="o">/</span> <span class="n">height</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="array_bounds"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.array_bounds">[docs]</a><span class="k">def</span> <span class="nf">array_bounds</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
+<div class="viewcode-block" id="array_bounds"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.array_bounds">[docs]</a><span class="k">def</span> <span class="nf">array_bounds</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return the bounds of an array given height, width, and a transform.</span>
 
 <span class="sd">    Return the `west, south, east, north` bounds of an array given</span>
@@ -199,7 +229,7 @@
     <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">n</span></div>
 
 
-<div class="viewcode-block" id="xy"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.xy">[docs]</a><span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="xy"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.xy">[docs]</a><span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the x and y coordinates of pixels at `rows` and `cols`.</span>
 <span class="sd">    The pixel&#39;s center is returned by default, but a corner can be returned</span>
 <span class="sd">    by setting `offset` to one of `ul, ur, ll, lr`.</span>
@@ -261,7 +291,7 @@
     <span class="k">return</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span></div>
 
 
-<div class="viewcode-block" id="rowcol"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.rowcol">[docs]</a><span class="k">def</span> <span class="nf">rowcol</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+<div class="viewcode-block" id="rowcol"><a class="viewcode-back" href="../../api/rasterio.transform.html#rasterio.transform.rowcol">[docs]</a><span class="k">def</span> <span class="nf">rowcol</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the rows and cols of the pixels containing (x, y) given a</span>
 <span class="sd">    coordinate reference system.</span>

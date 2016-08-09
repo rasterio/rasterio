@@ -1,0 +1,472 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.warp module &mdash; rasterio 1.0.dev1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.dev1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>rasterio.warp module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/rasterio.warp.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-rasterio.warp">
+<span id="rasterio-warp-module"></span><h1>rasterio.warp module<a class="headerlink" href="#module-rasterio.warp" title="Permalink to this headline">¶</a></h1>
+<p>Raster warping and reprojection.</p>
+<dl class="function">
+<dt id="rasterio.warp.calculate_default_transform">
+<code class="descclassname">rasterio.warp.</code><code class="descname">calculate_default_transform</code><span class="sig-paren">(</span><em>src_crs</em>, <em>dst_crs</em>, <em>width</em>, <em>height</em>, <em>left</em>, <em>bottom</em>, <em>right</em>, <em>top</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#calculate_default_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.calculate_default_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate parameters for reproject function.</p>
+<p>Transforms bounds to destination coordinate system, calculates resolution
+if not provided, and returns destination transform and dimensions.
+Intended to be used to calculate parameters for reproject function.</p>
+<p>Destination transform is anchored from the left, top coordinate.</p>
+<p>Destination width and height (and resolution if not provided), are
+calculated using GDAL&#8217;s method for suggest warp output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Source coordinate reference system, in rasterio dict format.
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
+</div></blockquote>
+<p><strong>dst_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Target coordinate reference system.</p>
+</div></blockquote>
+<p><strong>width: int</strong></p>
+<blockquote>
+<div><p>Source raster width.</p>
+</div></blockquote>
+<p><strong>height: int</strong></p>
+<blockquote>
+<div><p>Source raster height.</p>
+</div></blockquote>
+<p><strong>left, bottom, right, top: float</strong></p>
+<blockquote>
+<div><p>Bounding coordinates in src_crs, from the bounds property of a raster.</p>
+</div></blockquote>
+<p><strong>resolution: tuple (x resolution, y resolution) or float, optional</strong></p>
+<blockquote>
+<div><p>Target resolution, in units of target coordinate reference system.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<blockquote class="last">
+<div><p>Three elements: <code class="docutils literal"><span class="pre">affine</span> <span class="pre">transform,</span> <span class="pre">width,</span> <span class="pre">and</span> <span class="pre">height</span></code></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.warp.reproject">
+<code class="descclassname">rasterio.warp.</code><code class="descname">reproject</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em>, <em>src_transform=None</em>, <em>src_crs=None</em>, <em>src_nodata=None</em>, <em>dst_transform=None</em>, <em>dst_crs=None</em>, <em>dst_nodata=None</em>, <em>resampling=&lt;Resampling.nearest: 0&gt;</em>, <em>init_dest_nodata=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#reproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.reproject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reproject a source raster to a destination raster.</p>
+<p>If the source and destination are ndarrays, coordinate reference
+system definitions and affine transformation parameters are required
+for reprojection.</p>
+<p>If the source and destination are rasterio Bands, shorthand for
+bands of datasets on disk, the coordinate reference systems and
+transforms will be read from the appropriate datasets.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source: ndarray or rasterio Band</strong></p>
+<blockquote>
+<div><p>Source raster.</p>
+</div></blockquote>
+<p><strong>destination: ndarray or rasterio Band</strong></p>
+<blockquote>
+<div><p>Target raster.</p>
+</div></blockquote>
+<p><strong>src_transform: affine.Affine(), optional</strong></p>
+<blockquote>
+<div><p>Source affine transformation.  Required if source and destination
+are ndarrays.  Will be derived from source if it is a rasterio Band.</p>
+</div></blockquote>
+<p><strong>src_crs: CRS or dict, optional</strong></p>
+<blockquote>
+<div><p>Source coordinate reference system, in rasterio dict format.
+Required if source and destination are ndarrays.
+Will be derived from source if it is a rasterio Band.
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
+</div></blockquote>
+<p><strong>src_nodata: int or float, optional</strong></p>
+<blockquote>
+<div><p>The source nodata value.  Pixels with this value will not be used
+for interpolation.  If not set, it will be default to the
+nodata value of the source image if a masked ndarray or rasterio band,
+if available.  Must be provided if dst_nodata is not None.</p>
+</div></blockquote>
+<p><strong>dst_transform: affine.Affine(), optional</strong></p>
+<blockquote>
+<div><p>Target affine transformation.  Required if source and destination
+are ndarrays.  Will be derived from target if it is a rasterio Band.</p>
+</div></blockquote>
+<p><strong>dst_crs: CRS or dict, optional</strong></p>
+<blockquote>
+<div><p>Target coordinate reference system.  Required if source and destination
+are ndarrays.  Will be derived from target if it is a rasterio Band.</p>
+</div></blockquote>
+<p><strong>dst_nodata: int or float, optional</strong></p>
+<blockquote>
+<div><p>The nodata value used to initialize the destination; it will remain
+in all areas not covered by the reprojected source.  Defaults to the
+nodata value of the destination image (if set), the value of
+src_nodata, or 0 (GDAL default).</p>
+</div></blockquote>
+<p><strong>resampling: int</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Resampling method to use.  One of the following:</dt>
+<dd><p class="first last">Resampling.nearest,
+Resampling.bilinear,
+Resampling.cubic,
+Resampling.cubic_spline,
+Resampling.lanczos,
+Resampling.average,
+Resampling.mode</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>init_dest_nodata: bool</strong></p>
+<blockquote>
+<div><p>Flag to specify initialization of nodata in destination;
+prevents overwrite of previous warps. Defaults to True.</p>
+</div></blockquote>
+<p><strong>kwargs:  dict, optional</strong></p>
+<blockquote>
+<div><p>Additional arguments passed to transformation function.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">out: None</p>
+<blockquote class="last">
+<div><p>Output is written to destination.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.warp.transform">
+<code class="descclassname">rasterio.warp.</code><code class="descname">transform</code><span class="sig-paren">(</span><em>src_crs</em>, <em>dst_crs</em>, <em>xs</em>, <em>ys</em>, <em>zs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform vectors from source to target coordinate reference system.</p>
+<p>Transform vectors of x, y and optionally z from source
+coordinate reference system into target.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Source coordinate reference system, as a rasterio CRS object.
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
+</div></blockquote>
+<p><strong>dst_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Target coordinate reference system.</p>
+</div></blockquote>
+<p><strong>xs: array_like</strong></p>
+<blockquote>
+<div><p>Contains x values.  Will be cast to double floating point values.</p>
+</div></blockquote>
+<p><strong>ys:  array_like</strong></p>
+<blockquote>
+<div><p>Contains y values.</p>
+</div></blockquote>
+<p><strong>zs: array_like, optional</strong></p>
+<blockquote>
+<div><p>Contains z values.  Assumed to be all 0 if absent.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">out: tuple of array_like, (xs, ys, [zs])</p>
+<p>Tuple of x, y, and optionally z vectors, transformed into the target</p>
+<p class="last">coordinate reference system.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.warp.transform_bounds">
+<code class="descclassname">rasterio.warp.</code><code class="descname">transform_bounds</code><span class="sig-paren">(</span><em>src_crs</em>, <em>dst_crs</em>, <em>left</em>, <em>bottom</em>, <em>right</em>, <em>top</em>, <em>densify_pts=21</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#transform_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.transform_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform bounds from src_crs to dst_crs.</p>
+<p>Optionally densifying the edges (to account for nonlinear transformations
+along these edges) and extracting the outermost bounds.</p>
+<p>Note: this does not account for the antimeridian.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Source coordinate reference system, in rasterio dict format.
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
+</div></blockquote>
+<p><strong>dst_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Target coordinate reference system.</p>
+</div></blockquote>
+<p><strong>left, bottom, right, top: float</strong></p>
+<blockquote>
+<div><p>Bounding coordinates in src_crs, from the bounds property of a raster.</p>
+</div></blockquote>
+<p><strong>densify_pts: uint, optional</strong></p>
+<blockquote>
+<div><p>Number of points to add to each edge to account for nonlinear
+edges produced by the transform process.  Large numbers will produce
+worse performance.  Default: 21 (gdal default).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">left, bottom, right, top: float</p>
+<blockquote class="last">
+<div><p>Outermost coordinates in target coordinate reference system.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.warp.transform_geom">
+<code class="descclassname">rasterio.warp.</code><code class="descname">transform_geom</code><span class="sig-paren">(</span><em>src_crs</em>, <em>dst_crs</em>, <em>geom</em>, <em>antimeridian_cutting=False</em>, <em>antimeridian_offset=10.0</em>, <em>precision=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#transform_geom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.transform_geom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform geometry from source coordinate reference system into target.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Source coordinate reference system, in rasterio dict format.
+Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
+</div></blockquote>
+<p><strong>dst_crs: CRS or dict</strong></p>
+<blockquote>
+<div><p>Target coordinate reference system.</p>
+</div></blockquote>
+<p><strong>geom: GeoJSON like dict object</strong></p>
+<p><strong>antimeridian_cutting: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, cut geometries at the antimeridian, otherwise geometries will
+not be cut (default).</p>
+</div></blockquote>
+<p><strong>antimeridian_offset: float</strong></p>
+<blockquote>
+<div><p>Offset from the antimeridian in degrees (default: 10) within which
+any geometries will be split.</p>
+</div></blockquote>
+<p><strong>precision: float</strong></p>
+<blockquote>
+<div><p>If &gt;= 0, geometry coordinates will be rounded to this number of decimal
+places after the transform operation, otherwise original coordinate
+values will be preserved (default).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">out: GeoJSON like dict object</p>
+<blockquote class="last">
+<div><p>Transformed geometry in GeoJSON dict format</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.dev1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

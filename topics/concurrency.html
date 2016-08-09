@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Concurrent processing &mdash; rasterio 1.0.dev1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.dev1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Concurrent processing</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/topics/concurrency.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="concurrent-processing">
+<h1>Concurrent processing<a class="headerlink" href="#concurrent-processing" title="Permalink to this headline">¶</a></h1>
+<p>Rasterio affords concurrent processing of raster data. The Python GIL is
+released when calling GDAL&#8217;s <code class="docutils literal"><span class="pre">GDALRasterIO()</span></code> function, which means that
+datasets can read and write concurrently with other threads.</p>
+<p>The Numpy library also releases the GIL as much as it can, e.g., in applying
+universal functions to arrays, and this makes it possible to distribute
+processing of an array across cores of a processor. The Cython function below,
+included in Rasterio&#8217;s <code class="docutils literal"><span class="pre">_example</span></code> module, simulates such a GIL-releasing
+raster processing function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">cimport</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="k">def</span> <span class="nf">compute</span><span class="p">(</span>
+        <span class="n">unsigned</span> <span class="n">char</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="nb">input</span><span class="p">,</span>
+        <span class="n">unsigned</span> <span class="n">char</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="n">output</span><span class="p">):</span>
+    <span class="c1"># Given input and output uint8 arrays, fakes an CPU-intensive</span>
+    <span class="c1"># computation.</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">K</span>
+    <span class="n">cdef</span> <span class="nb">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span>
+    <span class="n">cdef</span> <span class="n">double</span> <span class="n">val</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">with</span> <span class="n">nogil</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">I</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">J</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">double</span><span class="o">&gt;</span><span class="nb">input</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2000</span><span class="p">):</span>
+                        <span class="n">val</span> <span class="o">+=</span> <span class="mf">1.0</span>
+                    <span class="n">val</span> <span class="o">-=</span> <span class="mf">2000.0</span>
+                    <span class="n">output</span><span class="p">[</span><span class="o">~</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">unsigned</span> <span class="n">char</span><span class="o">&gt;</span><span class="n">val</span>
+</pre></div>
+</div>
+<p>Here is the program in examples/concurrent-cpu-bound.py.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;concurrent-cpu-bound.py</span>
+
+<span class="sd">Operate on a raster dataset window-by-window using a ThreadPoolExecutor.</span>
+
+<span class="sd">Simulates a CPU-bound thread situation where multiple threads can improve performance.</span>
+
+<span class="sd">With -j 4, the program returns in about 1/4 the time as with -j 1.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">concurrent.futures</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">from</span> <span class="nn">rasterio._example</span> <span class="kn">import</span> <span class="n">compute</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
+
+        <span class="c1"># Open the source dataset.</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+
+            <span class="c1"># Create a destination dataset based on source params.</span>
+            <span class="c1"># The destination will be tiled, and we&#39;ll &quot;process&quot; the tiles</span>
+            <span class="c1"># concurrently.</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">meta</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">blockxsize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">blockysize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">tiled</span><span class="o">=</span><span class="s1">&#39;yes&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">meta</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+
+                <span class="c1"># Define a generator for data, window pairs.</span>
+                <span class="k">def</span> <span class="nf">jobs</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">ij</span><span class="p">,</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">dst</span><span class="o">.</span><span class="n">block_windows</span><span class="p">():</span>
+                        <span class="n">data</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                        <span class="k">yield</span> <span class="n">data</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">window</span>
+
+                <span class="c1"># Submit the jobs to the thread pool executor.</span>
+                <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">(</span>
+                        <span class="n">max_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+
+                    <span class="c1"># Map the futures returned from executor.submit()</span>
+                    <span class="c1"># to their destination windows.</span>
+                    <span class="c1">#</span>
+                    <span class="c1"># The _example.compute function modifies no Python</span>
+                    <span class="c1"># objects and releases the GIL. It can execute</span>
+                    <span class="c1"># concurrently.</span>
+                    <span class="n">future_to_window</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">compute</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">res</span><span class="p">):</span> <span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">()}</span>
+
+                    <span class="c1"># As the processing jobs are completed, get the</span>
+                    <span class="c1"># results and write the data to the appropriate</span>
+                    <span class="c1"># destination window.</span>
+                    <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span>
+                            <span class="n">future_to_window</span><span class="p">):</span>
+
+                        <span class="n">result</span><span class="p">,</span> <span class="n">window</span> <span class="o">=</span> <span class="n">future_to_window</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
+
+                        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="kn">import</span> <span class="nn">argparse</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Concurrent raster processing demo&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;INPUT&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input file name&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;output&#39;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;OUTPUT&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file name&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-j&#39;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;NUM_JOBS&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">(),</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of concurrent jobs&quot;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">j</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The code above simulates a fairly CPU-intensive process that runs faster when
+spread over multiple cores using the <code class="docutils literal"><span class="pre">ThreadPoolExecutor</span></code> from Python 3&#8217;s
+<code class="docutils literal"><span class="pre">concurrent.futures</span></code> module. Compared to the case of one concurrent job
+(<code class="docutils literal"><span class="pre">-j</span> <span class="pre">1</span></code>)</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 1
+
+<span class="go">real    0m3.474s</span>
+<span class="go">user    0m3.426s</span>
+<span class="go">sys     0m0.043s</span>
+</pre></div>
+</div>
+<p>we get an almost 3x speed up with four concurrent jobs.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 4
+
+<span class="go">real    0m1.335s</span>
+<span class="go">user    0m3.400s</span>
+<span class="go">sys     0m0.043s</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.dev1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

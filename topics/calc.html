@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Using rio-calc &mdash; rasterio 1.0.dev1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.dev1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Using rio-calc</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/topics/calc.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="using-rio-calc">
+<h1>Using rio-calc<a class="headerlink" href="#using-rio-calc" title="Permalink to this headline">¶</a></h1>
+<p>Simple raster data processing on the command line is possible using Rasterio&#8217;s
+rio-calc command. It uses the <a class="reference external" href="https://github.com/mapbox/snuggs">snuggs</a>
+Numpy S-expression engine. The <a class="reference external" href="https://github.com/mapbox/snuggs/blob/master/README.rst">snuggs README</a> explains how
+expressions are written and evaluated in general. This document explains
+Rasterio-specific details of rio-calc and offers some examples.</p>
+<div class="section" id="expressions">
+<h2>Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline">¶</a></h2>
+<p>Rio-calc expressions look like</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="go">(func|operator arg [*args])</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal"><span class="pre">func</span></code> may be the name of any function in the module <code class="docutils literal"><span class="pre">numpy</span></code> or
+one of the rio-calc builtins: <code class="docutils literal"><span class="pre">read</span></code>, <code class="docutils literal"><span class="pre">fillnodata</span></code>, or <code class="docutils literal"><span class="pre">sieve</span></code>; and
+<code class="docutils literal"><span class="pre">operator</span></code> may be any of the standard Python arithmetic or logical operators.
+The arguments may themselves be expressions.</p>
+</div>
+<div class="section" id="copying-a-file">
+<h2>Copying a file<a class="headerlink" href="#copying-a-file" title="Permalink to this headline">¶</a></h2>
+<p>Here&#8217;s a trivial example of copying a dataset. The expression <code class="docutils literal"><span class="pre">(read</span> <span class="pre">1)</span></code>
+evaluates to all bands of the first input dataset, an array with shape
+<code class="docutils literal"><span class="pre">(3,</span> <span class="pre">718,</span> <span class="pre">791)</span></code> in this case.</p>
+<p>Note: rio-calc&#8217;s indexes start at <code class="docutils literal"><span class="pre">1</span></code>.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(read 1)&quot;</span> tests/data/RGB.byte.tif out.tif
+</pre></div>
+</div>
+</div>
+<div class="section" id="reversing-the-band-order-of-a-file">
+<h2>Reversing the band order of a file<a class="headerlink" href="#reversing-the-band-order-of-a-file" title="Permalink to this headline">¶</a></h2>
+<p>The expression <code class="docutils literal"><span class="pre">(read</span> <span class="pre">i</span> <span class="pre">j)</span></code> evaluates to the j-th band of the i-th input
+dataset. The <code class="docutils literal"><span class="pre">asarray</span></code> function collects bands read in reverse order into
+an array with shape <code class="docutils literal"><span class="pre">(3,</span> <span class="pre">718,</span> <span class="pre">791)</span></code> for output.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(asarray (read 1 3) (read 1 2) (read 1 1))&quot;</span> tests/data/RGB.byte.tif out.tif
+</pre></div>
+</div>
+</div>
+<div class="section" id="stacking-bands-of-multiple-files">
+<h2>Stacking bands of multiple files<a class="headerlink" href="#stacking-bands-of-multiple-files" title="Permalink to this headline">¶</a></h2>
+<p>Bands can be read from multiple input files. This example is another (slower)
+way to copy a file.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(asarray (read 1 1) (read 2 2) (read 3 3))&quot;</span> <span class="se">\</span>
+<span class="gp">&gt;</span> tests/data/RGB.byte.tif tests/data/RGB.byte.tif tests/data/RGB.byte.tif <span class="se">\</span>
+<span class="gp">&gt;</span> out.tif
+</pre></div>
+</div>
+</div>
+<div class="section" id="named-datasets">
+<h2>Named datasets<a class="headerlink" href="#named-datasets" title="Permalink to this headline">¶</a></h2>
+<p>Datasets can be referenced in expressions by name and single bands picked out
+using the <code class="docutils literal"><span class="pre">take</span></code> function.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(asarray (take a 3) (take a 2) (take a 1))&quot;</span> <span class="se">\</span>
+<span class="gp">&gt;</span> --name <span class="s2">&quot;a=tests/data/RGB.byte.tif&quot;</span> out.tif
+</pre></div>
+</div>
+<p>The third example, re-done using names, is:</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(asarray (take a 1) (take b 2) (take b 3))&quot;</span> <span class="se">\</span>
+<span class="gp">&gt;</span> --name <span class="s2">&quot;a=tests/data/RGB.byte.tif&quot;</span> --name <span class="s2">&quot;b=tests/data/RGB.byte.tif&quot;</span> <span class="se">\</span>
+<span class="gp">&gt;</span> --name <span class="s2">&quot;c=tests/data/RGB.byte.tif&quot;</span> out.tif
+</pre></div>
+</div>
+</div>
+<div class="section" id="read-and-take">
+<h2>Read and take<a class="headerlink" href="#read-and-take" title="Permalink to this headline">¶</a></h2>
+<p>The functions <code class="docutils literal"><span class="pre">read</span></code> and <code class="docutils literal"><span class="pre">take</span></code> overlap a bit in the previous examples but
+are rather different. The former involves I/O and the latter does not. You may
+also <code class="docutils literal"><span class="pre">take</span></code> from any array, as in this example.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(take (read 1) 1)&quot;</span> tests/data/RGB.byte.tif out.tif
+</pre></div>
+</div>
+</div>
+<div class="section" id="arithmetic-operations">
+<h2>Arithmetic operations<a class="headerlink" href="#arithmetic-operations" title="Permalink to this headline">¶</a></h2>
+<p>Arithmetic operations can be performed as with Numpy. Here is an example of
+scaling all three bands of a dataset by the same factors.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(+ 2 (* 0.95 (read 1)))&quot;</span> tests/data/RGB.byte.tif out.tif
+</pre></div>
+</div>
+<p>Here is a more complicated example of scaling bands by different factors.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(asarray (+ 2 (* 0.95 (read 1 1))) (+ 3 (* 0.9 (read 1 2))) (+ 4 (* 0.85 (read 1 3))))&quot;</span> tests/data/RGB.byte.tif out.tif
+</pre></div>
+</div>
+</div>
+<div class="section" id="logical-operations">
+<h2>Logical operations<a class="headerlink" href="#logical-operations" title="Permalink to this headline">¶</a></h2>
+<p>Logical operations can be used in conjunction with arithemtic operations. In
+this example, the output values are 255 wherever the input values are greater
+than or equal to 40.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(* (&gt;= (read 1) 40) 255)&quot;</span> tests/data/RGB.byte.tif out.tif
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.dev1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

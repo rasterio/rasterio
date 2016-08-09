@@ -81,11 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/reading.html">Reading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/writing.html">Writing Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
 
@@ -156,7 +186,7 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_plt"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.get_plt">[docs]</a><span class="k">def</span> <span class="nf">get_plt</span><span class="p">():</span>
+<div class="viewcode-block" id="get_plt"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.get_plt">[docs]</a><span class="k">def</span> <span class="nf">get_plt</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;import matplotlib.pyplot</span>
 <span class="sd">    raise import error if matplotlib is not installed</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -169,7 +199,7 @@
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="show"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">with_bounds</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">contour</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">contour_label_kws</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+<div class="viewcode-block" id="show"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">with_bounds</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">contour</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">contour_label_kws</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
          <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Display a raster or raster band using matplotlib.</span>
 
@@ -270,7 +300,7 @@
     <span class="k">return</span> <span class="n">ax</span></div>
 
 
-<div class="viewcode-block" id="plotting_extent"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.plotting_extent">[docs]</a><span class="k">def</span> <span class="nf">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="plotting_extent"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.plotting_extent">[docs]</a><span class="k">def</span> <span class="nf">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns an extent in the format needed</span>
 <span class="sd">     for matplotlib&#39;s imshow (left, right, bottom, top)</span>
 <span class="sd">     instead of rasterio&#39;s bounds (left, bottom, top, right)</span>
@@ -296,7 +326,7 @@
     <span class="k">return</span> <span class="n">extent</span></div>
 
 
-<div class="viewcode-block" id="reshape_as_image"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.reshape_as_image">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<div class="viewcode-block" id="reshape_as_image"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.reshape_as_image">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the source array reshaped into the order</span>
 <span class="sd">    expected by image processing and visualization software</span>
 <span class="sd">    (matplotlib, scikit-image, etc)</span>
@@ -313,7 +343,7 @@
 
 
 
-<div class="viewcode-block" id="reshape_as_raster"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.reshape_as_raster">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<div class="viewcode-block" id="reshape_as_raster"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.reshape_as_raster">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the array in a raster order</span>
 <span class="sd">    by swapping the axes order from (rows, columns, bands)</span>
 <span class="sd">    to (bands, rows, columns)</span>
@@ -327,7 +357,7 @@
     <span class="k">return</span> <span class="n">im</span></div>
 
 
-<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Easily display a histogram with matplotlib.</span>
 
 <span class="sd">    Parameters</span>

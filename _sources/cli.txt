@@ -1,6 +1,6 @@
-==================================
-``rio`` Command Line User's Manual
-==================================
+========================
+Command Line Users Guide
+========================
 
 Rasterio's command line interface is a program named ``rio``.
 
@@ -47,8 +47,6 @@ handling of context variables.
       warp       Warp a raster dataset.
 
 
-Commands
-========
 Commands are shown below. See ``--help`` of individual commands for more
 details.
 

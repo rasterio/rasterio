@@ -81,11 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/reading.html">Reading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/writing.html">Writing Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
 
@@ -151,7 +181,7 @@
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">rowcol</span>
 
 
-<div class="viewcode-block" id="iter_args"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.iter_args">[docs]</a><span class="k">def</span> <span class="nf">iter_args</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+<div class="viewcode-block" id="iter_args"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.iter_args">[docs]</a><span class="k">def</span> <span class="nf">iter_args</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Decorator to allow function to take either *args or</span>
 <span class="sd">    a single iterable which gets expanded to *args.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -164,7 +194,7 @@
     <span class="k">return</span> <span class="n">wrapper</span></div>
 
 
-<div class="viewcode-block" id="get_data_window"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.get_data_window">[docs]</a><span class="k">def</span> <span class="nf">get_data_window</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="get_data_window"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.get_data_window">[docs]</a><span class="k">def</span> <span class="nf">get_data_window</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a window for the non-nodata pixels within the input array.</span>
 
@@ -215,7 +245,7 @@
 
 
 <span class="nd">@iter_args</span>
-<div class="viewcode-block" id="union"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.union">[docs]</a><span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
+<div class="viewcode-block" id="union"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.union">[docs]</a><span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Union windows and return the outermost extent they cover.</span>
 
@@ -237,7 +267,7 @@
 
 
 <span class="nd">@iter_args</span>
-<div class="viewcode-block" id="intersection"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.intersection">[docs]</a><span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
+<div class="viewcode-block" id="intersection"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.intersection">[docs]</a><span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Intersect windows and return the innermost extent they cover.</span>
 
@@ -264,7 +294,7 @@
 
 
 <span class="nd">@iter_args</span>
-<div class="viewcode-block" id="intersect"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.intersect">[docs]</a><span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
+<div class="viewcode-block" id="intersect"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.intersect">[docs]</a><span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="o">*</span><span class="n">windows</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Test if windows intersect.</span>
 
@@ -296,7 +326,7 @@
     <span class="k">return</span> <span class="bp">True</span></div>
 
 
-<div class="viewcode-block" id="from_bounds"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.from_bounds">[docs]</a><span class="k">def</span> <span class="nf">from_bounds</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span>
+<div class="viewcode-block" id="from_bounds"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.from_bounds">[docs]</a><span class="k">def</span> <span class="nf">from_bounds</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span>
                 <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get the window corresponding to the bounding coordinates.</span>
 
@@ -345,7 +375,7 @@
         <span class="k">return</span> <span class="n">crop</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.transform">[docs]</a><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
+<div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.transform">[docs]</a><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get the affine transform for a dataset window.</span>
 
 <span class="sd">    Parameters</span>
@@ -364,7 +394,7 @@
     <span class="k">return</span> <span class="n">transform</span> <span class="o">*</span> <span class="n">Affine</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">c</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="bounds"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.bounds">[docs]</a><span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
+<div class="viewcode-block" id="bounds"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.bounds">[docs]</a><span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Get the bounds of a window</span>
 
 <span class="sd">    Parameters</span>
@@ -385,7 +415,7 @@
     <span class="k">return</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span></div>
 
 
-<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.crop">[docs]</a><span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.crop">[docs]</a><span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns a window cropped to fall within height and width.&quot;&quot;&quot;</span>
     <span class="p">(</span><span class="n">r_start</span><span class="p">,</span> <span class="n">r_stop</span><span class="p">),</span> <span class="p">(</span><span class="n">c_start</span><span class="p">,</span> <span class="n">c_stop</span><span class="p">)</span> <span class="o">=</span> <span class="n">window</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -393,7 +423,7 @@
         <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">c_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">width</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">c_stop</span><span class="p">,</span> <span class="n">width</span><span class="p">))))</span></div>
 
 
-<div class="viewcode-block" id="evaluate"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.evaluate">[docs]</a><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+<div class="viewcode-block" id="evaluate"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.evaluate">[docs]</a><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Evaluates a window tuple that might contain negative values</span>
 <span class="sd">    in the context of a raster height and width.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
@@ -432,7 +462,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">r_start</span><span class="p">,</span> <span class="n">r_stop</span><span class="p">),</span> <span class="p">(</span><span class="n">c_start</span><span class="p">,</span> <span class="n">c_stop</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="shape"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.shape">[docs]</a><span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="shape"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.shape">[docs]</a><span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns shape of a window.</span>
 
 <span class="sd">    height and width arguments are optional if there are no negative</span>
@@ -442,7 +472,7 @@
     <span class="k">return</span> <span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="o">-</span><span class="n">c</span></div>
 
 
-<div class="viewcode-block" id="window_index"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.window_index">[docs]</a><span class="k">def</span> <span class="nf">window_index</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
+<div class="viewcode-block" id="window_index"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.window_index">[docs]</a><span class="k">def</span> <span class="nf">window_index</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
     <span class="c1"># &quot;window_&quot; is necessary here to redundancy to disambiguate</span>
     <span class="c1"># from transform.get_index and src.index</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">window</span><span class="p">)</span></div>
