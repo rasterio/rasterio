@@ -141,9 +141,9 @@ essentially global variables the user can set.</div></blockquote>
 <div class="section" id="gdal-example">
 <h2>GDAL Example<a class="headerlink" href="#gdal-example" title="Permalink to this headline">¶</a></h2>
 <p>The following is from <a class="reference external" href="https://github.com/OSGeo/gdal/blob/0b75aa3c39e6d126439fb17eed939de39f6f3720/autotest/gcore/tiff_read.py#L117-L119">GDAL&#8217;s test suite</a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="s">&#39;GTIFF_FORCE_RGBA&#39;</span><span class="p">,</span> <span class="s">&#39;YES&#39;</span><span class="p">)</span>
-<span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s">&#39;data/stefan_full_greyalpha.tif&#39;</span><span class="p">)</span>
-<span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="s">&#39;GTIFF_FORCE_RGBA&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="s1">&#39;GTIFF_FORCE_RGBA&#39;</span><span class="p">,</span> <span class="s1">&#39;YES&#39;</span><span class="p">)</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s1">&#39;data/stefan_full_greyalpha.tif&#39;</span><span class="p">)</span>
+<span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="s1">&#39;GTIFF_FORCE_RGBA&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>With GDAL&#8217;s C or Python API, you call a function once to set a global
@@ -158,11 +158,11 @@ to unset it.</p>
 </ul>
 <p>That code example can be generalized to multiple options and made to
 recover better from errors.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;GTIFF_FORCE_RGBA&#39;</span><span class="p">:</span> <span class="s">&#39;YES&#39;</span><span class="p">}</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;GTIFF_FORCE_RGBA&#39;</span><span class="p">:</span> <span class="s1">&#39;YES&#39;</span><span class="p">}</span>
 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s">&#39;data/stefan_full_greyalpha.tif&#39;</span><span class="p">)</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s1">&#39;data/stefan_full_greyalpha.tif&#39;</span><span class="p">)</span>
 <span class="k">finally</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
@@ -174,9 +174,9 @@ and easier to use.</p>
 </div>
 <div class="section" id="rasterio">
 <h2>Rasterio<a class="headerlink" href="#rasterio" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">GTIFF_FORCE_RGBA</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">CPL_DEBUG</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;data/stefan_full_greyalpha.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
-       <span class="c"># Suite of code accessing dataset ``ds`` follows...</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">GTIFF_FORCE_RGBA</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">CPL_DEBUG</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;data/stefan_full_greyalpha.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+       <span class="c1"># Suite of code accessing dataset ``ds`` follows...</span>
 </pre></div>
 </div>
 <p>The object returned when you call <code class="docutils literal"><span class="pre">rasterio.Env()</span></code> is a context manager.  It
@@ -186,13 +186,13 @@ Rasterio <code class="docutils literal"><span class="pre">with</span> <span clas
 statements and makes its relationship to a block of code clear.</p>
 <p>If you want to know what options are configured at any time, you could bind it
 to a name like so.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">GTIFF_FORCE_RGBA</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">CPL_DEBUG</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">env</span><span class="p">:</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">GTIFF_FORCE_RGBA</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">CPL_DEBUG</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">env</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">print</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
 
-<span class="c"># Prints:</span>
-<span class="c"># (&#39;GTIFF_FORCE_RGBA&#39;, True)</span>
-<span class="c"># (&#39;CPL_DEBUG&#39;, True)</span>
+<span class="c1"># Prints:</span>
+<span class="c1"># (&#39;GTIFF_FORCE_RGBA&#39;, True)</span>
+<span class="c1"># (&#39;CPL_DEBUG&#39;, True)</span>
 </pre></div>
 </div>
 </div>

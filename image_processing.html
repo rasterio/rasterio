@@ -175,20 +175,20 @@
 <p>Some python image processing software packages
 organize arrays differently than rasterio. The interpretation of a
 3-dimension array read from <code class="docutils literal"><span class="pre">rasterio</span></code> is:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>while image processing software like <code class="docutils literal"><span class="pre">scikit-image</span></code>, <code class="docutils literal"><span class="pre">pillow</span></code> and <code class="docutils literal"><span class="pre">matplotlib</span></code> are generally ordered:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">bands</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">bands</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The number of rows defines the dataset&#8217;s height, the columns are the dataset&#8217;s width.</p>
 <p>Numpy provides a way to efficiently swap the axis order and you can use the
 following reshape functions to convert between raster and image axis order:</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.plot</span> <span class="k">import</span> <span class="n">reshape_as_raster</span><span class="p">,</span> <span class="n">reshape_as_image</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(3, 718, 791)</span>
 

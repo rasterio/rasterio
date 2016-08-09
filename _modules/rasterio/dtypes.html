@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.dtypes</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Mapping of GDAL to Numpy data types.</span>
+<span></span><span class="sd">&quot;&quot;&quot;Mapping of GDAL to Numpy data types.</span>
 
 <span class="sd">Since 0.13 we are not importing numpy here and data types are strings.</span>
 <span class="sd">Happily strings can be used throughout Numpy and so existing code will</span>
@@ -146,62 +146,62 @@
 <span class="sd">    if np.dtype(destination.dtype) == np.dtype(rasterio.uint8): ...</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">bool_</span> <span class="o">=</span> <span class="s">&#39;bool&#39;</span>
-<span class="n">ubyte</span> <span class="o">=</span> <span class="n">uint8</span> <span class="o">=</span> <span class="s">&#39;uint8&#39;</span>
-<span class="n">uint16</span> <span class="o">=</span> <span class="s">&#39;uint16&#39;</span>
-<span class="n">int16</span> <span class="o">=</span> <span class="s">&#39;int16&#39;</span>
-<span class="n">uint32</span> <span class="o">=</span> <span class="s">&#39;uint32&#39;</span>
-<span class="n">int32</span> <span class="o">=</span> <span class="s">&#39;int32&#39;</span>
-<span class="n">float32</span> <span class="o">=</span> <span class="s">&#39;float32&#39;</span>
-<span class="n">float64</span> <span class="o">=</span> <span class="s">&#39;float64&#39;</span>
-<span class="n">complex_</span> <span class="o">=</span> <span class="s">&#39;complex&#39;</span>
-<span class="n">complex64</span> <span class="o">=</span> <span class="s">&#39;complex64&#39;</span>
-<span class="n">complex128</span> <span class="o">=</span> <span class="s">&#39;complex128&#39;</span>
+<span class="n">bool_</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span>
+<span class="n">ubyte</span> <span class="o">=</span> <span class="n">uint8</span> <span class="o">=</span> <span class="s1">&#39;uint8&#39;</span>
+<span class="n">uint16</span> <span class="o">=</span> <span class="s1">&#39;uint16&#39;</span>
+<span class="n">int16</span> <span class="o">=</span> <span class="s1">&#39;int16&#39;</span>
+<span class="n">uint32</span> <span class="o">=</span> <span class="s1">&#39;uint32&#39;</span>
+<span class="n">int32</span> <span class="o">=</span> <span class="s1">&#39;int32&#39;</span>
+<span class="n">float32</span> <span class="o">=</span> <span class="s1">&#39;float32&#39;</span>
+<span class="n">float64</span> <span class="o">=</span> <span class="s1">&#39;float64&#39;</span>
+<span class="n">complex_</span> <span class="o">=</span> <span class="s1">&#39;complex&#39;</span>
+<span class="n">complex64</span> <span class="o">=</span> <span class="s1">&#39;complex64&#39;</span>
+<span class="n">complex128</span> <span class="o">=</span> <span class="s1">&#39;complex128&#39;</span>
 
-<span class="c"># Not supported:</span>
-<span class="c">#  GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10, GDT_CFloat64 = 11</span>
+<span class="c1"># Not supported:</span>
+<span class="c1">#  GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10, GDT_CFloat64 = 11</span>
 
 <span class="n">dtype_fwd</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="mi">0</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>            <span class="c"># GDT_Unknown</span>
-    <span class="mi">1</span><span class="p">:</span> <span class="n">ubyte</span><span class="p">,</span>           <span class="c"># GDT_Byte</span>
-    <span class="mi">2</span><span class="p">:</span> <span class="n">uint16</span><span class="p">,</span>          <span class="c"># GDT_UInt16</span>
-    <span class="mi">3</span><span class="p">:</span> <span class="n">int16</span><span class="p">,</span>           <span class="c"># GDT_Int16</span>
-    <span class="mi">4</span><span class="p">:</span> <span class="n">uint32</span><span class="p">,</span>          <span class="c"># GDT_UInt32</span>
-    <span class="mi">5</span><span class="p">:</span> <span class="n">int32</span><span class="p">,</span>           <span class="c"># GDT_Int32</span>
-    <span class="mi">6</span><span class="p">:</span> <span class="n">float32</span><span class="p">,</span>         <span class="c"># GDT_Float32</span>
-    <span class="mi">7</span><span class="p">:</span> <span class="n">float64</span><span class="p">,</span>         <span class="c"># GDT_Float64</span>
-    <span class="mi">8</span><span class="p">:</span> <span class="n">complex_</span><span class="p">,</span>        <span class="c"># GDT_CInt16</span>
-    <span class="mi">9</span><span class="p">:</span> <span class="n">complex_</span><span class="p">,</span>        <span class="c"># GDT_CInt32</span>
-    <span class="mi">10</span><span class="p">:</span> <span class="n">complex64</span><span class="p">,</span>      <span class="c"># GDT_CFloat32</span>
-    <span class="mi">11</span><span class="p">:</span> <span class="n">complex128</span><span class="p">}</span>    <span class="c"># GDT_CFloat64</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>            <span class="c1"># GDT_Unknown</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="n">ubyte</span><span class="p">,</span>           <span class="c1"># GDT_Byte</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="n">uint16</span><span class="p">,</span>          <span class="c1"># GDT_UInt16</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="n">int16</span><span class="p">,</span>           <span class="c1"># GDT_Int16</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="n">uint32</span><span class="p">,</span>          <span class="c1"># GDT_UInt32</span>
+    <span class="mi">5</span><span class="p">:</span> <span class="n">int32</span><span class="p">,</span>           <span class="c1"># GDT_Int32</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="n">float32</span><span class="p">,</span>         <span class="c1"># GDT_Float32</span>
+    <span class="mi">7</span><span class="p">:</span> <span class="n">float64</span><span class="p">,</span>         <span class="c1"># GDT_Float64</span>
+    <span class="mi">8</span><span class="p">:</span> <span class="n">complex_</span><span class="p">,</span>        <span class="c1"># GDT_CInt16</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="n">complex_</span><span class="p">,</span>        <span class="c1"># GDT_CInt32</span>
+    <span class="mi">10</span><span class="p">:</span> <span class="n">complex64</span><span class="p">,</span>      <span class="c1"># GDT_CFloat32</span>
+    <span class="mi">11</span><span class="p">:</span> <span class="n">complex128</span><span class="p">}</span>    <span class="c1"># GDT_CFloat64</span>
 
 <span class="n">dtype_rev</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dtype_fwd</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-<span class="n">dtype_rev</span><span class="p">[</span><span class="s">&#39;uint8&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">dtype_rev</span><span class="p">[</span><span class="s1">&#39;uint8&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
 <span class="n">typename_fwd</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="mi">0</span><span class="p">:</span> <span class="s">&#39;Unknown&#39;</span><span class="p">,</span>
-    <span class="mi">1</span><span class="p">:</span> <span class="s">&#39;Byte&#39;</span><span class="p">,</span>
-    <span class="mi">2</span><span class="p">:</span> <span class="s">&#39;UInt16&#39;</span><span class="p">,</span>
-    <span class="mi">3</span><span class="p">:</span> <span class="s">&#39;Int16&#39;</span><span class="p">,</span>
-    <span class="mi">4</span><span class="p">:</span> <span class="s">&#39;UInt32&#39;</span><span class="p">,</span>
-    <span class="mi">5</span><span class="p">:</span> <span class="s">&#39;Int32&#39;</span><span class="p">,</span>
-    <span class="mi">6</span><span class="p">:</span> <span class="s">&#39;Float32&#39;</span><span class="p">,</span>
-    <span class="mi">7</span><span class="p">:</span> <span class="s">&#39;Float64&#39;</span><span class="p">,</span>
-    <span class="mi">8</span><span class="p">:</span> <span class="s">&#39;CInt16&#39;</span><span class="p">,</span>
-    <span class="mi">9</span><span class="p">:</span> <span class="s">&#39;CInt32&#39;</span><span class="p">,</span>
-    <span class="mi">10</span><span class="p">:</span> <span class="s">&#39;CFloat32&#39;</span><span class="p">,</span>
-    <span class="mi">11</span><span class="p">:</span> <span class="s">&#39;CFloat64&#39;</span><span class="p">}</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;Byte&#39;</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;UInt16&#39;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;Int16&#39;</span><span class="p">,</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;UInt32&#39;</span><span class="p">,</span>
+    <span class="mi">5</span><span class="p">:</span> <span class="s1">&#39;Int32&#39;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;Float32&#39;</span><span class="p">,</span>
+    <span class="mi">7</span><span class="p">:</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span>
+    <span class="mi">8</span><span class="p">:</span> <span class="s1">&#39;CInt16&#39;</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;CInt32&#39;</span><span class="p">,</span>
+    <span class="mi">10</span><span class="p">:</span> <span class="s1">&#39;CFloat32&#39;</span><span class="p">,</span>
+    <span class="mi">11</span><span class="p">:</span> <span class="s1">&#39;CFloat64&#39;</span><span class="p">}</span>
 
 <span class="n">typename_rev</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">typename_fwd</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 
 <span class="n">dtype_ranges</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s">&#39;uint8&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
-    <span class="s">&#39;uint16&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">),</span>
-    <span class="s">&#39;int16&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">32768</span><span class="p">,</span> <span class="mi">32767</span><span class="p">),</span>
-    <span class="s">&#39;uint32&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4294967295</span><span class="p">),</span>
-    <span class="s">&#39;int32&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">2147483648</span><span class="p">,</span> <span class="mi">2147483647</span><span class="p">),</span>
-    <span class="s">&#39;float32&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">3.4028235e+38</span><span class="p">,</span> <span class="mf">3.4028235e+38</span><span class="p">),</span>
-    <span class="s">&#39;float64&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.7976931348623157e+308</span><span class="p">,</span> <span class="mf">1.7976931348623157e+308</span><span class="p">)}</span>
+    <span class="s1">&#39;uint8&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+    <span class="s1">&#39;uint16&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">),</span>
+    <span class="s1">&#39;int16&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">32768</span><span class="p">,</span> <span class="mi">32767</span><span class="p">),</span>
+    <span class="s1">&#39;uint32&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4294967295</span><span class="p">),</span>
+    <span class="s1">&#39;int32&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">2147483648</span><span class="p">,</span> <span class="mi">2147483647</span><span class="p">),</span>
+    <span class="s1">&#39;float32&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">3.4028235e+38</span><span class="p">,</span> <span class="mf">3.4028235e+38</span><span class="p">),</span>
+    <span class="s1">&#39;float64&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.7976931348623157e+308</span><span class="p">,</span> <span class="mf">1.7976931348623157e+308</span><span class="p">)}</span>
 
 
 <span class="k">def</span> <span class="nf">_gdal_typename</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
@@ -244,7 +244,7 @@
     <span class="n">min_value</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
     <span class="n">max_value</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;i&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">min_value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">max_value</span> <span class="o">&lt;=</span> <span class="mi">255</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">uint8</span>
@@ -267,7 +267,7 @@
     <span class="sd">&quot;&quot;&quot;Check if array is a ndarray.&quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
-    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="s">&#39;__array__&#39;</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="s1">&#39;__array__&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="can_cast_dtype"><a class="viewcode-back" href="../../rasterio.dtypes.html#rasterio.dtypes.can_cast_dtype">[docs]</a><span class="k">def</span> <span class="nf">can_cast_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
@@ -291,7 +291,7 @@
     <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">True</span>
 
-    <span class="k">elif</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;f&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
 
     <span class="k">else</span><span class="p">:</span>

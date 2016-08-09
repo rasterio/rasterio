@@ -182,30 +182,30 @@ Relationship to GDAL vsicurl, vsis3 et al.</p>
 <p class="last">Requires GDAL 2.1.0</p>
 </div>
 <p>This is an extra feature that must be installed by executing</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="go">pip install rasterio[s3]</span>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="go">pip install rasterio[s3]</span>
 </pre></div>
 </div>
 <p>After you have configured your AWS credentials as explained in the <a class="reference external" href="http://boto3.readthedocs.org/en/latest/guide/configuration.html">boto3 guide</a> you can
 read metadata and imagery from TIFFs stored as S3 objects with no change to
 your code.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
 
-<span class="c"># Printed:</span>
-<span class="c"># {&#39;blockxsize&#39;: 512,</span>
-<span class="c">#  &#39;blockysize&#39;: 512,</span>
-<span class="c">#  &#39;compress&#39;: &#39;deflate&#39;,</span>
-<span class="c">#  &#39;count&#39;: 1,</span>
-<span class="c">#  &#39;crs&#39;: {&#39;init&#39;: u&#39;epsg:32645&#39;},</span>
-<span class="c">#  &#39;driver&#39;: u&#39;GTiff&#39;,</span>
-<span class="c">#  &#39;dtype&#39;: &#39;uint16&#39;,</span>
-<span class="c">#  &#39;height&#39;: 7791,</span>
-<span class="c">#  &#39;interleave&#39;: &#39;band&#39;,</span>
-<span class="c">#  &#39;nodata&#39;: None,</span>
-<span class="c">#  &#39;tiled&#39;: True,</span>
-<span class="c">#  &#39;transform&#39;: Affine(30.0, 0.0, 381885.0,</span>
-<span class="c">#        0.0, -30.0, 2512815.0),</span>
-<span class="c">#  &#39;width&#39;: 7621}</span>
+<span class="c1"># Printed:</span>
+<span class="c1"># {&#39;blockxsize&#39;: 512,</span>
+<span class="c1">#  &#39;blockysize&#39;: 512,</span>
+<span class="c1">#  &#39;compress&#39;: &#39;deflate&#39;,</span>
+<span class="c1">#  &#39;count&#39;: 1,</span>
+<span class="c1">#  &#39;crs&#39;: {&#39;init&#39;: u&#39;epsg:32645&#39;},</span>
+<span class="c1">#  &#39;driver&#39;: u&#39;GTiff&#39;,</span>
+<span class="c1">#  &#39;dtype&#39;: &#39;uint16&#39;,</span>
+<span class="c1">#  &#39;height&#39;: 7791,</span>
+<span class="c1">#  &#39;interleave&#39;: &#39;band&#39;,</span>
+<span class="c1">#  &#39;nodata&#39;: None,</span>
+<span class="c1">#  &#39;tiled&#39;: True,</span>
+<span class="c1">#  &#39;transform&#39;: Affine(30.0, 0.0, 381885.0,</span>
+<span class="c1">#        0.0, -30.0, 2512815.0),</span>
+<span class="c1">#  &#39;width&#39;: 7621}</span>
 </pre></div>
 </div>
 <div class="admonition note">

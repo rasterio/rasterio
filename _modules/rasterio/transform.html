@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.transform</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Geospatial transforms&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Geospatial transforms&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
 
@@ -159,9 +159,9 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Affine</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tastes_like_gdal</span><span class="p">(</span><span class="n">transform</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s">&quot;GDAL-style transforms have been deprecated.  This &quot;</span>
-                <span class="s">&quot;exception will be raised for a period of time to highlight &quot;</span>
-                <span class="s">&quot;potentially confusing errors, but will eventually be removed.&quot;</span><span class="p">)</span>
+                <span class="s2">&quot;GDAL-style transforms have been deprecated.  This &quot;</span>
+                <span class="s2">&quot;exception will be raised for a period of time to highlight &quot;</span>
+                <span class="s2">&quot;potentially confusing errors, but will eventually be removed.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">transform</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="o">*</span><span class="n">transform</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">transform</span></div>
@@ -199,7 +199,7 @@
     <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">n</span></div>
 
 
-<div class="viewcode-block" id="xy"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.xy">[docs]</a><span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="xy"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.xy">[docs]</a><span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the x and y coordinates of pixels at `rows` and `cols`.</span>
 <span class="sd">    The pixel&#39;s center is returned by default, but a corner can be returned</span>
 <span class="sd">    by setting `offset` to one of `ul, ur, ll, lr`.</span>
@@ -233,18 +233,18 @@
         <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">rows</span><span class="p">]</span>
         <span class="n">single_row</span> <span class="o">=</span> <span class="bp">True</span>
 
-    <span class="k">if</span> <span class="n">offset</span> <span class="o">==</span> <span class="s">&#39;center&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="o">==</span> <span class="s1">&#39;center&#39;</span><span class="p">:</span>
         <span class="n">coff</span><span class="p">,</span> <span class="n">roff</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s">&#39;ul&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s1">&#39;ul&#39;</span><span class="p">:</span>
         <span class="n">coff</span><span class="p">,</span> <span class="n">roff</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s">&#39;ur&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s1">&#39;ur&#39;</span><span class="p">:</span>
         <span class="n">coff</span><span class="p">,</span> <span class="n">roff</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s">&#39;ll&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s1">&#39;ll&#39;</span><span class="p">:</span>
         <span class="n">coff</span><span class="p">,</span> <span class="n">roff</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s">&#39;lr&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="o">==</span> <span class="s1">&#39;lr&#39;</span><span class="p">:</span>
         <span class="n">coff</span><span class="p">,</span> <span class="n">roff</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Invalid offset&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid offset&quot;</span><span class="p">)</span>
 
     <span class="n">xs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>

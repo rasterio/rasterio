@@ -181,26 +181,26 @@ GIS layers.</p>
 <p>Consider the Python logo.</p>
 <img alt="https://farm8.staticflickr.com/7018/13547682814_f2e459f7a5_o_d.png" src="https://farm8.staticflickr.com/7018/13547682814_f2e459f7a5_o_d.png" />
 <p>The shapes of the foreground features can be extracted like this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pprint</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pprint</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">features</span>
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;13547682814_f2e459f7a5_o_d.png&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;13547682814_f2e459f7a5_o_d.png&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">blue</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 
 <span class="n">mask</span> <span class="o">=</span> <span class="n">blue</span> <span class="o">!=</span> <span class="mi">255</span>
 <span class="n">shapes</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shapes</span><span class="p">(</span><span class="n">blue</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
 <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">shapes</span><span class="p">))</span>
 
-<span class="c"># Output</span>
-<span class="c"># pprint.pprint(next(shapes))</span>
-<span class="c"># ({&#39;coordinates&#39;: [[(71.0, 6.0),</span>
-<span class="c">#                    (71.0, 7.0),</span>
-<span class="c">#                    (72.0, 7.0),</span>
-<span class="c">#                    (72.0, 6.0),</span>
-<span class="c">#                    (71.0, 6.0)]],</span>
-<span class="c">#   &#39;type&#39;: &#39;Polygon&#39;},</span>
-<span class="c"># 253)</span>
+<span class="c1"># Output</span>
+<span class="c1"># pprint.pprint(next(shapes))</span>
+<span class="c1"># ({&#39;coordinates&#39;: [[(71.0, 6.0),</span>
+<span class="c1">#                    (71.0, 7.0),</span>
+<span class="c1">#                    (72.0, 7.0),</span>
+<span class="c1">#                    (72.0, 6.0),</span>
+<span class="c1">#                    (71.0, 6.0)]],</span>
+<span class="c1">#   &#39;type&#39;: &#39;Polygon&#39;},</span>
+<span class="c1"># 253)</span>
 </pre></div>
 </div>
 <p>The shapes iterator yields <code class="docutils literal"><span class="pre">geometry,</span> <span class="pre">value</span></code> pairs. The second item is the
@@ -208,7 +208,7 @@ value of the raster feature corresponding to the shape and the first is its
 geometry.  The coordinates of the geometries in this case are in pixel units
 with origin at the upper left of the image. If the source dataset was
 georeferenced, you would get similarly georeferenced geometries like this:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">shapes</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shapes</span><span class="p">(</span><span class="n">blue</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">shapes</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shapes</span><span class="p">(</span><span class="n">blue</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -216,7 +216,7 @@ georeferenced, you would get similarly georeferenced geometries like this:</p>
 <h2>Burning shapes into a raster<a class="headerlink" href="#burning-shapes-into-a-raster" title="Permalink to this headline">¶</a></h2>
 <p>To go the other direction, use <code class="docutils literal"><span class="pre">rasterize()</span></code> to burn values into the pixels
 intersecting with geometries.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">image</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span>
             <span class="p">((</span><span class="n">g</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">),</span>
             <span class="n">out_shape</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
@@ -228,7 +228,7 @@ The geometries will be rasterized by the &#8220;painter&#8217;s algorithm&#8221;
 geometries are handled in order and later geometries will overwrite earlier values.</p>
 <p>Again, to burn in georeferenced shapes, pass an appropriate transform for the
 image to be created.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">image</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span>
             <span class="p">((</span><span class="n">g</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">),</span>
             <span class="n">out_shape</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
             <span class="n">transform</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
@@ -238,9 +238,9 @@ image to be created.</p>
 expression. Areas not covered by input geometries are replaced with an
 optional <code class="docutils literal"><span class="pre">fill</span></code> value, which defaults to <code class="docutils literal"><span class="pre">0</span></code>. The resulting image,
 written to disk like this,</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-        <span class="s">&#39;/tmp/rasterized-results.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span>
-        <span class="n">driver</span><span class="o">=</span><span class="s">&#39;GTiff&#39;</span><span class="p">,</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+        <span class="s1">&#39;/tmp/rasterized-results.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span>
+        <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
         <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">width</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>

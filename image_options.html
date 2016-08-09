@@ -189,14 +189,14 @@ environment variables will influence the behavior of <code class="docutils liter
 highly recommended avoiding them in favor of defining behavior programatically.</p>
 <p>The preferred way to set options for rasterio is via <code class="docutils literal"><span class="pre">rasterio.Env()</span></code>.
 Options set on entering the context are deleted on exit.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">GDAL_TIFF_INTERNAL_MASK</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
-    <span class="c"># GeoTIFFs written here will have internal masks, not the</span>
-    <span class="c"># .msk sidecars.</span>
+    <span class="c1"># GeoTIFFs written here will have internal masks, not the</span>
+    <span class="c1"># .msk sidecars.</span>
     <span class="o">...</span>
 
-<span class="c"># Option is gone and the default (False) returns.</span>
+<span class="c1"># Option is gone and the default (False) returns.</span>
 </pre></div>
 </div>
 <p>Use native Python forms (<code class="docutils literal"><span class="pre">True</span></code> and <code class="docutils literal"><span class="pre">False</span></code>) for boolean options. Rasterio
@@ -218,14 +218,14 @@ Some of the common GeoTIFF creation options include:</p>
 </div></blockquote>
 <p>To specify these creation options in python code, you pass them as keyword arguments
 to the <code class="docutils literal"><span class="pre">rasterio.open()</span></code> command in write mode:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;output.tif&quot;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">src</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="s">&quot;JPEG&quot;</span><span class="p">,</span>
-                   <span class="n">tiled</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">blockxsize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">blockysize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-                   <span class="n">photometric</span><span class="o">=</span><span class="s">&quot;YCBCR&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dest</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;output.tif&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">src</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="s2">&quot;JPEG&quot;</span><span class="p">,</span>
+                   <span class="n">tiled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blockxsize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">blockysize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+                   <span class="n">photometric</span><span class="o">=</span><span class="s2">&quot;YCBCR&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dest</span><span class="p">:</span>
     <span class="o">...</span>
 </pre></div>
 </div>
 <p>Or at the command line, <code class="docutils literal"><span class="pre">rio</span></code> commands will accept multiple <code class="docutils literal"><span class="pre">--co</span></code> options:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="n">rio</span> <span class="n">copy</span> <span class="n">source</span><span class="o">.</span><span class="n">tif</span> <span class="n">dest</span><span class="o">.</span><span class="n">tif</span> <span class="o">--</span><span class="n">co</span> <span class="n">tiled</span><span class="o">=</span><span class="n">true</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rio</span> <span class="n">copy</span> <span class="n">source</span><span class="o">.</span><span class="n">tif</span> <span class="n">dest</span><span class="o">.</span><span class="n">tif</span> <span class="o">--</span><span class="n">co</span> <span class="n">tiled</span><span class="o">=</span><span class="n">true</span>
 </pre></div>
 </div>
 <p>Note that some <em>configuration</em> options also have an effect on driver behavior at creation time.</p>

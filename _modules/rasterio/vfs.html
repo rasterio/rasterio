@@ -134,18 +134,18 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.vfs</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Implementation of Apache VFS schemes and URLs.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Implementation of Apache VFS schemes and URLs.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">urlparse</span>
 
 
-<span class="c"># NB: As not to propagate fallacies of distributed computing, Rasterio</span>
-<span class="c"># does not support HTTP or FTP URLs via GDAL&#39;s vsicurl handler. Only</span>
-<span class="c"># the following local filesystem schemes are supported.</span>
-<span class="n">SCHEMES</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;gzip&#39;</span><span class="p">:</span> <span class="s">&#39;gzip&#39;</span><span class="p">,</span> <span class="s">&#39;zip&#39;</span><span class="p">:</span> <span class="s">&#39;zip&#39;</span><span class="p">,</span> <span class="s">&#39;tar&#39;</span><span class="p">:</span> <span class="s">&#39;tar&#39;</span><span class="p">,</span> <span class="s">&#39;https&#39;</span><span class="p">:</span> <span class="s">&#39;curl&#39;</span><span class="p">,</span>
-           <span class="s">&#39;http&#39;</span><span class="p">:</span> <span class="s">&#39;curl&#39;</span><span class="p">,</span> <span class="s">&#39;s3&#39;</span><span class="p">:</span> <span class="s">&#39;s3&#39;</span><span class="p">}</span>
+<span class="c1"># NB: As not to propagate fallacies of distributed computing, Rasterio</span>
+<span class="c1"># does not support HTTP or FTP URLs via GDAL&#39;s vsicurl handler. Only</span>
+<span class="c1"># the following local filesystem schemes are supported.</span>
+<span class="n">SCHEMES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;gzip&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="s1">&#39;zip&#39;</span><span class="p">:</span> <span class="s1">&#39;zip&#39;</span><span class="p">,</span> <span class="s1">&#39;tar&#39;</span><span class="p">:</span> <span class="s1">&#39;tar&#39;</span><span class="p">,</span> <span class="s1">&#39;https&#39;</span><span class="p">:</span> <span class="s1">&#39;curl&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;http&#39;</span><span class="p">:</span> <span class="s1">&#39;curl&#39;</span><span class="p">,</span> <span class="s1">&#39;s3&#39;</span><span class="p">:</span> <span class="s1">&#39;s3&#39;</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="parse_path"><a class="viewcode-back" href="../../rasterio.vfs.html#rasterio.vfs.parse_path">[docs]</a><span class="k">def</span> <span class="nf">parse_path</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">vfs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -160,25 +160,25 @@
         <span class="n">parts</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">vfs</span><span class="p">)</span>
         <span class="n">scheme</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">scheme</span>
         <span class="n">archive</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">path</span>
-        <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="ow">and</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="o">!=</span> <span class="s">&#39;localhost&#39;</span><span class="p">:</span>  <span class="c"># pragma: no cover</span>
+        <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="ow">and</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="o">!=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
             <span class="n">archive</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="o">+</span> <span class="n">archive</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">scheme</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">scheme</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">path</span>
-        <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="ow">and</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="o">!=</span> <span class="s">&#39;localhost&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="ow">and</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="o">!=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">:</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">netloc</span> <span class="o">+</span> <span class="n">path</span>
-        <span class="c"># There are certain URI schemes we favor over GDAL&#39;s names.</span>
+        <span class="c1"># There are certain URI schemes we favor over GDAL&#39;s names.</span>
         <span class="k">if</span> <span class="n">scheme</span> <span class="ow">in</span> <span class="n">SCHEMES</span><span class="p">:</span>
-            <span class="n">parts</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;!&#39;</span><span class="p">)</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="p">)</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="n">parts</span> <span class="k">else</span> <span class="bp">None</span>
             <span class="n">archive</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="n">parts</span> <span class="k">else</span> <span class="bp">None</span>
-        <span class="c"># For filesystem paths.</span>
-        <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;file&#39;</span><span class="p">):</span>
+        <span class="c1"># For filesystem paths.</span>
+        <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">):</span>
             <span class="k">pass</span>
-        <span class="c"># We permit GDAL&#39;s idiosyncratic URI-like dataset paths such as</span>
-        <span class="c"># &#39;NETCDF:...&#39; to fall right through with no parsed archive</span>
-        <span class="c"># or scheme.</span>
+        <span class="c1"># We permit GDAL&#39;s idiosyncratic URI-like dataset paths such as</span>
+        <span class="c1"># &#39;NETCDF:...&#39; to fall right through with no parsed archive</span>
+        <span class="c1"># or scheme.</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">archive</span> <span class="o">=</span> <span class="n">scheme</span> <span class="o">=</span> <span class="bp">None</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">uri</span>
@@ -188,16 +188,16 @@
 
 <div class="viewcode-block" id="vsi_path"><a class="viewcode-back" href="../../rasterio.vfs.html#rasterio.vfs.vsi_path">[docs]</a><span class="k">def</span> <span class="nf">vsi_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">archive</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scheme</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert a parsed path to a GDAL VSI path.&quot;&quot;&quot;</span>
-    <span class="c"># If a VSF and archive file are specified, we convert the path to</span>
-    <span class="c"># a GDAL VSI path (see cpl_vsi.h).</span>
-    <span class="k">if</span> <span class="n">scheme</span> <span class="ow">and</span> <span class="n">scheme</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;http&#39;</span><span class="p">):</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="s">&quot;/vsicurl/{0}://{1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">and</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s">&#39;s3&#39;</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="s">&quot;/vsis3/{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">and</span> <span class="n">scheme</span> <span class="o">!=</span> <span class="s">&#39;file&#39;</span><span class="p">:</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="p">[</span><span class="s">&#39;/vsi{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scheme</span><span class="p">),</span> <span class="n">archive</span><span class="p">,</span> <span class="n">path</span><span class="p">])</span>
+    <span class="c1"># If a VSF and archive file are specified, we convert the path to</span>
+    <span class="c1"># a GDAL VSI path (see cpl_vsi.h).</span>
+    <span class="k">if</span> <span class="n">scheme</span> <span class="ow">and</span> <span class="n">scheme</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;/vsicurl/{0}://{1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">and</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;s3&#39;</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;/vsis3/{0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">and</span> <span class="n">scheme</span> <span class="o">!=</span> <span class="s1">&#39;file&#39;</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">&#39;/vsi{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scheme</span><span class="p">),</span> <span class="n">archive</span><span class="p">,</span> <span class="n">path</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">path</span>
     <span class="k">return</span> <span class="n">result</span></div>

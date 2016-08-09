@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.features</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Functions for working with features in a raster dataset.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Functions for working with features in a raster dataset.&quot;&quot;&quot;</span>
 
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -192,7 +192,7 @@
         <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
         <span class="n">all_touched</span><span class="o">=</span><span class="n">all_touched</span><span class="p">,</span>
         <span class="n">fill</span><span class="o">=</span><span class="n">fill</span><span class="p">,</span>
-        <span class="n">default_value</span><span class="o">=</span><span class="n">mask_value</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;bool&#39;</span><span class="p">)</span></div>
+        <span class="n">default_value</span><span class="o">=</span><span class="n">mask_value</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span></div>
 
 
 <span class="nd">@ensure_env</span>
@@ -335,35 +335,35 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">valid_dtypes</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s">&#39;int16&#39;</span><span class="p">,</span> <span class="s">&#39;int32&#39;</span><span class="p">,</span> <span class="s">&#39;uint8&#39;</span><span class="p">,</span> <span class="s">&#39;uint16&#39;</span><span class="p">,</span> <span class="s">&#39;uint32&#39;</span><span class="p">,</span> <span class="s">&#39;float32&#39;</span><span class="p">,</span> <span class="s">&#39;float64&#39;</span>
+        <span class="s1">&#39;int16&#39;</span><span class="p">,</span> <span class="s1">&#39;int32&#39;</span><span class="p">,</span> <span class="s1">&#39;uint8&#39;</span><span class="p">,</span> <span class="s1">&#39;uint16&#39;</span><span class="p">,</span> <span class="s1">&#39;uint32&#39;</span><span class="p">,</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;float64&#39;</span>
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">format_invalid_dtype</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s">&#39;{0} dtype must be one of: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">param</span><span class="p">,</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">valid_dtypes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;{0} dtype must be one of: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">param</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">valid_dtypes</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">format_cast_error</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s">&#39;{0} cannot be cast to specified dtype: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;{0} cannot be cast to specified dtype: {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">fill</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">fill_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">fill</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">validate_dtype</span><span class="p">(</span><span class="n">fill_array</span><span class="p">,</span> <span class="n">valid_dtypes</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s">&#39;fill&#39;</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">can_cast_dtype</span><span class="p">(</span><span class="n">fill_array</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s">&#39;fill&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">default_value</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">default_value_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">default_value</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">validate_dtype</span><span class="p">(</span><span class="n">default_value_array</span><span class="p">,</span> <span class="n">valid_dtypes</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s">&#39;default_value&#39;</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s1">&#39;default_value&#39;</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">can_cast_dtype</span><span class="p">(</span><span class="n">default_value_array</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s">&#39;default_vaue&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s1">&#39;default_vaue&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_dtypes</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s">&#39;dtype&#39;</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">))</span>
 
     <span class="n">valid_shapes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">shape_values</span> <span class="o">=</span> <span class="p">[]</span>
@@ -373,45 +373,45 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">geom</span> <span class="o">=</span> <span class="n">item</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">default_value</span>
-        <span class="n">geom</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="s">&#39;__geo_interface__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">geom</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="s1">&#39;__geo_interface__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">geom</span>
 
-        <span class="c"># not isinstance(geom, dict) or</span>
-        <span class="k">if</span> <span class="s">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">geom</span> <span class="ow">or</span> <span class="s">&#39;coordinates&#39;</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">:</span>
+        <span class="c1"># not isinstance(geom, dict) or</span>
+        <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">geom</span> <span class="ow">or</span> <span class="s1">&#39;coordinates&#39;</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">:</span>
             <span class="n">valid_shapes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geom</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
             <span class="n">shape_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s">&#39;Invalid geometry object at index {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="s1">&#39;Invalid geometry object at index {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
             <span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_shapes</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;No valid geometry objects found for rasterize&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No valid geometry objects found for rasterize&#39;</span><span class="p">)</span>
 
     <span class="n">shape_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape_values</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">validate_dtype</span><span class="p">(</span><span class="n">shape_values</span><span class="p">,</span> <span class="n">valid_dtypes</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s">&#39;shape values&#39;</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s1">&#39;shape values&#39;</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">get_minimum_dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape_values</span><span class="p">,</span> <span class="n">fill</span><span class="p">))</span>
 
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">can_cast_dtype</span><span class="p">(</span><span class="n">shape_values</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s">&#39;shape values&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s1">&#39;shape values&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_dtypes</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s">&#39;out&#39;</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_invalid_dtype</span><span class="p">(</span><span class="s1">&#39;out&#39;</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">can_cast_dtype</span><span class="p">(</span><span class="n">shape_values</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s">&#39;shape values&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s1">&#39;shape values&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
     <span class="k">elif</span> <span class="n">out_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">out_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">out</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">fill</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Either an out_shape or image must be provided&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either an out_shape or image must be provided&#39;</span><span class="p">)</span>
 
     <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
     <span class="n">_rasterize</span><span class="p">(</span><span class="n">valid_shapes</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">transform</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">(),</span> <span class="n">all_touched</span><span class="p">)</span>
@@ -432,10 +432,10 @@
 <span class="sd">    tuple</span>
 <span class="sd">        Bounding box: (minx, miny, maxx, maxy)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s">&#39;bbox&#39;</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s">&#39;bbox&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s1">&#39;bbox&#39;</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">])</span>
 
-    <span class="n">geom</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;geometry&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">geometry</span>
+    <span class="n">geom</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;geometry&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">geometry</span>
     <span class="k">return</span> <span class="n">_bounds</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span></div>
 </pre></div>
 

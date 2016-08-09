@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.warp</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Raster warping and reprojection.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Raster warping and reprojection.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
@@ -262,7 +262,7 @@
 <span class="sd">        Outermost coordinates in target coordinate reference system.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">densify_pts</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;densify parameter must be &gt;= 0&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;densify parameter must be &gt;= 0&#39;</span><span class="p">)</span>
 
     <span class="n">in_xs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">in_ys</span> <span class="o">=</span> <span class="p">[]</span>
@@ -270,7 +270,7 @@
     <span class="k">if</span> <span class="n">densify_pts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">densify_factor</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">densify_pts</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="c"># Add points along outer edges.</span>
+        <span class="c1"># Add points along outer edges.</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
             <span class="n">in_xs</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">x</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">densify_pts</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
             <span class="n">in_ys</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
@@ -367,19 +367,19 @@
 <span class="sd">    out: None</span>
 <span class="sd">        Output is written to destination.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c"># Resampling guard.</span>
+    <span class="c1"># Resampling guard.</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">Resampling</span><span class="p">(</span><span class="n">resampling</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">resampling</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s">&quot;resampling must be one of: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="s">&#39;Resampling.{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span>
-                 <span class="n">Resampling</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s">&#39;gauss&#39;</span><span class="p">])))</span>
+            <span class="s2">&quot;resampling must be one of: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="s1">&#39;Resampling.{0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span>
+                 <span class="n">Resampling</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;gauss&#39;</span><span class="p">])))</span>
 
-    <span class="c"># If working with identity transform, assume it is crs-less data</span>
-    <span class="c"># and that translating the matrix very slightly will avoid #674</span>
+    <span class="c1"># If working with identity transform, assume it is crs-less data</span>
+    <span class="c1"># and that translating the matrix very slightly will avoid #674</span>
     <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-100</span>
     <span class="k">if</span> <span class="n">src_transform</span> <span class="ow">and</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">src_transform</span><span class="p">)</span><span class="o">.</span><span class="n">is_identity</span><span class="p">:</span>
         <span class="n">src_transform</span> <span class="o">=</span> <span class="n">src_transform</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
@@ -391,7 +391,7 @@
     <span class="k">if</span> <span class="n">dst_transform</span><span class="p">:</span>
         <span class="n">dst_transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">dst_transform</span><span class="p">)</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">()</span>
 
-    <span class="c"># Passing None can cause segfault, use empty dict</span>
+    <span class="c1"># Passing None can cause segfault, use empty dict</span>
     <span class="k">if</span> <span class="n">src_crs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">src_crs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">dst_crs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -469,20 +469,20 @@
         <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
         <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
 
-    <span class="c"># If resolution is specified, Keep upper-left anchored</span>
-    <span class="c"># adjust the transform resolutions</span>
-    <span class="c"># adjust the width/height by the ratio of estimated:specified res (ceil&#39;d)</span>
+    <span class="c1"># If resolution is specified, Keep upper-left anchored</span>
+    <span class="c1"># adjust the transform resolutions</span>
+    <span class="c1"># adjust the width/height by the ratio of estimated:specified res (ceil&#39;d)</span>
     <span class="k">if</span> <span class="n">resolution</span><span class="p">:</span>
 
-        <span class="c"># resolutions argument into tuple</span>
+        <span class="c1"># resolutions argument into tuple</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">resolution</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolution</span><span class="p">))</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> \
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
 
-        <span class="c"># Assume yres is provided as positive,</span>
-        <span class="c"># needs to be negative for north-up affine</span>
+        <span class="c1"># Assume yres is provided as positive,</span>
+        <span class="c1"># needs to be negative for north-up affine</span>
         <span class="n">xres</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">yres</span> <span class="o">=</span> <span class="o">-</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 

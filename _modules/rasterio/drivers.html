@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.drivers</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Driver policies and utilities</span>
+<span></span><span class="sd">&quot;&quot;&quot;Driver policies and utilities</span>
 
 <span class="sd">GDAL has many standard and extension format drivers and completeness of</span>
 <span class="sd">these drivers varies greatly. It&#39;s possible to succeed poorly with some</span>
@@ -146,12 +146,12 @@
 <span class="sd">http://unidata.github.io/netcdf4-python/.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="c"># Methods like `rasterio.open()` may use this blacklist to preempt</span>
-<span class="c"># combinations of drivers and file modes.</span>
+<span class="c1"># Methods like `rasterio.open()` may use this blacklist to preempt</span>
+<span class="c1"># combinations of drivers and file modes.</span>
 <span class="n">blacklist</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="c"># See https://github.com/mapbox/rasterio/issues/638 for discussion</span>
-    <span class="c"># about writing NetCDF files.</span>
-    <span class="s">&#39;netCDF&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&#39;r+&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)}</span>
+    <span class="c1"># See https://github.com/mapbox/rasterio/issues/638 for discussion</span>
+    <span class="c1"># about writing NetCDF files.</span>
+    <span class="s1">&#39;netCDF&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;r+&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)}</span>
 
 
 <div class="viewcode-block" id="is_blacklisted"><a class="viewcode-back" href="../../rasterio.drivers.html#rasterio.drivers.is_blacklisted">[docs]</a><span class="k">def</span> <span class="nf">is_blacklisted</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>

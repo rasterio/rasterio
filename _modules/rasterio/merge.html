@@ -134,7 +134,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.merge</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;Copy valid pixels from input files to an output file.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Copy valid pixels from input files to an output file.&quot;&quot;&quot;</span>
 
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -197,11 +197,11 @@
     <span class="n">nodataval</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">nodatavals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">dtype</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">dtypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="c"># Extent from option or extent of all inputs.</span>
+    <span class="c1"># Extent from option or extent of all inputs.</span>
     <span class="k">if</span> <span class="n">bounds</span><span class="p">:</span>
         <span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_s</span><span class="p">,</span> <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_n</span> <span class="o">=</span> <span class="n">bounds</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c"># scan input files.</span>
+        <span class="c1"># scan input files.</span>
         <span class="n">xs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
@@ -210,11 +210,11 @@
             <span class="n">ys</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">bottom</span><span class="p">,</span> <span class="n">top</span><span class="p">])</span>
         <span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_s</span><span class="p">,</span> <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">ys</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Output bounds: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_s</span><span class="p">,</span> <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_n</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output bounds: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_s</span><span class="p">,</span> <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_n</span><span class="p">))</span>
     <span class="n">output_transform</span> <span class="o">=</span> <span class="n">Affine</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_n</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Output transform, before scaling: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output transform, before scaling: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">)</span>
 
-    <span class="c"># Resolution/pixel size.</span>
+    <span class="c1"># Resolution/pixel size.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">first_res</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
@@ -222,51 +222,51 @@
     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">output_transform</span> <span class="o">*=</span> <span class="n">Affine</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Output transform, after scaling: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output transform, after scaling: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">)</span>
 
-    <span class="c"># Compute output array shape. We guarantee it will cover the output</span>
-    <span class="c"># bounds completely.</span>
+    <span class="c1"># Compute output array shape. We guarantee it will cover the output</span>
+    <span class="c1"># bounds completely.</span>
     <span class="n">output_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">dst_e</span> <span class="o">-</span> <span class="n">dst_w</span><span class="p">)</span> <span class="o">/</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
     <span class="n">output_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">dst_n</span> <span class="o">-</span> <span class="n">dst_s</span><span class="p">)</span> <span class="o">/</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
-    <span class="c"># Adjust bounds to fit.</span>
+    <span class="c1"># Adjust bounds to fit.</span>
     <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_s</span> <span class="o">=</span> <span class="n">output_transform</span> <span class="o">*</span> <span class="p">(</span><span class="n">output_width</span><span class="p">,</span> <span class="n">output_height</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Output width: </span><span class="si">%d</span><span class="s">, height: </span><span class="si">%d</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">output_width</span><span class="p">,</span> <span class="n">output_height</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Adjusted bounds: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_s</span><span class="p">,</span> <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_n</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output width: </span><span class="si">%d</span><span class="s2">, height: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">output_width</span><span class="p">,</span> <span class="n">output_height</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adjusted bounds: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">dst_w</span><span class="p">,</span> <span class="n">dst_s</span><span class="p">,</span> <span class="n">dst_e</span><span class="p">,</span> <span class="n">dst_n</span><span class="p">))</span>
 
-    <span class="c"># create destination array</span>
+    <span class="c1"># create destination array</span>
     <span class="n">dest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">first</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">output_height</span><span class="p">,</span> <span class="n">output_width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">nodataval</span> <span class="o">=</span> <span class="n">nodata</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Set nodataval: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">nodataval</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Set nodataval: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">nodataval</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">nodataval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="c"># Only fill if the nodataval is within dtype&#39;s range.</span>
+        <span class="c1"># Only fill if the nodataval is within dtype&#39;s range.</span>
         <span class="n">inrange</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="s">&#39;u&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">):</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
             <span class="n">inrange</span> <span class="o">=</span> <span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">min</span> <span class="o">&lt;=</span> <span class="n">nodataval</span> <span class="o">&lt;=</span> <span class="n">info</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s">&#39;f&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
             <span class="n">inrange</span> <span class="o">=</span> <span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">min</span> <span class="o">&lt;=</span> <span class="n">nodataval</span> <span class="o">&lt;=</span> <span class="n">info</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inrange</span><span class="p">:</span>
             <span class="n">dest</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">nodataval</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s">&quot;Input file&#39;s nodata value, </span><span class="si">%s</span><span class="s">, is beyond the valid &quot;</span>
-                <span class="s">&quot;range of its data type, </span><span class="si">%s</span><span class="s">. Consider overriding it &quot;</span>
-                <span class="s">&quot;using the --nodata option for better results.&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="s2">&quot;Input file&#39;s nodata value, </span><span class="si">%s</span><span class="s2">, is beyond the valid &quot;</span>
+                <span class="s2">&quot;range of its data type, </span><span class="si">%s</span><span class="s2">. Consider overriding it &quot;</span>
+                <span class="s2">&quot;using the --nodata option for better results.&quot;</span> <span class="o">%</span> <span class="p">(</span>
                     <span class="n">nodataval</span><span class="p">,</span> <span class="n">dtype</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">nodataval</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-        <span class="c"># Real World (tm) use of boundless reads.</span>
-        <span class="c"># This approach uses the maximum amount of memory to solve the problem.</span>
-        <span class="c"># Making it more efficient is a TODO.</span>
+        <span class="c1"># Real World (tm) use of boundless reads.</span>
+        <span class="c1"># This approach uses the maximum amount of memory to solve the problem.</span>
+        <span class="c1"># Making it more efficient is a TODO.</span>
 
-        <span class="c"># 1. Compute spatial intersection of destination and source.</span>
+        <span class="c1"># 1. Compute spatial intersection of destination and source.</span>
         <span class="n">src_w</span><span class="p">,</span> <span class="n">src_s</span><span class="p">,</span> <span class="n">src_e</span><span class="p">,</span> <span class="n">src_n</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">bounds</span>
 
         <span class="n">int_w</span> <span class="o">=</span> <span class="n">src_w</span> <span class="k">if</span> <span class="n">src_w</span> <span class="o">&gt;</span> <span class="n">dst_w</span> <span class="k">else</span> <span class="n">dst_w</span>
@@ -274,31 +274,31 @@
         <span class="n">int_e</span> <span class="o">=</span> <span class="n">src_e</span> <span class="k">if</span> <span class="n">src_e</span> <span class="o">&lt;</span> <span class="n">dst_e</span> <span class="k">else</span> <span class="n">dst_e</span>
         <span class="n">int_n</span> <span class="o">=</span> <span class="n">src_n</span> <span class="k">if</span> <span class="n">src_n</span> <span class="o">&lt;</span> <span class="n">dst_n</span> <span class="k">else</span> <span class="n">dst_n</span>
 
-        <span class="c"># 2. Compute the source window.</span>
+        <span class="c1"># 2. Compute the source window.</span>
         <span class="n">src_window</span> <span class="o">=</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
             <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
             <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Src </span><span class="si">%s</span><span class="s"> window: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">src_window</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Src </span><span class="si">%s</span><span class="s2"> window: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">src_window</span><span class="p">)</span>
 
-        <span class="c"># 3. Compute the destination window.</span>
+        <span class="c1"># 3. Compute the destination window.</span>
         <span class="n">dst_window</span> <span class="o">=</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
             <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">,</span>
             <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Dst window: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">dst_window</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dst window: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dst_window</span><span class="p">)</span>
 
-        <span class="c"># 4. Initialize temp array.</span>
+        <span class="c1"># 4. Initialize temp array.</span>
         <span class="n">tcount</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">count</span>
         <span class="n">trows</span><span class="p">,</span> <span class="n">tcols</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">dst_window</span><span class="p">)</span>
 
         <span class="n">temp_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">tcount</span><span class="p">,</span> <span class="n">trows</span><span class="p">,</span> <span class="n">tcols</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Temp shape: </span><span class="si">%r</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">temp_shape</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Temp shape: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">temp_shape</span><span class="p">)</span>
 
         <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">temp_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">temp</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">temp</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">src_window</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                         <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-        <span class="c"># 5. Copy elements of temp into dest.</span>
+        <span class="c1"># 5. Copy elements of temp into dest.</span>
         <span class="n">roff</span><span class="p">,</span> <span class="n">coff</span> <span class="o">=</span> <span class="n">dst_window</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">dst_window</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">region</span> <span class="o">=</span> <span class="n">dest</span><span class="p">[:,</span> <span class="n">roff</span><span class="p">:</span><span class="n">roff</span> <span class="o">+</span> <span class="n">trows</span><span class="p">,</span> <span class="n">coff</span><span class="p">:</span><span class="n">coff</span> <span class="o">+</span> <span class="n">tcols</span><span class="p">]</span>

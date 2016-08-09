@@ -173,20 +173,20 @@ provide this functionality.</p>
 the difference in coding style is significant. For example, opening a raster file
 with <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> involves using gdal constants and the programmer must provide
 their own error handling and memory management</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
 <span class="kn">from</span> <span class="nn">osgeo.gdalconst</span> <span class="k">import</span> <span class="o">*</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span> <span class="n">filename</span><span class="p">,</span> <span class="n">GA_ReadOnly</span> <span class="p">)</span>
-<span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="k">None</span><span class="p">:</span>
-    <span class="c"># ... handle a non-existant dataset</span>
-<span class="c"># ... work with dataset</span>
+<span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># ... handle a non-existant dataset</span>
+<span class="c1"># ... work with dataset</span>
 <span class="k">del</span> <span class="n">dataset</span>
 </pre></div>
 </div>
 <p>Compared to the similar code in <code class="docutils literal"><span class="pre">rasterio</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">rasterio</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
-    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
-        <span class="c"># ... work with dataset</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="c1"># ... work with dataset</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal"><span class="pre">rasterio</span></code> code:</p>
@@ -237,29 +237,29 @@ process using <code class="docutils literal"><span class="pre">rasterio</span></
 <div class="section" id="reading">
 <h3>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h3>
 <p>We&#8217;ll start with a raster dataset to work with, our trusty test fixture</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="s">&quot;tests/data/RGB.byte.tif&quot;</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span>
 </pre></div>
 </div>
 <img alt="_images/rgb.jpg" src="_images/rgb.jpg" />
 <p>The most basic operation is reading the raster into a numpy array</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># osgeo.gdal</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">osgeo.gdalconst</span> <span class="kn">import</span> <span class="n">GA_ReadOnly</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">GA_ReadOnly</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="ow">not</span> <span class="n">g_ds</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&quot;Cannot open </span><span class="si">%r</span><span class="s"> as GDAL raster&quot;</span> <span class="o">%</span> <span class="n">raster</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Cannot open </span><span class="si">%r</span><span class="s2"> as GDAL raster&quot;</span> <span class="o">%</span> <span class="n">raster</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_arr</span> <span class="o">=</span> <span class="n">g_ds</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The similar operation in rasterio</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># rasterio</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># rasterio</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">r_arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The result is the same 3D <code class="docutils literal"><span class="pre">numpy.ndarray</span></code></p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">r_arr</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(3, 718, 791)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">g_arr</span><span class="p">,</span> <span class="n">r_arr</span><span class="p">)</span>
@@ -267,22 +267,22 @@ process using <code class="docutils literal"><span class="pre">rasterio</span></
 </div>
 <p>If we want to grab a subset of the raster, say from row 300 to 400 and column 200 to 400.
 In gdal you would express this in terms of the offset (200, 300) and size (200, 100)</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># osgeo.gdal</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_arr2</span> <span class="o">=</span> <span class="n">g_ds</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_arr2</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(3, 100, 200)</span>
 </pre></div>
 </div>
 <p>In Rasterio, we use a windows tuple which explicitly defines the start/stop row and columns</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># rasterio</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">r_arr2</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">400</span><span class="p">)))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">r_arr2</span><span class="p">,</span> <span class="n">g_arr2</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Reading a single band into a 2D array follows a different pattern. In gdal, you get a
 reference to a <code class="docutils literal"><span class="pre">RasterBand</span></code> and use its <code class="docutils literal"><span class="pre">ReadAsArray</span></code> method</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># osgeo.gdal</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_band1</span> <span class="o">=</span> <span class="n">g_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_band1_arr</span> <span class="o">=</span> <span class="n">g_band1</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g_band1_arr</span><span class="o">.</span><span class="n">shape</span>
@@ -291,7 +291,7 @@ reference to a <code class="docutils literal"><span class="pre">RasterBand</span
 </div>
 <p>With Rasterio, you pass the raster band index to the <code class="docutils literal"><span class="pre">read()</span></code> method. Note that
 both Rasterio and gdal use a 1-based index to defined bands</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># rasterio</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># rasterio</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">r_band1_arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
@@ -299,8 +299,8 @@ both Rasterio and gdal use a 1-based index to defined bands</p>
 </pre></div>
 </div>
 <p>With the gdal objects you have to manually manage the object&#8217;s lifecycle</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># osgeo.gdal</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># clean up reference to dateset to close</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># osgeo.gdal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># clean up reference to dateset to close</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">g_band1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">g_ds</span>
 </pre></div>
@@ -312,32 +312,32 @@ both Rasterio and gdal use a 1-based index to defined bands</p>
 to a new GeoTIFF file.</p>
 <p>With Rasterio, you open the dataset, read the data and the
 <code class="docutils literal"><span class="pre">profile</span></code> which contains the metadata necessary to write a similar dataset.</p>
-<div class="highlight-python"><div class="highlight"><pre>   <span class="o">&gt;&gt;&gt;</span> <span class="c"># rasterio</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span>   <span class="o">&gt;&gt;&gt;</span> <span class="c1"># rasterio</span>
    <span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
    <span class="o">...</span>     <span class="n">arr</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
    <span class="o">...</span>     <span class="n">profile</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">profile</span>
-   <span class="o">&gt;&gt;&gt;</span> <span class="n">profile</span><span class="p">[</span><span class="s">&#39;height&#39;</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s">&#39;width&#39;</span><span class="p">]</span>
+   <span class="o">&gt;&gt;&gt;</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span>
    <span class="p">(</span><span class="mi">718</span><span class="p">,</span> <span class="mi">791</span><span class="p">)</span>
 
-<span class="n">Writing</span> <span class="n">the</span> <span class="mi">3</span><span class="n">D</span> <span class="n">array</span> <span class="k">with</span> <span class="n">Rasterio</span> <span class="ow">is</span> <span class="n">similar</span> <span class="n">to</span> <span class="n">Python</span><span class="s">&#39;s file interface</span>
+<span class="n">Writing</span> <span class="n">the</span> <span class="mi">3</span><span class="n">D</span> <span class="n">array</span> <span class="k">with</span> <span class="n">Rasterio</span> <span class="ow">is</span> <span class="n">similar</span> <span class="n">to</span> <span class="n">Python</span><span class="s1">&#39;s file interface</span>
 <span class="k">with</span> <span class="n">some</span> <span class="n">additional</span> <span class="n">metadata</span> <span class="n">to</span> <span class="n">handle</span> <span class="n">geospatial</span> <span class="n">datasets</span><span class="p">:</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>   <span class="o">&gt;&gt;&gt;</span> <span class="c"># rasterio</span>
-   <span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;/tmp/newraster.tif&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span>   <span class="o">&gt;&gt;&gt;</span> <span class="c1"># rasterio</span>
+   <span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/newraster.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
    <span class="o">...</span>     <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 
 
 <span class="n">The</span> <span class="n">equivalent</span> <span class="n">operation</span> <span class="ow">in</span> <span class="n">osgeo</span><span class="o">.</span><span class="n">gdal</span> <span class="n">requires</span> <span class="n">a</span> <span class="n">more</span> <span class="n">procedural</span> <span class="n">approach</span><span class="p">:</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">driver</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="s">&#39;GTiff&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">out_raster</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="s">&#39;/tmp/newraster_gdal.tif&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                           <span class="n">profile</span><span class="p">[</span><span class="s">&#39;width&#39;</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s">&#39;height&#39;</span><span class="p">],</span>
-<span class="gp">... </span>                           <span class="n">profile</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">],</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GDT_Byte</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">out_raster</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="s">&#39;transform&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">())</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">driver</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="s1">&#39;GTiff&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_raster</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="s1">&#39;/tmp/newraster_gdal.tif&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                           <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">],</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                           <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">],</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GDT_Byte</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_raster</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">())</span>
 <span class="go">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">bidx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">profile</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">bidx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">band</span> <span class="o">=</span> <span class="n">out_raster</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="n">bidx</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">band</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">bidx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
 <span class="gp">... </span>    <span class="n">band</span><span class="o">.</span><span class="n">FlushCache</span><span class="p">()</span>
@@ -346,7 +346,7 @@ to a new GeoTIFF file.</p>
 <span class="go">0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">osr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">srs</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">SpatialReference</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">srs</span><span class="o">.</span><span class="n">ImportFromWkt</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="s">&#39;crs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">wkt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">srs</span><span class="o">.</span><span class="n">ImportFromWkt</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;crs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">wkt</span><span class="p">)</span>
 <span class="go">0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">out_raster</span><span class="o">.</span><span class="n">SetProjection</span><span class="p">(</span><span class="n">srs</span><span class="o">.</span><span class="n">ExportToWkt</span><span class="p">())</span>
 <span class="go">0</span>
