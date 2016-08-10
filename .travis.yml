@@ -54,7 +54,7 @@ install:
   - "rio --version"
   - "rio --gdal-version"
 script:
-  - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-modules rasterio --doctest-glob='*.rst' docs/*.rst ; fi"
+  - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-modules rasterio --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart' ; fi"
   - py.test --cov rasterio --cov-report term-missing
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"
