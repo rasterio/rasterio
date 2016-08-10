@@ -12,7 +12,6 @@ Rasterio supports Python 2.7 and 3.3-3.5 on Linux and Mac OS X.
 
 .. code:: pycon
 
-    >>> import rasterio
     >>> dataset = rasterio.open('example.tif')
     >>> dataset.driver
     'GTiff'
