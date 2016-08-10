@@ -1,47 +1,94 @@
+======================
 Rasterio Documentation
 ======================
 
-.. warning::
-    This is not the official documentation. Not yet.
-    This is a draft and everything here is subject to change.
+Rasterio reads and writes geospatial raster data.
 
-    For now, please refer to https://github.com/mapbox/rasterio
-    for documentation.
+Geographic information systems use GeoTIFF and other formats to organize
+and store gridded raster datasets. Rasterio reads and writes these
+formats and provides a Python API based on Numpy N-dimensional arrays.
 
-Rasterio is for Python programmers and command line users
-who want to read, write and manipulate geospatial raster datasets.
+Rasterio supports Python 2.7 and 3.3-3.5 on Linux and Mac OS X.
 
-Rasterio employs GDAL_ under the hood for file I/O and raster formatting.
-Its functions typically accept and return Numpy ndarrays.
-Rasterio is designed to make working with geospatial raster data more productive and more fun.
+.. code:: pycon
 
-Install with pip (see the complete :doc:`installation docs </installation>` )
+    >>> dataset = rasterio.open('example.tif')
+    >>> dataset.driver
+    'GTiff'
+    >>> dataset.count
+    1
+    >>> dataset.dtypes
+    ('uint16',)
+    >>> dataset.shape
+    (7871, 7731)
+    >>> dataset.crs
+    CRS({'init': 'epsg:32612'})
+    >>> dataset.bounds
+    BoundingBox(left=358485.0, bottom=4028985.0, right=59
 
-.. code::
-
-    pip install rasterio
-
-And an example of use in python
-
-.. code:: python
-
-    import rasterio
-
-
-    with rasterio.open('data.tif') as src:
-        array = src.read()
-
-
-Contents:
+User guide
+==========
 
 .. toctree::
    :maxdepth: 2
 
-   python_manual
-   cli
-   api_docs
-   community
+   user/intro
+   user/installation
+   user/quickstart
+   user/reading
+   user/working_with_datasets
+   user/writing
+   user/osgeo_gdal_migration
 
+Advanced topics
+===============
+
+.. toctree::
+   :maxdepth: 2
+
+   topics/color
+   topics/concurrency
+   topics/errors
+   topics/features
+   topics/fillnodata
+   topics/georeferencing
+   topics/image_options
+   topics/image_processing
+   topics/masking-by-shapefile
+   topics/masks
+   topics/migrating-to-v1
+   topics/nodata
+   topics/overviews
+   topics/plotting
+   topics/reproject
+   topics/resampling
+   topics/tags
+   topics/vsi
+   topics/windowed-rw
+
+API documentation
+=================
+
+.. toctree::
+   :maxdepth: 2
+
+   api/index
+
+CLI guide
+=========
+
+.. toctree::
+   :maxdepth: 2
+
+   cli
+
+Contributor Guide
+=================
+
+.. toctree::
+   :maxdepth: 2
+
+   contributing
 
 Indices and tables
 ==================

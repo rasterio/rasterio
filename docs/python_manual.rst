@@ -16,11 +16,8 @@ This user's manual is for Python developers who want a clean API for accessing r
     :maxdepth: 2
 
     installation
-    data_model
     reading
     working_with_datasets
     writing
     topics
-    developers
-    cookbook
     osgeo_gdal_migration
