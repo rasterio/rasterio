@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/> 
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/>
+        <link rel="next" title="Windowed reading and writing" href="windowed-rw.html"/>
+        <link rel="prev" title="Tagging datasets and bands" href="tags.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -83,7 +85,33 @@
 <li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/reading.html">Reading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/writing.html">Writing Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Virtual Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#aws-s3">AWS S3</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
@@ -193,6 +221,15 @@ AWS S3 pricing guidelines before deciding if <cite>aws.Session</cite> is for you
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="windowed-rw.html" class="btn btn-neutral float-right" title="Windowed reading and writing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tags.html" class="btn btn-neutral" title="Tagging datasets and bands" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
-        <link rel="next" title="Using rio-calc" href="calc.html"/>
+        <link rel="next" title="Contributing" href="contributing.html"/>
         <link rel="prev" title="rasterio.windows module" href="api/rasterio.windows.html"/> 
 
   
@@ -82,8 +82,30 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="user/intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
@@ -92,8 +114,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Command Line Users Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#creation-options">creation options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bounds">bounds</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#calc">calc</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="calc.html">Using rio-calc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calc">calc</a><ul class="simple">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#clip">clip</a></li>
@@ -302,18 +323,7 @@ collects a sequence of 2-D arrays into a 3-D array for output.</p>
 design of the calc command and something that could be done much more
 efficiently in Python.</p>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="calc.html">Using rio-calc</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#expressions">Expressions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#copying-a-file">Copying a file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#reversing-the-band-order-of-a-file">Reversing the band order of a file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#stacking-bands-of-multiple-files">Stacking bands of multiple files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#named-datasets">Named datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#read-and-take">Read and take</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#arithmetic-operations">Arithmetic operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="calc.html#logical-operations">Logical operations</a></li>
-</ul>
-</li>
+<ul class="simple">
 </ul>
 </div>
 </div>
@@ -698,7 +708,7 @@ for a list of available plugins.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="calc.html" class="btn btn-neutral float-right" title="Using rio-calc" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="api/rasterio.windows.html" class="btn btn-neutral" title="rasterio.windows module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

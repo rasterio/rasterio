@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rasterio Documentation &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Rasterio: access to geospatial raster data &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="rasterio 1.0.dev1 documentation" href="#"/>
-        <link rel="next" title="Introduction" href="user/intro.html"/> 
+        <link rel="next" title="Introduction" href="intro.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,13 +81,10 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="user/intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/reading.html">Reading Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/working_with_datasets.html">Working with Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/writing.html">Writing Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
@@ -147,7 +144,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="#">Docs</a> &raquo;</li>
       
-    <li>Rasterio Documentation</li>
+    <li>Rasterio: access to geospatial raster data</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -161,72 +158,75 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rasterio-documentation">
-<h1>Rasterio Documentation<a class="headerlink" href="#rasterio-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Rasterio reads and writes geospatial raster data.</p>
-<p>Geographic information systems use GeoTIFF and other formats to organize
-and store gridded raster datasets. Rasterio reads and writes these
-formats and provides a Python API based on Numpy N-dimensional arrays.</p>
-<p>Rasterio supports Python 2.7 and 3.3-3.5 on Linux and Mac OS X.</p>
-<div class="code pycon highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">driver</span>
-<span class="go">&#39;GTiff&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
-<span class="go">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">dtypes</span>
-<span class="go">(&#39;uint16&#39;,)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span>
-<span class="go">(7871, 7731)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
-<span class="go">CRS({&#39;init&#39;: &#39;epsg:32612&#39;})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
-<span class="go">BoundingBox(left=358485.0, bottom=4028985.0, right=59</span>
+  <div class="section" id="rasterio-access-to-geospatial-raster-data">
+<h1>Rasterio: access to geospatial raster data<a class="headerlink" href="#rasterio-access-to-geospatial-raster-data" title="Permalink to this headline">¶</a></h1>
+<p>Geographic information systems use GeoTIFF and other formats to organize and
+store gridded raster datasets such as satellite imagery and terrain models.
+Rasterio reads and writes these formats and provides a Python API based on
+Numpy N-dimensional arrays and GeoJSON.</p>
+<p>Here&#8217;s an example program that extracts the GeoJSON shapes of a raster&#8217;s valid
+data footprint.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">import</span> <span class="nn">rasterio.features</span>
+<span class="kn">import</span> <span class="nn">rasterio.warp</span>
+
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+
+    <span class="c1"># Read the dataset&#39;s valid data mask as a ndarray.</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dataset_mask</span><span class="p">()</span>
+
+    <span class="c1"># Extract feature shapes and values from the array.</span>
+    <span class="k">for</span> <span class="n">geom</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">shapes</span><span class="p">(</span>
+            <span class="n">mask</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span><span class="p">):</span>
+
+        <span class="c1"># Transform shapes from the dataset&#39;s own coordinate</span>
+        <span class="c1"># reference system to CRS84 (EPSG:4326).</span>
+        <span class="n">geom</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">warp</span><span class="o">.</span><span class="n">transform_geom</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="s1">&#39;EPSG:4326&#39;</span><span class="p">,</span> <span class="n">geom</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+        <span class="c1"># Print GeoJSON shapes to stdout.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The output of the program:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Polygon&#39;</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">:</span> <span class="p">[[(</span><span class="o">-</span><span class="mf">77.730817</span><span class="p">,</span> <span class="mf">25.282335</span><span class="p">),</span> <span class="o">...</span><span class="p">]]}</span>
+</pre></div>
+</div>
+<p>Rasterio supports Python versions 2.7 and 3.3 or higher.</p>
 <div class="section" id="user-guide">
 <h2>User guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h2>
+<p>Start here with some background about the project and an introduction to
+reading and writing raster datasets.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="user/intro.html">Introduction</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/intro.html#background">Background</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/intro.html#philosophy">Philosophy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/intro.html#rasterio-license">Rasterio license</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#background">Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#philosophy">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#rasterio-license">Rasterio license</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user/installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/installation.html#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/installation.html#installing-from-binaries">Installing from binaries</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/installation.html#installing-with-anaconda">Installing with Anaconda</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/installation.html#installing-from-the-source-distribution">Installing from the source distribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/installation.html#testing">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-binaries">Installing from binaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-with-anaconda">Installing with Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-the-source-distribution">Installing from the source distribution</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user/quickstart.html">Quickstart</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#opening-a-dataset-in-reading-mode">Opening a dataset in reading mode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#dataset-attributes">Dataset attributes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#dataset-georeferencing">Dataset georeferencing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#reading-raster-data">Reading raster data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#spatial-indexing">Spatial indexing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#creating-data">Creating data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#opening-a-dataset-in-writing-mode">Opening a dataset in writing mode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/quickstart.html#saving-raster-data">Saving raster data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#opening-a-dataset-in-reading-mode">Opening a dataset in reading mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#dataset-attributes">Dataset attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#dataset-georeferencing">Dataset georeferencing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#spatial-indexing">Spatial indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#creating-data">Creating data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#opening-a-dataset-in-writing-mode">Opening a dataset in writing mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#saving-raster-data">Saving raster data</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user/reading.html">Reading Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/working_with_datasets.html">Working with Datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/working_with_datasets.html#attributes">Attributes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/working_with_datasets.html#profile">Profile</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="user/writing.html">Writing Datasets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/writing.html#supported-drivers">Supported Drivers</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user/osgeo_gdal_migration.html#differences-between-rasterio-and-osgeo-gdal">Differences between rasterio and osgeo.gdal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/osgeo_gdal_migration.html#osgeo-gdal-gotchas"><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/osgeo_gdal_migration.html#command-line-interface">Command Line Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user/osgeo_gdal_migration.html#migrating">Migrating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Guide for osgeo.gdal users</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#differences-between-rasterio-and-osgeo-gdal">Differences between rasterio and osgeo.gdal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#osgeo-gdal-gotchas"><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#command-line-interface">Command Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#migrating">Migrating</a></li>
 </ul>
 </li>
 </ul>
@@ -394,7 +394,7 @@ formats and provides a Python API based on Numpy N-dimensional arrays.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="user/intro.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="intro.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>

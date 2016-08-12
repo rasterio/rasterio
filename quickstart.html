@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/> 
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
+        <link rel="next" title="Migration Guide for osgeo.gdal users" href="migration.html"/>
+        <link rel="prev" title="Installation" href="installation.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -79,11 +81,23 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="user/intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset-in-reading-mode">Opening a dataset in reading mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-attributes">Dataset attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-georeferencing">Dataset georeferencing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reading-raster-data">Reading raster data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-indexing">Spatial indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-data">Creating data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset-in-writing-mode">Opening a dataset in writing mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-raster-data">Saving raster data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Guide for osgeo.gdal users</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
@@ -104,9 +118,6 @@
 <li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
@@ -174,7 +185,7 @@ Rasterio has been <a class="reference external" href="./installation">installed<
 of the United States&#8217;s Colorado Plateau <a class="footnote-reference" href="#id2" id="id1">[1]</a>. Because the imagery is large (70
 MB) and has a wide dynamic range it is difficult to display it in a browser.
 A rescaled and dynamically squashed version is shown below.</p>
-<img alt="_images/example.png" src="_images/example.png" />
+<img alt="../img/example.png" src="../img/example.png" />
 <p>Import rasterio to begin.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 </pre></div>
@@ -278,9 +289,8 @@ meridian (111 degrees west) and 4265 kilometers north of the equator.</p>
 <p>Coordinate reference systems are an advanced topic. Suffice it to say that
 between the <code class="docutils literal"><span class="pre">crs</span></code> attribute and the <code class="docutils literal"><span class="pre">transform</span></code> attribute a raster dataset
 is geo-referenced and can be compared to other GIS datasets.</p>
-</div>
 <div class="section" id="reading-raster-data">
-<h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
+<h3>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h3>
 <p>The raster array for a raster band can be accessed by calling
 <code class="docutils literal"><span class="pre">dataset.read()</span></code> with the band&#8217;s index number. Following the GDAL convention,
 bands are indexed from 1.</p>
@@ -304,6 +314,7 @@ bands are indexed from 1.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band1</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
 <span class="go">17491</span>
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="spatial-indexing">
@@ -349,7 +360,7 @@ last grid points on the vertical axis are located at 3 degrees south and
 <p>The fictional field for this example consists of the difference of two Gaussian
 distributions and is represented by the array <code class="docutils literal"><span class="pre">Z</span></code>. Its contours are shown
 below.</p>
-<img alt="_images/field.png" src="_images/field.png" />
+<img alt="../img/field.png" src="../img/field.png" />
 </div>
 <div class="section" id="opening-a-dataset-in-writing-mode">
 <h2>Opening a dataset in writing mode<a class="headerlink" href="#opening-a-dataset-in-writing-mode" title="Permalink to this headline">¶</a></h2>
@@ -430,6 +441,15 @@ LC80370342016194LGN00.</td></tr>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="migration.html" class="btn btn-neutral float-right" title="Migration Guide for osgeo.gdal users" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

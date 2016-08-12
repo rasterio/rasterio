@@ -30,10 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
-        <link rel="up" title="rasterio Python User’s Manual" href="python_manual.html"/>
-        <link rel="next" title="Reading Datasets" href="reading.html"/>
-        <link rel="prev" title="rasterio Python User’s Manual" href="python_manual.html"/> 
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,39 +79,33 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#dependencies">Dependencies</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#installing-from-binaries">Installing from binaries</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#os-x">OS X</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#windows">Windows</a></li>
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#installing-with-anaconda">Installing with Anaconda</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#installing-from-the-source-distribution">Installing from the source distribution</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#linux">Linux</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id1">OS X</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id2">Windows</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
 </ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#downstream-testing">Downstream testing</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Users Guide</a></li>
 </ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="topics.html">General Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Reference</a></li>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
 
@@ -146,8 +137,6 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a> &raquo;</li>
-      
     <li>Installation</li>
       <li class="wy-breadcrumbs-aside">
         
@@ -169,7 +158,8 @@
 <p>Rasterio has one C library dependency: <code class="docutils literal"><span class="pre">GDAL</span> <span class="pre">&gt;=1.9</span></code>. GDAL itself depends on
 many of other libraries provided by most major operating systems and also
 depends on the non standard GEOS and PROJ4 libraries.</p>
-<p>Python package dependencies (see also requirements.txt): <code class="docutils literal"><span class="pre">affine,</span> <span class="pre">cligj,</span> <span class="pre">click,</span> <span class="pre">enum34,</span> <span class="pre">numpy</span></code>.</p>
+<p>Python package dependencies (see also requirements.txt): <code class="docutils literal"><span class="pre">affine,</span> <span class="pre">cligj,</span>
+<span class="pre">click,</span> <span class="pre">enum34,</span> <span class="pre">numpy</span></code>.</p>
 <p>Development also requires (see requirements-dev.txt) Cython and other packages.</p>
 </div>
 <div class="section" id="installing-from-binaries">
@@ -255,58 +245,12 @@ versions used <a class="reference external" href="https://docs.python.org/devgui
 Windows PATH otherwise rasterio will fail to work.</p>
 </div>
 </div>
-<div class="section" id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
-<p>From the repo directory, run py.test</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> py.test
-</pre></div>
-</div>
-<p>Note: some tests do not succeed on Windows (see
-<a class="reference external" href="https://github.com/mapbox/rasterio/issues/66">#66</a>.).</p>
-<div class="section" id="downstream-testing">
-<h3>Downstream testing<a class="headerlink" href="#downstream-testing" title="Permalink to this headline">¶</a></h3>
-<p>If your project depends on Rasterio and uses Travis-CI, you can speed up your
-builds by fetching Rasterio and its dependencies as a set of wheels from
-GitHub as done in <a class="reference external" href="https://github.com/sgillies/rio-plugin-example/blob/master/.travis.yml">rio-plugin-example</a>.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">language</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">python</span>
-<span class="l l-Scalar l-Scalar-Plain">env</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">RASTERIO_VERSION=0.26</span>
-<span class="l l-Scalar l-Scalar-Plain">python</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="s">&quot;2.7&quot;</span>
-  <span class="p p-Indicator">-</span> <span class="s">&quot;3.4&quot;</span>
-<span class="l l-Scalar l-Scalar-Plain">cache</span><span class="p p-Indicator">:</span>
-  <span class="l l-Scalar l-Scalar-Plain">directories</span><span class="p p-Indicator">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/.pip-cache/</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$HOME/wheelhouse</span>
-<span class="l l-Scalar l-Scalar-Plain">before_install</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sudo add-apt-repository -y ppa:ubuntugis/ppa</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sudo apt-get update -qq</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">sudo apt-get install -y libgdal-dev gdal-bin</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">curl -L https://github.com/mapbox/rasterio/releases/download/$RASTERIO_VERSION/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz &gt; /tmp/wheelhouse.tar.gz</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">tar -xzvf /tmp/wheelhouse.tar.gz -C $HOME</span>
-<span class="l l-Scalar l-Scalar-Plain">install</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">pip install --use-wheel --find-links=$HOME/wheelhouse -e .[test] --cache-dir $HOME/.pip-cache</span>
-<span class="l l-Scalar l-Scalar-Plain">script</span><span class="p p-Indicator">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">py.test</span>
-</pre></div>
-</div>
-</div>
-</div>
 </div>
 
 
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="reading.html" class="btn btn-neutral float-right" title="Reading Datasets" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="python_manual.html" class="btn btn-neutral" title="rasterio Python User’s Manual" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

@@ -10,14 +10,14 @@ but the examples do apply to other raster data formats. It is presumed that
 Rasterio has been `installed <./installation>`__.
 
 Opening a dataset in reading mode
----------------------------------
+=================================
 
 Consider an "example.tif" file with 16-bit Landsat 8 imagery covering a part
 of the United States's Colorado Plateau [#]_. Because the imagery is large (70
 MB) and has a wide dynamic range it is difficult to display it in a browser.
 A rescaled and dynamically squashed version is shown below.
 
-.. image:: img/example.png
+.. image:: ../img/example.png
 
 Import rasterio to begin.
 
@@ -46,7 +46,7 @@ attributes as Python file objects.
     False
 
 Dataset attributes
-------------------
+==================
 
 Properties of the raster data stored in "example.tif" can be accessed through
 attributes of the ``dataset`` object. Dataset objects have bands and this
@@ -87,7 +87,7 @@ The "example.tif" file's sole band contains unsigned 16-bit integer values. The
 GeoTIFF format also supports signed integers and floats of different size.
 
 Dataset georeferencing
-----------------------
+======================
 
 A GIS raster dataset is different from an ordinary image; its elements (or
 "pixels") are mapped to regions on the earth's surface. Every pixels of a
@@ -183,7 +183,7 @@ Values from the array can be had by their row, column index.
     17491
 
 Spatial indexing
-----------------
+================
 
 Datasets have a method of getting array indices for spatial points. To get the
 value for the pixel 100 kilometers east and 50 kilometers south of the
@@ -207,7 +207,7 @@ The coordinates of the center of the image can be computed like this.
     (476550.0, 4149150.0)
 
 Creating data
--------------
+=============
 
 Reading data is only half the story. Using Rasterio dataset objects, arrays of
 values can be written to a raster data file and thus shared with other GIS
@@ -234,11 +234,11 @@ The fictional field for this example consists of the difference of two Gaussian
 distributions and is represented by the array ``Z``. Its contours are shown
 below.
 
-.. image:: img/field.png
+.. image:: ../img/field.png
 
 
 Opening a dataset in writing mode
----------------------------------
+=================================
 
 To save this array along with georeferencing information to a new raster data
 file, call ``rasterio.open()`` with a path to the new file to be created,
@@ -289,7 +289,7 @@ directly from attributes of the 2-D array, ``Z``. Not all raster formats can
 support the 64-bit float values in ``Z``, but the GeoTIFF format can.
 
 Saving raster data
-------------------
+==================
 
 To save the grid, call the new dataset's ``write()`` method with the grid and
 target band number as arguments.

@@ -23,7 +23,7 @@ objects.
     >>> import rasterio
     >>> src = rasterio.open('tests/data/RGB.byte.tif')
     >>> src
-    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <open DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
     >>> src.name
     'tests/data/RGB.byte.tif'
     >>> src.mode
@@ -104,7 +104,7 @@ To close a dataset, call its ``close()`` method.
 
     >>> src.close()
     >>> src
-    <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <closed DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
 
 After it's closed, data can no longer be read.
 
@@ -137,10 +137,10 @@ the the block.
     ...     with rasterio.open('tests/data/RGB.byte.tif', 'r') as two:
     ...        print(two)
     ...     print(one)
-    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
-    <open RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <open DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
+    <open DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
 
     >>> print(two)
-    <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <closed DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
     >>> print(one)
-    <closed RasterReader name='tests/data/RGB.byte.tif' mode='r'>
+    <closed DatasetReader name='tests/data/RGB.byte.tif' mode='r'>

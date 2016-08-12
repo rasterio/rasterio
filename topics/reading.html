@@ -83,7 +83,27 @@
 <li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
@@ -165,7 +185,7 @@ objects.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span>
-<span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;open DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">name</span>
 <span class="go">&#39;tests/data/RGB.byte.tif&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">mode</span>
@@ -229,7 +249,7 @@ be had from its <code class="docutils literal"><span class="pre">indexes</span><
 <p>To close a dataset, call its <code class="docutils literal"><span class="pre">close()</span></code> method.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span>
-<span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
 <p>After it&#8217;s closed, data can no longer be read.</p>
@@ -256,13 +276,13 @@ the the block.</p>
 <span class="gp">... </span>    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">two</span><span class="p">:</span>
 <span class="gp">... </span>       <span class="k">print</span><span class="p">(</span><span class="n">two</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
-<span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
-<span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;open DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;open DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">two</span><span class="p">)</span>
-<span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
-<span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
 </div>

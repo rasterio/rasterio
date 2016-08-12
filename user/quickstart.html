@@ -87,8 +87,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset-in-reading-mode">Opening a dataset in reading mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dataset-attributes">Dataset attributes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dataset-georeferencing">Dataset georeferencing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reading-raster-data">Reading raster data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-georeferencing">Dataset georeferencing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reading-raster-data">Reading raster data</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#spatial-indexing">Spatial indexing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-data">Creating data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#opening-a-dataset-in-writing-mode">Opening a dataset in writing mode</a></li>
@@ -186,7 +188,7 @@ Rasterio has been <a class="reference external" href="./installation">installed<
 of the United States&#8217;s Colorado Plateau <a class="footnote-reference" href="#id2" id="id1">[1]</a>. Because the imagery is large (70
 MB) and has a wide dynamic range it is difficult to display it in a browser.
 A rescaled and dynamically squashed version is shown below.</p>
-<img alt="user/img/example.png" src="user/img/example.png" />
+<img alt="../_images/example1.png" src="../_images/example1.png" />
 <p>Import rasterio to begin.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 </pre></div>
@@ -290,9 +292,8 @@ meridian (111 degrees west) and 4265 kilometers north of the equator.</p>
 <p>Coordinate reference systems are an advanced topic. Suffice it to say that
 between the <code class="docutils literal"><span class="pre">crs</span></code> attribute and the <code class="docutils literal"><span class="pre">transform</span></code> attribute a raster dataset
 is geo-referenced and can be compared to other GIS datasets.</p>
-</div>
 <div class="section" id="reading-raster-data">
-<h2>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h2>
+<h3>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h3>
 <p>The raster array for a raster band can be accessed by calling
 <code class="docutils literal"><span class="pre">dataset.read()</span></code> with the band&#8217;s index number. Following the GDAL convention,
 bands are indexed from 1.</p>
@@ -316,6 +317,7 @@ bands are indexed from 1.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">band1</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
 <span class="go">17491</span>
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="spatial-indexing">
@@ -361,7 +363,7 @@ last grid points on the vertical axis are located at 3 degrees south and
 <p>The fictional field for this example consists of the difference of two Gaussian
 distributions and is represented by the array <code class="docutils literal"><span class="pre">Z</span></code>. Its contours are shown
 below.</p>
-<img alt="user/img/field.png" src="user/img/field.png" />
+<img alt="../_images/field1.png" src="../_images/field1.png" />
 </div>
 <div class="section" id="opening-a-dataset-in-writing-mode">
 <h2>Opening a dataset in writing mode<a class="headerlink" href="#opening-a-dataset-in-writing-mode" title="Permalink to this headline">¶</a></h2>

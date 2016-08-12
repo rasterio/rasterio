@@ -190,7 +190,7 @@ objects.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span>
-<span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;open DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">name</span>
 <span class="go">&#39;tests/data/RGB.byte.tif&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">mode</span>
@@ -254,7 +254,7 @@ be had from its <code class="docutils literal"><span class="pre">indexes</span><
 <p>To close a dataset, call its <code class="docutils literal"><span class="pre">close()</span></code> method.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span>
-<span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
 <p>After it&#8217;s closed, data can no longer be read.</p>
@@ -281,13 +281,13 @@ the the block.</p>
 <span class="gp">... </span>    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">two</span><span class="p">:</span>
 <span class="gp">... </span>       <span class="k">print</span><span class="p">(</span><span class="n">two</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
-<span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
-<span class="go">&lt;open RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;open DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;open DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">two</span><span class="p">)</span>
-<span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">one</span><span class="p">)</span>
-<span class="go">&lt;closed RasterReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
+<span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
 </div>

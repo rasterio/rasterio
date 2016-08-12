@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/> 
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/>
+        <link rel="next" title="Overviews" href="overviews.html"/>
+        <link rel="prev" title="Nodata Masks" href="masks.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -83,7 +85,65 @@
 <li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/reading.html">Reading Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/writing.html">Writing Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Migrating to Rasterio 1.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#affine-affine-vs-gdal-style-geotransforms">affine.Affine() vs. GDAL-style geotransforms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tickets">Tickets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#i-o-operations">I/O Operations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#deprecated-rasterio-drivers">Deprecated: <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Tickets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#removed-src-read-band">Removed: <code class="docutils literal"><span class="pre">src.read_band()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Tickets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#removed-src-read-mask">Removed: <code class="docutils literal"><span class="pre">src.read_mask()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Tickets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#moved-functions-for-working-with-dataset-windows">Moved: Functions for working with dataset windows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Tickets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#moved-rasterio-tool">Moved: <code class="docutils literal"><span class="pre">rasterio.tool</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Tickets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#moved-rasterio-tools">Moved: <code class="docutils literal"><span class="pre">rasterio.tools</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Tickets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#removed-rasterio-warp-resampling">Removed: <code class="docutils literal"><span class="pre">rasterio.warp.RESAMPLING</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#signature-changes">Signature Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
@@ -337,6 +397,15 @@ several different locations:</p>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="overviews.html" class="btn btn-neutral float-right" title="Overviews" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="masks.html" class="btn btn-neutral" title="Nodata Masks" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
