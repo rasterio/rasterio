@@ -1,44 +1,60 @@
-Migration Guide for osgeo.gdal users
-====================================
-
+==============================
+Migrating from GDAL's bindings
+==============================
 
 Differences between rasterio and osgeo.gdal
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Rasterio uses the ``libgdal`` shared library under the hood to provide a significant portion
-of functionality.  GDAL itself ships with its own python bindings, ``osgeo.gdal``.
-This section will discuss the differences between ``rasterio`` and ``osgeo.gdal``
-and reasons why you might choose to use one over the other.
+===========================================
+
+Rasterio uses the ``libgdal`` shared library under the hood to provide
+a significant portion of functionality.  GDAL itself ships with its own python
+bindings, ``osgeo.gdal``.  This section will discuss the differences between
+``rasterio`` and ``osgeo.gdal`` and reasons why you might choose to use one
+over the other.
 
 Rasterio is, by design, a library for reading and writing raster datasets.
 Rasterio *uses* GDAL but is not a "Python binding for GDAL."
 
-``osgeo.gdal`` is automatically-generated using swig. As a result, the interface and method names are
-similar to the C API. Virtually all of the GDAL C API is exposed through the library.
+``osgeo.gdal`` is automatically-generated using SWIG. As a result, the
+interface and method names are similar to the C API. Virtually all of the GDAL
+C API is exposed through the library.
 
-The ``rasterio`` library is built from the ground up to provide an interface for reading,
-writing and manipulating geospatial raster data that follows the style and convention
-of idiomatic Python code.  We use a selected subset of the GDAL C API in order to
-provide this functionality.
+The ``rasterio`` library is built from the ground up to provide an interface
+for reading, writing and manipulating geospatial raster data that follows the
+style and convention of idiomatic Python code.  We use a selected subset of the
+GDAL C API in order to provide this functionality.
 
-In practice, while many similar tasks can be performed by both libraries,
-the difference in coding style is significant. For example, opening a raster file
-with ``osgeo.gdal`` involves using gdal constants and the programmer must provide
-their own error handling and memory management ::
+In practice, while many similar tasks can be performed by both libraries, the
+difference in coding style is significant. For example, opening a raster file
+with ``osgeo.gdal`` involves using gdal constants and the programmer must
+provide their own error handling and memory management.
+
+.. code-block:: python
 
     from osgeo import gdal
-    from osgeo.gdalconst import *
-    dataset = gdal.Open( filename, GA_ReadOnly )
-    if dataset is None:
-        # ... handle a non-existant dataset
-    # ... work with dataset
-    del dataset
+    from osgeo import gdalconst
 
-Compared to the similar code in ``rasterio``::
+    dataset = gdal.Open('example.tif', gdalconst.GA_ReadOnly)
+    if not dataset:
+        # handle a non-existant dataset...
+
+    # work with opened dataset...
+    print(dataset.RasterCount)
+
+    # trigger eventual closure of GDAL dataset.
+    dataset = None
+
+This program reads and runs like a C program. Compare it to the equivalent
+``rasterio`` code.
+
+.. code-block:: python
 
     import rasterio
-    with rasterio.Env():
-        with rasterio.open(filename, 'r') as dataset:
-            # ... work with dataset
+
+    with rasterio.open('example.tif', 'r') as dataset:
+        # Work with opened dataset...
+        print(dataset.count)
+
+    # Dataset is closed automatically at the end of the ``with`` block.
 
 The ``rasterio`` code:
 
