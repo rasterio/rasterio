@@ -164,7 +164,7 @@ def rasterize(
     shapes : iterable of (geometry, value) pairs or iterable over
         geometries. `geometry` can either be an object that implements
         the geo interface or GeoJSON-like object.
-    out_shape : tuple or list
+    out_shape : tuple or list with 2 integers
         Shape of output numpy ndarray.
     fill : int or float, optional
         Used as fill value for all areas not covered by input
@@ -271,6 +271,10 @@ def rasterize(
             raise ValueError(format_cast_error('shape values', out.dtype.name))
 
     elif out_shape is not None:
+
+        if len(out_shape) != 2:
+            raise ValueError('Invalid out_shape, must be 2D')
+
         out = np.empty(out_shape, dtype=dtype)
         out.fill(fill)
 

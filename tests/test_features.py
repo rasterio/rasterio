@@ -136,6 +136,18 @@ def test_rasterize_invalid_shapes():
         assert 'Invalid geometry object' in str(ex.value)
 
 
+def test_rasterize_invalid_out_shape(basic_geometry):
+    """output array shape must be 2D."""
+    with rasterio.Env():
+        with pytest.raises(ValueError) as ex:
+            rasterize([basic_geometry], out_shape=(1, 10, 10))
+        assert 'Invalid out_shape' in str(ex.value)
+
+        with pytest.raises(ValueError) as ex:
+            rasterize([basic_geometry], out_shape=(10,))
+        assert 'Invalid out_shape' in str(ex.value)
+
+
 def test_rasterize_default_value(basic_geometry, basic_image_2x2):
     """All shapes should rasterize to the default value."""
     default_value = 2
