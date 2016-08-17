@@ -27,27 +27,29 @@ from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
 from rasterio import windows
 
+# These modules are imported from the Cython extensions, but are also import
+# here to help tools like cx_Freeze find them automatically
+from rasterio import _err, coords, enums, vfs
+
+
 # TODO deprecate or remove in factor of rasterio.windows.___
 def eval_window(*args, **kwargs):
     from rasterio.windows import evaluate
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return evaluate(*args, **kwargs)
 
+
 def window_shape(*args, **kwargs):
     from rasterio.windows import shape
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return shape(*args, **kwargs)
+
 
 def window_index(*args, **kwargs):
     from rasterio.windows import window_index
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return window_index(*args, **kwargs)
 
-# These modules are imported from the Cython extensions, but are also import
-# here to help tools like cx_Freeze find them automatically
-from rasterio import _err, coords, enums, vfs
-
-# Classes in rasterio._io are imported below just before we need them.
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
@@ -66,7 +68,7 @@ log.addHandler(NullHandler())
 @ensure_env
 def open(path, mode='r', driver=None, width=None, height=None,
          count=None, crs=None, transform=None, dtype=None, nodata=None,
-         **kwargs):
+         units=None, **kwargs):
     """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
     write), or 'w' (write) and return a dataset Reader or Updater
     object.
@@ -110,6 +112,8 @@ def open(path, mode='r', driver=None, width=None, height=None,
     nodata: number
         Defines pixel value to be interpreted as null/nodata
         (optional, recommended for write)
+    units: string
+        Optional units for raster band array values ('meters', 'degC', &c).
 
     Returns
     -------
@@ -228,7 +232,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
                                           width=width, height=height,
                                           count=count, crs=crs,
                                           transform=transform, dtype=dtype,
-                                          nodata=nodata, **kwargs)
+                                          nodata=nodata, units=units, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)

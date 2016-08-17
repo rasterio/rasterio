@@ -12,6 +12,7 @@ cdef class DatasetReaderBase(DatasetBase):
 cdef class DatasetWriterBase(DatasetReaderBase):
     cdef readonly object _init_dtype
     cdef readonly object _init_nodata
+    cdef readonly object _init_units
     cdef readonly object _options
 
 

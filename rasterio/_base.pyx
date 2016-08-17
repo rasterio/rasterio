@@ -34,11 +34,12 @@ from rasterio._gdal cimport (
     GDALGetProjectionRef, GDALGetRasterBand, GDALGetRasterBandXSize,
     GDALGetRasterColorInterpretation, GDALGetRasterColorTable,
     GDALGetRasterCount, GDALGetRasterDataType, GDALGetRasterNoDataValue,
-    GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen, GDALVersionInfo,
-    OCTNewCoordinateTransformation, OCTTransform, OSRAutoIdentifyEPSG,
-    OSRDestroySpatialReference, OSRExportToProj4, OSRExportToWkt,
-    OSRGetAuthorityCode, OSRGetAuthorityName, OSRImportFromEPSG,
-    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput)
+    GDALGetRasterUnitType, GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen,
+    GDALVersionInfo, OCTNewCoordinateTransformation, OCTTransform,
+    OSRAutoIdentifyEPSG, OSRDestroySpatialReference, OSRExportToProj4,
+    OSRExportToWkt, OSRGetAuthorityCode, OSRGetAuthorityName,
+    OSRImportFromEPSG, OSRImportFromProj4, OSRNewSpatialReference,
+    OSRSetFromUserInput)
 
 include "gdal.pxi"
 
@@ -128,6 +129,7 @@ cdef class DatasetBase(object):
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []
+        self._units = ()
         self._crs = None
         self._read = False
 
@@ -389,7 +391,15 @@ cdef class DatasetBase(object):
         """Mask flags for each band."""
         def __get__(self):
             cdef GDALRasterBandH band = NULL
-            return [GDALGetMaskFlags(self.band(j)) for j in self.indexes]
+            return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+
+    property units:
+        """Units for each band."""
+        def __get__(self):
+            if not self._units:
+                self._units = tuple(
+                    GDALGetRasterUnitType(self.band(j)) for j in self.indexes)
+            return self._units
 
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's blocks and their corresponding

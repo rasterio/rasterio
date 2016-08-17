@@ -91,6 +91,8 @@ cdef extern from "gdal.h" nogil:
     GDALRasterBandH GDALGetOverview(GDALRasterBandH hband, int num)
     int GDALGetRasterBandXSize(GDALRasterBandH hband)
     int GDALGetRasterBandYSize(GDALRasterBandH hband)
+    const char *GDALGetRasterUnitType(GDALRasterBandH hband)
+    CPLErr GDALSetRasterUnitType(GDALRasterBandH hband, const char *val)
     int GDALSetGeoTransform(GDALDatasetH hds, double *transform)
     int GDALSetProjection(GDALDatasetH hds, const char *wkt)
     void GDALGetBlockSize(GDALRasterBandH , int *xsize, int *ysize)
