@@ -1484,7 +1484,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Fixup, export to WKT, and set the GDAL dataset's projection.
         OSRFixup(osr)
-        OSRExportToWkt(osr, &wkt)
+        OSRExportToWkt(osr, <char**>&wkt)
         wkt_b = wkt
         log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
         GDALSetProjection(self._hds, wkt)
@@ -1934,10 +1934,10 @@ cdef class InMemoryRaster:
         # GDALSuggestedWarpOutput2()).
         if crs:
             osr = _osr_from_crs(crs)
-            OSRExportToWkt(osr, &srcwkt)
+            OSRExportToWkt(osr, <char**>&srcwkt)
             GDALSetProjection(self._hds, srcwkt)
             log.debug("Set CRS on temp source dataset: %s", srcwkt)
-            CPLFree(srcwkt)
+            CPLFree(<void *>srcwkt)
             OSRDestroySpatialReference(osr)
 
         self.write(image)

@@ -699,7 +699,7 @@ cdef class DatasetBase(object):
         retval = {}
 
         for i in range(GDALGetColorEntryCount(colortable)):
-            color = GDALGetColorEntry(colortable, i)
+            color = <GDALColorEntry*>GDALGetColorEntry(colortable, i)
             if color == NULL:
                 log.warn("NULL color at %d, skipping", i)
                 continue
