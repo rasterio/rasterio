@@ -27,27 +27,29 @@ from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
 from rasterio import windows
 
+# These modules are imported from the Cython extensions, but are also import
+# here to help tools like cx_Freeze find them automatically
+from rasterio import _err, coords, enums, vfs
+
+
 # TODO deprecate or remove in factor of rasterio.windows.___
 def eval_window(*args, **kwargs):
     from rasterio.windows import evaluate
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return evaluate(*args, **kwargs)
 
+
 def window_shape(*args, **kwargs):
     from rasterio.windows import shape
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return shape(*args, **kwargs)
+
 
 def window_index(*args, **kwargs):
     from rasterio.windows import window_index
     warnings.warn("Deprecated; Use rasterio.windows instead", FutureWarning)
     return window_index(*args, **kwargs)
 
-# These modules are imported from the Cython extensions, but are also import
-# here to help tools like cx_Freeze find them automatically
-from rasterio import _err, coords, enums, vfs
-
-# Classes in rasterio._io are imported below just before we need them.
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
@@ -84,32 +86,29 @@ def open(path, mode='r', driver=None, width=None, height=None,
     mode: string
         "r" (read), "r+" (read/write), or "w" (write)
     driver: string
-        driver code specifying the format name (e.g. "GTiff" or
+        Driver code specifying the format name (e.g. "GTiff" or
         "JPEG"). See GDAL docs at
         http://www.gdal.org/formats_list.html (optional, required
         for writing).
     width: int
-        number of pixels per line
-        (optional, required for write)
+        Number of pixels per line (optional, required for write).
     height: int
-        number of lines
-        (optional, required for write)
+        Number of lines (optional, required for write).
     count: int > 0
-        number of bands
-        (optional, required for write)
+        Count of bands (optional, required for write).
     dtype: rasterio.dtype
         the data type for bands such as ``rasterio.ubyte`` for
         8-bit bands or ``rasterio.uint16`` for 16-bit bands
         (optional, required for write)
     crs: dict or string
-        Coordinate reference system
-        (optional, recommended for write)
+        Coordinate reference system (optional, recommended for write).
     transform: Affine instance
         Affine transformation mapping the pixel space to geographic
         space (optional, recommended for writing).
     nodata: number
         Defines pixel value to be interpreted as null/nodata
-        (optional, recommended for write)
+        (optional, recommended for write, will be broadcast to all
+        bands).
 
     Returns
     -------
@@ -182,7 +181,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
         with warnings.catch_warnings():
             warnings.simplefilter('always')
             warnings.warn(
-                "The 'affine' kwarg in rasterio.open() is deprecated as of 1.0 "
+                "The 'affine' kwarg in rasterio.open() is deprecated at 1.0 "
                 "and only remains to ease the transition.  Please switch to "
                 "the 'transform' kwarg.  See "
                 "https://github.com/mapbox/rasterio/issues/86 for details.",

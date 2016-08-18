@@ -36,13 +36,14 @@ from rasterio._gdal cimport (
     CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
     GDALCreateColorTable, GDALCreateCopy, GDALCreateMaskBand,
     GDALDatasetRasterIO, GDALDestroyColorTable, GDALFillRaster,
-    GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDriverByName,
-    GDALGetDriverShortName, GDALGetMaskBand, GDALGetMaskFlags, GDALGetMetadata,
-    GDALGetRasterBand, GDALGetRasterCount, GDALGetRasterXSize,
-    GDALGetRasterYSize, GDALOpen, GDALRasterIO, GDALSetColorEntry,
-    GDALSetGeoTransform, GDALSetMetadata, GDALSetProjection,
-    GDALSetRasterColorInterpretation, GDALSetRasterColorTable,
-    GDALSetRasterNoDataValue, GDALSetRasterNoDataValue,
+    GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDescription,
+    GDALGetDriverByName, GDALGetDriverShortName, GDALGetMaskBand,
+    GDALGetMaskFlags, GDALGetMetadata, GDALGetRasterBand, GDALGetRasterCount,
+    GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen, GDALRasterIO,
+    GDALSetColorEntry, GDALSetDescription, GDALSetGeoTransform,
+    GDALSetMetadata, GDALSetProjection, GDALSetRasterColorInterpretation,
+    GDALSetRasterColorTable, GDALSetRasterNoDataValue,
+    GDALSetRasterNoDataValue, GDALSetRasterUnitType,
     OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
     VSIGetMemFileBuffer, vsi_l_offset)
@@ -1300,6 +1301,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
+        self._units = ()
+        self._band_descriptions = ()
         self._options = kwargs.copy()
 
     def __repr__(self):
@@ -1402,6 +1405,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                         "range of its data type, %s." % (
                             self._init_nodata, self._init_dtype))
 
+                # Broadcast the nodata value to all bands.
                 for i in range(self._count):
                     band = self.band(i + 1)
                     success = GDALSetRasterNoDataValue(band,
@@ -1742,6 +1746,51 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             log.warn("Tags accepted but may not be persisted.")
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
+
+    def set_band_description(self, bidx, value):
+        """Sets the description of a dataset band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+
+        value: string
+            A description of the band.
+
+        Returns
+        -------
+        None
+        """
+        cdef GDALRasterBandH hband = NULL
+
+        hband = self.band(bidx)
+        GDALSetDescription(hband, value.encode('utf-8'))
+        # Invalidate cached descriptions.
+        self._band_descriptions = ()
+
+    def set_units(self, bidx, value):
+        """Sets the units of a dataset band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+
+        value: string
+            A label for the band's units such as 'meters' or 'degC'.
+            See the Pint project for a suggested list of units.
+
+        Returns
+        -------
+        None
+        """
+        cdef GDALRasterBandH hband = NULL
+
+        hband = self.band(bidx)
+        GDALSetRasterUnitType(hband, value.encode('utf-8'))
+        # Invalidate cached units.
+        self._units = ()
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""

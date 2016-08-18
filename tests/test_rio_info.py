@@ -8,7 +8,7 @@ import pytest
 
 import rasterio
 from rasterio.rio.edit_info import (
-    edit, all_handler, crs_handler, tags_handler, transform_handler)
+    all_handler, crs_handler, tags_handler, transform_handler)
 from rasterio.rio.main import main_group
 
 
@@ -18,14 +18,16 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_edit_nodata_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--nodata', '-1'])
+    result = runner.invoke(main_group,
+                           ['edit-info', inputfile, '--nodata', '-1'])
     assert result.exit_code == 2
 
 
 def test_edit_nodata(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--nodata', '255'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--nodata', '255'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.nodata == 255.0
@@ -34,14 +36,16 @@ def test_edit_nodata(data):
 def test_edit_crs_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--crs', 'LOL:WUT'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--crs', 'LOL:WUT'])
     assert result.exit_code == 2
 
 
 def test_edit_crs_epsg(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--crs', 'EPSG:32618'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--crs', 'EPSG:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -50,7 +54,8 @@ def test_edit_crs_epsg(data):
 def test_edit_crs_proj4(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--crs', '+init=epsg:32618'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--crs', '+init=epsg:32618'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
@@ -60,7 +65,8 @@ def test_edit_crs_obj(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
-        main_group, ['edit-info', inputfile, '--crs', '{"init": "epsg:32618"}'])
+        main_group,
+        ['edit-info', inputfile, '--crs', '{"init": "epsg:32618"}'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs.to_dict() == {'init': 'epsg:32618'}
@@ -69,14 +75,16 @@ def test_edit_crs_obj(data):
 def test_edit_transform_err_not_json(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--transform', 'LOL'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--transform', 'LOL'])
     assert result.exit_code == 2
 
 
 def test_edit_transform_err_bad_array(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--transform', '[1,2]'])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--transform', '[1,2]'])
     assert result.exit_code == 2
 
 
@@ -84,7 +92,8 @@ def test_edit_transform_affine(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     input_t = '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
-    result = runner.invoke(main_group, ['edit-info', inputfile, '--transform', input_t])
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--transform', input_t])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         for a, b in zip(src.transform, json.loads(input_t)):
@@ -111,6 +120,32 @@ def test_edit_tags(data):
     with rasterio.open(inputfile) as src:
         assert src.tags()['lol'] == '1'
         assert src.tags()['wut'] == '2'
+
+
+def test_edit_band_description(data):
+    """Edit band descriptions"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', inputfile, '--bidx', '3', '--band-description',
+        'this is another test'])
+
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.band_descriptions[2] == 'this is another test'
+
+
+def test_edit_units(data):
+    """Edit units"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', inputfile, '--bidx', '1', '--units', 'DN'],
+        catch_exceptions=False)
+
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.units[0] == 'DN'
 
 
 class MockContext:
@@ -283,6 +318,34 @@ def test_info():
         main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
     assert '"count": 3' in result.output
+
+
+def test_info_units():
+    """Find a units item"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"units": ["", "", ""]' in result.output
+
+
+def test_info_indexes():
+    """Find an indexes item"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"indexes": [1, 2, 3]' in result.output
+
+
+def test_info_descriptions():
+    """Find description items"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"description": "/' in result.output
+    assert '"band_descriptions"' in result.output
 
 
 def test_info_verbose():
@@ -592,7 +655,8 @@ def test_bounds_seq_rs():
     ])
     assert result.exit_code == 0
     assert result.output == (
-        '\x1e[-78.96, 23.56, -76.57, 25.55]\n\x1e[-78.96, 23.56, -76.57, 25.55]\n')
+        '\x1e[-78.96, 23.56, -76.57, 25.55]\n'
+        '\x1e[-78.96, 23.56, -76.57, 25.55]\n')
 
 
 def test_insp():

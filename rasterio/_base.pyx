@@ -29,12 +29,13 @@ from rasterio._gdal cimport (
     CPLFree, CPLMalloc, CSLCount, CSLFetchBoolean, GDALCheckVersion,
     GDALChecksumImage, GDALClose, GDALFlushCache, GDALGetBlockSize,
     GDALGetColorEntry, GDALGetColorEntryCount, GDALGetDatasetDriver,
-    GDALGetDriverByName, GDALGetDriverShortName, GDALGetGeoTransform,
-    GDALGetMaskFlags, GDALGetMetadata, GDALGetOverview, GDALGetOverviewCount,
-    GDALGetProjectionRef, GDALGetRasterBand, GDALGetRasterBandXSize,
-    GDALGetRasterColorInterpretation, GDALGetRasterColorTable,
-    GDALGetRasterCount, GDALGetRasterDataType, GDALGetRasterNoDataValue,
-    GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen, GDALVersionInfo,
+    GDALGetDescription, GDALGetDriverByName, GDALGetDriverShortName,
+    GDALGetGeoTransform, GDALGetMaskFlags, GDALGetMetadata, GDALGetOverview,
+    GDALGetOverviewCount, GDALGetProjectionRef, GDALGetRasterBand,
+    GDALGetRasterBandXSize, GDALGetRasterColorInterpretation,
+    GDALGetRasterColorTable, GDALGetRasterCount, GDALGetRasterDataType,
+    GDALGetRasterNoDataValue, GDALGetRasterUnitType, GDALGetRasterXSize,
+    GDALGetRasterYSize, GDALOpen, GDALVersionInfo,
     OCTNewCoordinateTransformation, OCTTransform, OSRAutoIdentifyEPSG,
     OSRDestroySpatialReference, OSRExportToProj4, OSRExportToWkt,
     OSRGetAuthorityCode, OSRGetAuthorityName, OSRImportFromEPSG,
@@ -128,6 +129,9 @@ cdef class DatasetBase(object):
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []
+        self._units = ()
+        self._description = None
+        self._band_descriptions = ()
         self._crs = None
         self._read = False
 
@@ -389,7 +393,35 @@ cdef class DatasetBase(object):
         """Mask flags for each band."""
         def __get__(self):
             cdef GDALRasterBandH band = NULL
-            return [GDALGetMaskFlags(self.band(j)) for j in self.indexes]
+            return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+
+    property description:
+        """Text description of the dataset."""
+        def __get__(self):
+            if not self._description:
+                self._description = GDALGetDescription(
+                    <GDALMajorObjectH>self.handle())
+            return self._description
+
+    property band_descriptions:
+        """Text descriptions for each band."""
+        def __get__(self):
+            if not self._band_descriptions:
+                descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
+                self._band_descriptions = tuple((d or None) for d in descr)
+            return self._band_descriptions
+
+    property units:
+        """Strings defining the units for each band.
+
+        Possible values include 'meters' or 'degC'. See the Pint
+        project for a suggested list of units.¬
+        """
+        def __get__(self):
+            if not self._units:
+                self._units = tuple(
+                    GDALGetRasterUnitType(self.band(j)) for j in self.indexes)
+            return self._units
 
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's blocks and their corresponding

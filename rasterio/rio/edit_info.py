@@ -3,7 +3,6 @@
 
 import json
 
-import affine
 import click
 
 import rasterio
@@ -12,7 +11,7 @@ from rasterio.compat import string_types
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.rio import options
-from rasterio.transform import guard_transform, tastes_like_gdal
+from rasterio.transform import guard_transform
 
 
 # Handlers for info module options.
@@ -79,11 +78,16 @@ def transform_handler(ctx, param, value):
 
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
+@options.bidx_opt
 @options.nodata_opt
 @click.option('--crs', callback=crs_handler, default=None,
               help="New coordinate reference system")
 @click.option('--transform', callback=transform_handler,
               help="New affine transform matrix")
+@click.option('--units', help="Edit units of a band (requires --bidx)")
+@click.option('--description', help="Edit description")
+@click.option('--band-description',
+              help="Edit description of a band (requires --bidx)")
 @click.option('--tag', 'tags', callback=tags_handler, multiple=True,
               metavar='KEY=VAL', help="New tag.")
 @click.option('--all', 'allmd', callback=all_handler, flag_value='like',
@@ -91,7 +95,8 @@ def transform_handler(ctx, param, value):
               help="Copy all metadata items from the template file.")
 @options.like_opt
 @click.pass_context
-def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
+def edit(ctx, input, bidx, nodata, crs, transform, units, description,
+         band_description, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -130,30 +135,37 @@ def edit(ctx, input, nodata, crs, transform, tags, allmd, like):
         rng = infos[np.dtype(dtype).kind](dtype)
         return rng.min <= value <= rng.max
 
-    with ctx.obj['env']:
+    with ctx.obj['env'], rasterio.open(input, 'r+') as dst:
 
-        with rasterio.open(input, 'r+') as dst:
+        if allmd:
+            nodata = allmd['nodata']
+            crs = allmd['crs']
+            transform = allmd['transform']
+            tags = allmd['tags']
 
-            if allmd:
-                nodata = allmd['nodata']
-                crs = allmd['crs']
-                transform = allmd['transform']
-                tags = allmd['tags']
+        if nodata is not None:
+            dtype = dst.dtypes[0]
+            if not in_dtype_range(nodata, dtype):
+                raise click.BadParameter(
+                    "outside the range of the file's "
+                    "data type (%s)." % dtype,
+                    param=nodata, param_hint='nodata')
+            dst.nodata = nodata
 
-            if nodata is not None:
-                dtype = dst.dtypes[0]
-                if not in_dtype_range(nodata, dtype):
-                    raise click.BadParameter(
-                        "outside the range of the file's "
-                        "data type (%s)." % dtype,
-                        param=nodata, param_hint='nodata')
-                dst.nodata = nodata
+        if crs:
+            dst.crs = crs
 
-            if crs:
-                dst.crs = crs
+        if transform:
+            dst.transform = transform
 
-            if transform:
-                dst.transform = transform
+        if tags:
+            dst.update_tags(**tags)
 
-            if tags:
-                dst.update_tags(**tags)
+        if units:
+            dst.set_units(bidx, units)
+
+        if band_description:
+            dst.set_band_description(bidx, band_description)
+
+        if description:
+            dst.description = description

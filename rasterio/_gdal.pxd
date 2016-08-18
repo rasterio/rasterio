@@ -76,7 +76,7 @@ cdef extern from "gdal.h" nogil:
     const char *GDALGetDriverShortName(GDALDriverH driver)
     const char *GDALGetDriverLongName(GDALDriverH driver)
     const char* GDALGetDescription(GDALMajorObjectH obj)
-    void GDALSetDescription(GDALMajorObjectH obj, const char *)
+    void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, int access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
@@ -91,6 +91,8 @@ cdef extern from "gdal.h" nogil:
     GDALRasterBandH GDALGetOverview(GDALRasterBandH hband, int num)
     int GDALGetRasterBandXSize(GDALRasterBandH hband)
     int GDALGetRasterBandYSize(GDALRasterBandH hband)
+    const char *GDALGetRasterUnitType(GDALRasterBandH hband)
+    CPLErr GDALSetRasterUnitType(GDALRasterBandH hband, const char *val)
     int GDALSetGeoTransform(GDALDatasetH hds, double *transform)
     int GDALSetProjection(GDALDatasetH hds, const char *wkt)
     void GDALGetBlockSize(GDALRasterBandH , int *xsize, int *ysize)

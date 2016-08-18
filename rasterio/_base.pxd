@@ -21,6 +21,9 @@ cdef class DatasetBase:
     cdef public object _transform
     cdef public object _block_shapes
     cdef public object _nodatavals
+    cdef public object _units
+    cdef public object _description
+    cdef public object _band_descriptions
     cdef public object _read
 
     cdef GDALDatasetH handle(self) except NULL
