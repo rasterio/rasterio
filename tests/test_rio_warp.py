@@ -486,23 +486,29 @@ def test_warp_badcrs_src_bounds(runner, tmpdir):
 
 def test_warp_reproject_check_invert(runner, tmpdir):
     srcname = 'tests/data/world.rgb.tif'
+
+    # default True
     outputname = str(tmpdir.join('test.tif'))
-    result = runner.invoke(main_group, [
-        'warp', srcname, outputname, '--check-invert-proj',
+    runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', 'EPSG:3759'])
+
+    # explicit True
+    output2name = str(tmpdir.join('test2.tif'))
+    runner.invoke(main_group, [
+        'warp', srcname, output2name, '--check-invert-proj',
         '--dst-crs', 'EPSG:3759'])
-    assert result.exit_code == 0
-    assert os.path.exists(outputname)
+
+    # explicit False
+    output3name = str(tmpdir.join('test3.tif'))
+    runner.invoke(main_group, [
+        'warp', srcname, output3name, '--no-check-invert-proj',
+        '--dst-crs', 'EPSG:3759'])
 
     with rasterio.open(outputname) as output:
-        assert output.crs == {'init': 'epsg:3759'}
         shape1 = output.shape
 
-    output2name = str(tmpdir.join('test2.tif'))
-    result = runner.invoke(main_group, [
-        'warp', srcname, output2name, '--dst-crs', 'EPSG:3759'])
-    assert result.exit_code == 0
-    assert os.path.exists(output2name)
-
     with rasterio.open(output2name) as output:
-        assert output.crs == {'init': 'epsg:3759'}
+        assert output.shape == shape1
+
+    with rasterio.open(output3name) as output:
         assert output.shape != shape1

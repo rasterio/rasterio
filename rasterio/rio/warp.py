@@ -132,6 +132,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 "--dimensions cannot be used with --bounds or --res")
 
     with ctx.obj['env']:
+        print(check_invert_proj)
+        quit()
         setenv(CHECK_WITH_INVERT_PROJ=check_invert_proj)
 
         with rasterio.open(files[0]) as src:
