@@ -113,6 +113,43 @@ def test_edit_tags(data):
         assert src.tags()['wut'] == '2'
 
 
+def test_edit_description(data):
+    """Edit description"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', inputfile, '--description', 'this is a test'])
+
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.description == 'this is a test'
+
+
+def test_edit_band_description(data):
+    """Edit band descriptions"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', inputfile, '--bidx', '3', '--band-description',
+        'this is another test'])
+
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.band_descriptions[2] == 'this is another test'
+
+
+def test_edit_units(data):
+    """Edit units"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', inputfile, '--bidx', '1', '--units', 'DN'],
+        catch_exceptions=False)
+
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.units[0] == 'DN'
+
 class MockContext:
 
     def __init__(self):
@@ -284,6 +321,33 @@ def test_info():
     assert result.exit_code == 0
     assert '"count": 3' in result.output
 
+
+def test_info_units():
+    """Find a units item"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"units": ["", "", ""]' in result.output
+
+
+def test_info_indexes():
+    """Find an indexes item"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"indexes": [1, 2, 3]' in result.output
+
+
+def test_info_descriptions():
+    """Find description items"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"description": "/' in result.output
+    assert '"band_descriptions"' in result.output
 
 def test_info_verbose():
     runner = CliRunner()

@@ -63,8 +63,9 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
     """
     try:
         with ctx.obj['env'], rasterio.open(input) as src:
+
             info = dict(src.profile)
-            info['shape'] = info['height'], info['width']
+            info['shape'] = (info['height'], info['width'])
             info['bounds'] = src.bounds
             proj4 = src.crs.to_string()
             if proj4.startswith('+init=epsg'):
@@ -73,6 +74,11 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             info['res'] = src.res
             info['colorinterp'] = [src.colorinterp(i).name
                                    for i in src.indexes]
+            info['units'] = src.units
+            info['description'] = src.description
+            info['band_descriptions'] = src.band_descriptions
+            info['indexes'] = src.indexes
+
             if proj4 != '':
                 info['lnglat'] = src.lnglat()
             if verbose:
@@ -82,6 +88,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                           } for b in src.read(masked=masked)]
                 info['stats'] = stats
                 info['checksum'] = [src.checksum(i) for i in src.indexes]
+
             if aspect == 'meta':
                 if meta_member == 'stats':
                     band = src.read(bidx, masked=masked)
@@ -98,6 +105,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                         click.echo(info[meta_member])
                 else:
                     click.echo(json.dumps(info, indent=indent))
+
             elif aspect == 'tags':
                 click.echo(
                     json.dumps(src.tags(ns=namespace), indent=indent))
