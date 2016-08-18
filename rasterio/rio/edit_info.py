@@ -3,7 +3,6 @@
 
 import json
 
-import affine
 import click
 
 import rasterio
@@ -12,7 +11,7 @@ from rasterio.compat import string_types
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.rio import options
-from rasterio.transform import guard_transform, tastes_like_gdal
+from rasterio.transform import guard_transform
 
 
 # Handlers for info module options.

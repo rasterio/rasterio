@@ -1421,12 +1421,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             if self._init_description is not None:
                 GDALSetDescription(
-                    self.handle(), self._init_description.encode('utf-8'))
+                    <GDALMajorObjectH>self.handle(), self._init_description.encode('utf-8'))
+
                 # Broadcast description to all bands.
                 for i in range(self._count):
                     band = self.band(i + 1)
                     GDALSetDescription(
-                        band, self._init_description.encode('utf-8'))
+                        <GDALMajorObjectH>band, self._init_description.encode('utf-8'))
 
             if self._transform:
                 self.write_transform(self._transform)
@@ -1591,20 +1592,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __set__(self, value):
             self.set_nodatavals([value for old_val in self.nodatavals])
-
-    property description:
-        """Description of the dataset."""
-
-        def __get__(self):
-            if not self._description:
-                value = GDALGetDescription(self.handle())
-                self._description = value.decode('utf-8')
-            return self._description
-
-        def __set__(self, value):
-            GDALSetDescription(self.handle(), value.encode('utf-8'))
-            # Invalidate cached description.
-            self._description = None
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.

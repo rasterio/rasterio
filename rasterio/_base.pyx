@@ -399,7 +399,8 @@ cdef class DatasetBase(object):
         """Text description of the dataset."""
         def __get__(self):
             if not self._description:
-                self._description = GDALGetDescription(self.handle())
+                self._description = GDALGetDescription(
+                    <GDALMajorObjectH>self.handle())
             return self._description
 
     property band_descriptions:

@@ -75,8 +75,8 @@ class TransformMethodsMixin(object):
         y : float
             y value in coordinate reference system
         op : function, optional (default: math.floor)
-            Function to convert fractional pixels to whole numbers (floor, ceiling,
-            round)
+            Function to convert fractional pixels to whole numbers (floor,
+            ceiling, round)
         precision : int, optional (default: 6)
             Decimal places of precision in indexing, as in `round()`.
 

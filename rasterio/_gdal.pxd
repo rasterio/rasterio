@@ -76,7 +76,7 @@ cdef extern from "gdal.h" nogil:
     const char *GDALGetDriverShortName(GDALDriverH driver)
     const char *GDALGetDriverLongName(GDALDriverH driver)
     const char* GDALGetDescription(GDALMajorObjectH obj)
-    void GDALSetDescription(GDALMajorObjectH obj, const char *)
+    void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, int access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
