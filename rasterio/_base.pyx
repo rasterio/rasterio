@@ -407,12 +407,16 @@ cdef class DatasetBase(object):
         """Text descriptions for each band."""
         def __get__(self):
             if not self._band_descriptions:
-                self._band_descriptions = tuple(
-                    GDALGetDescription(self.band(j)) for j in self.indexes)
+                descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
+                self._band_descriptions = tuple((d or None) for d in descr)
             return self._band_descriptions
 
     property units:
-        """Units for each band."""
+        """Strings defining the units for each band.
+
+        Possible values include 'meters' or 'degC'. See the Pint
+        project for a suggested list of units.¬
+        """
         def __get__(self):
             if not self._units:
                 self._units = tuple(

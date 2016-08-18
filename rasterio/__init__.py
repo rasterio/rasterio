@@ -68,7 +68,7 @@ log.addHandler(NullHandler())
 @ensure_env
 def open(path, mode='r', driver=None, width=None, height=None,
          count=None, crs=None, transform=None, dtype=None, nodata=None,
-         units=None, description=None, **kwargs):
+         **kwargs):
     """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
     write), or 'w' (write) and return a dataset Reader or Updater
     object.
@@ -109,12 +109,6 @@ def open(path, mode='r', driver=None, width=None, height=None,
         Defines pixel value to be interpreted as null/nodata
         (optional, recommended for write, will be broadcast to all
         bands).
-    description: string
-        Text describing the dataset (optional, will be broadcast to
-        all bands).
-    units: string
-        Units of raster band array values ('meters', 'degC', &c)
-        (optional, will be broadcast to all bands).
 
     Returns
     -------
@@ -187,7 +181,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
         with warnings.catch_warnings():
             warnings.simplefilter('always')
             warnings.warn(
-                "The 'affine' kwarg in rasterio.open() is deprecated as of 1.0 "
+                "The 'affine' kwarg in rasterio.open() is deprecated at 1.0 "
                 "and only remains to ease the transition.  Please switch to "
                 "the 'transform' kwarg.  See "
                 "https://github.com/mapbox/rasterio/issues/86 for details.",
@@ -233,8 +227,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
                                           width=width, height=height,
                                           count=count, crs=crs,
                                           transform=transform, dtype=dtype,
-                                          nodata=nodata, units=units,
-                                          description=description, **kwargs)
+                                          nodata=nodata, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)

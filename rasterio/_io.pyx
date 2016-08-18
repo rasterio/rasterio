@@ -1266,7 +1266,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 units=None, description=None, **kwargs):
+                 **kwargs):
         # Validate write mode arguments.
         if mode == 'w':
             if not isinstance(driver, string_types):
@@ -1293,8 +1293,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._count = count
         self._init_dtype = np.dtype(dtype).name
         self._init_nodata = nodata
-        self._init_units = units
-        self._init_description = description
         self._hds = NULL
         self._count = count
         self._crs = crs
@@ -1304,6 +1302,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._dtypes = []
         self._nodatavals = []
         self._units = ()
+        self._band_descriptions = ()
         self._options = kwargs.copy()
 
     def __repr__(self):
@@ -1411,23 +1410,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     band = self.band(i + 1)
                     success = GDALSetRasterNoDataValue(band,
                                                        self._init_nodata)
-
-            if self._init_units is not None:
-                # Broadcast the units to all bands.
-                for i in range(self._count):
-                    band = self.band(i + 1)
-                    success = GDALSetRasterUnitType(
-                        band, self._init_units.encode('utf-8'))
-
-            if self._init_description is not None:
-                GDALSetDescription(
-                    <GDALMajorObjectH>self.handle(), self._init_description.encode('utf-8'))
-
-                # Broadcast description to all bands.
-                for i in range(self._count):
-                    band = self.band(i + 1)
-                    GDALSetDescription(
-                        <GDALMajorObjectH>band, self._init_description.encode('utf-8'))
 
             if self._transform:
                 self.write_transform(self._transform)

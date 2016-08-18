@@ -1,16 +1,5 @@
-import pytest
-
 import rasterio
 from rasterio.profiles import default_gtiff_profile
-
-
-def test_units_creation(tmpdir):
-    """Passed units are broadcast to all bands"""
-    tmptiff = str(tmpdir.join('test.tif'))
-    with rasterio.open(
-            tmptiff, 'w', count=2, units='degC', height=256, width=256,
-            **default_gtiff_profile) as dst:
-        assert dst.units == ('degC', 'degC')
 
 
 def test_set_units(tmpdir):
