@@ -36,13 +36,14 @@ from rasterio._gdal cimport (
     CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
     GDALCreateColorTable, GDALCreateCopy, GDALCreateMaskBand,
     GDALDatasetRasterIO, GDALDestroyColorTable, GDALFillRaster,
-    GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDriverByName,
-    GDALGetDriverShortName, GDALGetMaskBand, GDALGetMaskFlags, GDALGetMetadata,
-    GDALGetRasterBand, GDALGetRasterCount, GDALGetRasterXSize,
-    GDALGetRasterYSize, GDALOpen, GDALRasterIO, GDALSetColorEntry,
-    GDALSetGeoTransform, GDALSetMetadata, GDALSetProjection,
-    GDALSetRasterColorInterpretation, GDALSetRasterColorTable,
-    GDALSetRasterNoDataValue, GDALSetRasterNoDataValue, GDALSetRasterUnitType,
+    GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDescription,
+    GDALGetDriverByName, GDALGetDriverShortName, GDALGetMaskBand,
+    GDALGetMaskFlags, GDALGetMetadata, GDALGetRasterBand, GDALGetRasterCount,
+    GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen, GDALRasterIO,
+    GDALSetColorEntry, GDALSetDescription, GDALSetGeoTransform,
+    GDALSetMetadata, GDALSetProjection, GDALSetRasterColorInterpretation,
+    GDALSetRasterColorTable, GDALSetRasterNoDataValue,
+    GDALSetRasterNoDataValue, GDALSetRasterUnitType,
     OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
     VSIGetMemFileBuffer, vsi_l_offset)
@@ -1265,7 +1266,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 units=None, **kwargs):
+                 units=None, description=None, **kwargs):
         # Validate write mode arguments.
         if mode == 'w':
             if not isinstance(driver, string_types):
@@ -1293,6 +1294,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._init_dtype = np.dtype(dtype).name
         self._init_nodata = nodata
         self._init_units = units
+        self._init_description = description
         self._hds = NULL
         self._count = count
         self._crs = crs
@@ -1404,16 +1406,27 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                         "range of its data type, %s." % (
                             self._init_nodata, self._init_dtype))
 
+                # Broadcast the nodata value to all bands.
                 for i in range(self._count):
                     band = self.band(i + 1)
                     success = GDALSetRasterNoDataValue(band,
                                                        self._init_nodata)
 
             if self._init_units is not None:
+                # Broadcast the units to all bands.
                 for i in range(self._count):
                     band = self.band(i + 1)
                     success = GDALSetRasterUnitType(
                         band, self._init_units.encode('utf-8'))
+
+            if self._init_description is not None:
+                GDALSetDescription(
+                    self.handle(), self._init_description.encode('utf-8'))
+                # Broadcast description to all bands.
+                for i in range(self._count):
+                    band = self.band(i + 1)
+                    GDALSetDescription(
+                        band, self._init_description.encode('utf-8'))
 
             if self._transform:
                 self.write_transform(self._transform)
@@ -1578,6 +1591,20 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __set__(self, value):
             self.set_nodatavals([value for old_val in self.nodatavals])
+
+    property description:
+        """Description of the dataset."""
+
+        def __get__(self):
+            if not self._description:
+                value = GDALGetDescription(self.handle())
+                self._description = value.decode('utf-8')
+            return self._description
+
+        def __set__(self, value):
+            GDALSetDescription(self.handle(), value.encode('utf-8'))
+            # Invalidate cached description.
+            self._description = None
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.
@@ -1750,6 +1777,51 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             log.warn("Tags accepted but may not be persisted.")
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
+
+    def set_band_description(self, bidx, value):
+        """Sets the description of a dataset band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+
+        value: string
+            A description of the band.
+
+        Returns
+        -------
+        None
+        """
+        cdef GDALRasterBandH hband = NULL
+
+        hband = self.band(bidx)
+        GDALSetDescription(hband, value.encode('utf-8'))
+        # Invalidate cached descriptions.
+        self._band_descriptions = ()
+
+    def set_units(self, bidx, value):
+        """Sets the units of a dataset band.
+
+        Parameters
+        ----------
+        bidx : int
+            Index of the band (starting with 1).
+
+        value: string
+            A label for the band's units such as 'meters' or 'degC'.
+            See the Pint project for a suggested list of units.
+
+        Returns
+        -------
+        None
+        """
+        cdef GDALRasterBandH hband = NULL
+
+        hband = self.band(bidx)
+        GDALSetRasterUnitType(hband, value.encode('utf-8'))
+        # Invalidate cached units.
+        self._units = ()
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""

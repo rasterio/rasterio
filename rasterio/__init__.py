@@ -68,7 +68,7 @@ log.addHandler(NullHandler())
 @ensure_env
 def open(path, mode='r', driver=None, width=None, height=None,
          count=None, crs=None, transform=None, dtype=None, nodata=None,
-         units=None, **kwargs):
+         units=None, description=None, **kwargs):
     """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
     write), or 'w' (write) and return a dataset Reader or Updater
     object.
@@ -86,34 +86,35 @@ def open(path, mode='r', driver=None, width=None, height=None,
     mode: string
         "r" (read), "r+" (read/write), or "w" (write)
     driver: string
-        driver code specifying the format name (e.g. "GTiff" or
+        Driver code specifying the format name (e.g. "GTiff" or
         "JPEG"). See GDAL docs at
         http://www.gdal.org/formats_list.html (optional, required
         for writing).
     width: int
-        number of pixels per line
-        (optional, required for write)
+        Number of pixels per line (optional, required for write).
     height: int
-        number of lines
-        (optional, required for write)
+        Number of lines (optional, required for write).
     count: int > 0
-        number of bands
-        (optional, required for write)
+        Count of bands (optional, required for write).
     dtype: rasterio.dtype
         the data type for bands such as ``rasterio.ubyte`` for
         8-bit bands or ``rasterio.uint16`` for 16-bit bands
         (optional, required for write)
     crs: dict or string
-        Coordinate reference system
-        (optional, recommended for write)
+        Coordinate reference system (optional, recommended for write).
     transform: Affine instance
         Affine transformation mapping the pixel space to geographic
         space (optional, recommended for writing).
     nodata: number
         Defines pixel value to be interpreted as null/nodata
-        (optional, recommended for write)
+        (optional, recommended for write, will be broadcast to all
+        bands).
+    description: string
+        Text describing the dataset (optional, will be broadcast to
+        all bands).
     units: string
-        Optional units for raster band array values ('meters', 'degC', &c).
+        Units of raster band array values ('meters', 'degC', &c)
+        (optional, will be broadcast to all bands).
 
     Returns
     -------
@@ -232,7 +233,8 @@ def open(path, mode='r', driver=None, width=None, height=None,
                                           width=width, height=height,
                                           count=count, crs=crs,
                                           transform=transform, dtype=dtype,
-                                          nodata=nodata, units=units, **kwargs)
+                                          nodata=nodata, units=units,
+                                          description=description, **kwargs)
     else:
         raise ValueError(
             "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)

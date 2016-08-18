@@ -29,17 +29,17 @@ from rasterio._gdal cimport (
     CPLFree, CPLMalloc, CSLCount, CSLFetchBoolean, GDALCheckVersion,
     GDALChecksumImage, GDALClose, GDALFlushCache, GDALGetBlockSize,
     GDALGetColorEntry, GDALGetColorEntryCount, GDALGetDatasetDriver,
-    GDALGetDriverByName, GDALGetDriverShortName, GDALGetGeoTransform,
-    GDALGetMaskFlags, GDALGetMetadata, GDALGetOverview, GDALGetOverviewCount,
-    GDALGetProjectionRef, GDALGetRasterBand, GDALGetRasterBandXSize,
-    GDALGetRasterColorInterpretation, GDALGetRasterColorTable,
-    GDALGetRasterCount, GDALGetRasterDataType, GDALGetRasterNoDataValue,
-    GDALGetRasterUnitType, GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen,
-    GDALVersionInfo, OCTNewCoordinateTransformation, OCTTransform,
-    OSRAutoIdentifyEPSG, OSRDestroySpatialReference, OSRExportToProj4,
-    OSRExportToWkt, OSRGetAuthorityCode, OSRGetAuthorityName,
-    OSRImportFromEPSG, OSRImportFromProj4, OSRNewSpatialReference,
-    OSRSetFromUserInput)
+    GDALGetDescription, GDALGetDriverByName, GDALGetDriverShortName,
+    GDALGetGeoTransform, GDALGetMaskFlags, GDALGetMetadata, GDALGetOverview,
+    GDALGetOverviewCount, GDALGetProjectionRef, GDALGetRasterBand,
+    GDALGetRasterBandXSize, GDALGetRasterColorInterpretation,
+    GDALGetRasterColorTable, GDALGetRasterCount, GDALGetRasterDataType,
+    GDALGetRasterNoDataValue, GDALGetRasterUnitType, GDALGetRasterXSize,
+    GDALGetRasterYSize, GDALOpen, GDALVersionInfo,
+    OCTNewCoordinateTransformation, OCTTransform, OSRAutoIdentifyEPSG,
+    OSRDestroySpatialReference, OSRExportToProj4, OSRExportToWkt,
+    OSRGetAuthorityCode, OSRGetAuthorityName, OSRImportFromEPSG,
+    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput)
 
 include "gdal.pxi"
 
@@ -130,6 +130,8 @@ cdef class DatasetBase(object):
         self._block_shapes = None
         self._nodatavals = []
         self._units = ()
+        self._description = None
+        self._band_descriptions = ()
         self._crs = None
         self._read = False
 
@@ -392,6 +394,21 @@ cdef class DatasetBase(object):
         def __get__(self):
             cdef GDALRasterBandH band = NULL
             return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+
+    property description:
+        """Text description of the dataset."""
+        def __get__(self):
+            if not self._description:
+                self._description = GDALGetDescription(self.handle())
+            return self._description
+
+    property band_descriptions:
+        """Text descriptions for each band."""
+        def __get__(self):
+            if not self._band_descriptions:
+                self._band_descriptions = tuple(
+                    GDALGetDescription(self.band(j)) for j in self.indexes)
+            return self._band_descriptions
 
     property units:
         """Units for each band."""
