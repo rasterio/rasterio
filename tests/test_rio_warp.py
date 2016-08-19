@@ -484,31 +484,43 @@ def test_warp_badcrs_src_bounds(runner, tmpdir):
     assert "Invalid value for dst_crs" in result.output
 
 
-def test_warp_reproject_check_invert(runner, tmpdir):
+shape_check = (412, 397)
+shape_no_check = (291, 493)
+
+def test_warp_reproject_check_invert_default(runner, tmpdir):
+    outputname = str(tmpdir.join('test.tif'))
     srcname = 'tests/data/world.rgb.tif'
 
     # default True
-    outputname = str(tmpdir.join('test.tif'))
     runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', 'EPSG:3759'])
 
-    # explicit True
-    output2name = str(tmpdir.join('test2.tif'))
-    runner.invoke(main_group, [
-        'warp', srcname, output2name, '--check-invert-proj',
-        '--dst-crs', 'EPSG:3759'])
+    with rasterio.open(outputname) as output:
+        assert output.shape == shape_check
 
-    # explicit False
-    output3name = str(tmpdir.join('test3.tif'))
+
+def test_warp_reproject_check_invert_true(runner, tmpdir):
+    outputname = str(tmpdir.join('test2.tif'))
+    srcname = 'tests/data/world.rgb.tif'
+
+    # explicit True
     runner.invoke(main_group, [
-        'warp', srcname, output3name, '--no-check-invert-proj',
+        'warp', srcname, outputname, '--check-invert-proj',
         '--dst-crs', 'EPSG:3759'])
 
     with rasterio.open(outputname) as output:
-        shape1 = output.shape
+        assert output.shape == shape_check
 
-    with rasterio.open(output2name) as output:
-        assert output.shape == shape1
 
-    with rasterio.open(output3name) as output:
-        assert output.shape != shape1
+def test_warp_reproject_check_invert_false(runner, tmpdir):
+    outputname = str(tmpdir.join('test2.tif'))
+    srcname = 'tests/data/world.rgb.tif'
+
+    # explicit False
+    runner.invoke(main_group, [
+        'warp', srcname, outputname, '--no-check-invert-proj',
+        '--dst-crs', 'EPSG:3759'])
+
+    with rasterio.open(outputname) as output:
+        assert output.shape != shape_check
+        assert output.shape == shape_no_check
