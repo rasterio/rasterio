@@ -55,7 +55,7 @@ MAX_OUTPUT_HEIGHT = 100000
               type=float, help="Manually override destination nodata")
 @click.option('--threads', type=int, default=1,
               help='Number of processing threads.')
-@click.option('--check-invert-proj', is_flag=True, default=True,
+@click.option('--check-invert-proj/--no-check-invert-proj', default=True,
               help='Constrain output to valid coordinate region in dst-crs')
 @options.force_overwrite_opt
 @options.creation_options
