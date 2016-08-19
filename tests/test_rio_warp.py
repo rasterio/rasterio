@@ -484,43 +484,39 @@ def test_warp_badcrs_src_bounds(runner, tmpdir):
     assert "Invalid value for dst_crs" in result.output
 
 
-shape_check = (412, 397)
-shape_no_check = (291, 493)
-
-def test_warp_reproject_check_invert_default(runner, tmpdir):
+def test_warp_reproject_check_invert_true(runner, tmpdir):
     outputname = str(tmpdir.join('test.tif'))
+    output2name = str(tmpdir.join('test2.tif'))
     srcname = 'tests/data/world.rgb.tif'
 
     # default True
     runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', 'EPSG:3759'])
 
-    with rasterio.open(outputname) as output:
-        assert output.shape == shape_check
-
-
-def test_warp_reproject_check_invert_true(runner, tmpdir):
-    outputname = str(tmpdir.join('test2.tif'))
-    srcname = 'tests/data/world.rgb.tif'
-
     # explicit True
     runner.invoke(main_group, [
-        'warp', srcname, outputname, '--check-invert-proj',
+        'warp', srcname, output2name, '--check-invert-proj',
         '--dst-crs', 'EPSG:3759'])
 
-    with rasterio.open(outputname) as output:
-        assert output.shape == shape_check
+    with rasterio.open(outputname) as output, \
+         rasterio.open(output2name) as output2:
+        assert output.shape == output2.shape
 
 
 def test_warp_reproject_check_invert_false(runner, tmpdir):
-    outputname = str(tmpdir.join('test2.tif'))
+    outputname = str(tmpdir.join('test.tif'))
+    output2name = str(tmpdir.join('test2.tif'))
     srcname = 'tests/data/world.rgb.tif'
+
+    # default True
+    runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', 'EPSG:3759'])
 
     # explicit False
     runner.invoke(main_group, [
-        'warp', srcname, outputname, '--no-check-invert-proj',
+        'warp', srcname, output2name, '--no-check-invert-proj',
         '--dst-crs', 'EPSG:3759'])
 
-    with rasterio.open(outputname) as output:
-        assert output.shape != shape_check
-        assert output.shape == shape_no_check
+    with rasterio.open(outputname) as output, \
+         rasterio.open(output2name) as output2:
+        assert output.shape != output2.shape
