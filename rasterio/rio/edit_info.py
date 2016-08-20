@@ -85,8 +85,7 @@ def transform_handler(ctx, param, value):
 @click.option('--transform', callback=transform_handler,
               help="New affine transform matrix")
 @click.option('--units', help="Edit units of a band (requires --bidx)")
-@click.option('--description', help="Edit description")
-@click.option('--band-description',
+@click.option('--description',
               help="Edit description of a band (requires --bidx)")
 @click.option('--tag', 'tags', callback=tags_handler, multiple=True,
               metavar='KEY=VAL', help="New tag.")
@@ -96,7 +95,7 @@ def transform_handler(ctx, param, value):
 @options.like_opt
 @click.pass_context
 def edit(ctx, input, bidx, nodata, crs, transform, units, description,
-         band_description, tags, allmd, like):
+         tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -164,8 +163,5 @@ def edit(ctx, input, bidx, nodata, crs, transform, units, description,
         if units:
             dst.set_units(bidx, units)
 
-        if band_description:
-            dst.set_band_description(bidx, band_description)
-
         if description:
-            dst.description = description
+            dst.set_description(bidx, description)
