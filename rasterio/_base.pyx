@@ -130,8 +130,7 @@ cdef class DatasetBase(object):
         self._block_shapes = None
         self._nodatavals = []
         self._units = ()
-        self._description = None
-        self._band_descriptions = ()
+        self._descriptions = ()
         self._crs = None
         self._read = False
 
@@ -395,21 +394,13 @@ cdef class DatasetBase(object):
             cdef GDALRasterBandH band = NULL
             return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
 
-    property description:
-        """Text description of the dataset."""
-        def __get__(self):
-            if not self._description:
-                self._description = GDALGetDescription(
-                    <GDALMajorObjectH>self.handle())
-            return self._description
-
-    property band_descriptions:
+    property descriptions:
         """Text descriptions for each band."""
         def __get__(self):
-            if not self._band_descriptions:
+            if not self._descriptions:
                 descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
-                self._band_descriptions = tuple((d or None) for d in descr)
-            return self._band_descriptions
+                self._descriptions = tuple((d or None) for d in descr)
+            return self._descriptions
 
     property units:
         """Strings defining the units for each band.
