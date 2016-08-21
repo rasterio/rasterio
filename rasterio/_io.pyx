@@ -1302,7 +1302,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._dtypes = []
         self._nodatavals = []
         self._units = ()
-        self._band_descriptions = ()
+        self._descriptions = ()
         self._options = kwargs.copy()
 
     def __repr__(self):
@@ -1747,7 +1747,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
 
-    def set_band_description(self, bidx, value):
+    def set_description(self, bidx, value):
         """Sets the description of a dataset band.
 
         Parameters
@@ -1767,7 +1767,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         hband = self.band(bidx)
         GDALSetDescription(hband, value.encode('utf-8'))
         # Invalidate cached descriptions.
-        self._band_descriptions = ()
+        self._descriptions = ()
 
     def set_units(self, bidx, value):
         """Sets the units of a dataset band.

@@ -127,12 +127,12 @@ def test_edit_band_description(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(main_group, [
-        'edit-info', inputfile, '--bidx', '3', '--band-description',
+        'edit-info', inputfile, '--bidx', '3', '--description',
         'this is another test'])
 
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.band_descriptions[2] == 'this is another test'
+        assert src.descriptions[2] == 'this is another test'
 
 
 def test_edit_units(data):
@@ -344,8 +344,7 @@ def test_info_descriptions():
     result = runner.invoke(
         main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
-    assert '"description": "/' in result.output
-    assert '"band_descriptions"' in result.output
+    assert '"descriptions"' in result.output
 
 
 def test_info_verbose():

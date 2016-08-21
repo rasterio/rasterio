@@ -75,8 +75,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             info['colorinterp'] = [src.colorinterp(i).name
                                    for i in src.indexes]
             info['units'] = src.units
-            info['description'] = src.description
-            info['band_descriptions'] = src.band_descriptions
+            info['descriptions'] = src.descriptions
             info['indexes'] = src.indexes
 
             if proj4 != '':
