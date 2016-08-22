@@ -95,7 +95,8 @@ def file_in_handler(ctx, param, value):
     except ValueError as exc:
         raise click.BadParameter(str(exc))
     path_to_check = archive or path
-    if not scheme in ['http', 'https', 's3'] and not os.path.exists(path_to_check):
+    if (scheme not in ['http', 'https', 's3'] and not
+            os.path.exists(path_to_check)):
         raise click.BadParameter(
             "Input file {0} does not exist".format(path_to_check))
     if archive and scheme:
@@ -201,9 +202,7 @@ output_opt = click.option(
     '-o', '--output',
     default=None,
     type=click.Path(resolve_path=True),
-    help="Path to output file (optional alternative to a positional arg). "
-         "Existing files will be overwritten (`--force-overwrite` is "
-         "implied).")
+    help="Path to output file (optional alternative to a positional arg).")
 
 resolution_opt = click.option(
     '-r', '--res',
