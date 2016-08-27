@@ -87,7 +87,7 @@ def resolve_inout(input=None, output=None, files=None, force_overwrite=False):
             resolved_output):
         raise FileOverwriteError(
             "file exists and won't be overwritten without use of the "
-            "`--force-overwrite` or `--output` options.")
+            "`--force-overwrite` option.")
     resolved_inputs = (
         [input] if input else [] +
         list(files[:-1 if not output else None]) if files else [])
