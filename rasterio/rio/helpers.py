@@ -83,12 +83,11 @@ def resolve_inout(input=None, output=None, files=None, force_overwrite=False):
     :param:`force_overwrite` is `True`.
     """
     resolved_output = output or (files[-1] if files else None)
-    force_overwrite = output is not None or force_overwrite
     if not force_overwrite and resolved_output and os.path.exists(
             resolved_output):
         raise FileOverwriteError(
             "file exists and won't be overwritten without use of the "
-            "`--force-overwrite` or `--output` options.")
+            "`--force-overwrite` option.")
     resolved_inputs = (
         [input] if input else [] +
         list(files[:-1 if not output else None]) if files else [])

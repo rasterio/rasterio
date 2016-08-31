@@ -39,11 +39,11 @@ def test_force_overwrite(tmpdir):
 
 
 def test_implicit_overwrite(tmpdir):
-    """Implicit overwrite of existing file succeeds."""
+    """Implicit overwrite of existing file fails."""
     foo_tif = tmpdir.join('foo.tif')
     foo_tif.write("content")
-    output, inputs = helpers.resolve_inout(output=str(foo_tif))
-    assert output == str(foo_tif)
+    with pytest.raises(FileOverwriteError):
+        helpers.resolve_inout(output=str(foo_tif))
 
 
 def test_to_lower():

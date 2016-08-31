@@ -12,12 +12,12 @@ from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
-from rasterio.env import ensure_env
+from rasterio.env import ensure_env, Env
 from rasterio.transform import guard_transform
 
 
 @ensure_env
-def transform(src_crs, dst_crs, xs, ys, zs=None):
+def transform(src_crs, dst_crs, xs, ys, zs=None, **options):
     """Transform vectors from source to target coordinate reference system.
 
     Transform vectors of x, y and optionally z from source
@@ -43,7 +43,8 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     Tuple of x, y, and optionally z vectors, transformed into the target
     coordinate reference system.
     """
-    return _transform(src_crs, dst_crs, xs, ys, zs)
+    with Env(**options):
+        return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
 @ensure_env

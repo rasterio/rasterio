@@ -574,7 +574,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
             'rasterize', output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
             '--bounds', 0, 10, 10, 0],
-        input=json.dumps(basic_feature))
+        input=json.dumps(basic_feature), catch_exceptions=False)
 
     assert result.exit_code == 0
     assert os.path.exists(output)
@@ -584,7 +584,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
 
     result = runner.invoke(
         main_group, [
-            'rasterize', '-o', output, '--dimensions', DEFAULT_SHAPE[0],
+            'rasterize', '--force-overwrite', '-o', output, '--dimensions', DEFAULT_SHAPE[0],
             DEFAULT_SHAPE[1]],
         input=json.dumps(basic_feature))
 
