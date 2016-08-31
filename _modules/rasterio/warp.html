@@ -175,12 +175,12 @@
 <span class="kn">from</span> <span class="nn">rasterio._warp</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_transform_geom</span><span class="p">,</span> <span class="n">_reproject</span><span class="p">,</span> <span class="n">_calculate_default_transform</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="kn">import</span> <span class="n">Resampling</span>
-<span class="kn">from</span> <span class="nn">rasterio.env</span> <span class="kn">import</span> <span class="n">ensure_env</span>
+<span class="kn">from</span> <span class="nn">rasterio.env</span> <span class="kn">import</span> <span class="n">ensure_env</span><span class="p">,</span> <span class="n">Env</span>
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">guard_transform</span>
 
 
 <span class="nd">@ensure_env</span>
-<div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.transform">[docs]</a><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.transform">[docs]</a><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Transform vectors from source to target coordinate reference system.</span>
 
 <span class="sd">    Transform vectors of x, y and optionally z from source</span>
@@ -206,7 +206,8 @@
 <span class="sd">    Tuple of x, y, and optionally z vectors, transformed into the target</span>
 <span class="sd">    coordinate reference system.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">)</span></div>
+    <span class="k">with</span> <span class="n">Env</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">)</span></div>
 
 
 <span class="nd">@ensure_env</span>

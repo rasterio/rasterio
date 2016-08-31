@@ -82,13 +82,10 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/reading.html">Reading Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/working_with_datasets.html">Working with Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/writing.html">Writing Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from GDAL&#8217;s bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
@@ -278,25 +275,22 @@ specified.  Additionally, the data type for bands such as
 </div></blockquote>
 <p><strong>driver: string</strong></p>
 <blockquote>
-<div><p>driver code specifying the format name (e.g. &#8220;GTiff&#8221; or
+<div><p>Driver code specifying the format name (e.g. &#8220;GTiff&#8221; or
 &#8220;JPEG&#8221;). See GDAL docs at
 <a class="reference external" href="http://www.gdal.org/formats_list.html">http://www.gdal.org/formats_list.html</a> (optional, required
 for writing).</p>
 </div></blockquote>
 <p><strong>width: int</strong></p>
 <blockquote>
-<div><p>number of pixels per line
-(optional, required for write)</p>
+<div><p>Number of pixels per line (optional, required for write).</p>
 </div></blockquote>
 <p><strong>height: int</strong></p>
 <blockquote>
-<div><p>number of lines
-(optional, required for write)</p>
+<div><p>Number of lines (optional, required for write).</p>
 </div></blockquote>
 <p><strong>count: int &gt; 0</strong></p>
 <blockquote>
-<div><p>number of bands
-(optional, required for write)</p>
+<div><p>Count of bands (optional, required for write).</p>
 </div></blockquote>
 <p><strong>dtype: rasterio.dtype</strong></p>
 <blockquote>
@@ -306,8 +300,7 @@ for writing).</p>
 </div></blockquote>
 <p><strong>crs: dict or string</strong></p>
 <blockquote>
-<div><p>Coordinate reference system
-(optional, recommended for write)</p>
+<div><p>Coordinate reference system (optional, recommended for write).</p>
 </div></blockquote>
 <p><strong>transform: Affine instance</strong></p>
 <blockquote>
@@ -317,7 +310,8 @@ space (optional, recommended for writing).</p>
 <p><strong>nodata: number</strong></p>
 <blockquote>
 <div><p>Defines pixel value to be interpreted as null/nodata
-(optional, recommended for write)</p>
+(optional, recommended for write, will be broadcast to all
+bands).</p>
 </div></blockquote>
 </td>
 </tr>

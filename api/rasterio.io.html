@@ -82,13 +82,10 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../user/intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/reading.html">Reading Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/working_with_datasets.html">Working with Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/writing.html">Writing Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration.html">Migrating from GDAL&#8217;s bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
@@ -232,62 +229,68 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">crs</span></code></td>
 <td>A mapping of PROJ.4 coordinate reference system params.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">descriptions</span></code></td>
+<td>Text descriptions for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
 <td>Returns an ordered tuple of all band data types.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
 <td>Mask flags for each band.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
 <td>The basic metadata of this dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
 <td>The dataset&#8217;s single nodata value.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
 <td>A list by band of a dataset&#8217;s nodata values.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
 <td>Basic metadata and creation options of this dataset.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
 <td>Returns the (width, height) of pixels in the units of its coordinate reference system.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
 <td>An affine transformation that maps pixel row/column coordinates to coordinates in the specified crs.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">units</span></code></td>
+<td>Strings defining the units for each band.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">width</span></code></td>
 <td></td>
@@ -361,8 +364,14 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
 <td>Writes a coordinate reference system to the dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
+<td>Sets the description of a dataset band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
 <td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_units</span></code></td>
+<td>Sets the units of a dataset band.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
 <td></td>
@@ -443,62 +452,68 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">crs</span></code></td>
 <td>A mapping of PROJ.4 coordinate reference system params.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">descriptions</span></code></td>
+<td>Text descriptions for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
 <td>Returns an ordered tuple of all band data types.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
 <td>Mask flags for each band.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
 <td>The basic metadata of this dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
 <td>The dataset&#8217;s single nodata value.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
 <td>Nodata values for each band.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
 <td>Basic metadata and creation options of this dataset.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
 <td>Returns the (width, height) of pixels in the units of its coordinate reference system.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
 <td>An instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code>, which is a <code class="docutils literal"><span class="pre">namedtuple</span></code> with coefficients in the order <code class="docutils literal"><span class="pre">(a,</span> <span class="pre">b,</span> <span class="pre">c,</span> <span class="pre">d,</span> <span class="pre">e,</span> <span class="pre">f)</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">units</span></code></td>
+<td>Strings defining the units for each band.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">width</span></code></td>
 <td></td>
@@ -628,62 +643,68 @@ directly to disk.</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">crs</span></code></td>
 <td>A mapping of PROJ.4 coordinate reference system params.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">descriptions</span></code></td>
+<td>Text descriptions for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
 <td>Returns an ordered tuple of all band data types.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
 <td>Mask flags for each band.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
 <td>The basic metadata of this dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
 <td>The dataset&#8217;s single nodata value.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
 <td>A list by band of a dataset&#8217;s nodata values.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
 <td>Basic metadata and creation options of this dataset.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
 <td>Returns the (width, height) of pixels in the units of its coordinate reference system.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
 <td>An affine transformation that maps pixel row/column coordinates to coordinates in the specified crs.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">units</span></code></td>
+<td>Strings defining the units for each band.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">width</span></code></td>
 <td></td>
@@ -757,8 +778,14 @@ directly to disk.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
 <td>Writes a coordinate reference system to the dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
+<td>Sets the description of a dataset band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
 <td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_units</span></code></td>
+<td>Sets the units of a dataset band.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
 <td></td>
@@ -858,8 +885,8 @@ and sign determined by the op function:</p>
 </div></blockquote>
 <p><strong>op</strong> : function, optional (default: math.floor)</p>
 <blockquote>
-<div><p>Function to convert fractional pixels to whole numbers (floor, ceiling,
-round)</p>
+<div><p>Function to convert fractional pixels to whole numbers (floor,
+ceiling, round)</p>
 </div></blockquote>
 <p><strong>precision</strong> : int, optional (default: 6)</p>
 <blockquote>

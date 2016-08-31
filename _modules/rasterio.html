@@ -188,27 +188,29 @@
 <span class="kn">from</span> <span class="nn">rasterio.vfs</span> <span class="kn">import</span> <span class="n">parse_path</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">windows</span>
 
+<span class="c1"># These modules are imported from the Cython extensions, but are also import</span>
+<span class="c1"># here to help tools like cx_Freeze find them automatically</span>
+<span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">_err</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">enums</span><span class="p">,</span> <span class="n">vfs</span>
+
+
 <span class="c1"># TODO deprecate or remove in factor of rasterio.windows.___</span>
 <span class="k">def</span> <span class="nf">eval_window</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">evaluate</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+
 <span class="k">def</span> <span class="nf">window_shape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">shape</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">shape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
 
 <span class="k">def</span> <span class="nf">window_index</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">window_index</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">window_index</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<span class="c1"># These modules are imported from the Cython extensions, but are also import</span>
-<span class="c1"># here to help tools like cx_Freeze find them automatically</span>
-<span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">_err</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">enums</span><span class="p">,</span> <span class="n">vfs</span>
-
-<span class="c1"># Classes in rasterio._io are imported below just before we need them.</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;band&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;copy&#39;</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">]</span>
@@ -245,32 +247,29 @@
 <span class="sd">    mode: string</span>
 <span class="sd">        &quot;r&quot; (read), &quot;r+&quot; (read/write), or &quot;w&quot; (write)</span>
 <span class="sd">    driver: string</span>
-<span class="sd">        driver code specifying the format name (e.g. &quot;GTiff&quot; or</span>
+<span class="sd">        Driver code specifying the format name (e.g. &quot;GTiff&quot; or</span>
 <span class="sd">        &quot;JPEG&quot;). See GDAL docs at</span>
 <span class="sd">        http://www.gdal.org/formats_list.html (optional, required</span>
 <span class="sd">        for writing).</span>
 <span class="sd">    width: int</span>
-<span class="sd">        number of pixels per line</span>
-<span class="sd">        (optional, required for write)</span>
+<span class="sd">        Number of pixels per line (optional, required for write).</span>
 <span class="sd">    height: int</span>
-<span class="sd">        number of lines</span>
-<span class="sd">        (optional, required for write)</span>
+<span class="sd">        Number of lines (optional, required for write).</span>
 <span class="sd">    count: int &gt; 0</span>
-<span class="sd">        number of bands</span>
-<span class="sd">        (optional, required for write)</span>
+<span class="sd">        Count of bands (optional, required for write).</span>
 <span class="sd">    dtype: rasterio.dtype</span>
 <span class="sd">        the data type for bands such as ``rasterio.ubyte`` for</span>
 <span class="sd">        8-bit bands or ``rasterio.uint16`` for 16-bit bands</span>
 <span class="sd">        (optional, required for write)</span>
 <span class="sd">    crs: dict or string</span>
-<span class="sd">        Coordinate reference system</span>
-<span class="sd">        (optional, recommended for write)</span>
+<span class="sd">        Coordinate reference system (optional, recommended for write).</span>
 <span class="sd">    transform: Affine instance</span>
 <span class="sd">        Affine transformation mapping the pixel space to geographic</span>
 <span class="sd">        space (optional, recommended for writing).</span>
 <span class="sd">    nodata: number</span>
 <span class="sd">        Defines pixel value to be interpreted as null/nodata</span>
-<span class="sd">        (optional, recommended for write)</span>
+<span class="sd">        (optional, recommended for write, will be broadcast to all</span>
+<span class="sd">        bands).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -343,7 +342,7 @@
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The &#39;affine&#39; kwarg in rasterio.open() is deprecated as of 1.0 &quot;</span>
+                <span class="s2">&quot;The &#39;affine&#39; kwarg in rasterio.open() is deprecated at 1.0 &quot;</span>
                 <span class="s2">&quot;and only remains to ease the transition.  Please switch to &quot;</span>
                 <span class="s2">&quot;the &#39;transform&#39; kwarg.  See &quot;</span>
                 <span class="s2">&quot;https://github.com/mapbox/rasterio/issues/86 for details.&quot;</span><span class="p">,</span>

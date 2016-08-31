@@ -2,42 +2,24 @@
 Introduction
 ============
 
-Background
-----------
+Before Rasterio there was one Python option for accessing the many different
+kind of raster data files used in the GIS field: the Python bindings
+distributed with the `Geospatial Data Abstraction Library, GDAL
+<http://gdal.org/>`__.  These bindings extend Python, but provide little
+abstraction for GDAL's C API. This means that Python programs using them tend
+to read and run like C programs. For example, GDAL's Python bindings require
+users to watch out for dangling C pointers, potential crashers of programs.
+This is bad: not only have users chosen Python instead of C to avoid problems
+with pointers (among other considerations), neither does the Python language
+give them ways to check the validity of pointers in extension objects.
 
-Before Rasterio, there was one way to access the many different kind of raster
-data files used in the GIS field with Python: the Python bindings distributed
-with the geospatial data abstraction library, `GDAL <http://gdal.org/>`__.
-These bindings provide almost no abstraction for GDAL's C API and Python
-programs using them read and run like C programs.
-
-Rasterio uses the GDAL C API but is not a "Python binding for GDAL." It is
-written for a different mindset.
-
-Philosophy
-----------
-
-Rasterio is written with a question in mind: what would it be like to have
-a geospatial data abstraction in the Python standard library? GDAL's raster
-data model has unique qualities but is not too special to be expressed using
-standard Python language features. Rasterio uses fewer classes specific to GDAL
-and more ordinary mappings, sequences, and generators.
-
-Rasterio aspires to keep input/output separate from other operations.
-``rasterio.open()`` is the only library function that operates on filenames and
-URIs. ``dataset.read()``, ``dataset.write()``, and their mask counterparts are
-the methods that do I/O.
-
-Rasterio methods and functions avoid hidden inputs and side-effects. GDAL's
-C API uses global variables liberally, but Rasterio provides abstractions that
-make them less dangerous.
-
-Rasterio delegates calculation of raster data properties almost entirely to
-Numpy and uses GDAL mainly for input/output. In the GDAL data model the mean,
-minimum, and maximum values of a raster band, for example, are attributes of
-a GDAL dataset object. In the Rasterio model they are not attributes of
-a Rasterio dataset, but are attributes of the N-D array returned by
-``dataset.read()``. Thus Rasterio objects are more limited than GDAL objects.
+What would it be like to have a geospatial data abstraction in the Python
+standard library? One that used modern Python language features and idioms?
+One that freed users from concern about dangling pointers and other
+C programming pitfalls? Rasterio's goal is to be this kind of raster data
+library – expressing GDAL's data model using fewer non-idiomatic extension
+classes and more idiomatic Python types and protocols, while performing as
+fast as GDAL's Python bindings.
 
 Rasterio license
 ----------------

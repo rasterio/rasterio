@@ -327,7 +327,7 @@
 <span class="sd">    shapes : iterable of (geometry, value) pairs or iterable over</span>
 <span class="sd">        geometries. `geometry` can either be an object that implements</span>
 <span class="sd">        the geo interface or GeoJSON-like object.</span>
-<span class="sd">    out_shape : tuple or list</span>
+<span class="sd">    out_shape : tuple or list with 2 integers</span>
 <span class="sd">        Shape of output numpy ndarray.</span>
 <span class="sd">    fill : int or float, optional</span>
 <span class="sd">        Used as fill value for all areas not covered by input</span>
@@ -434,6 +434,10 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">format_cast_error</span><span class="p">(</span><span class="s1">&#39;shape values&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
     <span class="k">elif</span> <span class="n">out_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid out_shape, must be 2D&#39;</span><span class="p">)</span>
+
         <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">out_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">out</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">fill</span><span class="p">)</span>
 
