@@ -2,6 +2,9 @@
 Introduction
 ============
 
+Philosophy
+----------
+
 Before Rasterio there was one Python option for accessing the many different
 kind of raster data files used in the GIS field: the Python bindings
 distributed with the `Geospatial Data Abstraction Library, GDAL
