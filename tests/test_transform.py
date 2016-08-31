@@ -1,5 +1,10 @@
+import warnings
+
 from affine import Affine
+from hypothesis import given, strategies as st
+import math
 import pytest
+
 import rasterio
 from rasterio import transform
 from rasterio.transform import xy, rowcol
@@ -197,14 +202,33 @@ def test_rowcol():
         assert rowcol(aff, right, top) == (0, src.width)
         assert rowcol(aff, right, bottom) == (src.height, src.width)
         assert rowcol(aff, left, bottom) == (src.height, 0)
-        assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
-        assert rowcol(aff, 101985.0+400.0, 2826915.0) == (0, 1)
 
 
-def test_xy_rowcol_inverse():
-    # TODO this is an ideal candiate for
-    # property-based testing with hypothesis
-    aff = Affine.identity()
-    rows_cols = ([0, 0, 10, 10],
-                 [0, 10, 0, 10])
-    assert rows_cols == rowcol(aff, *xy(aff, *rows_cols))
+@given(precision=st.integers())
+def test_precision_warning(precision, recwarn):
+    warnings.simplefilter('always')
+    row, col = rowcol(Affine.identity(), 0, 0, precision=precision)
+    assert len(recwarn) == 1
+    assert recwarn.pop(DeprecationWarning)
+
+
+@given(row=st.integers(min_value=0, max_value=100),
+       col=st.integers(min_value=0, max_value=100),
+       pxsz=st.floats(min_value=1.0, max_value=1000.0),
+       xoff=st.floats(min_value=0.0, max_value=1000000.0),
+       yoff=st.floats(min_value=0.0, max_value=1000000.0))
+def test_xy_rowcol_inverse(row, col, pxsz, xoff, yoff):
+    """Roundtrip of xy and rowcol for range of inputs"""
+    aff = Affine(pxsz, 0.0, xoff, 0.0, -pxsz, yoff)
+    assert (row, col) == rowcol(aff, *xy(aff, row, col))
+
+
+@given(row=st.integers(min_value=0, max_value=100),
+       col=st.integers(min_value=0, max_value=100),
+       pxsz=st.floats(min_value=1.0, max_value=1000.0),
+       xoff=st.floats(min_value=0.0, max_value=1000000.0),
+       yoff=st.floats(min_value=0.0, max_value=1000000.0))
+def test_xy_rowcol_inverse_ceil(row, col, pxsz, xoff, yoff):
+    """Roundtrip of xy and rowcol for range of inputs"""
+    aff = Affine(pxsz, 0.0, xoff, 0.0, -pxsz, yoff)
+    assert (row + 1, col + 1) == rowcol(aff, *xy(aff, row, col), op=math.ceil)

@@ -4,6 +4,7 @@ from __future__ import division
 
 import collections
 import math
+import warnings
 
 from affine import Affine
 
@@ -125,7 +126,7 @@ def xy(transform, rows, cols, offset='center'):
     return xs, ys
 
 
-def rowcol(transform, xs, ys, op=math.floor, precision=6):
+def rowcol(transform, xs, ys, op=math.floor, precision=None):
     """
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
@@ -145,16 +146,24 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
-    precision : int
-        Decimal places of precision in indexing, as in `round()`.
+
+    Deprecated Parameter
+    --------------------
+    precision :
+        This argument is ignored.
 
     Returns
     -------
     rows : list of ints
-        list of row indicies
+        list of row indices
     cols : list of ints
-        list of column indicies
+        list of column indices
     """
+
+    if precision is not None:
+        warnings.warn(
+            "The precision keyword argument is no longer used",
+            DeprecationWarning)
 
     single_x = False
     single_y = False
@@ -165,13 +174,12 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
         ys = [ys]
         single_y = True
 
-    eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
     invtransform = ~transform
 
     rows = []
     cols = []
     for x, y in zip(xs, ys):
-        fcol, frow = invtransform * (x + eps, y - eps)
+        fcol, frow = invtransform * (x, y)
         cols.append(int(op(fcol)))
         rows.append(int(op(frow)))
 

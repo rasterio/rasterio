@@ -1,13 +1,71 @@
-import rasterio
+import math
 
+from affine import Affine
+from hypothesis import assume, given, strategies as st
 import numpy as np
 import pytest
 
+import rasterio
 from rasterio.windows import (
     from_bounds, bounds, transform, evaluate, window_index, shape)
 
 
-EPS = 1.0e-8
+EPS = 0.0
+
+
+@given(pxsz=st.floats(min_value=1.0, max_value=1000.0),
+       xoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
+       yoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
+       height=st.integers(min_value=1, max_value=1000),
+       width=st.integers(min_value=1, max_value=1000),
+       denominator_exponent=st.integers(min_value=1, max_value=32))
+def test_window_inner_snap(pxsz, xoff, yoff, height, width,
+                           denominator_exponent):
+    """When bounds are slightly smaller than the raster's extent the entire
+    raster is selected."""
+    aff = Affine(pxsz, 0.0, xoff, 0.0, -pxsz, yoff)
+    left, top = xoff, yoff
+    right, bottom = xoff + width * pxsz, yoff - height * pxsz
+    fraction = 10.0 ** -denominator_exponent
+    delta = pxsz * fraction
+
+    # Avoid cases of lost significance.
+    assume(left + delta != left and
+           bottom + delta != bottom and
+           right - delta != right and
+           top - delta != top)
+
+    assert from_bounds(left + delta, bottom + delta, right - delta,
+            top - delta, aff, height=height, width=width) \
+        == ((0, height), (0, width))
+
+
+@given(pxsz=st.floats(min_value=1.0, max_value=1000.0),
+       xoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
+       yoff=st.floats(min_value=-1000000.0, max_value=1000000.0),
+       height=st.integers(min_value=1, max_value=1000),
+       width=st.integers(min_value=1, max_value=1000),
+       denominator_exponent=st.integers(min_value=1, max_value=11))
+def test_window_outer_boundless(pxsz, xoff, yoff, height, width,
+                                denominator_exponent):
+    """When bounds are slightly larger than the raster's extent the entire
+    raster is selected plus one pixel all around."""
+    aff = Affine(pxsz, 0.0, xoff, 0.0, -pxsz, yoff)
+    left, top = xoff, yoff
+    right, bottom = xoff + width * pxsz, yoff - height * pxsz
+    fraction = 10.0 ** -denominator_exponent
+    delta = pxsz * fraction
+
+    # Avoid cases of lost significance.
+    assume(left - delta != left and
+           bottom - delta != bottom and
+           right + delta != right and
+           top + delta != top)
+
+    assert from_bounds(left - delta, bottom - delta, right + delta,
+                       top + delta, aff, height=height, width=width,
+                       boundless=True) \
+        == ((-1, height + 1), (-1, width + 1))
 
 
 def test_window_function():
