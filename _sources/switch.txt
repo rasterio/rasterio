@@ -113,6 +113,11 @@ below.
 
 Rasterio provides this with a single Python statement.
 
+.. code-block:: python
+
+   with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=512):
+       # ...
+
 Reading
 =======
 
