@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating to from GDAL’s Python bindings &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Switching from GDAL’s Python bindings &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -85,7 +85,9 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Migrating to from GDAL&#8217;s Python bindings</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL&#8217;s Python bindings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibility">Mutual Incompatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-gdal-environment">The GDAL Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reading">Reading</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#writing">Writing</a></li>
 </ul>
@@ -151,11 +153,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Migrating to from GDAL&#8217;s Python bindings</li>
+    <li>Switching from GDAL&#8217;s Python bindings</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/migration.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/switch.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -165,12 +167,107 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="migrating-to-from-gdal-s-python-bindings">
-<h1>Migrating to from GDAL&#8217;s Python bindings<a class="headerlink" href="#migrating-to-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
-<p>Switching to Rasterio for new projects or new iterations on existing projects
-may not be complicated. This document explains the key similarities and
-differences between these two Python packages and how to cross over to the
-Rasterio side of the street.</p>
+  <div class="section" id="switching-from-gdal-s-python-bindings">
+<h1>Switching from GDAL&#8217;s Python bindings<a class="headerlink" href="#switching-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
+<p>Switching from GDAL&#8217;s Python bindings to Rasterio for new projects or new
+iterations on existing projects may not be complicated. This document explains
+the key similarities and differences between these two Python packages and
+provides some guidelines for why and how to switch.</p>
+<div class="section" id="mutual-incompatibility">
+<h2>Mutual Incompatibility<a class="headerlink" href="#mutual-incompatibility" title="Permalink to this headline">¶</a></h2>
+<p>GDAL&#8217;s Python module, meaning the <code class="docutils literal"><span class="pre">gdal</span></code> module in the <code class="docutils literal"><span class="pre">osgeo</span></code> namespace,
+and Rasterio are mutually incompatible and should not be imported and used in
+a single Python program. The reason is that they take different, naive,
+incompatible approaches to managing global variables in the dynamic library
+that they would share. It is assumed in multiple places in <code class="docutils literal"><span class="pre">gdal</span></code>, such as
+testing whether the count of currently registered format drivers is 0 to
+determine whether any drivers need to be registered, that no other Python
+module functions are modifying the variables in the dynamic library. Rasterio
+makes the same kind of assumptions and consequently the state of the global
+GDAL driver manager may be unpredictable. Additionally, <code class="docutils literal"><span class="pre">gdal</span></code> and Rasterio
+register conflicting error handlers and thus the propagation of exceptions and
+warnings may depend on which module was imported last.</p>
+<p>Beyond the issues above, the modules have different styles and don&#8217;t complement
+each other well. The bottom line: choose <code class="docutils literal"><span class="pre">import</span> <span class="pre">osgeo.gdal</span></code> or <code class="docutils literal"><span class="pre">import</span>
+<span class="pre">rasterio</span></code>.</p>
+</div>
+<div class="section" id="the-gdal-environment">
+<h2>The GDAL Environment<a class="headerlink" href="#the-gdal-environment" title="Permalink to this headline">¶</a></h2>
+<p>GDAL library functions are excuted in a context of format drivers, error
+handlers, and format-specific configuration options that this document will
+call the &#8220;GDAL Environment.&#8221; With <code class="docutils literal"><span class="pre">gdal</span></code>, this context is initialized upon
+import of the module. This makes sense because <code class="docutils literal"><span class="pre">gdal</span></code> objects are thin
+wrappers around functions and classes in the GDAL dynamic library that
+generally require registration of drivers and error handlers.  The <code class="docutils literal"><span class="pre">gdal</span></code>
+module doesn&#8217;t have an abstraction for the environment, but it can be modified
+using functions like <code class="docutils literal"><span class="pre">gdal.SetErrorHandler()</span></code> and <code class="docutils literal"><span class="pre">gdal.UseExceptions()</span></code>.</p>
+<p>Rasterio has modules that don&#8217;t require complete initialization and
+configuration of GDAL (<code class="docutils literal"><span class="pre">rasterio.dtypes</span></code>, <code class="docutils literal"><span class="pre">rasterio.profiles</span></code>, and
+<code class="docutils literal"><span class="pre">rasterio.windows</span></code>, for example) and in the interest of reducing overhead
+doesn&#8217;t register format drivers and error handlers until they are needed. The
+functions that do need fully initialized GDAL environments will ensure that
+they exist. <code class="docutils literal"><span class="pre">rasterio.open()</span></code> is the foremost of this category of functions.
+Consider the example code below.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="c1"># The GDAL environment has no registered format drivers or error</span>
+<span class="c1"># handlers at this point.</span>
+
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="c1"># Format drivers and error handlers are registered just before</span>
+    <span class="c1"># open() executes.</span>
+</pre></div>
+</div>
+<p>Importing <code class="docutils literal"><span class="pre">rasterio</span></code> does not initialize the GDAL environment. Calling
+<code class="docutils literal"><span class="pre">rasterio.open()</span></code> does. This is different from <code class="docutils literal"><span class="pre">gdal</span></code> where <code class="docutils literal"><span class="pre">import</span>
+<span class="pre">osgeo.gdal</span></code>, not <code class="docutils literal"><span class="pre">osgeo.gdal.Open()</span></code>, initializes the GDAL environment.</p>
+<p>Rasterio has an abstraction for the GDAL environment, <code class="docutils literal"><span class="pre">rasterio.Env</span></code>, that
+can be invoked explicitly for more control over the configuration of GDAL as
+shown below.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="c1"># The GDAL environment has no registered format drivers or error</span>
+<span class="c1"># handlers at this point.</span>
+
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">CPL_DEBUG</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">GDAL_CACHEMAX</span><span class="o">=</span><span class="mi">512</span><span class="p">):</span>
+    <span class="c1"># This ensures that all drivers are registered in the global</span>
+    <span class="c1"># context. Within this block *only* GDAL&#39;s debugging messages</span>
+    <span class="c1"># are turned on and the raster block cache size is set to 512MB.</span>
+
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+        <span class="c1"># Perform GDAL operations in this context.</span>
+        <span class="c1"># ...</span>
+        <span class="c1"># Done.</span>
+
+<span class="c1"># At this point, configuration options are set back to their</span>
+<span class="c1"># previous (possibly unset) values. The raster block cache size</span>
+<span class="c1"># is returned to its default (5% of available RAM) and debugging</span>
+<span class="c1"># messages are disabled.</span>
+</pre></div>
+</div>
+<p>As mentioned previously, <code class="docutils literal"><span class="pre">gdal</span></code> has no such abstraction for the GDAL
+environment. The nearest approximation would be something like the code
+below.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+
+<span class="c1"># Define a new configuration, save the previous configuration,</span>
+<span class="c1"># and then apply the new one.</span>
+<span class="n">new_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;CPL_DEBUG&#39;</span><span class="p">:</span> <span class="s1">&#39;ON&#39;</span><span class="p">,</span> <span class="s1">&#39;GDAL_CACHEMAX&#39;</span><span class="p">:</span> <span class="s1">&#39;512&#39;</span><span class="p">}</span>
+<span class="n">prev_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetConfigOption</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">new_config</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">new_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+<span class="c1"># Perform GDAL operations in this context.</span>
+<span class="c1"># ...</span>
+<span class="c1"># Done.</span>
+
+<span class="c1"># Restore previous configuration.</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">prev_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Rasterio provides this with a single Python statement.</p>
+</div>
 <div class="section" id="reading">
 <h2>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h2>
 <p>We&#8217;ll start with a raster dataset to work with, our trusty test fixture</p>

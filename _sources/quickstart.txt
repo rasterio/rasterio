@@ -17,7 +17,7 @@ of the United States's Colorado Plateau [#]_. Because the imagery is large (70
 MB) and has a wide dynamic range it is difficult to display it in a browser.
 A rescaled and dynamically squashed version is shown below.
 
-.. image:: ../img/example.png
+.. image:: img/example.png
 
 Import rasterio to begin.
 
@@ -234,7 +234,7 @@ The fictional field for this example consists of the difference of two Gaussian
 distributions and is represented by the array ``Z``. Its contours are shown
 below.
 
-.. image:: ../img/field.png
+.. image:: img/field.png
 
 
 Opening a dataset in writing mode
