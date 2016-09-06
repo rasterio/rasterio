@@ -118,159 +118,32 @@ Rasterio provides this with a single Python statement.
    with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=512):
        # ...
 
-Reading
-=======
+Dataset Objects
+===============
 
-We'll start with a raster dataset to work with, our trusty test fixture
+TODO.
 
-.. code-block:: python
+Band Objects
+============
 
-    >>> raster = "tests/data/RGB.byte.tif"
+TODO. Briefly: GDAL has band objects, Rasterio does not.
 
-.. image:: /img/rgb.jpg
+Geotransforms
+=============
 
-The most basic operation is reading the raster into a numpy array
+TODO
 
-.. code-block:: python
+Coordinate Reference Systems
+============================
 
-    >>> # osgeo.gdal
-    >>> from osgeo import gdal
-    >>> from osgeo.gdalconst import GA_ReadOnly
-    >>> g_ds = gdal.Open(raster, GA_ReadOnly)
-    >>> if not g_ds:
-    ...     raise IOError("Cannot open %r as GDAL raster" % raster)
-    >>> g_arr = g_ds.ReadAsArray()
+TODO
 
-The similar operation in rasterio
+Offsets and Windows
+===================
 
-.. code-block:: python
+TODO
 
-    >>> # rasterio
-    >>> import rasterio
-    >>> with rasterio.open(raster, 'r') as src:
-    ...     r_arr = src.read()
+Valid Data Masks
+================
 
-
-The result is the same 3D ``numpy.ndarray``
-
-.. code-block:: python
-
-    >>> import numpy as np
-    >>> r_arr.shape
-    (3, 718, 791)
-    >>> assert np.array_equal(g_arr, r_arr)
-
-If we want to grab a subset of the raster, say from row 300 to 400 and column 200 to 400.
-In gdal you would express this in terms of the offset (200, 300) and size (200, 100)
-
-.. code-block:: python
-
-    >>> # osgeo.gdal
-    >>> g_arr2 = g_ds.ReadAsArray(200, 300, 200, 100)
-    >>> g_arr2.shape
-    (3, 100, 200)
-
-
-In Rasterio, we use a windows tuple which explicitly defines the start/stop row and columns
-
-
-.. code-block:: python
-
-    >>> # rasterio
-    >>> with rasterio.open(raster, 'r') as src:
-    ...     r_arr2 = src.read(window=((300, 400), (200, 400)))
-    >>> assert np.array_equal(r_arr2, g_arr2)
-
-
-Reading a single band into a 2D array follows a different pattern. In gdal, you get a
-reference to a ``RasterBand`` and use its ``ReadAsArray`` method
-
-.. code-block:: python
-
-    >>> # osgeo.gdal
-    >>> g_band1 = g_ds.GetRasterBand(1)
-    >>> g_band1_arr = g_band1.ReadAsArray()
-    >>> g_band1_arr.shape
-    (718, 791)
-
-With Rasterio, you pass the raster band index to the ``read()`` method. Note that
-both Rasterio and gdal use a 1-based index to defined bands
-
-.. code-block:: python
-
-    >>> # rasterio
-    >>> with rasterio.open(raster) as src:
-    ...     r_band1_arr = src.read(1)
-
-    >>> assert np.array_equal(r_band1_arr, g_band1_arr)
-
-
-With the gdal objects you have to manually manage the object's lifecycle
-
-.. code-block:: python
-
-    >>> # osgeo.gdal
-    >>> # clean up reference to dateset to close
-    >>> del g_band1
-    >>> del g_ds
-
-Writing
-~~~~~~~
-
-Let's take the arrays that we've read from the original dataset and write them out
-to a new GeoTIFF file.
-
-With Rasterio, you open the dataset, read the data and the
-``profile`` which contains the metadata necessary to write a similar dataset.
-
-.. code-block:: python
-
-    >>> # rasterio
-    >>> with rasterio.open(raster) as src:
-    ...     arr = src.read()
-    ...     profile = src.profile
-    >>> profile['height'], profile['width']
-    (718, 791)
-
- Writing the 3D array with Rasterio is similar to Python's file interface
- with some additional metadata to handle geospatial datasets:
-
-.. code-block:: python
-
-    >>> # rasterio
-    >>> with rasterio.open('/tmp/newraster.tif', 'w', **profile) as dst:
-    ...     dst.write(arr)
-   
-
- The equivalent operation in osgeo.gdal requires a more procedural approach:
-
-.. code-block:: python
-
-    >>> driver = gdal.GetDriverByName('GTiff')
-    >>> out_raster = driver.Create('/tmp/newraster_gdal.tif',
-    ...                            profile['width'], profile['height'],
-    ...                            profile['count'], gdal.GDT_Byte)
-    >>> out_raster.SetGeoTransform(profile['transform'].to_gdal())
-    0
-    >>> for bidx in range(1, profile['count'] + 1):
-    ...     band = out_raster.GetRasterBand(bidx)
-    ...     band.WriteArray(arr[bidx - 1])
-    ...     band.FlushCache()
-    0
-    0
-    0
-    >>> from osgeo import osr
-    >>> srs = osr.SpatialReference()
-    >>> srs.ImportFromWkt(profile['crs'].wkt)
-    0
-    >>> out_raster.SetProjection(srs.ExportToWkt())
-    0
-    >>> out_raster.FlushCache()
-
-
-For a real-world example of a Python project making the osgeo.gdal-to-rasterio switch,
-see the pull request for the `rasterstats migration`_.
-
-
-.. _rasterstats Migration: https://github.com/perrygeo/python-rasterstats/pull/63
-.. _Python Gotchas: https://trac.osgeo.org/gdal/wiki/PythonGotchas
+TODO
