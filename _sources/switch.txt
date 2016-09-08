@@ -5,8 +5,8 @@ Switching from GDAL's Python bindings
 Switching from GDAL's Python bindings, meaning the ``gdal`` module in the
 ``osgeo`` namespace, to Rasterio for new projects or new iterations on existing
 projects may not be complicated. This document explains the key similarities
-and differences between these two Python packages and provides some guidelines
-for why and how to switch.
+and differences between these two Python packages and highlights the features
+of Rasterio that can help in switching.
 
 Mutual Incompatibility
 ======================
@@ -169,13 +169,16 @@ With ``gdal``, the equivalent identifiers are respectively
 and
 ``/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF``.
 
+To help developers switch, Rasterio will accept these identifiers, too, and
+dispatch them to the proper format drivers and protocol implementations.
+
 Bands
 =====
 
 ``gdal`` has band objects. Rasterio does not and thus never has objects with
 dangling dataset pointers. With Rasterio, bands are represented by a numerical
-index, starting from 1, and are used as arguments to dataset methods. To read
-the first band of a dataset as a Numpy ``ndarray``, do this.
+index, starting from 1 (as GDAL does), and are used as arguments to dataset
+methods. To read the first band of a dataset as a Numpy ``ndarray``, do this.
 
 .. code-block:: python
 
@@ -246,8 +249,8 @@ The affine transformation matrix can be inverted as well.
    >>> ~src.transform * (101985.0, 2826915.0)
    (0.0, 0.0)
 
-``Affine`` instances can be created from or converted to the sequences used by
-``gdal``.
+To help developers switch, ``Affine`` instances can be created from or
+converted to the sequences used by ``gdal``.
 
 .. code-block:: pycon
 
@@ -273,8 +276,8 @@ The ``crs`` attribute of a Rasterio dataset object is an instance of Rasterio's
 Tags
 ====
 
-GDAL metadata items are called "tags" in Rasterio. The tag set for a given GDAL metadata namespace is
-represented as a dict.
+GDAL metadata items are called "tags" in Rasterio. The tag set for a given GDAL
+metadata namespace is represented as a dict.
 
 .. code-block:: pycon
 
@@ -292,16 +295,20 @@ Offsets and Windows
 ===================
 
 Rasterio adds an abstraction for subsets or windows of a raster array that
-GDAL does not have.
+GDAL does not have. A window is a pair of tuples, the first of the pair being
+the raster row indexes at which the window starts and stops, the second being
+the column indexes at which the window starts and stops. Row before column,
+as with ``ndarray`` slices. The relationship of these windows to GDAL's subset
+parameters is shown in the example of getting a 10 x 10 subset at the upper
+left corner of a dataset below.
 
 .. code-block:: python
 
    src = rasterio.open('example.tif')
 
-   row_start, row_stop = 0, 10
-   col_start, col_stop = 0, 10
-   subset_window = (
-   subset = src.read(1, window=((row_start, row_stop), (col_start, col_stop)))
+   xoff, yoff = 0, 0
+   xsize, ysize = 10, 10
+   subset = src.read(1, window=((yoff, yoff + ysize), (xoff, xoff + xsize)))
 
 .. note::
 

@@ -177,8 +177,8 @@
 <p>Switching from GDAL&#8217;s Python bindings, meaning the <code class="docutils literal"><span class="pre">gdal</span></code> module in the
 <code class="docutils literal"><span class="pre">osgeo</span></code> namespace, to Rasterio for new projects or new iterations on existing
 projects may not be complicated. This document explains the key similarities
-and differences between these two Python packages and provides some guidelines
-for why and how to switch.</p>
+and differences between these two Python packages and highlights the features
+of Rasterio that can help in switching.</p>
 <div class="section" id="mutual-incompatibility">
 <h2>Mutual Incompatibility<a class="headerlink" href="#mutual-incompatibility" title="Permalink to this headline">¶</a></h2>
 <p>Rasterio and GDAL&#8217;s bindings contend for global GDAL objects. Choose one of
@@ -314,13 +314,15 @@ identifiers like <code class="docutils literal"><span class="pre">zip:///var/dat
 <code class="docutils literal"><span class="pre">/vsicurl/landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>,
 and
 <code class="docutils literal"><span class="pre">/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
+<p>To help developers switch, Rasterio will accept these identifiers, too, and
+dispatch them to the proper format drivers and protocol implementations.</p>
 </div>
 <div class="section" id="bands">
 <h2>Bands<a class="headerlink" href="#bands" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal"><span class="pre">gdal</span></code> has band objects. Rasterio does not and thus never has objects with
 dangling dataset pointers. With Rasterio, bands are represented by a numerical
-index, starting from 1, and are used as arguments to dataset methods. To read
-the first band of a dataset as a Numpy <code class="docutils literal"><span class="pre">ndarray</span></code>, do this.</p>
+index, starting from 1 (as GDAL does), and are used as arguments to dataset
+methods. To read the first band of a dataset as a Numpy <code class="docutils literal"><span class="pre">ndarray</span></code>, do this.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">band1</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
@@ -378,8 +380,8 @@ of the element.</p>
 <span class="go">(0.0, 0.0)</span>
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">Affine</span></code> instances can be created from or converted to the sequences used by
-<code class="docutils literal"><span class="pre">gdal</span></code>.</p>
+<p>To help developers switch, <code class="docutils literal"><span class="pre">Affine</span></code> instances can be created from or
+converted to the sequences used by <code class="docutils literal"><span class="pre">gdal</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">Affine</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Affine</span><span class="o">.</span><span class="n">from_gdal</span><span class="p">(</span><span class="mf">101985.0</span><span class="p">,</span> <span class="mf">300.0379266750948</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>
 <span class="gp">... </span>                 <span class="mf">2826915.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">300.041782729805</span><span class="p">)</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">()</span>
@@ -401,8 +403,8 @@ of the element.</p>
 </div>
 <div class="section" id="tags">
 <h2>Tags<a class="headerlink" href="#tags" title="Permalink to this headline">¶</a></h2>
-<p>GDAL metadata items are called &#8220;tags&#8221; in Rasterio. The tag set for a given GDAL metadata namespace is
-represented as a dict.</p>
+<p>GDAL metadata items are called &#8220;tags&#8221; in Rasterio. The tag set for a given GDAL
+metadata namespace is represented as a dict.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span>
 <span class="go">{&#39;AREA_OR_POINT&#39;: &#39;Area&#39;}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;IMAGE_STRUCTURE&#39;</span><span class="p">)</span>
@@ -417,13 +419,17 @@ each with their own semantics.</p>
 <div class="section" id="offsets-and-windows">
 <h2>Offsets and Windows<a class="headerlink" href="#offsets-and-windows" title="Permalink to this headline">¶</a></h2>
 <p>Rasterio adds an abstraction for subsets or windows of a raster array that
-GDAL does not have.</p>
+GDAL does not have. A window is a pair of tuples, the first of the pair being
+the raster row indexes at which the window starts and stops, the second being
+the column indexes at which the window starts and stops. Row before column,
+as with <code class="docutils literal"><span class="pre">ndarray</span></code> slices. The relationship of these windows to GDAL&#8217;s subset
+parameters is shown in the example of getting a 10 x 10 subset at the upper
+left corner of a dataset below.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 
-<span class="n">row_start</span><span class="p">,</span> <span class="n">row_stop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span>
-<span class="n">col_start</span><span class="p">,</span> <span class="n">col_stop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span>
-<span class="n">subset_window</span> <span class="o">=</span> <span class="p">(</span>
-<span class="n">subset</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="n">row_start</span><span class="p">,</span> <span class="n">row_stop</span><span class="p">),</span> <span class="p">(</span><span class="n">col_start</span><span class="p">,</span> <span class="n">col_stop</span><span class="p">)))</span>
+<span class="n">xoff</span><span class="p">,</span> <span class="n">yoff</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+<span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="n">yoff</span><span class="p">,</span> <span class="n">yoff</span> <span class="o">+</span> <span class="n">ysize</span><span class="p">),</span> <span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">xoff</span> <span class="o">+</span> <span class="n">xsize</span><span class="p">)))</span>
 </pre></div>
 </div>
 <div class="admonition note">
