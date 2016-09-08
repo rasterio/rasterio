@@ -226,10 +226,11 @@ Geotransforms
 
 The ``transform`` attribute of a Rasterio dataset object is comparable to the
 ``GeoTransform`` attribute of a GDAL dataset, but Rasterio's has more power.
-It's not just an array of affine transformation matrix elements, it's a matrix
-object with handy methods. For example, the spatial coordinates of the upper
-left corner of any raster element is the product of the dataset's ``transform``
-matrix and the ``(column, row)`` index of the element.
+It's not just an array of affine transformation matrix elements, it's an
+instance of an ``Afine`` class and has many handy methods. For example, the
+spatial coordinates of the upper left corner of any raster element is the
+product of the dataset's ``transform`` matrix and the ``(column, row)`` index
+of the element.
 
 .. code-block:: pycon
 
@@ -243,6 +244,17 @@ The affine transformation matrix can be inverted as well.
 
    >>> ~src.transform * (101985.0, 2826915.0)
    (0.0, 0.0)
+
+``Affine`` instances can be created from or converted to the sequences used by
+``gdal``.
+
+.. code-block:: pycon
+
+    >>> from rasterio.transform import Affine
+    >>> Affine.from_gdal(101985.0, 300.0379266750948, 0.0,
+    ...                  2826915.0, 0.0, -300.041782729805).to_gdal()
+    ...
+    (101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805)
 
 Coordinate Reference Systems
 ============================
@@ -280,4 +292,44 @@ GDAL does not have.
 Valid Data Masks
 ================
 
-TODO
+Rasterio provides an array for every dataset representing its valid data mask
+using the same indicators as GDAL: ``0`` for invalid data and ``255`` for valid
+data.
+
+.. code-block:: pycon
+
+   >>> src = rasterio.open('example.tif')
+   >>> src.dataset_mask()
+   array([[0, 0, 0, ..., 0, 0, 0],
+          [0, 0, 0, ..., 0, 0, 0],
+          [0, 0, 0, ..., 0, 0, 0],
+          ...,
+          [0, 0, 0, ..., 0, 0, 0],
+          [0, 0, 0, ..., 0, 0, 0],
+          [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
+
+Arrays for dataset bands can also be had as a Numpy ``masked_array``.
+
+.. code-block:: pycon
+
+    >>> src.read(1, masked=True)
+    masked_array(data =
+     [[-- -- -- ..., -- -- --]
+      [-- -- -- ..., -- -- --]
+      [-- -- -- ..., -- -- --]
+      ...,
+      [-- -- -- ..., -- -- --]
+      [-- -- -- ..., -- -- --]
+      [-- -- -- ..., -- -- --]],
+                 mask =
+     [[ True  True  True ...,  True  True  True]
+      [ True  True  True ...,  True  True  True]
+      [ True  True  True ...,  True  True  True]
+      ...,
+      [ True  True  True ...,  True  True  True]
+      [ True  True  True ...,  True  True  True]
+      [ True  True  True ...,  True  True  True]],
+            fill_value = 0)
+
+Where the masked array's ``mask`` is ``True``, the data is invalid and has been
+masked "out" in the opposite sense of GDAL's mask.

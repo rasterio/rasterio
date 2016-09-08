@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating to from GDAL’s Python bindings &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>Migrating from GDAL’s bindings &mdash; rasterio 1.0.dev1 documentation</title>
   
 
   
@@ -85,9 +85,15 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Migrating to from GDAL&#8217;s Python bindings</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#reading">Reading</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#writing">Writing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Migrating from GDAL&#8217;s bindings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#differences-between-rasterio-and-osgeo-gdal">Differences between rasterio and osgeo.gdal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#osgeo-gdal-gotchas"><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-interface">Command Line Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#migrating">Migrating</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reading">Reading</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#writing">Writing</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -151,7 +157,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Migrating to from GDAL&#8217;s Python bindings</li>
+    <li>Migrating from GDAL&#8217;s bindings</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -165,14 +171,99 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="migrating-to-from-gdal-s-python-bindings">
-<h1>Migrating to from GDAL&#8217;s Python bindings<a class="headerlink" href="#migrating-to-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
-<p>Switching to Rasterio for new projects or new iterations on existing projects
-may not be complicated. This document explains the key similarities and
-differences between these two Python packages and how to cross over to the
-Rasterio side of the street.</p>
+  <div class="section" id="migrating-from-gdal-s-bindings">
+<h1>Migrating from GDAL&#8217;s bindings<a class="headerlink" href="#migrating-from-gdal-s-bindings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="differences-between-rasterio-and-osgeo-gdal">
+<h2>Differences between rasterio and osgeo.gdal<a class="headerlink" href="#differences-between-rasterio-and-osgeo-gdal" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio uses the <code class="docutils literal"><span class="pre">libgdal</span></code> shared library under the hood to provide
+a significant portion of functionality.  GDAL itself ships with its own python
+bindings, <code class="docutils literal"><span class="pre">osgeo.gdal</span></code>.  This section will discuss the differences between
+<code class="docutils literal"><span class="pre">rasterio</span></code> and <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> and reasons why you might choose to use one
+over the other.</p>
+<p>Rasterio is, by design, a library for reading and writing raster datasets.
+Rasterio <em>uses</em> GDAL but is not a &#8220;Python binding for GDAL.&#8221;</p>
+<p><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> is automatically-generated using SWIG. As a result, the
+interface and method names are similar to the C API. Virtually all of the GDAL
+C API is exposed through the library.</p>
+<p>The <code class="docutils literal"><span class="pre">rasterio</span></code> library is built from the ground up to provide an interface
+for reading, writing and manipulating geospatial raster data that follows the
+style and convention of idiomatic Python code.  We use a selected subset of the
+GDAL C API in order to provide this functionality.</p>
+<p>In practice, while many similar tasks can be performed by both libraries, the
+difference in coding style is significant. For example, opening a raster file
+with <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> involves using gdal constants and the programmer must
+provide their own error handling and memory management.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdalconst</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">,</span> <span class="n">gdalconst</span><span class="o">.</span><span class="n">GA_ReadOnly</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">dataset</span><span class="p">:</span>
+    <span class="c1"># handle a non-existant dataset...</span>
+
+<span class="c1"># work with opened dataset...</span>
+<span class="k">print</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">RasterCount</span><span class="p">)</span>
+
+<span class="c1"># trigger eventual closure of GDAL dataset.</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="bp">None</span>
+</pre></div>
+</div>
+<p>This program reads and runs like a C program. Compare it to the equivalent
+<code class="docutils literal"><span class="pre">rasterio</span></code> code.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
+
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+    <span class="c1"># Work with opened dataset...</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+
+<span class="c1"># Dataset is closed automatically at the end of the ``with`` block.</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">rasterio</span></code> code:</p>
+<ul class="simple">
+<li>Uses pep8 compliant module, method and property names</li>
+<li>Follows the conventions of python file handles</li>
+<li>Uses context managers to safely manage memory, global environment and file resources</li>
+<li>Will raise proper exceptions (i.e. <code class="docutils literal"><span class="pre">RasterioIOError</span></code> if the file does not exist)</li>
+</ul>
+<div class="section" id="osgeo-gdal-gotchas">
+<h3><code class="docutils literal"><span class="pre">osgeo.gdal</span></code> gotchas<a class="headerlink" href="#osgeo-gdal-gotchas" title="Permalink to this headline">¶</a></h3>
+<p>Beyond idiomatic python coding conventions, the need for Rasterio arose as a
+result of several quirks of the <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> module which made it difficult to manage
+as a software dependency or as part of a production system.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<ul class="last simple">
+<li>global state makes osgeo.gdal unsafe with other python modules</li>
+<li>hidden behavior with environm vars vs explicit GDALEnv</li>
+<li>vsi vs URIs</li>
+<li>installation and packaging issues</li>
+<li>examples of unsafe memory situations</li>
+</ul>
+</div>
+<p>For a more detailed look at some unexpected behaviors of the <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> module, see the <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/PythonGotchas">Python Gotchas</a> page on the GDAL wiki.</p>
+</div>
+<div class="section" id="command-line-interface">
+<h3>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the python library, Rasterio also provides the <code class="docutils literal"><span class="pre">rio</span></code> command which
+contains several subcommands whose functionality overlaps what is provided by
+the <code class="docutils literal"><span class="pre">gdal*</span></code> commands</p>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<ul class="last simple">
+<li>differences between similar commands</li>
+<li>what rio doesn&#8217;t do</li>
+<li>what gdal* doesn&#8217;t do</li>
+</ul>
+</div>
+</div>
+<div class="section" id="migrating">
+<h3>Migrating<a class="headerlink" href="#migrating" title="Permalink to this headline">¶</a></h3>
+<p>So maybe we&#8217;ve convinced you to give Rasterio a try. How do you go about migrating an
+existing script or a project that uses <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> to <code class="docutils literal"><span class="pre">rasterio</span></code>? This section will
+walk through several common examples of <code class="docutils literal"><span class="pre">osgeo.gdal</span></code> code and show the equivalent
+process using <code class="docutils literal"><span class="pre">rasterio</span></code>.</p>
 <div class="section" id="reading">
-<h2>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h2>
+<h4>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h4>
 <p>We&#8217;ll start with a raster dataset to work with, our trusty test fixture</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">raster</span> <span class="o">=</span> <span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span>
 </pre></div>
@@ -242,8 +333,9 @@ both Rasterio and gdal use a 1-based index to defined bands</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">g_ds</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="writing">
-<h3>Writing<a class="headerlink" href="#writing" title="Permalink to this headline">¶</a></h3>
+<h4>Writing<a class="headerlink" href="#writing" title="Permalink to this headline">¶</a></h4>
 <p>Let&#8217;s take the arrays that we&#8217;ve read from the original dataset and write them out
 to a new GeoTIFF file.</p>
 <p>With Rasterio, you open the dataset, read the data and the
@@ -291,6 +383,7 @@ to a new GeoTIFF file.</p>
 </div>
 <p>For a real-world example of a Python project making the osgeo.gdal-to-rasterio switch,
 see the pull request for the <a class="reference external" href="https://github.com/perrygeo/python-rasterstats/pull/63">rasterstats migration</a>.</p>
+</div>
 </div>
 </div>
 </div>

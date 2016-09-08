@@ -30,9 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/>
-        <link rel="next" title="Color" href="topics/color.html"/>
-        <link rel="prev" title="Quickstart" href="quickstart.html"/> 
+    <link rel="top" title="rasterio 1.0.dev1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,22 +79,11 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL&#8217;s Python bindings</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibility">Mutual Incompatibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-gdal-environment">The GDAL Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#format-drivers">Format Drivers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bands">Bands</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#geotransforms">Geotransforms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coordinate-reference-systems">Coordinate Reference Systems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#offsets-and-windows">Offsets and Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#valid-data-masks">Valid Data Masks</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migrating from GDAL&#8217;s bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
@@ -361,10 +348,11 @@ them by zipping these tuples together.</p>
 <h2>Geotransforms<a class="headerlink" href="#geotransforms" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal"><span class="pre">transform</span></code> attribute of a Rasterio dataset object is comparable to the
 <code class="docutils literal"><span class="pre">GeoTransform</span></code> attribute of a GDAL dataset, but Rasterio&#8217;s has more power.
-It&#8217;s not just an array of affine transformation matrix elements, it&#8217;s a matrix
-object with handy methods. For example, the spatial coordinates of the upper
-left corner of any raster element is the product of the dataset&#8217;s <code class="docutils literal"><span class="pre">transform</span></code>
-matrix and the <code class="docutils literal"><span class="pre">(column,</span> <span class="pre">row)</span></code> index of the element.</p>
+It&#8217;s not just an array of affine transformation matrix elements, it&#8217;s an
+instance of an <code class="docutils literal"><span class="pre">Afine</span></code> class and has many handy methods. For example, the
+spatial coordinates of the upper left corner of any raster element is the
+product of the dataset&#8217;s <code class="docutils literal"><span class="pre">transform</span></code> matrix and the <code class="docutils literal"><span class="pre">(column,</span> <span class="pre">row)</span></code> index
+of the element.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="go">(101985.0, 2826915.0)</span>
@@ -373,6 +361,15 @@ matrix and the <code class="docutils literal"><span class="pre">(column,</span> 
 <p>The affine transformation matrix can be inverted as well.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="o">~</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mf">101985.0</span><span class="p">,</span> <span class="mf">2826915.0</span><span class="p">)</span>
 <span class="go">(0.0, 0.0)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">Affine</span></code> instances can be created from or converted to the sequences used by
+<code class="docutils literal"><span class="pre">gdal</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">Affine</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Affine</span><span class="o">.</span><span class="n">from_gdal</span><span class="p">(</span><span class="mf">101985.0</span><span class="p">,</span> <span class="mf">300.0379266750948</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="mf">2826915.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">300.041782729805</span><span class="p">)</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="go">(101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805)</span>
 </pre></div>
 </div>
 </div>
@@ -407,7 +404,43 @@ easier to use.</p>
 </div>
 <div class="section" id="valid-data-masks">
 <h2>Valid Data Masks<a class="headerlink" href="#valid-data-masks" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>Rasterio provides an array for every dataset representing its valid data mask
+using the same indicators as GDAL: <code class="docutils literal"><span class="pre">0</span></code> for invalid data and <code class="docutils literal"><span class="pre">255</span></code> for valid
+data.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">dataset_mask</span><span class="p">()</span>
+<span class="go">array([[0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       ...,</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)</span>
+</pre></div>
+</div>
+<p>Arrays for dataset bands can also be had as a Numpy <code class="docutils literal"><span class="pre">masked_array</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">masked_array(data =</span>
+<span class="go"> [[-- -- -- ..., -- -- --]</span>
+<span class="go">  [-- -- -- ..., -- -- --]</span>
+<span class="go">  [-- -- -- ..., -- -- --]</span>
+<span class="go">  ...,</span>
+<span class="go">  [-- -- -- ..., -- -- --]</span>
+<span class="go">  [-- -- -- ..., -- -- --]</span>
+<span class="go">  [-- -- -- ..., -- -- --]],</span>
+<span class="go">             mask =</span>
+<span class="go"> [[ True  True  True ...,  True  True  True]</span>
+<span class="go">  [ True  True  True ...,  True  True  True]</span>
+<span class="go">  [ True  True  True ...,  True  True  True]</span>
+<span class="go">  ...,</span>
+<span class="go">  [ True  True  True ...,  True  True  True]</span>
+<span class="go">  [ True  True  True ...,  True  True  True]</span>
+<span class="go">  [ True  True  True ...,  True  True  True]],</span>
+<span class="go">        fill_value = 0)</span>
+</pre></div>
+</div>
+<p>Where the masked array&#8217;s <code class="docutils literal"><span class="pre">mask</span></code> is <code class="docutils literal"><span class="pre">True</span></code>, the data is invalid and has been
+masked &#8220;out&#8221; in the opposite sense of GDAL&#8217;s mask.</p>
 </div>
 </div>
 
@@ -415,15 +448,6 @@ easier to use.</p>
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="topics/color.html" class="btn btn-neutral float-right" title="Color" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="quickstart.html" class="btn btn-neutral" title="Quickstart" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
