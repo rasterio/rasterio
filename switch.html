@@ -88,8 +88,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL&#8217;s Python bindings</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibility">Mutual Incompatibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-gdal-environment">The GDAL Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dataset-objects">Dataset Objects</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#band-objects">Band Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#format-drivers">Format Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bands">Bands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#geotransforms">Geotransforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#coordinate-reference-systems">Coordinate Reference Systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#offsets-and-windows">Offsets and Windows</a></li>
@@ -171,38 +172,45 @@
             
   <div class="section" id="switching-from-gdal-s-python-bindings">
 <h1>Switching from GDAL&#8217;s Python bindings<a class="headerlink" href="#switching-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
-<p>Switching from GDAL&#8217;s Python bindings to Rasterio for new projects or new
-iterations on existing projects may not be complicated. This document explains
-the key similarities and differences between these two Python packages and
-provides some guidelines for why and how to switch.</p>
+<p>Switching from GDAL&#8217;s Python bindings, meaning the <code class="docutils literal"><span class="pre">gdal</span></code> module in the
+<code class="docutils literal"><span class="pre">osgeo</span></code> namespace, to Rasterio for new projects or new iterations on existing
+projects may not be complicated. This document explains the key similarities
+and differences between these two Python packages and provides some guidelines
+for why and how to switch.</p>
 <div class="section" id="mutual-incompatibility">
 <h2>Mutual Incompatibility<a class="headerlink" href="#mutual-incompatibility" title="Permalink to this headline">¶</a></h2>
-<p>GDAL&#8217;s Python module, meaning the <code class="docutils literal"><span class="pre">gdal</span></code> module in the <code class="docutils literal"><span class="pre">osgeo</span></code> namespace,
-and Rasterio are mutually incompatible and should not be imported and used in
-a single Python program. The reason is that they take different, naive,
-incompatible approaches to managing global variables in the dynamic library
-that they would share. It is assumed in multiple places in <code class="docutils literal"><span class="pre">gdal</span></code>, such as
-testing whether the count of currently registered format drivers is 0 to
-determine whether any drivers need to be registered, that no other Python
-module functions are modifying the variables in the dynamic library. Rasterio
-makes the same kind of assumptions and consequently the state of the global
-GDAL driver manager may be unpredictable. Additionally, <code class="docutils literal"><span class="pre">gdal</span></code> and Rasterio
-register conflicting error handlers and thus the propagation of exceptions and
-warnings may depend on which module was imported last.</p>
+<p>Rasterio and GDAL&#8217;s bindings contend for global GDAL objects. Choose one of
+<code class="docutils literal"><span class="pre">import</span> <span class="pre">osgeo.gdal</span></code> or <code class="docutils literal"><span class="pre">import</span> <span class="pre">rasterio</span></code>.</p>
+<p>GDAL&#8217;s bindings (<code class="docutils literal"><span class="pre">gdal</span></code> for the rest of this document) and Rasterio are
+mutually incompatible and should not be imported and used in a single Python
+program. The reason is that the dynamic library they each load (these are
+C extension modules, remember), <code class="docutils literal"><span class="pre">libgdal.so</span></code> on Linux, <code class="docutils literal"><span class="pre">gdal.dll</span></code> on
+Windows, has a number of global objects and the two modules take different,
+naive approaches to managing these objects. It is assumed in multiple places in
+<code class="docutils literal"><span class="pre">gdal</span></code> that no other Python module is modifying the variables in the dynamic
+library. Rasterio makes the same kind of assumptions and consequently the state
+of global objects like the format driver registry may be unpredictable.
+Additionally, <code class="docutils literal"><span class="pre">gdal</span></code> and Rasterio register conflicting error handlers and
+thus the propagation of exceptions and warnings may depend on which module was
+imported last.</p>
+<p>Static linking of the GDAL library for <code class="docutils literal"><span class="pre">gdal</span></code> and <code class="docutils literal"><span class="pre">rasterio</span></code> can avoid
+this contention, but in practice you will almost never see distributions of
+these modules that statically link GDAL.</p>
 <p>Beyond the issues above, the modules have different styles and don&#8217;t complement
-each other well. The bottom line: choose <code class="docutils literal"><span class="pre">import</span> <span class="pre">osgeo.gdal</span></code> or <code class="docutils literal"><span class="pre">import</span>
-<span class="pre">rasterio</span></code>.</p>
+each other well.</p>
 </div>
 <div class="section" id="the-gdal-environment">
 <h2>The GDAL Environment<a class="headerlink" href="#the-gdal-environment" title="Permalink to this headline">¶</a></h2>
 <p>GDAL library functions are excuted in a context of format drivers, error
 handlers, and format-specific configuration options that this document will
-call the &#8220;GDAL Environment.&#8221; With <code class="docutils literal"><span class="pre">gdal</span></code>, this context is initialized upon
-import of the module. This makes sense because <code class="docutils literal"><span class="pre">gdal</span></code> objects are thin
-wrappers around functions and classes in the GDAL dynamic library that
-generally require registration of drivers and error handlers.  The <code class="docutils literal"><span class="pre">gdal</span></code>
-module doesn&#8217;t have an abstraction for the environment, but it can be modified
-using functions like <code class="docutils literal"><span class="pre">gdal.SetErrorHandler()</span></code> and <code class="docutils literal"><span class="pre">gdal.UseExceptions()</span></code>.</p>
+call the &#8220;GDAL Environment.&#8221; Rasterio has an abstraction for the GDAL
+environment, <code class="docutils literal"><span class="pre">gdal</span></code> does not.</p>
+<p>With <code class="docutils literal"><span class="pre">gdal</span></code>, this context is initialized upon import of the module. This
+makes sense because <code class="docutils literal"><span class="pre">gdal</span></code> objects are thin wrappers around functions and
+classes in the GDAL dynamic library that generally require registration of
+drivers and error handlers.  The <code class="docutils literal"><span class="pre">gdal</span></code> module doesn&#8217;t have an abstraction
+for the environment, but it can be modified using functions like
+<code class="docutils literal"><span class="pre">gdal.SetErrorHandler()</span></code> and <code class="docutils literal"><span class="pre">gdal.UseExceptions()</span></code>.</p>
 <p>Rasterio has modules that don&#8217;t require complete initialization and
 configuration of GDAL (<code class="docutils literal"><span class="pre">rasterio.dtypes</span></code>, <code class="docutils literal"><span class="pre">rasterio.profiles</span></code>, and
 <code class="docutils literal"><span class="pre">rasterio.windows</span></code>, for example) and in the interest of reducing overhead
@@ -274,25 +282,128 @@ below.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="dataset-objects">
-<h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
-<p>TODO.</p>
+<div class="section" id="datasets">
+<h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio uses URIs to identify datasets, with schemes for different protocols.
+The GDAL bindings have their own special syntax.</p>
+<p>Unix-style filenames such as <code class="docutils literal"><span class="pre">/var/data/example.tif</span></code> identify dataset files
+for both Rasterio and <code class="docutils literal"><span class="pre">gdal</span></code>. Rasterio also accepts &#8216;file&#8217; scheme URIs
+like <code class="docutils literal"><span class="pre">file:///var/data/example.tif</span></code>.</p>
+<p>Rasterio identifies datasets within ZIP or tar archives using Apache VFS style
+identifiers like <code class="docutils literal"><span class="pre">zip:///var/data/example.zip!example.tif</span></code> or
+<code class="docutils literal"><span class="pre">tar:///var/data/example.tar!example.tif</span></code>.</p>
+<p>Datasets served via HTTPS are identified using &#8216;https&#8217; URIs like
+<code class="docutils literal"><span class="pre">https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
+<p>Datasets on AWS S3 are identified using &#8216;s3&#8217; scheme identifiers like
+<code class="docutils literal"><span class="pre">s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
+<p>With <code class="docutils literal"><span class="pre">gdal</span></code>, the equivalent identifiers are respectively
+<code class="docutils literal"><span class="pre">/vsizip//var/data/example.zip/example.tif</span></code>,
+<code class="docutils literal"><span class="pre">/vsitar//var/data/example.tar/example.tif</span></code>,
+<code class="docutils literal"><span class="pre">/vsicurl/landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>,
+and
+<code class="docutils literal"><span class="pre">/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
 </div>
-<div class="section" id="band-objects">
-<h2>Band Objects<a class="headerlink" href="#band-objects" title="Permalink to this headline">¶</a></h2>
-<p>TODO. Briefly: GDAL has band objects, Rasterio does not.</p>
+<div class="section" id="format-drivers">
+<h2>Format Drivers<a class="headerlink" href="#format-drivers" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">gdal</span></code> provides objects for each of the GDAL format drivers. With Rasterio,
+format drivers are represented by strings and are used only as arguments to
+functions like <code class="docutils literal"><span class="pre">rasterio.open()</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">dst</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;new.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Rasterio uses the same format driver names as GDAL does.</p>
+</div>
+<div class="section" id="bands">
+<h2>Bands<a class="headerlink" href="#bands" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">gdal</span></code> has band objects. Rasterio does not and thus never has objects with
+dangling dataset pointers. With Rasterio, bands are represented by a numerical
+index, starting from 1, and are used as arguments to dataset methods. To read
+the first band of a dataset as a Numpy <code class="docutils literal"><span class="pre">ndarray</span></code>, do this.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">band1</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Other attributes of GDAL band objects generally surface in Rasterio as tuples
+returned by dataset attributes, with one value per band, in order.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">indexes</span>
+<span class="go">(1, 2, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">dtypes</span>
+<span class="go">(&#39;uint8&#39;, &#39;uint8&#39;, &#39;uint8&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">descriptions</span>
+<span class="go">(&#39;Red band&#39;, &#39;Green band&#39;, &#39;Blue band&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">units</span>
+<span class="go">(&#39;DN&#39;, &#39;DN&#39;, &#39;DN&#39;)</span>
+</pre></div>
+</div>
+<p>Developers that want read-only band objects for their applications can create
+them by zipping these tuples together.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+<span class="n">Band</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Band&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;idx&#39;</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">])</span>
+
+<span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+<span class="n">bands</span> <span class="o">=</span> <span class="p">[</span><span class="n">Band</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="k">for</span> <span class="n">vals</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+    <span class="n">src</span><span class="o">.</span><span class="n">indexes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">descriptions</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">units</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Namedtuples are like lightweight classes.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="n">bands</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">band</span><span class="o">.</span><span class="n">idx</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">3</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="geotransforms">
 <h2>Geotransforms<a class="headerlink" href="#geotransforms" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>The <code class="docutils literal"><span class="pre">transform</span></code> attribute of a Rasterio dataset object is comparable to the
+<code class="docutils literal"><span class="pre">GeoTransform</span></code> attribute of a GDAL dataset, but Rasterio&#8217;s has more power.
+It&#8217;s not just an array of affine transformation matrix elements, it&#8217;s a matrix
+object with handy methods. For example, the spatial coordinates of the upper
+left corner of any raster element is the product of the dataset&#8217;s <code class="docutils literal"><span class="pre">transform</span></code>
+matrix and the <code class="docutils literal"><span class="pre">(column,</span> <span class="pre">row)</span></code> index of the element.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">(101985.0, 2826915.0)</span>
+</pre></div>
+</div>
+<p>The affine transformation matrix can be inverted as well.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="o">~</span><span class="n">src</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mf">101985.0</span><span class="p">,</span> <span class="mf">2826915.0</span><span class="p">)</span>
+<span class="go">(0.0, 0.0)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="coordinate-reference-systems">
 <h2>Coordinate Reference Systems<a class="headerlink" href="#coordinate-reference-systems" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>The <code class="docutils literal"><span class="pre">crs</span></code> attribute of a Rasterio dataset object is an instance of Rasterio&#8217;s
+<code class="docutils literal"><span class="pre">CRS</span></code> class and works well with <code class="docutils literal"><span class="pre">pyproj</span></code>.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyproj</span> <span class="kn">import</span> <span class="n">Proj</span><span class="p">,</span> <span class="n">transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transform</span><span class="p">(</span><span class="n">Proj</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">),</span> <span class="n">Proj</span><span class="p">(</span><span class="s1">&#39;+init=epsg:3857&#39;</span><span class="p">),</span> <span class="mf">101985.0</span><span class="p">,</span> <span class="mf">2826915.0</span><span class="p">)</span>
+<span class="go">(-8789636.707871985, 2938035.238323653)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="offsets-and-windows">
 <h2>Offsets and Windows<a class="headerlink" href="#offsets-and-windows" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>Rasterio adds an abstraction for subsets or windows of a raster array that
+GDAL does not have.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
+
+<span class="n">row_start</span><span class="p">,</span> <span class="n">row_stop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span>
+<span class="n">col_start</span><span class="p">,</span> <span class="n">col_stop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span>
+<span class="n">subset_window</span> <span class="o">=</span> <span class="p">(</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="n">row_start</span><span class="p">,</span> <span class="n">row_stop</span><span class="p">),</span> <span class="p">(</span><span class="n">col_start</span><span class="p">,</span> <span class="n">col_stop</span><span class="p">)))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Rasterio 1.0 will include a new <code class="docutils literal"><span class="pre">Window</span></code> class that makes this abstraction
+easier to use.</p>
+</div>
 </div>
 <div class="section" id="valid-data-masks">
 <h2>Valid Data Masks<a class="headerlink" href="#valid-data-masks" title="Permalink to this headline">¶</a></h2>
