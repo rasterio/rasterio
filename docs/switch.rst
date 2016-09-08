@@ -128,6 +128,20 @@ Rasterio provides this with a single Python statement.
    with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=512):
        # ...
 
+
+Format Drivers
+==============
+
+``gdal`` provides objects for each of the GDAL format drivers. With Rasterio,
+format drivers are represented by strings and are used only as arguments to
+functions like ``rasterio.open()``.
+
+.. code-block:: python
+
+   dst = rasterio.open('new.tif', 'w', format='GTiff', **kwargs)
+
+Rasterio uses the same format driver names as GDAL does.
+
 Datasets
 ========
 
@@ -154,19 +168,6 @@ With ``gdal``, the equivalent identifiers are respectively
 ``/vsicurl/landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF``,
 and
 ``/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF``.
-
-Format Drivers
-==============
-
-``gdal`` provides objects for each of the GDAL format drivers. With Rasterio,
-format drivers are represented by strings and are used only as arguments to
-functions like ``rasterio.open()``.
-
-.. code-block:: python
-
-   dst = rasterio.open('new.tif', 'w', format='GTiff', **kwargs)
-
-Rasterio uses the same format driver names as GDAL does.
 
 Bands
 =====
@@ -269,6 +270,24 @@ The ``crs`` attribute of a Rasterio dataset object is an instance of Rasterio's
    >>> transform(Proj(src.crs), Proj('+init=epsg:3857'), 101985.0, 2826915.0)
    (-8789636.707871985, 2938035.238323653)
 
+Tags
+====
+
+GDAL metadata items are called "tags" in Rasterio. The tag set for a given GDAL metadata namespace is
+represented as a dict.
+
+.. code-block:: pycon
+
+   >>> src.tags()
+   {'AREA_OR_POINT': 'Area'}
+   >>> src.tags(ns='IMAGE_STRUCTURE')
+   {'INTERLEAVE': 'PIXEL'}
+
+The semantics of the tags in GDAL's default and ``IMAGE_STRUCTURE`` namespaces
+are described in http://www.gdal.org/gdal_datamodel.html. Rasterio uses 
+several namespaces of its own: ``rio_creation_kwds`` and ``rio_overviews``,
+each with their own semantics.
+
 Offsets and Windows
 ===================
 
@@ -333,3 +352,11 @@ Arrays for dataset bands can also be had as a Numpy ``masked_array``.
 
 Where the masked array's ``mask`` is ``True``, the data is invalid and has been
 masked "out" in the opposite sense of GDAL's mask.
+
+Errors and Exceptions
+=====================
+
+Rasterio always raises Python exceptions when an error occurs and never returns
+an error code or ``None`` to indicate an error. ``gdal`` takes the opposite
+approach, although developers can turn on exceptions by calling
+``gdal.UseExceptions()``.
