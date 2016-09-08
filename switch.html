@@ -88,13 +88,15 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL&#8217;s Python bindings</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibility">Mutual Incompatibility</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-gdal-environment">The GDAL Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#format-drivers">Format Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bands">Bands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#geotransforms">Geotransforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#coordinate-reference-systems">Coordinate Reference Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tags">Tags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#offsets-and-windows">Offsets and Windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#valid-data-masks">Valid Data Masks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#errors-and-exceptions">Errors and Exceptions</a></li>
 </ul>
 </li>
 </ul>
@@ -282,6 +284,16 @@ below.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="format-drivers">
+<h2>Format Drivers<a class="headerlink" href="#format-drivers" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">gdal</span></code> provides objects for each of the GDAL format drivers. With Rasterio,
+format drivers are represented by strings and are used only as arguments to
+functions like <code class="docutils literal"><span class="pre">rasterio.open()</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">dst</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;new.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Rasterio uses the same format driver names as GDAL does.</p>
+</div>
 <div class="section" id="datasets">
 <h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
 <p>Rasterio uses URIs to identify datasets, with schemes for different protocols.
@@ -302,16 +314,6 @@ identifiers like <code class="docutils literal"><span class="pre">zip:///var/dat
 <code class="docutils literal"><span class="pre">/vsicurl/landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>,
 and
 <code class="docutils literal"><span class="pre">/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
-</div>
-<div class="section" id="format-drivers">
-<h2>Format Drivers<a class="headerlink" href="#format-drivers" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">gdal</span></code> provides objects for each of the GDAL format drivers. With Rasterio,
-format drivers are represented by strings and are used only as arguments to
-functions like <code class="docutils literal"><span class="pre">rasterio.open()</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">dst</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;new.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Rasterio uses the same format driver names as GDAL does.</p>
 </div>
 <div class="section" id="bands">
 <h2>Bands<a class="headerlink" href="#bands" title="Permalink to this headline">¶</a></h2>
@@ -397,6 +399,21 @@ of the element.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="tags">
+<h2>Tags<a class="headerlink" href="#tags" title="Permalink to this headline">¶</a></h2>
+<p>GDAL metadata items are called &#8220;tags&#8221; in Rasterio. The tag set for a given GDAL metadata namespace is
+represented as a dict.</p>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span>
+<span class="go">{&#39;AREA_OR_POINT&#39;: &#39;Area&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;IMAGE_STRUCTURE&#39;</span><span class="p">)</span>
+<span class="go">{&#39;INTERLEAVE&#39;: &#39;PIXEL&#39;}</span>
+</pre></div>
+</div>
+<p>The semantics of the tags in GDAL&#8217;s default and <code class="docutils literal"><span class="pre">IMAGE_STRUCTURE</span></code> namespaces
+are described in <a class="reference external" href="http://www.gdal.org/gdal_datamodel.html">http://www.gdal.org/gdal_datamodel.html</a>. Rasterio uses
+several namespaces of its own: <code class="docutils literal"><span class="pre">rio_creation_kwds</span></code> and <code class="docutils literal"><span class="pre">rio_overviews</span></code>,
+each with their own semantics.</p>
+</div>
 <div class="section" id="offsets-and-windows">
 <h2>Offsets and Windows<a class="headerlink" href="#offsets-and-windows" title="Permalink to this headline">¶</a></h2>
 <p>Rasterio adds an abstraction for subsets or windows of a raster array that
@@ -454,6 +471,13 @@ data.</p>
 </div>
 <p>Where the masked array&#8217;s <code class="docutils literal"><span class="pre">mask</span></code> is <code class="docutils literal"><span class="pre">True</span></code>, the data is invalid and has been
 masked &#8220;out&#8221; in the opposite sense of GDAL&#8217;s mask.</p>
+</div>
+<div class="section" id="errors-and-exceptions">
+<h2>Errors and Exceptions<a class="headerlink" href="#errors-and-exceptions" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio always raises Python exceptions when an error occurs and never returns
+an error code or <code class="docutils literal"><span class="pre">None</span></code> to indicate an error. <code class="docutils literal"><span class="pre">gdal</span></code> takes the opposite
+approach, although developers can turn on exceptions by calling
+<code class="docutils literal"><span class="pre">gdal.UseExceptions()</span></code>.</p>
 </div>
 </div>
 
