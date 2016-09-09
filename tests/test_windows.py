@@ -205,5 +205,5 @@ def test_window_from_bounds():
 def test_read_with_window_class():
     """Reading subset with Window class works"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        subset = src.read(1, window=((0, 10), (0, 10))) #Window(0, 0, 10, 10))
+        subset = src.read(1, window=Window(0, 0, 10, 10))
         assert subset.shape == (10, 10)
