@@ -60,10 +60,10 @@ def get_data_window(arr, nodata=None):
         arr = np.ma.masked_array(arr, arr == nodata)
 
     if num_dims == 2:
-        data_rows, data_cols = np.where(arr.mask is False)
+        data_rows, data_cols = np.where(arr.mask == False)
     else:
         data_rows, data_cols = np.where(
-            np.any(np.rollaxis(arr.mask, 0, 3) is False, axis=2)
+            np.any(np.rollaxis(arr.mask, 0, 3) == False, axis=2)
         )
 
     if data_rows.size:
