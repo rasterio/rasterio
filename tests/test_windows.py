@@ -1,13 +1,20 @@
-import rasterio
+from copy import copy
+import logging
+import sys
 
+from affine import Affine
 import numpy as np
 import pytest
 
+import rasterio
 from rasterio.windows import (
-    from_bounds, bounds, transform, evaluate, window_index, shape)
+    from_bounds, bounds, transform, evaluate, window_index, shape, Window,
+    intersect)
 
 
 EPS = 1.0e-8
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_window_function():
@@ -17,24 +24,24 @@ def test_window_function():
         height = src.height
         width = src.width
         assert from_bounds(
-            left+EPS, bottom+EPS, right-EPS, top-EPS, src.transform,
+            left + EPS, bottom + EPS, right - EPS, top - EPS, src.transform,
             height, width) == ((0, height), (0, width))
         assert from_bounds(
-            left, top-400, left+400, top, src.transform,
+            left, top - 400, left + 400, top, src.transform,
             height, width) == ((0, 2), (0, 2))
         assert from_bounds(
-            left, top-2*dy-EPS, left+2*dx-EPS, top, src.transform,
+            left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
             height, width) == ((0, 2), (0, 2))
 
         # bounds cropped
         assert from_bounds(
-            left-2*dx, top-2*dy, left+2*dx, top+2*dy, src.transform,
-            height, width) == ((0, 2), (0, 2))
+            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
+            src.transform, height, width) == ((0, 2), (0, 2))
 
         # boundless
         assert from_bounds(
-            left-2*dx, top-2*dy, left+2*dx, top+2*dy, src.transform,
-            boundless=True) == ((-2, 2), (-2, 2))
+            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
+            src.transform, boundless=True) == ((-2, 2), (-2, 2))
 
 
 def test_window_function_valuerror():
@@ -43,7 +50,8 @@ def test_window_function_valuerror():
 
         with pytest.raises(ValueError):
             # No height or width
-            from_bounds(left+EPS, bottom+EPS, right-EPS, top-EPS, src.transform)
+            from_bounds(left + EPS, bottom + EPS, right - EPS, top - EPS,
+                        src.transform)
 
 
 def test_window_transform_function():
@@ -135,3 +143,67 @@ def test_shape_negative():
     assert shape(((-10, None), (-10, None)), 100, 90) == (10, 10)
     assert shape(((~0, None), (~0, None)), 100, 90) == (1, 1)
     assert shape(((None, ~0), (None, ~0)), 100, 90) == (99, 89)
+
+
+def test_window_class_constructor():
+    """Construct a Window from offsets, height, and width"""
+    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
+    assert window == ((0, 100), (1, 201))
+
+
+def test_window_class_constructor_positional():
+    """Construct a Window using positional parameters"""
+    window = Window(1, 0, 200, 100)
+    assert window == ((0, 100), (1, 201))
+
+
+def test_window_class_attrs():
+    """Test Window attributes"""
+    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
+    assert window.col_off == 1
+    assert window.row_off == 0
+    assert window.num_cols == 200
+    assert window.num_rows == 100
+
+
+def test_window_class_repr():
+    """Test Window respresentation"""
+    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
+    assert repr(window) == 'Window(col_off=1, row_off=0, num_cols=200, num_rows=100)'
+    assert eval(repr(window)) == ((0, 100), (1, 201))
+
+
+def test_window_class_copy():
+    """Test Window copying"""
+    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
+    assert copy(window) == ((0, 100), (1, 201))
+
+
+def test_window_class_asdict():
+    """Test Window.asdict"""
+    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
+    assert window.asdict() == {
+        'col_off': 1, 'num_cols': 200, 'num_rows': 100, 'row_off': 0}
+
+
+def test_window_class_intersects():
+    """Windows intersect"""
+    assert intersect(Window(0, 0, 10, 10), Window(8, 8, 10, 10))
+
+
+def test_window_class_nonintersects():
+    """Windows do not intersect"""
+    assert not intersect(Window(0, 0, 10, 10), Window(10, 10, 10, 10))
+
+
+def test_window_from_bounds():
+    """from_bounds classmethod works"""
+    assert Window.from_bounds(
+        0, 0, 1, 1, Affine.identity(), width=1, height=1) == ((0, 1), (0, 1))
+
+
+def test_read_with_window_class():
+    """Reading subset with Window class works"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        subset = src.read(1, window=((0, 10), (0, 10))) #Window(0, 0, 10, 10))
+        assert subset.shape == (10, 10)

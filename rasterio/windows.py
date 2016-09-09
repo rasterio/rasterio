@@ -8,6 +8,7 @@ A window is a 2D ndarray indexer in the form of a tuple:
 import collections
 import functools
 import math
+from operator import itemgetter
 
 from affine import Affine
 import numpy as np
@@ -30,7 +31,7 @@ def iter_args(function):
 
 def get_data_window(arr, nodata=None):
     """
-    Returns a window for the non-nodata pixels within the input array.
+    Returns a window for the valid data pixels within the input array.
 
     Parameters
     ----------
@@ -59,10 +60,10 @@ def get_data_window(arr, nodata=None):
         arr = np.ma.masked_array(arr, arr == nodata)
 
     if num_dims == 2:
-        data_rows, data_cols = np.where(arr.mask == False)
+        data_rows, data_cols = np.where(arr.mask is False)
     else:
         data_rows, data_cols = np.where(
-            np.any(np.rollaxis(arr.mask, 0, 3) == False, axis=2)
+            np.any(np.rollaxis(arr.mask, 0, 3) is False, axis=2)
         )
 
     if data_rows.size:
@@ -75,7 +76,7 @@ def get_data_window(arr, nodata=None):
     else:
         col_range = (0, 0)
 
-    return (row_range, col_range)
+    return Window.from_ranges(row_range, col_range)
 
 
 @iter_args
@@ -94,10 +95,9 @@ def union(*windows):
     """
 
     stacked = np.dstack(windows)
-    return (
+    return Window.from_ranges(
         (stacked[0, 0].min(), stacked[0, 1].max()),
-        (stacked[1, 0].min(), stacked[1, 1]. max())
-    )
+        (stacked[1, 0].min(), stacked[1, 1]. max()))
 
 
 @iter_args
@@ -121,10 +121,9 @@ def intersection(*windows):
         raise ValueError('windows do not intersect')
 
     stacked = np.dstack(windows)
-    return (
+    return Window.from_ranges(
         (stacked[0, 0].max(), stacked[0, 1].min()),
-        (stacked[1, 0].max(), stacked[1, 1]. min())
-    )
+        (stacked[1, 0].max(), stacked[1, 1]. min()))
 
 
 @iter_args
@@ -199,7 +198,7 @@ def from_bounds(left, bottom, right, top, transform,
     window_stop = rowcol(
         transform, right, bottom, op=math.ceil, precision=precision)
 
-    window = tuple(zip(window_start, window_stop))
+    window = Window.from_ranges(*tuple(zip(window_start, window_stop)))
 
     if boundless:
         return window
@@ -252,7 +251,7 @@ def bounds(window, transform):
 def crop(window, height, width):
     """Returns a window cropped to fall within height and width."""
     (r_start, r_stop), (c_start, c_stop) = window
-    return (
+    return Window.from_ranges(
         (min(max(r_start, 0), height), max(0, min(r_stop, height))),
         (min(max(c_start, 0), width), max(0, min(c_stop, width))))
 
@@ -293,7 +292,7 @@ def evaluate(window, height, width):
     if not c_stop >= c_start:
         raise ValueError(
             "invalid window: col range (%d, %d)" % (c_start, c_stop))
-    return (r_start, r_stop), (c_start, c_stop)
+    return Window.from_ranges((r_start, r_stop), (c_start, c_stop))
 
 
 def shape(window, height=-1, width=-1):
@@ -303,10 +302,71 @@ def shape(window, height=-1, width=-1):
     values in the window.
     """
     (a, b), (c, d) = evaluate(window, height, width)
-    return b-a, d-c
+    return (b - a, d - c)
 
 
 def window_index(window):
     # "window_" is necessary here to redundancy to disambiguate
     # from transform.get_index and src.index
     return tuple(slice(*w) for w in window)
+
+
+class Window(tuple):
+    """Windows are rectangular subsets of rasters"""
+
+    __slots__ = ()
+    _fields = ('col_off', 'row_off', 'num_cols', 'num_rows')
+
+    def __new__(cls, col_off=0, row_off=0, num_cols=0, num_rows=0):
+        """Create new instance of Window."""
+        return tuple.__new__(
+            cls,
+            ((row_off, row_off + num_rows), (col_off, col_off + num_cols)))
+
+    def __repr__(self):
+        """Return a nicely formatted representation string"""
+        return (
+            "Window(col_off={self.col_off}, row_off={self.row_off}, "
+            "num_cols={self.num_cols}, num_rows={self.num_rows})").format(
+                self=self)
+
+    def __getnewargs__(self):
+        'Return self as a plain tuple.  Used by copy and pickle.'
+        return self.flattened()
+
+    def flattened(self):
+        """Return a flattened tuple, ordered as _fields."""
+        return (self[1][0], self[0][0],
+                self[1][1] - self[1][0], self[0][1] - self[0][0])
+
+    def asdict(self):
+        'Return a new OrderedDict which maps field names to their values.'
+        return collections.OrderedDict(zip(self._fields, self.flattened()))
+
+    @classmethod
+    def from_ranges(cls, row_range, col_range):
+        return cls(col_range[0], row_range[0],
+                   col_range[1] - col_range[0], row_range[1] - row_range[0])
+
+    @classmethod
+    def from_bounds(cls, left, bottom, right, top, transform,
+            height=None, width=None, boundless=False, precision=6):
+        return from_bounds(left, bottom, right, top, transform,
+                           height=height, width=width, boundless=boundless,
+                           precision=precision)
+
+    @property
+    def col_off(self):
+        return self[1][0]
+
+    @property
+    def num_cols(self):
+        return self[1][1] - self[1][0]
+
+    @property
+    def row_off(self):
+        return self[0][0]
+
+    @property
+    def num_rows(self):
+        return self[0][1] - self[0][0]
