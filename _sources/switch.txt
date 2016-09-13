@@ -2,37 +2,34 @@
 Switching from GDAL's Python bindings
 =====================================
 
-Switching from GDAL's Python bindings, meaning the ``gdal`` module in the
-``osgeo`` namespace, to Rasterio for new projects or new iterations on existing
-projects may not be complicated. This document explains the key similarities
-and differences between these two Python packages and highlights the features
-of Rasterio that can help in switching.
+This document is written specifically for users of GDAL's Python bindings
+(``osgeo.gdal``) who have read about Rasterio's `philosophy <intro.html>`__ and
+want to know what switching entails.  The good news is that switching may not
+be complicated. This document explains the key similarities and differences
+between these two Python packages and highlights the features of Rasterio that
+can help in switching.
 
-Mutual Incompatibility
-======================
+Mutual Incompatibilities
+========================
 
-Rasterio and GDAL's bindings contend for global GDAL objects. Choose one of
-``import osgeo.gdal`` or ``import rasterio``.
+Rasterio and GDAL's bindings can contend for global GDAL objects. Unless you
+have deep knowledge about both packages, choose exactly one of ``import
+osgeo.gdal`` or ``import rasterio``.
 
-GDAL's bindings (``gdal`` for the rest of this document) and Rasterio are
-mutually incompatible and should not be imported and used in a single Python
-program. The reason is that the dynamic library they each load (these are
-C extension modules, remember), ``libgdal.so`` on Linux, ``gdal.dll`` on
-Windows, has a number of global objects and the two modules take different,
-naive approaches to managing these objects. It is assumed in multiple places in
-``gdal`` that no other Python module is modifying the variables in the dynamic
-library. Rasterio makes the same kind of assumptions and consequently the state
-of global objects like the format driver registry may be unpredictable.
-Additionally, ``gdal`` and Rasterio register conflicting error handlers and
-thus the propagation of exceptions and warnings may depend on which module was
-imported last.
+GDAL's bindings (``gdal`` for the rest of this document) and Rasterio are not
+entirely compatible and should not, without a great deal of care, be imported
+and used in a single Python program. The reason is that the dynamic library
+they each load (these are C extension modules, remember), ``libgdal.so`` on
+Linux, ``gdal.dll`` on Windows, has a number of global objects and the two
+modules take different approaches to managing these objects.
 
-Static linking of the GDAL library for ``gdal`` and ``rasterio`` can avoid
+Static linking of the GDAL library for ``gdal`` and ``rasterio`` can avoid 
 this contention, but in practice you will almost never see distributions of
-these modules that statically link GDAL.
+these modules that statically link the GDAL library.
 
-Beyond the issues above, the modules have different styles and don't complement
-each other well.
+Beyond the issues above, the modules have different styles – ``gdal`` reads and
+writes like C while ``rasterio`` is more Pythonic – and don't complement each
+other well.
 
 The GDAL Environment
 ====================
@@ -121,7 +118,7 @@ below.
    for key, val in prev_config.items():
        gdal.SetConfigOption(key, val)
 
-Rasterio provides this with a single Python statement.
+Rasterio achieves this with a single Python statement.
 
 .. code-block:: python
 
@@ -142,8 +139,8 @@ functions like ``rasterio.open()``.
 
 Rasterio uses the same format driver names as GDAL does.
 
-Datasets
-========
+Dataset Identifiers
+===================
 
 Rasterio uses URIs to identify datasets, with schemes for different protocols.
 The GDAL bindings have their own special syntax.
@@ -169,8 +166,22 @@ With ``gdal``, the equivalent identifiers are respectively
 and
 ``/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF``.
 
-To help developers switch, Rasterio will accept these identifiers, too, and
-dispatch them to the proper format drivers and protocol implementations.
+To help developers switch, Rasterio will accept these identifiers and other
+format-specific connection strings, too, and dispatch them to the proper format
+drivers and protocols.
+
+Dataset Objects
+===============
+
+Rasterio and ``gdal`` each have dataset objects. Not the same classes, of 
+course, but not radically different ones. In each case, you generally get
+dataset objects through an "opener" function: ``rasterio.open()`` or
+``gdal.Open()``.
+
+So that Python developers can spend less time reading docs, the dataset object
+returned by ``rasterio.open()`` is modeled on Python's file object. It even has
+the ``close()`` method that ``gdal`` lacks so that you can actively close
+dataset connections.
 
 Bands
 =====
@@ -223,7 +234,6 @@ Namedtuples are like lightweight classes.
    1
    2
    3
-
 
 Geotransforms
 =============

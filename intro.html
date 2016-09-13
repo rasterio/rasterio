@@ -173,9 +173,8 @@ distributed with the <a class="reference external" href="http://gdal.org/">Geosp
 abstraction for GDAL&#8217;s C API. This means that Python programs using them tend
 to read and run like C programs. For example, GDAL&#8217;s Python bindings require
 users to watch out for dangling C pointers, potential crashers of programs.
-This is bad: not only have users chosen Python instead of C to avoid problems
-with pointers (among other considerations), neither does the Python language
-give them ways to check the validity of pointers in extension objects.</p>
+This is bad: among other considerations we&#8217;ve chosen Python instead of C to
+avoid problems with pointers.</p>
 <p>What would it be like to have a geospatial data abstraction in the Python
 standard library? One that used modern Python language features and idioms?
 One that freed users from concern about dangling pointers and other
@@ -183,6 +182,8 @@ C programming pitfalls? Rasterio&#8217;s goal is to be this kind of raster data
 library – expressing GDAL&#8217;s data model using fewer non-idiomatic extension
 classes and more idiomatic Python types and protocols, while performing as
 fast as GDAL&#8217;s Python bindings.</p>
+<p>High performance, lower cognitive load, cleaner and more transparent code.
+This is what Rasterio is about.</p>
 </div>
 <div class="section" id="rasterio-license">
 <h2>Rasterio license<a class="headerlink" href="#rasterio-license" title="Permalink to this headline">¶</a></h2>

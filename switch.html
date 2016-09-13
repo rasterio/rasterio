@@ -86,10 +86,11 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL&#8217;s Python bindings</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibility">Mutual Incompatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibilities">Mutual Incompatibilities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-gdal-environment">The GDAL Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#format-drivers">Format Drivers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-identifiers">Dataset Identifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-objects">Dataset Objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bands">Bands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#geotransforms">Geotransforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#coordinate-reference-systems">Coordinate Reference Systems</a></li>
@@ -174,32 +175,29 @@
             
   <div class="section" id="switching-from-gdal-s-python-bindings">
 <h1>Switching from GDAL&#8217;s Python bindings<a class="headerlink" href="#switching-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
-<p>Switching from GDAL&#8217;s Python bindings, meaning the <code class="docutils literal"><span class="pre">gdal</span></code> module in the
-<code class="docutils literal"><span class="pre">osgeo</span></code> namespace, to Rasterio for new projects or new iterations on existing
-projects may not be complicated. This document explains the key similarities
-and differences between these two Python packages and highlights the features
-of Rasterio that can help in switching.</p>
-<div class="section" id="mutual-incompatibility">
-<h2>Mutual Incompatibility<a class="headerlink" href="#mutual-incompatibility" title="Permalink to this headline">¶</a></h2>
-<p>Rasterio and GDAL&#8217;s bindings contend for global GDAL objects. Choose one of
-<code class="docutils literal"><span class="pre">import</span> <span class="pre">osgeo.gdal</span></code> or <code class="docutils literal"><span class="pre">import</span> <span class="pre">rasterio</span></code>.</p>
-<p>GDAL&#8217;s bindings (<code class="docutils literal"><span class="pre">gdal</span></code> for the rest of this document) and Rasterio are
-mutually incompatible and should not be imported and used in a single Python
-program. The reason is that the dynamic library they each load (these are
-C extension modules, remember), <code class="docutils literal"><span class="pre">libgdal.so</span></code> on Linux, <code class="docutils literal"><span class="pre">gdal.dll</span></code> on
-Windows, has a number of global objects and the two modules take different,
-naive approaches to managing these objects. It is assumed in multiple places in
-<code class="docutils literal"><span class="pre">gdal</span></code> that no other Python module is modifying the variables in the dynamic
-library. Rasterio makes the same kind of assumptions and consequently the state
-of global objects like the format driver registry may be unpredictable.
-Additionally, <code class="docutils literal"><span class="pre">gdal</span></code> and Rasterio register conflicting error handlers and
-thus the propagation of exceptions and warnings may depend on which module was
-imported last.</p>
+<p>This document is written specifically for users of GDAL&#8217;s Python bindings
+(<code class="docutils literal"><span class="pre">osgeo.gdal</span></code>) who have read about Rasterio&#8217;s <a class="reference external" href="intro.html">philosophy</a> and
+want to know what switching entails.  The good news is that switching may not
+be complicated. This document explains the key similarities and differences
+between these two Python packages and highlights the features of Rasterio that
+can help in switching.</p>
+<div class="section" id="mutual-incompatibilities">
+<h2>Mutual Incompatibilities<a class="headerlink" href="#mutual-incompatibilities" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio and GDAL&#8217;s bindings can contend for global GDAL objects. Unless you
+have deep knowledge about both packages, choose exactly one of <code class="docutils literal"><span class="pre">import</span>
+<span class="pre">osgeo.gdal</span></code> or <code class="docutils literal"><span class="pre">import</span> <span class="pre">rasterio</span></code>.</p>
+<p>GDAL&#8217;s bindings (<code class="docutils literal"><span class="pre">gdal</span></code> for the rest of this document) and Rasterio are not
+entirely compatible and should not, without a great deal of care, be imported
+and used in a single Python program. The reason is that the dynamic library
+they each load (these are C extension modules, remember), <code class="docutils literal"><span class="pre">libgdal.so</span></code> on
+Linux, <code class="docutils literal"><span class="pre">gdal.dll</span></code> on Windows, has a number of global objects and the two
+modules take different approaches to managing these objects.</p>
 <p>Static linking of the GDAL library for <code class="docutils literal"><span class="pre">gdal</span></code> and <code class="docutils literal"><span class="pre">rasterio</span></code> can avoid
 this contention, but in practice you will almost never see distributions of
-these modules that statically link GDAL.</p>
-<p>Beyond the issues above, the modules have different styles and don&#8217;t complement
-each other well.</p>
+these modules that statically link the GDAL library.</p>
+<p>Beyond the issues above, the modules have different styles – <code class="docutils literal"><span class="pre">gdal</span></code> reads and
+writes like C while <code class="docutils literal"><span class="pre">rasterio</span></code> is more Pythonic – and don&#8217;t complement each
+other well.</p>
 </div>
 <div class="section" id="the-gdal-environment">
 <h2>The GDAL Environment<a class="headerlink" href="#the-gdal-environment" title="Permalink to this headline">¶</a></h2>
@@ -278,7 +276,7 @@ below.</p>
     <span class="n">gdal</span><span class="o">.</span><span class="n">SetConfigOption</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Rasterio provides this with a single Python statement.</p>
+<p>Rasterio achieves this with a single Python statement.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">(</span><span class="n">CPL_DEBUG</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">GDAL_CACHEMAX</span><span class="o">=</span><span class="mi">512</span><span class="p">):</span>
     <span class="c1"># ...</span>
 </pre></div>
@@ -294,8 +292,8 @@ functions like <code class="docutils literal"><span class="pre">rasterio.open()<
 </div>
 <p>Rasterio uses the same format driver names as GDAL does.</p>
 </div>
-<div class="section" id="datasets">
-<h2>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dataset-identifiers">
+<h2>Dataset Identifiers<a class="headerlink" href="#dataset-identifiers" title="Permalink to this headline">¶</a></h2>
 <p>Rasterio uses URIs to identify datasets, with schemes for different protocols.
 The GDAL bindings have their own special syntax.</p>
 <p>Unix-style filenames such as <code class="docutils literal"><span class="pre">/var/data/example.tif</span></code> identify dataset files
@@ -314,8 +312,20 @@ identifiers like <code class="docutils literal"><span class="pre">zip:///var/dat
 <code class="docutils literal"><span class="pre">/vsicurl/landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>,
 and
 <code class="docutils literal"><span class="pre">/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
-<p>To help developers switch, Rasterio will accept these identifiers, too, and
-dispatch them to the proper format drivers and protocol implementations.</p>
+<p>To help developers switch, Rasterio will accept these identifiers and other
+format-specific connection strings, too, and dispatch them to the proper format
+drivers and protocols.</p>
+</div>
+<div class="section" id="dataset-objects">
+<h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio and <code class="docutils literal"><span class="pre">gdal</span></code> each have dataset objects. Not the same classes, of
+course, but not radically different ones. In each case, you generally get
+dataset objects through an &#8220;opener&#8221; function: <code class="docutils literal"><span class="pre">rasterio.open()</span></code> or
+<code class="docutils literal"><span class="pre">gdal.Open()</span></code>.</p>
+<p>So that Python developers can spend less time reading docs, the dataset object
+returned by <code class="docutils literal"><span class="pre">rasterio.open()</span></code> is modeled on Python&#8217;s file object. It even has
+the <code class="docutils literal"><span class="pre">close()</span></code> method that <code class="docutils literal"><span class="pre">gdal</span></code> lacks so that you can actively close
+dataset connections.</p>
 </div>
 <div class="section" id="bands">
 <h2>Bands<a class="headerlink" href="#bands" title="Permalink to this headline">¶</a></h2>
