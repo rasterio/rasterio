@@ -53,7 +53,7 @@ reading and writing raster datasets.
    intro
    installation
    quickstart
-   migration
+   switch
 
 Advanced topics
 ===============
