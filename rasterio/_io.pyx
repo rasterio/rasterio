@@ -1073,12 +1073,17 @@ cdef class DatasetReaderBase(DatasetBase):
             width = <int>self.width
             height = <int>self.height
 
+        log.debug(
+            "IO window xoff=%s yoff=%s width=%s height=%s",
+            xoff, yoff, width, height)
+
         # Call io_multi* functions with C type args so that they
         # can release the GIL.
         indexes_arr = np.array(indexes, dtype=int)
         indexes_count = <int>indexes_arr.shape[0]
         gdt = dtypes.dtype_rev[dtype]
 
+        
         if masks:
             # Warn if nodata attribute is shadowing an alpha band.
             if self.count == 4 and self.colorinterp(4) == ColorInterp.alpha:

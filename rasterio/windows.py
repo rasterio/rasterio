@@ -1,6 +1,7 @@
 """Window utilities and related functions.
 
-A window is a 2D ndarray indexer in the form of a tuple:
+A window is an instance of Window or a 2D ndarray indexer in the form
+of a tuple:
 
     ((row_start, row_stop), (col_start, col_stop))
 """
@@ -8,6 +9,7 @@ A window is a 2D ndarray indexer in the form of a tuple:
 import collections
 import functools
 import math
+from operator import itemgetter
 
 from affine import Affine
 import numpy as np
@@ -29,8 +31,7 @@ def iter_args(function):
 
 
 def get_data_window(arr, nodata=None):
-    """
-    Returns a window for the non-nodata pixels within the input array.
+    """Window covering the input array's valid data pixels.
 
     Parameters
     ----------
@@ -38,13 +39,12 @@ def get_data_window(arr, nodata=None):
     nodata: number
         If None, will either return a full window if arr is not a masked
         array, or will use the mask to determine non-nodata pixels.
-        If provided, it must be a number within the valid range of the dtype
-        of the input array.
+        If provided, it must be a number within the valid range of the
+        dtype of the input array.
 
     Returns
     -------
-    window: tuple
-        ((row_start, row_stop), (col_start, col_stop))
+    Window
     """
 
     num_dims = len(arr.shape)
@@ -62,8 +62,7 @@ def get_data_window(arr, nodata=None):
         data_rows, data_cols = np.where(arr.mask == False)
     else:
         data_rows, data_cols = np.where(
-            np.any(np.rollaxis(arr.mask, 0, 3) == False, axis=2)
-        )
+            np.any(np.rollaxis(arr.mask, 0, 3) == False, axis=2))
 
     if data_rows.size:
         row_range = (data_rows.min(), data_rows.max() + 1)
@@ -75,7 +74,7 @@ def get_data_window(arr, nodata=None):
     else:
         col_range = (0, 0)
 
-    return (row_range, col_range)
+    return Window.from_ranges(row_range, col_range)
 
 
 @iter_args
@@ -85,61 +84,56 @@ def union(*windows):
 
     Parameters
     ----------
-    windows: list-like of window objects
-        ((row_start, row_stop), (col_start, col_stop))
+    windows: sequence
+        One or more Windows or window tuples.
 
     Returns
     -------
-    ((row_start, row_stop), (col_start, col_stop))
+    Window
     """
 
     stacked = np.dstack(windows)
-    return (
+    return Window.from_ranges(
         (stacked[0, 0].min(), stacked[0, 1].max()),
-        (stacked[1, 0].min(), stacked[1, 1]. max())
-    )
+        (stacked[1, 0].min(), stacked[1, 1]. max()))
 
 
 @iter_args
 def intersection(*windows):
-    """
-    Intersect windows and return the innermost extent they cover.
+    """Innermost extent of window intersections.
 
     Will raise ValueError if windows do not intersect.
 
     Parameters
     ----------
-    windows: list-like of window objects
-        ((row_start, row_stop), (col_start, col_stop))
+    windows: sequence
+        One or more Windows or window tuples.
 
     Returns
     -------
-    ((row_start, row_stop), (col_start, col_stop))
+    Window
     """
-
     if not intersect(windows):
         raise ValueError('windows do not intersect')
 
     stacked = np.dstack(windows)
-    return (
+    return Window.from_ranges(
         (stacked[0, 0].max(), stacked[0, 1].min()),
-        (stacked[1, 0].max(), stacked[1, 1]. min())
-    )
+        (stacked[1, 0].max(), stacked[1, 1]. min()))
 
 
 @iter_args
 def intersect(*windows):
-    """
-    Test if windows intersect.
+    """Test if all given windows intersect.
 
     Parameters
     ----------
-    windows: list-like of window objects
-        ((row_start, row_stop), (col_start, col_stop))
+    windows: sequence
+        One or more Windows or window tuples.
 
     Returns
     -------
-    boolean:
+    bool
         True if all windows intersect.
     """
 
@@ -166,40 +160,32 @@ def from_bounds(left, bottom, right, top, transform,
 
     Parameters
     ----------
-    left : float
-        Left (west) bounding coordinate
-    bottom : float
-        Bottom (south) bounding coordinate
-    right : float
-        Right (east) bounding coordinate
-    top : float
-        Top (north) bounding coordinate
+    left, bottom, right, top : float
+        Left (west), bottom (south), right (east), and top (north)
+        bounding coordinates.
     transform : Affine
-        Affine transform matrix
-    height : int
-        Number of rows
-    width : int
-        Number of columns
+        Affine transform matrix.
+    height, width : int
+        Number of rows and columns of the window.
     boundless : boolean, optional
-        If boundless is False, window is limited
-        to extent of this dataset.
+        If True, the output window's size may exceed the given height
+        and width.
     precision : int, optional
-        float precision
+        Number of decimal points of precision when computing inverse
+        transform.
 
     Returns
     -------
-    window: tuple
-        ((row_start, row_stop), (col_start, col_stop))
-        corresponding to the bounding coordinates
+    Window
+        A new Window
     """
-
     window_start = rowcol(
         transform, left, top, op=math.floor, precision=precision)
 
     window_stop = rowcol(
         transform, right, bottom, op=math.ceil, precision=precision)
 
-    window = tuple(zip(window_start, window_stop))
+    window = Window.from_ranges(*tuple(zip(window_start, window_stop)))
 
     if boundless:
         return window
@@ -210,18 +196,18 @@ def from_bounds(left, bottom, right, top, transform,
 
 
 def transform(window, transform):
-    """Get the affine transform for a dataset window.
+    """Construct an affine transform matrix relative to a window.
 
     Parameters
     ----------
-    window: tuple
-        Dataset window tuple
+    window : a Window or window tuple
+        The input window.
     transform: Affine
-        The affine transform matrix for the entire dataset
+        an affine transform matrix.
 
     Returns
     -------
-    transform: Affine
+    Affine
         The affine transform matrix for the given window
     """
     (r, _), (c, _) = window
@@ -229,37 +215,66 @@ def transform(window, transform):
 
 
 def bounds(window, transform):
-    """Get the bounds of a window
+    """Get the spatial bounds of a window.
 
     Parameters
     ----------
-    window: tuple
-        Dataset window tuple
+    window : a Window or window tuple
+        The input window.
     transform: Affine
-        The affine transform matrix for the entire dataset
+        an affine transform matrix.
 
     Returns
     -------
-    bounds : tuple
-        x_min, y_min, x_max, y_max for the given window
+    x_min, y_min, x_max, y_max : float
+        A tuple of spatial coordinate bounding values.
     """
-    ((row_min, row_max), (col_min, col_max)) = window
+    (row_min, row_max), (col_min, col_max) = window
     x_min, y_min = transform * (col_min, row_max)
     x_max, y_max = transform * (col_max, row_min)
     return x_min, y_min, x_max, y_max
 
 
 def crop(window, height, width):
-    """Returns a window cropped to fall within height and width."""
+    """Crops a window to given height and width.
+
+    Parameters
+    ----------
+    window : a Window or window tuple
+        The input window.
+    height, width : int
+        The number of rows and cols in the cropped window.
+
+    Returns
+    -------
+    Window
+        A new Window object.
+    """
     (r_start, r_stop), (c_start, c_stop) = window
-    return (
+    return Window.from_ranges(
         (min(max(r_start, 0), height), max(0, min(r_stop, height))),
         (min(max(c_start, 0), width), max(0, min(c_stop, width))))
 
 
 def evaluate(window, height, width):
-    """Evaluates a window tuple that might contain negative values
-    in the context of a raster height and width."""
+    """Evaluates a window tuple that may contain relative index values.
+
+    The height and width of the array the window targets is the context
+    for evaluation.
+
+    Parameters
+    ----------
+    window : a Window or window tuple
+        The input window.
+    height, width : int
+        The number of rows or columns in the array that the window
+        targets.
+
+    Returns
+    -------
+    Window
+        A new Window object with absolute index values.
+    """
     try:
         r, c = window
         assert len(r) == 2
@@ -293,20 +308,182 @@ def evaluate(window, height, width):
     if not c_stop >= c_start:
         raise ValueError(
             "invalid window: col range (%d, %d)" % (c_start, c_stop))
-    return (r_start, r_stop), (c_start, c_stop)
+    return Window.from_ranges((r_start, r_stop), (c_start, c_stop))
 
 
 def shape(window, height=-1, width=-1):
-    """Returns shape of a window.
+    """The shape of a window.
 
     height and width arguments are optional if there are no negative
     values in the window.
+
+    Parameters
+    ----------
+    window : a Window or window tuple
+        The input window.
+    height, width : int, optional
+        The number of rows or columns in the array that the window
+        targets.
+
+    Returns
+    -------
+    num_rows, num_cols
+        The number of rows and columns of the window.
     """
     (a, b), (c, d) = evaluate(window, height, width)
-    return b-a, d-c
+    return (b - a, d - c)
 
 
 def window_index(window):
-    # "window_" is necessary here to redundancy to disambiguate
-    # from transform.get_index and src.index
+    """Construct a pair of slice objects for ndarray indexing
+
+    Parameters
+    ----------
+    window : a Window or window tuple
+        The input window.
+
+    Returns
+    -------
+    row_slice, col_slice: slice
+        A pair of slices in row, column order
+    """
     return tuple(slice(*w) for w in window)
+
+
+class Window(tuple):
+    """Windows are rectangular subsets of rasters.
+    
+    This class abstracts the 2-tuples mentioned in the module docstring
+    and adds methods and new constructors.
+
+    Attributes
+    ----------
+    col_off
+    num_cols
+    row_off
+    num_rows
+    """
+
+    __slots__ = ()
+    _fields = ('col_off', 'row_off', 'num_cols', 'num_rows')
+
+    def __new__(cls, col_off=0, row_off=0, num_cols=0, num_rows=0):
+        """Create new instance of Window."""
+        return tuple.__new__(
+            cls,
+            ((row_off, row_off + num_rows), (col_off, col_off + num_cols)))
+
+    def __repr__(self):
+        """Return a nicely formatted representation string"""
+        return (
+            "Window(col_off={self.col_off}, row_off={self.row_off}, "
+            "num_cols={self.num_cols}, num_rows={self.num_rows})").format(
+                self=self)
+
+    def __getnewargs__(self):
+        'Return self as a plain tuple.  Used by copy and pickle.'
+        return self.flatten()
+
+    def flatten(self):
+        """A flattened form of the window.
+
+        Returns
+        -------
+        col_off, row_off, num_cols, num_rows: int
+            Window offsets and lengths.
+        """
+        return (self[1][0], self[0][0],
+                self[1][1] - self[1][0], self[0][1] - self[0][0])
+
+    def todict(self):
+        """A mapping of field names and values.
+
+        Returns
+        -------
+        dict
+        """
+        return collections.OrderedDict(zip(self._fields, self.flatten()))
+
+    def toslices(self):
+        """Slice objects for use as an ndarray indexer.
+
+        Returns
+        -------
+        row_slice, col_slice: slice
+            A pair of slices in row, column order
+        """
+        return tuple(slice(*rng) for rng in self)
+
+    @classmethod
+    def from_ranges(cls, row_range, col_range):
+        """Construct a Window from row and column range tuples.
+
+        Parameters
+        ----------
+        row_range, col_range: tuple
+            2-tuples containing start, stop indexes.
+
+        Returns
+        -------
+        Window
+        """
+        return cls(col_range[0], row_range[0],
+                   col_range[1] - col_range[0],
+                   row_range[1] - row_range[0])
+
+    @classmethod
+    def from_offlen(cls, col_off, row_off, num_cols, num_rows):
+        """Contruct a Window from offsets and lengths.
+
+        Parameters
+        ----------
+        col_off, row_off: int
+            Column and row offsets.
+        num_cols, num_rows : int
+            Lengths (width and height) of the window.
+
+        Returns
+        -------
+        Window
+        """
+        return cls(col_off, row_off, num_cols, num_rows)
+
+    @property
+    def col_off(self):
+        """Column (x) offset of the window.
+
+        Returns
+        -------
+        int
+        """
+        return self[1][0]
+
+    @property
+    def num_cols(self):
+        """Number of cols in the window.
+
+        Returns
+        -------
+        int
+        """
+        return self[1][1] - self[1][0]
+
+    @property
+    def row_off(self):
+        """Row (y) offset of the window.
+
+        Returns
+        -------
+        int
+        """
+        return self[0][0]
+
+    @property
+    def num_rows(self):
+        """Number of rows in the window.
+
+        Returns
+        -------
+        int
+        """
+        return self[0][1] - self[0][0]
