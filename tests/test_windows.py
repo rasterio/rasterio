@@ -9,7 +9,7 @@ import pytest
 import rasterio
 from rasterio.windows import (
     from_bounds, bounds, transform, evaluate, window_index, shape, Window,
-    intersect)
+    intersect, intersection, get_data_window, union)
 
 
 EPS = 1.0e-8
@@ -93,6 +93,7 @@ bad_params = (
     (((0, 10), (1, -1)), 10, -1),
     (((10, 5), (0, 5)), 10, 10),
     (((0, 5), (10, 5)), 10, 10))
+
 
 @pytest.mark.parametrize("params", bad_params)
 def test_eval_window_invalid_dims(params):
@@ -179,11 +180,21 @@ def test_window_class_copy():
     assert copy(window) == ((0, 100), (1, 201))
 
 
-def test_window_class_asdict():
-    """Test Window.asdict"""
+def test_window_class_todict():
+    """Test Window.todict"""
     window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    assert window.asdict() == {
+    assert window.todict() == {
         'col_off': 1, 'num_cols': 200, 'num_rows': 100, 'row_off': 0}
+
+
+def test_window_class_toslices():
+    """Test Window.toslices"""
+    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
+    yslice, xslice = window.toslices()
+    assert yslice.start == 0
+    assert yslice.stop == 100
+    assert xslice.start == 1
+    assert xslice.stop == 201
 
 
 def test_window_class_intersects():
@@ -191,15 +202,24 @@ def test_window_class_intersects():
     assert intersect(Window(0, 0, 10, 10), Window(8, 8, 10, 10))
 
 
+def test_window_class_intersects_list():
+    """A list of Windows intersect"""
+    assert intersect([Window(0, 0, 10, 10), Window(8, 8, 10, 10)])
+
+
 def test_window_class_nonintersects():
     """Windows do not intersect"""
     assert not intersect(Window(0, 0, 10, 10), Window(10, 10, 10, 10))
 
 
-def test_window_from_bounds():
-    """from_bounds classmethod works"""
-    assert Window.from_bounds(
-        0, 0, 1, 1, Affine.identity(), width=1, height=1) == ((0, 1), (0, 1))
+def test_window_from_ranges():
+    """from_ranges classmethod works."""
+    assert Window.from_ranges((0, 1), (2, 3)) == ((0, 1), (2, 3))
+
+
+def test_window_from_offlen():
+    """from_offlen classmethod works."""
+    assert Window.from_offlen(2, 0, 1, 1) == ((0, 1), (2, 3))
 
 
 def test_read_with_window_class():
@@ -207,3 +227,68 @@ def test_read_with_window_class():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         subset = src.read(1, window=Window(0, 0, 10, 10))
         assert subset.shape == (10, 10)
+
+
+def test_data_window_invalid_arr_dims():
+    """An array of more than 3 dimensions is invalid."""
+    arr = np.ones((3,3,3,3))
+    with pytest.raises(ValueError):
+        get_data_window(arr)
+
+
+def test_data_window_full():
+    """Get window of entirely valid data array."""
+    arr = np.ones((3,3))
+    window = get_data_window(arr)
+    assert window == ((0, 3), (0, 3))
+
+
+def test_data_window_nodata():
+    """Get window of arr with nodata."""
+    arr = np.ones((3, 3))
+    arr[0, :] = 0
+    window = get_data_window(arr, nodata=0)
+    assert window == ((1, 3), (0, 3))
+
+
+def test_data_window_novalid():
+    """Get window of arr with nodata."""
+    arr = np.ones((3, 3))
+    arr[:, :] = 0
+    window = get_data_window(arr, nodata=0)
+    assert window == ((0, 0), (0, 0))
+
+
+def test_data_window_maskedarray():
+    """Get window of masked arr."""
+    arr = np.ones((3, 3))
+    arr[0, :] = 0
+    arr = np.ma.masked_array(arr, arr == 0)
+    window = get_data_window(arr)
+    assert window == ((1, 3), (0, 3))
+
+
+def test_data_window_nodata_3d():
+    """Get window of 3d arr with nodata."""
+    arr = np.ones((3, 3, 3))
+    arr[:, 0, :] = 0
+    window = get_data_window(arr, nodata=0)
+    assert window == ((1, 3), (0, 3))
+
+
+def test_window_union():
+    """Window union works."""
+    window = union(Window(0, 0, 1, 1), Window(1, 1, 2, 2))
+    assert window == ((0, 3), (0, 3))
+
+
+def test_no_intersection():
+    """Non intersecting windows raises error."""
+    with pytest.raises(ValueError):
+        intersection(Window(0, 0, 1, 1), Window(1, 1, 2, 2))
+
+
+def test_intersection():
+    """Window intersection works."""
+    window = intersection(Window(0, 0, 10, 10), Window(8, 8, 12, 12))
+    assert window == ((8, 10), (8, 10))
