@@ -308,9 +308,8 @@ Rasterio adds an abstraction for subsets or windows of a raster array that
 GDAL does not have. A window is a pair of tuples, the first of the pair being
 the raster row indexes at which the window starts and stops, the second being
 the column indexes at which the window starts and stops. Row before column,
-as with ``ndarray`` slices. The relationship of these windows to GDAL's subset
-parameters is shown in the example of getting a 10 x 10 subset at the upper
-left corner of a dataset below.
+as with ``ndarray`` slices. Instances of ``Window`` are created by passing the
+four subset parameters used with ``gdal`` to the class constructor.
 
 .. code-block:: python
 
@@ -318,12 +317,7 @@ left corner of a dataset below.
 
    xoff, yoff = 0, 0
    xsize, ysize = 10, 10
-   subset = src.read(1, window=((yoff, yoff + ysize), (xoff, xoff + xsize)))
-
-.. note::
-
-   Rasterio 1.0 will include a new ``Window`` class that makes this abstraction
-   easier to use.
+   subset = src.read(1, window=Window(xoff, yoff, xsize, ysize))
 
 Valid Data Masks
 ================

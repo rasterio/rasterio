@@ -432,20 +432,14 @@ each with their own semantics.</p>
 GDAL does not have. A window is a pair of tuples, the first of the pair being
 the raster row indexes at which the window starts and stops, the second being
 the column indexes at which the window starts and stops. Row before column,
-as with <code class="docutils literal"><span class="pre">ndarray</span></code> slices. The relationship of these windows to GDAL&#8217;s subset
-parameters is shown in the example of getting a 10 x 10 subset at the upper
-left corner of a dataset below.</p>
+as with <code class="docutils literal"><span class="pre">ndarray</span></code> slices. Instances of <code class="docutils literal"><span class="pre">Window</span></code> are created by passing the
+four subset parameters used with <code class="docutils literal"><span class="pre">gdal</span></code> to the class constructor.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 
 <span class="n">xoff</span><span class="p">,</span> <span class="n">yoff</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span>
-<span class="n">subset</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">((</span><span class="n">yoff</span><span class="p">,</span> <span class="n">yoff</span> <span class="o">+</span> <span class="n">ysize</span><span class="p">),</span> <span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">xoff</span> <span class="o">+</span> <span class="n">xsize</span><span class="p">)))</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">Window</span><span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">yoff</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">))</span>
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Rasterio 1.0 will include a new <code class="docutils literal"><span class="pre">Window</span></code> class that makes this abstraction
-easier to use.</p>
 </div>
 </div>
 <div class="section" id="valid-data-masks">
