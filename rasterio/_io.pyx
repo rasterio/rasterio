@@ -777,16 +777,10 @@ cdef class DatasetReaderBase(DatasetBase):
         # arrays.
 
         if masked:
-
-            mask_flags = [0]*self.count
-            for i, j in zip(range(self.count), self.indexes):
-                band = self.band(j)
-                mask_flags[i] = GDALGetMaskFlags(band)
-
-            all_valid = all([flag & 0x01 == 1 for flag in mask_flags])
-
+            enums = self.mask_flag_enums
+            all_valid = all([MaskFlags.all_valid in flags for flags in enums])
             log.debug("all_valid: %s", all_valid)
-            log.debug("mask_flags: %r", mask_flags)
+            log.debug("mask_flags: %r", enums)
 
         if out is None:
             out = np.zeros(win_shape, dtype)
@@ -1087,8 +1081,8 @@ cdef class DatasetReaderBase(DatasetBase):
         if masks:
             # Warn if nodata attribute is shadowing an alpha band.
             if self.count == 4 and self.colorinterp(4) == ColorInterp.alpha:
-                for flags in self.mask_flags:
-                    if flags & MaskFlags.nodata:
+                for flags in self.mask_flag_enums:
+                    if MaskFlags.nodata in flags:
                         warnings.warn(NodataShadowWarning())
 
             retval = io_multi_mask(
@@ -1180,7 +1174,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # GDAL found dataset-wide alpha band or mask
         # All band masks are equal so we can return the first
-        if self.mask_flags[0] & MaskFlags.per_dataset:
+        if MaskFlags.per_dataset in self.mask_flag_enums[0]:
             return self.read_masks(1, **kwargs)
 
         # use Alpha mask if available and looks like RGB, even if nodata is shadowing

@@ -1,5 +1,6 @@
 import logging
 import sys
+import warnings
 
 import numpy as np
 import pytest
@@ -42,12 +43,30 @@ def tiffs(tmpdir):
 
     return tmpdir
 
+
+def test_mask_flags_deprecation():
+    """mask_flags is deprecated"""
+    warnings.simplefilter('always')
+    with pytest.warns(DeprecationWarning):
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            src.mask_flags
+
+
 def test_mask_flags():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         for flags in src.mask_flag_enums:
             assert MaskFlags.nodata in flags
             assert MaskFlags.per_dataset not in flags
             assert MaskFlags.alpha not in flags
+
+
+def test_mask_flags_rgba():
+    with rasterio.open('tests/data/RGBA.byte.tif') as src:
+        for flags in src.mask_flag_enums[:3]:
+            assert MaskFlags.nodata not in flags
+            assert MaskFlags.per_dataset in flags
+            assert MaskFlags.alpha in flags
+        assert [MaskFlags.all_valid] == src.mask_flag_enums[3]
 
 
 def test_mask_flags_sidecar(tiffs):

@@ -179,7 +179,6 @@ def open(path, mode='r', driver=None, width=None, height=None,
     if 'affine' in kwargs:
         # DeprecationWarning's are ignored by default
         with warnings.catch_warnings():
-            warnings.simplefilter('always')
             warnings.warn(
                 "The 'affine' kwarg in rasterio.open() is deprecated at 1.0 "
                 "and only remains to ease the transition.  Please switch to "

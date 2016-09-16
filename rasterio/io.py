@@ -170,33 +170,6 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
         return "<{} DatasetReader name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
 
-    @property
-    def mask_flag_enums(self):
-        """Sets of flags describing the sources of band masks.
-
-        Returns
-        -------
-        list [, list*]
-            One list of rasterio.enums.MaskFlags members per band.
-
-        Examples
-        --------
-
-        For a 3 band dataset that has masks derived from nodata values:
-
-        >>> dataset.mask_flag_enums
-        ([<MaskFlags.nodata: 8>], [<MaskFlags.nodata: 8>], [<MaskFlags.nodata: 8>])
-        >>> band1_flags = dataset.mask_flag_enums[0]
-        >>> rio.enums.MaskFlags.nodata in band1_flags
-        True
-        >>> rio.enums.MaskFlags.alpha in band1_flags
-        False
-
-        """
-        return tuple(
-            [flag for flag in enums.MaskFlags if x & flag.value]
-            for x in self.mask_flags)
-
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
                     TransformMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
