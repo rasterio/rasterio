@@ -326,7 +326,7 @@ def test_info_units():
     result = runner.invoke(
         main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
-    assert '"units": ["", "", ""]' in result.output
+    assert '"units": [null, null, null]' in result.output
 
 
 def test_info_indexes():
@@ -345,6 +345,15 @@ def test_info_descriptions():
         main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
     assert '"descriptions"' in result.output
+
+
+def test_info_mask_flags():
+    """Find description items"""
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+    assert '"mask_flags": [["nodata"], ["nodata"], ["nodata"]]' in result.output
 
 
 def test_info_verbose():

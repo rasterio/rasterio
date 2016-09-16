@@ -44,28 +44,28 @@ def tiffs(tmpdir):
 
 def test_mask_flags():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        for flags in src.mask_flags:
-            assert flags & MaskFlags.nodata
-            assert not flags & MaskFlags.per_dataset
-            assert not flags & MaskFlags.alpha
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.nodata in flags
+            assert MaskFlags.per_dataset not in flags
+            assert MaskFlags.alpha not in flags
 
 
 def test_mask_flags_sidecar(tiffs):
     filename = str(tiffs.join('sidecar-masked.tif'))
     with rasterio.open(filename) as src:
-        for flags in src.mask_flags:
-            assert not flags & MaskFlags.nodata
-            assert not flags & MaskFlags.alpha
-            assert flags & MaskFlags.per_dataset
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.nodata not in flags
+            assert MaskFlags.alpha not in flags
+            assert MaskFlags.per_dataset in flags
 
 
 def test_mask_flags_shadow(tiffs):
     filename = str(tiffs.join('shadowed.tif'))
     with rasterio.open(filename) as src:
-        for flags in src.mask_flags:
-            assert flags & MaskFlags.nodata
-            assert not flags & MaskFlags.alpha
-            assert not flags & MaskFlags.per_dataset
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.nodata in flags
+            assert MaskFlags.alpha not in flags
+            assert MaskFlags.per_dataset not in flags
 
 
 def test_warning_no():
@@ -119,10 +119,10 @@ def test_masking_no_nodata(tiffs):
     # is False.
     filename = str(tiffs.join('no-nodata.tif'))
     with rasterio.open(filename) as src:
-        for flags in src.mask_flags:
-            assert flags & MaskFlags.all_valid
-            assert not flags & MaskFlags.alpha
-            assert not flags & MaskFlags.nodata
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.all_valid in flags
+            assert MaskFlags.alpha not in flags
+            assert MaskFlags.nodata not in flags
 
         rgb = src.read(masked=False)
         assert not hasattr(rgb, 'mask')
@@ -150,10 +150,10 @@ def test_masking_sidecar_mask(tiffs):
     # If the dataset has a .msk sidecar mask band file, all masks will
     # be derived from that file.
     with rasterio.open(str(tiffs.join('sidecar-masked.tif'))) as src:
-        for flags in src.mask_flags:
-            assert flags & MaskFlags.per_dataset
-            assert not flags & MaskFlags.alpha
-            assert not flags & MaskFlags.nodata
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.per_dataset in flags
+            assert MaskFlags.alpha not in flags
+            assert MaskFlags.nodata not in flags
         rgb = src.read(masked=True)
         assert rgb.mask.all()
         r = src.read(1, masked=True)

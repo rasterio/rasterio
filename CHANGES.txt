@@ -1,6 +1,72 @@
 Changes
 =======
 
+1.0a1 (2016-09-15)
+------------------
+
+Documentation:
+
+- New introduction, guidance on switching from GDAL's Python bindings and much
+  more.
+
+Breaking changes:
+
+- The sense of rio-warp's `--bounds` options has been changed from source
+  bounds to destination bounds (#549).
+- Extracted Rasterio's public dataset classes into `rasterio.io` (#743).
+- All Rasterio functions with will raise an exception if a GDAL style
+  geotransform sequence is passed as `transform`.
+- The `affine` attribute of dataset objects is deprecated.
+- The `affine` member of dataset `profile` has been removed.
+- The `rasterio.drivers()` context manager has been removed. It is replaced by
+  `rasterio.Env()`.
+- The `read_band()` method of dataset objects has been removed. It is replaced
+  by `read()`.
+- The `read_mask()` method of dataset objects has been removed. It is replaced
+  by `read_masks()`.
+- `get_data_window()`, `window_union()`, `window_intersection()`, and
+  `windows_intersect()` have been removed from the `rasterio` module. They
+  have been moved to `rasterio.windows`.
+- The `rasterio.tool` module has been removed. Its functions have been 
+  relocated to `rasterio.plot` and `rasterio.rio.insp`.
+- The `rasterio.tools` module has been removed. Its functions have been
+  relocated to `rasterio.mask` and `rasterio.merge`.
+- The `rasterio.warp.RESAMPLING` enum has been replaced by
+  `rasterio.warp.Resampling`.
+- The signatures of `rasterio.features.sieve()` and
+  `rasterio.features.rasterize()` have been changed: the `output` argument
+  is deprecated and is replaced by `out`.
+- In the CLI, the `-o` option no longer causes existing output files to be
+  overwritten (#751).
+
+New features:
+
+- Added `descriptions` and `units` attributes to dataset objects, exposing
+  the descriptions and units of dataset bands (#850, #851).
+- Creation of a `Window` class to abstract Rasterio's window selection
+  tuples (#759).
+- Performance of `reproject()` has been increased by using an approximate
+  transformer as with gdal_translate (#569).
+
+Bug fixes:
+
+- `rasterize()` now checks that the `out_shape` is 2D before continuing (#847).
+- Named AWS credential profiles are now properly set up up in the main CLI
+  command's environment (#838).
+
+Refactoring:
+
+- In the CLI, a GDAL environment is now configured by the top level command
+  and then passed in a Click context to subcommands (#841).
+- Removal of redundant copies of GDAL geotransform detection code (#828).
+- Window methods of dataset objects have been extracted into functions of
+  a new `rasterio.windows` module (#803).
+
+Known bugs:
+
+- `warp.project()` and rio-warp may lose one or more columns of data when 
+  resampling to lower resolution (#853).
+
 0.36.0 (2016-06-14)
 -------------------
 
