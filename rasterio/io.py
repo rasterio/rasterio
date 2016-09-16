@@ -184,7 +184,6 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
 
         For a 3 band dataset that has masks derived from nodata values:
 
-        >>> dataset = rasterio.open('tests/data/RGB.byte.tif')
         >>> dataset.mask_flag_enums
         ([<MaskFlags.nodata: 8>], [<MaskFlags.nodata: 8>], [<MaskFlags.nodata: 8>])
         >>> band1_flags = dataset.mask_flag_enums[0]
