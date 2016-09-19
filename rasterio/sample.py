@@ -3,6 +3,10 @@
 def sample_gen(dataset, xy, indexes=None):
     index = dataset.index
     read = dataset.read
+
+    if isinstance(indexes, int):
+        indexes = [indexes]
+
     for x, y in xy:
         r, c = index(x, y)
         window = ((r, r+1), (c, c+1))
