@@ -37,3 +37,7 @@ class NodataShadowWarning(Warning):
         return ("The dataset's nodata attribute is shadowing "
                 "the alpha band. All masks will be determined "
                 "by the nodata attribute")
+
+
+class NotGeoreferencedWarning(Warning):
+    """Warn that a dataset isn't georeferenced."""

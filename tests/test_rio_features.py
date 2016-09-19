@@ -16,7 +16,6 @@ DEFAULT_SHAPE = (10, 10)
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-
 def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
               pixelated_image_file):
 
@@ -261,14 +260,17 @@ def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,
 
 
 def test_shapes(runner, pixelated_image_file):
-    result = runner.invoke(main_group, ['shapes', pixelated_image_file])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 4
-    assert np.allclose(
-        json.loads(result.output)['features'][0]['geometry']['coordinates'],
-        [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]])
+        result = runner.invoke(main_group, ['shapes', pixelated_image_file])
+
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 1
+        assert result.output.count('"Feature"') == 4
+        assert np.allclose(
+            json.loads(result.output)['features'][0]['geometry']['coordinates'],
+            [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]])
 
 
 def test_shapes_invalid_bidx(runner, pixelated_image_file):
@@ -284,14 +286,16 @@ def test_shapes_sequence(runner, pixelated_image_file):
     --sequence option should produce 4 features in series rather than
     inside a feature collection.
     """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    result = runner.invoke(
-        main_group, ['shapes', pixelated_image_file, '--sequence'])
+        result = runner.invoke(
+            main_group, ['shapes', pixelated_image_file, '--sequence'])
 
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 0
-    assert result.output.count('"Feature"') == 4
-    assert result.output.count('\n') == 4
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 0
+        assert result.output.count('"Feature"') == 4
+        assert result.output.count('\n') == 4
 
 
 def test_shapes_sequence_rs(runner, pixelated_image_file):
@@ -328,26 +332,31 @@ def test_shapes_indent(runner, pixelated_image_file):
     """
     --indent option should produce lots of newlines and contiguous spaces
     """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    result = runner.invoke(
-        main_group, ['shapes', pixelated_image_file, '--indent', 2])
+        result = runner.invoke(
+            main_group, ['shapes', pixelated_image_file, '--indent', 2])
 
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 4
-    assert result.output.count('\n') == 231
-    assert result.output.count('        ') == 180
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 1
+        assert result.output.count('"Feature"') == 4
+        assert result.output.count('\n') == 231
+        assert result.output.count('        ') == 180
 
 
 def test_shapes_compact(runner, pixelated_image_file):
-    result = runner.invoke(
-        main_group, ['shapes', pixelated_image_file, '--compact'])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 4
-    assert result.output.count(', ') == 0
-    assert result.output.count(': ') == 0
+        result = runner.invoke(
+            main_group, ['shapes', pixelated_image_file, '--compact'])
+
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 1
+        assert result.output.count('"Feature"') == 4
+        assert result.output.count(', ') == 0
+        assert result.output.count(': ') == 0
 
 
 def test_shapes_sampling(runner, pixelated_image_file):
@@ -382,24 +391,20 @@ def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    result = runner.invoke(
-        main_group, ['shapes', pixelated_image_file, '--mask'])
-
-    print(result.output)
-    print(result.exception)
-
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 1
-
-    assert np.allclose(
-        json.loads(result.output)['features'][0]['geometry']['coordinates'],
-        [[[3, 5], [3, 10], [8, 10], [8, 8], [9, 8], [10, 8], [10, 5], [3, 5]]])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        result = runner.invoke(
+            main_group, ['shapes', pixelated_image_file, '--mask'])
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 1
+        assert result.output.count('"Feature"') == 1
+        assert np.allclose(
+            json.loads(result.output)['features'][0]['geometry']['coordinates'],
+            [[[3, 5], [3, 10], [8, 10], [8, 8], [9, 8], [10, 8], [10, 5], [3, 5]]])
 
 
 def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
-    """
-    using --sampling with the mask should snap coordinates to the nearest
+    """using --sampling with the mask should snap coordinates to the nearest
     factor of 5
     """
     pixelated_image[0:5, 0:10] = 255
@@ -409,17 +414,19 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    result = runner.invoke(
-        main_group,
-        ['shapes', pixelated_image_file, '--mask', '--sampling', 5])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        result = runner.invoke(
+            main_group,
+            ['shapes', pixelated_image_file, '--mask', '--sampling', 5])
 
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 1
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 1
+        assert result.output.count('"Feature"') == 1
 
-    assert np.allclose(
-        json.loads(result.output)['features'][0]['geometry']['coordinates'],
-        [[[5, 5], [5, 10], [10, 10], [10, 5], [5, 5]]])
+        assert np.allclose(
+            json.loads(result.output)['features'][0]['geometry']['coordinates'],
+            [[[5, 5], [5, 10], [10, 10], [10, 5], [5, 5]]])
 
 
 def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
@@ -433,16 +440,18 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    result = runner.invoke(
-        main_group,
-        ['shapes', pixelated_image_file, '--band', '--bidx', '1', '--as-mask'])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        result = runner.invoke(
+            main_group,
+            ['shapes', pixelated_image_file, '--band', '--bidx', '1', '--as-mask'])
 
-    assert result.exit_code == 0
-    assert result.output.count('"FeatureCollection"') == 1
-    assert result.output.count('"Feature"') == 3
-    assert np.allclose(
-        json.loads(result.output)['features'][1]['geometry']['coordinates'],
-        [[[2, 2], [2, 5], [5, 5], [5, 2], [2, 2]]])
+        assert result.exit_code == 0
+        assert result.output.count('"FeatureCollection"') == 1
+        assert result.output.count('"Feature"') == 3
+        assert np.allclose(
+            json.loads(result.output)['features'][1]['geometry']['coordinates'],
+            [[[2, 2], [2, 5], [5, 5], [5, 2], [2, 2]]])
 
 
 def test_rasterize(tmpdir, runner, basic_feature):

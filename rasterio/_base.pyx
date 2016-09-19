@@ -16,9 +16,11 @@ from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
-    ColorInterp, Compression, Interleaving, PhotometricInterp)
+    ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env
-from rasterio.errors import RasterioIOError, CRSError, DriverRegistrationError
+from rasterio.errors import (
+    RasterioIOError, CRSError, DriverRegistrationError,
+    NotGeoreferencedWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -269,7 +271,7 @@ cdef class DatasetBase(object):
         if err == GDALError.failure:
             warnings.warn(
                 "Dataset has no geotransform set. Default transform "
-                "will be applied (Affine.identity())", UserWarning)
+                "will be applied (Affine.identity())", NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
 
@@ -388,11 +390,55 @@ cdef class DatasetBase(object):
                 return None
             return self.nodatavals[0]
 
-    property mask_flags:
+    property _mask_flags:
         """Mask flags for each band."""
         def __get__(self):
             cdef GDALRasterBandH band = NULL
             return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+
+    property mask_flag_enums:
+        """Sets of flags describing the sources of band masks.
+
+        all_valid: There are no invalid pixels, all mask values will be
+            255. When used this will normally be the only flag set.
+        per_dataset: The mask band is shared between all bands on the
+            dataset.
+        alpha: The mask band is actually an alpha band and may have
+            values other than 0 and 255.
+        nodata: Indicates the mask is actually being generated from
+            nodata values (mutually exclusive of "alpha").
+
+        Returns
+        -------
+        list [, list*]
+            One list of rasterio.enums.MaskFlags members per band.
+
+        Examples
+        --------
+
+        For a 3 band dataset that has masks derived from nodata values:
+
+        >>> dataset.mask_flag_enums
+        ([<MaskFlags.nodata: 8>], [<MaskFlags.nodata: 8>], [<MaskFlags.nodata: 8>])
+        >>> band1_flags = dataset.mask_flag_enums[0]
+        >>> rasterio.enums.MaskFlags.nodata in band1_flags
+        True
+        >>> rasterio.enums.MaskFlags.alpha in band1_flags
+        False
+        """
+        def __get__(self):
+            return tuple(
+                [flag for flag in MaskFlags if x & flag.value]
+                for x in self._mask_flags)
+
+    property mask_flags:
+        """Mask flags for each band."""
+        def __get__(self):
+            warnings.warn(
+                "'mask_flags' is deprecated. Switch to 'mask_flag_enums'",
+                DeprecationWarning,
+                stacklevel=2)
+            return self._mask_flags
 
     property descriptions:
         """Text descriptions for each band."""

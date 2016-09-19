@@ -74,9 +74,11 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             info['res'] = src.res
             info['colorinterp'] = [src.colorinterp(i).name
                                    for i in src.indexes]
-            info['units'] = src.units
+            info['units'] = [units or None for units in src.units]
             info['descriptions'] = src.descriptions
             info['indexes'] = src.indexes
+            info['mask_flags'] = [[
+                flag.name for flag in flags] for flags in src.mask_flag_enums]
 
             if proj4 != '':
                 info['lnglat'] = src.lnglat()

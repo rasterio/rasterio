@@ -10,7 +10,7 @@ from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
-from rasterio import windows
+from rasterio import enums, windows
 from rasterio.transform import guard_transform, xy, rowcol
 
 
@@ -169,7 +169,6 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
     def __repr__(self):
         return "<{} DatasetReader name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
-
 
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
                     TransformMethodsMixin):
