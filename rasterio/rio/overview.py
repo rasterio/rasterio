@@ -67,9 +67,8 @@ def overview(ctx, input, build, ls, rebuild, resampling):
 
     """
     with ctx.obj['env']:
-        with rasterio.open(input, 'r+') as dst:
-
-            if ls:
+        if ls:
+            with rasterio.open(input, 'r') as dst:
                 resampling_method = dst.tags(
                     ns='rio_overview').get('resampling') or 'unknown'
 
@@ -77,8 +76,8 @@ def overview(ctx, input, build, ls, rebuild, resampling):
                 for idx in dst.indexes:
                     click.echo("  Band %d: %s (method: '%s')" % (
                         idx, dst.overviews(idx) or 'None', resampling_method))
-
-            elif rebuild:
+        elif rebuild:
+            with rasterio.open(input, 'r+') as dst:
                 # Build the same overviews for all bands.
                 factors = reduce(
                     operator.or_,
@@ -91,8 +90,13 @@ def overview(ctx, input, build, ls, rebuild, resampling):
                 dst.build_overviews(
                     list(factors), Resampling[resampling_method])
 
-            elif build:
+        elif build:
+            with rasterio.open(input, 'r+') as dst:
                 dst.build_overviews(build, Resampling[resampling])
 
                 # Save the resampling method to a tag.
                 dst.update_tags(ns='rio_overview', resampling=resampling)
+
+        else:
+            raise click.UsageError(
+                "Please specify --ls, --rebuild, or --build ...")

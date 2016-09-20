@@ -66,3 +66,11 @@ def test_rebuild_ls(data):
 
     expected = "  Band 1: [2, 4, 8] (method: 'cubic')\n  Band 2: [2, 4, 8] (method: 'cubic')\n  Band 3: [2, 4, 8] (method: 'cubic')\n"
     assert result.output.endswith(expected)
+
+
+def test_no_args(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(cli, ['overview', inputfile])
+    assert result.exit_code == 2
+    assert "Please specify --ls, --rebuild, or --build ..." in result.output
