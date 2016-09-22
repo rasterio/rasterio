@@ -62,10 +62,16 @@ Refactoring:
 - Window methods of dataset objects have been extracted into functions of
   a new `rasterio.windows` module (#803).
 
+Packaging:
+
+- A Dockerfile for an image which builds manylinux1 wheels is now included
+  in the project.
+
 Known bugs:
 
 - `warp.project()` and rio-warp may lose one or more columns of data when 
   resampling to lower resolution (#853).
+
 
 0.36.0 (2016-06-14)
 -------------------
