@@ -18,7 +18,8 @@ log = logging.getLogger(__name__)
 
 # Rasterio defaults
 default_options = {
-    'CHECK_WITH_INVERT_PROJ': True
+    'CHECK_WITH_INVERT_PROJ': True,
+    'GTIFF_IMPLICIT_JPEG_OVR': False
 }
 
 class Env(object):
