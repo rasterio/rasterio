@@ -44,9 +44,9 @@ RUN mkdir -p /src \
 # gdal
 RUN mkdir -p /src \
     && cd /src \
-    && curl -f -L -O http://download.osgeo.org/gdal/2.1.0/gdal-2.1.0.tar.gz \
-    && tar xzf gdal-2.1.0.tar.gz \
-    && cd /src/gdal-2.1.0 \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.1.0/gdal-2.1.1.tar.gz \
+    && tar xzf gdal-2.1.1.tar.gz \
+    && cd /src/gdal-2.1.1 \
     && ./configure \
         --with-threads \
         --disable-debug \
