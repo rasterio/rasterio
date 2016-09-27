@@ -47,6 +47,8 @@ New features:
   tuples (#759).
 - Performance of `reproject()` has been increased by using an approximate
   transformer as with gdal_translate (#569).
+- `Band` objects may now represent one or more dataset bands and multiband 
+  reprojection of imagery kept in a GDAL dataset is now possible (#569).
 
 Bug fixes:
 
