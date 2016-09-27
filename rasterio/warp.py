@@ -184,10 +184,12 @@ def reproject(
 
     Parameters
     ------------
-    source: ndarray or rasterio Band
-        Source raster.
-    destination: ndarray or rasterio Band
-        Target raster.
+    source, destination: ndarray or Band
+        The source and destination are 2 or 3-D ndarrays, or a single
+        or multiple Rasterio Band object. The dimensionality of source
+        and destination must match, i.e., for multiband reprojection 
+        the lengths of the first axes of the source and destination 
+        must be the same.
     src_transform: affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.

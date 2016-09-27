@@ -53,7 +53,7 @@ def window_index(*args, **kwargs):
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
-__version__ = "1.0a1"
+__version__ = "1.0a2"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -270,24 +270,20 @@ Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
 
 
 def band(ds, bidx):
-    """Wraps a dataset and a band index up as a 'Band'
+    """A dataset and one or more of its bands
 
     Parameters
     ----------
-    ds: rasterio.RasterReader
-        Open rasterio dataset
+    ds: dataset object
+        An opened rasterio dataset object.
     bidx: int or sequence of ints
-        Band number, index starting at 1
+        Band number(s), index starting at 1.
 
     Returns
     -------
-    a rasterio.Band
+    rasterio.Band
     """
-    return Band(
-        ds,
-        bidx,
-        set(ds.dtypes).pop(),
-        ds.shape)
+    return Band(ds, bidx, set(ds.dtypes).pop(), ds.shape)
 
 
 def pad(array, transform, pad_width, mode=None, **kwargs):
