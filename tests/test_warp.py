@@ -245,6 +245,7 @@ def test_reproject_view():
             source = src.read(1)
 
         window = windows.Window(100, 100, 500, 500)
+        # window = windows.get_data_window(source)
         reduced_array = source[window.toslices()]
         reduced_transform = windows.transform(window, src.transform)
 
@@ -267,7 +268,6 @@ def test_reproject_view():
 
         out = np.empty(src.shape, dtype=np.uint8)
 
-
         reproject(
             reduced_array,
             out,
@@ -277,9 +277,7 @@ def test_reproject_view():
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
 
-        show(out)
-
-        assert (out > 0).sum() == 438113
+        assert (out > 0).sum() == 299199
 
 
 def test_reproject_epsg():

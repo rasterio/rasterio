@@ -121,7 +121,7 @@ cdef int io_multi_ubyte(
         int height,
         np.uint8_t[:, :, :] buffer,
         long[:] indexes,
-        int count) nogil
+        int count)
 
 
 cdef int io_multi_uint16(

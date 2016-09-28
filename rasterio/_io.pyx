@@ -74,6 +74,7 @@ cdef bint in_dtype_range(value, dtype):
     rng = infos[key](dtype)
     return rng.min <= value <= rng.max
 
+
 # Single band IO functions.
 
 cdef int io_ubyte(
@@ -84,10 +85,13 @@ cdef int io_ubyte(
         int width,
         int height,
         np.uint8_t[:, :] buffer):
+    cdef int pixelspace = buffer.itemsize * buffer.strides[1]
+    cdef int linespace = buffer.itemsize * buffer.strides[0]
     with nogil:
         return GDALRasterIO(
             band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, 0, 0)
+            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, pixelspace,
+            linespace)
 
 cdef int io_uint16(
         GDALRasterBandH band,
@@ -178,17 +182,21 @@ cdef int io_multi_ubyte(
         int height,
         np.uint8_t[:, :, :] buffer,
         long[:] indexes,
-        int count) nogil:
+        int count):
     cdef int i, retval=0
     cdef GDALRasterBandH band
     cdef int *bandmap
+    cdef int pixelspace = buffer.itemsize * buffer.strides[2]
+    cdef int linespace = buffer.itemsize * buffer.strides[1]
+    cdef int bandspace = buffer.itemsize * buffer.strides[0]
     with nogil:
         bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
         retval = GDALDatasetRasterIO(
             hds, mode, xoff, yoff, width, height, &buffer[0, 0, 0],
-            buffer.shape[2], buffer.shape[1], 1, count, bandmap, 0, 0, 0)
+            buffer.shape[2], buffer.shape[1], 1, count, bandmap,
+            pixelspace, linespace, bandspace)
         CPLFree(bandmap)
     return retval
 
