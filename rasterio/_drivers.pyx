@@ -48,7 +48,7 @@ code_map = {
 log = logging.getLogger(__name__)
 
 
-cdef void errorHandler(CPLErr err_class, int err_no, const char* msg):
+cdef void errorHandler(CPLErr err_class, int err_no, const char* msg) with gil:
     """Send GDAL errors and warnings to the Python logger."""
     if err_no in code_map:
         # 'rasterio._gdal' is the name in our logging hierarchy for
