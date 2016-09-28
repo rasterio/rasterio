@@ -54,7 +54,7 @@ def get_data_window(arr, nodata=None):
 
     if nodata is None:
         if not hasattr(arr, 'mask'):
-            return ((0, arr.shape[-2]), (0, arr.shape[-1]))
+            return Window.from_ranges((0, arr.shape[-2]), (0, arr.shape[-1]))
     else:
         arr = np.ma.masked_array(arr, arr == nodata)
 
