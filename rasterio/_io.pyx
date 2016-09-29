@@ -65,8 +65,8 @@ cdef bint in_dtype_range(value, dtype):
         99: np.finfo,
         102: np.finfo,
         105: np.iinfo,
-        117: np.iinfo
-    }
+        117: np.iinfo}
+
     key = np.dtype(dtype).kind
     if np.isnan(value):
         return key in ('c', 'f', 99, 102)
@@ -77,454 +77,60 @@ cdef bint in_dtype_range(value, dtype):
 
 # Single band IO functions.
 
-cdef int io_ubyte(
+cdef int io_any(
         GDALRasterBandH band,
         int mode,
         int xoff,
         int yoff,
         int width,
         int height,
-        np.uint8_t[:, :] buffer):
-    cdef int pixelspace = buffer.itemsize * buffer.strides[1]
-    cdef int linespace = buffer.itemsize * buffer.strides[0]
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 1, pixelspace,
-            linespace)
+        object image):
 
-cdef int io_uint16(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint16_t[:, :] buffer):
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 2, 0, 0)
+    cdef void *buf = <void *>np.PyArray_DATA(image)
+    cdef int bufxsize = image.shape[1]
+    cdef int bufysize = image.shape[0]
+    cdef int buftype = dtypes.dtype_rev[image.dtype.name]
+    cdef int pixelspace = image.strides[1]
+    cdef int linespace = image.strides[0]
 
-cdef int io_int16(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int16_t[:, :] buffer):
     with nogil:
         return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 3, 0, 0)
+            band, mode, xoff, yoff, width, height, buf, bufxsize, bufysize,
+            buftype, pixelspace, linespace)
 
-cdef int io_uint32(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint32_t[:, :] buffer):
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 4, 0, 0)
-
-cdef int io_int32(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int32_t[:, :] buffer):
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 5, 0, 0)
-
-cdef int io_float32(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float32_t[:, :] buffer):
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 6, 0, 0)
-
-cdef int io_float64(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float64_t[:, :] buffer):
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height,
-            &buffer[0, 0], buffer.shape[1], buffer.shape[0], 7, 0, 0)
 
 # The multi-band IO functions.
 
-cdef int io_multi_ubyte(
+cdef int io_multi_any(
         GDALDatasetH hds,
         int mode,
         int xoff,
         int yoff,
         int width,
         int height,
-        np.uint8_t[:, :, :] buffer,
-        long[:] indexes,
-        int count):
+        object image,
+        long[:] indexes):
+
     cdef int i, retval=0
-    cdef GDALRasterBandH band
-    cdef int *bandmap
-    cdef int pixelspace = buffer.itemsize * buffer.strides[2]
-    cdef int linespace = buffer.itemsize * buffer.strides[1]
-    cdef int bandspace = buffer.itemsize * buffer.strides[0]
+    cdef int *bandmap = NULL
+    cdef void *buf = <void *>np.PyArray_DATA(image)
+    cdef int bufxsize = image.shape[2]
+    cdef int bufysize = image.shape[1]
+    cdef int buftype = dtypes.dtype_rev[image.dtype.name]
+    cdef int pixelspace = image.strides[2]
+    cdef int linespace = image.strides[1]
+    cdef int bandspace = image.strides[0]
+    cdef int count = len(indexes)
+
     with nogil:
         bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
             bandmap[i] = indexes[i]
         retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buffer[0, 0, 0],
-            buffer.shape[2], buffer.shape[1], 1, count, bandmap,
+            hds, mode, xoff, yoff, width, height, buf,
+            bufxsize, bufysize, buftype, count, bandmap,
             pixelspace, linespace, bandspace)
         CPLFree(bandmap)
-    return retval
-
-cdef int io_multi_uint16(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint16_t[:, :, :] buf,
-        long[:] indexes,
-        int count) nogil:
-    cdef int i, retval=0
-    cdef GDALRasterBandH band = NULL
-    cdef int *bandmap
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
-            buf.shape[1], 2, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-    return retval
-
-cdef int io_multi_int16(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int16_t[:, :, :] buf,
-        long[:] indexes,
-        int count) nogil:
-    cdef int i, retval=0
-    cdef GDALRasterBandH band = NULL
-    cdef int *bandmap
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
-            buf.shape[1], 3, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-    return retval
-
-cdef int io_multi_uint32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint32_t[:, :, :] buf,
-        long[:] indexes,
-        int count) nogil:
-    cdef int i, retval=0
-    cdef GDALRasterBandH band = NULL
-    cdef int *bandmap
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
-            buf.shape[1], 4, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-    return retval
-
-cdef int io_multi_int32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int32_t[:, :, :] buf,
-        long[:] indexes,
-        int count) nogil:
-    cdef int i, retval=0
-    cdef GDALRasterBandH band = NULL
-    cdef int *bandmap
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
-            buf.shape[1], 5, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-    return retval
-
-
-cdef int io_multi_float32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float32_t[:, :, :] buf,
-        long[:] indexes,
-        int count) nogil:
-    cdef int i, retval=0
-    cdef GDALRasterBandH band = NULL
-    cdef int *bandmap
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
-            buf.shape[1], 6, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-    return retval
-
-cdef int io_multi_float64(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float64_t[:, :, :] buf,
-        long[:] indexes,
-        int count) nogil:
-
-    cdef int i, retval=0
-    cdef GDALRasterBandH band = NULL
-    cdef int *bandmap
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf[0, 0, 0], buf.shape[2],
-            buf.shape[1], 7, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-    return retval
-
-cdef int io_multi_cint16(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex_t[:, :, :] out,
-        long[:] indexes,
-        int count):
-    cdef int retval=0
-    cdef int *bandmap
-    cdef int I, J, K
-    cdef int i, j, k
-    cdef np.int16_t real, imag
-
-    buf = np.zeros(
-            (out.shape[0], 2*out.shape[2]*out.shape[1]),
-            dtype=np.int16)
-    cdef np.int16_t[:, :] buf_view = buf
-
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
-            out.shape[2], out.shape[1], 8, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-
-        if retval > 0:
-            return retval
-
-        I = out.shape[0]
-        J = out.shape[1]
-        K = out.shape[2]
-        for i in range(I):
-            for j in range(J):
-                for k in range(K):
-                    real = buf_view[i, 2*(j*K+k)]
-                    imag = buf_view[i, 2*(j*K+k)+1]
-                    out[i,j,k].real = real
-                    out[i,j,k].imag = imag
-
-    return retval
-
-cdef int io_multi_cint32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex_t[:, :, :] out,
-        long[:] indexes,
-        int count):
-
-    cdef int retval=0
-    cdef int *bandmap
-    cdef int I, J, K
-    cdef int i, j, k
-    cdef np.int32_t real, imag
-
-    buf = np.empty(
-            (out.shape[0], 2*out.shape[2]*out.shape[1]),
-            dtype=np.int32)
-    cdef np.int32_t[:, :] buf_view = buf
-
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
-            out.shape[2], out.shape[1], 9, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-
-        if retval > 0:
-            return retval
-
-        I = out.shape[0]
-        J = out.shape[1]
-        K = out.shape[2]
-        for i in range(I):
-            for j in range(J):
-                for k in range(K):
-                    real = buf_view[i, 2*(j*K+k)]
-                    imag = buf_view[i, 2*(j*K+k)+1]
-                    out[i,j,k].real = real
-                    out[i,j,k].imag = imag
-
-    return retval
-
-cdef int io_multi_cfloat32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex64_t[:, :, :] out,
-        long[:] indexes,
-        int count):
-
-    cdef int retval=0
-    cdef int *bandmap
-    cdef int I, J, K
-    cdef int i, j, k
-    cdef np.float32_t real, imag
-
-    buf = np.empty(
-            (out.shape[0], 2*out.shape[2]*out.shape[1]),
-            dtype=np.float32)
-    cdef np.float32_t[:, :] buf_view = buf
-
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
-            out.shape[2], out.shape[1], 10, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-
-        if retval > 0:
-            return retval
-
-        I = out.shape[0]
-        J = out.shape[1]
-        K = out.shape[2]
-        for i in range(I):
-            for j in range(J):
-                for k in range(K):
-                    real = buf_view[i, 2*(j*K+k)]
-                    imag = buf_view[i, 2*(j*K+k)+1]
-                    out[i,j,k].real = real
-                    out[i,j,k].imag = imag
-
-    return retval
-
-cdef int io_multi_cfloat64(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex128_t[:, :, :] out,
-        long[:] indexes,
-        int count):
-
-    cdef int retval=0
-    cdef int *bandmap
-    cdef int I, J, K
-    cdef int i, j, k
-    cdef np.float64_t real, imag
-
-    buf = np.empty(
-            (out.shape[0], 2*out.shape[2]*out.shape[1]),
-            dtype=np.float64)
-    cdef np.float64_t[:, :] buf_view = buf
-
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, &buf_view[0, 0],
-            out.shape[2], out.shape[1], 11, count, bandmap, 0, 0, 0)
-        CPLFree(bandmap)
-
-        if retval > 0:
-            return retval
-
-        I = out.shape[0]
-        J = out.shape[1]
-        K = out.shape[2]
-        for i in range(I):
-            for j in range(J):
-                for k in range(K):
-                    real = buf_view[i, 2*(j*K+k)]
-                    imag = buf_view[i, 2*(j*K+k)+1]
-                    out[i,j,k].real = real
-                    out[i,j,k].imag = imag
-
     return retval
 
 
@@ -535,12 +141,20 @@ cdef int io_multi_mask(
         int yoff,
         int width,
         int height,
-        np.uint8_t[:, :, :] buffer,
-        long[:] indexes,
-        int count):
+        object image,
+        long[:] indexes):
+
     cdef int i, j, retval=0
-    cdef GDALRasterBandH band
-    cdef GDALRasterBandH hmask
+    cdef GDALRasterBandH band = NULL
+    cdef GDALRasterBandH hmask = NULL
+    cdef void *buf = NULL
+    cdef int bufxsize = image.shape[2]
+    cdef int bufysize = image.shape[1]
+    cdef int buftype = dtypes.dtype_rev[image.dtype.name]
+    cdef int pixelspace = image.strides[2]
+    cdef int linespace = image.strides[1]
+    cdef int bandspace = image.strides[0]
+    cdef int count = len(indexes)
 
     for i in range(count):
         j = indexes[i]
@@ -550,12 +164,14 @@ cdef int io_multi_mask(
         hmask = GDALGetMaskBand(band)
         if hmask == NULL:
             raise ValueError("Null mask band")
+        buf = <void *>np.PyArray_DATA(image[i])
         with nogil:
             retval = GDALRasterIO(
-                hmask, mode, xoff, yoff, width, height,
-                &buffer[i, 0, 0], buffer.shape[2], buffer.shape[1], 1, 0, 0)
+                hmask, mode, xoff, yoff, width, height, buf, bufxsize, bufysize,
+                1, pixelspace, linespace)
             if retval:
                 break
+
     return retval
 
 
@@ -575,59 +191,13 @@ cdef int io_auto(image, GDALRasterBandH band, bint write):
     cdef int width = image.shape[-1]
     cdef int count
     cdef long[:] indexes
-    dtype_name = image.dtype.name
 
     if ndims == 2:
-        if dtype_name == "float32":
-            return io_float32(band, write, 0, 0, width, height, image)
-        elif dtype_name == "float64":
-            return io_float64(band, write, 0, 0, width, height, image)
-        elif dtype_name == "uint8":
-            return io_ubyte(band, write, 0, 0, width, height, image)
-        elif dtype_name == "int16":
-            return io_int16(band, write, 0, 0, width, height, image)
-        elif dtype_name == "int32":
-            return io_int32(band, write, 0, 0, width, height, image)
-        elif dtype_name == "uint16":
-            return io_uint16(band, write, 0, 0, width, height, image)
-        elif dtype_name == "uint32":
-            return io_uint32(band, write, 0, 0, width, height, image)
-        else:
-            raise ValueError("Image dtype is not supported for this function."
-                             "Must be float32, float64, int16, int32, uint8, "
-                             "uint16, or uint32")
+        return io_any(band, write, 0, 0, width, height, image)
     elif ndims == 3:
         count = image.shape[0]
         indexes = np.arange(1, count + 1)
-
-        dtype_name = image.dtype.name
-
-        if dtype_name == "float32":
-            return io_multi_float32(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        elif dtype_name == "float64":
-            return io_multi_float64(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        elif dtype_name == "uint8":
-            return io_multi_ubyte(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        elif dtype_name == "int16":
-            return io_multi_int16(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        elif dtype_name == "int32":
-            return io_multi_int32(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        elif dtype_name == "uint16":
-            return io_multi_uint16(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        elif dtype_name == "uint32":
-            return io_multi_uint32(band, write, 0, 0, width, height, image,
-                                    indexes, count)
-        else:
-            raise ValueError("Image dtype is not supported for this function."
-                             "Must be float32, float64, int16, int32, uint8, "
-                             "uint16, or uint32")
-
+        return io_multi_any(band, write, 0, 0, width, height, image, indexes)
     else:
         raise ValueError("Specified image must have 2 or 3 dimensions")
 
@@ -1083,9 +653,7 @@ cdef class DatasetReaderBase(DatasetBase):
         # can release the GIL.
         indexes_arr = np.array(indexes, dtype=int)
         indexes_count = <int>indexes_arr.shape[0]
-        gdt = dtypes.dtype_rev[dtype]
 
-        
         if masks:
             # Warn if nodata attribute is shadowing an alpha band.
             if self.count == 4 and self.colorinterp(4) == ColorInterp.alpha:
@@ -1095,51 +663,11 @@ cdef class DatasetReaderBase(DatasetBase):
 
             retval = io_multi_mask(
                             self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 1:
-            retval = io_multi_ubyte(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 2:
-            retval = io_multi_uint16(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 3:
-            retval = io_multi_int16(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 4:
-            retval = io_multi_uint32(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 5:
-            retval = io_multi_int32(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 6:
-            retval = io_multi_float32(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 7:
-            retval = io_multi_float64(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 8:
-            retval = io_multi_cint16(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 9:
-            retval = io_multi_cint32(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 10:
-            retval = io_multi_cfloat32(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
-        elif gdt == 11:
-            retval = io_multi_cfloat64(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, indexes_count)
+                            out, indexes_arr)
+
+        else:
+            retval = io_multi_any(self._hds, 0, xoff, yoff, width, height,
+                                  out, indexes_arr)
 
         if retval in (1, 2, 3):
             raise IOError("Read or write failed")
@@ -1238,7 +766,7 @@ cdef class DatasetReaderBase(DatasetBase):
             width = self.width
             height = self.height
 
-        io_ubyte(
+        io_any(
             mask, 0, xoff, yoff, width, height, out)
         return out
 
@@ -1639,55 +1167,56 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = <int>self.width
             height = <int>self.height
 
-        # Call io_multi* functions with C type args so that they
-        # can release the GIL.
         indexes_arr = np.array(indexes, dtype=int)
         indexes_count = <int>indexes_arr.shape[0]
-        gdt = dtypes.dtype_rev[dtype]
-        if gdt == 1:
-            retval = io_multi_ubyte(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 2:
-            retval = io_multi_uint16(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 3:
-            retval = io_multi_int16(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 4:
-            retval = io_multi_uint32(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 5:
-            retval = io_multi_int32(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 6:
-            retval = io_multi_float32(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 7:
-            retval = io_multi_float64(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 8:
-            retval = io_multi_cint16(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 9:
-            retval = io_multi_cint32(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 10:
-            retval = io_multi_cfloat32(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
-        elif gdt == 11:
-            retval = io_multi_cfloat64(
-                            self._hds, 1, xoff, yoff, width, height,
-                            src, indexes_arr, indexes_count)
+        retval = io_multi_any(self._hds, 1, xoff, yoff, width, height,
+                              src, indexes_arr)
+
+
+#        if gdt == 1:
+#            retval = io_multi_ubyte(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 2:
+#            retval = io_multi_uint16(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 3:
+#            retval = io_multi_int16(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 4:
+#            retval = io_multi_uint32(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 5:
+#            retval = io_multi_int32(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 6:
+#            retval = io_multi_float32(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 7:
+#            retval = io_multi_float64(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 8:
+#            retval = io_multi_cint16(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 9:
+#            retval = io_multi_cint32(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 10:
+#            retval = io_multi_cfloat32(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
+#        elif gdt == 11:
+#            retval = io_multi_cfloat64(
+#                            self._hds, 1, xoff, yoff, width, height,
+#                            src, indexes_arr, indexes_count)
 
         if retval in (1, 2, 3):
             raise IOError("Read or write failed")
@@ -1875,10 +1404,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             GDALFillRaster(mask, 0, 0)
         elif mask_array.dtype == np.bool:
             array = 255 * mask_array.astype(np.uint8)
-            retval = io_ubyte(
+            retval = io_any(
                 mask, 1, xoff, yoff, width, height, array)
         else:
-            retval = io_ubyte(
+            retval = io_any(
                 mask, 1, xoff, yoff, width, height, mask_array)
 
     def build_overviews(self, factors, resampling=Resampling.nearest):

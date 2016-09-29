@@ -42,206 +42,36 @@ ctypedef np.float64_t DTYPE_FLOAT64_t
 cdef bint in_dtype_range(value, dtype)
 
 
-cdef int io_ubyte(
+cdef int io_any(
         GDALRasterBandH band,
         int mode,
         int xoff,
         int yoff,
         int width,
         int height,
-        np.uint8_t[:, :] buffer)
+        object buffer)
 
 
-cdef int io_uint16(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint16_t[:, :] buffer)
-
-
-cdef int io_int16(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int16_t[:, :] buffer)
-
-
-cdef int io_uint32(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint32_t[:, :] buffer)
-
-
-cdef int io_int32(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int32_t[:, :] buffer)
-
-
-cdef int io_float32(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float32_t[:, :] buffer)
-
-
-cdef int io_float64(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float64_t[:, :] buffer)
-
-
-cdef int io_multi_ubyte(
+cdef int io_multi_any(
         GDALDatasetH hds,
         int mode,
         int xoff,
         int yoff,
         int width,
         int height,
-        np.uint8_t[:, :, :] buffer,
-        long[:] indexes,
-        int count)
+        object image,
+        long[:] indexes)
 
 
-cdef int io_multi_uint16(
+cdef int io_multi_mask(
         GDALDatasetH hds,
         int mode,
         int xoff,
         int yoff,
         int width,
         int height,
-        np.uint16_t[:, :, :] buffer,
-        long[:] indexes,
-        int count) nogil
-
-
-cdef int io_multi_int16(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int16_t[:, :, :] buffer,
-        long[:] indexes,
-        int count) nogil
-
-
-cdef int io_multi_uint32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.uint32_t[:, :, :] buffer,
-        long[:] indexes,
-        int count) nogil
-
-
-cdef int io_multi_int32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.int32_t[:, :, :] buffer,
-        long[:] indexes,
-        int count) nogil
-
-
-cdef int io_multi_float32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float32_t[:, :, :] buffer,
-        long[:] indexes,
-        int count) nogil
-
-
-cdef int io_multi_float64(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.float64_t[:, :, :] buffer,
-        long[:] indexes,
-        int count) nogil
-
-
-cdef int io_multi_cint16(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex_t[:, :, :] out,
-        long[:] indexes,
-        int count)
-
-
-cdef int io_multi_cint32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex_t[:, :, :] out,
-        long[:] indexes,
-        int count)
-
-
-cdef int io_multi_cfloat32(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex64_t[:, :, :] out,
-        long[:] indexes,
-        int count)
-
-
-cdef int io_multi_cfloat64(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        np.complex128_t[:, :, :] out,
-        long[:] indexes,
-        int count)
+        object image,
+        long[:] indexes)
 
 
 cdef int io_auto(image, GDALRasterBandH band, bint write)
