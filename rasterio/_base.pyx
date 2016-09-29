@@ -225,10 +225,10 @@ cdef class DatasetBase(object):
             if OSRAutoIdentifyEPSG(osr) == 0:
                 key = OSRGetAuthorityName(osr, NULL)
                 val = OSRGetAuthorityCode(osr, NULL)
-                log.info("Authority key: %s, value: %s", key, val)
+                log.debug("Authority key: %s, value: %s", key, val)
                 crs['init'] = u'epsg:' + val
             else:
-                log.info("Failed to auto identify EPSG")
+                log.debug("Failed to auto identify EPSG")
                 OSRExportToProj4(osr, &proj)
                 if proj == NULL:
                     raise ValueError("Unexpected Null spatial reference")
