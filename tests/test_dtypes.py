@@ -60,9 +60,6 @@ def test_validate_dtype():
     assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('uint8',)) == False
 
 
-# Roundtrip to complex type failing for unknown reasons
-# see https://github.com/mapbox/rasterio/issues/714
-@pytest.mark.xfail
 def test_complex(tmpdir):
     name = str(tmpdir.join("complex.tif"))
     arr1 = np.ones((2, 2), dtype=complex_)

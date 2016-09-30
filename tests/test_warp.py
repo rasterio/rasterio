@@ -11,7 +11,8 @@ from rasterio.enums import Resampling
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
-
+from rasterio import windows
+from rasterio.plot import show
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -235,6 +236,48 @@ def test_reproject_ndarray():
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
         assert (out > 0).sum() == 438113
+
+
+def test_reproject_view():
+    """Source views are reprojected properly"""
+    with rasterio.Env():
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            source = src.read(1)
+
+        window = windows.Window(100, 100, 500, 500)
+        # window = windows.get_data_window(source)
+        reduced_array = source[window.toslices()]
+        reduced_transform = windows.transform(window, src.transform)
+
+        # Assert that we're working with a view.
+        assert reduced_array.base is source
+
+        dst_crs = dict(
+            proj='merc',
+            a=6378137,
+            b=6378137,
+            lat_ts=0.0,
+            lon_0=0.0,
+            x_0=0.0,
+            y_0=0,
+            k=1.0,
+            units='m',
+            nadgrids='@null',
+            wktext=True,
+            no_defs=True)
+
+        out = np.empty(src.shape, dtype=np.uint8)
+
+        reproject(
+            reduced_array,
+            out,
+            src_transform=reduced_transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest)
+
+        assert (out > 0).sum() == 299199
 
 
 def test_reproject_epsg():
