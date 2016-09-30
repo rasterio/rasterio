@@ -77,7 +77,7 @@ cdef bint in_dtype_range(value, dtype):
 
 # Single band IO functions.
 
-cdef int io_any(
+cdef int io_band(
         GDALRasterBandH band,
         int mode,
         int xoff,
@@ -101,7 +101,7 @@ cdef int io_any(
 
 # The multi-band IO functions.
 
-cdef int io_multi_any(
+cdef int io_multi_band(
         GDALDatasetH hds,
         int mode,
         int xoff,
@@ -193,11 +193,11 @@ cdef int io_auto(image, GDALRasterBandH band, bint write):
     cdef long[:] indexes
 
     if ndims == 2:
-        return io_any(band, write, 0, 0, width, height, image)
+        return io_band(band, write, 0, 0, width, height, image)
     elif ndims == 3:
         count = image.shape[0]
         indexes = np.arange(1, count + 1)
-        return io_multi_any(band, write, 0, 0, width, height, image, indexes)
+        return io_multi_band(band, write, 0, 0, width, height, image, indexes)
     else:
         raise ValueError("Specified image must have 2 or 3 dimensions")
 
@@ -666,7 +666,7 @@ cdef class DatasetReaderBase(DatasetBase):
                             out, indexes_arr)
 
         else:
-            retval = io_multi_any(self._hds, 0, xoff, yoff, width, height,
+            retval = io_multi_band(self._hds, 0, xoff, yoff, width, height,
                                   out, indexes_arr)
 
         if retval in (1, 2, 3):
@@ -766,8 +766,7 @@ cdef class DatasetReaderBase(DatasetBase):
             width = self.width
             height = self.height
 
-        io_any(
-            mask, 0, xoff, yoff, width, height, out)
+        io_band(mask, 0, xoff, yoff, width, height, out)
         return out
 
     def sample(self, xy, indexes=None):
@@ -1169,54 +1168,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         indexes_arr = np.array(indexes, dtype=int)
         indexes_count = <int>indexes_arr.shape[0]
-        retval = io_multi_any(self._hds, 1, xoff, yoff, width, height,
-                              src, indexes_arr)
-
-
-#        if gdt == 1:
-#            retval = io_multi_ubyte(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 2:
-#            retval = io_multi_uint16(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 3:
-#            retval = io_multi_int16(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 4:
-#            retval = io_multi_uint32(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 5:
-#            retval = io_multi_int32(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 6:
-#            retval = io_multi_float32(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 7:
-#            retval = io_multi_float64(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 8:
-#            retval = io_multi_cint16(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 9:
-#            retval = io_multi_cint32(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 10:
-#            retval = io_multi_cfloat32(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
-#        elif gdt == 11:
-#            retval = io_multi_cfloat64(
-#                            self._hds, 1, xoff, yoff, width, height,
-#                            src, indexes_arr, indexes_count)
+        retval = io_multi_band(self._hds, 1, xoff, yoff, width, height,
+                               src, indexes_arr)
 
         if retval in (1, 2, 3):
             raise IOError("Read or write failed")
@@ -1404,11 +1357,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             GDALFillRaster(mask, 0, 0)
         elif mask_array.dtype == np.bool:
             array = 255 * mask_array.astype(np.uint8)
-            retval = io_any(
-                mask, 1, xoff, yoff, width, height, array)
+            retval = io_band(mask, 1, xoff, yoff, width, height, array)
         else:
-            retval = io_any(
-                mask, 1, xoff, yoff, width, height, mask_array)
+            retval = io_band(mask, 1, xoff, yoff, width, height, mask_array)
 
     def build_overviews(self, factors, resampling=Resampling.nearest):
         """Build overviews at one or more decimation factors for all

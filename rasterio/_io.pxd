@@ -42,7 +42,7 @@ ctypedef np.float64_t DTYPE_FLOAT64_t
 cdef bint in_dtype_range(value, dtype)
 
 
-cdef int io_any(
+cdef int io_band(
         GDALRasterBandH band,
         int mode,
         int xoff,
@@ -52,7 +52,7 @@ cdef int io_any(
         object buffer)
 
 
-cdef int io_multi_any(
+cdef int io_multi_band(
         GDALDatasetH hds,
         int mode,
         int xoff,
