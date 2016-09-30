@@ -63,7 +63,7 @@ def test_read_view_offset(tempfile, dtype, height, width):
 @pytest.mark.parametrize("dtype", dtypes)
 @pytest.mark.parametrize("height,width", [(20, 30)])
 def test_write_view_no_offset(tempfile, dtype, height, width):
-    """_io functions read views with offsets correctly"""
+    """_io functions read views without offsets correctly"""
     out_img = image(height, width, dtype)
     in_img = np.zeros((10, 10), dtype=dtype)
     with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
@@ -72,5 +72,23 @@ def test_write_view_no_offset(tempfile, dtype, height, width):
     with rasterio.open(tempfile) as dataset:
         result = dataset.read(1, out=out_img[:10, :10])
 
-    assert (result == in_img).all()
+    assert (result == 0).all()
     assert (out_img[:10, :10] == 0).all()
+
+
+@pytest.mark.parametrize("dtype", dtypes)
+@pytest.mark.parametrize("height,width", [(20, 30)])
+def test_write_view_offset(tempfile, dtype, height, width):
+    """_io functions read views with offsets correctly"""
+    out_img = np.ones((height, width), dtype=dtype)
+    in_img = np.zeros((10, 10), dtype=dtype)
+    with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
+                       height=10, width=10, count=1) as dataset:
+        dataset.write(in_img, 1)
+    with rasterio.open(tempfile) as dataset:
+        result = dataset.read(1, out=out_img[5:15, 5:15])
+
+    assert (result == 0).all()
+    assert (out_img[5:15, 5:15] == 0).all()
+    assert (out_img[:5, :5] == 1).all()
+    assert (out_img[15:, 15:] == 1).all()

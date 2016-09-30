@@ -49,7 +49,7 @@ cdef int io_band(
         int yoff,
         int width,
         int height,
-        object buffer)
+        object data)
 
 
 cdef int io_multi_band(
@@ -59,7 +59,7 @@ cdef int io_multi_band(
         int yoff,
         int width,
         int height,
-        object image,
+        object data,
         long[:] indexes)
 
 
@@ -70,7 +70,7 @@ cdef int io_multi_mask(
         int yoff,
         int width,
         int height,
-        object image,
+        object data,
         long[:] indexes)
 
 

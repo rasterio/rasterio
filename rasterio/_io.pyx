@@ -75,8 +75,6 @@ cdef bint in_dtype_range(value, dtype):
     return rng.min <= value <= rng.max
 
 
-# Single band IO functions.
-
 cdef int io_band(
         GDALRasterBandH band,
         int mode,
@@ -84,22 +82,31 @@ cdef int io_band(
         int yoff,
         int width,
         int height,
-        object image):
+        object data):
+    """Read or write a region of data for the band.
 
-    cdef void *buf = <void *>np.PyArray_DATA(image)
-    cdef int bufxsize = image.shape[1]
-    cdef int bufysize = image.shape[0]
-    cdef int buftype = dtypes.dtype_rev[image.dtype.name]
-    cdef int pixelspace = image.strides[1]
-    cdef int linespace = image.strides[0]
+    Implicit are
+
+    1) data type conversion if the dtype of `data` and `band` differ.
+    2) decimation if `data` and `band` shapes differ.
+
+    The striding of `data` is passed to GDAL so that it can navigate
+    the layout of ndarray views.
+    """
+    # GDAL handles all the buffering indexing, so a typed memoryview,
+    # as in previous versions, isn't needed.
+    cdef void *buf = <void *>np.PyArray_DATA(data)
+    cdef int bufxsize = data.shape[1]
+    cdef int bufysize = data.shape[0]
+    cdef int buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef int bufpixelspace = data.strides[1]
+    cdef int buflinespace = data.strides[0]
 
     with nogil:
         return GDALRasterIO(
             band, mode, xoff, yoff, width, height, buf, bufxsize, bufysize,
-            buftype, pixelspace, linespace)
+            buftype, bufpixelspace, buflinespace)
 
-
-# The multi-band IO functions.
 
 cdef int io_multi_band(
         GDALDatasetH hds,
@@ -108,18 +115,28 @@ cdef int io_multi_band(
         int yoff,
         int width,
         int height,
-        object image,
+        object data,
         long[:] indexes):
+    """Read or write a region of data for multiple bands.
 
-    cdef int i, retval=0
+    Implicit are
+
+    1) data type conversion if the dtype of `data` and bands differ.
+    2) decimation if `data` and band shapes differ.
+
+    The striding of `data` is passed to GDAL so that it can navigate
+    the layout of ndarray views.
+    """
+    cdef int i = 0
+    cdef int retval = 3
     cdef int *bandmap = NULL
-    cdef void *buf = <void *>np.PyArray_DATA(image)
-    cdef int bufxsize = image.shape[2]
-    cdef int bufysize = image.shape[1]
-    cdef int buftype = dtypes.dtype_rev[image.dtype.name]
-    cdef int pixelspace = image.strides[2]
-    cdef int linespace = image.strides[1]
-    cdef int bandspace = image.strides[0]
+    cdef void *buf = <void *>np.PyArray_DATA(data)
+    cdef int bufxsize = data.shape[2]
+    cdef int bufysize = data.shape[1]
+    cdef int buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef int bufpixelspace = data.strides[2]
+    cdef int buflinespace = data.strides[1]
+    cdef int bufbandspace = data.strides[0]
     cdef int count = len(indexes)
 
     with nogil:
@@ -129,8 +146,9 @@ cdef int io_multi_band(
         retval = GDALDatasetRasterIO(
             hds, mode, xoff, yoff, width, height, buf,
             bufxsize, bufysize, buftype, count, bandmap,
-            pixelspace, linespace, bandspace)
+            bufpixelspace, buflinespace, bufbandspace)
         CPLFree(bandmap)
+
     return retval
 
 
@@ -141,19 +159,29 @@ cdef int io_multi_mask(
         int yoff,
         int width,
         int height,
-        object image,
+        object data,
         long[:] indexes):
+    """Read or write a region of data for multiple band masks.
 
-    cdef int i, j, retval=0
+    Implicit are
+
+    1) data type conversion if the dtype of `data` and bands differ.
+    2) decimation if `data` and band shapes differ.
+
+    The striding of `data` is passed to GDAL so that it can navigate
+    the layout of ndarray views.
+    """
+    cdef int i = 0
+    cdef int j = 0
+    cdef int retval = 3
     cdef GDALRasterBandH band = NULL
     cdef GDALRasterBandH hmask = NULL
     cdef void *buf = NULL
-    cdef int bufxsize = image.shape[2]
-    cdef int bufysize = image.shape[1]
-    cdef int buftype = dtypes.dtype_rev[image.dtype.name]
-    cdef int pixelspace = image.strides[2]
-    cdef int linespace = image.strides[1]
-    cdef int bandspace = image.strides[0]
+    cdef int bufxsize = data.shape[2]
+    cdef int bufysize = data.shape[1]
+    cdef int buftype = dtypes.dtype_rev[data.dtype.name]
+    cdef int bufpixelspace = data.strides[2]
+    cdef int buflinespace = data.strides[1]
     cdef int count = len(indexes)
 
     for i in range(count):
@@ -164,42 +192,39 @@ cdef int io_multi_mask(
         hmask = GDALGetMaskBand(band)
         if hmask == NULL:
             raise ValueError("Null mask band")
-        buf = <void *>np.PyArray_DATA(image[i])
+        buf = <void *>np.PyArray_DATA(data[i])
+        if buf == NULL:
+            raise ValueError("NULL data")
         with nogil:
             retval = GDALRasterIO(
-                hmask, mode, xoff, yoff, width, height, buf, bufxsize, bufysize,
-                1, pixelspace, linespace)
+                hmask, mode, xoff, yoff, width, height, buf, bufxsize,
+                bufysize, 1, bufpixelspace, buflinespace)
             if retval:
                 break
 
     return retval
 
 
-cdef int io_auto(image, GDALRasterBandH band, bint write):
-    """
-    Convenience function to handle IO with a GDAL band and a 2D numpy image
+cdef int io_auto(data, GDALRasterBandH band, bint write):
+    """Convenience function to handle IO with a GDAL band.
 
-    :param image: a numpy 2D image
+    :param data: a numpy ndarray
     :param band: an instance of GDALGetRasterBand
-    :param write: 1 (True) uses write mode (writes image into band),
-                  0 (False) uses read mode (reads band into image)
+    :param write: 1 (True) uses write mode (writes data into band),
+                  0 (False) uses read mode (reads band into data)
     :return: the return value from the data-type specific IO function
     """
-
-    cdef int ndims = len(image.shape)
-    cdef int height = image.shape[-2]
-    cdef int width = image.shape[-1]
-    cdef int count
-    cdef long[:] indexes
+    cdef int ndims = len(data.shape)
+    cdef int height = data.shape[-2]
+    cdef int width = data.shape[-1]
 
     if ndims == 2:
-        return io_band(band, write, 0, 0, width, height, image)
+        return io_band(band, write, 0, 0, width, height, data)
     elif ndims == 3:
-        count = image.shape[0]
-        indexes = np.arange(1, count + 1)
-        return io_multi_band(band, write, 0, 0, width, height, image, indexes)
+        indexes = np.arange(1, data.shape[0] + 1)
+        return io_multi_band(band, write, 0, 0, width, height, data, indexes)
     else:
-        raise ValueError("Specified image must have 2 or 3 dimensions")
+        raise ValueError("Specified data must have 2 or 3 dimensions")
 
 
 cdef class DatasetReaderBase(DatasetBase):
