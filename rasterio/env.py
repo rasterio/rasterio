@@ -1,5 +1,6 @@
 """Rasterio's GDAL/AWS environment"""
 
+from functools import wraps
 import logging
 
 from rasterio._drivers import (
@@ -197,5 +198,8 @@ def delenv():
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
-    defenv()
-    return f
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        with Env():
+            return f(*args, **kwds)
+    return wrapper

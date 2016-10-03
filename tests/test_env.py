@@ -72,7 +72,7 @@ def test_ensure_env_decorator(gdalenv):
     def f(x):
         return x
     wrapper = ensure_env(f)
-    assert wrapper == f
+    assert wrapper.func_name == f.func_name
 
 
 def test_no_aws_gdal_config(gdalenv):
