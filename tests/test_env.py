@@ -69,10 +69,11 @@ def test_env_accessors(gdalenv):
 
 
 def test_ensure_env_decorator(gdalenv):
-    def f(x):
-        return x
+    def f():
+        return getenv()['WITH_RASTERIO_ENV']
     wrapper = ensure_env(f)
-    assert wrapper.func_name == f.func_name
+    assert wrapper() is True
+    assert 'WITH_RASTERIO_ENV' not in getenv()
 
 
 def test_no_aws_gdal_config(gdalenv):
@@ -86,15 +87,12 @@ def test_no_aws_gdal_config(gdalenv):
 def test_env_options(gdalenv):
     """Test env options."""
     env = rasterio.Env(foo='x')
-    assert env.options == {'foo': 'x'}
-    assert not env.previous_options
-    expected = default_options.copy()
-    assert getenv() == rasterio.env._env.options == expected
-    expected.update({'foo': 'x'})
+    assert env.options['foo'] == 'x'
+    assert not env.context_options
     with env:
-        assert getenv() == rasterio.env._env.options == expected
-    del expected['foo']
-    assert getenv() == rasterio.env._env.options == expected
+        assert env.context_options['CHECK_WITH_INVERT_PROJ'] is True
+        assert env.context_options['GTIFF_IMPLICIT_JPEG_OVR'] is False
+        assert env.context_options["I'M_ON_RASTERIO"] is True
 
 
 def test_aws_session(gdalenv):
@@ -114,14 +112,12 @@ def test_aws_session_credentials(gdalenv):
     aws_session = boto3.Session(
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
-    s = rasterio.env.Env(aws_session=aws_session)
-    expected = default_options.copy()
-    assert getenv() == rasterio.env._env.options == expected
-    s.get_aws_credentials()
-    expected.update({
-        'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
-        'aws_secret_access_key': 'key', 'aws_session_token': 'token'})
-    assert getenv() == rasterio.env._env.options == expected
+    with rasterio.env.Env(aws_session=aws_session) as s:
+        s.get_aws_credentials()
+        assert getenv()['aws_access_key_id'] == 'id'
+        assert getenv()['aws_region'] == 'null-island-1'
+        assert getenv()['aws_secret_access_key'] == 'key'
+        assert getenv()['aws_session_token'] == 'token'
 
 
 def test_with_aws_session_credentials(gdalenv):

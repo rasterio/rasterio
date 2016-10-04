@@ -65,7 +65,6 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-@ensure_env
 def open(path, mode='r', driver=None, width=None, height=None,
          count=None, crs=None, transform=None, dtype=None, nodata=None,
          **kwargs):
@@ -198,40 +197,44 @@ def open(path, mode='r', driver=None, width=None, height=None,
     if transform:
         transform = guard_transform(transform)
 
-    # Get AWS credentials if we're attempting to access a raster
-    # on S3.
-    pth, archive, scheme = parse_path(path)
-    if scheme == 's3':
-        Env().get_aws_credentials()
-        log.debug("AWS credentials have been obtained")
-
     # Check driver/mode blacklist.
     if driver and is_blacklisted(driver, mode):
         raise RasterioIOError(
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
-    # Create dataset instances and pass the given env, which will
-    # be taken over by the dataset's context manager if it is not
-    # None.
-    if mode == 'r':
-        s = DatasetReader(path)
-    elif mode == 'r-':
-        warnings.warn("'r-' mode is deprecated, use 'r'", DeprecationWarning)
-        s = DatasetReader(path)
-    elif mode == 'r+':
-        s = get_writer_for_path(path)(path, mode)
-    elif mode == 'w':
-        s = get_writer_for_driver(driver)(path, mode, driver=driver,
-                                          width=width, height=height,
-                                          count=count, crs=crs,
-                                          transform=transform, dtype=dtype,
-                                          nodata=nodata, **kwargs)
-    else:
-        raise ValueError(
-            "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
-    s.start()
-    return s
+    _, _, scheme = parse_path(path)
+
+    with Env() as env:
+        # Get AWS credentials only if we're attempting to access a
+        # raster using the S3 scheme.
+        if scheme == 's3':
+            env.get_aws_credentials()
+            log.debug("AWS credentials have been obtained")
+
+        # Create dataset instances and pass the given env, which will
+        # be taken over by the dataset's context manager if it is not
+        # None.
+        if mode == 'r':
+            s = DatasetReader(path)
+        elif mode == 'r-':
+            warnings.warn("'r-' mode is deprecated, use 'r'",
+                          DeprecationWarning)
+            s = DatasetReader(path)
+        elif mode == 'r+':
+            s = get_writer_for_path(path)(path, mode)
+        elif mode == 'w':
+            s = get_writer_for_driver(driver)(path, mode, driver=driver,
+                                              width=width, height=height,
+                                              count=count, crs=crs,
+                                              transform=transform,
+                                              dtype=dtype, nodata=nodata,
+                                              **kwargs)
+        else:
+            raise ValueError(
+                "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
+        s.start()
+        return s
 
 
 @ensure_env
