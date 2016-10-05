@@ -14,24 +14,22 @@ env:
     - secure: "xYB0j68QKkKTHa2fdVTr8SAmge8FITZCLyIcdIVdc0PcowEHXEgYcGScXYgWUarQrpfshBlf7xV8jRMzLSWj8ut5k52ozRunm1tjSYhHrROQhZIntfuFgEkF7N05o144XslrrESh6L0q6scFMPvOOepHRMbiApYLhTHRAhHFp7Q="
   matrix:
     - GDALVERSION="1.9.2"
-    - GDALVERSION="1.10.0"  # doesn't exist but path/lib will fall back to system
-    - GDALVERSION="1.11.4"
-    - GDALVERSION="2.0.2"
-    - GDALVERSION="2.1.0"
+    - GDALVERSION="1.11.5"
+    - GDALVERSION="2.0.3"
+    - GDALVERSION="2.1.1"
 addons:
   apt:
     packages:
     - gdal-bin
     - libproj-dev
     - libhdf5-serial-dev
-    - libpng-dev
+    - libpng12-dev
     - libgdal-dev
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
 python:
   - "2.7"
-  - "3.4"
   - "3.5"
 before_script: # configure a headless display to test matplotlib
   - "export DISPLAY=:99.0"
@@ -47,10 +45,8 @@ install:
   - "if [ $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - "pip wheel -r requirements-dev.txt"
   - "pip install -r requirements-dev.txt"
-  - "pip install --upgrade --force-reinstall --global-option=build_ext --global-option='-I$GDALINST/gdal-$GDALVERSION/include' --global-option='-L$GDALINST/gdal-$GDALVERSION/lib' --global-option='-R$GDALINST/gdal-$GDALVERSION/lib' -e ."
+  - "GDAL_CONFIG=$GDALINST/gdal-$GDALVERSION/bin/gdal-config pip install --upgrade --force-reinstall -e .[test,plot]"
   - "pip install coveralls>=1.1"
-  - "pip install -e .[test]"
-  - "pip install -e .[plot]"
   - "rio --version"
   - "rio --gdal-version"
 script:
