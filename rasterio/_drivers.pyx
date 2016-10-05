@@ -129,13 +129,16 @@ cdef class GDALEnv(ConfigEnv):
         self.start()
 
     def start(self):
+        CPLPushErrorHandler(<CPLErrorHandler>errorHandler)
+        log.debug("Error handler pushed.")
         GDALAllRegister()
         OGRRegisterAll()
-        CPLPushErrorHandler(<CPLErrorHandler>errorHandler)
-        log.debug("Error handler pushed")
+        log.debug("All drivers registered.")
 
         if driver_count() == 0:
-            raise ValueError("Drivers not registered")
+            CPLPopErrorHandler()
+            log.debug("Error handler popped")
+            raise ValueError("Drivers not registered.")
 
         if 'GDAL_DATA' not in os.environ:
             whl_datadir = os.path.abspath(
@@ -149,15 +152,15 @@ cdef class GDALEnv(ConfigEnv):
             whl_datadir = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "proj_data"))
             os.environ['PROJ_LIB'] = whl_datadir
-        log.debug("Env %r has been started", self)
+        log.debug("Env %r has been started.", self)
 
     def stop(self):
         # NB: do not restore the CPL error handler to its default
         # state here. If you do, log messages will be written to stderr
         # by GDAL instead of being sent to Python's logging module.
         CPLPopErrorHandler()
-        log.debug("Error handler popped")
-        log.debug("Env %r has been stopped", self)
+        log.debug("Error handler popped.")
+        log.debug("Env %r has been stopped.", self)
 
     def drivers(self):
         cdef GDALDriverH driver = NULL
