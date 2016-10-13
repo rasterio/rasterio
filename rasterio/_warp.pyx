@@ -484,9 +484,11 @@ def _reproject(
 
         with CPLErrors() as cple:
             if num_threads > 1:
-                oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+                with nogil:
+                    oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
             else:
-                oWarper.ChunkAndWarpImage(0, 0, cols, rows)
+                with nogil:
+                    oWarper.ChunkAndWarpImage(0, 0, cols, rows)
             cple.check()
 
         if dtypes.is_ndarray(destination):
