@@ -3,15 +3,21 @@
 Instances of these classes are called dataset objects.
 """
 
+import logging
 import math
+import uuid
 import warnings
 
 from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
-    DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
+    DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
+    MemoryFileBase)
 from rasterio import enums, windows
 from rasterio.transform import guard_transform, xy, rowcol
+
+
+log = logging.getLogger(__name__)
 
 
 class TransformMethodsMixin(object):
@@ -170,6 +176,7 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
         return "<{} DatasetReader name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
 
+
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
                     TransformMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
@@ -193,6 +200,36 @@ class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
     def __repr__(self):
         return "<{} BufferedDatasetWriter name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
+
+
+class MemoryFile(MemoryFileBase):
+    """A BytesIO-like object, backed by an in-memory file.
+    """
+
+    def open(self, driver=None, width=None, height=None,
+             count=None, crs=None, transform=None, dtype=None, nodata=None,
+             **kwargs):
+        """Open the file and return a Rasterio dataset object."""
+        if self.check():
+            s = get_writer_for_path(self.name)(self.name, 'r+')
+        else:
+            s = get_writer_for_driver(driver)(self.name, 'w', driver=driver,
+                                              width=width, height=height,
+                                              count=count, crs=crs,
+                                              transform=transform, dtype=dtype,
+                                              nodata=nodata, **kwargs)
+        try:
+            s.start()
+        except:
+            import pdb; pdb.set_trace()
+            raise
+        return s
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
 
 
 def get_writer_for_driver(driver):

@@ -1,5 +1,7 @@
 # GDAL type definitions.
 
+from libc.stdio cimport FILE
+
 
 cdef extern from "cpl_conv.h" nogil:
 
@@ -27,6 +29,7 @@ cdef extern from "cpl_error.h":
 cdef extern from "cpl_vsi.h":
 
     ctypedef int vsi_l_offset
+    ctypedef FILE VSILFILE
 
 
 cdef extern from "gdal.h":

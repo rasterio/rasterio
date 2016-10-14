@@ -290,6 +290,9 @@ cdef class DatasetBase(object):
 
     def __enter__(self):
         log.debug("Entering Dataset %r context.", self)
+        if self._closed:
+            self.start()
+            log.debug("Starting Dataset %r context.", self)
         return self
 
     def __exit__(self, type, value, traceback):
@@ -830,6 +833,7 @@ cdef class DatasetBase(object):
             height = window[0][1] - yoff
 
         return GDALChecksumImage(band, xoff, yoff, width, height)
+
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):

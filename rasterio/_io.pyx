@@ -28,6 +28,7 @@ from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
 
+from libc.stdio cimport FILE
 cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
@@ -35,7 +36,7 @@ from rasterio._gdal cimport (
     CPLFree, CPLMalloc, CSLDestroy, CSLDuplicate, CSLFetchNameValue,
     CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
     GDALCreateColorTable, GDALCreateCopy, GDALCreateMaskBand,
-    GDALDatasetRasterIO, GDALDestroyColorTable, GDALFillRaster,
+    GDALDatasetRasterIO, GDALDestroyColorTable, GDALFillRaster, GDALFlushCache,
     GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDescription,
     GDALGetDriverByName, GDALGetDriverShortName, GDALGetMaskBand,
     GDALGetMaskFlags, GDALGetMetadata, GDALGetRasterBand, GDALGetRasterCount,
@@ -46,7 +47,8 @@ from rasterio._gdal cimport (
     GDALSetRasterNoDataValue, GDALSetRasterUnitType,
     OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
-    VSIGetMemFileBuffer, vsi_l_offset)
+    VSIGetMemFileBuffer, vsi_l_offset, VSIFileFromMemBuffer, VSIFCloseL,
+    VSIFOpenL, VSIUnlink, VSIFWriteL, VSIFFlushL)
 
 include "gdal.pxi"
 
@@ -654,9 +656,10 @@ cdef class DatasetReaderBase(DatasetBase):
         """
         cdef int height, width, xoff, yoff, aix, bidx, indexes_count
         cdef int retval = 0
+        cdef GDALDatasetH dataset = NULL
 
-        if self._hds == NULL:
-            raise ValueError("can't read closed raster file")
+        dataset = self.handle()
+        GDALFlushCache(dataset)
 
         # Prepare the IO window.
         if window:
@@ -820,6 +823,126 @@ cdef class DatasetReaderBase(DatasetBase):
         return sample_gen(self, xy, indexes)
 
 
+cdef class MemoryFileBase(object):
+    """Base for a BytesIO-like class backed by an in-memory file
+    
+    The in-memory file is a GDAL VSIMEM file. Initial bytes given to
+    the constructor are mapped to a VSIMEM file without copying.
+    """
+
+    def __init__(self, initial_bytes=b''):
+        """Map bytes to a file in an in-memory filesystem."""
+        cdef const char *path = NULL
+        cdef VSILFILE *vsi_handle = NULL
+
+        if not isinstance(initial_bytes, bytes):
+            raise ValueError("Initial bytes must be type bytes")
+
+        self.name = os.path.join('/vsimem', uuid.uuid4().hex)
+        self._pos = 0
+
+        self._initial_bytes = initial_bytes
+        cdef unsigned char *buffer = self._initial_bytes
+
+        if self._initial_bytes:
+            path_b = self.name.encode('utf-8')
+            path = path_b
+            vsi_handle = VSIFileFromMemBuffer(path, buffer,
+                                              len(self._initial_bytes), 0)
+            if vsi_handle == NULL:
+                raise OSError('failed to map buffer to file')
+            if VSIFCloseL(vsi_handle) != 0:
+                raise OSError('failed to close mapped file handle')
+
+    def check(self):
+        """True if the in-memory file exists"""
+        path_b = self.name.encode('utf-8')
+        cdef const char *path = path_b
+
+        cdef VSILFILE *fp = VSIFOpenL(path, 'r')
+        if fp == NULL:
+            result = False
+        else:
+            VSIFCloseL(fp)
+            result = True
+
+        return result
+
+    def close(self):
+        path_b = self.name.encode('utf-8')
+        cdef const char *path = path_b
+        VSIUnlink(path)
+
+    def read(self, size=-1):
+        view = self.getbuffer()
+        length = len(view)
+        if size == 0:
+            return b''
+        elif size > 0:
+            end = min(length, self._pos + size)
+        else:
+            end = length
+        start = self._pos
+        data = bytes(view[start: end])
+        self._pos = end
+        return data
+
+    def seek(self, offset, whence=0):
+        view = self.getbuffer()
+        length = len(view)
+        if whence == 0:
+            pos = offset
+        elif whence == 1:
+            pos = self._offset + offset
+        elif whence == 2:
+            pos = length - offset
+        self._pos = pos
+        return self._pos
+
+    def tell(self):
+        log.debug("tell()")
+        return self._pos
+
+    def write(self, data):
+        cdef VSILFILE *fp = NULL
+        cdef const char *view = data
+        n = len(data)
+
+        path_b = self.name.encode('utf-8')
+        cdef const char *path = path_b
+
+        mode_b = ('r+' if self.check() else 'w').encode('utf-8')
+        cdef const char *mode = mode_b
+
+        fp = VSIFOpenL(path, mode)
+        if fp == NULL:
+            raise ValueError("NULL file")
+        result = VSIFWriteL(view, 1, n, fp)
+        VSIFFlushL(fp)
+        VSIFCloseL(fp)
+        return result
+
+    def getbuffer(self):
+        """Return a view on bytes of the file."""
+        cdef unsigned char *buffer = NULL
+        cdef const char *path = NULL
+        cdef vsi_l_offset buffer_len = 0
+        cdef np.uint8_t [:] buff_view
+
+        path_b = self.name.encode('utf-8')
+        path = path_b
+
+        with CPLErrors() as cple:
+            buffer = VSIGetMemFileBuffer(path, &buffer_len, 0)
+            cple.check()
+
+        if buffer == NULL or buffer_len == 0:
+            buff_view = np.array([], dtype='uint8')
+        else:
+            buff_view = <np.uint8_t[:buffer_len]>buffer
+        return buff_view
+
+
 cdef class DatasetWriterBase(DatasetReaderBase):
     # Read-write access to raster data and metadata.
 
@@ -827,6 +950,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
                  **kwargs):
         # Validate write mode arguments.
+        log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode == 'w':
             if not isinstance(driver, string_types):
                 raise TypeError("A driver name string is required.")
