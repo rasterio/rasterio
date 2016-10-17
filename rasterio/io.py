@@ -204,6 +204,36 @@ class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
 
 class MemoryFile(MemoryFileBase):
     """A BytesIO-like object, backed by an in-memory file.
+
+    This allows formatted files to be read and written without I/O.
+
+    A MemoryFile created with initial bytes becomes immutable. A
+    MemoryFile created without initial bytes may be written to using
+    either file-like or dataset interfaces.
+
+    Examples
+    --------
+
+    A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
+    format driver
+
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, \
+    ...         MemoryFile(f.read()) as memfile:
+    ...     with memfile.open() as src:
+    ...         pprint.pprint(src.profile)
+    ...
+    {'count': 3,
+     'crs': CRS({'init': 'epsg:32618'}),
+     'driver': 'GTiff',
+     'dtype': 'uint8',
+     'height': 718,
+     'interleave': 'pixel',
+     'nodata': 0.0,
+     'tiled': False,
+     'transform': Affine(300.0379266750948, 0.0, 101985.0,
+           0.0, -300.041782729805, 2826915.0),
+     'width': 791}
+
     """
 
     def open(self, driver=None, width=None, height=None,

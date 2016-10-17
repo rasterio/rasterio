@@ -48,7 +48,7 @@ from rasterio._gdal cimport (
     OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
     VSIGetMemFileBuffer, vsi_l_offset, VSIFileFromMemBuffer, VSIFCloseL,
-    VSIFOpenL, VSIUnlink, VSIFWriteL, VSIFFlushL)
+    VSIFOpenL, VSIUnlink, VSIFReadL, VSIFWriteL, VSIFFlushL, VSIFSeekL)
 
 include "gdal.pxi"
 
@@ -824,11 +824,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
 
 cdef class MemoryFileBase(object):
-    """Base for a BytesIO-like class backed by an in-memory file
-    
-    The in-memory file is a GDAL VSIMEM file. Initial bytes given to
-    the constructor are mapped to a VSIMEM file without copying.
-    """
+    """Base for a BytesIO-like class backed by an in-memory file."""
 
     def __init__(self, initial_bytes=b''):
         """Map bytes to a file in an in-memory filesystem."""
@@ -840,6 +836,7 @@ cdef class MemoryFileBase(object):
 
         self.name = os.path.join('/vsimem', uuid.uuid4().hex)
         self._pos = 0
+        self._len = 0
 
         self._initial_bytes = initial_bytes
         cdef unsigned char *buffer = self._initial_bytes
@@ -853,6 +850,7 @@ cdef class MemoryFileBase(object):
                 raise OSError('failed to map buffer to file')
             if VSIFCloseL(vsi_handle) != 0:
                 raise OSError('failed to close mapped file handle')
+            self._len = len(self._initial_bytes)
 
     def check(self):
         """True if the in-memory file exists"""
@@ -869,57 +867,94 @@ cdef class MemoryFileBase(object):
         return result
 
     def close(self):
+        """Close MemoryFile and unlink its in-memory file."""
         path_b = self.name.encode('utf-8')
         cdef const char *path = path_b
         VSIUnlink(path)
+        self._len = 0
+        self._pos = 0
+        self._initial_bytes = None
 
     def read(self, size=-1):
-        view = self.getbuffer()
-        length = len(view)
-        if size == 0:
+        """Read size bytes from MemoryFile."""
+        cdef VSILFILE *fp = NULL
+
+        # Return no bytes immediately if the position is at or past the
+        # end of the file.
+        if self._pos >= self._len:
+            self._pos = self._len
             return b''
-        elif size > 0:
-            end = min(length, self._pos + size)
+
+        if size == -1:
+            size = self._len - self._pos
         else:
-            end = length
-        start = self._pos
-        data = bytes(view[start: end])
-        self._pos = end
-        return data
+            size = min(size, self._len - self._pos)
+
+        path_b = self.name.encode('utf-8')
+        cdef const char *path = path_b
+
+        fp = VSIFOpenL(path, 'r')
+        if fp == NULL:
+            raise ValueError("NULL file")
+
+        if VSIFSeekL(fp, self._pos, 0) < 0:
+            raise IOError(
+                "Failed to seek to offset %s in %s.", self._pos, self.name)
+
+        cdef unsigned char *buffer = <unsigned char *>CPLMalloc(size)
+        objects_read = VSIFReadL(buffer, 1, size, fp)
+        VSIFCloseL(fp)
+
+        cdef np.uint8_t [:] view = <np.uint8_t[:objects_read]>buffer
+        result = bytes(view)
+        CPLFree(buffer)
+
+        self._pos += len(result)
+        return result
 
     def seek(self, offset, whence=0):
-        view = self.getbuffer()
-        length = len(view)
+        """Seek to position in MemoryFile."""
         if whence == 0:
             pos = offset
         elif whence == 1:
-            pos = self._offset + offset
+            pos = self._pos + offset
         elif whence == 2:
-            pos = length - offset
+            pos = self._len - offset
         self._pos = pos
         return self._pos
 
     def tell(self):
-        log.debug("tell()")
+        """Tell current position in MemoryFile."""
         return self._pos
 
     def write(self, data):
+        """Write data bytes to MemoryFile"""
         cdef VSILFILE *fp = NULL
-        cdef const char *view = data
+        cdef const unsigned char *view = data
         n = len(data)
 
         path_b = self.name.encode('utf-8')
         cdef const char *path = path_b
 
-        mode_b = ('r+' if self.check() else 'w').encode('utf-8')
-        cdef const char *mode = mode_b
+        if not self.check():
+            fp = VSIFOpenL(path, 'w')
+            if fp == NULL:
+                raise ValueError("NULL file")
+        else:
+            fp = VSIFOpenL(path, 'r+')
+            if fp == NULL:
+                raise ValueError("NULL file")
 
-        fp = VSIFOpenL(path, mode)
-        if fp == NULL:
-            raise ValueError("NULL file")
+            if VSIFSeekL(fp, self._pos, 0) < 0:
+                raise IOError(
+                    "Failed to seek to offset %s in %s.", self._pos, self.name)
+
         result = VSIFWriteL(view, 1, n, fp)
         VSIFFlushL(fp)
         VSIFCloseL(fp)
+
+        self._pos += result
+        self._len += min(0, result - self._len + self._pos)
         return result
 
     def getbuffer(self):
