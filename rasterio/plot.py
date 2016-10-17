@@ -223,7 +223,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
 
     # The histogram is computed individually for each 'band' in the array
     # so we need the overall min/max to constrain the plot
-    rng = arr.min(), arr.max()
+    rng = np.nanmin(arr), np.nanmax(arr)
 
     if len(arr.shape) is 2:
         arr = np.expand_dims(arr.flatten(), 0).T
