@@ -831,10 +831,10 @@ cdef class MemoryFileBase(object):
         cdef const char *path = NULL
         cdef VSILFILE *vsi_handle = NULL
 
-        if not isinstance(initial_bytes, bytes):
-            raise ValueError("Initial bytes must be type bytes")
+        if not isinstance(initial_bytes, (bytearray, bytes)):
+            raise ValueError("Initial bytes must be type bytearray or bytes")
 
-        self.name = os.path.join('/vsimem', uuid.uuid4().hex)
+        self.name = os.path.join('/vsimem', str(uuid.uuid4()))
         self._pos = 0
         self._len = 0
 
@@ -905,8 +905,7 @@ cdef class MemoryFileBase(object):
         objects_read = VSIFReadL(buffer, 1, size, fp)
         VSIFCloseL(fp)
 
-        cdef np.uint8_t [:] view = <np.uint8_t[:objects_read]>buffer
-        result = bytes(view)
+        cdef bytes result = <bytes>buffer[:objects_read]
         CPLFree(buffer)
 
         self._pos += len(result)
@@ -930,7 +929,7 @@ cdef class MemoryFileBase(object):
     def write(self, data):
         """Write data bytes to MemoryFile"""
         cdef VSILFILE *fp = NULL
-        cdef const unsigned char *view = data
+        cdef const unsigned char *view = <bytes>data
         n = len(data)
 
         path_b = self.name.encode('utf-8')

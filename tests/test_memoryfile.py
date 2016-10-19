@@ -77,7 +77,7 @@ def test_no_initial_bytes(rgb_data_and_profile):
             dst.write(data)
         view = memfile.getbuffer()
         assert view.size == 1706290
-        data = bytes(view)
+        data = bytearray(view)
 
     with MemoryFile(data) as memfile:
         with memfile.open() as src:
@@ -88,6 +88,7 @@ def test_read(tmpdir, rgb_file_bytes):
     """Reading from a MemoryFile works"""
     with MemoryFile(rgb_file_bytes) as memfile:
         tmptiff = tmpdir.join('test.tif')
+
         while 1:
             chunk = memfile.read(8192)
             if not chunk:
