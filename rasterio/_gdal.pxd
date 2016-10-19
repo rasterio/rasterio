@@ -29,7 +29,8 @@ cdef extern from "cpl_error.h" nogil:
     int CPLGetLastErrorNo()
     const char* CPLGetLastErrorMsg()
     CPLErr CPLGetLastErrorType()
-    void CPLSetErrorHandler(CPLErrorHandler handler)
+    void CPLPushErrorHandler(CPLErrorHandler handler)
+    void CPLPopErrorHandler()
 
 
 cdef extern from "ogr_srs_api.h" nogil:

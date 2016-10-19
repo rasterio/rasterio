@@ -16,7 +16,6 @@ from rasterio.env import ensure_env, Env
 from rasterio.transform import guard_transform
 
 
-@ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None, **options):
     """Transform vectors from source to target coordinate reference system.
 
@@ -320,10 +319,6 @@ def calculate_default_transform(
     -------
     tuple
         Three elements: ``affine transform, width, and height``
-
-    Note
-    ----
-    Should be called within a rasterio.Env() context
 
     Some behavior of this function is determined by the
     CHECK_WITH_INVERT_PROJ environment variable

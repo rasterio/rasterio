@@ -1,5 +1,6 @@
 """Rasterio's GDAL/AWS environment"""
 
+from functools import wraps
 import logging
 
 from rasterio._drivers import (
@@ -19,7 +20,8 @@ log = logging.getLogger(__name__)
 # Rasterio defaults
 default_options = {
     'CHECK_WITH_INVERT_PROJ': True,
-    'GTIFF_IMPLICIT_JPEG_OVR': False
+    'GTIFF_IMPLICIT_JPEG_OVR': False,
+    "I'M_ON_RASTERIO": True
 }
 
 class Env(object):
@@ -104,8 +106,7 @@ class Env(object):
             self.aws_session._session.get_credentials()
             if self.aws_session else None)
         self.options = options.copy()
-        self.previous_options = {}
-        defenv()
+        self.context_options = {}
 
     def get_aws_credentials(self):
         """Get credentials and configure GDAL."""
@@ -131,7 +132,6 @@ class Env(object):
             options.update(aws_region=self.aws_session.region_name)
 
         # Pass these credentials to the GDAL environment.
-        defenv()
         global _env
         _env.update_config_options(**options)
 
@@ -141,14 +141,15 @@ class Env(object):
         return _env.drivers()
 
     def __enter__(self):
-        self.previous_options = getenv()
+        defenv()
+        self.context_options = getenv()
         setenv(**self.options)
         log.debug("Entering env %r context", self)
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
         delenv()
-        setenv(**self.previous_options)
+        setenv(**self.context_options)
         log.debug("Exiting env %r context", self)
 
 
@@ -197,5 +198,8 @@ def delenv():
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
-    defenv()
-    return f
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        with Env(WITH_RASTERIO_ENV=True):
+            return f(*args, **kwds)
+    return wrapper
