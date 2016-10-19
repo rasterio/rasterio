@@ -836,7 +836,6 @@ cdef class MemoryFileBase(object):
 
         self.name = os.path.join('/vsimem', str(uuid.uuid4()))
         self._pos = 0
-        self._len = 0
 
         self._initial_bytes = initial_bytes
         cdef unsigned char *buffer = self._initial_bytes
@@ -850,7 +849,6 @@ cdef class MemoryFileBase(object):
                 raise OSError('failed to map buffer to file')
             if VSIFCloseL(vsi_handle) != 0:
                 raise OSError('failed to close mapped file handle')
-            self._len = len(self._initial_bytes)
 
     def check(self):
         """True if the in-memory file exists"""
@@ -866,12 +864,14 @@ cdef class MemoryFileBase(object):
 
         return result
 
+    def __len__(self):
+        return self.getbuffer().size
+
     def close(self):
         """Close MemoryFile and unlink its in-memory file."""
         path_b = self.name.encode('utf-8')
         cdef const char *path = path_b
         VSIUnlink(path)
-        self._len = 0
         self._pos = 0
         self._initial_bytes = None
 
@@ -881,14 +881,15 @@ cdef class MemoryFileBase(object):
 
         # Return no bytes immediately if the position is at or past the
         # end of the file.
-        if self._pos >= self._len:
-            self._pos = self._len
+        length = len(self)
+        if self._pos >= length:
+            self._pos = length
             return b''
 
         if size == -1:
-            size = self._len - self._pos
+            size = length - self._pos
         else:
-            size = min(size, self._len - self._pos)
+            size = min(size, length - self._pos)
 
         path_b = self.name.encode('utf-8')
         cdef const char *path = path_b
@@ -918,7 +919,7 @@ cdef class MemoryFileBase(object):
         elif whence == 1:
             pos = self._pos + offset
         elif whence == 2:
-            pos = self._len - offset
+            pos = len(self) - offset
         self._pos = pos
         return self._pos
 
@@ -953,7 +954,6 @@ cdef class MemoryFileBase(object):
         VSIFCloseL(fp)
 
         self._pos += result
-        self._len += min(0, result - self._len + self._pos)
         return result
 
     def getbuffer(self):
