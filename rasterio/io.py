@@ -239,7 +239,11 @@ class MemoryFile(MemoryFileBase):
     def open(self, driver=None, width=None, height=None,
              count=None, crs=None, transform=None, dtype=None, nodata=None,
              **kwargs):
-        """Open the file and return a Rasterio dataset object."""
+        """Open the file and return a Rasterio dataset object.
+
+        If data has already been written, the file is opened in 'r+'
+        mode. Otherwise, the file is opened in 'w' mode.
+        """
         if self.check():
             s = get_writer_for_path(self.name)(self.name, 'r+')
         else:
@@ -248,11 +252,7 @@ class MemoryFile(MemoryFileBase):
                                               count=count, crs=crs,
                                               transform=transform, dtype=dtype,
                                               nodata=nodata, **kwargs)
-        try:
-            s.start()
-        except:
-            import pdb; pdb.set_trace()
-            raise
+        s.start()
         return s
 
     def __enter__(self):
