@@ -142,7 +142,10 @@ cdef extern from "gdal.h" nogil:
     int GDALCheckVersion(int nVersionMajor, int nVersionMinor,
                          const char *pszCallingComponentName)
     const char* GDALVersionInfo(const char *pszRequest)
-    CPLErr GDALSetGCPs(GDALDatasetH hDS, int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection)
+    CPLErr GDALSetGCPs(GDALDatasetH hDS, int nGCPCount, const GDAL_GCP *pasGCPList,
+                       const char *pszGCPProjection)
+    const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
+    int GDALGetGCPCount(GDALDatasetH hDS)
 
 
 cdef extern from "gdalwarper.h":

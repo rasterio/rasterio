@@ -825,7 +825,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 **kwargs):
+                 gcps=None, **kwargs):
         # Validate write mode arguments.
         if mode == 'w':
             if not isinstance(driver, string_types):
@@ -857,6 +857,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._crs = crs
         if transform is not None:
             self._transform = transform.to_gdal()
+        self._gcps = gcps
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -974,6 +975,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self.write_transform(self._transform)
             if self._crs:
                 self.set_crs(self._crs)
+            if self._gcps:
+                self.set_gcps(self._gcps, self._crs)
 
         elif self.mode == 'r+':
             try:
@@ -1427,6 +1430,44 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 if factors_c != NULL:
                     CPLFree(factors_c)
 
+    def set_gcps(self, gcps, crs=None):
+        cdef char *srcwkt = NULL
+        cdef GDAL_GCP *gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
+        
+        for i, obj in enumerate(gcps):
+            ident = str(i).encode('utf-8')
+            info = "".encode('utf-8')
+            gcplist[i].pszId = ident
+            gcplist[i].pszInfo = info
+            gcplist[i].dfGCPPixel = obj.col
+            gcplist[i].dfGCPLine = obj.row
+            gcplist[i].dfGCPX = obj.x
+            gcplist[i].dfGCPY = obj.y
+            gcplist[i].dfGCPZ = obj.z or 0.0
+
+        # Try to use the primary crs if possible.
+        if not crs:
+            crs = self.crs
+
+        osr = _osr_from_crs(crs)
+        OSRExportToWkt(osr, <char**>&srcwkt)
+        GDALSetGCPs(self._hds, len(gcps), gcplist, srcwkt)
+        CPLFree(gcplist)
+        CPLFree(srcwkt)
+
+        # Invalidate cached value.
+        self._gcps = None
+
+    property gcps:
+
+        def __get__(self):
+            if not self._gcps:
+                self._gcps = self.get_gcps()
+            return self._gcps
+
+        def __set__(self, values):
+            self.set_gcps(values)
+
 
 cdef class InMemoryRaster:
     """
@@ -1623,6 +1664,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self.write_transform(self._transform)
             if self._crs:
                 self.set_crs(self._crs)
+            if self._gcps:
+                self.set_gcps(self._gcps, self._crs)
 
         elif self.mode == 'r+':
             try:

@@ -11,6 +11,7 @@ import warnings
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
+from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
@@ -41,7 +42,8 @@ from rasterio._gdal cimport (
     OCTNewCoordinateTransformation, OCTTransform, OSRAutoIdentifyEPSG,
     OSRDestroySpatialReference, OSRExportToProj4, OSRExportToWkt,
     OSRGetAuthorityCode, OSRGetAuthorityName, OSRImportFromEPSG,
-    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput)
+    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
+    GDALGetGCPs, GDALGetGCPCount)
 
 include "gdal.pxi"
 
@@ -134,6 +136,7 @@ cdef class DatasetBase(object):
         self._units = ()
         self._descriptions = ()
         self._crs = None
+        self._gcps = None
         self._read = False
 
     def __repr__(self):
@@ -830,6 +833,22 @@ cdef class DatasetBase(object):
             height = window[0][1] - yoff
 
         return GDALChecksumImage(band, xoff, yoff, width, height)
+
+    def get_gcps(self):
+        cdef const GDAL_GCP *gcplist = NULL
+        gcplist = GDALGetGCPs(self.handle())
+        num_gcps = GDALGetGCPCount(self.handle())
+        return [GroundControlPoint(col=gcplist[i].dfGCPPixel,
+                                   row=gcplist[i].dfGCPLine,
+                                   x=gcplist[i].dfGCPX,
+                                   y=gcplist[i].dfGCPY,
+                                   z=gcplist[i].dfGCPZ) for i in range(num_gcps)]
+
+    property gcps:
+        def __get__(self):
+            if not self._gcps:
+                self._gcps = self.get_gcps()
+            return self._gcps
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):

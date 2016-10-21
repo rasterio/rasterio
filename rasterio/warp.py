@@ -325,8 +325,6 @@ def calculate_default_transform(src_crs, dst_crs, width, height,
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
                          "be used together.")
-    else:
-        pass
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
         src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
