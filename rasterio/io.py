@@ -244,6 +244,8 @@ class MemoryFile(MemoryFileBase):
         If data has already been written, the file is opened in 'r+'
         mode. Otherwise, the file is opened in 'w' mode.
         """
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
         if self.check():
             s = get_writer_for_path(self.name)(self.name, 'r+')
         else:

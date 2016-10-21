@@ -828,60 +828,60 @@ cdef class MemoryFileBase(object):
 
     def __init__(self, initial_bytes=b''):
         """Map bytes to a file in an in-memory filesystem."""
-        cdef const char *path = NULL
         cdef VSILFILE *vsi_handle = NULL
 
         if not isinstance(initial_bytes, (bytearray, bytes)):
-            raise ValueError("Initial bytes must be type bytearray or bytes")
+            raise TypeError("Initial bytes must be type bytearray or bytes.")
 
         self.name = os.path.join('/vsimem', str(uuid.uuid4()))
+        self.path = self.name.encode('utf-8')
         self._pos = 0
+        self.closed = False
 
         self._initial_bytes = initial_bytes
         cdef unsigned char *buffer = self._initial_bytes
 
         if self._initial_bytes:
-            path_b = self.name.encode('utf-8')
-            path = path_b
-            vsi_handle = VSIFileFromMemBuffer(path, buffer,
-                                              len(self._initial_bytes), 0)
+
+            with CPLErrors() as cple:
+                vsi_handle = VSIFileFromMemBuffer(self.path, buffer,
+                                                  len(self._initial_bytes), 0)
+                cple.check()
+
             if vsi_handle == NULL:
-                raise OSError('failed to map buffer to file')
+                raise IOError(
+                    "Failed to create in-memory file using initial bytes.")
+
             if VSIFCloseL(vsi_handle) != 0:
-                raise OSError('failed to close mapped file handle')
+                raise IOError(
+                    "Failed to properly close in-memory file.")
 
     def check(self):
         """True if the in-memory file exists"""
-        path_b = self.name.encode('utf-8')
-        cdef const char *path = path_b
-
-        cdef VSILFILE *fp = VSIFOpenL(path, 'r')
-        if fp == NULL:
-            result = False
-        else:
+        cdef VSILFILE *fp = VSIFOpenL(self.path, 'r')
+        if fp != NULL:
             VSIFCloseL(fp)
-            result = True
-
-        return result
+            return True
+        else:
+            return False
 
     def __len__(self):
         return self.getbuffer().size
 
     def close(self):
-        """Close MemoryFile and unlink its in-memory file."""
-        path_b = self.name.encode('utf-8')
-        cdef const char *path = path_b
-        VSIUnlink(path)
+        """Close MemoryFile and release allocated memory."""
+        VSIUnlink(self.path)
         self._pos = 0
         self._initial_bytes = None
+        self.closed = True
 
     def read(self, size=-1):
         """Read size bytes from MemoryFile."""
         cdef VSILFILE *fp = NULL
-
         # Return no bytes immediately if the position is at or past the
         # end of the file.
         length = len(self)
+
         if self._pos >= length:
             self._pos = length
             return b''
@@ -891,23 +891,30 @@ cdef class MemoryFileBase(object):
         else:
             size = min(size, length - self._pos)
 
-        path_b = self.name.encode('utf-8')
-        cdef const char *path = path_b
-
-        fp = VSIFOpenL(path, 'r')
-        if fp == NULL:
-            raise ValueError("NULL file")
-
-        if VSIFSeekL(fp, self._pos, 0) < 0:
-            raise IOError(
-                "Failed to seek to offset %s in %s.", self._pos, self.name)
-
         cdef unsigned char *buffer = <unsigned char *>CPLMalloc(size)
-        objects_read = VSIFReadL(buffer, 1, size, fp)
-        VSIFCloseL(fp)
+        cdef bytes result
 
-        cdef bytes result = <bytes>buffer[:objects_read]
-        CPLFree(buffer)
+        try:
+            with CPLErrors() as cple:
+                fp = VSIFOpenL(self.path, 'r')
+                cple.check()
+
+                if fp == NULL:
+                    raise IOError(
+                        "Failed to open in-memory file: %s", self.name)
+
+                if VSIFSeekL(fp, self._pos, 0) < 0:
+                    raise IOError(
+                        "Failed to seek to offset %s in %s.",
+                        self._pos, self.name)
+
+                objects_read = VSIFReadL(buffer, 1, size, fp)
+                cple.check()
+
+                result = <bytes>buffer[:objects_read]
+        finally:
+            VSIFCloseL(fp)
+            CPLFree(buffer)
 
         self._pos += len(result)
         return result
@@ -920,6 +927,10 @@ cdef class MemoryFileBase(object):
             pos = self._pos + offset
         elif whence == 2:
             pos = len(self) - offset
+        if pos < 0:
+            raise ValueError("negative seek position: {}".format(pos))
+        if pos > len(self):
+            raise ValueError("seek position past end of file: {}".format(pos))
         self._pos = pos
         return self._pos
 
@@ -933,15 +944,12 @@ cdef class MemoryFileBase(object):
         cdef const unsigned char *view = <bytes>data
         n = len(data)
 
-        path_b = self.name.encode('utf-8')
-        cdef const char *path = path_b
-
         if not self.check():
-            fp = VSIFOpenL(path, 'w')
+            fp = VSIFOpenL(self.path, 'w')
             if fp == NULL:
                 raise ValueError("NULL file")
         else:
-            fp = VSIFOpenL(path, 'r+')
+            fp = VSIFOpenL(self.path, 'r+')
             if fp == NULL:
                 raise ValueError("NULL file")
 
@@ -963,11 +971,8 @@ cdef class MemoryFileBase(object):
         cdef vsi_l_offset buffer_len = 0
         cdef np.uint8_t [:] buff_view
 
-        path_b = self.name.encode('utf-8')
-        path = path_b
-
         with CPLErrors() as cple:
-            buffer = VSIGetMemFileBuffer(path, &buffer_len, 0)
+            buffer = VSIGetMemFileBuffer(self.path, &buffer_len, 0)
             cple.check()
 
         if buffer == NULL or buffer_len == 0:
