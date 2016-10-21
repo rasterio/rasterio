@@ -142,6 +142,7 @@ cdef extern from "gdal.h" nogil:
     int GDALCheckVersion(int nVersionMajor, int nVersionMinor,
                          const char *pszCallingComponentName)
     const char* GDALVersionInfo(const char *pszRequest)
+    CPLErr GDALSetGCPs(GDALDatasetH hDS, int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection)
 
 
 cdef extern from "gdalwarper.h":
@@ -174,6 +175,7 @@ cdef extern from "gdal_alg.h":
                                  const char *pszDstWKT,
                                  int bGCPUseOK, double dfGCPErrorThreshold,
                                  int nOrder)
+    void *GDALCreateGenImgProjTransformer2(GDALDatasetH src_hds, GDALDatasetH dst_hds, char **options)
     void *GDALCreateGenImgProjTransformer3(
             const char *pszSrcWKT, const double *padfSrcGeoTransform,
             const char *pszDstWKT, const double *padfDstGeoTransform)

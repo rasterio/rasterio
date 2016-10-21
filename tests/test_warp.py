@@ -7,6 +7,7 @@ import numpy as np
 from packaging.version import parse
 
 import rasterio
+from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
@@ -328,7 +329,7 @@ def test_reproject_nodata(options, expected):
     with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
-                          dtype=source.dtype)
+                       dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
         reproject(
@@ -354,7 +355,7 @@ def test_reproject_nodata_nan(options, expected):
     with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.float32)
         out = np.zeros((params.dst_width, params.dst_height),
-                          dtype=source.dtype)
+                       dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
         reproject(
@@ -381,7 +382,7 @@ def test_reproject_dst_nodata_default(options, expected):
     with rasterio.Env(**options):
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
-                          dtype=source.dtype)
+                       dtype=source.dtype)
         out.fill(120)  # Fill with arbitrary value
 
         reproject(
@@ -948,3 +949,40 @@ def test_reproject_identity():
             dst_transform=dstaff,
             dst_crs=dstcrs,
             resampling=Resampling.nearest)
+
+
+@pytest.fixture(scope='function')
+def rgb_byte_profile():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        return src.profile
+
+
+def test_reproject_gcps_transform_exclusivity():
+    """gcps and transform can't be used together."""
+    with pytest.raises(ValueError):
+        reproject(1, 1, gcps=[0], src_transform=[0])
+
+
+def test_reproject_gcps(rgb_byte_profile):
+    """Reproject using ground control points for the source"""
+    source = np.ones((3, 800, 800), dtype=np.uint8) * 255
+    out = np.zeros((3, rgb_byte_profile['height'], rgb_byte_profile['height']), dtype=np.uint8)
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0)]
+    reproject(
+        source,
+        out,
+        src_crs='epsg:32618',
+        gcps=src_gcps,
+        dst_transform=rgb_byte_profile['transform'],
+        dst_crs=rgb_byte_profile['crs'],
+        resampling=Resampling.nearest)
+
+    assert not out.all()
+    assert not out[:, 0, 0].any()
+    assert not out[:, 0, -1].any()
+    assert not out[:, -1, -1].any()
+    assert not out[:, -1, 0].any()

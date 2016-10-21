@@ -46,7 +46,7 @@ from rasterio._gdal cimport (
     GDALSetRasterNoDataValue, GDALSetRasterUnitType,
     OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
-    VSIGetMemFileBuffer, vsi_l_offset)
+    VSIGetMemFileBuffer, vsi_l_offset, GDALSetGCPs)
 
 include "gdal.pxi"
 
@@ -1450,10 +1450,15 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
 
-    def __cinit__(self, image, transform=None, crs=None):
+    def __cinit__(self, image=None, dtype='uint8', count=1, width=None,
+                  height=None, transform=None, gcps=None, crs=None):
         """
-        Create in-memory raster dataset, and populate its initial values with
-        the values in image.
+        Create in-memory raster dataset, and fill its bands with the
+        arrays in image.
+
+        An empty in-memory raster with no memory allocated to bands,
+        e.g. for use in _calculate_default_transform(), can be created
+        by passing dtype, count, width, and height instead.
 
         :param image: 2D numpy array.  Must be of supported data type
         (see rasterio.dtypes.dtype_rev)
@@ -1466,12 +1471,15 @@ cdef class InMemoryRaster:
         cdef const char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
+        cdef GDAL_GCP *gcplist = NULL
 
-        if len(image.shape) == 3:
-            count, height, width = image.shape
-        elif len(image.shape) == 2:
-            count = 1
-            height, width = image.shape
+        if image is not None:
+            if len(image.shape) == 3:
+                count, height, width = image.shape
+            elif len(image.shape) == 2:
+                count = 1
+                height, width = image.shape
+            dtype = image.dtype.name
 
         self.band_ids[0] = 1
 
@@ -1481,7 +1489,7 @@ cdef class InMemoryRaster:
             datasetname = str(uuid.uuid4()).encode('utf-8')
             self._hds = GDALCreate(
                 memdriver, <const char *>datasetname, width, height, count,
-                <GDALDataType>dtypes.dtype_rev[image.dtype.name], NULL)
+                <GDALDataType>dtypes.dtype_rev[dtype], NULL)
             cple.check()
 
         if transform is not None:
@@ -1491,17 +1499,35 @@ cdef class InMemoryRaster:
             if err:
                 raise ValueError("transform not set: %s" % transform)
 
-        # Set projection if specified (for use with
-        # GDALSuggestedWarpOutput2()).
-        if crs:
+            if crs:
+                osr = _osr_from_crs(crs)
+                OSRExportToWkt(osr, <char**>&srcwkt)
+                GDALSetProjection(self._hds, srcwkt)
+                log.debug("Set CRS on temp source dataset: %s", srcwkt)
+                CPLFree(<void *>srcwkt)
+                OSRDestroySpatialReference(osr)
+
+        elif gcps and crs:
+            gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
+            for i, obj in enumerate(gcps):
+                ident = str(i).encode('utf-8')
+                info = "".encode('utf-8')
+                gcplist[i].pszId = ident
+                gcplist[i].pszInfo = info
+                gcplist[i].dfGCPPixel = obj.col
+                gcplist[i].dfGCPLine = obj.row
+                gcplist[i].dfGCPX = obj.x
+                gcplist[i].dfGCPY = obj.y
+                gcplist[i].dfGCPZ = obj.z or 0.0
+
             osr = _osr_from_crs(crs)
             OSRExportToWkt(osr, <char**>&srcwkt)
-            GDALSetProjection(self._hds, srcwkt)
-            log.debug("Set CRS on temp source dataset: %s", srcwkt)
-            CPLFree(<void *>srcwkt)
-            OSRDestroySpatialReference(osr)
+            GDALSetGCPs(self._hds, len(gcps), gcplist, srcwkt)
+            CPLFree(gcplist)
+            CPLFree(srcwkt)
 
-        self.write(image)
+        if self._image is not None:
+            self.write(self._image)
 
     def __enter__(self):
         return self

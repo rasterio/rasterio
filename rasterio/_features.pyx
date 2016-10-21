@@ -86,7 +86,7 @@ def _shapes(image, mask, connectivity, transform):
         raise ValueError("Connectivity Option must be 4 or 8")
 
     if dtypes.is_ndarray(image):
-        mem_ds = InMemoryRaster(image, transform)
+        mem_ds = InMemoryRaster(image=image, transform=transform)
         band = mem_ds.band(1)
     elif isinstance(image, tuple):
         rdr = image.ds
@@ -104,7 +104,8 @@ def _shapes(image, mask, connectivity, transform):
 
         if dtypes.is_ndarray(mask):
             # A boolean mask must be converted to uint8 for GDAL
-            mask_ds = InMemoryRaster(mask.astype('uint8'), transform)
+            mask_ds = InMemoryRaster(image=mask.astype('uint8'),
+                                     transform=transform)
             maskband = mask_ds.band(1)
         elif isinstance(mask, tuple):
             mrdr = mask.ds
@@ -212,7 +213,7 @@ def _sieve(image, size, out, mask, connectivity):
         raise ValueError('out raster must match dtype of image')
 
     if dtypes.is_ndarray(image):
-        in_mem_ds = InMemoryRaster(image)
+        in_mem_ds = InMemoryRaster(image=image)
         in_band = in_mem_ds.band(1)
     elif isinstance(image, tuple):
         rdr = image.ds
@@ -222,7 +223,7 @@ def _sieve(image, size, out, mask, connectivity):
 
     if dtypes.is_ndarray(out):
         log.debug("out array: %r", out)
-        out_mem_ds = InMemoryRaster(out)
+        out_mem_ds = InMemoryRaster(image=out)
         out_band = out_mem_ds.band(1)
     elif isinstance(out, tuple):
         udr = out.ds
@@ -240,7 +241,7 @@ def _sieve(image, size, out, mask, connectivity):
 
         if dtypes.is_ndarray(mask):
             # A boolean mask must be converted to uint8 for GDAL
-            mask_mem_ds = InMemoryRaster(mask.astype('uint8'))
+            mask_mem_ds = InMemoryRaster(image=mask.astype('uint8'))
             mask_band = mask_mem_ds.band(1)
 
         elif isinstance(mask, tuple):
@@ -311,7 +312,7 @@ def _rasterize(shapes, image, transform, all_touched):
                 log.error("Geometry %r at index %d with value %d skipped",
                     geometry, i, value)
 
-        with InMemoryRaster(image, transform) as mem:
+        with InMemoryRaster(image=image, transform=transform) as mem:
             with CPLErrors() as cple:
                 GDALRasterizeGeometries(
                     mem.handle(), 1, mem.band_ids,num_geoms, geoms, NULL,

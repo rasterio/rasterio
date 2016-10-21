@@ -158,61 +158,60 @@ def transform_bounds(
 
 
 @ensure_env
-def reproject(
-        source,
-        destination,
-        src_transform=None,
-        src_crs=None,
-        src_nodata=None,
-        dst_transform=None,
-        dst_crs=None,
-        dst_nodata=None,
-        resampling=Resampling.nearest,
-        init_dest_nodata=True,
-        **kwargs):
-    """
-    Reproject a source raster to a destination raster.
+def reproject(source, destination, src_transform=None, gcps=None,
+              src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
+              dst_nodata=None, resampling=Resampling.nearest,
+              init_dest_nodata=True, **kwargs):
+    """Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
-    system definitions and affine transformation parameters are required
-    for reprojection.
+    system definitions and affine transformation parameters or ground
+    control points (gcps) are required for reprojection.
 
     If the source and destination are rasterio Bands, shorthand for
     bands of datasets on disk, the coordinate reference systems and
-    transforms will be read from the appropriate datasets.
+    transforms or GCPs will be read from the appropriate datasets.
 
     Parameters
     ------------
     source, destination: ndarray or Band
         The source and destination are 2 or 3-D ndarrays, or a single
         or multiple Rasterio Band object. The dimensionality of source
-        and destination must match, i.e., for multiband reprojection 
-        the lengths of the first axes of the source and destination 
+        and destination must match, i.e., for multiband reprojection
+        the lengths of the first axes of the source and destination
         must be the same.
     src_transform: affine.Affine(), optional
-        Source affine transformation.  Required if source and destination
-        are ndarrays.  Will be derived from source if it is a rasterio Band.
+        Source affine transformation. Required if source and
+        destination are ndarrays. Will be derived from source if it is
+        a rasterio Band. An error will be raised if this parameter is
+        defined together with gcps.
+    gcps: sequence of GroundControlPoint, optional
+        Ground control points for the source. An error will be raised
+        if this parameter is defined together with src_transform.
     src_crs: CRS or dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
         Will be derived from source if it is a rasterio Band.
         Example: CRS({'init': 'EPSG:4326'})
     src_nodata: int or float, optional
-        The source nodata value.  Pixels with this value will not be used
-        for interpolation.  If not set, it will be default to the
-        nodata value of the source image if a masked ndarray or rasterio band,
-        if available.  Must be provided if dst_nodata is not None.
+        The source nodata value.Pixels with this value will not be
+        used for interpolation. If not set, it will be default to the
+        nodata value of the source image if a masked ndarray or
+        rasterio band, if available. Must be provided if dst_nodata is
+        not None.
     dst_transform: affine.Affine(), optional
-        Target affine transformation.  Required if source and destination
-        are ndarrays.  Will be derived from target if it is a rasterio Band.
+        Target affine transformation. Required if source and
+        destination are ndarrays. Will be derived from target if it is
+        a rasterio Band.
     dst_crs: CRS or dict, optional
-        Target coordinate reference system.  Required if source and destination
-        are ndarrays.  Will be derived from target if it is a rasterio Band.
+        Target coordinate reference system. Required if source and
+        destination are ndarrays. Will be derived from target if it
+        is a rasterio Band.
     dst_nodata: int or float, optional
-        The nodata value used to initialize the destination; it will remain
-        in all areas not covered by the reprojected source.  Defaults to the
-        nodata value of the destination image (if set), the value of
-        src_nodata, or 0 (GDAL default).
+        The nodata value used to initialize the destination; it will
+        remain in all areas not covered by the reprojected source.
+        Defaults to the nodata value of the destination image (if set),
+        the value of src_nodata, or 0 (GDAL default).
     resampling: int
         Resampling method to use.  One of the following:
             Resampling.nearest,
@@ -233,6 +232,10 @@ def reproject(
     out: None
         Output is written to destination.
     """
+    if src_transform and gcps:
+        raise ValueError("src_transform and gcps parameters may not"
+                         "be used together.")
+
     # Resampling guard.
     try:
         Resampling(resampling)
@@ -263,38 +266,23 @@ def reproject(
     if dst_crs is None:
         dst_crs = {}
 
-    _reproject(
-        source,
-        destination,
-        src_transform,
-        src_crs,
-        src_nodata,
-        dst_transform,
-        dst_crs,
-        dst_nodata,
-        resampling,
-        init_dest_nodata,
-        **kwargs)
+    _reproject(source, destination, src_transform, gcps, src_crs, src_nodata,
+               dst_transform, dst_crs, dst_nodata, resampling,
+               init_dest_nodata, **kwargs)
 
 
 @ensure_env
-def calculate_default_transform(
-        src_crs,
-        dst_crs,
-        width,
-        height,
-        left,
-        bottom,
-        right,
-        top,
-        resolution=None):
-    """Calculate parameters for reproject function.
+def calculate_default_transform(src_crs, dst_crs, width, height,
+                                left=None, bottom=None, right=None, top=None,
+                                gcps=None, resolution=None):
+    """Output dimensions and transform for a reprojection.
 
-    Transforms bounds to destination coordinate system, calculates resolution
-    if not provided, and returns destination transform and dimensions.
-    Intended to be used to calculate parameters for reproject function.
+    Source and destination coordinate reference systems are the first
+    two, required, parameters. Source georeferencing can be specified
+    using either ground control points (gcps) or source image dimension
+    (width, height) and spatial bounds (left, bottom, right, top).
 
-    Destination transform is anchored from the left, top coordinate.
+    The destination transform is anchored at the left, top coordinate.
 
     Destination width and height (and resolution if not provided), are
     calculated using GDAL's method for suggest warp output.
@@ -306,36 +294,47 @@ def calculate_default_transform(
         Example: CRS({'init': 'EPSG:4326'})
     dst_crs: CRS or dict
         Target coordinate reference system.
-    width: int
-        Source raster width.
-    height: int
-        Source raster height.
-    left, bottom, right, top: float
-        Bounding coordinates in src_crs, from the bounds property of a raster.
+    width, height: int, optional
+        Source raster width and height. Not needed if gcps are used.
+    left, bottom, right, top: float, optional
+        Bounding coordinates in src_crs, from the bounds property of a
+        raster.
+    gcps: sequence of GroundControlPoint, optional
+        Instead of a bounding box for the source, a sequence of ground
+        control points may be provided.
     resolution: tuple (x resolution, y resolution) or float, optional
-        Target resolution, in units of target coordinate reference system.
+        Target resolution, in units of target coordinate reference
+        system.
 
     Returns
     -------
-    tuple
-        Three elements: ``affine transform, width, and height``
+    transform: Affine
+        Output affine transformation matrix
+    width, height: int
+        Output dimesions
 
+    Notes
+    -----
     Some behavior of this function is determined by the
-    CHECK_WITH_INVERT_PROJ environment variable
+    CHECK_WITH_INVERT_PROJ environment variable:
+
         YES: constrain output raster to extents that can be inverted
              avoids visual artifacts and coordinate discontinuties.
         NO:  reproject coordinates beyond valid bound limits
     """
+    if any(x is not None for x in (left, bottom, right, top)) and gcps:
+        raise ValueError("Bounding values and ground control points may not"
+                         "be used together.")
+    else:
+        pass
+
     dst_affine, dst_width, dst_height = _calculate_default_transform(
-        src_crs, dst_crs,
-        width, height,
-        left, bottom, right, top)
+        src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
 
     # If resolution is specified, Keep upper-left anchored
     # adjust the transform resolutions
     # adjust the width/height by the ratio of estimated:specified res (ceil'd)
     if resolution:
-
         # resolutions argument into tuple
         try:
             res = (float(resolution), float(resolution))

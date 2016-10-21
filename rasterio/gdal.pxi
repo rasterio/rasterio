@@ -68,6 +68,15 @@ cdef extern from "gdal.h":
         short c3
         short c4
 
+    ctypedef struct GDAL_GCP:
+        char *pszId
+        char *pszInfo
+        double dfGCPPixel
+        double dfGCPLine
+        double dfGCPX
+        double dfGCPY
+        double dfGCPZ
+
 
 cdef extern from "ogr_api.h":
 
