@@ -44,3 +44,27 @@ def test_write_read_gcps(tmpdir):
         point = dst.gcps[1]
         assert (2, 2) == (point.row, point.col)
         assert (200.0, 2000.0, 0.0) == (point.x, point.y, point.z)
+
+
+def test_read_vrt_gcps(tmpdir):
+    vrtfile = tmpdir.join('test.vrt')
+    vrtfile.write("""
+<VRTDataset rasterXSize="512" rasterYSize="512">
+<GCPList Projection="EPSG:4326">
+  <GCP Id="1" Info="a" Pixel="0.5" Line="0.5" X="0.0" Y="0.0" Z="0.0" />
+  <GCP Id="2" Info="b" Pixel="13.5" Line="23.5" X="1.0" Y="2.0" Z="0.0" />
+</GCPList>
+  <GeoTransform>440720.0, 60.0, 0.0, 3751320.0, 0.0, -60.0</GeoTransform>
+  <VRTRasterBand dataType="Byte" band="1">
+    <ColorInterp>Gray</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">tests/data/RGB.byte.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="512" ySize="512"/>
+      <DstRect xOff="0" yOff="0" xSize="512" ySize="512"/>
+    </SimpleSource>
+  </VRTRasterBand>
+</VRTDataset>""")
+    with rasterio.open(str(vrtfile)) as src:
+        assert len(src.gcps) == 2
+        assert [(0.5, 0.5), (13.5, 23.5)] == [(p.col, p.row) for p in src.gcps]
