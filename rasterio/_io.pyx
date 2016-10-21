@@ -856,7 +856,7 @@ cdef class MemoryFileBase(object):
                 raise IOError(
                     "Failed to properly close in-memory file.")
 
-    def check(self):
+    def exists(self):
         """True if the in-memory file exists"""
         cdef VSILFILE *fp = VSIFOpenL(self.path, 'r')
         if fp != NULL:
@@ -944,7 +944,7 @@ cdef class MemoryFileBase(object):
         cdef const unsigned char *view = <bytes>data
         n = len(data)
 
-        if not self.check():
+        if not self.exists():
             fp = VSIFOpenL(self.path, 'w')
             if fp == NULL:
                 raise ValueError("NULL file")

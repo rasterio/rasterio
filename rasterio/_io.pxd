@@ -30,10 +30,6 @@ cdef class InMemoryRaster:
     cdef GDALRasterBandH band(self, int) except NULL
 
 
-cdef class VsiMemDatasetWriterBase(DatasetWriterBase):
-    pass
-
-
 ctypedef np.uint8_t DTYPE_UBYTE_t
 ctypedef np.uint16_t DTYPE_UINT16_t
 ctypedef np.int16_t DTYPE_INT16_t

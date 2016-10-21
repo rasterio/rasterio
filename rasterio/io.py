@@ -246,7 +246,7 @@ class MemoryFile(MemoryFileBase):
         """
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        if self.check():
+        if self.exists():
             s = get_writer_for_path(self.name)(self.name, 'r+')
         else:
             s = get_writer_for_driver(driver)(self.name, 'w', driver=driver,
