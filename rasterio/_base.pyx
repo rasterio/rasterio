@@ -290,9 +290,6 @@ cdef class DatasetBase(object):
 
     def __enter__(self):
         log.debug("Entering Dataset %r context.", self)
-        if self._closed:
-            self.start()
-            log.debug("Starting Dataset %r context.", self)
         return self
 
     def __exit__(self, type, value, traceback):
