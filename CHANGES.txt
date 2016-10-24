@@ -1,6 +1,23 @@
 Changes
 =======
 
+1.0a3 (2016-10-31)
+------------------
+
+New features:
+
+- A `BytesIO` like `MemoryFile` class has been added for an improved Python
+  interface to GDAL's in-memory filesystem (#899, #925).
+- Error handlers are pushed to GDAL on entering a GDAL environment and popped
+  when exiting (#876, #902, #907).
+- The GIL is released when calling GDAL's ChunkAndWarp() (#912).
+
+Bug fixes:
+
+- show_hist() failed when nans were present in data (#913) and this has been
+  fixed with the use of nanmin() and nanmax() in #914.
+
+
 1.0a2 (2016-10-03)
 ------------------
 
@@ -27,6 +44,7 @@ Refactoring:
 - Data type-specific functions such as `io_uint8()` have been eliminated from
   the private `_io` module and replaced by generic `io_band()`,
   `io_multi_band()`, and `io_multi_mask()` functions (#901).
+
 
 1.0a1 (2016-09-15)
 ------------------
