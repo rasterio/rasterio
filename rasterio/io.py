@@ -3,15 +3,21 @@
 Instances of these classes are called dataset objects.
 """
 
+import logging
 import math
+import uuid
 import warnings
 
 from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
-    DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase)
+    DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
+    MemoryFileBase)
 from rasterio import enums, windows
 from rasterio.transform import guard_transform, xy, rowcol
+
+
+log = logging.getLogger(__name__)
 
 
 class TransformMethodsMixin(object):
@@ -170,6 +176,7 @@ class DatasetReader(DatasetReaderBase, WindowMethodsMixin,
         return "<{} DatasetReader name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
 
+
 class DatasetWriter(DatasetWriterBase, WindowMethodsMixin,
                     TransformMethodsMixin):
     """An unbuffered data and metadata writer. Its methods write data
@@ -193,6 +200,68 @@ class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
     def __repr__(self):
         return "<{} BufferedDatasetWriter name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
+
+
+class MemoryFile(MemoryFileBase):
+    """A BytesIO-like object, backed by an in-memory file.
+
+    This allows formatted files to be read and written without I/O.
+
+    A MemoryFile created with initial bytes becomes immutable. A
+    MemoryFile created without initial bytes may be written to using
+    either file-like or dataset interfaces.
+
+    Examples
+    --------
+
+    A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
+    format driver
+
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, \
+    ...         MemoryFile(f.read()) as memfile:
+    ...     with memfile.open() as src:
+    ...         pprint.pprint(src.profile)
+    ...
+    {'count': 3,
+     'crs': CRS({'init': 'epsg:32618'}),
+     'driver': 'GTiff',
+     'dtype': 'uint8',
+     'height': 718,
+     'interleave': 'pixel',
+     'nodata': 0.0,
+     'tiled': False,
+     'transform': Affine(300.0379266750948, 0.0, 101985.0,
+           0.0, -300.041782729805, 2826915.0),
+     'width': 791}
+
+    """
+
+    def open(self, driver=None, width=None, height=None,
+             count=None, crs=None, transform=None, dtype=None, nodata=None,
+             **kwargs):
+        """Open the file and return a Rasterio dataset object.
+
+        If data has already been written, the file is opened in 'r+'
+        mode. Otherwise, the file is opened in 'w' mode.
+        """
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
+        if self.exists():
+            s = get_writer_for_path(self.name)(self.name, 'r+')
+        else:
+            s = get_writer_for_driver(driver)(self.name, 'w', driver=driver,
+                                              width=width, height=height,
+                                              count=count, crs=crs,
+                                              transform=transform, dtype=dtype,
+                                              nodata=nodata, **kwargs)
+        s.start()
+        return s
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
 
 
 def get_writer_for_driver(driver):

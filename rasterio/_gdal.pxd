@@ -21,6 +21,18 @@ cdef extern from "cpl_vsi.h" nogil:
     unsigned char *VSIGetMemFileBuffer(const char *path,
                                        vsi_l_offset *data_len,
                                        int take_ownership)
+    VSILFILE *VSIFileFromMemBuffer(const char *path, void *data,
+                                   vsi_l_offset data_len, int take_ownership)
+    VSILFILE* VSIFOpenL(const char *path, const char *mode)
+    int VSIFCloseL(VSILFILE *fp)
+    int VSIUnlink(const char *path)
+
+    int VSIFFlushL(VSILFILE *fp)
+    size_t VSIFReadL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
+    int VSIFSeekL(VSILFILE *fp, vsi_l_offset nOffset, int nWhence)
+    vsi_l_offset VSIFTellL(VSILFILE *fp)
+    int VSIFTruncateL(VSILFILE *fp, vsi_l_offset nNewSize)
+    size_t VSIFWriteL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
 
 
 cdef extern from "cpl_error.h" nogil:
