@@ -105,7 +105,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     else:
                         click.echo(info[meta_member])
                 else:
-                    click.echo(json.dumps(info, indent=indent))
+                    click.echo(json.dumps(info, sort_keys=True, indent=indent))
 
             elif aspect == 'tags':
                 click.echo(
