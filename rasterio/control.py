@@ -1,7 +1,5 @@
 """Ground control points"""
 
-from collections import namedtuple
-
 
 class GroundControlPoint(object):
     """A mapping of row, col image coordinates to x, y, z in a CRS"""
