@@ -53,7 +53,7 @@ def window_index(*args, **kwargs):
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
-__version__ = "1.0a2"
+__version__ = "1.0a3"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
