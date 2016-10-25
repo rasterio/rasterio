@@ -857,7 +857,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._crs = crs
         if transform is not None:
             self._transform = transform.to_gdal()
-        self._gcps = gcps
+        self._gcps = None
+        self._init_gcps = gcps
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -975,8 +976,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self.write_transform(self._transform)
             if self._crs:
                 self.set_crs(self._crs)
-            if self._gcps:
-                self.set_gcps(self._gcps, self._crs)
+            if self._init_gcps:
+                self.set_gcps(self._init_gcps, self.crs)
 
         elif self.mode == 'r+':
             try:
@@ -1451,7 +1452,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         osr = _osr_from_crs(crs)
         OSRExportToWkt(osr, <char**>&srcwkt)
-        GDALSetGCPs(self._hds, len(gcps), gcplist, srcwkt)
+        GDALSetGCPs(self.handle(), len(gcps), gcplist, srcwkt)
         CPLFree(gcplist)
         CPLFree(srcwkt)
 
@@ -1459,14 +1460,25 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._gcps = None
 
     property gcps:
+        """ground control crs and points.
 
+        Returns
+        -------
+        gcps: a sequence of GroundControlPoints
+            Zero or more ground control points.
+        crs: a CRS
+            The coordinate reference system for ground control points.
+        """
         def __get__(self):
             if not self._gcps:
                 self._gcps = self.get_gcps()
             return self._gcps
 
         def __set__(self, values):
-            self.set_gcps(values)
+            if isinstance(values, tuple):
+                self.set_gcps(values[0], values[1])
+            else:
+                self.set_gcps(values)
 
 
 cdef class InMemoryRaster:

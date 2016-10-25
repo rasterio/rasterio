@@ -279,20 +279,22 @@ def _reproject(
 
         elif gcps:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
-            for i, obj in enumerate(gcps):
-                ident = str(i).encode('utf-8')
-                info = "".encode('utf-8')
-                gcplist[i].pszId = ident
-                gcplist[i].pszInfo = info
-                gcplist[i].dfGCPPixel = obj.col
-                gcplist[i].dfGCPLine = obj.row
-                gcplist[i].dfGCPX = obj.x
-                gcplist[i].dfGCPY = obj.y
-                gcplist[i].dfGCPZ = obj.z or 0.0
+            try:
+                for i, obj in enumerate(gcps):
+                    ident = str(i).encode('utf-8')
+                    info = "".encode('utf-8')
+                    gcplist[i].pszId = ident
+                    gcplist[i].pszInfo = info
+                    gcplist[i].dfGCPPixel = obj.col
+                    gcplist[i].dfGCPLine = obj.row
+                    gcplist[i].dfGCPX = obj.x
+                    gcplist[i].dfGCPY = obj.y
+                    gcplist[i].dfGCPZ = obj.z or 0.0
 
-            GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt)
-            CPLFree(gcplist)
-            CPLFree(srcwkt)
+                GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt)
+            finally:
+                CPLFree(gcplist)
+                CPLFree(srcwkt)
 
         # Copy arrays to the dataset.
         retval = io_auto(source, src_dataset, 1)
@@ -562,6 +564,9 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     if all(x is not None for x in (left, bottom, right, top)):
         transform = from_bounds(left, bottom, right, top, width, height)
         transform=transform.to_gdal()
+    elif any(x is not None for x in (left, bottom, right, top)):
+        raise ValueError(
+            "Some, but not all, bounding box parameters were provided.")
     else:
         transform = None
     img = np.empty((height, width))

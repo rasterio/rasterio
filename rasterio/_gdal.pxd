@@ -146,6 +146,7 @@ cdef extern from "gdal.h" nogil:
                        const char *pszGCPProjection)
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
     int GDALGetGCPCount(GDALDatasetH hDS)
+    const char *GDALGetGCPProjection(GDALDatasetH hDS)
 
 
 cdef extern from "gdalwarper.h":

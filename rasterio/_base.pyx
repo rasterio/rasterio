@@ -43,7 +43,7 @@ from rasterio._gdal cimport (
     OSRDestroySpatialReference, OSRExportToProj4, OSRExportToWkt,
     OSRGetAuthorityCode, OSRGetAuthorityName, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
-    GDALGetGCPs, GDALGetGCPCount)
+    GDALGetGCPs, GDALGetGCPCount, GDALGetGCPProjection)
 
 include "gdal.pxi"
 
@@ -202,24 +202,20 @@ cdef class DatasetBase(object):
         except IndexError:
             return False
 
-    def read_crs(self):
+    def _handle_crswkt(self, wkt):
         """Return the GDAL dataset's stored CRS"""
         cdef char *proj = NULL
-        cdef const char *wkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
-
-        wkt = GDALGetProjectionRef(self._hds)
-        if wkt is NULL:
-            raise ValueError("Unexpected NULL spatial reference")
+        wkt_b = wkt.encode('utf-8')
+        cdef const char *wkt_c = wkt_b
 
         crs = CRS()
 
         # Test that the WKT definition isn't just an empty string, which
         # can happen when the source dataset is not georeferenced.
-        wkt_string = wkt
-        if len(wkt_string) > 0:
+        if len(wkt) > 0:
 
-            osr = OSRNewSpatialReference(wkt)
+            osr = OSRNewSpatialReference(wkt_c)
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             log.debug("Got coordinate system")
@@ -261,8 +257,18 @@ cdef class DatasetBase(object):
             CPLFree(proj)
             OSRDestroySpatialReference(osr)
         else:
-            log.debug("GDAL dataset has no projection.")
+            log.debug("No projection detected.")
+
         return crs
+
+    def read_crs(self):
+        """Return the GDAL dataset's stored CRS"""
+        cdef const char *wkt_b = GDALGetProjectionRef(self._hds)
+        if wkt_b == NULL:
+            raise ValueError("Unexpected NULL spatial reference")
+
+        wkt = wkt_b
+        return self._handle_crswkt(wkt)
 
     def read_transform(self):
         """Return the stored GDAL GeoTransform"""
@@ -835,18 +841,27 @@ cdef class DatasetBase(object):
         return GDALChecksumImage(band, xoff, yoff, width, height)
 
     def get_gcps(self):
+        """Get GCPs and their associated CRS."""
+        cdef const char *wkt_b = GDALGetGCPProjection(self.handle())
+        if wkt_b == NULL:
+            raise ValueError("Unexpected NULL spatial reference")
+        wkt = wkt_b
+        crs = self._handle_crswkt(wkt)
+
         cdef const GDAL_GCP *gcplist = NULL
         gcplist = GDALGetGCPs(self.handle())
         num_gcps = GDALGetGCPCount(self.handle())
-        return [GroundControlPoint(col=gcplist[i].dfGCPPixel,
-                                   row=gcplist[i].dfGCPLine,
-                                   x=gcplist[i].dfGCPX,
-                                   y=gcplist[i].dfGCPY,
-                                   z=gcplist[i].dfGCPZ) for i in range(num_gcps)]
+
+        return ([GroundControlPoint(col=gcplist[i].dfGCPPixel,
+                                         row=gcplist[i].dfGCPLine,
+                                         x=gcplist[i].dfGCPX,
+                                         y=gcplist[i].dfGCPY,
+                                         z=gcplist[i].dfGCPZ)
+                                         for i in range(num_gcps)], crs)
 
     property gcps:
         def __get__(self):
-            if not self._gcps:
+            if self._gcps is None:
                 self._gcps = self.get_gcps()
             return self._gcps
 

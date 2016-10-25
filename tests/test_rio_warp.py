@@ -498,8 +498,7 @@ def test_warp_reproject_check_invert_true(runner, tmpdir):
         'warp', srcname, output2name, '--check-invert-proj',
         '--dst-crs', 'EPSG:3759'])
 
-    with rasterio.open(outputname) as output, \
-         rasterio.open(output2name) as output2:
+    with rasterio.open(outputname) as output, rasterio.open(output2name) as output2:
         assert output.shape == output2.shape
 
 
@@ -517,6 +516,22 @@ def test_warp_reproject_check_invert_false(runner, tmpdir):
         'warp', srcname, output2name, '--no-check-invert-proj',
         '--dst-crs', 'EPSG:3759'])
 
-    with rasterio.open(outputname) as output, \
-         rasterio.open(output2name) as output2:
+    with rasterio.open(outputname) as output, rasterio.open(output2name) as output2:
         assert output.shape != output2.shape
+
+
+def test_warp_vrt_gcps(runner, tmpdir):
+    """A VRT with GCPs can be warped."""
+    srcname = 'tests/data/white-gemini-iv.vrt'
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', srcname, outputname, '--dst-crs', 'epsg:32618'])
+    assert result.exit_code == 0
+
+    # All 4 corners have no data.
+    with rasterio.open(outputname) as src:
+        data = src.read()
+        assert not data[:, 0, 0].any()
+        assert not data[:, 0, -1].any()
+        assert not data[:, -1, -1].any()
+        assert not data[:, -1, 0].any()

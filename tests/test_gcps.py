@@ -31,17 +31,22 @@ def test_write_read_gcps(tmpdir):
         pass
 
     with rasterio.open(tiffname, 'r+') as dst:
-        assert len(dst.gcps) == 1
-        point = dst.gcps[0]
+        gcps, crs = dst.gcps
+        assert crs['init'] == 'epsg:4326'
+        assert len(gcps) == 1
+        point = gcps[0]
         assert (1, 1) == (point.row, point.col)
         assert (100.0, 1000.0, 0.0) == (point.x, point.y, point.z)
 
         dst.gcps = [
             GroundControlPoint(row=1, col=1, x=100.0, y=1000.0, z=0.0),
-            GroundControlPoint(row=2, col=2, x=200.0, y=2000.0, z=0.0)]
+            GroundControlPoint(row=2, col=2, x=200.0, y=2000.0, z=0.0)], crs
 
-        assert len(dst.gcps) == 2
-        point = dst.gcps[1]
+        gcps, crs = dst.gcps
+
+        assert crs['init'] == 'epsg:4326'
+        assert len(gcps) == 2
+        point = gcps[1]
         assert (2, 2) == (point.row, point.col)
         assert (200.0, 2000.0, 0.0) == (point.x, point.y, point.z)
 
@@ -66,5 +71,7 @@ def test_read_vrt_gcps(tmpdir):
   </VRTRasterBand>
 </VRTDataset>""")
     with rasterio.open(str(vrtfile)) as src:
-        assert len(src.gcps) == 2
-        assert [(0.5, 0.5), (13.5, 23.5)] == [(p.col, p.row) for p in src.gcps]
+        gcps, crs = src.gcps
+        assert crs['init'] == 'epsg:4326'
+        assert len(gcps) == 2
+        assert [(0.5, 0.5), (13.5, 23.5)] == [(p.col, p.row) for p in gcps]
