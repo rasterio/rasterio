@@ -1598,36 +1598,38 @@ cdef class DatasetWriterBase(DatasetReaderBase):
     def set_gcps(self, gcps, crs=None):
         cdef char *srcwkt = NULL
         cdef GDAL_GCP *gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
-        
-        for i, obj in enumerate(gcps):
-            ident = str(i).encode('utf-8')
-            info = "".encode('utf-8')
-            gcplist[i].pszId = ident
-            gcplist[i].pszInfo = info
-            gcplist[i].dfGCPPixel = obj.col
-            gcplist[i].dfGCPLine = obj.row
-            gcplist[i].dfGCPX = obj.x
-            gcplist[i].dfGCPY = obj.y
-            gcplist[i].dfGCPZ = obj.z or 0.0
 
-        # Try to use the primary crs if possible.
-        if not crs:
-            crs = self.crs
+        try:
+            for i, obj in enumerate(gcps):
+                ident = str(i).encode('utf-8')
+                info = "".encode('utf-8')
+                gcplist[i].pszId = ident
+                gcplist[i].pszInfo = info
+                gcplist[i].dfGCPPixel = obj.col
+                gcplist[i].dfGCPLine = obj.row
+                gcplist[i].dfGCPX = obj.x
+                gcplist[i].dfGCPY = obj.y
+                gcplist[i].dfGCPZ = obj.z or 0.0
 
-        osr = _osr_from_crs(crs)
-        OSRExportToWkt(osr, <char**>&srcwkt)
-        GDALSetGCPs(self.handle(), len(gcps), gcplist, srcwkt)
-        CPLFree(gcplist)
-        CPLFree(srcwkt)
+            # Try to use the primary crs if possible.
+            if not crs:
+                crs = self.crs
+
+            osr = _osr_from_crs(crs)
+            OSRExportToWkt(osr, <char**>&srcwkt)
+            GDALSetGCPs(self.handle(), len(gcps), gcplist, srcwkt)
+        finally:
+            CPLFree(gcplist)
+            CPLFree(srcwkt)
 
         # Invalidate cached value.
         self._gcps = None
 
     property gcps:
-        """ground control crs and points.
+        """ground control points and their coordinate reference system.
 
-        Returns
-        -------
+        The value of this property is a 2-tuple, or pair: (gcps, crs).
+
         gcps: a sequence of GroundControlPoints
             Zero or more ground control points.
         crs: a CRS
@@ -1639,10 +1641,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             return self._gcps
 
         def __set__(self, values):
-            if isinstance(values, tuple):
-                self.set_gcps(values[0], values[1])
-            else:
-                self.set_gcps(values)
+            self.set_gcps(values[0], values[1])
 
 
 cdef class InMemoryRaster:
