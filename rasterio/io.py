@@ -14,6 +14,7 @@ from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
 from rasterio import enums, windows
+from rasterio.env import Env
 from rasterio.transform import guard_transform, xy, rowcol
 
 
@@ -244,18 +245,19 @@ class MemoryFile(MemoryFileBase):
         If data has already been written, the file is opened in 'r+'
         mode. Otherwise, the file is opened in 'w' mode.
         """
-        if self.closed:
-            raise IOError("I/O operation on closed file.")
-        if self.exists():
-            s = get_writer_for_path(self.name)(self.name, 'r+')
-        else:
-            s = get_writer_for_driver(driver)(self.name, 'w', driver=driver,
-                                              width=width, height=height,
-                                              count=count, crs=crs,
-                                              transform=transform, dtype=dtype,
-                                              nodata=nodata, **kwargs)
-        s.start()
-        return s
+        with Env():
+            if self.closed:
+                raise IOError("I/O operation on closed file.")
+            if self.exists():
+                s = get_writer_for_path(self.name)(self.name, 'r+')
+            else:
+                s = get_writer_for_driver(
+                    driver)(self.name, 'w', driver=driver, width=width,
+                            height=height, count=count, crs=crs,
+                            transform=transform, dtype=dtype, nodata=nodata,
+                            **kwargs)
+            s.start()
+            return s
 
     def __enter__(self):
         return self
