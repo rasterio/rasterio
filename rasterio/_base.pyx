@@ -856,7 +856,9 @@ cdef class DatasetBase(object):
                                          row=gcplist[i].dfGCPLine,
                                          x=gcplist[i].dfGCPX,
                                          y=gcplist[i].dfGCPY,
-                                         z=gcplist[i].dfGCPZ)
+                                         z=gcplist[i].dfGCPZ,
+                                         id=gcplist[i].pszId,
+                                         info=gcplist[i].pszInfo)
                                          for i in range(num_gcps)], crs)
 
     property gcps:

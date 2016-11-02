@@ -198,7 +198,10 @@ def _reproject(
     num_threads: int
         Number of worker threads.
     kwargs:  dict, optional
-        Additional arguments passed to transformation function.
+        Additional arguments passed to both the image to image
+        transformer GDALCreateGenImgProjTransformer2() (for example,
+        MAX_GCP_ORDER=2) and to the Warper (for example,
+        INIT_DEST=NO_DATA).
 
     Returns
     ---------
@@ -391,10 +394,21 @@ def _reproject(
     cdef char **imgProjOptions = NULL
     CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
 
+    # See http://www.gdal.org/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
+    # for a list of supported options. I (Sean) don't see harm in
+    # copying all the function's keyword arguments to the image to
+    # image transformer options mapping; unsupported options should be
+    # okay.
+    for key, val in kwargs.items():
+        key = key.upper().encode('utf-8')
+        val = str(val).upper().encode('utf-8')
+        imgProjOptions = CSLSetNameValue(
+            imgProjOptions, <const char *>key, <const char *>val)
+
     try:
         with CPLErrors() as cple:
             hTransformArg = GDALCreateGenImgProjTransformer2(
-                src_dataset, dst_dataset, imgProjOptions)  # NULL, 1, 1000.0, 0)
+                src_dataset, dst_dataset, imgProjOptions)
             hTransformArg = GDALCreateApproxTransformer(
                 GDALGenImgProjTransform, hTransformArg, tolerance)
             pfnTransformer = GDALApproxTransform
@@ -418,6 +432,9 @@ def _reproject(
     warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
     log.debug("Setting NUM_THREADS option: %d", num_threads)
 
+    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # for a list of supported options. Copying unsupported options
+    # is fine.
     for key, val in kwargs.items():
         key = key.upper().encode('utf-8')
         val = str(val).upper().encode('utf-8')

@@ -1,30 +1,56 @@
 """Tests of ground control points"""
 
+import pytest
+
 import rasterio
 from rasterio.control import GroundControlPoint
 
 
 def test_gcp_empty():
-    gcp = GroundControlPoint()
-    assert gcp.row is None
-    assert gcp.col is None
-    assert gcp.x is None
-    assert gcp.y is None
-    assert gcp.z is None
+    with pytest.raises(ValueError):
+        GroundControlPoint()
 
 
 def test_gcp():
-    gcp = GroundControlPoint(row=1, col=1, x=100.0, y=1000.0, z=0.0)
-    assert gcp.row == 1
-    assert gcp.col == 1
+    gcp = GroundControlPoint(1.0, 1.5, 100.0, 1000.0, z=0.0)
+    assert gcp.row == 1.0
+    assert gcp.col == 1.5
     assert gcp.x == 100.0
     assert gcp.y == 1000.0
     assert gcp.z == 0.0
+    assert isinstance(gcp.id, str)
+
+
+def test_gcp_repr():
+    gcp = GroundControlPoint(1.0, 1.5, 100.0, 1000.0, id='foo', info='bar')
+    assert repr(gcp) == "GroundControlPoint(row=1.0, col=1.5, x=100.0, y=1000.0, id='foo', info='bar')"
+
+
+def test_gcp_dict():
+    gcp = GroundControlPoint(1.0, 1.5, 100.0, 1000.0, id='foo', info='bar')
+    assert gcp.asdict()['row'] == 1.0
+    assert gcp.asdict()['col'] == 1.5
+    assert gcp.asdict()['x'] == 100.0
+
+
+def test_gcp_geo_interface():
+    gcp = GroundControlPoint(1.0, 1.5, 100.0, 1000.0, id='foo', info='bar')
+    assert gcp.__geo_interface__['geometry']['coordinates'] == (100.0, 1000.0)
+    assert gcp.__geo_interface__['type'] == 'Feature'
+    assert gcp.__geo_interface__['id'] == 'foo'
+    assert gcp.__geo_interface__['properties']['info'] == 'bar'
+    assert gcp.__geo_interface__['properties']['row'] == 1.0
+    assert gcp.__geo_interface__['properties']['col'] == 1.5
+
+
+def test_gcp_geo_interface_z():
+    gcp = GroundControlPoint(1.0, 1.5, 100.0, 1000.0, z=0.0)
+    assert gcp.__geo_interface__['geometry']['coordinates'] == (100.0, 1000.0, 0.0)
 
 
 def test_write_read_gcps(tmpdir):
     tiffname = str(tmpdir.join('test.tif'))
-    gcps = [GroundControlPoint(row=1, col=1, x=100.0, y=1000.0, z=0.0)]
+    gcps = [GroundControlPoint(1, 1, 100.0, 1000.0, z=0.0)]
 
     with rasterio.open(tiffname, 'w', driver='GTiff', dtype='uint8', count=1,
                        width=10, height=10, crs='epsg:4326', gcps=gcps) as dst:
@@ -39,8 +65,8 @@ def test_write_read_gcps(tmpdir):
         assert (100.0, 1000.0, 0.0) == (point.x, point.y, point.z)
 
         dst.gcps = [
-            GroundControlPoint(row=1, col=1, x=100.0, y=1000.0, z=0.0),
-            GroundControlPoint(row=2, col=2, x=200.0, y=2000.0, z=0.0)], crs
+            GroundControlPoint(1, 1, 100.0, 1000.0, z=0.0),
+            GroundControlPoint(2, 2, 200.0, 2000.0, z=0.0)], crs
 
         gcps, crs = dst.gcps
 
@@ -75,3 +101,5 @@ def test_read_vrt_gcps(tmpdir):
         assert crs['init'] == 'epsg:4326'
         assert len(gcps) == 2
         assert [(0.5, 0.5), (13.5, 23.5)] == [(p.col, p.row) for p in gcps]
+        assert ['1', '2'] == [p.id for p in gcps]
+        assert ['a', 'b'] == [p.info for p in gcps]
