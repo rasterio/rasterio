@@ -24,6 +24,7 @@ cdef class DatasetBase:
     cdef public object _units
     cdef public object _descriptions
     cdef public object _read
+    cdef public object _gcps
 
     cdef GDALDatasetH handle(self) except NULL
     cdef GDALRasterBandH band(self, int bidx) except NULL

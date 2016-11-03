@@ -1,0 +1,36 @@
+<VRTDataset rasterXSize="1024" rasterYSize="768">
+<GCPList Projection="EPSG:32618">
+  <GCP Id="1" Info="a" Pixel="0.0" Line="0.0" X="157168.0" Y="2818194.0" Z="0.0" />
+  <GCP Id="2" Info="b" Pixel="1024.0" Line="0.0" X="338615.0" Y="2786088.0" Z="0.0" />
+  <GCP Id="3" Info="c" Pixel="0.0" Line="768.0" X="116792" Y="2651340.0" Z="0.0" />
+</GCPList>
+  <VRTRasterBand dataType="Byte" band="1">
+    <ColorInterp>Gray</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">tests/data/389225main_sw_1965_1024.jpg</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
+      <DstRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="2">
+    <ColorInterp>Gray</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">tests/data/389225main_sw_1965_1024.jpg</SourceFilename>
+      <SourceBand>2</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
+      <DstRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="3">
+    <ColorInterp>Gray</ColorInterp>
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">tests/data/389225main_sw_1965_1024.jpg</SourceFilename>
+      <SourceBand>3</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
+      <DstRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
+    </SimpleSource>
+  </VRTRasterBand>
+
+</VRTDataset>
+

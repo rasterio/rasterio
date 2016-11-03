@@ -10,6 +10,7 @@ import numpy as np
 from rasterio._err import (
     CPLErrors, GDALError, CPLE_NotSupportedError, CPLE_AppDefinedError)
 from rasterio import dtypes
+from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError
 from rasterio.transform import Affine, from_bounds, tastes_like_gdal
@@ -27,7 +28,7 @@ from rasterio._gdal cimport (
     GDALSetDescription, GDALSetGeoTransform, GDALSetProjection,
     GDALSuggestedWarpOutput2, OCTDestroyCoordinateTransformation,
     OCTNewCoordinateTransformation, OSRDestroySpatialReference,
-    OSRExportToWkt)
+    OSRExportToWkt, GDAL_GCP, GDALSetGCPs, GDALCreateGenImgProjTransformer2)
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
@@ -128,6 +129,7 @@ def _transform_geom(
 def _reproject(
         source, destination,
         src_transform=None,
+        gcps=None,
         src_crs=None,
         src_nodata=None,
         dst_transform=None,
@@ -157,6 +159,9 @@ def _reproject(
     src_transform: affine.Affine(), optional
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
+    gcps: sequence of `GroundControlPoint` instances, optional
+        Ground control points for the source. May be used in place of 
+        src_transform.
     src_crs: dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
@@ -193,7 +198,10 @@ def _reproject(
     num_threads: int
         Number of worker threads.
     kwargs:  dict, optional
-        Additional arguments passed to transformation function.
+        Additional arguments passed to both the image to image
+        transformer GDALCreateGenImgProjTransformer2() (for example,
+        MAX_GCP_ORDER=2) and to the Warper (for example,
+        INIT_DEST=NO_DATA).
 
     Returns
     ---------
@@ -216,6 +224,7 @@ def _reproject(
     cdef const char* pszWarpThread = NULL
     cdef int i
     cdef double tolerance = 0.125
+    cdef GDAL_GCP *gcplist = NULL
 
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
@@ -256,19 +265,39 @@ def _reproject(
             src_dataset, "Temporary source dataset for _reproject()")
         log.debug("Created temp source dataset")
 
-        for i in range(6):
-            gt[i] = src_transform[i]
-        retval = GDALSetGeoTransform(src_dataset, gt)
-        log.debug("Set transform on temp source dataset: %d", retval)
+        if src_transform:
+            for i in range(6):
+                gt[i] = src_transform[i]
+            retval = GDALSetGeoTransform(src_dataset, gt)
+            log.debug("Set transform on temp source dataset: %d", retval)
 
-        try:
-            osr = osr_from_crs(src_crs)
-            OSRExportToWkt(osr, &srcwkt)
-            GDALSetProjection(src_dataset, srcwkt)
-            log.debug("Set CRS on temp source dataset: %s", srcwkt)
-        finally:
-            CPLFree(srcwkt)
-            OSRDestroySpatialReference(osr)
+            try:
+                osr = osr_from_crs(src_crs)
+                OSRExportToWkt(osr, &srcwkt)
+                GDALSetProjection(src_dataset, srcwkt)
+                log.debug("Set CRS on temp source dataset: %s", srcwkt)
+            finally:
+                CPLFree(srcwkt)
+                OSRDestroySpatialReference(osr)
+
+        elif gcps:
+            gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
+            try:
+                for i, obj in enumerate(gcps):
+                    ident = str(i).encode('utf-8')
+                    info = "".encode('utf-8')
+                    gcplist[i].pszId = ident
+                    gcplist[i].pszInfo = info
+                    gcplist[i].dfGCPPixel = obj.col
+                    gcplist[i].dfGCPLine = obj.row
+                    gcplist[i].dfGCPX = obj.x
+                    gcplist[i].dfGCPY = obj.y
+                    gcplist[i].dfGCPZ = obj.z or 0.0
+
+                GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt)
+            finally:
+                CPLFree(gcplist)
+                CPLFree(srcwkt)
 
         # Copy arrays to the dataset.
         retval = io_auto(source, src_dataset, 1)
@@ -361,10 +390,25 @@ def _reproject(
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
 
+    # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
+    cdef char **imgProjOptions = NULL
+    CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+
+    # See http://www.gdal.org/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
+    # for a list of supported options. I (Sean) don't see harm in
+    # copying all the function's keyword arguments to the image to
+    # image transformer options mapping; unsupported options should be
+    # okay.
+    for key, val in kwargs.items():
+        key = key.upper().encode('utf-8')
+        val = str(val).upper().encode('utf-8')
+        imgProjOptions = CSLSetNameValue(
+            imgProjOptions, <const char *>key, <const char *>val)
+
     try:
         with CPLErrors() as cple:
-            hTransformArg = GDALCreateGenImgProjTransformer(
-                src_dataset, NULL, dst_dataset, NULL, 1, 1000.0, 0)
+            hTransformArg = GDALCreateGenImgProjTransformer2(
+                src_dataset, dst_dataset, imgProjOptions)
             hTransformArg = GDALCreateApproxTransformer(
                 GDALGenImgProjTransform, hTransformArg, tolerance)
             pfnTransformer = GDALApproxTransform
@@ -376,6 +420,7 @@ def _reproject(
     except:
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
+        CPLFree(imgProjOptions)
         raise
 
     # Note: warp_extras is pointed to different memory locations on every
@@ -387,6 +432,9 @@ def _reproject(
     warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
     log.debug("Setting NUM_THREADS option: %d", num_threads)
 
+    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # for a list of supported options. Copying unsupported options
+    # is fine.
     for key, val in kwargs.items():
         key = key.upper().encode('utf-8')
         val = str(val).upper().encode('utf-8')
@@ -402,6 +450,7 @@ def _reproject(
         psWOptions.papszWarpOptions = warp_extras
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
+        CPLFree(imgProjOptions)
         raise ValueError("src_nodata must be provided because dst_nodata "
                          "is not None")
     log.debug("src_nodata: %s" % src_nodata)
@@ -419,6 +468,7 @@ def _reproject(
             psWOptions.papszWarpOptions = warp_extras
             GDALDestroyApproxTransformer(hTransformArg)
             GDALDestroyWarpOptions(psWOptions)
+            CPLFree(imgProjOptions)
             raise ValueError("src_nodata must be in valid range for "
                             "source dtype")
 
@@ -438,6 +488,7 @@ def _reproject(
         psWOptions.papszWarpOptions = warp_extras
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
+        CPLFree(imgProjOptions)
         raise ValueError("dst_nodata must be in valid range for "
                          "destination dtype")
 
@@ -502,13 +553,15 @@ def _reproject(
     finally:
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
+        CPLFree(imgProjOptions)
         if dtypes.is_ndarray(source):
             if src_dataset != NULL:
                 GDALClose(src_dataset)
 
 
-def _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top, **kwargs):
+def _calculate_default_transform(src_crs, dst_crs, width, height,
+                                 left=None, bottom=None, right=None, top=None,
+                                 gcps=None, **kwargs):
     """Wraps GDAL's algorithm."""
     cdef void *hTransformArg = NULL
     cdef int npixels = 0
@@ -524,15 +577,23 @@ def _calculate_default_transform(
 
     # Make an in-memory raster dataset we can pass to
     # GDALCreateGenImgProjTransformer().
-    transform = from_bounds(left, bottom, right, top, width, height)
+
+    if all(x is not None for x in (left, bottom, right, top)):
+        transform = from_bounds(left, bottom, right, top, width, height)
+        transform=transform.to_gdal()
+    elif any(x is not None for x in (left, bottom, right, top)):
+        raise ValueError(
+            "Some, but not all, bounding box parameters were provided.")
+    else:
+        transform = None
     img = np.empty((height, width))
 
     osr = osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
     OSRDestroySpatialReference(osr)
 
-    with InMemoryRaster(
-            img, transform=transform.to_gdal(), crs=src_crs) as temp:
+    with InMemoryRaster(width=width, height=height, transform=transform,
+                        gcps=gcps, crs=src_crs) as temp:
         try:
             with CPLErrors() as cple:
                 hTransformArg = GDALCreateGenImgProjTransformer(

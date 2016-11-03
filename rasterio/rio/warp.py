@@ -15,7 +15,8 @@ from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.transform import Affine
 from rasterio.warp import (
-    reproject, Resampling, calculate_default_transform, transform_bounds)
+    reproject, Resampling, transform_bounds,
+    calculate_default_transform as calcdt)
 
 
 # Improper usage of rio-warp can lead to accidental creation of
@@ -199,12 +200,19 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
                 else:
                     try:
-                        dst_transform, dst_width, dst_height = calculate_default_transform(
-                            src.crs, dst_crs, src.width, src.height,
-                            *src.bounds, resolution=res)
+                        if src.transform.is_identity and src.gcps:
+                            src_crs = src.gcps[1]
+                            kwargs = {'gcps': src.gcps[0]}
+                        else:
+                            src_crs = src.crs
+                            kwargs = src.bounds._asdict()
+                        dst_transform, dst_width, dst_height = calcdt(
+                            src_crs , dst_crs, src.width, src.height,
+                            resolution=res, **kwargs)
                     except CRSError as err:
                         raise click.BadParameter(
                             str(err), param='dst_crs', param_hint='dst_crs')
+
             elif dimensions:
                 # Same projection, different dimensions, calculate resolution.
                 dst_crs = src.crs
