@@ -23,7 +23,9 @@ def test_gcp():
 
 def test_gcp_repr():
     gcp = GroundControlPoint(1.0, 1.5, 100.0, 1000.0, id='foo', info='bar')
-    assert repr(gcp) == "GroundControlPoint(row=1.0, col=1.5, x=100.0, y=1000.0, id='foo', info='bar')"
+    copy = eval(repr(gcp))
+    for attr in ('id', 'info', 'row', 'col', 'x', 'y', 'z'):
+        assert getattr(copy, attr) == getattr(gcp, attr)
 
 
 def test_gcp_dict():
