@@ -4,10 +4,15 @@
 import json
 
 import click
+from cligj import (
+    sequence_opt, use_rs_opt, geojson_type_collection_opt,
+    geojson_type_feature_opt, projection_geographic_opt,
+    projection_projected_opt, precision_opt)
 
 import rasterio
 import rasterio.crs
 from rasterio.rio import options
+from rasterio.warp import transform_geom
 
 
 @click.command(short_help="Print information about a data file.")
@@ -50,13 +55,22 @@ from rasterio.rio import options
 @click.option('--checksum', 'meta_member', flag_value='checksum',
               help="Print integer checksum of a single band "
                    "(use --bidx).")
+@click.option('--gcps', 'meta_member', flag_value='gcps',
+              help="Print JSON representation of ground control points.")
+@sequence_opt
+@use_rs_opt
+@geojson_type_collection_opt()
+@geojson_type_feature_opt()
+@projection_geographic_opt
+@projection_projected_opt
+@precision_opt
 @click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
               help="Output extra information.")
 @options.bidx_opt
 @options.masked_opt
 @click.pass_context
-def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
-         masked):
+def info(ctx, input, aspect, indent, namespace, meta_member, sequence, use_rs,
+         geojson_type, projection, precision, verbose, bidx, masked):
     """Print metadata about the dataset as JSON.
 
     Optionally print a single metadata item as a string.
@@ -82,13 +96,22 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
             if proj4 != '':
                 info['lnglat'] = src.lnglat()
+
             if verbose:
                 stats = [{'min': float(b.min()),
                           'max': float(b.max()),
                           'mean': float(b.mean())
                           } for b in src.read(masked=masked)]
                 info['stats'] = stats
+
                 info['checksum'] = [src.checksum(i) for i in src.indexes]
+
+                gcps, crs = src.gcps
+                proj4 = crs.to_string()
+                if proj4.startswith('+init=epsg'):
+                    proj4 = proj4.split('=')[1].upper()
+                info['gcps'] = {
+                    'crs': proj4, 'points': [p.asdict() for p in gcps]}
 
             if aspect == 'meta':
                 if meta_member == 'stats':
@@ -99,6 +122,48 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                         float(band.mean())))
                 elif meta_member == 'checksum':
                     click.echo(str(src.checksum(bidx)))
+
+                elif meta_member == 'gcps':
+                    gcps, crs = src.gcps
+
+                    if geojson_type == 'collection':
+                        features = [p.__geo_interface__ for p in gcps]
+                        if projection == 'geographic' or precision >= 0:
+                            prec = 7 if precision == -1 else precision
+                            dst_crs = 'epsg:4326' if projection == 'geographic' else crs
+                            for i, feat in enumerate(features):
+                                geom = transform_geom(crs, dst_crs,
+                                                      feat['geometry'],
+                                                      precision=prec)
+                                feat['geometry'] = geom
+                                features[i] = feat
+
+                        click.echo(json.dumps(
+                            {'type': 'FeatureCollection',
+                             'features': features}))
+
+                    elif sequence:
+                        for p in gcps:
+                            if use_rs:
+                                click.echo(u'\x1e', nl=False)
+
+                            if geojson_type == 'feature':
+                                feat = p.__geo_interface__
+                                if projection == 'geographic' or precision >= 0:
+                                    prec = 7 if precision == -1 else precision
+                                    dst_crs = 'epsg:4326' if projection == 'geographic' else crs
+                                    geom = transform_geom(crs, dst_crs,
+                                                          feat['geometry'],
+                                                          precision=prec)
+                                    feat['geometry'] = geom
+                                click.echo(json.dumps(feat))
+
+                            else:
+                                click.echo(json.dumps(p.asdict()))
+
+                    else:
+                        click.echo(json.dumps([p.asdict() for p in gcps]))
+
                 elif meta_member:
                     if isinstance(info[meta_member], (list, tuple)):
                         click.echo(" ".join(map(str, info[meta_member])))

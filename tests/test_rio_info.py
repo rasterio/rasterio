@@ -694,3 +694,19 @@ def test_info_checksums_only():
         ['info', 'tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.strip() == '29131'
+
+
+def test_info_gcp_dump():
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/white-gemini-iv.vrt', '--gcps'])
+    assert result.exit_code == 0
+    assert '"info": "c"' in result.output
+
+
+def test_info_gcp_collection():
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/white-gemini-iv.vrt', '--gcps', '--collection'])
+    assert result.exit_code == 0
+    assert '"info": "c"' in result.output

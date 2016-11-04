@@ -84,33 +84,21 @@ def _transform_geom(
 
         if precision >= 0:
             if result['type'] == 'Point':
-                x, y = result['coordinates']
-                x = round(x, precision)
-                y = round(y, precision)
-                new_coords = [x, y]
+                new_coords = [
+                    round(v, precision) for v in result['coordinates']]
             elif result['type'] in ['LineString', 'MultiPoint']:
-                xp, yp = zip(*result['coordinates'])
-                xp = [round(v, precision) for v in xp]
-                yp = [round(v, precision) for v in yp]
-                new_coords = list(zip(xp, yp))
+                new_coords = list(
+                    zip(*([round(v, precision) for v in r]
+                        for r in zip(*result['coordinates']))))
             elif result['type'] in ['Polygon', 'MultiLineString']:
-                new_coords = []
-                for piece in result['coordinates']:
-                    xp, yp = zip(*piece)
-                    xp = [round(v, precision) for v in xp]
-                    yp = [round(v, precision) for v in yp]
-                    new_coords.append(list(zip(xp, yp)))
+                new_coords = [list(zip(*([round(v, precision) for v in r]
+                              for r in zip(*piece))))
+                              for piece in result['coordinates']]
             elif result['type'] == 'MultiPolygon':
-                parts = result['coordinates']
-                new_coords = []
-                for part in parts:
-                    inner_coords = []
-                    for ring in part:
-                        xp, yp = zip(*ring)
-                        xp = [round(v, precision) for v in xp]
-                        yp = [round(v, precision) for v in yp]
-                        inner_coords.append(list(zip(xp, yp)))
-                    new_coords.append(inner_coords)
+                new_coords = [[list(zip(*([round(v, precision) for v in r]
+                              for r in zip(*piece))))
+                              for piece in part]
+                              for part in result['coordinates']]
             result['coordinates'] = new_coords
 
         return result
