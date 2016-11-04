@@ -350,6 +350,42 @@ def window_index(window):
     return tuple(slice(*w) for w in window)
 
 
+def round_window_to_full_tiles(window=None, block_shapes=None):
+    """
+    Round window to include full expanse of intersecting tiles.
+
+    Parameters
+    ----------
+    window : a Window or window tuple
+        The input window.
+
+    block_shapes : tuple of block shapes
+        The input raster's block shape. All bands must have the same block/stripe structure
+
+    Returns
+    -------
+    Window
+    """
+    if len(set(block_shapes)) != 1:
+            raise ValueError('All bands must have the same block/stripe structure')
+
+    height_shape = block_shapes[0][0]
+    width_shape = block_shapes[0][1]
+
+    row_range = window[0]
+    col_range = window[1]
+
+    row_min = int(row_range[0] / height_shape) * height_shape
+    row_max = int(row_range[1] / height_shape) * height_shape + \
+        (height_shape if row_range[1] % height_shape != 0 else 0)
+
+    col_min = int(col_range[0] / width_shape) * width_shape
+    col_max = int(col_range[1] / width_shape) * width_shape + \
+        (width_shape if col_range[1] % width_shape != 0 else 0)
+
+    return Window.from_ranges((row_min, row_max), (col_min, col_max))
+
+
 class Window(tuple):
     """Windows are rectangular subsets of rasters.
     
