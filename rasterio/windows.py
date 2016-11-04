@@ -367,7 +367,7 @@ def round_window_to_full_tiles(window=None, block_shapes=None):
     Window
     """
     if len(set(block_shapes)) != 1:
-            raise ValueError('All bands must have the same block/stripe structure')
+        raise ValueError('All bands must have the same block/stripe structure')
 
     height_shape = block_shapes[0][0]
     width_shape = block_shapes[0][1]
