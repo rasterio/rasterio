@@ -40,6 +40,14 @@ include "gdal.pxi"
 log = logging.getLogger(__name__)
 
 
+def recursive_round(val, precision):
+    """Recursively round coordinates."""
+    if isinstance(val, (int, float)):
+        return round(val, precision)
+    else:
+        return [recursive_round(part, precision) for part in val]
+
+
 def _transform_geom(
         src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
         precision):
@@ -83,23 +91,9 @@ def _transform_geom(
         result = GeomBuilder().build(dst_geom)
 
         if precision >= 0:
-            if result['type'] == 'Point':
-                new_coords = [
-                    round(v, precision) for v in result['coordinates']]
-            elif result['type'] in ['LineString', 'MultiPoint']:
-                new_coords = list(
-                    zip(*([round(v, precision) for v in r]
-                        for r in zip(*result['coordinates']))))
-            elif result['type'] in ['Polygon', 'MultiLineString']:
-                new_coords = [list(zip(*([round(v, precision) for v in r]
-                              for r in zip(*piece))))
-                              for piece in result['coordinates']]
-            elif result['type'] == 'MultiPolygon':
-                new_coords = [[list(zip(*([round(v, precision) for v in r]
-                              for r in zip(*piece))))
-                              for piece in part]
-                              for part in result['coordinates']]
-            result['coordinates'] = new_coords
+            # TODO: Geometry collectons.
+            result['coordinates'] = recursive_round(result['coordinates'],
+                                                    precision)
 
         return result
 
