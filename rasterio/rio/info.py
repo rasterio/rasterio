@@ -82,13 +82,23 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
             if proj4 != '':
                 info['lnglat'] = src.lnglat()
+
             if verbose:
                 stats = [{'min': float(b.min()),
                           'max': float(b.max()),
                           'mean': float(b.mean())
                           } for b in src.read(masked=masked)]
                 info['stats'] = stats
+
                 info['checksum'] = [src.checksum(i) for i in src.indexes]
+
+                gcps, crs = src.gcps
+                proj4 = crs.to_string()
+                if proj4.startswith('+init=epsg'):
+                    proj4 = proj4.split('=')[1].upper()
+                if gcps:
+                    info['gcps'] = {
+                        'crs': proj4, 'points': [p.asdict() for p in gcps]}
 
             if aspect == 'meta':
                 if meta_member == 'stats':

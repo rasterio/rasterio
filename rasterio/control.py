@@ -56,5 +56,4 @@ class GroundControlPoint(object):
             coords.append(self.z)
         return {'id': self.id, 'type': 'Feature',
                 'geometry': {'type': 'Point', 'coordinates': tuple(coords)},
-                'properties': {'info': self.info, 'row': self.row,
-                               'col': self.col}}
+                'properties': self.asdict()}

@@ -1,6 +1,7 @@
 
 import logging
 import sys
+
 import pytest
 from affine import Affine
 import numpy as np
@@ -721,8 +722,10 @@ def test_warp_from_to_file_multi(tmpdir):
                     num_threads=2)
 
 
-def test_transform_geom():
-    geom = {
+@pytest.fixture(scope='function')
+def polygon_3373():
+    """An EPSG:3373 polygon."""
+    return {
         'type': 'Polygon',
         'coordinates': (
             ((798842.3090855901, 6569056.500655151),
@@ -757,15 +760,25 @@ def test_transform_geom():
                 (840726.455490463, 6727039.8672589315),
                 (798842.3090855901, 6569056.500655151)),)}
 
+
+
+def test_transform_geom_polygon(polygon_3373):
+    geom = polygon_3373
     result = transform_geom('EPSG:3373', 'EPSG:4326', geom)
     assert result['type'] == 'Polygon'
     assert len(result['coordinates']) == 1
 
+
+def test_transform_geom_polygon_cutting(polygon_3373):
+    geom = polygon_3373
     result = transform_geom(
         'EPSG:3373', 'EPSG:4326', geom, antimeridian_cutting=True)
     assert result['type'] == 'MultiPolygon'
     assert len(result['coordinates']) == 2
 
+
+def test_transform_geom_polygon_offset(polygon_3373):
+    geom = polygon_3373
     result = transform_geom(
         'EPSG:3373',
         'EPSG:4326',
@@ -775,8 +788,42 @@ def test_transform_geom():
     assert result['type'] == 'MultiPolygon'
     assert len(result['coordinates']) == 2
 
+
+def test_transform_geom_polygon_precision(polygon_3373):
+    geom = polygon_3373
     result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
     assert int(result['coordinates'][0][0][0] * 10) == -1778
+
+
+def test_transform_geom_linestring_precision(polygon_3373):
+    ring = polygon_3373['coordinates'][0]
+    geom = {'type': 'LineString', 'coordinates': ring}
+    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
+    assert int(result['coordinates'][0][0] * 10) == -1778
+
+
+def test_transform_geom_linestring_precision_iso(polygon_3373):
+    ring = polygon_3373['coordinates'][0]
+    geom = {'type': 'LineString', 'coordinates': ring}
+    result = transform_geom('EPSG:3373', 'EPSG:3373', geom, precision=1)
+    assert int(result['coordinates'][0][0] * 10) == 7988423
+
+
+def test_transform_geom_linestring_precision_z(polygon_3373):
+    ring = polygon_3373['coordinates'][0]
+    x, y = zip(*ring)
+    ring = zip(x, y, [0.0 for i in range(len(x))])
+    geom = {'type': 'LineString', 'coordinates': ring}
+    result = transform_geom('EPSG:3373', 'EPSG:3373', geom, precision=1)
+    assert int(result['coordinates'][0][0] * 10) == 7988423
+    assert int(result['coordinates'][0][2] * 10) == 0
+
+
+def test_transform_geom_multipolygon(polygon_3373):
+    geom = {
+        'type': 'MultiPolygon', 'coordinates': [polygon_3373['coordinates']]}
+    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
+    assert int(result['coordinates'][0][0][0][0] * 10) == -1778
 
 
 def test_reproject_unsupported_resampling():

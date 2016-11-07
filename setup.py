@@ -277,6 +277,7 @@ setup_args = dict(
         convert=rasterio.rio.convert:convert
         edit-info=rasterio.rio.edit_info:edit
         env=rasterio.rio.env:env
+        gcps=rasterio.rio.gcps:gcps
         info=rasterio.rio.info:info
         insp=rasterio.rio.insp:insp
         mask=rasterio.rio.mask:mask
