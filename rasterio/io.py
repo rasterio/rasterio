@@ -9,7 +9,7 @@ import uuid
 import warnings
 
 from rasterio._base import (
-    get_dataset_driver, driver_can_create, driver_can_create_copy)
+    DatasetBase, get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
