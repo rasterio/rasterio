@@ -6,9 +6,14 @@ Changes
 
 New features:
 
+- The `DatasetBase` class is now surfaced in `rasterio.io`. This is not too
+  promote the practice of subclassing `DatasetBase` but to help users that
+  would like to use type annotations (#925) or make `isinstance()` assertions.
 - Ground control points may be read from and written to datasets (when the
   format permits) and may be used when reprojecting arrays with `reproject()`
-  or on the command line with rio-warp (#203, #916).
+  or on the command line with rio-warp (#203, #916). A new rio-gcps command
+  has been added, it can print a dataset's GCPs as GeoJSON Feature sequences
+  or FeatureCollections.
 - A `BytesIO` like `MemoryFile` class has been added for an improved Python
   interface to GDAL's in-memory filesystem (#899, #925).
 - Error handlers are pushed to GDAL on entering a GDAL environment and popped
@@ -17,6 +22,8 @@ New features:
 
 Bug fixes:
 
+- transform_geom() would fail when encountering geometries with z coordinate
+  values, but now handles them properly (#922, #923).
 - show_hist() failed when nans were present in data (#913) and this has been
   fixed with the use of nanmin() and nanmax() in #914.
 
