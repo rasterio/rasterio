@@ -350,7 +350,7 @@ def window_index(window):
     return tuple(slice(*w) for w in window)
 
 
-def round_window_to_full_tiles(window=None, block_shapes=None):
+def round_window_to_full_tiles(window, block_shapes):
     """
     Round window to include full expanse of intersecting tiles.
 
