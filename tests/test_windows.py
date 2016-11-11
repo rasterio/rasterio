@@ -306,3 +306,23 @@ def test_round_window_to_full_tiles():
         assert rounded_window[0][1] % height_shape == 0
         assert rounded_window[1][0] % width_shape == 0
         assert rounded_window[1][1] % width_shape == 0
+
+def test_round_window_already_at_edge():
+    with rasterio.open('tests/data/alpha.tif') as src:
+        block_shapes = src.block_shapes
+        test_window = ((256, 512), (512, 768))
+        rounded_window = round_window_to_full_tiles(test_window, block_shapes)
+        assert rounded_window == test_window
+
+def test_round_window_boundless():
+    with rasterio.open('tests/data/alpha.tif') as src:
+        block_shapes = src.block_shapes
+        test_window = ((256, 512), (1000, 1500))
+        rounded_window = round_window_to_full_tiles(test_window, block_shapes)
+        block_shape = block_shapes[0]
+        height_shape = block_shape[0]
+        width_shape = block_shape[1]
+        assert rounded_window[0][0] % height_shape == 0
+        assert rounded_window[0][1] % height_shape == 0
+        assert rounded_window[1][0] % width_shape == 0
+        assert rounded_window[1][1] % width_shape == 0
