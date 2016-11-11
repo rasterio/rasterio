@@ -5,7 +5,7 @@ of a tuple:
 
     ((row_start, row_stop), (col_start, col_stop))
 """
-
+from __future__ import division
 import collections
 import functools
 import math
@@ -375,12 +375,12 @@ def round_window_to_full_tiles(window, block_shapes):
     row_range = window[0]
     col_range = window[1]
 
-    row_min = int(row_range[0] / height_shape) * height_shape
-    row_max = int(row_range[1] / height_shape) * height_shape + \
+    row_min = int(row_range[0] // height_shape) * height_shape
+    row_max = int(row_range[1] // height_shape) * height_shape + \
         (height_shape if row_range[1] % height_shape != 0 else 0)
 
-    col_min = int(col_range[0] / width_shape) * width_shape
-    col_max = int(col_range[1] / width_shape) * width_shape + \
+    col_min = int(col_range[0] // width_shape) * width_shape
+    col_max = int(col_range[1] // width_shape) * width_shape + \
         (width_shape if col_range[1] % width_shape != 0 else 0)
 
     return Window.from_ranges((row_min, row_max), (col_min, col_max))
