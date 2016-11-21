@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.warp module &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>rasterio.warp module &mdash; rasterio 1.0a3 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="next" title="rasterio.windows module" href="rasterio.windows.html"/>
         <link rel="prev" title="rasterio.vfs module" href="rasterio.vfs.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                1.0a3
               </div>
             
           
@@ -193,12 +193,14 @@
 <p>Raster warping and reprojection.</p>
 <dl class="function">
 <dt id="rasterio.warp.calculate_default_transform">
-<code class="descclassname">rasterio.warp.</code><code class="descname">calculate_default_transform</code><span class="sig-paren">(</span><em>src_crs</em>, <em>dst_crs</em>, <em>width</em>, <em>height</em>, <em>left</em>, <em>bottom</em>, <em>right</em>, <em>top</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#calculate_default_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.calculate_default_transform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate parameters for reproject function.</p>
-<p>Transforms bounds to destination coordinate system, calculates resolution
-if not provided, and returns destination transform and dimensions.
-Intended to be used to calculate parameters for reproject function.</p>
-<p>Destination transform is anchored from the left, top coordinate.</p>
+<code class="descclassname">rasterio.warp.</code><code class="descname">calculate_default_transform</code><span class="sig-paren">(</span><em>src_crs</em>, <em>dst_crs</em>, <em>width</em>, <em>height</em>, <em>left=None</em>, <em>bottom=None</em>, <em>right=None</em>, <em>top=None</em>, <em>gcps=None</em>, <em>resolution=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#calculate_default_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.calculate_default_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output dimensions and transform for a reprojection.</p>
+<p>Source and destination coordinate reference systems and output
+width and height are the first four, required, parameters. Source
+georeferencing can be specified using either ground control points
+(gcps) or spatial bounds (left, bottom, right, top). These two
+forms of georeferencing are mutually exclusive.</p>
+<p>The destination transform is anchored at the left, top coordinate.</p>
 <p>Destination width and height (and resolution if not provided), are
 calculated using GDAL&#8217;s method for suggest warp output.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -214,60 +216,84 @@ Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 <blockquote>
 <div><p>Target coordinate reference system.</p>
 </div></blockquote>
-<p><strong>width: int</strong></p>
+<p><strong>width, height: int, optional</strong></p>
 <blockquote>
-<div><p>Source raster width.</p>
+<div><p>Source raster width and height. Not needed if gcps are used.</p>
 </div></blockquote>
-<p><strong>height: int</strong></p>
+<p><strong>left, bottom, right, top: float, optional</strong></p>
 <blockquote>
-<div><p>Source raster height.</p>
+<div><p>Bounding coordinates in src_crs, from the bounds property of a
+raster.</p>
 </div></blockquote>
-<p><strong>left, bottom, right, top: float</strong></p>
+<p><strong>gcps: sequence of GroundControlPoint, optional</strong></p>
 <blockquote>
-<div><p>Bounding coordinates in src_crs, from the bounds property of a raster.</p>
+<div><p>Instead of a bounding box for the source, a sequence of ground
+control points may be provided.</p>
 </div></blockquote>
 <p><strong>resolution: tuple (x resolution, y resolution) or float, optional</strong></p>
 <blockquote>
-<div><p>Target resolution, in units of target coordinate reference system.</p>
+<div><p>Target resolution, in units of target coordinate reference
+system.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">transform: Affine</p>
+<blockquote>
+<div><p>Output affine transformation matrix</p>
+</div></blockquote>
+<p>width, height: int</p>
 <blockquote class="last">
-<div><p>Three elements: <code class="docutils literal"><span class="pre">affine</span> <span class="pre">transform,</span> <span class="pre">width,</span> <span class="pre">and</span> <span class="pre">height</span></code></p>
+<div><p>Output dimesions</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>Some behavior of this function is determined by the
+CHECK_WITH_INVERT_PROJ environment variable:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>YES: constrain output raster to extents that can be inverted</dt>
+<dd>avoids visual artifacts and coordinate discontinuties.</dd>
+</dl>
+<p>NO:  reproject coordinates beyond valid bound limits</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
 <dt id="rasterio.warp.reproject">
-<code class="descclassname">rasterio.warp.</code><code class="descname">reproject</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em>, <em>src_transform=None</em>, <em>src_crs=None</em>, <em>src_nodata=None</em>, <em>dst_transform=None</em>, <em>dst_crs=None</em>, <em>dst_nodata=None</em>, <em>resampling=&lt;Resampling.nearest: 0&gt;</em>, <em>init_dest_nodata=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#reproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.reproject" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.warp.</code><code class="descname">reproject</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em>, <em>src_transform=None</em>, <em>gcps=None</em>, <em>src_crs=None</em>, <em>src_nodata=None</em>, <em>dst_transform=None</em>, <em>dst_crs=None</em>, <em>dst_nodata=None</em>, <em>resampling=&lt;Resampling.nearest: 0&gt;</em>, <em>init_dest_nodata=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/warp.html#reproject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.warp.reproject" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reproject a source raster to a destination raster.</p>
 <p>If the source and destination are ndarrays, coordinate reference
-system definitions and affine transformation parameters are required
-for reprojection.</p>
+system definitions and affine transformation parameters or ground
+control points (gcps) are required for reprojection.</p>
 <p>If the source and destination are rasterio Bands, shorthand for
 bands of datasets on disk, the coordinate reference systems and
-transforms will be read from the appropriate datasets.</p>
+transforms or GCPs will be read from the appropriate datasets.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source: ndarray or rasterio Band</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source, destination: ndarray or Band</strong></p>
 <blockquote>
-<div><p>Source raster.</p>
-</div></blockquote>
-<p><strong>destination: ndarray or rasterio Band</strong></p>
-<blockquote>
-<div><p>Target raster.</p>
+<div><p>The source and destination are 2 or 3-D ndarrays, or a single
+or multiple Rasterio Band object. The dimensionality of source
+and destination must match, i.e., for multiband reprojection
+the lengths of the first axes of the source and destination
+must be the same.</p>
 </div></blockquote>
 <p><strong>src_transform: affine.Affine(), optional</strong></p>
 <blockquote>
-<div><p>Source affine transformation.  Required if source and destination
-are ndarrays.  Will be derived from source if it is a rasterio Band.</p>
+<div><p>Source affine transformation. Required if source and
+destination are ndarrays. Will be derived from source if it is
+a rasterio Band. An error will be raised if this parameter is
+defined together with gcps.</p>
+</div></blockquote>
+<p><strong>gcps: sequence of GroundControlPoint, optional</strong></p>
+<blockquote>
+<div><p>Ground control points for the source. An error will be raised
+if this parameter is defined together with src_transform.</p>
 </div></blockquote>
 <p><strong>src_crs: CRS or dict, optional</strong></p>
 <blockquote>
@@ -278,27 +304,30 @@ Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 </div></blockquote>
 <p><strong>src_nodata: int or float, optional</strong></p>
 <blockquote>
-<div><p>The source nodata value.  Pixels with this value will not be used
-for interpolation.  If not set, it will be default to the
-nodata value of the source image if a masked ndarray or rasterio band,
-if available.  Must be provided if dst_nodata is not None.</p>
+<div><p>The source nodata value.Pixels with this value will not be
+used for interpolation. If not set, it will be default to the
+nodata value of the source image if a masked ndarray or
+rasterio band, if available. Must be provided if dst_nodata is
+not None.</p>
 </div></blockquote>
 <p><strong>dst_transform: affine.Affine(), optional</strong></p>
 <blockquote>
-<div><p>Target affine transformation.  Required if source and destination
-are ndarrays.  Will be derived from target if it is a rasterio Band.</p>
+<div><p>Target affine transformation. Required if source and
+destination are ndarrays. Will be derived from target if it is
+a rasterio Band.</p>
 </div></blockquote>
 <p><strong>dst_crs: CRS or dict, optional</strong></p>
 <blockquote>
-<div><p>Target coordinate reference system.  Required if source and destination
-are ndarrays.  Will be derived from target if it is a rasterio Band.</p>
+<div><p>Target coordinate reference system. Required if source and
+destination are ndarrays. Will be derived from target if it
+is a rasterio Band.</p>
 </div></blockquote>
 <p><strong>dst_nodata: int or float, optional</strong></p>
 <blockquote>
-<div><p>The nodata value used to initialize the destination; it will remain
-in all areas not covered by the reprojected source.  Defaults to the
-nodata value of the destination image (if set), the value of
-src_nodata, or 0 (GDAL default).</p>
+<div><p>The nodata value used to initialize the destination; it will
+remain in all areas not covered by the reprojected source.
+Defaults to the nodata value of the destination image (if set),
+the value of src_nodata, or 0 (GDAL default).</p>
 </div></blockquote>
 <p><strong>resampling: int</strong></p>
 <blockquote>
@@ -508,7 +537,7 @@ values will be preserved (default).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.dev1',
+            VERSION:'1.0a3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

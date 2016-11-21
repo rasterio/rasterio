@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.windows module &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>rasterio.windows module &mdash; rasterio 1.0a3 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="prev" title="rasterio.warp module" href="rasterio.warp.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                1.0a3
               </div>
             
           
@@ -617,6 +617,31 @@ a single iterable which gets expanded to <a href="#id3"><span class="problematic
 </dd></dl>
 
 <dl class="function">
+<dt id="rasterio.windows.round_window_to_full_blocks">
+<code class="descclassname">rasterio.windows.</code><code class="descname">round_window_to_full_blocks</code><span class="sig-paren">(</span><em>window</em>, <em>block_shapes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#round_window_to_full_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.round_window_to_full_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Round window to include full expanse of intersecting tiles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window</strong> : a Window or window tuple</p>
+<blockquote>
+<div><p>The input window.</p>
+</div></blockquote>
+<p><strong>block_shapes</strong> : tuple of block shapes</p>
+<blockquote>
+<div><p>The input raster&#8217;s block shape. All bands must have the same block/stripe structure</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Window</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="rasterio.windows.shape">
 <code class="descclassname">rasterio.windows.</code><code class="descname">shape</code><span class="sig-paren">(</span><em>window</em>, <em>height=-1</em>, <em>width=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/windows.html#shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>The shape of a window.</p>
@@ -761,7 +786,7 @@ targets.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.dev1',
+            VERSION:'1.0a3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.io module &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>rasterio.io module &mdash; rasterio 1.0a3 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="prev" title="rasterio.fill module" href="rasterio.fill.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                1.0a3
               </div>
             
           
@@ -238,20 +238,26 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
 <td>Returns an ordered tuple of all band data types.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">gcps</span></code></td>
+<td>ground control points and their coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
 <td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flag_enums</span></code></td>
+<td>Sets of flags describing the sources of band masks.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
 <td>Mask flags for each band.</td>
@@ -328,44 +334,50 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
 <td>Returns a GDAL geotransform in its native form.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
 <td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
 <td>Read raster bands as a multidimensional array</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
 <td>Return the GDAL dataset&#8217;s stored CRS</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
 <td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset&#8217;s valid data mask.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
 <td>Read raster band masks as a multidimensional array</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
 <td>Return the stored GDAL GeoTransform</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
 <td>Get the values of a dataset at certain positions</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
 <td>Writes a coordinate reference system to the dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
 <td>Sets the description of a dataset band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_gcps</span></code></td>
+<td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
 <td></td>
@@ -461,20 +473,26 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
 <td>Returns an ordered tuple of all band data types.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">gcps</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
 <td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flag_enums</span></code></td>
+<td>Sets of flags describing the sources of band masks.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
 <td>Mask flags for each band.</td>
@@ -548,61 +566,64 @@ otherwise support updates, such as JPEG.</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
 <td>Returns a GDAL geotransform in its native form.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
 <td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
 <td>Read raster bands as a multidimensional array</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
 <td>Return the GDAL dataset&#8217;s stored CRS</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
 <td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset&#8217;s valid data mask.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
 <td>Read raster band masks as a multidimensional array</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
 <td>Return the stored GDAL GeoTransform</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
 <td>Get the values of a dataset at certain positions</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
 <td>Called to start reading a dataset.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">stop</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">stop</span></code></td>
 <td>Ends the dataset&#8217;s life cycle</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tags</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tags</span></code></td>
 <td>Returns a dict containing copies of the dataset or band&#8217;s tags.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">ul</span></code>(row,&nbsp;col)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">ul</span></code>(row,&nbsp;col)</td>
 <td>Returns the coordinates (x, y) of the upper left corner of a pixel at <cite>row</cite> and <cite>col</cite> in the units of the dataset&#8217;s coordinate reference system.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window</span></code>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;boundless])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window</span></code>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;boundless])</td>
 <td>Get the window corresponding to the bounding coordinates.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code>(window)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code>(window)</td>
 <td>Get the bounds of a window</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code>(window)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code>(window)</td>
 <td>Get the affine transform for a dataset window.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code>(row,&nbsp;col[,&nbsp;offset])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code>(row,&nbsp;col[,&nbsp;offset])</td>
 <td>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.</td>
 </tr>
 </tbody>
@@ -652,20 +673,26 @@ directly to disk.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
 <td>Returns an ordered tuple of all band data types.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">gcps</span></code></td>
+<td>ground control points and their coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
 <td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flag_enums</span></code></td>
+<td>Sets of flags describing the sources of band masks.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
 <td>Mask flags for each band.</td>
@@ -742,44 +769,50 @@ directly to disk.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
 <td>Returns a GDAL geotransform in its native form.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
 <td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
 <td>Read raster bands as a multidimensional array</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
 <td>Return the GDAL dataset&#8217;s stored CRS</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
 <td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset&#8217;s valid data mask.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
 <td>Read raster band masks as a multidimensional array</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
 <td>Return the stored GDAL GeoTransform</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
 <td>Get the values of a dataset at certain positions</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
 <td>Writes a coordinate reference system to the dataset.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
 <td>Sets the description of a dataset band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_gcps</span></code></td>
+<td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
 <td></td>
@@ -831,6 +864,78 @@ directly to disk.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.MemoryFile">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">MemoryFile</code><a class="reference internal" href="../_modules/rasterio/io.html#MemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.MemoryFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.MemoryFileBase</span></code></p>
+<p>A BytesIO-like object, backed by an in-memory file.</p>
+<p>This allows formatted files to be read and written without I/O.</p>
+<p>A MemoryFile created with initial bytes becomes immutable. A
+MemoryFile created without initial bytes may be written to using
+either file-like or dataset interfaces.</p>
+<p class="rubric">Examples</p>
+<p>A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
+format driver</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>     <span class="o">...</span>         <span class="n">MemoryFile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">{&#39;count&#39;: 3,</span>
+<span class="go"> &#39;crs&#39;: CRS({&#39;init&#39;: &#39;epsg:32618&#39;}),</span>
+<span class="go"> &#39;driver&#39;: &#39;GTiff&#39;,</span>
+<span class="go"> &#39;dtype&#39;: &#39;uint8&#39;,</span>
+<span class="go"> &#39;height&#39;: 718,</span>
+<span class="go"> &#39;interleave&#39;: &#39;pixel&#39;,</span>
+<span class="go"> &#39;nodata&#39;: 0.0,</span>
+<span class="go"> &#39;tiled&#39;: False,</span>
+<span class="go"> &#39;transform&#39;: Affine(300.0379266750948, 0.0, 101985.0,</span>
+<span class="go">       0.0, -300.041782729805, 2826915.0),</span>
+<span class="go"> &#39;width&#39;: 791}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td>Close MemoryFile and release allocated memory.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">exists</span></code></td>
+<td>True if the in-memory file exists</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
+<td>Return a view on bytes of the file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.io.MemoryFile.open" title="rasterio.io.MemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>([driver,&nbsp;width,&nbsp;height,&nbsp;count,&nbsp;crs,&nbsp;...])</td>
+<td>Open the file and return a Rasterio dataset object.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read size bytes from MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">seek</span></code></td>
+<td>Seek to position in MemoryFile.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tell</span></code></td>
+<td>Tell current position in MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></td>
+<td>Write data bytes to MemoryFile</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.io.MemoryFile.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/io.html#MemoryFile.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.MemoryFile.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the file and return a Rasterio dataset object.</p>
+<p>If data has already been written, the file is opened in &#8216;r+&#8217;
+mode. Otherwise, the file is opened in &#8216;w&#8217; mode.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1122,7 +1227,7 @@ corresponding to the bounding coordinates</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.dev1',
+            VERSION:'1.0a3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

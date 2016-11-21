@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.plot &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>rasterio.plot &mdash; rasterio 1.0a3 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                1.0a3
               </div>
             
           
@@ -386,7 +386,7 @@
 
     <span class="c1"># The histogram is computed individually for each &#39;band&#39; in the array</span>
     <span class="c1"># so we need the overall min/max to constrain the plot</span>
-    <span class="n">rng</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
@@ -466,7 +466,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0.dev1',
+            VERSION:'1.0a3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

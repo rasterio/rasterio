@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.warp &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>rasterio.warp &mdash; rasterio 1.0a3 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                1.0a3
               </div>
             
           
@@ -179,7 +179,6 @@
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">guard_transform</span>
 
 
-<span class="nd">@ensure_env</span>
 <div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.transform">[docs]</a><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Transform vectors from source to target coordinate reference system.</span>
 
@@ -322,59 +321,60 @@
 
 
 <span class="nd">@ensure_env</span>
-<div class="viewcode-block" id="reproject"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.reproject">[docs]</a><span class="k">def</span> <span class="nf">reproject</span><span class="p">(</span>
-        <span class="n">source</span><span class="p">,</span>
-        <span class="n">destination</span><span class="p">,</span>
-        <span class="n">src_transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">src_crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">src_nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">dst_transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">dst_crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">dst_nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span>
-        <span class="n">init_dest_nodata</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Reproject a source raster to a destination raster.</span>
+<div class="viewcode-block" id="reproject"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.reproject">[docs]</a><span class="k">def</span> <span class="nf">reproject</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">src_transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">gcps</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">src_crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">src_nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dst_transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">dst_nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span>
+              <span class="n">init_dest_nodata</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reproject a source raster to a destination raster.</span>
 
 <span class="sd">    If the source and destination are ndarrays, coordinate reference</span>
-<span class="sd">    system definitions and affine transformation parameters are required</span>
-<span class="sd">    for reprojection.</span>
+<span class="sd">    system definitions and affine transformation parameters or ground</span>
+<span class="sd">    control points (gcps) are required for reprojection.</span>
 
 <span class="sd">    If the source and destination are rasterio Bands, shorthand for</span>
 <span class="sd">    bands of datasets on disk, the coordinate reference systems and</span>
-<span class="sd">    transforms will be read from the appropriate datasets.</span>
+<span class="sd">    transforms or GCPs will be read from the appropriate datasets.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ------------</span>
-<span class="sd">    source: ndarray or rasterio Band</span>
-<span class="sd">        Source raster.</span>
-<span class="sd">    destination: ndarray or rasterio Band</span>
-<span class="sd">        Target raster.</span>
+<span class="sd">    source, destination: ndarray or Band</span>
+<span class="sd">        The source and destination are 2 or 3-D ndarrays, or a single</span>
+<span class="sd">        or multiple Rasterio Band object. The dimensionality of source</span>
+<span class="sd">        and destination must match, i.e., for multiband reprojection</span>
+<span class="sd">        the lengths of the first axes of the source and destination</span>
+<span class="sd">        must be the same.</span>
 <span class="sd">    src_transform: affine.Affine(), optional</span>
-<span class="sd">        Source affine transformation.  Required if source and destination</span>
-<span class="sd">        are ndarrays.  Will be derived from source if it is a rasterio Band.</span>
+<span class="sd">        Source affine transformation. Required if source and</span>
+<span class="sd">        destination are ndarrays. Will be derived from source if it is</span>
+<span class="sd">        a rasterio Band. An error will be raised if this parameter is</span>
+<span class="sd">        defined together with gcps.</span>
+<span class="sd">    gcps: sequence of GroundControlPoint, optional</span>
+<span class="sd">        Ground control points for the source. An error will be raised</span>
+<span class="sd">        if this parameter is defined together with src_transform.</span>
 <span class="sd">    src_crs: CRS or dict, optional</span>
 <span class="sd">        Source coordinate reference system, in rasterio dict format.</span>
 <span class="sd">        Required if source and destination are ndarrays.</span>
 <span class="sd">        Will be derived from source if it is a rasterio Band.</span>
 <span class="sd">        Example: CRS({&#39;init&#39;: &#39;EPSG:4326&#39;})</span>
 <span class="sd">    src_nodata: int or float, optional</span>
-<span class="sd">        The source nodata value.  Pixels with this value will not be used</span>
-<span class="sd">        for interpolation.  If not set, it will be default to the</span>
-<span class="sd">        nodata value of the source image if a masked ndarray or rasterio band,</span>
-<span class="sd">        if available.  Must be provided if dst_nodata is not None.</span>
+<span class="sd">        The source nodata value.Pixels with this value will not be</span>
+<span class="sd">        used for interpolation. If not set, it will be default to the</span>
+<span class="sd">        nodata value of the source image if a masked ndarray or</span>
+<span class="sd">        rasterio band, if available. Must be provided if dst_nodata is</span>
+<span class="sd">        not None.</span>
 <span class="sd">    dst_transform: affine.Affine(), optional</span>
-<span class="sd">        Target affine transformation.  Required if source and destination</span>
-<span class="sd">        are ndarrays.  Will be derived from target if it is a rasterio Band.</span>
+<span class="sd">        Target affine transformation. Required if source and</span>
+<span class="sd">        destination are ndarrays. Will be derived from target if it is</span>
+<span class="sd">        a rasterio Band.</span>
 <span class="sd">    dst_crs: CRS or dict, optional</span>
-<span class="sd">        Target coordinate reference system.  Required if source and destination</span>
-<span class="sd">        are ndarrays.  Will be derived from target if it is a rasterio Band.</span>
+<span class="sd">        Target coordinate reference system. Required if source and</span>
+<span class="sd">        destination are ndarrays. Will be derived from target if it</span>
+<span class="sd">        is a rasterio Band.</span>
 <span class="sd">    dst_nodata: int or float, optional</span>
-<span class="sd">        The nodata value used to initialize the destination; it will remain</span>
-<span class="sd">        in all areas not covered by the reprojected source.  Defaults to the</span>
-<span class="sd">        nodata value of the destination image (if set), the value of</span>
-<span class="sd">        src_nodata, or 0 (GDAL default).</span>
+<span class="sd">        The nodata value used to initialize the destination; it will</span>
+<span class="sd">        remain in all areas not covered by the reprojected source.</span>
+<span class="sd">        Defaults to the nodata value of the destination image (if set),</span>
+<span class="sd">        the value of src_nodata, or 0 (GDAL default).</span>
 <span class="sd">    resampling: int</span>
 <span class="sd">        Resampling method to use.  One of the following:</span>
 <span class="sd">            Resampling.nearest,</span>
@@ -395,6 +395,10 @@
 <span class="sd">    out: None</span>
 <span class="sd">        Output is written to destination.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">src_transform</span> <span class="ow">and</span> <span class="n">gcps</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;src_transform and gcps parameters may not&quot;</span>
+                         <span class="s2">&quot;be used together.&quot;</span><span class="p">)</span>
+
     <span class="c1"># Resampling guard.</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">Resampling</span><span class="p">(</span><span class="n">resampling</span><span class="p">)</span>
@@ -425,38 +429,24 @@
     <span class="k">if</span> <span class="n">dst_crs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">dst_crs</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="n">_reproject</span><span class="p">(</span>
-        <span class="n">source</span><span class="p">,</span>
-        <span class="n">destination</span><span class="p">,</span>
-        <span class="n">src_transform</span><span class="p">,</span>
-        <span class="n">src_crs</span><span class="p">,</span>
-        <span class="n">src_nodata</span><span class="p">,</span>
-        <span class="n">dst_transform</span><span class="p">,</span>
-        <span class="n">dst_crs</span><span class="p">,</span>
-        <span class="n">dst_nodata</span><span class="p">,</span>
-        <span class="n">resampling</span><span class="p">,</span>
-        <span class="n">init_dest_nodata</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="n">_reproject</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">src_transform</span><span class="p">,</span> <span class="n">gcps</span><span class="p">,</span> <span class="n">src_crs</span><span class="p">,</span> <span class="n">src_nodata</span><span class="p">,</span>
+               <span class="n">dst_transform</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">dst_nodata</span><span class="p">,</span> <span class="n">resampling</span><span class="p">,</span>
+               <span class="n">init_dest_nodata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <span class="nd">@ensure_env</span>
-<div class="viewcode-block" id="calculate_default_transform"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.calculate_default_transform">[docs]</a><span class="k">def</span> <span class="nf">calculate_default_transform</span><span class="p">(</span>
-        <span class="n">src_crs</span><span class="p">,</span>
-        <span class="n">dst_crs</span><span class="p">,</span>
-        <span class="n">width</span><span class="p">,</span>
-        <span class="n">height</span><span class="p">,</span>
-        <span class="n">left</span><span class="p">,</span>
-        <span class="n">bottom</span><span class="p">,</span>
-        <span class="n">right</span><span class="p">,</span>
-        <span class="n">top</span><span class="p">,</span>
-        <span class="n">resolution</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Calculate parameters for reproject function.</span>
+<div class="viewcode-block" id="calculate_default_transform"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.calculate_default_transform">[docs]</a><span class="k">def</span> <span class="nf">calculate_default_transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
+                                <span class="n">left</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                                <span class="n">gcps</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Output dimensions and transform for a reprojection.</span>
 
-<span class="sd">    Transforms bounds to destination coordinate system, calculates resolution</span>
-<span class="sd">    if not provided, and returns destination transform and dimensions.</span>
-<span class="sd">    Intended to be used to calculate parameters for reproject function.</span>
+<span class="sd">    Source and destination coordinate reference systems and output</span>
+<span class="sd">    width and height are the first four, required, parameters. Source</span>
+<span class="sd">    georeferencing can be specified using either ground control points</span>
+<span class="sd">    (gcps) or spatial bounds (left, bottom, right, top). These two</span>
+<span class="sd">    forms of georeferencing are mutually exclusive.</span>
 
-<span class="sd">    Destination transform is anchored from the left, top coordinate.</span>
+<span class="sd">    The destination transform is anchored at the left, top coordinate.</span>
 
 <span class="sd">    Destination width and height (and resolution if not provided), are</span>
 <span class="sd">    calculated using GDAL&#39;s method for suggest warp output.</span>
@@ -468,40 +458,45 @@
 <span class="sd">        Example: CRS({&#39;init&#39;: &#39;EPSG:4326&#39;})</span>
 <span class="sd">    dst_crs: CRS or dict</span>
 <span class="sd">        Target coordinate reference system.</span>
-<span class="sd">    width: int</span>
-<span class="sd">        Source raster width.</span>
-<span class="sd">    height: int</span>
-<span class="sd">        Source raster height.</span>
-<span class="sd">    left, bottom, right, top: float</span>
-<span class="sd">        Bounding coordinates in src_crs, from the bounds property of a raster.</span>
+<span class="sd">    width, height: int, optional</span>
+<span class="sd">        Source raster width and height. Not needed if gcps are used.</span>
+<span class="sd">    left, bottom, right, top: float, optional</span>
+<span class="sd">        Bounding coordinates in src_crs, from the bounds property of a</span>
+<span class="sd">        raster.</span>
+<span class="sd">    gcps: sequence of GroundControlPoint, optional</span>
+<span class="sd">        Instead of a bounding box for the source, a sequence of ground</span>
+<span class="sd">        control points may be provided.</span>
 <span class="sd">    resolution: tuple (x resolution, y resolution) or float, optional</span>
-<span class="sd">        Target resolution, in units of target coordinate reference system.</span>
+<span class="sd">        Target resolution, in units of target coordinate reference</span>
+<span class="sd">        system.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tuple</span>
-<span class="sd">        Three elements: ``affine transform, width, and height``</span>
+<span class="sd">    transform: Affine</span>
+<span class="sd">        Output affine transformation matrix</span>
+<span class="sd">    width, height: int</span>
+<span class="sd">        Output dimesions</span>
 
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    Should be called within a rasterio.Env() context</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
 <span class="sd">    Some behavior of this function is determined by the</span>
-<span class="sd">    CHECK_WITH_INVERT_PROJ environment variable</span>
+<span class="sd">    CHECK_WITH_INVERT_PROJ environment variable:</span>
+
 <span class="sd">        YES: constrain output raster to extents that can be inverted</span>
 <span class="sd">             avoids visual artifacts and coordinate discontinuties.</span>
 <span class="sd">        NO:  reproject coordinates beyond valid bound limits</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">))</span> <span class="ow">and</span> <span class="n">gcps</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bounding values and ground control points may not&quot;</span>
+                         <span class="s2">&quot;be used together.&quot;</span><span class="p">)</span>
+
     <span class="n">dst_affine</span><span class="p">,</span> <span class="n">dst_width</span><span class="p">,</span> <span class="n">dst_height</span> <span class="o">=</span> <span class="n">_calculate_default_transform</span><span class="p">(</span>
-        <span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span>
-        <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span>
-        <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+        <span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">gcps</span><span class="p">)</span>
 
     <span class="c1"># If resolution is specified, Keep upper-left anchored</span>
     <span class="c1"># adjust the transform resolutions</span>
     <span class="c1"># adjust the width/height by the ratio of estimated:specified res (ceil&#39;d)</span>
     <span class="k">if</span> <span class="n">resolution</span><span class="p">:</span>
-
         <span class="c1"># resolutions argument into tuple</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">resolution</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolution</span><span class="p">))</span>
@@ -557,7 +552,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0.dev1',
+            VERSION:'1.0a3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>In-Memory Files &mdash; rasterio 1.0a3 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>In-Memory Files</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/topics/memory-files.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="in-memory-files">
+<h1>In-Memory Files<a class="headerlink" href="#in-memory-files" title="Permalink to this headline">¶</a></h1>
+<p>Other sections of this documentation have explained how Rasterio can access
+data stored in existing files on disk written by other programs or write files
+to be used by other GIS programs. Filenames have been the typical inputs and
+files on disk have been the typical outputs.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+    <span class="n">data_array</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>There are different options for Python programs that have streams of bytes,
+e.g., from a network socket, as their input or output instead of filenames.
+One is the use of a temporary file on disk.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tempfile</span>
+
+
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpfile</span><span class="p">:</span>
+    <span class="n">tmpfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tmpfile</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">data_array</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Another is Rasterio&#8217;s <code class="docutils literal"><span class="pre">MemoryFile</span></code>, an abstraction for objects in GDAL&#8217;s
+in-memory filesystem.</p>
+<div class="section" id="memoryfile-bytesio-meets-namedtemporaryfile">
+<h2>MemoryFile: BytesIO meets NamedTemporaryFile<a class="headerlink" href="#memoryfile-bytesio-meets-namedtemporaryfile" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">MemoryFile</span></code> class behaves a bit like <code class="docutils literal"><span class="pre">BytesIO</span></code> and
+<code class="docutils literal"><span class="pre">NamedTemporaryFile</span></code>.  A GeoTIFF file in a sequence of <code class="docutils literal"><span class="pre">data</span></code> bytes can be
+opened in memory as shown below.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="kn">import</span> <span class="n">MemoryFile</span>
+
+
+ <span class="k">with</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+     <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+         <span class="n">data_array</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This code can be several times faster than the code using
+<code class="docutils literal"><span class="pre">NamedTemporaryFile</span></code> at roughly double the price in memory.</p>
+</div>
+<div class="section" id="writing-memoryfiles">
+<h2>Writing MemoryFiles<a class="headerlink" href="#writing-memoryfiles" title="Permalink to this headline">¶</a></h2>
+<p>Incremental writes to an empty <code class="docutils literal"><span class="pre">MemoryFile</span></code> are also possible.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MemoryFile</span><span class="p">()</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8192</span><span class="p">)</span>  <span class="c1"># ``f`` is an input stream.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">memfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">data_array</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>These two modes are incompatible: a <code class="docutils literal"><span class="pre">MemoryFile</span></code> initialized with a sequence
+of bytes cannot be extended.</p>
+<p>An empty <code class="docutils literal"><span class="pre">MemoryFile</span></code> can also be written to using dataset API methods.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MemoryFile</span><span class="p">()</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_array</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reading-memoryfiles">
+<h2>Reading MemoryFiles<a class="headerlink" href="#reading-memoryfiles" title="Permalink to this headline">¶</a></h2>
+<p>Access to the sequence of bytes of a <code class="docutils literal"><span class="pre">MemoryFile</span></code> can be had in two ways.
+Its <code class="docutils literal"><span class="pre">getbuffer()</span></code> method returns a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#memoryview">memoryview</a> of its data,
+and the <code class="docutils literal"><span class="pre">MemoryFile</span></code> object itself is a seek-able Python file object.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MemoryFile</span><span class="p">()</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_array</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">memfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8192</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># ``f`` is an output stream.</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0a3',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

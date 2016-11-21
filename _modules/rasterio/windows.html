@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.windows &mdash; rasterio 1.0.dev1 documentation</title>
+  <title>rasterio.windows &mdash; rasterio 1.0a3 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0.dev1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0.dev1
+                1.0a3
               </div>
             
           
@@ -168,7 +168,7 @@
 
 <span class="sd">    ((row_start, row_stop), (col_start, col_stop))</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -217,7 +217,7 @@
 
     <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">Window</span><span class="o">.</span><span class="n">from_ranges</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">arr</span> <span class="o">==</span> <span class="n">nodata</span><span class="p">)</span>
 
@@ -513,6 +513,42 @@
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">window</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="round_window_to_full_blocks"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.round_window_to_full_blocks">[docs]</a><span class="k">def</span> <span class="nf">round_window_to_full_blocks</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">block_shapes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Round window to include full expanse of intersecting tiles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    window : a Window or window tuple</span>
+<span class="sd">        The input window.</span>
+
+<span class="sd">    block_shapes : tuple of block shapes</span>
+<span class="sd">        The input raster&#39;s block shape. All bands must have the same block/stripe structure</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Window</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">block_shapes</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;All bands must have the same block/stripe structure&#39;</span><span class="p">)</span>
+
+    <span class="n">height_shape</span> <span class="o">=</span> <span class="n">block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">width_shape</span> <span class="o">=</span> <span class="n">block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">row_range</span> <span class="o">=</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">col_range</span> <span class="o">=</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">row_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">height_shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">height_shape</span>
+    <span class="n">row_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">height_shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">height_shape</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">height_shape</span> <span class="k">if</span> <span class="n">row_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">height_shape</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">col_min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">col_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">width_shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">width_shape</span>
+    <span class="n">col_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">col_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">width_shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">width_shape</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="n">width_shape</span> <span class="k">if</span> <span class="n">col_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">width_shape</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Window</span><span class="o">.</span><span class="n">from_ranges</span><span class="p">((</span><span class="n">row_min</span><span class="p">,</span> <span class="n">row_max</span><span class="p">),</span> <span class="p">(</span><span class="n">col_min</span><span class="p">,</span> <span class="n">col_max</span><span class="p">))</span></div>
+
+
 <div class="viewcode-block" id="Window"><a class="viewcode-back" href="../../api/rasterio.windows.html#rasterio.windows.Window">[docs]</a><span class="k">class</span> <span class="nc">Window</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Windows are rectangular subsets of rasters.</span>
 <span class="sd">    </span>
@@ -683,7 +719,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0.dev1',
+            VERSION:'1.0a3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
