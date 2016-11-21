@@ -7,7 +7,7 @@
   <VRTRasterBand dataType="Byte" band="1">
     <ColorInterp>Gray</ColorInterp>
     <SimpleSource>
-      <SourceFilename relativeToVRT="0">tests/data/389225main_sw_1965_1024.jpg</SourceFilename>
+      <SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>
       <SourceBand>1</SourceBand>
       <SrcRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
       <DstRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
@@ -16,7 +16,7 @@
   <VRTRasterBand dataType="Byte" band="2">
     <ColorInterp>Gray</ColorInterp>
     <SimpleSource>
-      <SourceFilename relativeToVRT="0">tests/data/389225main_sw_1965_1024.jpg</SourceFilename>
+      <SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>
       <SourceBand>2</SourceBand>
       <SrcRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
       <DstRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
@@ -25,7 +25,7 @@
   <VRTRasterBand dataType="Byte" band="3">
     <ColorInterp>Gray</ColorInterp>
     <SimpleSource>
-      <SourceFilename relativeToVRT="0">tests/data/389225main_sw_1965_1024.jpg</SourceFilename>
+      <SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>
       <SourceBand>3</SourceBand>
       <SrcRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
       <DstRect xOff="0" yOff="0" xSize="1024" ySize="768"/>
