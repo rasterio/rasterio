@@ -71,6 +71,7 @@ Advanced topics
    topics/image_processing
    topics/masking-by-shapefile
    topics/masks
+   topics/memory-files
    topics/migrating-to-v1
    topics/nodata
    topics/overviews
