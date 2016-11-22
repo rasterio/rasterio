@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory-files.html">In-Memory Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
@@ -161,32 +162,34 @@
 <h1>General Concepts<a class="headerlink" href="#general-concepts" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reproject.html#estimating-optimal-output-shape">Estimating optimal output shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reproject.html#reprojecting-a-geotiff-dataset">Reprojecting a GeoTIFF dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reproject.html#references">References</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="color.html#color-interpretation">Color interpretation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="color.html#colormaps">Colormaps</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="image_options.html#configuration-options">Configuration Options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="image_options.html#creation-options">Creation options</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
-<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
-<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Vector Features</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="features.html#extracting-shapes-of-raster-features">Extracting shapes of raster features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="features.html#burning-shapes-into-a-raster">Burning shapes into a raster</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="georeferencing.html#coordinate-reference-system">Coordinate Reference System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="georeferencing.html#coordinate-transformation">Coordinate Transformation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="image_options.html#configuration-options">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image_options.html#creation-options">Creation options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="image_processing.html#image-processing-software">Image processing software</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="masks.html#reading-dataset-masks">Reading dataset masks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="masks.html#writing-masks">Writing masks</a></li>
@@ -195,8 +198,28 @@
 <li class="toctree-l2"><a class="reference internal" href="masks.html#nodata-representations-in-raster-files">Nodata representations in raster files</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="image_processing.html#image-processing-software">Image processing software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory-files.html">In-Memory Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="memory-files.html#memoryfile-bytesio-meets-namedtemporaryfile">MemoryFile: BytesIO meets NamedTemporaryFile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory-files.html#writing-memoryfiles">Writing MemoryFiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory-files.html#reading-memoryfiles">Reading MemoryFiles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#affine-affine-vs-gdal-style-geotransforms">affine.Affine() vs. GDAL-style geotransforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#deprecated-rasterio-drivers">Deprecated: <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-functions-for-working-with-dataset-windows">Moved: Functions for working with dataset windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tool">Moved: <code class="docutils literal"><span class="pre">rasterio.tool</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tools">Moved: <code class="docutils literal"><span class="pre">rasterio.tools</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#removed-rasterio-warp-resampling">Removed: <code class="docutils literal"><span class="pre">rasterio.warp.RESAMPLING</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#signature-changes">Signature Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reproject.html#estimating-optimal-output-shape">Estimating optimal output shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reproject.html#reprojecting-a-geotiff-dataset">Reprojecting a GeoTIFF dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reproject.html#references">References</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a><ul>
@@ -209,9 +232,8 @@
 <li class="toctree-l2"><a class="reference internal" href="tags.html#writing-tags">Writing tags</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="georeferencing.html#coordinate-reference-system">Coordinate Reference System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="georeferencing.html#coordinate-transformation">Coordinate Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vsi.html#aws-s3">AWS S3</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a><ul>
@@ -223,21 +245,6 @@
 <li class="toctree-l2"><a class="reference internal" href="windowed-rw.html#data-windows">Data windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="windowed-rw.html#window-utilities">Window utilities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="windowed-rw.html#blocks">Blocks</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="vsi.html#aws-s3">AWS S3</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#affine-affine-vs-gdal-style-geotransforms">affine.Affine() vs. GDAL-style geotransforms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#deprecated-rasterio-drivers">Deprecated: <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-functions-for-working-with-dataset-windows">Moved: Functions for working with dataset windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tool">Moved: <code class="docutils literal"><span class="pre">rasterio.tool</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#moved-rasterio-tools">Moved: <code class="docutils literal"><span class="pre">rasterio.tools</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#removed-rasterio-warp-resampling">Removed: <code class="docutils literal"><span class="pre">rasterio.warp.RESAMPLING</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="migrating-to-v1.html#signature-changes">Signature Changes</a></li>
 </ul>
 </li>
 </ul>

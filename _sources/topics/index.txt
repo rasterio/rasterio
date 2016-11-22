@@ -4,23 +4,24 @@ General Concepts
 .. toctree::
     :maxdepth: 2
 
-    reproject
-    errors
     color
     concurrency
-    image_options
+    errors
+    features
     fillnodata
+    georeferencing
+    image_options
+    image_processing
+    masking-by-shapefile
+    masks
+    memory-files
+    migrating-to-v1
+    nodata
     overviews
     plotting
-    features
-    masks
-    nodata
-    image_processing
+    reproject
     resampling
     tags
-    georeferencing
-    windowed-rw
     vsi
-    masking-by-shapefile
-    migrating-to-v1
+    windowed-rw
 
