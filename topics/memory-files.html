@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/> 
+    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
+        <link rel="next" title="Migrating to Rasterio 1.0" href="migrating-to-v1.html"/>
+        <link rel="prev" title="Nodata Masks" href="masks.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -85,7 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
@@ -96,6 +98,12 @@
 <li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">In-Memory Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#memoryfile-bytesio-meets-namedtemporaryfile">MemoryFile: BytesIO meets NamedTemporaryFile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-memoryfiles">Writing MemoryFiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reading-memoryfiles">Reading MemoryFiles</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
@@ -221,17 +229,14 @@ of bytes cannot be extended.</p>
 </div>
 <div class="section" id="reading-memoryfiles">
 <h2>Reading MemoryFiles<a class="headerlink" href="#reading-memoryfiles" title="Permalink to this headline">¶</a></h2>
-<p>Access to the sequence of bytes of a <code class="docutils literal"><span class="pre">MemoryFile</span></code> can be had in two ways.
-Its <code class="docutils literal"><span class="pre">getbuffer()</span></code> method returns a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#memoryview">memoryview</a> of its data,
-and the <code class="docutils literal"><span class="pre">MemoryFile</span></code> object itself is a seek-able Python file object.</p>
+<p>Like <code class="docutils literal"><span class="pre">BytesIO</span></code>, <code class="docutils literal"><span class="pre">MemoryFile</span></code> implements the Python file protocol and
+provides <code class="docutils literal"><span class="pre">read()</span></code>, <code class="docutils literal"><span class="pre">seek()</span></code>, and <code class="docutils literal"><span class="pre">tell()</span></code> methods. Instances are thus suitable
+as arguments for methods like <a class="reference external" href="http://docs.python-requests.org/en/master/api/#requests.post">requests.post()</a>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MemoryFile</span><span class="p">()</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
     <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
         <span class="n">dataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_array</span><span class="p">)</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">memfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8192</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># ``f`` is an output stream.</span>
+
+     <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://example.com/upload&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">memfile</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -241,6 +246,15 @@ and the <code class="docutils literal"><span class="pre">MemoryFile</span></code
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="migrating-to-v1.html" class="btn btn-neutral float-right" title="Migrating to Rasterio 1.0" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="masks.html" class="btn btn-neutral" title="Nodata Masks" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
