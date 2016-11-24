@@ -77,18 +77,14 @@ An empty ``MemoryFile`` can also be written to using dataset API methods.
 Reading MemoryFiles
 -------------------
 
-Access to the sequence of bytes of a ``MemoryFile`` can be had in two ways.
-Its ``getbuffer()`` method returns a `memoryview
-<https://docs.python.org/3/library/stdtypes.html#memoryview>`__ of its data,
-and the ``MemoryFile`` object itself is a seek-able Python file object.
+Like ``BytesIO``, ``MemoryFile`` implements the Python file protocol and
+provides ``read()``, ``seek()``, and ``tell()`` methods. Instances are thus suitable
+as arguments for methods like `requests.post() <http://docs.python-requests.org/en/master/api/#requests.post>`__.
 
 .. code-block:: python
 
    with MemoryFile() as memfile:
        with memfile.open(driver='GTiff', count=3, ...) as dataset:
            dataset.write(data_array)
-       while True:
-           data = memfile.read(8192)
-           if not data:
-               break
-           f.write(data)  # ``f`` is an output stream.
+
+        requests.post('https://example.com/upload', data=memfile)
