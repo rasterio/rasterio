@@ -1,6 +1,21 @@
 Changes
 =======
 
+1.0a4 (2016-12-02)
+------------------
+
+New features:
+
+- Geographic bounds designated by a `--geographic` option may now be
+  passed to `rio clip` (#932).
+
+Bug fixes:
+
+- Passing a `--co nodata=none` option to CLI commands will create
+  datasets without any nodata value set. The `--co` option name follows
+  GDAL's command line utilities. A `--profile` alias for this option has
+  also been added.
+
 1.0a3 (2016-10-31)
 ------------------
 
