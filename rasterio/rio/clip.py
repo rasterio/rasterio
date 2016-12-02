@@ -9,6 +9,21 @@ import rasterio
 from rasterio.coords import disjoint_bounds
 
 
+# Geographic (default), projected, or Mercator switch.
+projection_geographic_opt = click.option(
+    '--geographic',
+    'projection',
+    flag_value='geographic',
+    help="Bounds in geographic coordinates.")
+
+projection_projected_opt = click.option(
+    '--projected',
+    'projection',
+    flag_value='projected',
+    default=True,
+    help="Bounds in input's own projected coordinates (the default).")
+
+
 # Clip command
 @click.command(short_help='Clip a raster to given bounds.')
 @click.argument(
@@ -24,23 +39,25 @@ from rasterio.coords import disjoint_bounds
     type=click.Path(exists=True),
     help='Raster dataset to use as a template for bounds')
 @format_opt
+@projection_geographic_opt
+@projection_projected_opt
 @options.creation_options
 @click.pass_context
-def clip(
-        ctx,
-        files,
-        output,
-        bounds,
-        like,
-        driver,
-        creation_options):
-    """Clips a raster using bounds input directly or from a template raster.
+def clip(ctx, files, output, bounds, like, driver, projection,
+         creation_options):
+    """Clips a raster using projected or geographic bounds.
 
     \b
       $ rio clip input.tif output.tif --bounds xmin ymin xmax ymax
       $ rio clip input.tif output.tif --like template.tif
 
-    If using --bounds, values must be in coordinate reference system of input.
+    The values of --bounds are presumed to be from the coordinate
+    reference system of the input dataset unless the --geographic option
+    is used, in which case the values may be longitude and latitude
+    bounds. Either JSON, for example "[west, south, east, north]", or
+    plain text "west south east north" representations of a bounding box
+    are acceptable.
+
     If using --like, bounds will automatically be transformed to match the
     coordinate reference system of the input.
 
@@ -50,7 +67,6 @@ def clip(
       $ rio clip input.tif output.tif --bounds $(fio info features.shp --bounds)
 
     """
-
     from rasterio.warp import transform_bounds
 
     with ctx.obj['env']:
@@ -60,6 +76,8 @@ def clip(
 
         with rasterio.open(input) as src:
             if bounds:
+                if projection == 'geographic':
+                    bounds = transform_bounds('epsg:4326', src.crs, *bounds)
                 if disjoint_bounds(bounds, src.bounds):
                     raise click.BadParameter('must overlap the extent of '
                                              'the input raster',

@@ -374,7 +374,7 @@ def test_merge_tiny_res_bounds(tiffs):
     inputs.sort()
     runner = CliRunner()
     result = runner.invoke(
-        main_group, ['merge'] + inputs + [outputname, '--res', 2, '--bounds', 1, 0, 5, 4])
+        main_group, ['merge'] + inputs + [outputname, '--res', 2, '--bounds', '1, 0, 5, 4'])
     assert result.exit_code == 0
 
     # Output should be

@@ -48,6 +48,7 @@ Registry of common rio CLI options.  See cligj for more options.
 
 
 import os.path
+import re
 
 import click
 
@@ -76,17 +77,20 @@ def _cb_key_val(ctx, param, value):
         out = {}
         for pair in value:
             if '=' not in pair:
-                raise click.BadParameter("Invalid syntax for KEY=VAL arg: {}".format(pair))
+                raise click.BadParameter(
+                    "Invalid syntax for KEY=VAL arg: {}".format(pair))
             else:
                 k, v = pair.split('=', 1)
                 k = k.lower()
                 v = v.lower()
-                out[k] = v
+                out[k] = None if v in ['none', 'null', 'nil'] else v
         return out
+
 
 def abspath_forward_slashes(path):
     """Return forward-slashed version of os.path.abspath"""
     return '/'.join(os.path.abspath(path).split(os.path.sep))
+
 
 def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
@@ -147,6 +151,21 @@ def nodata_handler(ctx, param, value):
     return retval
 
 
+def bounds_handler(ctx, param, value):
+    """Handle different forms of bounds."""
+    retval = from_like_context(ctx, param, value)
+    if retval is None and value is not None:
+        try:
+            value = value.strip(', []')
+            retval = tuple(float(x) for x in re.split('[,\s]+', value))
+            assert len(retval) == 4
+        except:
+            raise click.BadParameter(
+                "{0!r} is not a valid bounding box representation".format(
+                    value))
+    return retval
+
+
 # Singular input file
 file_in_arg = click.argument('INPUT', callback=file_in_handler)
 
@@ -168,9 +187,8 @@ bidx_mult_opt = click.option(
 
 # TODO: may be better suited to cligj
 bounds_opt = click.option(
-    '--bounds',
-    nargs=4, type=float, default=None,
-    help='Output bounds: left bottom right top.')
+    '--bounds', default=None, callback=bounds_handler,
+    help='Bounds: "left bottom right top" or "[left, bottom, right, top]".')
 
 dimensions_opt = click.option(
     '--dimensions',
@@ -213,7 +231,7 @@ resolution_opt = click.option(
          '--res pixel_width --res pixel_height.')
 
 creation_options = click.option(
-    '--co', 'creation_options',
+    '--co', '--profile', 'creation_options',
     metavar='NAME=VALUE',
     multiple=True,
     callback=_cb_key_val,

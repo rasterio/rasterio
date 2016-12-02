@@ -53,7 +53,7 @@ def window_index(*args, **kwargs):
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
-__version__ = "1.0a3"
+__version__ = "1.0a4"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -163,9 +163,7 @@ def open(path, mode='r', driver=None, width=None, height=None,
     be an Apache Commons VFS style string beginning with "zip://" or
     "tar://"". In this case, the ``path`` must be an absolute path
     within that container.
-
     """
-
     if not isinstance(path, string_types):
         raise TypeError("invalid path: {0!r}".format(path))
     if mode and not isinstance(mode, string_types):
@@ -174,7 +172,8 @@ def open(path, mode='r', driver=None, width=None, height=None,
         raise TypeError("invalid driver: {0!r}".format(driver))
     if dtype and not check_dtype(dtype):
         raise TypeError("invalid dtype: {0!r}".format(dtype))
-
+    if nodata is not None:
+        nodata = float(nodata)
     if 'affine' in kwargs:
         # DeprecationWarning's are ignored by default
         with warnings.catch_warnings():

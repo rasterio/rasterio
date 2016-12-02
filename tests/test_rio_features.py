@@ -12,9 +12,15 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.rio.main import main_group
 
+
 DEFAULT_SHAPE = (10, 10)
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+def bbox(*args):
+    return ' '.join([str(x) for x in args])
+
 
 def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
               pixelated_image_file):
@@ -476,7 +482,7 @@ def test_rasterize_bounds(tmpdir, runner, basic_feature, basic_image_2x2):
     result = runner.invoke(
         main_group, [
             'rasterize', output, '--dimensions', DEFAULT_SHAPE[0],
-            DEFAULT_SHAPE[1], '--bounds', 0, 10, 10, 0],
+            DEFAULT_SHAPE[1], '--bounds', bbox(0, 10, 10, 0)],
         input=json.dumps(basic_feature))
 
     assert result.exit_code == 0
@@ -582,7 +588,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
         main_group, [
             'rasterize', output,
             '--dimensions', DEFAULT_SHAPE[0], DEFAULT_SHAPE[1],
-            '--bounds', 0, 10, 10, 0],
+            '--bounds', bbox(0, 10, 10, 0)],
         input=json.dumps(basic_feature), catch_exceptions=False)
 
     assert result.exit_code == 0

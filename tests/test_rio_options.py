@@ -4,7 +4,8 @@ import uuid
 import click
 import pytest
 
-from rasterio.rio.options import file_in_handler, like_handler, nodata_handler
+from rasterio.rio.options import (
+    bounds_handler, file_in_handler, like_handler, nodata_handler)
 
 
 class MockContext:
@@ -17,6 +18,41 @@ class MockOption:
 
     def __init__(self, name):
         self.name = name
+
+
+def test_bounds_handler_3_items():
+    """fail if less than 4 numbers in the bbox"""
+    ctx = MockContext()
+    with pytest.raises(click.BadParameter):
+        bounds_handler(ctx, 'bounds', '1.0 0.0 1.0')
+
+
+def test_bounds_handler_3_items():
+    """fail if there's a non-number in the bbox"""
+    ctx = MockContext()
+    with pytest.raises(click.BadParameter):
+        bounds_handler(ctx, 'bounds', '1.0 surprise! 1.0')
+
+
+def test_bounds_handler_floats():
+    """handle non-JSON bbox"""
+    ctx = MockContext()
+    retval = bounds_handler(ctx, 'bounds', '1.0 0.0 1.0 0.0')
+    assert retval == (1.0, 0.0, 1.0, 0.0)
+
+
+def test_bounds_handler_floats():
+    """handle non-JSON bbox with commas"""
+    ctx = MockContext()
+    retval = bounds_handler(ctx, 'bounds', '1.0, 0.0, 1.0 , 0.0')
+    assert retval == (1.0, 0.0, 1.0, 0.0)
+
+
+def test_bounds_handler_json():
+    """handle JSON bbox"""
+    ctx = MockContext()
+    retval = bounds_handler(ctx, 'bounds', '[1.0, 0.0, 1.0, 0.0]')
+    assert retval == (1.0, 0.0, 1.0, 0.0)
 
 
 def test_file_in_handler_no_vfs_nonexistent():
@@ -38,21 +74,23 @@ def test_file_in_handler_bad_scheme():
     """lolwut scheme is not supported"""
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
-        _ = file_in_handler(ctx, 'INPUT', 'lolwut://bogus')
+        file_in_handler(ctx, 'INPUT', 'lolwut://bogus')
 
 
 def test_file_in_handler_with_vfs_nonexistent():
     """archive does not exist"""
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
-        _ = file_in_handler(
-            ctx, 'INPUT', 'zip://{0}/files.zip!/inputs/RGB.byte.tif'.format(uuid.uuid4()))
+        file_in_handler(
+            ctx, 'INPUT', 'zip://{0}/files.zip!/inputs/RGB.byte.tif'.format(
+                uuid.uuid4()))
 
 
 def test_file_in_handler_with_vfs():
     """vfs file path path is expanded"""
     ctx = MockContext()
-    retval = file_in_handler(ctx, 'INPUT', 'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
+    retval = file_in_handler(
+        ctx, 'INPUT', 'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
     assert retval.endswith('tests/data/files.zip!/inputs/RGB.byte.tif')
 
 
