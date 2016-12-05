@@ -108,7 +108,7 @@ def test_transform_bounds_densify():
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = {'init': 'EPSG:4326'}
-    dst_crs = {'init': 'EPSG:32610'}
+    dst_crs = {'init': 'EPSG:2163'}
     assert np.allclose(
         transform_bounds(
             src_crs,
@@ -116,9 +116,8 @@ def test_transform_bounds_densify():
             -120, 40, -80, 64,
             densify_pts=0
         ),
-        (
-            646695.227266598, 4432069.056898901,
-            4201818.984205882, 7807592.187464975
+        ( -1684649.41338, -350356.81377,
+          1684649.41338, 2234551.18559
         )
     )
 
@@ -129,10 +128,8 @@ def test_transform_bounds_densify():
             -120, 40, -80, 64,
             densify_pts=100
         ),
-        (
-            646695.2272665979, 4432069.056898901,
-            4201818.984205882, 7807592.187464977
-        )
+        ( -1684649.41338, -555777.79210,
+          1684649.41338, 2234551.18559)
     )
 
 
