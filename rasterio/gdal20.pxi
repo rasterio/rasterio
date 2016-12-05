@@ -1,0 +1,1 @@
+DEF CAN_DELETE_NODATA = False

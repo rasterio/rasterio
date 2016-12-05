@@ -23,6 +23,18 @@ def test_edit_nodata_err(data):
     assert result.exit_code == 2
 
 
+@pytest.mark.xfail(
+    not rasterio.__gdal_version__.startswith('2.1'),
+    reason='Unsupported by GDAL versions < 2.1')
+def test_delete_nodata(data):
+    """Delete a dataset's nodata value"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--nodata', 'none'])
+    assert result.exit_code == 0
+
+
 def test_edit_nodata(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))

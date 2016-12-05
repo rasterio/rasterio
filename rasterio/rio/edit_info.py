@@ -35,7 +35,7 @@ def crs_handler(ctx, param, value):
         try:
             if isinstance(retval, dict):
                 retval = CRS(retval)
-            elif isinstance(retval, string_types):
+            else:
                 retval = CRS.from_string(retval)
         except CRSError:
             raise click.BadParameter(
@@ -149,7 +149,14 @@ def edit(ctx, input, bidx, nodata, crs, transform, units, description,
                     "outside the range of the file's "
                     "data type (%s)." % dtype,
                     param=nodata, param_hint='nodata')
+
+        # Setting nodata to None will raise NotImplementedError
+        # if GDALDeleteRasterNoDataValue() isn't present in the
+        # GDAL library.
+        try:
             dst.nodata = nodata
+        except NotImplementedError as exc:
+            raise click.ClickException(str(exc))
 
         if crs:
             dst.crs = crs

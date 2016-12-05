@@ -102,16 +102,43 @@ try:
             # e.g. -framework GDAL
             extra_link_args.append(item)
     # datadir, gdal_output[2] handled below
-    for item in gdal_output[3].split():
-        gdal2plus = not item.startswith("1.")
+
+    gdalversion = gdal_output[3]
+    if gdalversion:
+        log.info("GDAL API version obtained from gdal-config: %s",
+                 gdalversion)
 
 except Exception as e:
     if os.name == "nt":
-        log.info(("Building on Windows requires extra options to setup.py to locate needed GDAL files.\n"
-                 "More information is available in the README."))
+        log.info("Building on Windows requires extra options to setup.py "
+                 "to locate needed GDAL files. More information is available "
+                 "in the README.")
     else:
         log.warning("Failed to get options via gdal-config: %s", str(e))
 
+
+# Get GDAL API version from environment variable.
+if 'GDAL_VERSION' in os.environ:
+    gdalversion = os.environ['GDAL_VERSION']
+    log.info("GDAL API version obtained from environment: %s", gdalversion)
+
+# Get GDAL API version from the command line if specified there.
+if '--gdalversion' in sys.argv:
+    index = sys.argv.index('--gdalversion')
+    sys.argv.pop(index)
+    gdalversion = sys.argv.pop(index)
+    log.info("GDAL API version obtained from command line option: %s",
+             gdalversion)
+
+if not gdalversion:
+    log.fatal("A GDAL API version must be specified. Provide a path "
+              "to gdal-config using a GDAL_CONFIG environment variable "
+              "or use a GDAL_VERSION environment variable.")
+    sys.exit(1)
+
+gdal_version_parts = gdalversion.split('.')
+gdal_major_version = int(gdal_version_parts[0])
+gdal_minor_version = int(gdal_version_parts[1])
 
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
@@ -133,11 +160,15 @@ if os.environ.get('PACKAGE_DATA'):
         log.info("Copying proj_data from %s" % projdatadir)
         copy_data_tree(projdatadir, 'rasterio/proj_data')
 
-ext_options = dict(
-    include_dirs=include_dirs,
-    library_dirs=library_dirs,
-    libraries=libraries,
-    extra_link_args=extra_link_args)
+ext_options = {
+    'include_dirs': include_dirs,
+    'library_dirs': library_dirs,
+    'libraries': libraries,
+    'extra_link_args': extra_link_args,
+    'define_macros': []}
+
+#        ('GDAL_MAJOR_VERSION', gdal_major_version),
+#        ('GDAL_MINOR_VERSION', gdal_minor_version)]}
 
 if not os.name == "nt":
     # These options fail on Windows if using Visual Studio
@@ -148,12 +179,12 @@ cythonize_options = {}
 if os.environ.get('CYTHON_COVERAGE'):
     cythonize_options['compiler_directives'] = {'linetrace': True}
     cythonize_options['annotate'] = True
-    ext_options['define_macros'] = [('CYTHON_TRACE', '1'),
-                                    ('CYTHON_TRACE_NOGIL', '1')]
+    ext_options['define_macros'].extend(
+        [('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1')])
 
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
-if gdal2plus:
+if gdal_major_version >= 2:
     # GDAL>=2.0 does not require vendorized rasterfill.cpp
     cython_fill = ['rasterio/_fill.pyx']
     sdist_fill = ['rasterio/_fill.cpp']
@@ -164,11 +195,20 @@ else:
 # When building from a repo, Cython is required.
 if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
     log.info("MANIFEST.in found, presume a repo, cythonizing...")
+
     if not cythonize:
         log.critical(
             "Cython.Build.cythonize not found. "
             "Cython is required to build from a repo.")
         sys.exit(1)
+
+    if gdal_major_version >= 2 and gdal_minor_version >= 1:
+        log.info("Adding GDAL 2.1 declarations.")
+        shutil.copy('rasterio/gdal21.pxi', 'rasterio/gdalextras.pxi')
+    else:
+        log.info("Not adding extra declarations.")
+        shutil.copy('rasterio/gdal20.pxi', 'rasterio/gdalextras.pxi')
+
     ext_modules = cythonize([
         Extension(
             'rasterio._base', ['rasterio/_base.pyx'], **ext_options),

@@ -1,6 +1,7 @@
 # GDAL function definitions.
 
 include "gdal.pxi"
+include "gdalextras.pxi"
 
 
 cdef extern from "cpl_string.h" nogil:

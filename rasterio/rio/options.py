@@ -96,23 +96,23 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path, archive, scheme = parse_path(value)
-    except ValueError as exc:
-        raise click.BadParameter(str(exc))
-    path_to_check = archive or path
-    if (scheme not in ['http', 'https', 's3'] and not
-            os.path.exists(path_to_check)):
-        raise click.BadParameter(
-            "Input file {0} does not exist".format(path_to_check))
-    if archive and scheme:
-        archive = abspath_forward_slashes(archive)
-        path = "{0}://{1}!{2}".format(scheme, archive, path)
-    elif scheme and scheme.startswith('http'):
-        path = "{0}://{1}".format(scheme, path)
-    elif scheme == 's3':
-        path = "{0}://{1}".format(scheme, path)
-    else:
-        path = abspath_forward_slashes(path)
-    return path
+        path_to_check = archive or path
+        if (scheme not in ['http', 'https', 's3'] and not
+                os.path.exists(path_to_check)):
+            raise IOError(
+                "Input file {0} does not exist".format(path_to_check))
+        if archive and scheme:
+            archive = abspath_forward_slashes(archive)
+            path = "{0}://{1}!{2}".format(scheme, archive, path)
+        elif scheme and scheme.startswith('http'):
+            path = "{0}://{1}".format(scheme, path)
+        elif scheme == 's3':
+            path = "{0}://{1}".format(scheme, path)
+        else:
+            path = abspath_forward_slashes(path)
+        return path
+    except Exception:
+        raise click.BadParameter("{} is not a valid input file".format(value))
 
 
 def from_like_context(ctx, param, value):
@@ -141,13 +141,16 @@ def like_handler(ctx, param, value):
 def nodata_handler(ctx, param, value):
     """Get nodata value from a template file or command line."""
     retval = from_like_context(ctx, param, value)
-    if retval is None and value is not None:
-        try:
-            retval = float(value)
-        except:
-            raise click.BadParameter(
-                "%s is not a number." % repr(value),
-                param=param, param_hint='nodata')
+    if retval is None:
+        if value in ['none', 'null', 'nil']:
+            retval = None
+        elif value is not None:
+            try:
+                retval = float(value)
+            except:
+                raise click.BadParameter(
+                    "%s is not a number." % repr(value),
+                    param=param, param_hint='nodata')
     return retval
 
 

@@ -27,21 +27,21 @@ def test_bounds_handler_3_items():
         bounds_handler(ctx, 'bounds', '1.0 0.0 1.0')
 
 
-def test_bounds_handler_3_items():
+def test_bounds_handler_non_number():
     """fail if there's a non-number in the bbox"""
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
         bounds_handler(ctx, 'bounds', '1.0 surprise! 1.0')
 
 
-def test_bounds_handler_floats():
+def test_bounds_handler_non_json():
     """handle non-JSON bbox"""
     ctx = MockContext()
     retval = bounds_handler(ctx, 'bounds', '1.0 0.0 1.0 0.0')
     assert retval == (1.0, 0.0, 1.0, 0.0)
 
 
-def test_bounds_handler_floats():
+def test_bounds_handler_commas():
     """handle non-JSON bbox with commas"""
     ctx = MockContext()
     retval = bounds_handler(ctx, 'bounds', '1.0, 0.0, 1.0 , 0.0')
@@ -103,6 +103,13 @@ def test_file_in_handler_with_vfs_file():
 
 def test_like_dataset_callback(data):
     ctx = MockContext()
+    like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
+    assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+
+
+def test_like_dataset_callback_obj_init(data):
+    ctx = MockContext()
+    ctx.obj = None
     like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
     assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
 
