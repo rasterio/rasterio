@@ -141,16 +141,13 @@ def like_handler(ctx, param, value):
 def nodata_handler(ctx, param, value):
     """Get nodata value from a template file or command line."""
     retval = from_like_context(ctx, param, value)
-    if retval is None:
-        if value in ['none', 'null', 'nil']:
-            retval = None
-        elif value is not None:
-            try:
-                retval = float(value)
-            except:
-                raise click.BadParameter(
-                    "%s is not a number." % repr(value),
-                    param=param, param_hint='nodata')
+    if retval is None and value is not None:
+        try:
+            retval = float(value)
+        except:
+            raise click.BadParameter(
+                "%s is not a number." % repr(value),
+                param=param, param_hint='nodata')
     return retval
 
 
@@ -254,7 +251,7 @@ force_overwrite_opt = click.option(
     help="Always overwrite an existing output file.")
 
 nodata_opt = click.option(
-    '--nodata', callback=nodata_handler, default=None,
+    '--nodata', callback=nodata_handler, default=None, metavar='VALUE',
     help="New nodata value.")
 
 like_opt = click.option(

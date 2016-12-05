@@ -64,14 +64,16 @@ def test_update_nodatavals(data):
         assert f.nodatavals == (255, 255, 255)
 
 
-def test_update_nodatavals_error(data):
+@pytest.mark.xfail(
+    not rasterio.__gdal_version__.startswith('2.1'),
+    reason='Unsupported by GDAL versions < 2.1')
+def test_update_nodatavals_none(data):
     """GDAL doesn't support un-setting nodata values."""
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
-        try:
-            f.nodata = None
-        except TypeError:
-            pass
+        f.nodata = None
+    with rasterio.open(tiffname) as f:
+        assert f.nodatavals == (None, None, None)
 
 
 def test_update_mask_true(data):

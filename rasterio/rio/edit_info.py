@@ -80,6 +80,8 @@ def transform_handler(ctx, param, value):
 @options.file_in_arg
 @options.bidx_opt
 @options.nodata_opt
+@click.option('--unset-nodata', default=False, is_flag=True,
+              help="Unset the dataset's nodata value.")
 @click.option('--crs', callback=crs_handler, default=None,
               help="New coordinate reference system")
 @click.option('--transform', callback=transform_handler,
@@ -94,8 +96,8 @@ def transform_handler(ctx, param, value):
               help="Copy all metadata items from the template file.")
 @options.like_opt
 @click.pass_context
-def edit(ctx, input, bidx, nodata, crs, transform, units, description,
-         tags, allmd, like):
+def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
+         description, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -142,21 +144,27 @@ def edit(ctx, input, bidx, nodata, crs, transform, units, description,
             transform = allmd['transform']
             tags = allmd['tags']
 
-        if nodata is not None:
+        if unset_nodata and nodata is not None:
+            raise click.BadParameter(
+                "--unset-nodata and --nodata cannot be used together.")
+
+        if unset_nodata:
+            # Setting nodata to None will raise NotImplementedError
+            # if GDALDeleteRasterNoDataValue() isn't present in the
+            # GDAL library.
+            try:
+                dst.nodata = None
+            except NotImplementedError as exc:
+                raise click.ClickException(str(exc))
+
+        elif nodata is not None:
             dtype = dst.dtypes[0]
             if not in_dtype_range(nodata, dtype):
                 raise click.BadParameter(
                     "outside the range of the file's "
                     "data type (%s)." % dtype,
                     param=nodata, param_hint='nodata')
-
-        # Setting nodata to None will raise NotImplementedError
-        # if GDALDeleteRasterNoDataValue() isn't present in the
-        # GDAL library.
-        try:
             dst.nodata = nodata
-        except NotImplementedError as exc:
-            raise click.ClickException(str(exc))
 
         if crs:
             dst.crs = crs

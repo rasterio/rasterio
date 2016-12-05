@@ -31,7 +31,7 @@ def test_delete_nodata(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
-        main_group, ['edit-info', inputfile, '--nodata', 'none'])
+        main_group, ['edit-info', inputfile, '--unset-nodata'])
     assert result.exit_code == 0
 
 
