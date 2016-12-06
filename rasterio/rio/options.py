@@ -56,6 +56,20 @@ import rasterio
 from rasterio.vfs import parse_path
 
 
+class IgnoreOptionMarker(object):
+    """A marker for an option that is to be ignored.
+
+    For use in the case where `None` is a meaningful option value,
+    such as for nodata where `None` means "unset the nodata value."
+    """
+
+    def __repr__(self):
+        return 'IgnoreOption()'
+
+
+IgnoreOption = IgnoreOptionMarker()
+
+
 def _cb_key_val(ctx, param, value):
 
     """
@@ -136,19 +150,34 @@ def like_handler(ctx, param, value):
             ctx.obj['like'] = metadata
             ctx.obj['like']['transform'] = metadata['transform']
             ctx.obj['like']['tags'] = src.tags()
+    else:  # pragma: no cover
+        pass
 
 
 def nodata_handler(ctx, param, value):
-    """Get nodata value from a template file or command line."""
-    retval = from_like_context(ctx, param, value)
-    if retval is None and value is not None:
+    """Return a float or None"""
+    if value is None or value is IgnoreOption:
+        return value
+    else:
         try:
-            retval = float(value)
+            return float(value)
         except:
             raise click.BadParameter(
-                "%s is not a number." % repr(value),
+                "{!r} is not a number".format(value),
                 param=param, param_hint='nodata')
-    return retval
+
+
+def edit_nodata_handler(ctx, param, value):
+    """Get nodata value from a template file or command line.
+
+    Expected values are 'like', 'null', a numeric value, 'nan', or
+    IgnoreOption. Anything else should raise BadParameter.
+    """
+    if value == 'like' or value is IgnoreOption:
+        retval = from_like_context(ctx, param, value)
+        if retval is not None:
+            return retval
+    return nodata_handler(ctx, param, value)
 
 
 def bounds_handler(ctx, param, value):
@@ -159,11 +188,13 @@ def bounds_handler(ctx, param, value):
             value = value.strip(', []')
             retval = tuple(float(x) for x in re.split('[,\s]+', value))
             assert len(retval) == 4
+            return retval
         except:
             raise click.BadParameter(
                 "{0!r} is not a valid bounding box representation".format(
                     value))
-    return retval
+    else:  # pragma: no cover
+        return retval
 
 
 # Singular input file
@@ -251,8 +282,12 @@ force_overwrite_opt = click.option(
     help="Always overwrite an existing output file.")
 
 nodata_opt = click.option(
-    '--nodata', callback=nodata_handler, default=None, metavar='VALUE',
-    help="New nodata value.")
+    '--nodata', callback=nodata_handler, default=None,
+    metavar='NUMBER|nan', help="Set a Nodata value.")
+
+edit_nodata_opt = click.option(
+    '--nodata', callback=edit_nodata_handler, default=IgnoreOption,
+    metavar='NUMBER|nan|null', help="Modify the Nodata value.")
 
 like_opt = click.option(
     '--like',

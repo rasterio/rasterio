@@ -52,11 +52,9 @@ from rasterio._gdal cimport (
     GDALSetGCPs)
 
 include "gdal.pxi"
+
+# Defines GDALDeleteRasterNoDataValue() etc.
 include "gdalextras.pxi"
-
-
-IF CAN_DELETE_NODATA:
-    from rasterio._gdal cimport GDALDeleteRasterNoDataValue
 
 
 log = logging.getLogger(__name__)
@@ -1286,12 +1284,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         for i, val in zip(self.indexes, vals):
             band = self.band(i)
             if val is None:
-                IF CAN_DELETE_NODATA:
-                    success = GDALDeleteRasterNoDataValue(band)
-                ELSE:
-                    raise NotImplementedError(
-                        "Rasterio's GDAL library does not support Nodata "
-                        "deletion.")
+                success = GDALDeleteRasterNoDataValue(band)
             else:
                 nodataval = val
                 success = GDALSetRasterNoDataValue(band, nodataval)

@@ -74,12 +74,10 @@ def transform_handler(ctx, param, value):
     return retval
 
 
-# The edit-info command.
-
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
 @options.bidx_opt
-@options.nodata_opt
+@options.edit_nodata_opt
 @click.option('--unset-nodata', default=False, is_flag=True,
               help="Unset the dataset's nodata value.")
 @click.option('--crs', callback=crs_handler, default=None,
@@ -144,7 +142,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
             transform = allmd['transform']
             tags = allmd['tags']
 
-        if unset_nodata and nodata is not None:
+        if unset_nodata and nodata is not options.IgnoreOption:
             raise click.BadParameter(
                 "--unset-nodata and --nodata cannot be used together.")
 
@@ -154,10 +152,10 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
             # GDAL library.
             try:
                 dst.nodata = None
-            except NotImplementedError as exc:
+            except NotImplementedError as exc:  # pragma: no cover
                 raise click.ClickException(str(exc))
 
-        elif nodata is not None:
+        elif nodata is not options.IgnoreOption:
             dtype = dst.dtypes[0]
             if not in_dtype_range(nodata, dtype):
                 raise click.BadParameter(

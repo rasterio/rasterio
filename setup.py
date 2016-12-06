@@ -203,10 +203,10 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         sys.exit(1)
 
     if gdal_major_version >= 2 and gdal_minor_version >= 1:
-        log.info("Adding GDAL 2.1 declarations.")
+        log.info("Adding GDAL 2.1 API functions.")
         shutil.copy('rasterio/gdal21.pxi', 'rasterio/gdalextras.pxi')
     else:
-        log.info("Not adding extra declarations.")
+        log.info("Adding inline versions of GDAL 2.1 API functions.")
         shutil.copy('rasterio/gdal20.pxi', 'rasterio/gdalextras.pxi')
 
     ext_modules = cythonize([
