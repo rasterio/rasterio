@@ -40,8 +40,8 @@ def supported_resampling(method):
 
 
 reproj_expected = (
-    ({'CHECK_WITH_INVERT_PROJ': False}, 6217),
-    ({'CHECK_WITH_INVERT_PROJ': True}, 4005))
+    ({'CHECK_WITH_INVERT_PROJ': False}, 7608),
+    ({'CHECK_WITH_INVERT_PROJ': True}, 2216))
 
 
 class ReprojectParams(object):
@@ -73,7 +73,19 @@ def default_reproject_params():
         width=80,
         height=80,
         src_crs={'init': 'EPSG:4326'},
-        dst_crs={'init': 'EPSG:32610'})
+        dst_crs={'init': 'EPSG:2163'})
+
+
+def uninvertable_reproject_params():
+    return ReprojectParams(
+        left=-120,
+        bottom=30,
+        right=-80,
+        top=70,
+        width=80,
+        height=80,
+        src_crs={'init': 'EPSG:4326'},
+        dst_crs={'init': 'EPSG:26836'})
 
 
 def test_transform():
@@ -321,10 +333,10 @@ def test_reproject_out_of_bounds():
 
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_nodata(options, expected):
-    params = default_reproject_params()
     nodata = 215
 
     with rasterio.Env(**options):
+        params = uninvertable_reproject_params()
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
                        dtype=source.dtype)
@@ -348,9 +360,9 @@ def test_reproject_nodata(options, expected):
 
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_nodata_nan(options, expected):
-    params = default_reproject_params()
 
     with rasterio.Env(**options):
+        params = uninvertable_reproject_params()
         source = np.ones((params.width, params.height), dtype=np.float32)
         out = np.zeros((params.dst_width, params.dst_height),
                        dtype=source.dtype)
@@ -375,9 +387,9 @@ def test_reproject_nodata_nan(options, expected):
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_dst_nodata_default(options, expected):
     """If nodata is not provided, destination will be filled with 0."""
-    params = default_reproject_params()
 
     with rasterio.Env(**options):
+        params = uninvertable_reproject_params()
         source = np.ones((params.width, params.height), dtype=np.uint8)
         out = np.zeros((params.dst_width, params.dst_height),
                        dtype=source.dtype)
