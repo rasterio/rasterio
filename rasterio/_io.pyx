@@ -43,7 +43,7 @@ from rasterio._gdal cimport (
     GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen, GDALRasterIO,
     GDALSetColorEntry, GDALSetDescription, GDALSetGeoTransform,
     GDALSetMetadata, GDALSetProjection, GDALSetRasterColorInterpretation,
-    GDALSetRasterColorTable, GDALSetRasterNoDataValue,
+    GDALSetRasterColorTable,
     GDALSetRasterNoDataValue, GDALSetRasterUnitType,
     OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
     OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
@@ -52,6 +52,9 @@ from rasterio._gdal cimport (
     GDALSetGCPs)
 
 include "gdal.pxi"
+
+# Defines GDALDeleteRasterNoDataValue() etc.
+include "gdalextras.pxi"
 
 
 log = logging.getLogger(__name__)
@@ -1280,8 +1283,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         for i, val in zip(self.indexes, vals):
             band = self.band(i)
-            nodataval = val
-            success = GDALSetRasterNoDataValue(band, nodataval)
+            if val is None:
+                success = GDALDeleteRasterNoDataValue(band)
+            else:
+                nodataval = val
+                success = GDALSetRasterNoDataValue(band, nodataval)
             if success:
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals

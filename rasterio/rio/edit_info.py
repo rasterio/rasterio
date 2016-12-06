@@ -35,7 +35,7 @@ def crs_handler(ctx, param, value):
         try:
             if isinstance(retval, dict):
                 retval = CRS(retval)
-            elif isinstance(retval, string_types):
+            else:
                 retval = CRS.from_string(retval)
         except CRSError:
             raise click.BadParameter(
@@ -74,12 +74,12 @@ def transform_handler(ctx, param, value):
     return retval
 
 
-# The edit-info command.
-
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
 @options.bidx_opt
-@options.nodata_opt
+@options.edit_nodata_opt
+@click.option('--unset-nodata', default=False, is_flag=True,
+              help="Unset the dataset's nodata value.")
 @click.option('--crs', callback=crs_handler, default=None,
               help="New coordinate reference system")
 @click.option('--transform', callback=transform_handler,
@@ -94,8 +94,8 @@ def transform_handler(ctx, param, value):
               help="Copy all metadata items from the template file.")
 @options.like_opt
 @click.pass_context
-def edit(ctx, input, bidx, nodata, crs, transform, units, description,
-         tags, allmd, like):
+def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
+         description, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -142,7 +142,20 @@ def edit(ctx, input, bidx, nodata, crs, transform, units, description,
             transform = allmd['transform']
             tags = allmd['tags']
 
-        if nodata is not None:
+        if unset_nodata and nodata is not options.IgnoreOption:
+            raise click.BadParameter(
+                "--unset-nodata and --nodata cannot be used together.")
+
+        if unset_nodata:
+            # Setting nodata to None will raise NotImplementedError
+            # if GDALDeleteRasterNoDataValue() isn't present in the
+            # GDAL library.
+            try:
+                dst.nodata = None
+            except NotImplementedError as exc:  # pragma: no cover
+                raise click.ClickException(str(exc))
+
+        elif nodata is not options.IgnoreOption:
             dtype = dst.dtypes[0]
             if not in_dtype_range(nodata, dtype):
                 raise click.BadParameter(

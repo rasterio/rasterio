@@ -4,6 +4,7 @@ import sys
 
 import click
 from click.testing import CliRunner
+from packaging.version import Version
 import pytest
 
 import rasterio
@@ -15,12 +16,33 @@ from rasterio.rio.main import main_group
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
+def test_delete_nodata_exclusive_opts(data):
+    """--unset-nodata and --nodata can't be used together"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--unset-nodata', '--nodata', '0'])
+    assert result.exit_code == 2
+
+
 def test_edit_nodata_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(main_group,
                            ['edit-info', inputfile, '--nodata', '-1'])
     assert result.exit_code == 2
+
+
+@pytest.mark.xfail(
+    not Version(rasterio.__gdal_version__) >= Version('2.1'),
+    reason='Unsupported by GDAL versions < 2.1')
+def test_delete_nodata(data):
+    """Delete a dataset's nodata value"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--unset-nodata'])
+    assert result.exit_code == 0
 
 
 def test_edit_nodata(data):
