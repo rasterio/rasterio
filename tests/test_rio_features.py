@@ -384,7 +384,7 @@ def test_shapes_precision(runner, pixelated_image_file):
     assert result.exit_code == 0
     assert result.output.count('"FeatureCollection"') == 1
     assert result.output.count('"Feature"') == 4
-    assert re.search(r'\d*\.\d{2,}', result.output) is None
+    assert re.search(r'\s\d*\.\d{2,}', result.output) is None
 
 
 def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
