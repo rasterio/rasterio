@@ -97,7 +97,7 @@ def _cb_key_val(ctx, param, value):
                 k, v = pair.split('=', 1)
                 k = k.lower()
                 v = v.lower()
-                out[k] = None if v in ['none', 'null', 'nil'] else v
+                out[k] = None if v.lower() in ['none', 'null', 'nil', 'nada'] else v
         return out
 
 
@@ -158,6 +158,8 @@ def nodata_handler(ctx, param, value):
     """Return a float or None"""
     if value is None or value is IgnoreOption:
         return value
+    elif value.lower() in ['null', 'nil', 'none', 'nada']:
+        return None
     else:
         try:
             return float(value)

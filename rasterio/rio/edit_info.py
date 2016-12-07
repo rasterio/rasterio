@@ -157,7 +157,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
 
         elif nodata is not options.IgnoreOption:
             dtype = dst.dtypes[0]
-            if not in_dtype_range(nodata, dtype):
+            if nodata is not None and not in_dtype_range(nodata, dtype):
                 raise click.BadParameter(
                     "outside the range of the file's "
                     "data type (%s)." % dtype,
