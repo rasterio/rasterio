@@ -21,7 +21,7 @@ from setuptools import setup
 from setuptools.extension import Extension
 
 
-logging.basicConfig()
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 log = logging.getLogger()
 
 

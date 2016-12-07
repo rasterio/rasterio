@@ -34,8 +34,8 @@ def test_edit_nodata_err(data):
 
 
 @pytest.mark.xfail(
-    not Version(rasterio.__gdal_version__) >= Version('2.1'),
-    reason='Unsupported by GDAL versions < 2.1')
+    Version(rasterio.__gdal_version__) < Version('2.1'),
+    reason='GDAL version >= 2.1 required')
 def test_delete_nodata(data):
     """Delete a dataset's nodata value"""
     runner = CliRunner()
