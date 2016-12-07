@@ -5,6 +5,7 @@ import re
 
 import affine
 import numpy as np
+from packaging.version import Version
 import pytest
 
 import rasterio
@@ -65,7 +66,7 @@ def test_update_nodatavals(data):
 
 
 @pytest.mark.xfail(
-    not rasterio.__gdal_version__.startswith('2.1'),
+    not Version(rasterio.__gdal_version__) >= Version('2.1'),
     reason='Unsupported by GDAL versions < 2.1')
 def test_update_nodatavals_none(data):
     """GDAL doesn't support un-setting nodata values."""
