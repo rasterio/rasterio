@@ -17,6 +17,13 @@ def test_gcps_bounds_exclusivity():
             'epsg:4326', 'epsg:3857', width=1, height=1, left=1.0, gcps=[1])
 
 
+def test_one_of_gcps_bounds():
+    """at least one of gcps or bounds parameters must be provided"""
+    with pytest.raises(ValueError):
+        calculate_default_transform(
+            'epsg:4326', 'epsg:3857', width=1, height=1)
+
+
 def test_identity():
     """Get the same transform and dimensions back for same crs."""
     # Tile: [53, 96, 8]
@@ -132,3 +139,15 @@ def test_gdal_transform_fail_dst_crs_xfail():
                 bottom=30,
                 right=-80,
                 top=70)
+
+
+def test_gcps_calculate_transform():
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0)]
+    _, width, height = calculate_default_transform(
+        'epsg:3857', 'epsg:4326', width=800, height=800, gcps=src_gcps)
+    assert width == 1087
+    assert height == 895
