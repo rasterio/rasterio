@@ -67,14 +67,13 @@ def test_identity_gcps():
 
 def test_transform_bounds():
     """CRSError is raised."""
-    with rasterio.Env():
-        left, bottom, right, top = (
-            -11740727.544603072, 4852834.0517692715, -11584184.510675032,
-            5009377.085697309)
-        src_crs = 'EPSG:3857'
-        dst_crs = {'proj': 'foobar'}
-        with pytest.raises(CRSError):
-            transform_bounds(src_crs, dst_crs, left, bottom, right, top)
+    left, bottom, right, top = (
+        -11740727.544603072, 4852834.0517692715, -11584184.510675032,
+        5009377.085697309)
+    src_crs = 'EPSG:3857'
+    dst_crs = {'proj': 'foobar'}
+    with pytest.raises(CRSError):
+        transform_bounds(src_crs, dst_crs, left, bottom, right, top)
 
 
 def test_gdal_transform_notnull():

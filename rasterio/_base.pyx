@@ -961,6 +961,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
                     log.debug("PROJ.4 to be imported: %r", proj)
                     proj = proj.encode('utf-8')
                     OSRImportFromProj4(osr, <const char *>proj)
+
             # Fall back for CRS strings like "EPSG:3857."
             else:
                 proj = crs.encode('utf-8')

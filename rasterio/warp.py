@@ -90,7 +90,6 @@ def transform_geom(
         precision)
 
 
-@ensure_env
 def transform_bounds(
         src_crs,
         dst_crs,
