@@ -15,7 +15,7 @@ import numpy as np
 from rasterio._base import tastes_like_gdal
 from rasterio._drivers import driver_count, GDALEnv
 from rasterio._err import (
-    CPLErrors, GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError)
+    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError)
 from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
@@ -32,6 +32,7 @@ from libc.stdio cimport FILE
 cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._gdal cimport (
     CPLFree, CPLMalloc, CSLDestroy, CSLDuplicate, CSLFetchNameValue,
     CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
@@ -847,10 +848,8 @@ cdef class MemoryFileBase(object):
 
         if self._initial_bytes:
 
-            with CPLErrors() as cple:
-                vsi_handle = VSIFileFromMemBuffer(self.path, buffer,
-                                                  len(self._initial_bytes), 0)
-                cple.check()
+            vsi_handle = VSIFileFromMemBuffer(
+                self.path, buffer, len(self._initial_bytes), 0)
 
             if vsi_handle == NULL:
                 raise IOError(
@@ -899,23 +898,20 @@ cdef class MemoryFileBase(object):
         cdef bytes result
 
         try:
-            with CPLErrors() as cple:
-                fp = VSIFOpenL(self.path, 'r')
-                cple.check()
+            fp = VSIFOpenL(self.path, 'r')
 
-                if fp == NULL:
-                    raise IOError(
-                        "Failed to open in-memory file: %s", self.name)
+            if fp == NULL:
+                raise IOError(
+                    "Failed to open in-memory file: %s", self.name)
 
-                if VSIFSeekL(fp, self._pos, 0) < 0:
-                    raise IOError(
-                        "Failed to seek to offset %s in %s.",
-                        self._pos, self.name)
+            if VSIFSeekL(fp, self._pos, 0) < 0:
+                raise IOError(
+                    "Failed to seek to offset %s in %s.",
+                    self._pos, self.name)
 
-                objects_read = VSIFReadL(buffer, 1, size, fp)
-                cple.check()
+            objects_read = VSIFReadL(buffer, 1, size, fp)
+            result = <bytes>buffer[:objects_read]
 
-                result = <bytes>buffer[:objects_read]
         finally:
             VSIFCloseL(fp)
             CPLFree(buffer)
@@ -975,9 +971,7 @@ cdef class MemoryFileBase(object):
         cdef vsi_l_offset buffer_len = 0
         cdef np.uint8_t [:] buff_view
 
-        with CPLErrors() as cple:
-            buffer = VSIGetMemFileBuffer(self.path, &buffer_len, 0)
-            cple.check()
+        buffer = VSIGetMemFileBuffer(self.path, &buffer_len, 0)
 
         if buffer == NULL or buffer_len == 0:
             buff_view = np.array([], dtype='uint8')
@@ -1072,9 +1066,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             driver_b = self.driver.encode('utf-8')
             drv_name = driver_b
             try:
-                with CPLErrors() as cple:
-                    drv = GDALGetDriverByName(drv_name)
-                    cple.check()
+                drv = exc_wrap_pointer(GDALGetDriverByName(drv_name))
+
             except Exception as err:
                 raise DriverRegistrationError(str(err))
 
@@ -1115,11 +1108,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     (k, CSLFetchNameValue(options, key_c)))
 
             try:
-                with CPLErrors() as cple:
-                    self._hds = GDALCreate(
-                        drv, fname, self.width, self.height, self._count,
-                        gdal_dtype, options)
-                    cple.check()
+                self._hds = exc_wrap_pointer(
+                    GDALCreate(drv, fname, self.width, self.height,
+                               self._count, gdal_dtype, options))
             except Exception as err:
                 if options != NULL:
                     CSLDestroy(options)
@@ -1148,9 +1139,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         elif self.mode == 'r+':
             try:
-                with CPLErrors() as cple:
-                    self._hds = GDALOpen(fname, 1)
-                    cple.check()
+                self._hds = exc_wrap_pointer(GDALOpen(fname, 1))
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -1530,12 +1519,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         band = self.band(1)
 
         try:
-            with CPLErrors() as cple:
-                retval = GDALCreateMaskBand(band, 0x02)
-                cple.check()
-                mask = GDALGetMaskBand(band)
-                cple.check()
-                log.debug("Created mask band")
+            exc_wrap_int(GDALCreateMaskBand(band, 0x02))
+            mask = exc_wrap_pointer(GDALGetMaskBand(band))
+            log.debug("Created mask band")
         except:
             raise RasterioIOError("Failed to get mask.")
 
@@ -1591,12 +1577,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
             try:
-                with CPLErrors() as cple:
-                    resampling_b = resampling_alg.encode('utf-8')
-                    resampling_c = resampling_b
-                    err = GDALBuildOverviews(self._hds, resampling_c,
-                        len(factors), factors_c, 0, NULL, NULL, NULL)
-                    cple.check()
+                resampling_b = resampling_alg.encode('utf-8')
+                resampling_c = resampling_b
+                err = exc_wrap_int(
+                    GDALBuildOverviews(self._hds, resampling_c,
+                                       len(factors), factors_c, 0, NULL, NULL,
+                                       NULL))
             finally:
                 if factors_c != NULL:
                     CPLFree(factors_c)
@@ -1705,14 +1691,11 @@ cdef class InMemoryRaster:
 
         self.band_ids[0] = 1
 
-        with CPLErrors() as cple:
-            memdriver = GDALGetDriverByName("MEM")
-            cple.check()
-            datasetname = str(uuid.uuid4()).encode('utf-8')
-            self._hds = GDALCreate(
-                memdriver, <const char *>datasetname, width, height, count,
-                <GDALDataType>dtypes.dtype_rev[dtype], NULL)
-            cple.check()
+        memdriver = exc_wrap_pointer(GDALGetDriverByName("MEM"))
+        datasetname = str(uuid.uuid4()).encode('utf-8')
+        self._hds = exc_wrap_pointer(
+            GDALCreate(memdriver, <const char *>datasetname, width, height,
+                       count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
 
         if transform is not None:
             for i in range(6):
@@ -1766,11 +1749,11 @@ cdef class InMemoryRaster:
         cdef GDALRasterBandH band = NULL
 
         try:
-            with CPLErrors() as cple:
-                band = GDALGetRasterBand(self._hds, bidx)
-                cple.check()
+            band = exc_wrap_pointer(GDALGetRasterBand(self._hds, bidx))
         except CPLE_IllegalArgError as exc:
             raise IndexError(str(exc))
+
+        # Don't get here.
         if band == NULL:
             raise ValueError("NULL band")
 
@@ -1827,14 +1810,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
-            try:
-                with CPLErrors() as cple:
-                    self._hds = GDALCreate(
-                        memdrv, "temp", self.width, self.height, self._count,
-                        gdal_dtype, NULL)
-                    cple.check()
-            except:
-                raise
+            self._hds = exc_wrap_pointer(
+                GDALCreate(memdrv, "temp", self.width, self.height,
+                           self._count, gdal_dtype, NULL))
 
             if self._init_nodata is not None:
                 for i in range(self._count):
@@ -1850,19 +1828,12 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         elif self.mode == 'r+':
             try:
-                with CPLErrors() as cple:
-                    temp = GDALOpen(fname, 0)
-                    cple.check()
+                temp = exc_wrap_pointer(GDALOpen(fname, 0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 
-            try:
-                with CPLErrors() as cple:
-                    self._hds = GDALCreateCopy(
-                        memdrv, "temp", temp, 1, NULL, NULL, NULL)
-                    cple.check()
-            except:
-                raise
+            self._hds = exc_wrap_pointer(
+                GDALCreateCopy(memdrv, "temp", temp, 1, NULL, NULL, NULL))
 
             drv = GDALGetDatasetDriver(temp)
             self.driver = get_driver_name(drv)
@@ -1921,12 +1892,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         #self.update_tags(ns='rio_creation_kwds', **kwds)
         try:
-            with CPLErrors() as cple:
-                temp = GDALCreateCopy(
-                    drv, fname, self._hds, 1, options, NULL, NULL)
-                cple.check()
-        except:
-            raise
+            temp = exc_wrap_pointer(
+                GDALCreateCopy(drv, fname, self._hds, 1, options, NULL, NULL))
         finally:
             if options != NULL:
                 CSLDestroy(options)
@@ -1939,17 +1906,9 @@ def virtual_file_to_buffer(filename):
     cdef unsigned char *buff = NULL
     cdef const char *cfilename = NULL
     cdef vsi_l_offset buff_len = 0
-
     filename_b = filename if not isinstance(filename, string_types) else filename.encode('utf-8')
     cfilename = filename_b
-
-    try:
-        with CPLErrors() as cple:
-            buff = VSIGetMemFileBuffer(cfilename, &buff_len, 0)
-            cple.check()
-    except:
-        raise
-
+    buff = VSIGetMemFileBuffer(cfilename, &buff_len, 0)
     n = buff_len
     log.debug("Buffer length: %d bytes", n)
     cdef np.uint8_t[:] buff_view = <np.uint8_t[:n]>buff

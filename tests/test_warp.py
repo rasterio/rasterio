@@ -10,6 +10,7 @@ from packaging.version import parse
 import rasterio
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
+from rasterio.errors import CRSError
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
@@ -126,23 +127,16 @@ def test_transform_bounds_densify():
             src_crs,
             dst_crs,
             -120, 40, -80, 64,
-            densify_pts=0
-        ),
-        ( -1684649.41338, -350356.81377,
-          1684649.41338, 2234551.18559
-        )
-    )
+            densify_pts=0),
+        (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559))
 
     assert np.allclose(
         transform_bounds(
             src_crs,
             dst_crs,
             -120, 40, -80, 64,
-            densify_pts=100
-        ),
-        ( -1684649.41338, -555777.79210,
-          1684649.41338, 2234551.18559)
-    )
+            densify_pts=100),
+        (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559))
 
 
 def test_transform_bounds_no_change():
@@ -770,7 +764,6 @@ def polygon_3373():
                 (798842.3090855901, 6569056.500655151)),)}
 
 
-
 def test_transform_geom_polygon(polygon_3373):
     geom = polygon_3373
     result = transform_geom('EPSG:3373', 'EPSG:4326', geom)
@@ -958,7 +951,7 @@ def test_reproject_crs_none():
     dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
     dstcrs = None
 
-    with rasterio.Env():
+    with pytest.raises(ValueError):
         reproject(
             src, dst,
             src_transform=srcaff,

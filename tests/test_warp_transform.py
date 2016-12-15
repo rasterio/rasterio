@@ -91,8 +91,8 @@ def test_gdal_transform_notnull():
 
 
 def test_gdal_transform_fail_dst_crs():
-    with rasterio.Env():
-        dt, dw, dh = _calculate_default_transform(
+    with pytest.raises(CRSError):
+        _calculate_default_transform(
             {'init': 'EPSG:4326'},
             '+proj=foobar',
             width=80,
@@ -104,8 +104,8 @@ def test_gdal_transform_fail_dst_crs():
 
 
 def test_gdal_transform_fail_src_crs():
-    with rasterio.Env():
-        dt, dw, dh = _calculate_default_transform(
+    with pytest.raises(CRSError):
+        _calculate_default_transform(
             '+proj=foobar',
             {'init': 'EPSG:32610'},
             width=80,

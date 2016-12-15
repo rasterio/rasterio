@@ -4,9 +4,7 @@ import logging
 import os
 import os.path
 
-from rasterio._err import CPLErrors
-
-
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._gdal cimport (
     CSLDestroy, CSLSetNameValue, GDALClose, GDALCreateCopy,
     GDALGetDriverByName, GDALOpen)
@@ -43,13 +41,10 @@ cdef class RasterCopier:
         dstpath = dstpath.encode('utf-8')
 
         try:
-            with CPLErrors() as cple:
-                src_dataset = GDALOpen(<const char *>srcpath, 0)
-                cple.check()
-                dst_dataset = GDALCreateCopy(
-                    drv, <const char *>dstpath, src_dataset, strictness, NULL,
-                    NULL, NULL)
-                cple.check()
+            src_dataset = exc_wrap_pointer(GDALOpen(<const char *>srcpath, 0))
+            dst_dataset = exc_wrap_pointer(
+                GDALCreateCopy(drv, <const char *>dstpath, src_dataset,
+                               strictness, NULL, NULL, NULL))
         finally:
             CSLDestroy(options)
             GDALClose(src_dataset)
