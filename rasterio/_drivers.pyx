@@ -48,13 +48,14 @@ code_map = {
 log = logging.getLogger(__name__)
 
 
-cdef void errorHandler(CPLErr err_class, int err_no, const char* msg) with gil:
-    """Send GDAL errors and warnings to the Python logger."""
+cdef void logging_error_handler(CPLErr err_class, int err_no,
+                                const char* msg) with gil:
+    """Send CPL debug messages and warnings to Python's logger."""
     if err_no in code_map:
         # 'rasterio._gdal' is the name in our logging hierarchy for
         # messages coming direct from CPLError().
-        logger = logging.getLogger('rasterio._gdal')
-        logger.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+        log = logging.getLogger('rasterio._gdal')
+        log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
 
 
 def driver_count():
@@ -128,8 +129,8 @@ cdef class GDALEnv(ConfigEnv):
         super(GDALEnv, self).__init__(**options)
 
     def start(self):
-        CPLPushErrorHandler(<CPLErrorHandler>errorHandler)
-        log.debug("Error handler pushed.")
+        CPLPushErrorHandler(<CPLErrorHandler>logging_error_handler)
+        log.debug("Logging error handler pushed.")
         GDALAllRegister()
         OGRRegisterAll()
         log.debug("All drivers registered.")
