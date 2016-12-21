@@ -8,6 +8,11 @@ from rasterio.enums import Resampling
 cimport numpy as np
 
 
+cdef extern from "cpl_progress.h":
+
+    ctypedef int (*GDALProgressFunc)(double dfComplete, const char *pszMessage, void *pProgressArg)
+
+
 cdef extern from "gdal.h" nogil:
 
     ctypedef struct GDALRasterIOExtraArg:

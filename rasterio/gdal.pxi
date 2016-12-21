@@ -33,11 +33,6 @@ cdef extern from "cpl_error.h" nogil:
     void CPLPopErrorHandler()
 
 
-cdef extern from "cpl_progress.h":
-
-    ctypedef int (*GDALProgressFunc)(double dfComplete, const char *pszMessage, void *pProgressArg)
-
-
 cdef extern from "cpl_string.h" nogil:
 
     int CSLCount(char **papszStrList)
