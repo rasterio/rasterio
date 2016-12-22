@@ -50,6 +50,9 @@ def test_read_downsample_alpha():
             src.read(4, out=out, masked=False)
 
 
+@pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.0dev'),
+    reason="Extra resampling algorithms require GDAL>2.0")
 def test_resample_alg():
     """default (nearest) and cubic produce different results"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -59,13 +62,9 @@ def test_resample_alg():
         assert np.any(nearest != cubic)
 
 
-# Custom markers.
-mingdalversion = pytest.mark.skipif(
+@pytest.mark.skipif(
     parse(rasterio.__gdal_version__) < parse('2.0dev'),
-    reason="Floating point windows require GDAL 2.0")
-
-
-@mingdalversion
+    reason="Floating point windows require GDAL>2.0")
 def test_float_window():
     """floating point windows work"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
