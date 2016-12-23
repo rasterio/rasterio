@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.0a5 (2016-12-23)
+------------------
+- New binary wheels using version 1.2.0 of sgillies/frs-wheel-builds. See
+  https://github.com/sgillies/frs-wheel-builds/blob/master/CHANGES.txt.
+
 1.0a4 (2016-12-06)
 ------------------
 
