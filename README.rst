@@ -1,4 +1,4 @@
-========
+=======
 Rasterio
 ========
 
@@ -136,8 +136,8 @@ using Python.
      [ True  True  True ...,  True  True  True]],
            fill_value = 0)
 
-    >>> b.min(), b.max(), b.mean()
-    (1, 255, 44.434478650699106)
+    >>> np.nanmin(b), np.nanmax(b), np.nanmean(b)
+    (0, 255, 29.94772668847656)
 
 Rio Plugins
 -----------
