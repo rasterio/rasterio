@@ -148,13 +148,16 @@ cdef class DatasetBase(object):
     def start(self):
         """Called to start reading a dataset."""
         cdef GDALDriverH driver
+        cdef char * cypath
 
         path = vsi_path(*parse_path(self.name))
         path = path.encode('utf-8')
+        cypath = path
 
         try:
             with CPLErrors() as cple:
-                self._hds = GDALOpen(<const char *>path, 0)
+                with nogil:
+                    self._hds = GDALOpen(cypath, 0)
                 cple.check()
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
