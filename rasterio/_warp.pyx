@@ -533,6 +533,7 @@ def _reproject(
 
     # Clean up transformer, warp options, and dataset handles.
     finally:
+        del oWarper
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
