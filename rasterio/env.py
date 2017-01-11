@@ -3,7 +3,7 @@
 from functools import wraps
 import logging
 
-from rasterio._drivers import (
+from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError
