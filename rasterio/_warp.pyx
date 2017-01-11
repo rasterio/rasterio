@@ -493,7 +493,7 @@ def _reproject(
 
     # Now that the transformer and warp options are set up, we init
     # and run the warper.
-    cdef GDALWarpOperation *oWarper = new GDALWarpOperation()
+    cdef GDALWarpOperation oWarper
     try:
         exc_wrap_int(oWarper.Initialize(psWOptions))
         rows, cols = destination.shape[-2:]

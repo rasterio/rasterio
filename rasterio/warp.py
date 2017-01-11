@@ -294,11 +294,11 @@ def calculate_default_transform(src_crs, dst_crs, width, height,
         Example: CRS({'init': 'EPSG:4326'})
     dst_crs: CRS or dict
         Target coordinate reference system.
-    width, height: int, optional
-        Source raster width and height. Not needed if gcps are used.
+    width, height: int
+        Source raster width and height.
     left, bottom, right, top: float, optional
         Bounding coordinates in src_crs, from the bounds property of a
-        raster.
+        raster. Required unless using gcps.
     gcps: sequence of GroundControlPoint, optional
         Instead of a bounding box for the source, a sequence of ground
         control points may be provided.
@@ -325,6 +325,10 @@ def calculate_default_transform(src_crs, dst_crs, width, height,
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
                          "be used together.")
+
+    if any(x is None for x in (left, bottom, right, top)) and not gcps:
+        raise ValueError("Either four bounding values or ground control points"
+                         "must be specified")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
         src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
