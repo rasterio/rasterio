@@ -1,41 +1,15 @@
 """rasterio._err
 
-Transformation of GDAL C API errors to Python exceptions using Python's
-``with`` statement and an error-handling context manager class.
-
-The ``CPLErrors`` error-handling context manager is intended for use in
-Rasterio's Cython code. When entering the body of a ``with`` statement,
-the context manager clears GDAL's error stack. On exit, the stack is
-cleared again. Its ``check()`` method can be called after calling any
-GDAL function to determine if ``CPLError()`` was called, and raise an
-exception appropriately.
-
-When used to wrap a call to open a PNG in update mode
-
-    with CPLErrors() as cple:
-        cdef void *hds = GDALOpen('file.png', 1)
-        cple.check()
-    if hds == NULL:
-        raise ValueError("NULL dataset")
-
-the ValueError of last resort never gets raised because the context
-manager raises a more useful and informative error:
-
-    Traceback (most recent call last):
-      File "/Users/sean/code/rasterio/scripts/rio_insp", line 65, in <module>
-        with rasterio.open(args.src, args.mode) as src:
-      File "/Users/sean/code/rasterio/rasterio/__init__.py", line 111, in open
-        s.start()
-    CPLE_OpenFailed: The PNG driver does not support update access to existing datasets.
-
+Exception-raising wrappers for GDAL API functions.
 """
 
 from enums import IntEnum
+import logging
 import sys
 
 from rasterio._gdal cimport (
     CPLErrorReset, CPLGetLastErrorMsg, CPLGetLastErrorNo,
-    CPLGetLastErrorType)
+    CPLGetLastErrorType, CPLPushErrorHandler, CPLPopErrorHandler)
 
 include "gdal.pxi"
 
@@ -161,42 +135,74 @@ class GDALError(IntEnum):
     fatal = CE_Fatal
 
 
-cdef class CPLErrors:
-    """A manager for GDAL error handling contexts."""
+cdef inline object exc_check():
+    """Checks GDAL error stack for fatal or non-fatal errors
+    
+    Returns
+    -------
+    An Exception, SystemExit, or None
+    """
+    cdef const char *msg_c = NULL
 
-    def check(self):
-        """Check the error stack and raise or exit as appropriate."""
-        cdef const char *msg_c = NULL
+    err_type = CPLGetLastErrorType()
+    err_no = CPLGetLastErrorNo()
+    err_msg = CPLGetLastErrorMsg()
 
-        err_type = CPLGetLastErrorType()
-        # Return True if there's no error.
-        # Debug and warnings are already picked up by the drivers()
-        # context manager.
-        if err_type < 3:
-            CPLErrorReset()
-            return
-
-        err_no = CPLGetLastErrorNo()
-        msg_c = CPLGetLastErrorMsg()
-        if msg_c == NULL:
-            msg = "No error message."
-        else:
+    if err_msg == NULL:
+        msg = "No error message."
+    else:
         # Reformat messages.
-            msg_b = msg_c
-            msg = msg_b.decode('utf-8')
-            msg = msg.replace("`", "'")
-            msg = msg.replace("\n", " ")
+        msg_b = err_msg
+        msg = msg_b.decode('utf-8')
+        msg = msg.replace("`", "'")
+        msg = msg.replace("\n", " ")
 
-        if err_type == 4:
-            sys.exit("Fatal error: {0}".format((err_type, err_no, msg)))
-        else:
-            CPLErrorReset()
-            raise exception_map.get(err_no, CPLE_BaseError)(
-                err_type, err_no, msg)
-
-    def __enter__(self):
+    if err_type == 3:
         CPLErrorReset()
-        return self
+        return exception_map.get(
+            err_no, CPLE_BaseError)(err_type, err_no, msg)
 
-    def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        CPLErrorReset()
+    if err_type == 4:
+        return SystemExit("Fatal error: {0}".format((err_type, err_no, msg)))
+
+    else:
+        return
+
+
+cdef int exc_wrap_int(int err) except -1:
+    """Wrap a GDAL/OGR function that returns CPLErr or OGRErr (int)
+
+    Raises a Rasterio exception if a non-fatal error has be set.
+    """
+    if err:
+        exc = exc_check()
+        if exc:
+            raise exc
+            return -1
+    return err
+
+
+cdef void *exc_wrap_pointer(void *ptr) except NULL:
+    """Wrap a GDAL/OGR function that returns GDALDatasetH etc (void *)
+
+    Raises a Rasterio exception if a non-fatal error has be set.
+    """
+    if ptr == NULL:
+        exc = exc_check()
+        if exc:
+            raise exc
+            return NULL
+    return ptr
+
+
+cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *f) except NULL:
+    """Wrap a GDAL/OGR function that returns GDALDatasetH etc (void *)
+
+    Raises a Rasterio exception if a non-fatal error has be set.
+    """
+    if f == NULL:
+        exc = exc_check()
+        if exc:
+            raise exc
+            return NULL
+    return f

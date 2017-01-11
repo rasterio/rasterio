@@ -9,8 +9,10 @@ import math
 import warnings
 
 from rasterio._err import (
-    CPLErrors, GDALError, CPLE_IllegalArgError, CPLE_OpenFailedError,
+    GDALError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
+from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio import dtypes
@@ -76,13 +78,13 @@ def get_dataset_driver(path):
     path = path.encode('utf-8')
 
     try:
-        with CPLErrors() as cple:
-            dataset = GDALOpen(<const char *>path, 0)
-            cple.check()
+        dataset = exc_wrap_pointer(GDALOpen(<const char *>path, 0))
         driver = GDALGetDatasetDriver(dataset)
         drivername = get_driver_name(driver)
+
     except CPLE_OpenFailedError as exc:
         raise RasterioIOError(str(exc))
+
     finally:
         if dataset != NULL:
             GDALClose(dataset)
@@ -147,18 +149,18 @@ cdef class DatasetBase(object):
 
     def start(self):
         """Called to start reading a dataset."""
-        cdef GDALDriverH driver
-        cdef char * cypath
+        cdef GDALDriverH driver = NULL
+        cdef GDALDatasetH hds = NULL
+        cdef const char *cypath
 
         path = vsi_path(*parse_path(self.name))
         path = path.encode('utf-8')
         cypath = path
 
         try:
-            with CPLErrors() as cple:
-                with nogil:
-                    self._hds = GDALOpen(cypath, 0)
-                cple.check()
+            with nogil:
+                hds = GDALOpen(cypath, 0)
+            self._hds = exc_wrap_pointer(hds)
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
 
@@ -186,23 +188,22 @@ cdef class DatasetBase(object):
     cdef GDALRasterBandH band(self, int bidx) except NULL:
         """Return a GDAL raster band handle"""
         cdef GDALRasterBandH band = NULL
-
-        try:
-            with CPLErrors() as cple:
-                band = GDALGetRasterBand(self._hds, bidx)
-                cple.check()
-        except CPLE_IllegalArgError as exc:
-            raise IndexError(str(exc))
-
+        band = GDALGetRasterBand(self.handle(), bidx)
         if band == NULL:
-            raise ValueError("NULL band")
-
+            raise IndexError("No such band index: {!s}".format(bidx))
         return band
 
+        #if band == NULL:
+        #    raise ValueError("NULL band")
+
+        #return band
+
     def _has_band(self, bidx):
+        cdef GDALRasterBandH band = NULL
         try:
-            return self.band(bidx) != NULL
-        except IndexError:
+            band = self.band(bidx)
+            return True
+        except:
             return False
 
     def _handle_crswkt(self, wkt):
@@ -873,6 +874,7 @@ cdef class DatasetBase(object):
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):
+    """Transform input arrays from src to dst CRS."""
     cdef double *x = NULL
     cdef double *y = NULL
     cdef double *z = NULL
@@ -900,24 +902,28 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             z[i] = zs[i]
 
     try:
-        with CPLErrors() as cple:
-            transform = OCTNewCoordinateTransformation(src, dst)
-            cple.check()
-            res = OCTTransform(transform, n, x, y, z)
-            res_xs = [0]*n
-            res_ys = [0]*n
+        transform = OCTNewCoordinateTransformation(src, dst)
+        transform = exc_wrap_pointer(transform)
+
+        err = OCTTransform(transform, n, x, y, z)
+        err = exc_wrap_int(err)
+
+        res_xs = [0]*n
+        res_ys = [0]*n
+        for i in range(n):
+            res_xs[i] = x[i]
+            res_ys[i] = y[i]
+        if zs is not None:
+            res_zs = [0]*n
             for i in range(n):
-                res_xs[i] = x[i]
-                res_ys[i] = y[i]
-            if zs is not None:
-                res_zs = [0]*n
-                for i in range(n):
-                    res_zs[i] = z[i]
-                retval = (res_xs, res_ys, res_zs)
-            else:
-                retval = (res_xs, res_ys)
-    except CPLE_NotSupportedError as err:
-        raise CRSError(err.errmsg)
+                res_zs[i] = z[i]
+            retval = (res_xs, res_ys, res_zs)
+        else:
+            retval = (res_xs, res_ys)
+
+    except CPLE_NotSupportedError as exc:
+        raise CRSError(exc.errmsg)
+
     finally:
         CPLFree(x)
         CPLFree(y)
@@ -931,56 +937,54 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
+    if not crs:
+        raise ValueError("A crs is required") # CRSError('CRS cannot be None')
 
-    cdef OGRSpatialReferenceH osr = NULL
+    cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 
-    if crs is None:
-        raise CRSError('CRS cannot be None')
+    if isinstance(crs, string_types):
+        proj = crs.encode('utf-8')
 
-    osr = OSRNewSpatialReference(NULL)
+    # Make a CRS object from provided dict.
+    else:
+        crs = CRS(crs)
+        # EPSG is a special case.
+        init = crs.get('init')
+        if init:
+            auth, val = init.split(':')
 
-    params = []
+            if not val:
+                OSRDestroySpatialReference(osr)
+                raise CRSError("Invalid CRS: {!r}".format(crs))
 
-    try:
-        with CPLErrors() as cple:
-            # Normally, we expect a CRS dict.
-            if isinstance(crs, dict):
-                crs = CRS(crs)
-            if isinstance(crs, CRS):
-                # EPSG is a special case.
-                init = crs.get('init')
-                if init:
-                    auth, val = init.split(':')
-                    if auth.upper() == 'EPSG':
-                        OSRImportFromEPSG(osr, int(val))
+            if auth.upper() == 'EPSG':
+                proj = 'EPSG:{}'.format(val).encode('utf-8')
+        else:
+            crs['wktext'] = True
+            params = []
+            for k, v in crs.items():
+                if v is True or (k in ('no_defs', 'wktext') and v):
+                    params.append("+%s" % k)
                 else:
-                    crs['wktext'] = True
-                    for k, v in crs.items():
-                        if v is True or (k in ('no_defs', 'wktext') and v):
-                            params.append("+%s" % k)
-                        else:
-                            params.append("+%s=%s" % (k, v))
-                    proj = " ".join(params)
-                    log.debug("PROJ.4 to be imported: %r", proj)
-                    proj = proj.encode('utf-8')
-                    OSRImportFromProj4(osr, <const char *>proj)
-            # Fall back for CRS strings like "EPSG:3857."
-            else:
-                proj = crs.encode('utf-8')
-                OSRSetFromUserInput(osr, <const char *>proj)
-            cple.check()
+                    params.append("+%s=%s" % (k, v))
+            proj = " ".join(params)
+            log.debug("PROJ.4 to be imported: %r", proj)
+            proj = proj.encode('utf-8')
 
-    except:
+    retval = OSRSetFromUserInput(osr, <const char *>proj)
+    log.debug("OSRSetFromUserInput return value: %s", retval)
+
+    if retval:
         OSRDestroySpatialReference(osr)
-        raise CRSError('Invalid CRS')
+        raise CRSError("Invalid CRS: {!r}".format(crs))
 
     return osr
 
 
 def _can_create_osr(crs):
-    """
-    Returns True if valid OGRSpatialReference could be created from crs.
-    Specifically, it must not be NULL or empty string.
+    """Evaluate if a valid OGRSpatialReference can be created from crs.
+
+    Specifically, it must not be None or an empty dict or string.
 
     Parameters
     ----------
@@ -990,21 +994,19 @@ def _can_create_osr(crs):
     -------
     out: bool
         True if source coordinate reference appears valid.
-
     """
 
     cdef char *wkt = NULL
     cdef OGRSpatialReferenceH osr = NULL
 
     try:
+        # Note: _osr_from_crs() has "except NULL" in its signature.
+        # It raises, it does not return NULL.
         osr = _osr_from_crs(crs)
-        if osr == NULL:
-            return False
-
         OSRExportToWkt(osr, &wkt)
 
-        # If input was empty, WKT can be too; otherwise the conversion didn't
-        # work properly and indicates an error.
+        # If input was empty, WKT can be too; otherwise the conversion
+        # didn't work properly and indicates an error.
         return wkt != NULL and bool(crs) == (wkt[0] != '\0')
 
     except CRSError:

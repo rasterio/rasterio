@@ -48,14 +48,16 @@ code_map = {
 log = logging.getLogger(__name__)
 
 
-cdef void errorHandler(CPLErr err_class, int err_no, const char* msg) with gil:
-    """Send GDAL errors and warnings to the Python logger."""
+cdef void logging_error_handler(CPLErr err_class, int err_no,
+                                const char* msg) with gil:
+    """Send CPL debug messages and warnings to Python's logger."""
+    log = logging.getLogger('rasterio._gdal')
     if err_no in code_map:
         # 'rasterio._gdal' is the name in our logging hierarchy for
         # messages coming direct from CPLError().
-        logger = logging.getLogger('rasterio._gdal')
-        logger.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
-
+        log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+    else:
+        log.info("Unknown error number %r", err_no)
 
 def driver_count():
     """Return the count of all drivers"""
@@ -126,11 +128,10 @@ cdef class GDALEnv(ConfigEnv):
 
     def __init__(self, **options):
         super(GDALEnv, self).__init__(**options)
-        self.start()
 
     def start(self):
-        CPLPushErrorHandler(<CPLErrorHandler>errorHandler)
-        log.debug("Error handler pushed.")
+        CPLPushErrorHandler(<CPLErrorHandler>logging_error_handler)
+        log.debug("Logging error handler pushed.")
         GDALAllRegister()
         OGRRegisterAll()
         log.debug("All drivers registered.")
@@ -148,19 +149,22 @@ cdef class GDALEnv(ConfigEnv):
                 os.environ['GDAL_DATA'] = whl_datadir
             elif os.path.exists(os.path.join(share_datadir, 'pcs.csv')):
                 os.environ['GDAL_DATA'] = share_datadir
+
         if 'PROJ_LIB' not in os.environ:
             whl_datadir = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "proj_data"))
             os.environ['PROJ_LIB'] = whl_datadir
-        log.debug("Env %r has been started.", self)
+
+        log.debug("Started GDALEnv %r.", self)
 
     def stop(self):
         # NB: do not restore the CPL error handler to its default
         # state here. If you do, log messages will be written to stderr
         # by GDAL instead of being sent to Python's logging module.
+        log.debug("Stopping GDALEnv %r.", self)
         CPLPopErrorHandler()
         log.debug("Error handler popped.")
-        log.debug("Env %r has been stopped.", self)
+        log.debug("Stopped GDALEnv %r.", self)
 
     def drivers(self):
         cdef GDALDriverH driver = NULL

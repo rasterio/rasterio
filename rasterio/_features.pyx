@@ -4,10 +4,11 @@ import logging
 
 import numpy as np
 
-from rasterio._err import CPLErrors
 from rasterio import dtypes
 
 cimport numpy as np
+
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._gdal cimport (
     CPLFree, CPLMalloc, CSLDestroy, CSLSetNameValue, GDALFPolygonize,
     GDALPolygonize, GDALRasterizeGeometries, GDALSieveFilter)
@@ -313,11 +314,10 @@ def _rasterize(shapes, image, transform, all_touched):
                     geometry, i, value)
 
         with InMemoryRaster(image=image, transform=transform) as mem:
-            with CPLErrors() as cple:
+            exc_wrap_int(
                 GDALRasterizeGeometries(
                     mem.handle(), 1, mem.band_ids,num_geoms, geoms, NULL,
-                    mem.transform, pixel_values, options, NULL, NULL)
-                cple.check()
+                    mem.transform, pixel_values, options, NULL, NULL))
 
             # Read in-memory data back into image
             image = mem.read()
@@ -604,14 +604,12 @@ cdef class ShapeIterator:
         cdef OGRFeatureH feat = NULL
         cdef OGRGeometryH geom = NULL
 
-        with CPLErrors() as cple:
-            feat = OGR_L_GetNextFeature(self.layer)
-            cple.check()
-
-        if feat == NULL:
-            raise StopIteration
-
         try:
+            feat = OGR_L_GetNextFeature(self.layer)
+
+            if feat == NULL:
+                raise StopIteration
+
             if self.fieldtype == 0:
                 image_value = OGR_F_GetFieldAsInteger(feat, 0)
             else:
@@ -622,5 +620,6 @@ cdef class ShapeIterator:
             else:
                 shape = None
             return shape, image_value
+
         finally:
             _deleteOgrFeature(feat)

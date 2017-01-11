@@ -8,7 +8,7 @@ import uuid
 import numpy as np
 
 from rasterio._err import (
-    CPLErrors, GDALError, CPLE_NotSupportedError, CPLE_AppDefinedError)
+    GDALError, CPLE_NotSupportedError, CPLE_AppDefinedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
@@ -18,6 +18,7 @@ from rasterio.transform import Affine, from_bounds, tastes_like_gdal
 cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
+from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._gdal cimport (
     CSLSetNameValue, CSLDestroy, GDALApproxTransform,
     GDALApproxTransformerOwnsSubtransformer, GDALClose, GDALCreate,
@@ -65,8 +66,7 @@ def _transform_geom(
     dst = osr_from_crs(dst_crs)
 
     try:
-        with CPLErrors() as cple:
-            transform = OCTNewCoordinateTransformation(src, dst)
+        transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
     except:
         OSRDestroySpatialReference(src)
         OSRDestroySpatialReference(dst)
@@ -81,12 +81,11 @@ def _transform_geom(
     try:
         factory = new OGRGeometryFactory()
         src_geom = OGRGeomBuilder().build(geom)
-        with CPLErrors() as cple:
-            dst_geom = factory.transformWithOptions(
-                    <const OGRGeometry *>src_geom,
-                    <OGRCoordinateTransformation *>transform,
-                    options)
-            cple.check()
+        dst_geom = exc_wrap_pointer(
+            factory.transformWithOptions(
+                <const OGRGeometry *>src_geom,
+                <OGRCoordinateTransformation *>transform,
+                options))
 
         result = GeomBuilder().build(dst_geom)
 
@@ -225,24 +224,18 @@ def _reproject(
             src_nodata = source.fill_value
 
         try:
-            with CPLErrors() as cple:
-                driver = GDALGetDriverByName("MEM")
-                cple.check()
+            driver = exc_wrap_pointer(GDALGetDriverByName("MEM"))
         except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
-        try:
-            with CPLErrors() as cple:
-                datasetname = str(uuid.uuid4()).encode('utf-8')
-                src_dataset = GDALCreate(
-                    driver, <const char *>datasetname, cols, rows,
-                    src_count, dtypes.dtype_rev[dtype], NULL)
-                cple.check()
-        except:
-            raise
+        datasetname = str(uuid.uuid4()).encode('utf-8')
+        src_dataset = exc_wrap_pointer(
+            GDALCreate(driver, <const char *>datasetname, cols, rows,
+                       src_count, dtypes.dtype_rev[dtype], NULL))
+
         GDALSetDescription(
             src_dataset, "Temporary source dataset for _reproject()")
         log.debug("Created temp source dataset")
@@ -309,9 +302,7 @@ def _reproject(
         dst_bidx = src_bidx
 
         try:
-            with CPLErrors() as cple:
-                driver = GDALGetDriverByName("MEM")
-                cple.check()
+            driver = exc_wrap_pointer(GDALGetDriverByName("MEM"))
         except:
             raise DriverRegistrationError(
                 "'MEM' driver not found. Check that this call is contained "
@@ -319,15 +310,13 @@ def _reproject(
                 "block.")
 
         _, rows, cols = destination.shape
-        try:
-            with CPLErrors() as cple:
-                datasetname = str(uuid.uuid4()).encode('utf-8')
-                dst_dataset = GDALCreate(
-                    driver, <const char *>datasetname, cols, rows, src_count,
-                    dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL)
-                cple.check()
-        except:
-            raise
+
+        datasetname = str(uuid.uuid4()).encode('utf-8')
+        dst_dataset = exc_wrap_pointer(
+            GDALCreate(driver, <const char *>datasetname, cols, rows,
+                src_count,
+                dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL))
+
         GDALSetDescription(
             dst_dataset, "Temporary destination dataset for _reproject()")
         log.debug("Created temp destination dataset.")
@@ -388,16 +377,15 @@ def _reproject(
             imgProjOptions, <const char *>key, <const char *>val)
 
     try:
-        with CPLErrors() as cple:
-            hTransformArg = GDALCreateGenImgProjTransformer2(
-                src_dataset, dst_dataset, imgProjOptions)
-            hTransformArg = GDALCreateApproxTransformer(
-                GDALGenImgProjTransform, hTransformArg, tolerance)
-            pfnTransformer = GDALApproxTransform
-            GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
-            cple.check()
-            psWOptions = GDALCreateWarpOptions()
-            cple.check()
+        hTransformArg = exc_wrap_pointer(
+            GDALCreateGenImgProjTransformer2(
+                src_dataset, dst_dataset, imgProjOptions))
+        hTransformArg = exc_wrap_pointer(
+            GDALCreateApproxTransformer(
+                GDALGenImgProjTransform, hTransformArg, tolerance))
+        pfnTransformer = GDALApproxTransform
+        GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+        psWOptions = GDALCreateWarpOptions()
         log.debug("Created transformer and options.")
     except:
         GDALDestroyApproxTransformer(hTransformArg)
@@ -507,22 +495,18 @@ def _reproject(
     # and run the warper.
     cdef GDALWarpOperation oWarper
     try:
-        with CPLErrors() as cple:
-            oWarper.Initialize(psWOptions)
-            cple.check()
+        exc_wrap_int(oWarper.Initialize(psWOptions))
         rows, cols = destination.shape[-2:]
         log.debug(
             "Chunk and warp window: %d, %d, %d, %d.",
             0, 0, cols, rows)
 
-        with CPLErrors() as cple:
-            if num_threads > 1:
-                with nogil:
-                    oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
-            else:
-                with nogil:
-                    oWarper.ChunkAndWarpImage(0, 0, cols, rows)
-            cple.check()
+        if num_threads > 1:
+            with nogil:
+                oWarper.ChunkAndWarpMulti(0, 0, cols, rows)
+        else:
+            with nogil:
+                oWarper.ChunkAndWarpImage(0, 0, cols, rows)
 
         if dtypes.is_ndarray(destination):
             retval = io_auto(destination, dst_dataset, 0)
@@ -577,17 +561,18 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     with InMemoryRaster(width=width, height=height, transform=transform,
                         gcps=gcps, crs=src_crs) as temp:
         try:
-            with CPLErrors() as cple:
-                hTransformArg = GDALCreateGenImgProjTransformer(
-                    temp._hds, NULL, NULL, wkt, 1, 1000.0,0)
-                cple.check()
-                result = GDALSuggestedWarpOutput2(
+            hTransformArg = exc_wrap_pointer(
+                GDALCreateGenImgProjTransformer(
+                    temp._hds, NULL, NULL, wkt, 1, 1000.0,0))
+            exc_wrap_int(
+                GDALSuggestedWarpOutput2(
                     temp._hds, GDALGenImgProjTransform, hTransformArg,
-                    geotransform, &npixels, &nlines, extent, 0)
-                cple.check()
+                    geotransform, &npixels, &nlines, extent, 0))
             log.debug("Created transformer and warp output.")
+
         except CPLE_NotSupportedError as err:
             raise CRSError(err.errmsg)
+
         except CPLE_AppDefinedError as err:
             if "Reprojection failed" in str(err):
                 # This "exception" should be treated as a debug msg, not error

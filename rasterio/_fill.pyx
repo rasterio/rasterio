@@ -6,10 +6,10 @@ import uuid
 import numpy as np
 
 from rasterio import dtypes
-from rasterio._err import CPLErrors
 
 cimport numpy as np
 
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio._gdal cimport (
     CSLDestroy, CSLSetNameValue, GDALClose, GDALCreate, GDALFillNodata,
     GDALGetDriverByName, GDALGetRasterBand)
@@ -63,14 +63,10 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
         raise ValueError("Invalid source image mask")
 
     try:
-        with CPLErrors() as cple:
-            alg_options = CSLSetNameValue(
-                alg_options, "TEMP_FILE_DRIVER", "MEM")
-            GDALFillNodata(
-                image_band, mask_band, max_search_distance, 0,
-                smoothing_iterations, alg_options, NULL, NULL)
-            cple.check()
-        # read the result into a numpy ndarray
+        alg_options = CSLSetNameValue(alg_options, "TEMP_FILE_DRIVER", "MEM")
+        exc_wrap_int(
+            GDALFillNodata(image_band, mask_band, max_search_distance, 0,
+                           smoothing_iterations, alg_options, NULL, NULL))
         result = np.empty(image.shape, dtype=image.dtype)
         io_auto(result, image_band, False)
         return result

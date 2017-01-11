@@ -108,7 +108,6 @@ def test_is_geographic():
 
 def test_is_projected():
     assert CRS({'init': 'EPSG:3857'}).is_projected is True
-    assert CRS({'INIT': 'EPSG:4326'}).is_projected is False
 
     lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert CRS(lcc_crs).is_projected is True
@@ -155,21 +154,28 @@ def test_empty_json():
         CRS.from_string('')
 
 
+@pytest.mark.parametrize('arg', [None, {}, ''])
+def test_can_create_osr_none_err(arg):
+    """Passing None or empty fails"""
+    with pytest.raises(ValueError):
+        _can_create_osr(arg)
+
+
 def test_can_create_osr():
     assert _can_create_osr({'init': 'EPSG:4326'})
     assert _can_create_osr('EPSG:4326')
 
 
-def test_can_create_osr_empty():
-    assert _can_create_osr({})
-    assert _can_create_osr('')
+@pytest.mark.parametrize('arg', ['EPSG:-1', 'foo'])
+def test_can_create_osr_invalid(arg):
+    """invalid CRS definitions fail"""
+    assert not _can_create_osr(arg)
 
 
-def test_can_create_osr_invalid():
-    assert not _can_create_osr(None)
-    assert not _can_create_osr('EPSG:-1')
+@pytest.mark.xfail()
+def test_can_create_osr_invalid_epsg_0():
+    """this invalid CRS should fail, but doesn't because of a GDAL bug"""
     assert not _can_create_osr('EPSG:')
-    assert not _can_create_osr('foo')
 
 
 def test_has_wkt_property():

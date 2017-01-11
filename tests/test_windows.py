@@ -101,10 +101,13 @@ def test_eval_window_invalid_dims(params):
         evaluate(*params)
 
 
-def test_windows_evaluate():
-    assert evaluate(((2, 4), (2, 4)), 10, 10) == ((2, 4), (2, 4))
-    assert evaluate(((-10, None), (-10, None)), 100, 90) == ((90, 100), (80, 90))
-    assert evaluate(((None, -10), (None, -10)), 100, 90) == ((0, 90), (0, 80))
+@pytest.mark.parametrize("params,expected", [
+        ([((2, 4), (2, 4)), 10, 10], ((2, 4), (2, 4))),
+        ([((-10, None), (-10, None)), 100, 90], ((90, 100), (80, 90))),
+        ([((None, -10), (None, -10)), 100, 90], ((0, 90), (0, 80))),
+        ([((0, 256), (0, 256)), 7791, 7621], ((0, 256), (0, 256)))])
+def test_windows_evaluate(params,expected):
+    assert evaluate(*params) == expected
 
 
 def test_window_index():

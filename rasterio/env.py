@@ -3,7 +3,7 @@
 from functools import wraps
 import logging
 
-from rasterio._drivers import (
+from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError
@@ -141,35 +141,39 @@ class Env(object):
         return _env.drivers()
 
     def __enter__(self):
+        log.debug("Entering env context: %r", self)
         defenv()
         self.context_options = getenv()
         setenv(**self.options)
-        log.debug("Entering env %r context", self)
+        log.debug("Entered env context: %r", self)
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        log.debug("Exiting env context: %r", self)
         delenv()
         setenv(**self.context_options)
-        log.debug("Exiting env %r context", self)
+        log.debug("Exited env context: %r", self)
 
 
 def defenv():
     """Create a default environment if necessary."""
     global _env
     if _env:
-        log.debug("Environment %r exists", _env)
+        log.debug("GDAL environment exists: %r", _env)
     else:
+        log.debug("No GDAL environment exists")
         _env = GDALEnv()
         _env.update_config_options(**default_options)
         log.debug(
             "New GDAL environment %r created", _env)
+    _env.start()
 
 
 def getenv():
     """Get a mapping of current options."""
     global _env
     if not _env:
-        raise EnvError("No environment exists")
+        raise EnvError("No GDAL environment exists")
     else:
         log.debug("Got a copy of environment %r options", _env)
         return _env.options.copy()
@@ -179,7 +183,7 @@ def setenv(**options):
     """Set options in the existing environment."""
     global _env
     if not _env:
-        raise EnvError("No environment exists")
+        raise EnvError("No GDAL environment exists")
     else:
         _env.update_config_options(**options)
         log.debug("Updated existing %r with options %r", _env, options)
@@ -189,10 +193,11 @@ def delenv():
     """Delete options in the existing environment."""
     global _env
     if not _env:
-        raise EnvError("No environment exists")
+        raise EnvError("No GDAL environment exists")
     else:
         _env.clear_config_options()
         log.debug("Cleared existing %r options", _env)
+    _env.stop()
 
 
 def ensure_env(f):
