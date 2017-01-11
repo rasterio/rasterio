@@ -32,7 +32,7 @@ from libc.stdio cimport FILE
 cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 from rasterio._gdal cimport (
     CPLFree, CPLMalloc, CSLDestroy, CSLDuplicate, CSLFetchNameValue,
     CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
@@ -861,7 +861,12 @@ cdef class MemoryFileBase(object):
 
     def exists(self):
         """True if the in-memory file exists"""
-        cdef VSILFILE *fp = VSIFOpenL(self.path, 'r')
+        cdef VSILFILE *fp = NULL
+        cdef const char *cypath = self.path
+
+        with nogil:
+            fp = VSIFOpenL(cypath, 'r')
+
         if fp != NULL:
             VSIFCloseL(fp)
             return True
@@ -897,12 +902,14 @@ cdef class MemoryFileBase(object):
         cdef unsigned char *buffer = <unsigned char *>CPLMalloc(size)
         cdef bytes result
 
-        try:
-            fp = VSIFOpenL(self.path, 'r')
+        fp = VSIFOpenL(self.path, 'r')
 
-            if fp == NULL:
-                raise IOError(
-                    "Failed to open in-memory file: %s", self.name)
+        try:
+            fp = exc_wrap_vsilfile(fp)
+
+            #if fp == NULL:
+            #    raise IOError(
+            #        "Failed to open in-memory file: %s", self.name)
 
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(
@@ -945,13 +952,13 @@ cdef class MemoryFileBase(object):
         n = len(data)
 
         if not self.exists():
-            fp = VSIFOpenL(self.path, 'w')
-            if fp == NULL:
-                raise ValueError("NULL file")
+            fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'w'))
+            #if fp == NULL:
+            #    raise ValueError("NULL file")
         else:
-            fp = VSIFOpenL(self.path, 'r+')
-            if fp == NULL:
-                raise ValueError("NULL file")
+            fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'r+'))
+            #if fp == NULL:
+            #    raise ValueError("NULL file")
 
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(

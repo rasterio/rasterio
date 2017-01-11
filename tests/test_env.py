@@ -9,8 +9,7 @@ from packaging.version import parse
 import pytest
 
 import rasterio
-from rasterio._drivers import (del_gdal_config, get_gdal_config,
-                               set_gdal_config)
+from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
 from rasterio.env import default_options
 from rasterio.errors import EnvError

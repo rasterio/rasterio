@@ -51,12 +51,13 @@ log = logging.getLogger(__name__)
 cdef void logging_error_handler(CPLErr err_class, int err_no,
                                 const char* msg) with gil:
     """Send CPL debug messages and warnings to Python's logger."""
+    log = logging.getLogger('rasterio._gdal')
     if err_no in code_map:
         # 'rasterio._gdal' is the name in our logging hierarchy for
         # messages coming direct from CPLError().
-        log = logging.getLogger('rasterio._gdal')
         log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
-
+    else:
+        log.info("Unknown error number %r", err_no)
 
 def driver_count():
     """Return the count of all drivers"""
