@@ -14,7 +14,7 @@ Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
 provides a Python API based on N-D arrays.
 
-Rasterio supports Python 2.7 and 3.3-3.5 on Linux and Mac OS X.
+Rasterio supports Python 2.7 and 3.3-3.6 on Linux and Mac OS X.
 
 Read the documentation for more details: https://mapbox.github.io/rasterio/.
 
