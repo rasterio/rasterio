@@ -476,8 +476,8 @@ def test_reproject_init_nodata_tofile(tmpdir):
 
     # fill both sources w/ arbitrary values
     rows, cols = source1.shape
-    source1[:rows / 2, :cols / 2] = 200
-    source2[rows / 2:, cols / 2:] = 100
+    source1[:rows // 2, :cols // 2] = 200
+    source2[rows // 2:, cols // 2:] = 100
 
     kwargs = {
         'count': 1,
@@ -528,8 +528,8 @@ def test_reproject_no_init_nodata_tofile(tmpdir):
 
     # fill both sources w/ arbitrary values
     rows, cols = source1.shape
-    source1[:rows / 2, :cols / 2] = 200
-    source2[rows / 2:, cols / 2:] = 100
+    source1[:rows // 2, :cols // 2] = 200
+    source2[rows // 2:, cols // 2:] = 100
 
     kwargs = {
         'count': 1,
@@ -580,8 +580,8 @@ def test_reproject_no_init_nodata_toarray():
 
     # fill both sources w/ arbitrary values
     rows, cols = source1.shape
-    source1[:rows / 2, :cols / 2] = 200
-    source2[rows / 2:, cols / 2:] = 100
+    source1[:rows // 2, :cols // 2] = 200
+    source2[rows // 2:, cols // 2:] = 100
 
     with rasterio.Env():
         reproject(
