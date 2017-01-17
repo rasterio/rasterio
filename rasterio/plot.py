@@ -80,6 +80,9 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
     elif isinstance(source, DatasetReader):
+        if with_bounds:
+            kwargs['extent'] = plotting_extent(source)
+
         if source.count == 1:
             arr = source.read(1, masked=True)
         else:
@@ -91,8 +94,6 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
                 arr = source.read(rgb_indexes, masked=True)
                 arr = reshape_as_image(arr)
 
-                if with_bounds:
-                    kwargs['extent'] = plotting_extent(source)
             except KeyError:
                 arr = source.read(1, masked=True)
     else:
@@ -172,9 +173,8 @@ def reshape_as_image(arr):
     source : array-like in a of format (bands, rows, columns)
     """
     # swap the axes order from (bands, rows, columns) to (rows, columns, bands)
-    im = np.ma.transpose(arr, [1,2,0])
+    im = np.ma.transpose(arr, [1, 2, 0])
     return im
-
 
 
 def reshape_as_raster(arr):
@@ -187,7 +187,7 @@ def reshape_as_raster(arr):
     arr : array-like in the image form of (rows, columns, bands)
     """
     # swap the axes order from (rows, columns, bands) to (bands, rows, columns)
-    im = np.transpose(arr, [2,0,1])
+    im = np.transpose(arr, [2, 0, 1])
     return im
 
 
