@@ -160,3 +160,26 @@ def test_sieve_read(tmpdir):
     with rasterio.open(outfile) as src:
         assert src.count == 1
         assert src.meta['dtype'] == 'uint8'
+
+
+def test_positional_calculation_byindex(tmpdir):
+    # See Issue 947: https://github.com/mapbox/rasterio/issues/947
+    # Prior to fix, 'shade.tif' reliably is read as 2nd input and
+    # we should expect this to fail due to array shape error
+    # ("operands could not be broadcast together")
+    outfile = str(tmpdir.join('out.tif'))
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['calc'] + [
+        '(- (read 1 1) (read 2 2))',
+        'tests/data/RGB.byte.tif',
+        'tests/data/RGB.byte.tif',
+        'tests/data/shade.tif',
+        outfile], catch_exceptions=False)
+    assert result.exit_code == 0
+
+    window = ((0, 1), (0, 1))
+    with rasterio.open('tests/data/RGB.byte.tif') as rgb:
+        answer = rgb.read(1, window=window) - rgb.read(1, window=window)
+
+    with rasterio.open(outfile) as src:
+        assert src.read(1)[0, 0] == answer

@@ -1,6 +1,6 @@
 """$ rio calc"""
 
-
+from collections import OrderedDict
 from distutils.version import LooseVersion
 
 import click
@@ -100,7 +100,7 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
                 dtype = dtype or first.meta['dtype']
                 kwargs['dtype'] = dtype
 
-            ctxkwds = {}
+            ctxkwds = OrderedDict()
             for i, (name, path) in enumerate(inputs):
                 with rasterio.open(path) as src:
                     # Using the class method instead of instance
@@ -120,7 +120,7 @@ def calc(ctx, command, files, output, name, dtype, masked, force_overwrite,
             snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
             snuggs.func_map['sieve'] = lambda *args: sieve(*args)
 
-            res = snuggs.eval(command, **ctxkwds)
+            res = snuggs.eval(command, ctxkwds)
 
             if (isinstance(res, np.ma.core.MaskedArray) and (
                     tuple(LooseVersion(np.__version__).version) < (1, 9) or
