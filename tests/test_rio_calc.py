@@ -182,4 +182,4 @@ def test_positional_calculation_byindex(tmpdir):
         answer = rgb.read(1, window=window) - rgb.read(1, window=window)
 
     with rasterio.open(outfile) as src:
-        assert src.read(1)[0, 0] == answer
+        assert src.read(1, window=window) == answer
