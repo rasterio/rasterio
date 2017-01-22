@@ -132,6 +132,14 @@ def test_is_same_crs():
     assert lcc_crs1 != lcc_crs2
 
 
+def test_null_crs_equality():
+    assert (CRS() == CRS()) is False
+
+
+def test_null_and_valid_crs_equality():
+    assert (CRS() == CRS(init='EPSG:4326')) is False
+
+
 def test_to_string():
     assert CRS({'init': 'EPSG:4326'}).to_string() == "+init=EPSG:4326"
 
@@ -156,9 +164,7 @@ def test_empty_json():
 
 @pytest.mark.parametrize('arg', [None, {}, ''])
 def test_can_create_osr_none_err(arg):
-    """Passing None or empty fails"""
-    with pytest.raises(ValueError):
-        _can_create_osr(arg)
+    _can_create_osr(arg)
 
 
 def test_can_create_osr():
