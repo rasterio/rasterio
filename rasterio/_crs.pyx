@@ -50,14 +50,13 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
+            # return False immediately if either value is undefined
+            if not (self and other):
+                return False
             osr_crs1 = osr_from_crs(self)
             osr_crs2 = osr_from_crs(other)
-            osrs_valid = ((OSRIsGeographic(osr_crs1) == 1 or
-                           OSRIsProjected(osr_crs1) == 1) and
-                          (OSRIsGeographic(osr_crs2) == 1 or
-                           OSRIsProjected(osr_crs2) == 1))
-            osr_same = (OSRIsSame(osr_crs1, osr_crs2) == 1)
-            return (osr_same and osrs_valid)
+            retval = OSRIsSame(osr_crs1, osr_crs2)
+            return bool(retval == 1)
         finally:
             OSRDestroySpatialReference(osr_crs1)
             OSRDestroySpatialReference(osr_crs2)
