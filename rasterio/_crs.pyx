@@ -50,6 +50,9 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
+            # return False immediately if either value is undefined
+            if not (self and other):
+                return False
             osr_crs1 = osr_from_crs(self)
             osr_crs2 = osr_from_crs(other)
             retval = OSRIsSame(osr_crs1, osr_crs2)
