@@ -937,11 +937,10 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
+    if not crs:
+        raise ValueError("A crs is required")  # CRSError("CRS cannot be None")
 
     cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
-    if not crs:
-        return osr
 
     if isinstance(crs, string_types):
         proj = crs.encode('utf-8')

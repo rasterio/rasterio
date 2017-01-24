@@ -164,7 +164,9 @@ def test_empty_json():
 
 @pytest.mark.parametrize('arg', [None, {}, ''])
 def test_can_create_osr_none_err(arg):
-    _can_create_osr(arg)
+    """Passing None or empty fails"""
+    with pytest.raises(ValueError):
+        _can_create_osr(arg)
 
 
 def test_can_create_osr():
