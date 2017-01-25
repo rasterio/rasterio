@@ -23,6 +23,11 @@ def rgb_file_bytes(path_rgb_byte_tif):
     return open(path_rgb_byte_tif, 'rb').read()
 
 
+@pytest.fixture(scope='function')
+def rgb_file_object(path_rgb_byte_tif):
+    return open(path_rgb_byte_tif, 'rb')
+
+
 @mingdalversion
 def test_initial_bytes(rgb_file_bytes):
     """MemoryFile contents can initialized from bytes and opened."""
@@ -112,3 +117,25 @@ def test_read(tmpdir, rgb_file_bytes):
 
     with rasterio.open(str(tmptiff)) as src:
         assert src.count == 3
+
+
+@mingdalversion
+def test_rgb_file_object_example(rgb_file_object):
+    """An example of using a file object"""
+    with MemoryFile(rgb_file_object.read()) as memfile:
+        with memfile.open() as src:
+            assert src.driver == 'GTiff'
+            assert src.count == 3
+            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.read().shape == (3, 718, 791)
+
+
+@mingdalversion
+@pytest.mark.xfail(reason="file object input is not implemented")
+def test_rgb_file_object(rgb_file_object):
+    """A failing example of using a file object"""
+    with rasterio.open(rgb_file_object) as src:
+        assert src.driver == 'GTiff'
+        assert src.count == 3
+        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.read().shape == (3, 718, 791)
