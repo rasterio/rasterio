@@ -3,5 +3,5 @@ boto3>=1.2.4
 cligj
 enum34
 numpy>=1.8
-snuggs>=1.2
+snuggs>=1.4.1
 setuptools
