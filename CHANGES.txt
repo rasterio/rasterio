@@ -1,6 +1,10 @@
 Changes
 =======
 
+Next
+----
+- Order of input datasets is preserved by rio-calc (#947, #965).
+
 1.0a5 (2016-12-23)
 ------------------
 - New binary wheels using version 1.2.0 of sgillies/frs-wheel-builds. See
