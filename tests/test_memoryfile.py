@@ -120,21 +120,24 @@ def test_read(tmpdir, rgb_file_bytes):
 
 
 @mingdalversion
-def test_rgb_file_object_example(rgb_file_object):
-    """An example of using a file object"""
-    with MemoryFile(rgb_file_object.read()) as memfile:
-        with memfile.open() as src:
-            assert src.driver == 'GTiff'
-            assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
-            assert src.read().shape == (3, 718, 791)
+def test_file_object_read(rgb_file_object):
+    """An example of reading from a file object"""
+    with rasterio.open(rgb_file_object) as src:
+        assert src.driver == 'GTiff'
+        assert src.count == 3
+        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.read().shape == (3, 718, 791)
 
 
 @mingdalversion
-@pytest.mark.xfail(reason="file object input is not implemented")
-def test_rgb_file_object(rgb_file_object):
-    """A failing example of using a file object"""
-    with rasterio.open(rgb_file_object) as src:
+def test_test_file_object_write(tmpdir, rgb_data_and_profile):
+    """An example of writing to a file object"""
+    data, profile = rgb_data_and_profile
+    with tmpdir.join('test.tif').open('wb') as fout:
+        with rasterio.open(fout, 'w', **profile) as dst:
+            dst.write(data)
+
+    with rasterio.open(str(tmpdir.join('test.tif'))) as src:
         assert src.driver == 'GTiff'
         assert src.count == 3
         assert src.dtypes == ('uint8', 'uint8', 'uint8')

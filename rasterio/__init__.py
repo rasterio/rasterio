@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 from collections import namedtuple
+from contextlib import contextmanager
 import logging
 import warnings
 try:
@@ -21,7 +22,7 @@ from rasterio.env import ensure_env, Env
 from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
-    DatasetReader, get_writer_for_path, get_writer_for_driver)
+    DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
@@ -65,7 +66,7 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-def open(path, mode='r', driver=None, width=None, height=None,
+def open(fp, mode='r', driver=None, width=None, height=None,
          count=None, crs=None, transform=None, dtype=None, nodata=None,
          **kwargs):
     """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
@@ -82,6 +83,8 @@ def open(path, mode='r', driver=None, width=None, height=None,
 
     Parameters
     ----------
+    fp: string or file
+        A filename or file object opened in binary mode.
     mode: string
         "r" (read), "r+" (read/write), or "w" (write)
     driver: string
@@ -164,8 +167,9 @@ def open(path, mode='r', driver=None, width=None, height=None,
     "tar://"". In this case, the ``path`` must be an absolute path
     within that container.
     """
-    if not isinstance(path, string_types):
-        raise TypeError("invalid path: {0!r}".format(path))
+    if not isinstance(fp, string_types):
+        if not (hasattr(fp, 'read') or hasattr(fp, 'write')):
+            raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, string_types):
         raise TypeError("invalid mode: {0!r}".format(mode))
     if driver and not isinstance(driver, string_types):
@@ -202,38 +206,69 @@ def open(path, mode='r', driver=None, width=None, height=None,
             "Blacklisted: file cannot be opened by "
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
-    _, _, scheme = parse_path(path)
+    # Special case for file object argument.
+    if mode =='r' and hasattr(fp, 'read'):
 
-    with Env() as env:
-        # Get AWS credentials only if we're attempting to access a
-        # raster using the S3 scheme.
-        if scheme == 's3':
-            env.get_aws_credentials()
-            log.debug("AWS credentials have been obtained")
+        @contextmanager
+        def fp_reader(fp):
+            memfile = MemoryFile(fp.read())
+            dataset = memfile.open()
+            yield dataset
+            dataset.close()
+            memfile.close()
 
-        # Create dataset instances and pass the given env, which will
-        # be taken over by the dataset's context manager if it is not
-        # None.
-        if mode == 'r':
-            s = DatasetReader(path)
-        elif mode == 'r-':
-            warnings.warn("'r-' mode is deprecated, use 'r'",
-                          DeprecationWarning)
-            s = DatasetReader(path)
-        elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode)
-        elif mode == 'w':
-            s = get_writer_for_driver(driver)(path, mode, driver=driver,
-                                              width=width, height=height,
-                                              count=count, crs=crs,
-                                              transform=transform,
-                                              dtype=dtype, nodata=nodata,
-                                              **kwargs)
-        else:
-            raise ValueError(
-                "mode string must be one of 'r', 'r+', or 'w', not %s" % mode)
-        s.start()
-        return s
+        return fp_reader(fp)
+
+    elif mode == 'w' and hasattr(fp, 'write'):
+
+        @contextmanager
+        def fp_writer(fp):
+            memfile = MemoryFile()
+            dataset = memfile.open(driver=driver, width=width, height=height,
+                                   count=count, crs=crs, transform=transform,
+                                   dtype=dtype, nodata=nodata, **kwargs)
+            yield dataset
+            dataset.close()
+            memfile.seek(0)
+            fp.write(memfile.read())
+            memfile.close()
+
+        return fp_writer(fp)
+
+    else:
+        # The 'normal' filename path.
+        _, _, scheme = parse_path(fp)
+
+        with Env() as env:
+            # Get AWS credentials only if we're attempting to access a
+            # raster using the S3 scheme.
+            if scheme == 's3':
+                env.get_aws_credentials()
+                log.debug("AWS credentials have been obtained")
+
+            # Create dataset instances and pass the given env, which will
+            # be taken over by the dataset's context manager if it is not
+            # None.
+            if mode == 'r':
+                s = DatasetReader(fp)
+            elif mode == 'r-':
+                warnings.warn("'r-' mode is deprecated, use 'r'",
+                              DeprecationWarning)
+                s = DatasetReader(fp)
+            elif mode == 'r+':
+                s = get_writer_for_path(fp)(fp, mode)
+            elif mode == 'w':
+                s = get_writer_for_driver(driver)(fp, mode, driver=driver,
+                                                  width=width, height=height,
+                                                  count=count, crs=crs,
+                                                  transform=transform,
+                                                  dtype=dtype, nodata=nodata,
+                                                  **kwargs)
+            else:
+                raise ValueError(
+                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+            s.start()
+            return s
 
 
 @ensure_env
