@@ -25,6 +25,25 @@ def test_delete_nodata_exclusive_opts(data):
     assert result.exit_code == 2
 
 
+def test_delete_crs_exclusive_opts(data):
+    """--unset-crs and --crs can't be used together"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--unset-crs', '--crs', 'epsg:4326'])
+    assert result.exit_code == 2
+
+
+def test_unset_crs(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group,
+                           ['edit-info', inputfile, '--unset-crs'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert dict(src.crs) == {}
+
+
 def test_edit_nodata_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
