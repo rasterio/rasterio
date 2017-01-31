@@ -66,9 +66,8 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-def open(fp, mode='r', driver=None, width=None, height=None,
-         count=None, crs=None, transform=None, dtype=None, nodata=None,
-         **kwargs):
+def open(fp, mode='r', driver=None, width=None, height=None, count=None,
+         crs=None, transform=None, dtype=None, nodata=None, **kwargs):
     """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
     write), or 'w' (write) and return a dataset Reader or Updater
     object.

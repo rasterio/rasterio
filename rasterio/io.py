@@ -218,8 +218,7 @@ class MemoryFile(MemoryFileBase):
     A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
     format driver
 
-    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, \
-    ...         MemoryFile(f.read()) as memfile:
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, MemoryFile(f) as memfile:
     ...     with memfile.open() as src:
     ...         pprint.pprint(src.profile)
     ...
@@ -237,7 +236,7 @@ class MemoryFile(MemoryFileBase):
 
     """
 
-    def open(self, driver=None, width=None, height=None,
+    def open(self, path=None, driver=None, width=None, height=None,
              count=None, crs=None, transform=None, dtype=None, nodata=None,
              **kwargs):
         """Open the file and return a Rasterio dataset object.
@@ -245,17 +244,21 @@ class MemoryFile(MemoryFileBase):
         If data has already been written, the file is opened in 'r+'
         mode. Otherwise, the file is opened in 'w' mode.
         """
+        if path:
+            vsi_path = '/vsizip{0}/{1}'.format(self.name, path)
+        else:
+            vsi_path = self.name
+
         with Env():
             if self.closed:
                 raise IOError("I/O operation on closed file.")
             if self.exists():
-                s = get_writer_for_path(self.name)(self.name, 'r+')
+                s = DatasetReader(vsi_path)
             else:
-                s = get_writer_for_driver(
-                    driver)(self.name, 'w', driver=driver, width=width,
-                            height=height, count=count, crs=crs,
-                            transform=transform, dtype=dtype, nodata=nodata,
-                            **kwargs)
+                s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
+                                  height=height, count=count, crs=crs,
+                                  transform=transform, dtype=dtype,
+                                  nodata=nodata, **kwargs)
             s.start()
             return s
 

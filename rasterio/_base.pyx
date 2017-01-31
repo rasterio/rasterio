@@ -83,7 +83,7 @@ def get_dataset_driver(path):
         drivername = get_driver_name(driver)
 
     except CPLE_OpenFailedError as exc:
-        raise RasterioIOError(str(exc))
+        raise TypeError(str(exc))
 
     finally:
         if dataset != NULL:

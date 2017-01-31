@@ -4,6 +4,10 @@ Changes
 Next
 ----
 - Order of input datasets is preserved by rio-calc (#947, #965).
+- Rasterio's `open()` function now takes Python file objects as well as 
+  filenames and URLs (#964).
+- `MemoryFile()` can also take a file object parameter and its `open()` method
+  can take a path, allowing access to files within a zipfile.
 
 1.0a5 (2016-12-23)
 ------------------

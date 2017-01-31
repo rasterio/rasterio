@@ -3,6 +3,7 @@ import operator
 import os
 import shutil
 import sys
+import zipfile
 
 from click.testing import CliRunner
 import py
@@ -252,6 +253,25 @@ def gdalenv(request):
     request.addfinalizer(fin)
 
 
+@pytest.fixture(scope='session')
+def data_dir():
+    """Absolute file path to the directory containing test datasets."""
+    return os.path.abspath(os.path.join('tests', 'data'))
+
+
 @pytest.fixture(scope='module')
-def path_rgb_byte_tif():
-    return os.path.join('tests', 'data', 'RGB.byte.tif')
+def path_rgb_byte_tif(data_dir):
+    return os.path.join(data_dir, 'RGB.byte.tif')
+
+
+@pytest.fixture(scope='session')
+def path_zip_file():
+    """Creates ``coutwildrnp.zip`` if it does not exist and returns
+    the absolute file path."""
+    path = '{}/white-gemini-iv.zip'.format(data_dir())
+    if not os.path.exists(path):
+        with zipfile.ZipFile(path, 'w') as zip:
+            for filename in ['white-gemini-iv.vrt',
+                             '389225main_sw_1965_1024.jpg']:
+                zip.write(os.path.join(data_dir(), filename), filename)
+    return path

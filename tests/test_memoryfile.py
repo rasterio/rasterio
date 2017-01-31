@@ -142,3 +142,15 @@ def test_test_file_object_write(tmpdir, rgb_data_and_profile):
         assert src.count == 3
         assert src.dtypes == ('uint8', 'uint8', 'uint8')
         assert src.read().shape == (3, 718, 791)
+
+
+@mingdalversion
+def test_zip_file_object_read(path_zip_file):
+    """An example of reading from a zip file object"""
+    with open(path_zip_file, 'rb') as zip_file_object:
+        with MemoryFile(zip_file_object) as memfile:
+            with memfile.open('white-gemini-iv.vrt') as src:
+                assert src.driver == 'VRT'
+                assert src.count == 3
+                assert src.dtypes == ('uint8', 'uint8', 'uint8')
+                assert src.read().shape == (3, 768, 1024)
