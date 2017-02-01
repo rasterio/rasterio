@@ -828,13 +828,9 @@ cdef class DatasetReaderBase(DatasetBase):
         return sample_gen(self, xy, indexes)
 
 
-def get_filetype(bytesbuf):
-    """Detect compression type of bytesbuf.
-    ZIP only. TODO: add others relevant to GDAL/OGR."""
-    if bytesbuf[:4].startswith(b'PK\x03\x04'):
-        return 'zip'
-    else:
-        return ''
+def is_zip(data):
+    """Detect zip compressed data"""
+    return data[:4].startswith(b'PK\x03\x04')
 
 
 cdef class MemoryFileBase(object):
@@ -861,8 +857,8 @@ cdef class MemoryFileBase(object):
         else:
             initial_bytes = b''
 
-        filetype = get_filetype(initial_bytes)
-        if filetype == 'zip':
+        if is_zip(initial_bytes):
+            # GDAL 2.1 requires a .zip extension for zipped files.
             self.name = '/vsimem/{}.zip'.format(uuid.uuid4())
         else:
             self.name = '/vsimem/{}'.format(uuid.uuid4())
