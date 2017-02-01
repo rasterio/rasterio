@@ -2,6 +2,7 @@
 
 
 import json
+import warnings
 
 import click
 
@@ -185,3 +186,11 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
 
         if description:
             dst.set_description(bidx, description)
+
+    # Post check - ensure that crs was unset properly
+    if unset_crs:
+        with ctx.obj['env'], rasterio.open(input, 'r') as src:
+            if dict(src.crs) != {}:
+                warnings.warn(
+                    'CRS was not unset. Availability of his functionality '
+                    'differs depending on GDAL version and driver')
