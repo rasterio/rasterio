@@ -34,6 +34,9 @@ def test_delete_crs_exclusive_opts(data):
     assert result.exit_code == 2
 
 
+@pytest.mark.xfail(
+    Version(rasterio.__gdal_version__) < Version('2.0'),
+    reason='GDAL version >= 2.0 required')
 def test_unset_crs(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
