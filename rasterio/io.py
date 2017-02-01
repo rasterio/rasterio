@@ -236,24 +236,29 @@ class MemoryFile(MemoryFileBase):
 
     """
 
-    def open(self, path=None, driver=None, width=None, height=None,
-             count=None, crs=None, transform=None, dtype=None, nodata=None,
-             **kwargs):
+    def open(self, driver=None, width=None, height=None, count=None, crs=None,
+             transform=None, dtype=None, nodata=None, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
         If data has already been written, the file is opened in 'r+'
         mode. Otherwise, the file is opened in 'w' mode.
+
+        Parameters
+        ----------
+        Note well that there is no `path` parameter: a `MemoryFile`
+        contains a single dataset and there is no need to specify a
+        path.
+
+        Other parameters are optional and have the same semantics as the
+        parameters of `rasterio.open()`.
         """
-        if path:
-            vsi_path = '/vsizip{0}/{1}'.format(self.name, path)
-        else:
-            vsi_path = self.name
+        vsi_path = self.name
 
         with Env():
             if self.closed:
                 raise IOError("I/O operation on closed file.")
             if self.exists():
-                s = DatasetReader(vsi_path)
+                s = DatasetReader(vsi_path, 'r+')
             else:
                 s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
                                   height=height, count=count, crs=crs,
@@ -267,6 +272,36 @@ class MemoryFile(MemoryFileBase):
 
     def __exit__(self, *args, **kwargs):
         self.close()
+
+
+class ZipMemoryFile(MemoryFile):
+    """A read-only BytesIO-like object backed by an in-memory zip file.
+
+    This allows a zip file containing formatted files to be read
+    without I/O.
+    """
+
+    def open(self, path):
+        """Open a dataset within the zipped stream.
+
+        Parameters
+        ----------
+        path : str
+            Path to a dataset in the zip file, relative to the root of the
+            archive.
+
+        Returns
+        -------
+        A Rasterio dataset object
+        """
+        vsi_path = '/vsizip{0}/{1}'.format(self.name, path.lstrip('/'))
+
+        with Env():
+            if self.closed:
+                raise IOError("I/O operation on closed file.")
+            s = DatasetReader(vsi_path, 'r')
+            s.start()
+            return s
 
 
 def get_writer_for_driver(driver):

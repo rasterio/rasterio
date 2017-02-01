@@ -6,7 +6,7 @@ from packaging.version import parse
 import pytest
 
 import rasterio
-from rasterio.io import MemoryFile
+from rasterio.io import MemoryFile, ZipMemoryFile
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -37,6 +37,26 @@ def test_initial_bytes(rgb_file_bytes):
             assert src.count == 3
             assert src.dtypes == ('uint8', 'uint8', 'uint8')
             assert src.read().shape == (3, 718, 791)
+
+
+@mingdalversion
+def test_initial_file_object(rgb_file_object):
+    """MemoryFile contents can initialized from bytes and opened."""
+    with MemoryFile(rgb_file_object) as memfile:
+        with memfile.open() as src:
+            assert src.driver == 'GTiff'
+            assert src.count == 3
+            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.read().shape == (3, 718, 791)
+
+
+@mingdalversion
+def test_closed():
+    """A closed MemoryFile can not be opened"""
+    with MemoryFile() as memfile:
+        pass
+    with pytest.raises(IOError):
+        memfile.open()
 
 
 @mingdalversion
@@ -145,10 +165,19 @@ def test_test_file_object_write(tmpdir, rgb_data_and_profile):
 
 
 @mingdalversion
+def test_zip_closed():
+    """A closed MemoryFile can not be opened"""
+    with ZipMemoryFile() as memfile:
+        pass
+    with pytest.raises(IOError):
+        memfile.open('foo')
+
+
+@mingdalversion
 def test_zip_file_object_read(path_zip_file):
     """An example of reading from a zip file object"""
     with open(path_zip_file, 'rb') as zip_file_object:
-        with MemoryFile(zip_file_object) as memfile:
+        with ZipMemoryFile(zip_file_object) as memfile:
             with memfile.open('white-gemini-iv.vrt') as src:
                 assert src.driver == 'VRT'
                 assert src.count == 3
