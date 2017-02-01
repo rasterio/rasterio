@@ -1,6 +1,8 @@
 # distutils: language = c++
 """Raster fill."""
 
+include "gdal.pxi"
+
 import uuid
 
 import numpy as np
@@ -10,12 +12,7 @@ from rasterio import dtypes
 cimport numpy as np
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio._gdal cimport (
-    CSLDestroy, CSLSetNameValue, GDALClose, GDALCreate, GDALFillNodata,
-    GDALGetDriverByName, GDALGetRasterBand)
 from rasterio._io cimport DatasetReaderBase, InMemoryRaster, io_auto
-
-include "gdal.pxi"
 
 
 def _fillnodata(image, mask, double max_search_distance=100.0,

@@ -1,7 +1,11 @@
 import numpy as np
 
-import rasterio
+from packaging.version import parse
+import pytest
 
+import rasterio
+from rasterio.enums import Resampling
+from rasterio.windows import Window
 
 # Rasterio exposes GDAL's resampling/decimation on I/O. These are the tests
 # that it does this correctly.
@@ -21,7 +25,7 @@ def test_read_out_shape_resample_down():
             [ 11,   7,  13,  25,  13,  29,  33,   0],
             [  8,  10,  88,  27,  20,  33,  25,   0],
             [  0,   0,   0,   0,  98,  23,   0,   0]], dtype=np.uint8)
-        assert (data == expected).all() # all True.
+        assert (data == expected).all()  # all True.
 
 
 def test_read_out_shape_resample_up():
@@ -44,3 +48,27 @@ def test_read_downsample_alpha():
             assert src.read(1, out=out, masked=False).shape == out.shape
             # attempt decimated read of alpha band
             src.read(4, out=out, masked=False)
+
+
+def test_resample_alg():
+    """default (nearest) and cubic produce different results"""
+    with rasterio.open('tests/data/RGB.byte.tif') as s:
+        out_shape = (s.height // 2, s.width // 2)
+        nearest = s.read(1, out_shape=out_shape)
+        cubic = s.read(1, out_shape=out_shape, resampling=Resampling.cubic)
+        assert np.any(nearest != cubic)
+
+
+# Custom markers.
+mingdalversion = pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.0dev'),
+    reason="Floating point windows require GDAL 2.0")
+
+
+@mingdalversion
+def test_float_window():
+    """floating point windows work"""
+    with rasterio.open('tests/data/RGB.byte.tif') as s:
+        out_shape = (401, 401)
+        window = Window(300.5, 300.5, 200.5, 200.5)
+        s.read(1, window=window, out_shape=out_shape)

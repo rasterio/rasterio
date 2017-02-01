@@ -41,37 +41,4 @@ ctypedef np.float64_t DTYPE_FLOAT64_t
 
 cdef bint in_dtype_range(value, dtype)
 
-
-cdef int io_band(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        object data)
-
-
-cdef int io_multi_band(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        object data,
-        long[:] indexes)
-
-
-cdef int io_multi_mask(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        object data,
-        long[:] indexes)
-
-
-cdef int io_auto(image, GDALRasterBandH band, bint write)
+cdef int io_auto(image, GDALRasterBandH band, bint write, int resampling=*)
