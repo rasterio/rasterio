@@ -207,15 +207,17 @@ def open(fp, mode='r', driver=None, width=None, height=None,
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
     # Special case for file object argument.
-    if mode =='r' and hasattr(fp, 'read'):
+    if mode == 'r' and hasattr(fp, 'read'):
 
         @contextmanager
         def fp_reader(fp):
             memfile = MemoryFile(fp.read())
             dataset = memfile.open()
-            yield dataset
-            dataset.close()
-            memfile.close()
+            try:
+                yield dataset
+            finally:
+                dataset.close()
+                memfile.close()
 
         return fp_reader(fp)
 
@@ -227,11 +229,13 @@ def open(fp, mode='r', driver=None, width=None, height=None,
             dataset = memfile.open(driver=driver, width=width, height=height,
                                    count=count, crs=crs, transform=transform,
                                    dtype=dtype, nodata=nodata, **kwargs)
-            yield dataset
-            dataset.close()
-            memfile.seek(0)
-            fp.write(memfile.read())
-            memfile.close()
+            try:
+                yield dataset
+            finally:
+                dataset.close()
+                memfile.seek(0)
+                fp.write(memfile.read())
+                memfile.close()
 
         return fp_writer(fp)
 
