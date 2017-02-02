@@ -23,7 +23,6 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
-from rasterio._ogr cimport OGR_G_DestroyGeometry
 
 
 log = logging.getLogger(__name__)
