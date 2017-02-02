@@ -40,6 +40,13 @@ def rgb_data_and_profile(path_rgb_byte_tif):
 
 
 @mingdalversion
+def test_initial_not_bytes():
+    """Creating a MemoryFile from not bytes fails."""
+    with pytest.raises(TypeError):
+        MemoryFile(u'lolwut')
+
+
+@mingdalversion
 def test_initial_bytes(rgb_file_bytes):
     """MemoryFile contents can initialized from bytes and opened."""
     with MemoryFile(rgb_file_bytes) as memfile:
