@@ -284,13 +284,13 @@ else:
 
     # Copy the GDAL version-specific shim module to _shim.pyx.
     if gdal_major_version == 2 and gdal_minor_version >= 1:
-        ext_modules.extend(
+        ext_modules.append(
             Extension('rasterio._shim', ['rasterio/_shim21.c'], **ext_options))
     elif gdal_major_version == 2 and gdal_minor_version == 0:
-        ext_modules.extend(
+        ext_modules.append(
             Extension('rasterio._shim', ['rasterio/_shim20.c'], **ext_options))
     elif gdal_major_version == 1:
-        ext_modules.extend(
+        ext_modules.append(
             Extension('rasterio._shim', ['rasterio/_shim1.c'], **ext_options))
 
 with open('README.rst') as f:
