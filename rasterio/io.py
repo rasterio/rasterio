@@ -235,6 +235,8 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
+    def __init__(self, file_or_bytes=None, ext=''):
+        super(MemoryFile, self).__init__(file_or_bytes=file_or_bytes, ext=ext)
 
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
              transform=None, dtype=None, nodata=None, **kwargs):
@@ -280,6 +282,9 @@ class ZipMemoryFile(MemoryFile):
     This allows a zip file containing formatted files to be read
     without I/O.
     """
+
+    def __init__(self, file_or_bytes=None):
+        super(ZipMemoryFile, self).__init__(file_or_bytes, ext='zip')
 
     def open(self, path):
         """Open a dataset within the zipped stream.

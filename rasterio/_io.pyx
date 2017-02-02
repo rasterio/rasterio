@@ -686,40 +686,35 @@ cdef class DatasetReaderBase(DatasetBase):
         return sample_gen(self, xy, indexes)
 
 
-def is_zip(data):
-    """Detect zip compressed data"""
-    return data[:4].startswith(b'PK\x03\x04')
-
-
 cdef class MemoryFileBase(object):
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, file_or_bytes=None):
+    def __init__(self, file_or_bytes=None, ext=''):
         """A file in an in-memory filesystem.
 
         Parameters
         ----------
         file_or_bytes : file or bytes
             A file opened in binary mode or bytes or a bytearray
+        ext : str
+            A file extension for the in-memory file under /vsimem
         """
         cdef VSILFILE *vsi_handle = NULL
 
         if file_or_bytes:
             if hasattr(file_or_bytes, 'read'):
                 initial_bytes = file_or_bytes.read()
-            elif isinstance(file_or_bytes, (bytearray, bytes)):
-                initial_bytes = file_or_bytes
             else:
+                initial_bytes = file_or_bytes
+            if not isinstance(initial_bytes, (bytearray, bytes)):
                 raise TypeError(
-                    "Constructor argument must be a file or bytes.")
+                    "Constructor argument must be a file opened in binary "
+                    "mode or bytes/bytearray.")
         else:
             initial_bytes = b''
 
-        if is_zip(initial_bytes):
-            # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = '/vsimem/{}.zip'.format(uuid.uuid4())
-        else:
-            self.name = '/vsimem/{}'.format(uuid.uuid4())
+        # GDAL 2.1 requires a .zip extension for zipped files.
+        self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
 
         self.path = self.name.encode('utf-8')
         self._pos = 0

@@ -7,10 +7,20 @@ Changes
 Bug fixs:
 
 - Order of input datasets is preserved by rio-calc (#947, #965).
-- Rasterio's `open()` function now takes Python file objects as well as 
-  filenames and URLs (#964).
-- `MemoryFile()` can also take a file object parameter and its `open()` method
-  can take a path, allowing access to files within a zipfile.
+
+New features:
+
+- `MemoryFile()` can now take a file object parameter or bytes. The file should
+  be opened in binary mode and its contents are read immediately into bytes.
+  This form of argument is for convenience only; the provided file is not 
+  accessed in any other way.
+- A `ZipMemoryFile` class derived from `MemoryFile` has been added. It is
+  created from a sequence of bytes representing a zip file. Its `open()` method
+  can take a path, allowing access to files within the zip file.
+- For convenience of users, Rasterio's `open()` function now takes Python file
+  objects as well as filenames and URLs (#964). These file objects have their
+  contents read into `MemoryFile` instances within the `open()` call, so this
+  feature is equivalent to calling `MemoryFile(fp).open()`.
 
 Refactoring:
 

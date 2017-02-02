@@ -68,22 +68,31 @@ log.addHandler(NullHandler())
 
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
          crs=None, transform=None, dtype=None, nodata=None, **kwargs):
-    """Open file at ``path`` in ``mode`` 'r' (read), 'r+' (read and
-    write), or 'w' (write) and return a dataset Reader or Updater
-    object.
+    """Open a dataset for reading or writing.
+
+    The dataset may be located in a local file, in a resource located
+    by a URL, or contained within a stream of bytes.
+
+    To access a dataset within a zip file without unzipping the archive
+    use an Apache VFS style zip:// URL like
+
+      zip://path/to/archive.zip!path/to/example.tif
+
+    In read ('r') or read/write ('r+') mode, no other keyword arguments
+    are required: the attributes are supplied by the opened dataset.
 
     In write mode, a driver name such as "GTiff" or "JPEG" (see GDAL
-    docs or ``gdal_translate --help`` on the command line),
-    ``width`` (number of pixels per line) and ``height`` (number of
-    lines), the ``count`` number of bands in the new file must be
-    specified.  Additionally, the data type for bands such as
-    ``rasterio.ubyte`` for 8-bit bands or ``rasterio.uint16`` for
-    16-bit bands must be specified using the ``dtype`` argument.
+    docs or ``gdal_translate --help`` on the command line), ``width``
+    (number of pixels per line) and ``height`` (number of lines), the
+    ``count`` number of bands in the new file must be specified.
+    Additionally, the data type for bands such as ``rasterio.ubyte`` for
+    8-bit bands or ``rasterio.uint16`` for 16-bit bands must be
+    specified using the ``dtype`` argument.
 
     Parameters
     ----------
     fp: string or file
-        A filename or file object opened in binary mode.
+        A filename or URL, or file object opened in binary mode.
     mode: string
         "r" (read), "r+" (read/write), or "w" (write)
     driver: string
@@ -239,7 +248,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         return fp_writer(fp)
 
     else:
-        # The 'normal' filename path.
+        # The 'normal' filename or URL path.
         _, _, scheme = parse_path(fp)
 
         with Env() as env:

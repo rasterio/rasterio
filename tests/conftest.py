@@ -259,7 +259,7 @@ def data_dir():
     return os.path.abspath(os.path.join('tests', 'data'))
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def path_rgb_byte_tif(data_dir):
     return os.path.join(data_dir, 'RGB.byte.tif')
 

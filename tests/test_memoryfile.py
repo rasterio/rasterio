@@ -1,5 +1,6 @@
 """MemoryFile tests"""
 
+from io import BytesIO
 import logging
 
 from packaging.version import parse
@@ -18,14 +19,24 @@ mingdalversion = pytest.mark.skipif(
     reason="MemoryFile requires GDAL 2.0")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def rgb_file_bytes(path_rgb_byte_tif):
+    """Get the bytes of our RGB.bytes.tif file"""
     return open(path_rgb_byte_tif, 'rb').read()
 
 
 @pytest.fixture(scope='function')
 def rgb_file_object(path_rgb_byte_tif):
+    """Get RGB.bytes.tif file opened in 'rb' mode"""
     return open(path_rgb_byte_tif, 'rb')
+
+
+@pytest.fixture(scope='session')
+def rgb_data_and_profile(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        data = src.read()
+        profile = src.profile
+    return data, profile
 
 
 @mingdalversion
@@ -96,14 +107,6 @@ def test_non_initial_bytearray(rgb_file_bytes):
             assert src.read().shape == (3, 718, 791)
 
 
-@pytest.fixture(scope='function')
-def rgb_data_and_profile(path_rgb_byte_tif):
-    with rasterio.open(path_rgb_byte_tif) as src:
-        data = src.read()
-        profile = src.profile
-    return data, profile
-
-
 @mingdalversion
 def test_no_initial_bytes(rgb_data_and_profile):
     """An empty MemoryFile can be opened and written into."""
@@ -150,6 +153,26 @@ def test_file_object_read(rgb_file_object):
 
 
 @mingdalversion
+def test_file_object_read_variant(rgb_file_bytes):
+    """An example of reading from a MemoryFile object"""
+    with rasterio.open(MemoryFile(rgb_file_bytes)) as src:
+        assert src.driver == 'GTiff'
+        assert src.count == 3
+        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.read().shape == (3, 718, 791)
+
+
+@mingdalversion
+def test_file_object_read_variant2(rgb_file_bytes):
+    """An example of reading from a BytesIO object"""
+    with rasterio.open(BytesIO(rgb_file_bytes)) as src:
+        assert src.driver == 'GTiff'
+        assert src.count == 3
+        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.read().shape == (3, 718, 791)
+
+
+@mingdalversion
 def test_test_file_object_write(tmpdir, rgb_data_and_profile):
     """An example of writing to a file object"""
     data, profile = rgb_data_and_profile
@@ -165,20 +188,35 @@ def test_test_file_object_write(tmpdir, rgb_data_and_profile):
 
 
 @mingdalversion
+@pytest.mark.xfail(reason="in-memory files created within open() "
+                          "are not persistent")
+def test_nonpersistemt_memfile_fail_example(rgb_data_and_profile):
+    """An example of writing to a file object"""
+    data, profile = rgb_data_and_profile
+    with BytesIO() as fout:
+        with rasterio.open(fout, 'w', **profile) as dst:
+            dst.write(data)
+
+        # This fails because the MemoryFile created in open() is
+        # gone.
+        rasterio.open(fout)
+
+
+@mingdalversion
 def test_zip_closed():
-    """A closed MemoryFile can not be opened"""
-    with ZipMemoryFile() as memfile:
+    """A closed ZipMemoryFile can not be opened"""
+    with ZipMemoryFile() as zipmemfile:
         pass
     with pytest.raises(IOError):
-        memfile.open('foo')
+        zipmemfile.open('foo')
 
 
 @mingdalversion
 def test_zip_file_object_read(path_zip_file):
     """An example of reading from a zip file object"""
     with open(path_zip_file, 'rb') as zip_file_object:
-        with ZipMemoryFile(zip_file_object) as memfile:
-            with memfile.open('white-gemini-iv.vrt') as src:
+        with ZipMemoryFile(zip_file_object) as zipmemfile:
+            with zipmemfile.open('white-gemini-iv.vrt') as src:
                 assert src.driver == 'VRT'
                 assert src.count == 3
                 assert src.dtypes == ('uint8', 'uint8', 'uint8')
