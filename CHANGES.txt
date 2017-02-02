@@ -4,7 +4,7 @@ Changes
 1.0a6 (2017-02-03)
 ------------------
 
-Bug fixs:
+Bug fixes:
 
 - Order of input datasets is preserved by rio-calc (#947, #965).
 
