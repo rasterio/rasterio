@@ -54,7 +54,7 @@ def window_index(*args, **kwargs):
 
 __all__ = [
     'band', 'open', 'copy', 'pad']
-__version__ = "1.0a5"
+__version__ = "1.0a6"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -207,7 +207,7 @@ def open(fp, mode='r', driver=None, width=None, height=None,
             "driver '{0}' in '{1}' mode".format(driver, mode))
 
     # Special case for file object argument.
-    if mode =='r' and hasattr(fp, 'read'):
+    if mode == 'r' and hasattr(fp, 'read'):
 
         @contextmanager
         def fp_reader(fp):
