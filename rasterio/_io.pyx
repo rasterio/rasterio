@@ -689,14 +689,33 @@ cdef class DatasetReaderBase(DatasetBase):
 cdef class MemoryFileBase(object):
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, initial_bytes=b''):
-        """Map bytes to a file in an in-memory filesystem."""
+    def __init__(self, file_or_bytes=None, ext=''):
+        """A file in an in-memory filesystem.
+
+        Parameters
+        ----------
+        file_or_bytes : file or bytes
+            A file opened in binary mode or bytes or a bytearray
+        ext : str
+            A file extension for the in-memory file under /vsimem
+        """
         cdef VSILFILE *vsi_handle = NULL
 
-        if not isinstance(initial_bytes, (bytearray, bytes)):
-            raise TypeError("Initial bytes must be type bytearray or bytes.")
+        if file_or_bytes:
+            if hasattr(file_or_bytes, 'read'):
+                initial_bytes = file_or_bytes.read()
+            else:
+                initial_bytes = file_or_bytes
+            if not isinstance(initial_bytes, (bytearray, bytes)):
+                raise TypeError(
+                    "Constructor argument must be a file opened in binary "
+                    "mode or bytes/bytearray.")
+        else:
+            initial_bytes = b''
 
-        self.name = os.path.join('/vsimem', str(uuid.uuid4()))
+        # GDAL 2.1 requires a .zip extension for zipped files.
+        self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+
         self.path = self.name.encode('utf-8')
         self._pos = 0
         self.closed = False
@@ -718,7 +737,13 @@ cdef class MemoryFileBase(object):
                     "Failed to properly close in-memory file.")
 
     def exists(self):
-        """True if the in-memory file exists"""
+        """Test if the in-memory file exists.
+
+        Returns
+        -------
+        bool
+            True if the in-memory file exists.
+        """
         cdef VSILFILE *fp = NULL
         cdef const char *cypath = self.path
 
@@ -732,6 +757,12 @@ cdef class MemoryFileBase(object):
             return False
 
     def __len__(self):
+        """Length of the file's buffer in number of bytes.
+
+        Returns
+        -------
+        int
+        """
         return self.getbuffer().size
 
     def close(self):
@@ -764,11 +795,6 @@ cdef class MemoryFileBase(object):
 
         try:
             fp = exc_wrap_vsilfile(fp)
-
-            #if fp == NULL:
-            #    raise IOError(
-            #        "Failed to open in-memory file: %s", self.name)
-
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(
                     "Failed to seek to offset %s in %s.",
@@ -811,13 +837,8 @@ cdef class MemoryFileBase(object):
 
         if not self.exists():
             fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'w'))
-            #if fp == NULL:
-            #    raise ValueError("NULL file")
         else:
             fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'r+'))
-            #if fp == NULL:
-            #    raise ValueError("NULL file")
-
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(
                     "Failed to seek to offset %s in %s.", self._pos, self.name)
@@ -1007,6 +1028,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._hds = exc_wrap_pointer(GDALOpen(fname, 1))
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
+
+        else:
+            # Raise an exception if we have any other mode.
+            raise ValueError("Invalid mode: '%s'", self.mode)
 
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)

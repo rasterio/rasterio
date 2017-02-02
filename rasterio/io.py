@@ -218,8 +218,7 @@ class MemoryFile(MemoryFileBase):
     A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
     format driver
 
-    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, \
-    ...         MemoryFile(f.read()) as memfile:
+    >>> with open('tests/data/RGB.byte.tif', 'rb') as f, MemoryFile(f) as memfile:
     ...     with memfile.open() as src:
     ...         pprint.pprint(src.profile)
     ...
@@ -236,26 +235,37 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
+    def __init__(self, file_or_bytes=None, ext=''):
+        super(MemoryFile, self).__init__(file_or_bytes=file_or_bytes, ext=ext)
 
-    def open(self, driver=None, width=None, height=None,
-             count=None, crs=None, transform=None, dtype=None, nodata=None,
-             **kwargs):
+    def open(self, driver=None, width=None, height=None, count=None, crs=None,
+             transform=None, dtype=None, nodata=None, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
         If data has already been written, the file is opened in 'r+'
         mode. Otherwise, the file is opened in 'w' mode.
+
+        Parameters
+        ----------
+        Note well that there is no `path` parameter: a `MemoryFile`
+        contains a single dataset and there is no need to specify a
+        path.
+
+        Other parameters are optional and have the same semantics as the
+        parameters of `rasterio.open()`.
         """
+        vsi_path = self.name
+
         with Env():
             if self.closed:
                 raise IOError("I/O operation on closed file.")
             if self.exists():
-                s = get_writer_for_path(self.name)(self.name, 'r+')
+                s = DatasetReader(vsi_path, 'r+')
             else:
-                s = get_writer_for_driver(
-                    driver)(self.name, 'w', driver=driver, width=width,
-                            height=height, count=count, crs=crs,
-                            transform=transform, dtype=dtype, nodata=nodata,
-                            **kwargs)
+                s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
+                                  height=height, count=count, crs=crs,
+                                  transform=transform, dtype=dtype,
+                                  nodata=nodata, **kwargs)
             s.start()
             return s
 
@@ -264,6 +274,39 @@ class MemoryFile(MemoryFileBase):
 
     def __exit__(self, *args, **kwargs):
         self.close()
+
+
+class ZipMemoryFile(MemoryFile):
+    """A read-only BytesIO-like object backed by an in-memory zip file.
+
+    This allows a zip file containing formatted files to be read
+    without I/O.
+    """
+
+    def __init__(self, file_or_bytes=None):
+        super(ZipMemoryFile, self).__init__(file_or_bytes, ext='zip')
+
+    def open(self, path):
+        """Open a dataset within the zipped stream.
+
+        Parameters
+        ----------
+        path : str
+            Path to a dataset in the zip file, relative to the root of the
+            archive.
+
+        Returns
+        -------
+        A Rasterio dataset object
+        """
+        vsi_path = '/vsizip{0}/{1}'.format(self.name, path.lstrip('/'))
+
+        with Env():
+            if self.closed:
+                raise IOError("I/O operation on closed file.")
+            s = DatasetReader(vsi_path, 'r')
+            s.start()
+            return s
 
 
 def get_writer_for_driver(driver):
