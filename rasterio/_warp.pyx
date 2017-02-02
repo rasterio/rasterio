@@ -1,6 +1,7 @@
 # distutils: language = c++
 """Raster and vector warping and reprojection."""
 
+include "gdal.pxi"
 
 import logging
 import uuid
@@ -19,23 +20,9 @@ cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
-from rasterio._gdal cimport (
-    CSLSetNameValue, CSLDestroy, GDALApproxTransform,
-    GDALApproxTransformerOwnsSubtransformer, GDALClose, GDALCreate,
-    GDALCreateApproxTransformer, GDALCreateGenImgProjTransformer,
-    GDALCreateWarpOptions, GDALDestroyApproxTransformer,
-    GDALDestroyGenImgProjTransformer, GDALDestroyWarpOptions,
-    GDALGenImgProjTransform, GDALGetDriverByName, GDALResampleAlg,
-    GDALSetDescription, GDALSetGeoTransform, GDALSetProjection,
-    GDALSuggestedWarpOutput2, OCTDestroyCoordinateTransformation,
-    OCTNewCoordinateTransformation, OSRDestroySpatialReference,
-    OSRExportToWkt, GDAL_GCP, GDALSetGCPs, GDALCreateGenImgProjTransformer2)
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
-from rasterio._ogr cimport OGR_G_DestroyGeometry
-
-include "gdal.pxi"
 
 
 log = logging.getLogger(__name__)

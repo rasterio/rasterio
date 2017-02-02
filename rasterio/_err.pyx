@@ -3,15 +3,11 @@
 Exception-raising wrappers for GDAL API functions.
 """
 
+include "gdal.pxi"
+
 from enums import IntEnum
 import logging
 import sys
-
-from rasterio._gdal cimport (
-    CPLErrorReset, CPLGetLastErrorMsg, CPLGetLastErrorNo,
-    CPLGetLastErrorType, CPLPushErrorHandler, CPLPopErrorHandler)
-
-include "gdal.pxi"
 
 
 # Python exceptions expressing the CPL error numbers.

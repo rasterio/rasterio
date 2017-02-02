@@ -1,5 +1,7 @@
 """Feature extraction"""
 
+include "gdal.pxi"
+
 import logging
 
 import numpy as np
@@ -9,22 +11,7 @@ from rasterio import dtypes
 cimport numpy as np
 
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio._gdal cimport (
-    CPLFree, CPLMalloc, CSLDestroy, CSLSetNameValue, GDALFPolygonize,
-    GDALPolygonize, GDALRasterizeGeometries, GDALSieveFilter)
 from rasterio._io cimport DatasetReaderBase, InMemoryRaster, io_auto
-from rasterio._ogr cimport (
-    OGRGetDriverByName, OGR_DS_CreateLayer, OGR_DS_Destroy,
-    OGR_Dr_CreateDataSource, OGR_F_Destroy, OGR_F_GetFieldAsDouble,
-    OGR_F_GetFieldAsInteger, OGR_F_GetGeometryRef, OGR_Fld_Create,
-    OGR_Fld_Destroy, OGR_G_AddGeometryDirectly, OGR_G_AddPoint,
-    OGR_G_AddPoint_2D, OGR_G_CloseRings, OGR_G_CreateGeometry,
-    OGR_G_DestroyGeometry, OGR_G_GetCoordinateDimension,
-    OGR_G_GetGeometryCount, OGR_G_GetGeometryRef, OGR_G_GetGeometryType,
-    OGR_G_GetPointCount, OGR_G_GetX, OGR_G_GetY, OGR_G_GetZ, OGR_L_CreateField,
-    OGR_L_GetNextFeature, OGR_L_ResetReading)
-
-include "gdal.pxi"
 
 
 log = logging.getLogger(__name__)

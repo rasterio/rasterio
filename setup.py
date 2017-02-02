@@ -9,6 +9,7 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 
+from distutils.command.sdist import sdist
 import itertools
 import logging
 import os
@@ -160,6 +161,27 @@ if os.environ.get('PACKAGE_DATA'):
         log.info("Copying proj_data from %s" % projdatadir)
         copy_data_tree(projdatadir, 'rasterio/proj_data')
 
+
+# Extend distutil's sdist command to generate 3 C extension sources for
+# the _io module: a version for GDAL < 2, one for 2 <= GDAL < 2.1 and
+# one for GDAL >= 2.1.
+class sdist_multi_gdal(sdist):
+    def run(self):
+        shutil.copy('rasterio/_shim1.pyx', 'rasterio/_shim.pyx')
+        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
+                          '-o', 'rasterio/_shim1.c'])
+        print(_)
+        shutil.copy('rasterio/_shim20.pyx', 'rasterio/_shim.pyx')
+        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
+                          '-o', 'rasterio/_shim20.c'])
+        print(_)
+        shutil.copy('rasterio/_shim21.pyx', 'rasterio/_shim.pyx')
+        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
+                          '-o', 'rasterio/_shim21.c'])
+        print(_)
+        sdist.run(self)
+
+
 ext_options = {
     'include_dirs': include_dirs,
     'library_dirs': library_dirs,
@@ -202,12 +224,13 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             "Cython is required to build from a repo.")
         sys.exit(1)
 
-    if gdal_major_version >= 2 and gdal_minor_version >= 1:
-        log.info("Adding GDAL 2.1 API functions.")
-        shutil.copy('rasterio/gdal21.pxi', 'rasterio/gdalextras.pxi')
-    else:
-        log.info("Adding inline versions of GDAL 2.1 API functions.")
-        shutil.copy('rasterio/gdal20.pxi', 'rasterio/gdalextras.pxi')
+    # Copy the GDAL version-specific shim module to _shim.pyx.
+    if gdal_major_version == 2 and gdal_minor_version >= 1:
+        shutil.copy('rasterio/_shim21.pyx', 'rasterio/_shim.pyx')
+    elif gdal_major_version == 2 and gdal_minor_version == 0:
+        shutil.copy('rasterio/_shim20.pyx', 'rasterio/_shim.pyx')
+    elif gdal_major_version == 1:
+        shutil.copy('rasterio/_shim1.pyx', 'rasterio/_shim.pyx')
 
     ext_modules = cythonize([
         Extension(
@@ -229,11 +252,14 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._example', ['rasterio/_example.pyx'], **ext_options),
         Extension(
+            'rasterio._shim', ['rasterio/_shim.pyx'], **ext_options),
+        Extension(
             'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options)],
         quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
+
     ext_modules = [
         Extension(
             'rasterio._base', ['rasterio/_base.c'], **ext_options),
@@ -256,6 +282,17 @@ else:
         Extension(
             'rasterio._crs', ['rasterio/_crs.c'], **ext_options)]
 
+    # Copy the GDAL version-specific shim module to _shim.pyx.
+    if gdal_major_version == 2 and gdal_minor_version >= 1:
+        ext_modules.extend(
+            Extension('rasterio._shim', ['rasterio/_shim21.c'], **ext_options))
+    elif gdal_major_version == 2 and gdal_minor_version == 0:
+        ext_modules.extend(
+            Extension('rasterio._shim', ['rasterio/_shim20.c'], **ext_options))
+    elif gdal_major_version == 1:
+        ext_modules.extend(
+            Extension('rasterio._shim', ['rasterio/_shim1.c'], **ext_options))
+
 with open('README.rst') as f:
     readme = f.read()
 
@@ -277,6 +314,7 @@ extra_reqs = {
 extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
 
 setup_args = dict(
+    cmdclass={'sdist': sdist_multi_gdal},
     name='rasterio',
     version=version,
     description="Fast and direct raster I/O for use with Numpy and SciPy",
