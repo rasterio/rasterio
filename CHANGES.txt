@@ -1,13 +1,26 @@
 Changes
 =======
 
-Next
-----
+1.0a6 (2017-02-03)
+------------------
+
+Bug fixs:
+
 - Order of input datasets is preserved by rio-calc (#947, #965).
 - Rasterio's `open()` function now takes Python file objects as well as 
   filenames and URLs (#964).
 - `MemoryFile()` can also take a file object parameter and its `open()` method
   can take a path, allowing access to files within a zipfile.
+
+Refactoring:
+
+- GDAL/OGR function definitions consolidated in gdal.pxi (#949).
+- Shim APIs have been created to provide support for GDAL 2.0 and 2.1 features
+  that may be absent in a system's GDAL installation.
+
+Packaging:
+
+- Shim API C modules are included in source distributions.
 
 1.0a5 (2016-12-23)
 ------------------

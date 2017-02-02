@@ -25,6 +25,45 @@ def test_delete_nodata_exclusive_opts(data):
     assert result.exit_code == 2
 
 
+def test_delete_crs_exclusive_opts(data):
+    """--unset-crs and --crs can't be used together"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--unset-crs', '--crs', 'epsg:4326'])
+    assert result.exit_code == 2
+
+
+@pytest.mark.xfail(
+    Version(rasterio.__gdal_version__) < Version('1.10'),
+    reason='GDAL version >= 1.10 required')
+def test_unset_crs(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group,
+                           ['edit-info', inputfile, '--unset-crs'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert dict(src.crs) == {}
+
+@pytest.mark.skip(
+    Version(rasterio.__gdal_version__) >= Version('1.10'),
+    reason='Test applies to GDAL version < 1.10')
+def test_unset_crs_gdal19(data):
+    """unsetting crs doesn't work for geotiff and gdal 1.9
+    and should emit an warning"""
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile) as src:
+        orig_crs = src.crs
+    with pytest.warns(UserWarning):
+        result = runner.invoke(main_group,
+                            ['edit-info', inputfile, '--unset-crs'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.crs == orig_crs  # nochange
+
+
 def test_edit_nodata_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
