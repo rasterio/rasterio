@@ -213,9 +213,11 @@ def open(fp, mode='r', driver=None, width=None, height=None,
         def fp_reader(fp):
             memfile = MemoryFile(fp.read())
             dataset = memfile.open()
-            yield dataset
-            dataset.close()
-            memfile.close()
+            try:
+                yield dataset
+            finally:
+                dataset.close()
+                memfile.close()
 
         return fp_reader(fp)
 
@@ -227,11 +229,13 @@ def open(fp, mode='r', driver=None, width=None, height=None,
             dataset = memfile.open(driver=driver, width=width, height=height,
                                    count=count, crs=crs, transform=transform,
                                    dtype=dtype, nodata=nodata, **kwargs)
-            yield dataset
-            dataset.close()
-            memfile.seek(0)
-            fp.write(memfile.read())
-            memfile.close()
+            try:
+                yield dataset
+            finally:
+                dataset.close()
+                memfile.seek(0)
+                fp.write(memfile.read())
+                memfile.close()
 
         return fp_writer(fp)
 
