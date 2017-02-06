@@ -55,10 +55,14 @@ def test_env_accessors(gdalenv):
     assert get_gdal_config('foo') == '1'
     assert get_gdal_config('bar') == '2'
     delenv()
-    assert getenv() == rasterio.env._env.options == {}
+    with pytest.raises(EnvError):
+        getenv()
     assert get_gdal_config('foo') is None
     assert get_gdal_config('bar') is None
-    rasterio.env._env = None
+
+
+def test_env_accessors_no_env():
+    """Sould all raise an exception."""
     with pytest.raises(EnvError):
         delenv()
     with pytest.raises(EnvError):

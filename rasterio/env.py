@@ -159,9 +159,8 @@ class Env(object):
         log.debug("Exiting env context: %r", self)
         delenv()
         if self._has_parent_env:
+            defenv()
             setenv(**self.context_options)
-        else:
-            _env = None
         log.debug("Exited env context: %r", self)
 
 
@@ -208,6 +207,7 @@ def delenv():
         _env.clear_config_options()
         log.debug("Cleared existing %r options", _env)
     _env.stop()
+    _env = None
 
 
 def ensure_env(f):
