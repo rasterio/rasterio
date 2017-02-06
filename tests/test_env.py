@@ -68,11 +68,10 @@ def test_env_accessors(gdalenv):
 
 
 def test_ensure_env_decorator(gdalenv):
+    @ensure_env
     def f():
         return getenv()['WITH_RASTERIO_ENV']
-    wrapper = ensure_env(f)
-    assert wrapper() is True
-    assert 'WITH_RASTERIO_ENV' not in getenv()
+    assert f() is True
 
 
 def test_no_aws_gdal_config(gdalenv):
@@ -83,15 +82,15 @@ def test_no_aws_gdal_config(gdalenv):
         rasterio.Env(AWS_SECRET_ACCESS_KEY='y')
 
 
-def test_env_options(gdalenv):
-    """Test env options."""
+def test_env_defaults(gdalenv):
+    """Test env defaults."""
     env = rasterio.Env(foo='x')
     assert env.options['foo'] == 'x'
     assert not env.context_options
     with env:
-        assert env.context_options['CHECK_WITH_INVERT_PROJ'] is True
-        assert env.context_options['GTIFF_IMPLICIT_JPEG_OVR'] is False
-        assert env.context_options["I'M_ON_RASTERIO"] is True
+        assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is True
+        assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is False
+        assert get_gdal_config("I'M_ON_RASTERIO") is True
 
 
 def test_aws_session(gdalenv):
@@ -225,3 +224,24 @@ def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):
     assert '"aws_secret_access_key": "bar"' in result.output
     assert '"aws_session_token": "baz"' in result.output
     monkeypatch.undo()
+
+
+def test_ensure_defaults_teardown(gdalenv):
+
+    """This test guards against a regression.  Previously ``rasterio.Env()``
+    would quietly reinstate any ``rasterio.env.default_options`` that was
+    not modified by the environment.
+
+    https://github.com/mapbox/rasterio/issues/968
+    """
+
+    def _check_defaults():
+        for key in default_options.keys():
+            assert get_gdal_config(key) is None
+
+    _check_defaults()
+    with rasterio.Env():
+        pass
+
+    _check_defaults()
+    assert rasterio.env._env is None

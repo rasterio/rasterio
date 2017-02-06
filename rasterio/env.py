@@ -141,17 +141,27 @@ class Env(object):
         return _env.drivers()
 
     def __enter__(self):
+        global _env
         log.debug("Entering env context: %r", self)
-        defenv()
-        self.context_options = getenv()
+        if _env is None:
+            self._has_parent_env = False
+            defenv()
+            self.context_options = {}
+        else:
+            self._has_parent_env = True
+            self.context_options = getenv()
         setenv(**self.options)
         log.debug("Entered env context: %r", self)
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
+        global _env
         log.debug("Exiting env context: %r", self)
         delenv()
-        setenv(**self.context_options)
+        if self._has_parent_env:
+            setenv(**self.context_options)
+        else:
+            _env = None
         log.debug("Exited env context: %r", self)
 
 
