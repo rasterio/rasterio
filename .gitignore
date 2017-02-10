@@ -76,6 +76,9 @@ rasterio/_example.c
 rasterio/_features.c
 rasterio/_io.c
 rasterio/_crs.c
+rasterio/_env.c
+rasterio/_shim.c
+rasterio/_shim.pyx
 
 # vim
 .*.swp
