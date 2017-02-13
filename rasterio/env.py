@@ -15,6 +15,32 @@ from rasterio.vfs import parse_path, vsi_path
 # The currently active GDAL/AWS environment is a private attribute.
 _env = None
 
+
+# When the outermost 'rasterio.Env()' executes '__enter__' it probes the
+# GDAL environment to see if any of the supplied config options already
+# exist, the assumption being that they were set with
+# 'osgeo.gdal.SetConfigOption()' or possibly 'rasterio.env.set_gdal_config()'.
+# The discovered options are reinstated when the outermost Rasterio environment
+# exits.  Without this check any environment options that are present in the
+# GDAL environment and are also passed to 'rasterio.Env()' will be unset
+# when 'rasterio.Env()' tears down, regardless of their value.  For example:
+#
+#   from osgeo import gdal
+#   import rasterio
+#
+#   gdal.SetConfigOption('key', 'value')
+#   with rasterio.Env(key='something'):
+#       pass
+#
+# The config option 'key' would be unset when 'Env()' exits.  A more
+# comprehensive solution would also leverage https://trac.osgeo.org/gdal/changeset/37273
+# but this gets Rasterio + older versions of GDAL halfway there.  One major
+# assumption is that environment variables are not set directly with
+# 'osgeo.gdal.SetConfigOption()' OR 'rasterio.env.set_gdal_config()' inside
+# of a 'rasterio.Env()'.
+_discovered_options = None
+
+
 log = logging.getLogger(__name__)
 
 # Rasterio defaults
@@ -142,11 +168,23 @@ class Env(object):
 
     def __enter__(self):
         global _env
+        global _discovered_options
         log.debug("Entering env context: %r", self)
+
+        # No parent Rasterio environment exists.
         if _env is None:
             self._has_parent_env = False
             defenv()
             self.context_options = {}
+
+            # See note directly above where _discovered_options is globally
+            # defined.
+            _discovered_options = {}
+            for key in self.options:
+                val = get_gdal_config(key, normalize=False)
+                if val is not None:
+                    _discovered_options[key] = val
+                    logging.debug("Discovered option: %s=%s", key, val)
         else:
             self._has_parent_env = True
             self.context_options = getenv()
@@ -156,11 +194,21 @@ class Env(object):
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
         global _env
+        global _discovered_options
         log.debug("Exiting env context: %r", self)
         delenv()
         if self._has_parent_env:
             defenv()
             setenv(**self.context_options)
+        else:
+            # See note directly above where _discovered_options is globally
+            # defined.
+            while _discovered_options:
+                key, val = _discovered_options.popitem()
+                set_gdal_config(key, val, normalize=False)
+                logging.debug(
+                    "Set discovered option back to: '%s=%s", key, val)
+            _discovered_options = None
         log.debug("Exited env context: %r", self)
 
 

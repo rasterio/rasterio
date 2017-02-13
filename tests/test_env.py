@@ -50,6 +50,7 @@ def test_gdal_config_accessors_no_normalize():
 
     # GDAL actually handles casting to uppercase, but just to be sure
     # Rasterio can do the same.
+    # This also serves as a canary in case GDAL changes the behavior.
     assert get_gdal_config('foo', normalize=False) == 'ON'
     assert get_gdal_config('FOO', normalize=False) == 'ON'
 
@@ -265,3 +266,41 @@ def test_ensure_defaults_teardown(gdalenv):
 
     _check_defaults()
     assert rasterio.env._env is None
+
+
+def test_env_discovery():
+    """When passing options to ``rasterio.Env()`` Rasterio first checks
+    to see if they were set in the environment and reinstates on exit.
+    The discovered environment should only be reinstated when the outermost
+    environment exits.
+    """
+
+    assert rasterio.env._discovered_options is None
+
+    try:
+        # This should persist when all other environment managers exit.
+        set_gdal_config('key', 'ON')
+
+        # Start an environment and overwrite the value that should persist
+        with rasterio.Env(key=True):
+            assert get_gdal_config('key') is True
+            assert rasterio.env._discovered_options == {'key', 'ON'}
+
+            # Start another nested environment, again overwriting the value
+            # that should persist
+            with rasterio.Env(key=False):
+                assert rasterio.env._discovered_options == {'key', 'ON'}
+                assert get_gdal_config('key') is False
+
+            # Ensure the outer state is restored.
+            assert rasterio.env._discovered_options == {'key', 'ON'}
+            assert get_gdal_config('key') is True
+
+        # Ensure the discovered value remains unchanged.
+        assert rasterio.env._discovered_options is None
+        assert get_gdal_config('key', normalize=False) == 'ON'
+
+    # Leaving this option in the GDAL environment could cause a problem
+    # for other tests.
+    finally:
+        del_gdal_config('key')
