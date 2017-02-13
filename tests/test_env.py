@@ -302,16 +302,16 @@ def test_env_discovery():
         # Start an environment and overwrite the value that should persist
         with rasterio.Env(key=True):
             assert get_gdal_config('key') is True
-            assert rasterio.env._discovered_options == {'key', 'ON'}
+            assert rasterio.env._discovered_options == {'key': 'ON'}
 
             # Start another nested environment, again overwriting the value
             # that should persist
             with rasterio.Env(key=False):
-                assert rasterio.env._discovered_options == {'key', 'ON'}
+                assert rasterio.env._discovered_options == {'key': 'ON'}
                 assert get_gdal_config('key') is False
 
             # Ensure the outer state is restored.
-            assert rasterio.env._discovered_options == {'key', 'ON'}
+            assert rasterio.env._discovered_options == {'key': 'ON'}
             assert get_gdal_config('key') is True
 
         # Ensure the discovered value remains unchanged.
