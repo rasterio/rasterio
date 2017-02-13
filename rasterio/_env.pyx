@@ -69,7 +69,7 @@ cpdef get_gdal_config(key, normalize=True):
     normalize : bool, optional
         Convert values of ``"ON"'`` and ``"OFF"`` to ``True`` and ``False``.
     """
-    key = key.upper().encode('utf-8')
+    key = key.encode('utf-8')
     val = CPLGetConfigOption(<const char *>key, NULL)
     if not val:
         return None
@@ -94,7 +94,7 @@ cpdef set_gdal_config(key, val, normalize=True):
     normalize : bool, optional
         Convert ``True`` to `"ON"` and ``False`` to `"OFF"``.
     """
-    key = key.upper().encode('utf-8')
+    key = key.encode('utf-8')
     if isinstance(val, string_types):
         val = val.encode('utf-8')
     elif normalize:
@@ -110,7 +110,6 @@ cpdef del_gdal_config(key):
     key : str
         Name of config option.
     """
-    key = key.upper()
     key = key.encode('utf-8')
     CPLSetConfigOption(<const char *>key, NULL)
 

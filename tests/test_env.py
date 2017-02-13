@@ -47,15 +47,33 @@ def test_gdal_config_accessors_no_normalize():
     """
     assert get_gdal_config('foo') is None
     set_gdal_config('foo', 'ON', normalize=False)
-
-    # GDAL actually handles casting to uppercase, but just to be sure
-    # Rasterio can do the same.
-    # This also serves as a canary in case GDAL changes the behavior.
     assert get_gdal_config('foo', normalize=False) == 'ON'
-    assert get_gdal_config('FOO', normalize=False) == 'ON'
+    del_gdal_config('foo')
+    assert get_gdal_config('foo') is None
+
+
+def test_gdal_config_accessors_capitalization():
+    """GDAL normalizes config names to upper case so Rasterio does not
+    need to do it on its own.  This test serves as a canary in case GDAL
+    changes its behavior, which is an important part of reinstating
+    discovered environment variables when ``rasterio.Env()`` starts.
+    GDAL does not alter config values.
+    """
+    assert get_gdal_config('foo') is None
+    assert get_gdal_config('FOO') is None
+
+    set_gdal_config('foo', 'bar')
+
+    assert get_gdal_config('foo') == 'bar'
+    assert get_gdal_config('FOO') == 'bar'
 
     del_gdal_config('foo')
     assert get_gdal_config('foo') is None
+    assert get_gdal_config('FOO') is None
+
+    set_gdal_config('upper', 'UPPER')
+    assert get_gdal_config('upper') == 'UPPER'
+    del_gdal_config('upper')
 
 
 # The 'gdalenv' fixture ensures that gdal configuration is deleted
