@@ -47,9 +47,14 @@ def test_gdal_config_accessors_no_normalize():
     """
     assert get_gdal_config('foo') is None
     set_gdal_config('foo', 'ON', normalize=False)
+
+    # GDAL actually handles casting to uppercase, but just to be sure
+    # Rasterio can do the same.
     assert get_gdal_config('foo', normalize=False) == 'ON'
-    del_gdal_config('foo', normalize=False)
-    assert get_gdal_config('foo', normalize=False) is None
+    assert get_gdal_config('FOO', normalize=False) == 'ON'
+
+    del_gdal_config('foo')
+    assert get_gdal_config('foo') is None
 
 
 # The 'gdalenv' fixture ensures that gdal configuration is deleted
