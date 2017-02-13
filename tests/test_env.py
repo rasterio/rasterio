@@ -41,6 +41,17 @@ def test_gdal_config_accessers():
     assert get_gdal_config('foo') is None
 
 
+def test_gdal_config_accessors_no_normalize():
+    """Disables casting keys to upper case and normalizing values to boolean
+    Python values.
+    """
+    assert get_gdal_config('foo') is None
+    set_gdal_config('foo', 'ON', normalize=False)
+    assert get_gdal_config('foo', normalize=False) == 'ON'
+    del_gdal_config('foo', normalize=False)
+    assert get_gdal_config('foo', normalize=False) is None
+
+
 # The 'gdalenv' fixture ensures that gdal configuration is deleted
 # at the end of the test, making tests as isolates as GDAL allows.
 
