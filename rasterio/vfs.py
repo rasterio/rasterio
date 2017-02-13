@@ -59,9 +59,10 @@ def vsi_path(path, archive=None, scheme=None):
     elif scheme and scheme == 's3':
         result = "/vsis3/{0}".format(path)
     elif scheme and scheme != 'file':
-        path = path.strip('/')
-        result = '/'.join(
-            ['/vsi{0}'.format(scheme), archive, path])
+        if archive:
+            result = '/vsi{0}/{1}/{2}'.format(scheme, archive, path.lstrip('/'))
+        else:
+            result = '/vsi{0}/{1}'.format(scheme, path.lstrip('/'))
     else:
         result = path
     return result

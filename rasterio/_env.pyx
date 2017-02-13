@@ -1,19 +1,14 @@
 # cython: c_string_type=unicode, c_string_encoding=utf8
 """GDAL and OGR driver management."""
 
+include "gdal.pxi"
+
 import logging
 import os
 import os.path
 import sys
 
 from rasterio.compat import string_types
-
-from rasterio._gdal cimport (
-    CPLSetConfigOption, GDALAllRegister, GDALGetDriver,
-    GDALGetDriverCount, GDALGetDriverLongName, GDALGetDriverShortName,
-    OGRGetDriverCount, OGRRegisterAll, CPLPopErrorHandler, CPLPushErrorHandler)
-
-include "gdal.pxi"
 
 
 level_map = {

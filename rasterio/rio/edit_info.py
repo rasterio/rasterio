@@ -2,12 +2,12 @@
 
 
 import json
+import warnings
 
 import click
 
 import rasterio
 import rasterio.crs
-from rasterio.compat import string_types
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.rio import options
@@ -82,6 +82,8 @@ def transform_handler(ctx, param, value):
               help="Unset the dataset's nodata value.")
 @click.option('--crs', callback=crs_handler, default=None,
               help="New coordinate reference system")
+@click.option('--unset-crs', default=False, is_flag=True,
+              help="Unset the dataset's CRS value.")
 @click.option('--transform', callback=transform_handler,
               help="New affine transform matrix")
 @click.option('--units', help="Edit units of a band (requires --bidx)")
@@ -94,8 +96,8 @@ def transform_handler(ctx, param, value):
               help="Copy all metadata items from the template file.")
 @options.like_opt
 @click.pass_context
-def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
-         description, tags, allmd, like):
+def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
+         units, description, tags, allmd, like):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -146,6 +148,10 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
             raise click.BadParameter(
                 "--unset-nodata and --nodata cannot be used together.")
 
+        if unset_crs and crs:
+            raise click.BadParameter(
+                "--unset-crs and --crs cannot be used together.")
+
         if unset_nodata:
             # Setting nodata to None will raise NotImplementedError
             # if GDALDeleteRasterNoDataValue() isn't present in the
@@ -164,7 +170,9 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
                     param=nodata, param_hint='nodata')
             dst.nodata = nodata
 
-        if crs:
+        if unset_crs:
+            dst.crs = CRS()
+        elif crs:
             dst.crs = crs
 
         if transform:
@@ -178,3 +186,11 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, transform, units,
 
         if description:
             dst.set_description(bidx, description)
+
+    # Post check - ensure that crs was unset properly
+    if unset_crs:
+        with ctx.obj['env'], rasterio.open(input, 'r') as src:
+            if dict(src.crs) != {}:
+                warnings.warn(
+                    'CRS was not unset. Availability of his functionality '
+                    'differs depending on GDAL version and driver')

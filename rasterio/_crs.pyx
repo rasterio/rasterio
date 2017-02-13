@@ -1,17 +1,14 @@
 """Coordinate reference systems, class and functions.
 """
 
+include "gdal.pxi"
+
 import logging
 
 from rasterio.compat import UserDict
 from rasterio.compat import string_types
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
-from rasterio._gdal cimport (
-    CPLFree, OSRDestroySpatialReference, OSRExportToWkt, OSRIsGeographic,
-    OSRIsProjected, OSRIsSame)
-
-include "gdal.pxi"
 
 
 log = logging.getLogger(__name__)

@@ -3,6 +3,8 @@
 
 from __future__ import absolute_import
 
+include "gdal.pxi"
+
 import logging
 import os
 import os.path
@@ -33,29 +35,8 @@ cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
-from rasterio._gdal cimport (
-    CPLFree, CPLMalloc, CSLDestroy, CSLDuplicate, CSLFetchNameValue,
-    CSLSetNameValue, GDALBuildOverviews, GDALClose, GDALCreate,
-    GDALCreateColorTable, GDALCreateCopy, GDALCreateMaskBand,
-    GDALDatasetRasterIO, GDALDestroyColorTable, GDALFillRaster, GDALFlushCache,
-    GDALGetDatasetDriver, GDALGetDatasetDriver, GDALGetDescription,
-    GDALGetDriverByName, GDALGetDriverShortName, GDALGetMaskBand,
-    GDALGetMaskFlags, GDALGetMetadata, GDALGetRasterBand, GDALGetRasterCount,
-    GDALGetRasterXSize, GDALGetRasterYSize, GDALOpen, GDALRasterIO,
-    GDALSetColorEntry, GDALSetDescription, GDALSetGeoTransform,
-    GDALSetMetadata, GDALSetProjection, GDALSetRasterColorInterpretation,
-    GDALSetRasterColorTable,
-    GDALSetRasterNoDataValue, GDALSetRasterUnitType,
-    OSRDestroySpatialReference, OSRExportToWkt, OSRFixup, OSRImportFromEPSG,
-    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
-    VSIGetMemFileBuffer, vsi_l_offset, VSIFileFromMemBuffer, VSIFCloseL,
-    VSIFOpenL, VSIUnlink, VSIFReadL, VSIFWriteL, VSIFFlushL, VSIFSeekL,
-    GDALSetGCPs)
-
-include "gdal.pxi"
-
-# Defines GDALDeleteRasterNoDataValue() etc.
-include "gdalextras.pxi"
+from rasterio._shim cimport (
+    delete_nodata_value, io_band, io_multi_band, io_multi_mask)
 
 
 log = logging.getLogger(__name__)
@@ -82,137 +63,7 @@ cdef bint in_dtype_range(value, dtype):
     return rng.min <= value <= rng.max
 
 
-cdef int io_band(
-        GDALRasterBandH band,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        object data):
-    """Read or write a region of data for the band.
-
-    Implicit are
-
-    1) data type conversion if the dtype of `data` and `band` differ.
-    2) decimation if `data` and `band` shapes differ.
-
-    The striding of `data` is passed to GDAL so that it can navigate
-    the layout of ndarray views.
-    """
-    # GDAL handles all the buffering indexing, so a typed memoryview,
-    # as in previous versions, isn't needed.
-    cdef void *buf = <void *>np.PyArray_DATA(data)
-    cdef int bufxsize = data.shape[1]
-    cdef int bufysize = data.shape[0]
-    cdef int buftype = dtypes.dtype_rev[data.dtype.name]
-    cdef int bufpixelspace = data.strides[1]
-    cdef int buflinespace = data.strides[0]
-
-    with nogil:
-        return GDALRasterIO(
-            band, mode, xoff, yoff, width, height, buf, bufxsize, bufysize,
-            buftype, bufpixelspace, buflinespace)
-
-
-cdef int io_multi_band(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        object data,
-        long[:] indexes):
-    """Read or write a region of data for multiple bands.
-
-    Implicit are
-
-    1) data type conversion if the dtype of `data` and bands differ.
-    2) decimation if `data` and band shapes differ.
-
-    The striding of `data` is passed to GDAL so that it can navigate
-    the layout of ndarray views.
-    """
-    cdef int i = 0
-    cdef int retval = 3
-    cdef int *bandmap = NULL
-    cdef void *buf = <void *>np.PyArray_DATA(data)
-    cdef int bufxsize = data.shape[2]
-    cdef int bufysize = data.shape[1]
-    cdef int buftype = dtypes.dtype_rev[data.dtype.name]
-    cdef int bufpixelspace = data.strides[2]
-    cdef int buflinespace = data.strides[1]
-    cdef int bufbandspace = data.strides[0]
-    cdef int count = len(indexes)
-
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, width, height, buf,
-            bufxsize, bufysize, buftype, count, bandmap,
-            bufpixelspace, buflinespace, bufbandspace)
-        CPLFree(bandmap)
-
-    return retval
-
-
-cdef int io_multi_mask(
-        GDALDatasetH hds,
-        int mode,
-        int xoff,
-        int yoff,
-        int width,
-        int height,
-        object data,
-        long[:] indexes):
-    """Read or write a region of data for multiple band masks.
-
-    Implicit are
-
-    1) data type conversion if the dtype of `data` and bands differ.
-    2) decimation if `data` and band shapes differ.
-
-    The striding of `data` is passed to GDAL so that it can navigate
-    the layout of ndarray views.
-    """
-    cdef int i = 0
-    cdef int j = 0
-    cdef int retval = 3
-    cdef GDALRasterBandH band = NULL
-    cdef GDALRasterBandH hmask = NULL
-    cdef void *buf = NULL
-    cdef int bufxsize = data.shape[2]
-    cdef int bufysize = data.shape[1]
-    cdef int buftype = dtypes.dtype_rev[data.dtype.name]
-    cdef int bufpixelspace = data.strides[2]
-    cdef int buflinespace = data.strides[1]
-    cdef int count = len(indexes)
-
-    for i in range(count):
-        j = indexes[i]
-        band = GDALGetRasterBand(hds, j)
-        if band == NULL:
-            raise ValueError("Null band")
-        hmask = GDALGetMaskBand(band)
-        if hmask == NULL:
-            raise ValueError("Null mask band")
-        buf = <void *>np.PyArray_DATA(data[i])
-        if buf == NULL:
-            raise ValueError("NULL data")
-        with nogil:
-            retval = GDALRasterIO(
-                hmask, mode, xoff, yoff, width, height, buf, bufxsize,
-                bufysize, 1, bufpixelspace, buflinespace)
-            if retval:
-                break
-
-    return retval
-
-
-cdef int io_auto(data, GDALRasterBandH band, bint write):
+cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
     """Convenience function to handle IO with a GDAL band.
 
     :param data: a numpy ndarray
@@ -222,14 +73,16 @@ cdef int io_auto(data, GDALRasterBandH band, bint write):
     :return: the return value from the data-type specific IO function
     """
     cdef int ndims = len(data.shape)
-    cdef int height = data.shape[-2]
-    cdef int width = data.shape[-1]
+    cdef float height = data.shape[-2]
+    cdef float width = data.shape[-1]
 
     if ndims == 2:
-        return io_band(band, write, 0, 0, width, height, data)
+        return io_band(band, write, 0.0, 0.0, width, height, data,
+                       resampling=resampling)
     elif ndims == 3:
         indexes = np.arange(1, data.shape[0] + 1)
-        return io_multi_band(band, write, 0, 0, width, height, data, indexes)
+        return io_multi_band(band, write, 0.0, 0.0, width, height, data,
+                             indexes, resampling=resampling)
     else:
         raise ValueError("Specified data must have 2 or 3 dimensions")
 
@@ -237,7 +90,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write):
 cdef class DatasetReaderBase(DatasetBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
-            out_shape=None, boundless=False):
+            out_shape=None, boundless=False, resampling=Resampling.nearest):
         """Read raster bands as a multidimensional array
 
         Parameters
@@ -402,7 +255,8 @@ cdef class DatasetReaderBase(DatasetBase):
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
-            out = self._read(indexes, out, window, dtype)
+            out = self._read(indexes, out, window, dtype,
+                             resampling=resampling)
 
             if masked:
                 if all_valid:
@@ -410,8 +264,8 @@ cdef class DatasetReaderBase(DatasetBase):
                 else:
                     mask = np.empty(out.shape, 'uint8')
                     mask = ~self._read(
-                        indexes, mask, window, 'uint8', masks=True
-                        ).astype('bool')
+                        indexes, mask, window, 'uint8', masks=True,
+                        resampling=resampling).astype('bool')
 
                 kwds = {'mask': mask}
                 # Set a fill value only if the read bands share a
@@ -440,13 +294,14 @@ cdef class DatasetReaderBase(DatasetBase):
                         int(round(overlap_h*scaling_h)),
                         int(round(overlap_w*scaling_w)))
                 data = np.empty(win_shape[:-2] + buffer_shape, dtype)
-                data = self._read(indexes, data, overlap, dtype)
+                data = self._read(indexes, data, overlap, dtype,
+                                  resampling=resampling)
 
                 if masked:
                     mask = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
                     mask = ~self._read(
-                        indexes, mask, overlap, 'uint8', masks=True
-                        ).astype('bool')
+                        indexes, mask, overlap, 'uint8', masks=True,
+                        resampling=resampling).astype('bool')
                     kwds = {'mask': mask}
                     if len(set(nodatavals)) == 1:
                         if nodatavals[0] is not None:
@@ -497,7 +352,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
 
     def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
-                   boundless=False):
+                   boundless=False, resampling=Resampling.nearest):
         """Read raster band masks as a multidimensional array
 
         Parameters
@@ -598,7 +453,8 @@ cdef class DatasetReaderBase(DatasetBase):
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
-            out = self._read(indexes, out, window, dtype, masks=True)
+            out = self._read(indexes, out, window, dtype, masks=True,
+                             resampling=resampling)
 
         else:
             # Compute the overlap between the dataset and the boundless window.
@@ -617,7 +473,8 @@ cdef class DatasetReaderBase(DatasetBase):
                 scaling_w = float(out.shape[-2:][1])/window_w
                 buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
                 data = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
-                data = self._read(indexes, data, overlap, dtype, masks=True)
+                data = self._read(indexes, data, overlap, dtype, masks=True,
+                                  resampling=resampling)
             else:
                 data = None
 
@@ -641,7 +498,8 @@ cdef class DatasetReaderBase(DatasetBase):
         return out
 
 
-    def _read(self, indexes, out, window, dtype, masks=False):
+    def _read(self, indexes, out, window, dtype, masks=False,
+              resampling=Resampling.nearest):
         """Read raster bands as a multidimensional array
 
         If `indexes` is a list, the result is a 3D array, but
@@ -696,11 +554,11 @@ cdef class DatasetReaderBase(DatasetBase):
 
             retval = io_multi_mask(
                             self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr)
+                            out, indexes_arr, resampling=resampling)
 
         else:
             retval = io_multi_band(self._hds, 0, xoff, yoff, width, height,
-                                  out, indexes_arr)
+                                  out, indexes_arr, resampling=resampling)
 
         if retval in (1, 2, 3):
             raise IOError("Read or write failed")
@@ -831,14 +689,33 @@ cdef class DatasetReaderBase(DatasetBase):
 cdef class MemoryFileBase(object):
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, initial_bytes=b''):
-        """Map bytes to a file in an in-memory filesystem."""
+    def __init__(self, file_or_bytes=None, ext=''):
+        """A file in an in-memory filesystem.
+
+        Parameters
+        ----------
+        file_or_bytes : file or bytes
+            A file opened in binary mode or bytes or a bytearray
+        ext : str
+            A file extension for the in-memory file under /vsimem
+        """
         cdef VSILFILE *vsi_handle = NULL
 
-        if not isinstance(initial_bytes, (bytearray, bytes)):
-            raise TypeError("Initial bytes must be type bytearray or bytes.")
+        if file_or_bytes:
+            if hasattr(file_or_bytes, 'read'):
+                initial_bytes = file_or_bytes.read()
+            else:
+                initial_bytes = file_or_bytes
+            if not isinstance(initial_bytes, (bytearray, bytes)):
+                raise TypeError(
+                    "Constructor argument must be a file opened in binary "
+                    "mode or bytes/bytearray.")
+        else:
+            initial_bytes = b''
 
-        self.name = os.path.join('/vsimem', str(uuid.uuid4()))
+        # GDAL 2.1 requires a .zip extension for zipped files.
+        self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+
         self.path = self.name.encode('utf-8')
         self._pos = 0
         self.closed = False
@@ -860,7 +737,13 @@ cdef class MemoryFileBase(object):
                     "Failed to properly close in-memory file.")
 
     def exists(self):
-        """True if the in-memory file exists"""
+        """Test if the in-memory file exists.
+
+        Returns
+        -------
+        bool
+            True if the in-memory file exists.
+        """
         cdef VSILFILE *fp = NULL
         cdef const char *cypath = self.path
 
@@ -874,6 +757,12 @@ cdef class MemoryFileBase(object):
             return False
 
     def __len__(self):
+        """Length of the file's buffer in number of bytes.
+
+        Returns
+        -------
+        int
+        """
         return self.getbuffer().size
 
     def close(self):
@@ -906,11 +795,6 @@ cdef class MemoryFileBase(object):
 
         try:
             fp = exc_wrap_vsilfile(fp)
-
-            #if fp == NULL:
-            #    raise IOError(
-            #        "Failed to open in-memory file: %s", self.name)
-
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(
                     "Failed to seek to offset %s in %s.",
@@ -953,13 +837,8 @@ cdef class MemoryFileBase(object):
 
         if not self.exists():
             fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'w'))
-            #if fp == NULL:
-            #    raise ValueError("NULL file")
         else:
             fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'r+'))
-            #if fp == NULL:
-            #    raise ValueError("NULL file")
-
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(
                     "Failed to seek to offset %s in %s.", self._pos, self.name)
@@ -1150,6 +1029,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
+        else:
+            # Raise an exception if we have any other mode.
+            raise ValueError("Invalid mode: '%s'", self.mode)
+
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)
         self.driver = drv_name.decode('utf-8')
@@ -1280,7 +1163,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         for i, val in zip(self.indexes, vals):
             band = self.band(i)
             if val is None:
-                success = GDALDeleteRasterNoDataValue(band)
+                success = delete_nodata_value(band)
             else:
                 nodataval = val
                 success = GDALSetRasterNoDataValue(band, nodataval)

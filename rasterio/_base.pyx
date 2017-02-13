@@ -29,24 +29,6 @@ from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
 
-
-from rasterio._gdal cimport (
-    CPLFree, CPLMalloc, CSLCount, CSLFetchBoolean, GDALCheckVersion,
-    GDALChecksumImage, GDALClose, GDALFlushCache, GDALGetBlockSize,
-    GDALGetColorEntry, GDALGetColorEntryCount, GDALGetDatasetDriver,
-    GDALGetDescription, GDALGetDriverByName, GDALGetDriverShortName,
-    GDALGetGeoTransform, GDALGetMaskFlags, GDALGetMetadata, GDALGetOverview,
-    GDALGetOverviewCount, GDALGetProjectionRef, GDALGetRasterBand,
-    GDALGetRasterBandXSize, GDALGetRasterColorInterpretation,
-    GDALGetRasterColorTable, GDALGetRasterCount, GDALGetRasterDataType,
-    GDALGetRasterNoDataValue, GDALGetRasterUnitType, GDALGetRasterXSize,
-    GDALGetRasterYSize, GDALOpen, GDALVersionInfo,
-    OCTNewCoordinateTransformation, OCTTransform, OSRAutoIdentifyEPSG,
-    OSRDestroySpatialReference, OSRExportToProj4, OSRExportToWkt,
-    OSRGetAuthorityCode, OSRGetAuthorityName, OSRImportFromEPSG,
-    OSRImportFromProj4, OSRNewSpatialReference, OSRSetFromUserInput,
-    GDALGetGCPs, GDALGetGCPCount, GDALGetGCPProjection)
-
 include "gdal.pxi"
 
 
@@ -83,7 +65,7 @@ def get_dataset_driver(path):
         drivername = get_driver_name(driver)
 
     except CPLE_OpenFailedError as exc:
-        raise RasterioIOError(str(exc))
+        raise TypeError(str(exc))
 
     finally:
         if dataset != NULL:
