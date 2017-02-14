@@ -286,39 +286,46 @@ def test_ensure_defaults_teardown(gdalenv):
     assert rasterio.env._env is None
 
 
-def test_env_discovery():
+@pytest.mark.parametrize("key,val", [
+    ('key', 'ON'),
+    ('CHECK_WITH_INVERT_PROJ', 'ON'),
+    ('key', 'OFF'),
+    ('CHECK_WITH_INVERT_PROJ', 'OFF')])
+def test_env_discovery(key, val):
     """When passing options to ``rasterio.Env()`` Rasterio first checks
     to see if they were set in the environment and reinstates on exit.
     The discovered environment should only be reinstated when the outermost
-    environment exits.
+    environment exits.  It's really important that this test use an
+    environment default.
     """
 
-    assert rasterio.env._discovered_options is None
+    assert rasterio.env._discovered_options is None, \
+        "Something has gone horribly wrong."
 
     try:
         # This should persist when all other environment managers exit.
-        set_gdal_config('key', 'ON')
+        set_gdal_config(key, val)
 
         # Start an environment and overwrite the value that should persist
-        with rasterio.Env(key=True):
-            assert get_gdal_config('key') is True
-            assert rasterio.env._discovered_options == {'key': 'ON'}
+        with rasterio.Env(**{key: True}):
+            assert get_gdal_config(key) is True
+            assert rasterio.env._discovered_options == {key: val}
 
             # Start another nested environment, again overwriting the value
             # that should persist
-            with rasterio.Env(key=False):
-                assert rasterio.env._discovered_options == {'key': 'ON'}
-                assert get_gdal_config('key') is False
+            with rasterio.Env(**{key: False}):
+                assert rasterio.env._discovered_options == {key: val}
+                assert get_gdal_config(key) is False
 
             # Ensure the outer state is restored.
-            assert rasterio.env._discovered_options == {'key': 'ON'}
-            assert get_gdal_config('key') is True
+            assert rasterio.env._discovered_options == {key: val}
+            assert get_gdal_config(key) is True
 
         # Ensure the discovered value remains unchanged.
         assert rasterio.env._discovered_options is None
-        assert get_gdal_config('key', normalize=False) == 'ON'
+        assert get_gdal_config(key, normalize=False) == val
 
     # Leaving this option in the GDAL environment could cause a problem
     # for other tests.
     finally:
-        del_gdal_config('key')
+        del_gdal_config(key)
