@@ -59,12 +59,22 @@ def driver_count():
     return GDALGetDriverCount() + OGRGetDriverCount()
 
 
-cpdef get_gdal_config(key):
-    """Get the value of a GDAL configuration option"""
-    key = key.upper().encode('utf-8')
+cpdef get_gdal_config(key, normalize=True):
+    """Get the value of a GDAL configuration option
+
+    Parameters
+    ----------
+    key : str
+        Name of config option.
+    normalize : bool, optional
+        Convert values of ``"ON"'`` and ``"OFF"`` to ``True`` and ``False``.
+    """
+    key = key.encode('utf-8')
     val = CPLGetConfigOption(<const char *>key, NULL)
     if not val:
         return None
+    elif not normalize:
+        return val
     else:
         if val == u'ON':
             return True
@@ -74,19 +84,33 @@ cpdef get_gdal_config(key):
             return val
 
 
-cpdef set_gdal_config(key, val):
-    """Set a GDAL configuration option's value"""
-    key = key.upper().encode('utf-8')
+cpdef set_gdal_config(key, val, normalize=True):
+    """Set a GDAL configuration option's value.
+
+    Parameters
+    ----------
+    key : str
+        Name of config option.
+    normalize : bool, optional
+        Convert ``True`` to `"ON"` and ``False`` to `"OFF"``.
+    """
+    key = key.encode('utf-8')
     if isinstance(val, string_types):
         val = val.encode('utf-8')
-    else:
+    elif normalize:
         val = ('ON' if val else 'OFF').encode('utf-8')
     CPLSetConfigOption(<const char *>key, <const char *>val)
 
 
 cpdef del_gdal_config(key):
-    """Delete a GDAL configuration option"""
-    key = key.upper().encode('utf-8')
+    """Delete a GDAL configuration option.
+
+    Parameters
+    ----------
+    key : str
+        Name of config option.
+    """
+    key = key.encode('utf-8')
     CPLSetConfigOption(<const char *>key, NULL)
 
 

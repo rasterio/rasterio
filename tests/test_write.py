@@ -285,8 +285,9 @@ def test_write_noncontiguous(tmpdir):
 def test_write_blacklist(tmpdir, driver):
 
     # Skip if we don't have driver support built in.
-    if driver not in Env().drivers():
-        pytest.skip()
+    with Env() as env:
+        if driver not in env.drivers():
+            pytest.skip()
 
     name = str(tmpdir.join("data.test"))
     with pytest.raises(RasterioIOError) as exc_info:

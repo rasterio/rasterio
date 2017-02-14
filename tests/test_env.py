@@ -41,6 +41,41 @@ def test_gdal_config_accessers():
     assert get_gdal_config('foo') is None
 
 
+def test_gdal_config_accessors_no_normalize():
+    """Disables casting keys to upper case and normalizing values to boolean
+    Python values.
+    """
+    assert get_gdal_config('foo') is None
+    set_gdal_config('foo', 'ON', normalize=False)
+    assert get_gdal_config('foo', normalize=False) == 'ON'
+    del_gdal_config('foo')
+    assert get_gdal_config('foo') is None
+
+
+def test_gdal_config_accessors_capitalization():
+    """GDAL normalizes config names to upper case so Rasterio does not
+    need to do it on its own.  This test serves as a canary in case GDAL
+    changes its behavior, which is an important part of reinstating
+    discovered environment variables when ``rasterio.Env()`` starts.
+    GDAL does not alter config values.
+    """
+    assert get_gdal_config('foo') is None
+    assert get_gdal_config('FOO') is None
+
+    set_gdal_config('foo', 'bar')
+
+    assert get_gdal_config('foo') == 'bar'
+    assert get_gdal_config('FOO') == 'bar'
+
+    del_gdal_config('foo')
+    assert get_gdal_config('foo') is None
+    assert get_gdal_config('FOO') is None
+
+    set_gdal_config('upper', 'UPPER')
+    assert get_gdal_config('upper') == 'UPPER'
+    del_gdal_config('upper')
+
+
 # The 'gdalenv' fixture ensures that gdal configuration is deleted
 # at the end of the test, making tests as isolates as GDAL allows.
 
@@ -55,10 +90,14 @@ def test_env_accessors(gdalenv):
     assert get_gdal_config('foo') == '1'
     assert get_gdal_config('bar') == '2'
     delenv()
-    assert getenv() == rasterio.env._env.options == {}
+    with pytest.raises(EnvError):
+        getenv()
     assert get_gdal_config('foo') is None
     assert get_gdal_config('bar') is None
-    rasterio.env._env = None
+
+
+def test_env_accessors_no_env():
+    """Sould all raise an exception."""
     with pytest.raises(EnvError):
         delenv()
     with pytest.raises(EnvError):
@@ -68,11 +107,10 @@ def test_env_accessors(gdalenv):
 
 
 def test_ensure_env_decorator(gdalenv):
+    @ensure_env
     def f():
         return getenv()['WITH_RASTERIO_ENV']
-    wrapper = ensure_env(f)
-    assert wrapper() is True
-    assert 'WITH_RASTERIO_ENV' not in getenv()
+    assert f() is True
 
 
 def test_no_aws_gdal_config(gdalenv):
@@ -83,15 +121,15 @@ def test_no_aws_gdal_config(gdalenv):
         rasterio.Env(AWS_SECRET_ACCESS_KEY='y')
 
 
-def test_env_options(gdalenv):
-    """Test env options."""
+def test_env_defaults(gdalenv):
+    """Test env defaults."""
     env = rasterio.Env(foo='x')
     assert env.options['foo'] == 'x'
     assert not env.context_options
     with env:
-        assert env.context_options['CHECK_WITH_INVERT_PROJ'] is True
-        assert env.context_options['GTIFF_IMPLICIT_JPEG_OVR'] is False
-        assert env.context_options["I'M_ON_RASTERIO"] is True
+        assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is True
+        assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is False
+        assert get_gdal_config("I'M_ON_RASTERIO") is True
 
 
 def test_aws_session(gdalenv):
@@ -225,3 +263,69 @@ def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):
     assert '"aws_secret_access_key": "bar"' in result.output
     assert '"aws_session_token": "baz"' in result.output
     monkeypatch.undo()
+
+
+def test_ensure_defaults_teardown(gdalenv):
+
+    """This test guards against a regression.  Previously ``rasterio.Env()``
+    would quietly reinstate any ``rasterio.env.default_options`` that was
+    not modified by the environment.
+
+    https://github.com/mapbox/rasterio/issues/968
+    """
+
+    def _check_defaults():
+        for key in default_options.keys():
+            assert get_gdal_config(key) is None
+
+    _check_defaults()
+    with rasterio.Env():
+        pass
+
+    _check_defaults()
+    assert rasterio.env._env is None
+
+
+@pytest.mark.parametrize("key,val", [
+    ('key', 'ON'),
+    ('CHECK_WITH_INVERT_PROJ', 'ON'),
+    ('key', 'OFF'),
+    ('CHECK_WITH_INVERT_PROJ', 'OFF')])
+def test_env_discovery(key, val):
+    """When passing options to ``rasterio.Env()`` Rasterio first checks
+    to see if they were set in the environment and reinstates on exit.
+    The discovered environment should only be reinstated when the outermost
+    environment exits.  It's really important that this test use an
+    environment default.
+    """
+
+    assert rasterio.env._discovered_options is None, \
+        "Something has gone horribly wrong."
+
+    try:
+        # This should persist when all other environment managers exit.
+        set_gdal_config(key, val)
+
+        # Start an environment and overwrite the value that should persist
+        with rasterio.Env(**{key: True}):
+            assert get_gdal_config(key) is True
+            assert rasterio.env._discovered_options == {key: val}
+
+            # Start another nested environment, again overwriting the value
+            # that should persist
+            with rasterio.Env(**{key: False}):
+                assert rasterio.env._discovered_options == {key: val}
+                assert get_gdal_config(key) is False
+
+            # Ensure the outer state is restored.
+            assert rasterio.env._discovered_options == {key: val}
+            assert get_gdal_config(key) is True
+
+        # Ensure the discovered value remains unchanged.
+        assert rasterio.env._discovered_options is None
+        assert get_gdal_config(key, normalize=False) == val
+
+    # Leaving this option in the GDAL environment could cause a problem
+    # for other tests.
+    finally:
+        del_gdal_config(key)
