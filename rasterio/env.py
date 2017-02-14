@@ -1,6 +1,7 @@
 """Rasterio's GDAL/AWS environment"""
 
 from functools import wraps
+import itertools as it
 import logging
 
 from rasterio._env import (
@@ -173,18 +174,23 @@ class Env(object):
 
         # No parent Rasterio environment exists.
         if _env is None:
+            logging.debug("Starting outermost env")
             self._has_parent_env = False
-            defenv()
-            self.context_options = {}
 
             # See note directly above where _discovered_options is globally
-            # defined.
+            # defined.  This MUST happen before calling 'defenv()'.
             _discovered_options = {}
-            for key in self.options:
+            # Don't want to reinstate the "I'M_ON_RASTERIO" option.
+            probe_env = {k for k in default_options if k != "I'M_ON_RASTERIO"}
+            probe_env |= set(self.options.keys())
+            for key in probe_env:
                 val = get_gdal_config(key, normalize=False)
                 if val is not None:
                     _discovered_options[key] = val
                     logging.debug("Discovered option: %s=%s", key, val)
+
+            defenv()
+            self.context_options = {}
         else:
             self._has_parent_env = True
             self.context_options = getenv()
@@ -201,6 +207,7 @@ class Env(object):
             defenv()
             setenv(**self.context_options)
         else:
+            logging.debug("Exiting outermost env")
             # See note directly above where _discovered_options is globally
             # defined.
             while _discovered_options:
