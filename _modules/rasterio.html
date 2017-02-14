@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio &mdash; rasterio 1.0a3 documentation</title>
+  <title>rasterio &mdash; rasterio 1.0a7 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a7 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0a3
+                1.0a7
               </div>
             
           
@@ -165,6 +165,7 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="k">try</span><span class="p">:</span>
@@ -183,7 +184,7 @@
 <span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="kn">import</span> <span class="n">RasterioIOError</span>
 <span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">string_types</span>
 <span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DatasetReader</span><span class="p">,</span> <span class="n">get_writer_for_path</span><span class="p">,</span> <span class="n">get_writer_for_driver</span><span class="p">)</span>
+    <span class="n">DatasetReader</span><span class="p">,</span> <span class="n">get_writer_for_path</span><span class="p">,</span> <span class="n">get_writer_for_driver</span><span class="p">,</span> <span class="n">MemoryFile</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">rasterio.profiles</span> <span class="kn">import</span> <span class="n">default_gtiff_profile</span>
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">Affine</span><span class="p">,</span> <span class="n">guard_transform</span>
 <span class="kn">from</span> <span class="nn">rasterio.vfs</span> <span class="kn">import</span> <span class="n">parse_path</span>
@@ -215,7 +216,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;band&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;copy&#39;</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">]</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0a3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0a7&quot;</span>
 <span class="n">__gdal_version__</span> <span class="o">=</span> <span class="n">gdal_version</span><span class="p">()</span>
 
 <span class="c1"># Rasterio attaches NullHandler to the &#39;rasterio&#39; logger and its</span>
@@ -227,23 +228,33 @@
 <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">NullHandler</span><span class="p">())</span>
 
 
-<div class="viewcode-block" id="open"><a class="viewcode-back" href="../api/index.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-         <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Open file at ``path`` in ``mode`` &#39;r&#39; (read), &#39;r+&#39; (read and</span>
-<span class="sd">    write), or &#39;w&#39; (write) and return a dataset Reader or Updater</span>
-<span class="sd">    object.</span>
+<div class="viewcode-block" id="open"><a class="viewcode-back" href="../api/index.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+         <span class="n">crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Open a dataset for reading or writing.</span>
+
+<span class="sd">    The dataset may be located in a local file, in a resource located</span>
+<span class="sd">    by a URL, or contained within a stream of bytes.</span>
+
+<span class="sd">    To access a dataset within a zip file without unzipping the archive</span>
+<span class="sd">    use an Apache VFS style zip:// URL like</span>
+
+<span class="sd">      zip://path/to/archive.zip!path/to/example.tif</span>
+
+<span class="sd">    In read (&#39;r&#39;) or read/write (&#39;r+&#39;) mode, no other keyword arguments</span>
+<span class="sd">    are required: the attributes are supplied by the opened dataset.</span>
 
 <span class="sd">    In write mode, a driver name such as &quot;GTiff&quot; or &quot;JPEG&quot; (see GDAL</span>
-<span class="sd">    docs or ``gdal_translate --help`` on the command line),</span>
-<span class="sd">    ``width`` (number of pixels per line) and ``height`` (number of</span>
-<span class="sd">    lines), the ``count`` number of bands in the new file must be</span>
-<span class="sd">    specified.  Additionally, the data type for bands such as</span>
-<span class="sd">    ``rasterio.ubyte`` for 8-bit bands or ``rasterio.uint16`` for</span>
-<span class="sd">    16-bit bands must be specified using the ``dtype`` argument.</span>
+<span class="sd">    docs or ``gdal_translate --help`` on the command line), ``width``</span>
+<span class="sd">    (number of pixels per line) and ``height`` (number of lines), the</span>
+<span class="sd">    ``count`` number of bands in the new file must be specified.</span>
+<span class="sd">    Additionally, the data type for bands such as ``rasterio.ubyte`` for</span>
+<span class="sd">    8-bit bands or ``rasterio.uint16`` for 16-bit bands must be</span>
+<span class="sd">    specified using the ``dtype`` argument.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    fp: string or file</span>
+<span class="sd">        A filename or URL, or file object opened in binary mode.</span>
 <span class="sd">    mode: string</span>
 <span class="sd">        &quot;r&quot; (read), &quot;r+&quot; (read/write), or &quot;w&quot; (write)</span>
 <span class="sd">    driver: string</span>
@@ -325,18 +336,18 @@
 <span class="sd">    be an Apache Commons VFS style string beginning with &quot;zip://&quot; or</span>
 <span class="sd">    &quot;tar://&quot;&quot;. In this case, the ``path`` must be an absolute path</span>
 <span class="sd">    within that container.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid path: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid path or file: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">mode</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid mode: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mode</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">driver</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid driver: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">dtype</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">check_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid dtype: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
-
+    <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodata</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
     <span class="k">if</span> <span class="s1">&#39;affine&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="c1"># DeprecationWarning&#39;s are ignored by default</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
@@ -365,38 +376,73 @@
             <span class="s2">&quot;Blacklisted: file cannot be opened by &quot;</span>
             <span class="s2">&quot;driver &#39;{0}&#39; in &#39;{1}&#39; mode&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">mode</span><span class="p">))</span>
 
-    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">parse_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># Special case for file object argument.</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">):</span>
 
-    <span class="k">with</span> <span class="n">Env</span><span class="p">()</span> <span class="k">as</span> <span class="n">env</span><span class="p">:</span>
-        <span class="c1"># Get AWS credentials only if we&#39;re attempting to access a</span>
-        <span class="c1"># raster using the S3 scheme.</span>
-        <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;s3&#39;</span><span class="p">:</span>
-            <span class="n">env</span><span class="o">.</span><span class="n">get_aws_credentials</span><span class="p">()</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;AWS credentials have been obtained&quot;</span><span class="p">)</span>
+        <span class="nd">@contextmanager</span>
+        <span class="k">def</span> <span class="nf">fp_reader</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+            <span class="n">memfile</span> <span class="o">=</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">dataset</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">memfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-        <span class="c1"># Create dataset instances and pass the given env, which will</span>
-        <span class="c1"># be taken over by the dataset&#39;s context manager if it is not</span>
-        <span class="c1"># None.</span>
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r-&#39;</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&#39;r-&#39; mode is deprecated, use &#39;r&#39;&quot;</span><span class="p">,</span>
-                          <span class="ne">DeprecationWarning</span><span class="p">)</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r+&#39;</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_path</span><span class="p">(</span><span class="n">path</span><span class="p">)(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_driver</span><span class="p">(</span><span class="n">driver</span><span class="p">)(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span>
-                                              <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
-                                              <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
-                                              <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-                                              <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
-                                              <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;mode string must be one of &#39;r&#39;, &#39;r+&#39;, or &#39;w&#39;, not </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">fp_reader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">):</span>
+
+        <span class="nd">@contextmanager</span>
+        <span class="k">def</span> <span class="nf">fp_writer</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+            <span class="n">memfile</span> <span class="o">=</span> <span class="n">MemoryFile</span><span class="p">()</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+                                   <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                                   <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">dataset</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">memfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">memfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                <span class="n">memfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">fp_writer</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># The &#39;normal&#39; filename or URL path.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">parse_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Env</span><span class="p">()</span> <span class="k">as</span> <span class="n">env</span><span class="p">:</span>
+            <span class="c1"># Get AWS credentials only if we&#39;re attempting to access a</span>
+            <span class="c1"># raster using the S3 scheme.</span>
+            <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;s3&#39;</span><span class="p">:</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">get_aws_credentials</span><span class="p">()</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;AWS credentials have been obtained&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Create dataset instances and pass the given env, which will</span>
+            <span class="c1"># be taken over by the dataset&#39;s context manager if it is not</span>
+            <span class="c1"># None.</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r-&#39;</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&#39;r-&#39; mode is deprecated, use &#39;r&#39;&quot;</span><span class="p">,</span>
+                              <span class="ne">DeprecationWarning</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r+&#39;</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_driver</span><span class="p">(</span><span class="n">driver</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span>
+                                                  <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+                                                  <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
+                                                  <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                                                  <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
+                                                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;mode must be one of &#39;r&#39;, &#39;r+&#39;, or &#39;w&#39;, not </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">s</span></div>
 
 
 <span class="nd">@ensure_env</span>
@@ -515,7 +561,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a3',
+            VERSION:'1.0a7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

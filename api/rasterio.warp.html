@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.warp module &mdash; rasterio 1.0a3 documentation</title>
+  <title>rasterio.warp module &mdash; rasterio 1.0a7 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a7 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="next" title="rasterio.windows module" href="rasterio.windows.html"/>
         <link rel="prev" title="rasterio.vfs module" href="rasterio.vfs.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.0a3
+                1.0a7
               </div>
             
           
@@ -99,6 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
@@ -216,14 +217,14 @@ Example: CRS({&#8216;init&#8217;: &#8216;EPSG:4326&#8217;})</p>
 <blockquote>
 <div><p>Target coordinate reference system.</p>
 </div></blockquote>
-<p><strong>width, height: int, optional</strong></p>
+<p><strong>width, height: int</strong></p>
 <blockquote>
-<div><p>Source raster width and height. Not needed if gcps are used.</p>
+<div><p>Source raster width and height.</p>
 </div></blockquote>
 <p><strong>left, bottom, right, top: float, optional</strong></p>
 <blockquote>
 <div><p>Bounding coordinates in src_crs, from the bounds property of a
-raster.</p>
+raster. Required unless using gcps.</p>
 </div></blockquote>
 <p><strong>gcps: sequence of GroundControlPoint, optional</strong></p>
 <blockquote>
@@ -537,7 +538,7 @@ values will be preserved (default).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a3',
+            VERSION:'1.0a7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

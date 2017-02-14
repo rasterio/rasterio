@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.warp &mdash; rasterio 1.0a3 documentation</title>
+  <title>rasterio.warp &mdash; rasterio 1.0a7 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a3 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a7 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0a3
+                1.0a7
               </div>
             
           
@@ -254,7 +254,6 @@
         <span class="n">precision</span><span class="p">)</span></div>
 
 
-<span class="nd">@ensure_env</span>
 <div class="viewcode-block" id="transform_bounds"><a class="viewcode-back" href="../../api/rasterio.warp.html#rasterio.warp.transform_bounds">[docs]</a><span class="k">def</span> <span class="nf">transform_bounds</span><span class="p">(</span>
         <span class="n">src_crs</span><span class="p">,</span>
         <span class="n">dst_crs</span><span class="p">,</span>
@@ -459,11 +458,11 @@
 <span class="sd">        Example: CRS({&#39;init&#39;: &#39;EPSG:4326&#39;})</span>
 <span class="sd">    dst_crs: CRS or dict</span>
 <span class="sd">        Target coordinate reference system.</span>
-<span class="sd">    width, height: int, optional</span>
-<span class="sd">        Source raster width and height. Not needed if gcps are used.</span>
+<span class="sd">    width, height: int</span>
+<span class="sd">        Source raster width and height.</span>
 <span class="sd">    left, bottom, right, top: float, optional</span>
 <span class="sd">        Bounding coordinates in src_crs, from the bounds property of a</span>
-<span class="sd">        raster.</span>
+<span class="sd">        raster. Required unless using gcps.</span>
 <span class="sd">    gcps: sequence of GroundControlPoint, optional</span>
 <span class="sd">        Instead of a bounding box for the source, a sequence of ground</span>
 <span class="sd">        control points may be provided.</span>
@@ -490,6 +489,10 @@
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">))</span> <span class="ow">and</span> <span class="n">gcps</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bounding values and ground control points may not&quot;</span>
                          <span class="s2">&quot;be used together.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">gcps</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either four bounding values or ground control points&quot;</span>
+                         <span class="s2">&quot;must be specified&quot;</span><span class="p">)</span>
 
     <span class="n">dst_affine</span><span class="p">,</span> <span class="n">dst_width</span><span class="p">,</span> <span class="n">dst_height</span> <span class="o">=</span> <span class="n">_calculate_default_transform</span><span class="p">(</span>
         <span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">gcps</span><span class="p">)</span>
@@ -553,7 +556,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a3',
+            VERSION:'1.0a7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

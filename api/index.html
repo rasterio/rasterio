@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio package &mdash; rasterio 1.0a3 documentation</title>
+  <title>rasterio package &mdash; rasterio 1.0a7 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a7 documentation" href="../index.html"/>
         <link rel="next" title="rasterio.compat module" href="rasterio.compat.html"/>
         <link rel="prev" title="Windowed reading and writing" href="../topics/windowed-rw.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0a3
+                1.0a7
               </div>
             
           
@@ -98,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
@@ -256,22 +257,32 @@
 
 <dl class="function">
 <dt id="rasterio.open">
-<code class="descclassname">rasterio.</code><code class="descname">open</code><span class="sig-paren">(</span><em>path</em>, <em>mode='r'</em>, <em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio.html#open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.open" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open file at <code class="docutils literal"><span class="pre">path</span></code> in <code class="docutils literal"><span class="pre">mode</span></code> &#8216;r&#8217; (read), &#8216;r+&#8217; (read and
-write), or &#8216;w&#8217; (write) and return a dataset Reader or Updater
-object.</p>
+<code class="descclassname">rasterio.</code><code class="descname">open</code><span class="sig-paren">(</span><em>fp</em>, <em>mode='r'</em>, <em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio.html#open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a dataset for reading or writing.</p>
+<p>The dataset may be located in a local file, in a resource located
+by a URL, or contained within a stream of bytes.</p>
+<p>To access a dataset within a zip file without unzipping the archive
+use an Apache VFS style zip:// URL like</p>
+<blockquote>
+<div>zip://path/to/archive.zip!path/to/example.tif</div></blockquote>
+<p>In read (&#8216;r&#8217;) or read/write (&#8216;r+&#8217;) mode, no other keyword arguments
+are required: the attributes are supplied by the opened dataset.</p>
 <p>In write mode, a driver name such as &#8220;GTiff&#8221; or &#8220;JPEG&#8221; (see GDAL
-docs or <code class="docutils literal"><span class="pre">gdal_translate</span> <span class="pre">--help</span></code> on the command line),
-<code class="docutils literal"><span class="pre">width</span></code> (number of pixels per line) and <code class="docutils literal"><span class="pre">height</span></code> (number of
-lines), the <code class="docutils literal"><span class="pre">count</span></code> number of bands in the new file must be
-specified.  Additionally, the data type for bands such as
-<code class="docutils literal"><span class="pre">rasterio.ubyte</span></code> for 8-bit bands or <code class="docutils literal"><span class="pre">rasterio.uint16</span></code> for
-16-bit bands must be specified using the <code class="docutils literal"><span class="pre">dtype</span></code> argument.</p>
+docs or <code class="docutils literal"><span class="pre">gdal_translate</span> <span class="pre">--help</span></code> on the command line), <code class="docutils literal"><span class="pre">width</span></code>
+(number of pixels per line) and <code class="docutils literal"><span class="pre">height</span></code> (number of lines), the
+<code class="docutils literal"><span class="pre">count</span></code> number of bands in the new file must be specified.
+Additionally, the data type for bands such as <code class="docutils literal"><span class="pre">rasterio.ubyte</span></code> for
+8-bit bands or <code class="docutils literal"><span class="pre">rasterio.uint16</span></code> for 16-bit bands must be
+specified using the <code class="docutils literal"><span class="pre">dtype</span></code> argument.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mode: string</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fp: string or file</strong></p>
+<blockquote>
+<div><p>A filename or URL, or file object opened in binary mode.</p>
+</div></blockquote>
+<p><strong>mode: string</strong></p>
 <blockquote>
 <div><p>&#8220;r&#8221; (read), &#8220;r+&#8221; (read/write), or &#8220;w&#8221; (write)</p>
 </div></blockquote>
@@ -484,7 +495,7 @@ used to control the output format.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a3',
+            VERSION:'1.0a7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

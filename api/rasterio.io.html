@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.io module &mdash; rasterio 1.0a3 documentation</title>
+  <title>rasterio.io module &mdash; rasterio 1.0a7 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a3 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a7 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="prev" title="rasterio.fill module" href="rasterio.fill.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                1.0a3
+                1.0a7
               </div>
             
           
@@ -98,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
@@ -868,7 +869,7 @@ directly to disk.</p>
 
 <dl class="class">
 <dt id="rasterio.io.MemoryFile">
-<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">MemoryFile</code><a class="reference internal" href="../_modules/rasterio/io.html#MemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.MemoryFile" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">MemoryFile</code><span class="sig-paren">(</span><em>file_or_bytes=None</em>, <em>ext=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/io.html#MemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.MemoryFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.MemoryFileBase</span></code></p>
 <p>A BytesIO-like object, backed by an in-memory file.</p>
 <p>This allows formatted files to be read and written without I/O.</p>
@@ -878,7 +879,7 @@ either file-like or dataset interfaces.</p>
 <p class="rubric">Examples</p>
 <p>A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
 format driver</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span>     <span class="o">...</span>         <span class="n">MemoryFile</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
 <span class="gp">...</span>
@@ -906,7 +907,7 @@ format driver</p>
 <td>Close MemoryFile and release allocated memory.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">exists</span></code></td>
-<td>True if the in-memory file exists</td>
+<td>Test if the in-memory file exists.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
 <td>Return a view on bytes of the file.</td>
@@ -934,6 +935,19 @@ format driver</p>
 <dd><p>Open the file and return a Rasterio dataset object.</p>
 <p>If data has already been written, the file is opened in &#8216;r+&#8217;
 mode. Otherwise, the file is opened in &#8216;w&#8217; mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Note well that there is no `path` parameter: a `MemoryFile`</strong></p>
+<p><strong>contains a single dataset and there is no need to specify a</strong></p>
+<p><strong>path.</strong></p>
+<p><strong>Other parameters are optional and have the same semantics as the</strong></p>
+<p class="last"><strong>parameters of `rasterio.open()`.</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1174,6 +1188,70 @@ corresponding to the bounding coordinates</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="rasterio.io.ZipMemoryFile">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">ZipMemoryFile</code><span class="sig-paren">(</span><em>file_or_bytes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/io.html#ZipMemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.ZipMemoryFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rasterio.io.MemoryFile" title="rasterio.io.MemoryFile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.MemoryFile</span></code></a></p>
+<p>A read-only BytesIO-like object backed by an in-memory zip file.</p>
+<p>This allows a zip file containing formatted files to be read
+without I/O.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td>Close MemoryFile and release allocated memory.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">exists</span></code></td>
+<td>Test if the in-memory file exists.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
+<td>Return a view on bytes of the file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.io.ZipMemoryFile.open" title="rasterio.io.ZipMemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>(path)</td>
+<td>Open a dataset within the zipped stream.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read size bytes from MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">seek</span></code></td>
+<td>Seek to position in MemoryFile.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tell</span></code></td>
+<td>Tell current position in MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></td>
+<td>Write data bytes to MemoryFile</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.io.ZipMemoryFile.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/io.html#ZipMemoryFile.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.ZipMemoryFile.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a dataset within the zipped stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>path</strong> : str</p>
+<blockquote>
+<div><p>Path to a dataset in the zip file, relative to the root of the
+archive.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A Rasterio dataset object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="rasterio.io.get_writer_for_driver">
 <code class="descclassname">rasterio.io.</code><code class="descname">get_writer_for_driver</code><span class="sig-paren">(</span><em>driver</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/io.html#get_writer_for_driver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.get_writer_for_driver" title="Permalink to this definition">¶</a></dt>
@@ -1227,7 +1305,7 @@ corresponding to the bounding coordinates</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a3',
+            VERSION:'1.0a7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
