@@ -1,6 +1,23 @@
 Changes
 =======
 
+1.0a7 (2017-02-14)
+------------------
+
+Roses are red.
+Irish say "feck."
+Calling conventions
+are a pain in the neck
+
+Bug fixes:
+
+- Use __stdcall for GDAL callbacks on Windows (#935, #951).
+- Tear down Env more carefully (#968, #969), taking particular care not to
+  reinstate default options when a child environment is exited.
+- Always close open file handles when exiting context managers returned by
+  `rasterio.open()` when file objects are given as arguments (#973).
+- Properly append, not extend, shim module to extension list (#975).
+
 1.0a6 (2017-02-03)
 ------------------
 
