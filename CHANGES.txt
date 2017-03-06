@@ -1,6 +1,15 @@
 Changes
 =======
 
+Next
+----
+
+Bug fixes:
+
+- Secrets kept in GDAL config options could have been leaked via the Python
+  logger. AWS keys and tokens have always been redacted, but other options like
+  GDAL_HTTP_USERPWD were not. Logging of GDAL config options has been removed.
+
 1.0a7 (2017-02-14)
 ------------------
 
