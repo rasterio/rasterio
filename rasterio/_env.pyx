@@ -140,11 +140,6 @@ cdef class ConfigEnv(object):
         for key, val in kwargs.items():
             set_gdal_config(key, val)
             self.options[key] = val
-            # Redact AWS credentials for logs
-            if key.upper() in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
-                               'AWS_SESSION_TOKEN']:
-                val = '******'
-            log.debug("Set option %s=%s in env %r", key, val, self)
 
     def clear_config_options(self):
         """Clear GDAL config options."""
