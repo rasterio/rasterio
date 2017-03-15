@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 import os.path
 import shutil
@@ -7,8 +8,10 @@ import tempfile
 import unittest
 
 import numpy as np
+import pytest
 
 import rasterio
+from rasterio import windows
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -121,3 +124,42 @@ class WindowWriteTest(unittest.TestCase):
             "Minimum=0.000, Maximum=127.000, "
             "Mean=31.750, StdDev=54.993" in info.decode('utf-8'),
             info)
+
+
+def test_block_windows_unfiltered(path_rgb_byte_tif):
+    """Get all block windows"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        assert len(list(src.block_windows())) == 240
+
+
+def test_block_windows_filtered_all(path_rgb_byte_tif):
+    """Get all block windows using filter"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        w, s, e, n = src.bounds
+        focus_window = src.window(w, s, e, n)
+        filter_func = partial(windows.intersect, focus_window)
+        itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
+        assert len(list(itr)) == 240
+
+
+def test_block_windows_filtered_one(path_rgb_byte_tif):
+    """Get the first block windows using filter"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        w, s, e, n = src.bounds
+        focus_window = src.window(w, n - 1.0, w + 1.0, n)
+        filter_func = partial(windows.intersect, focus_window)
+        itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
+        assert next(itr) == ((0, 0), ((0, 3), (0, 791)))
+        with pytest.raises(StopIteration):
+            next(itr)
+
+
+def test_block_windows_filtered_none(path_rgb_byte_tif):
+    """Get no block windows using filter"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        w, s, e, n = src.bounds
+        focus_window = src.window(w - 100.0, n + 100.0, w - 1.0, n + 1.0)
+        filter_func = partial(windows.intersect, focus_window)
+        itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
+        with pytest.raises(StopIteration):
+            next(itr)
