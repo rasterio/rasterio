@@ -7,6 +7,7 @@ import logging
 import os
 import os.path
 import sys
+import threading
 
 from rasterio.compat import string_types
 
@@ -111,7 +112,7 @@ cpdef set_gdal_config(key, val, normalize=True):
         val = val.encode('utf-8')
     elif normalize:
         val = ('ON' if val else 'OFF').encode('utf-8')
-    CPLSetConfigOption(<const char *>key, <const char *>val)
+    CPLSetThreadLocalConfigOption(<const char *>key, <const char *>val)
 
 
 cpdef del_gdal_config(key):
@@ -123,7 +124,7 @@ cpdef del_gdal_config(key):
         Name of config option.
     """
     key = key.encode('utf-8')
-    CPLSetConfigOption(<const char *>key, NULL)
+    CPLSetThreadLocalConfigOption(<const char *>key, NULL)
 
 
 cdef class ConfigEnv(object):
@@ -158,28 +159,32 @@ cdef class GDALEnv(ConfigEnv):
     def start(self):
         CPLPushErrorHandler(<CPLErrorHandler>logging_error_handler)
         log.debug("Logging error handler pushed.")
-        GDALAllRegister()
-        OGRRegisterAll()
-        log.debug("All drivers registered.")
+
+        # Register drivers and set paths to GDAL and PROJ data only
+        # within the main thread.
+        if isinstance(threading.current_thread(), threading._MainThread):
+            GDALAllRegister()
+            OGRRegisterAll()
+            log.debug("All drivers registered.")
+
+            if 'GDAL_DATA' not in os.environ:
+                whl_datadir = os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), "gdal_data"))
+                share_datadir = os.path.join(sys.prefix, 'share/gdal')
+                if os.path.exists(os.path.join(whl_datadir, 'pcs.csv')):
+                    os.environ['GDAL_DATA'] = whl_datadir
+                elif os.path.exists(os.path.join(share_datadir, 'pcs.csv')):
+                    os.environ['GDAL_DATA'] = share_datadir
+
+            if 'PROJ_LIB' not in os.environ:
+                whl_datadir = os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), "proj_data"))
+                os.environ['PROJ_LIB'] = whl_datadir
 
         if driver_count() == 0:
             CPLPopErrorHandler()
             log.debug("Error handler popped")
             raise ValueError("Drivers not registered.")
-
-        if 'GDAL_DATA' not in os.environ:
-            whl_datadir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "gdal_data"))
-            share_datadir = os.path.join(sys.prefix, 'share/gdal')
-            if os.path.exists(os.path.join(whl_datadir, 'pcs.csv')):
-                os.environ['GDAL_DATA'] = whl_datadir
-            elif os.path.exists(os.path.join(share_datadir, 'pcs.csv')):
-                os.environ['GDAL_DATA'] = share_datadir
-
-        if 'PROJ_LIB' not in os.environ:
-            whl_datadir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "proj_data"))
-            os.environ['PROJ_LIB'] = whl_datadir
 
         log.debug("Started GDALEnv %r.", self)
 

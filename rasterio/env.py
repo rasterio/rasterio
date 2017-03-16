@@ -1,24 +1,24 @@
 """Rasterio's GDAL/AWS environment"""
 
 from functools import wraps
-import itertools as it
 import logging
+import threading
 
 from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
+from rasterio.compat import string_types
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError
-from rasterio.compat import string_types
 from rasterio.transform import guard_transform
 from rasterio.vfs import parse_path, vsi_path
-import threading
+
 
 # The currently active GDAL/AWS environment is a private attribute.
 class ThreadEnv(threading.local):
     def __init__(self):
-        self._env = None # Initialises in each thread
-local = ThreadEnv()
+        self._env = None  # Initialises in each thread
 
+local = ThreadEnv()
 
 # When the outermost 'rasterio.Env()' executes '__enter__' it probes the
 # GDAL environment to see if any of the supplied config options already
@@ -37,11 +37,12 @@ local = ThreadEnv()
 #       pass
 #
 # The config option 'key' would be unset when 'Env()' exits.  A more
-# comprehensive solution would also leverage https://trac.osgeo.org/gdal/changeset/37273
-# but this gets Rasterio + older versions of GDAL halfway there.  One major
-# assumption is that environment variables are not set directly with
-# 'osgeo.gdal.SetConfigOption()' OR 'rasterio.env.set_gdal_config()' inside
-# of a 'rasterio.Env()'.
+# comprehensive solution would also leverage
+# https://trac.osgeo.org/gdal/changeset/37273 but this gets Rasterio + older
+# versions of GDAL halfway there.  One major assumption is that environment
+# variables are not set directly with 'osgeo.gdal.SetConfigOption()' OR
+# 'rasterio.env.set_gdal_config()' inside of a 'rasterio.Env()'.
+
 _discovered_options = None
 
 
