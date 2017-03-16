@@ -11,10 +11,13 @@ from rasterio.errors import EnvError
 from rasterio.compat import string_types
 from rasterio.transform import guard_transform
 from rasterio.vfs import parse_path, vsi_path
-
+import threading
 
 # The currently active GDAL/AWS environment is a private attribute.
-_env = None
+class ThreadEnv(threading.local):
+    def __init__(self):
+        self._env = None # Initialises in each thread
+local = ThreadEnv()
 
 
 # When the outermost 'rasterio.Env()' executes '__enter__' it probes the
@@ -159,21 +162,18 @@ class Env(object):
             options.update(aws_region=self.aws_session.region_name)
 
         # Pass these credentials to the GDAL environment.
-        global _env
-        _env.update_config_options(**options)
+        local._env.update_config_options(**options)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
-        global _env
-        return _env.drivers()
+        return local._env.drivers()
 
     def __enter__(self):
-        global _env
         global _discovered_options
         log.debug("Entering env context: %r", self)
 
         # No parent Rasterio environment exists.
-        if _env is None:
+        if local._env is None:
             logging.debug("Starting outermost env")
             self._has_parent_env = False
 
@@ -199,7 +199,6 @@ class Env(object):
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        global _env
         global _discovered_options
         log.debug("Exiting env context: %r", self)
         delenv()
@@ -221,48 +220,44 @@ class Env(object):
 
 def defenv():
     """Create a default environment if necessary."""
-    global _env
-    if _env:
-        log.debug("GDAL environment exists: %r", _env)
+    if local._env:
+        log.debug("GDAL environment exists: %r", local._env)
     else:
         log.debug("No GDAL environment exists")
-        _env = GDALEnv()
-        _env.update_config_options(**default_options)
+        local._env = GDALEnv()
+        local._env.update_config_options(**default_options)
         log.debug(
-            "New GDAL environment %r created", _env)
-    _env.start()
+            "New GDAL environment %r created", local._env)
+    local._env.start()
 
 
 def getenv():
     """Get a mapping of current options."""
-    global _env
-    if not _env:
+    if not local._env:
         raise EnvError("No GDAL environment exists")
     else:
-        log.debug("Got a copy of environment %r options", _env)
-        return _env.options.copy()
+        log.debug("Got a copy of environment %r options", local._env)
+        return local._env.options.copy()
 
 
 def setenv(**options):
     """Set options in the existing environment."""
-    global _env
-    if not _env:
+    if not local._env:
         raise EnvError("No GDAL environment exists")
     else:
-        _env.update_config_options(**options)
-        log.debug("Updated existing %r with options %r", _env, options)
+        local._env.update_config_options(**options)
+        log.debug("Updated existing %r with options %r", local._env, options)
 
 
 def delenv():
     """Delete options in the existing environment."""
-    global _env
-    if not _env:
+    if not local._env:
         raise EnvError("No GDAL environment exists")
     else:
-        _env.clear_config_options()
-        log.debug("Cleared existing %r options", _env)
-    _env.stop()
-    _env = None
+        local._env.clear_config_options()
+        log.debug("Cleared existing %r options", local._env)
+    local._env.stop()
+    local._env = None
 
 
 def ensure_env(f):
