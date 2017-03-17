@@ -109,7 +109,7 @@ def test_env_accessors_no_env():
 def test_ensure_env_decorator(gdalenv):
     @ensure_env
     def f():
-        return getenv()['WITH_RASTERIO_ENV']
+        return getenv()['RASTERIO_ENV']
     assert f() is True
 
 
@@ -129,7 +129,7 @@ def test_env_defaults(gdalenv):
     with env:
         assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is True
         assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is False
-        assert get_gdal_config("I'M_ON_RASTERIO") is True
+        assert get_gdal_config("RASTERIO_ENV") is True
 
 
 def test_aws_session(gdalenv):

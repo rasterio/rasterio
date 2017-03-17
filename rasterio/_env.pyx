@@ -1,5 +1,19 @@
 # cython: c_string_type=unicode, c_string_encoding=utf8
-"""GDAL and OGR driver management."""
+"""GDAL and OGR driver and configuration management
+
+Note: Only the main thread may load drivers. This means that new threads
+must be started within a Rasterio environment:
+
+    with rasterio.Env():
+        thread.start()
+        thread.join()
+
+The main thread always utilizes CPLSetConfigOption. Child threads
+utilize CPLSetThreadLocalConfigOption instead. All threads use
+CPLGetConfigOption and not CPLGetThreadLocalConfigOption, thus child
+threads will inherit config options from the main thread.
+
+"""
 
 include "gdal.pxi"
 
@@ -112,7 +126,10 @@ cpdef set_gdal_config(key, val, normalize=True):
         val = val.encode('utf-8')
     elif normalize:
         val = ('ON' if val else 'OFF').encode('utf-8')
-    CPLSetThreadLocalConfigOption(<const char *>key, <const char *>val)
+    if isinstance(threading.current_thread(), threading._MainThread):
+        CPLSetConfigOption(<const char *>key, <const char *>val)
+    else:
+        CPLSetThreadLocalConfigOption(<const char *>key, <const char *>val)
 
 
 cpdef del_gdal_config(key):
@@ -124,7 +141,10 @@ cpdef del_gdal_config(key):
         Name of config option.
     """
     key = key.encode('utf-8')
-    CPLSetThreadLocalConfigOption(<const char *>key, NULL)
+    if isinstance(threading.current_thread(), threading._MainThread):
+        CPLSetConfigOption(<const char *>key, NULL)
+    else:
+        CPLSetThreadLocalConfigOption(<const char *>key, NULL)
 
 
 cdef class ConfigEnv(object):

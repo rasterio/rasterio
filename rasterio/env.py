@@ -52,7 +52,7 @@ log = logging.getLogger(__name__)
 default_options = {
     'CHECK_WITH_INVERT_PROJ': True,
     'GTIFF_IMPLICIT_JPEG_OVR': False,
-    "I'M_ON_RASTERIO": True
+    "RASTERIO_ENV": True
 }
 
 class Env(object):
@@ -181,8 +181,8 @@ class Env(object):
             # See note directly above where _discovered_options is globally
             # defined.  This MUST happen before calling 'defenv()'.
             _discovered_options = {}
-            # Don't want to reinstate the "I'M_ON_RASTERIO" option.
-            probe_env = {k for k in default_options if k != "I'M_ON_RASTERIO"}
+            # Don't want to reinstate the "RASTERIO_ENV" option.
+            probe_env = {k for k in default_options if k != "RASTERIO_ENV"}
             probe_env |= set(self.options.keys())
             for key in probe_env:
                 val = get_gdal_config(key, normalize=False)
@@ -264,8 +264,11 @@ def delenv():
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        with Env(WITH_RASTERIO_ENV=True):
-            return f(*args, **kwds)
-    return wrapper
+    if local._env:
+        return f
+    else:
+        @wraps(f)
+        def wrapper(*args, **kwds):
+            with Env():
+                return f(*args, **kwds)
+        return wrapper
