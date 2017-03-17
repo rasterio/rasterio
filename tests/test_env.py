@@ -204,6 +204,7 @@ def test_open_with_env(gdalenv):
 
 @mingdalversion
 @credentials
+@pytest.mark.network
 def test_s3_open_with_session(gdalenv):
     """Read from S3 demonstrating lazy credentials."""
     with rasterio.Env():
@@ -213,6 +214,7 @@ def test_s3_open_with_session(gdalenv):
 
 @mingdalversion
 @credentials
+@pytest.mark.network
 def test_s3_open_with_default_session(gdalenv):
     """Read from S3 using default env."""
     with rasterio.open(L8TIF) as dataset:
@@ -220,6 +222,7 @@ def test_s3_open_with_default_session(gdalenv):
 
 
 @mingdalversion
+@pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""
     with rasterio.Env():
@@ -231,6 +234,7 @@ def test_open_https_vsicurl(gdalenv):
 
 @mingdalversion
 @credentials
+@pytest.mark.network
 def test_s3_rio_info(runner):
     """S3 is supported by rio-info."""
     result = runner.invoke(main_group, ['info', L8TIF])
@@ -240,6 +244,7 @@ def test_s3_rio_info(runner):
 
 @mingdalversion
 @credentials
+@pytest.mark.network
 def test_https_rio_info(runner):
     """HTTPS is supported by rio-info."""
     result = runner.invoke(main_group, ['info', httpstif])
