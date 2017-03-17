@@ -85,7 +85,7 @@ def test_env_accessors(gdalenv):
     setenv(foo='1', bar='2')
     expected = default_options.copy()
     expected.update({'foo': '1', 'bar': '2'})
-    assert getenv() == rasterio.env._env.options
+    assert getenv() == rasterio.env.local._env.options
     assert getenv() == expected
     assert get_gdal_config('foo') == '1'
     assert get_gdal_config('bar') == '2'
@@ -163,12 +163,12 @@ def test_with_aws_session_credentials(gdalenv):
             aws_access_key_id='id', aws_secret_access_key='key',
             aws_session_token='token', region_name='null-island-1') as s:
         expected = default_options.copy()
-        assert getenv() == rasterio.env._env.options == expected
+        assert getenv() == rasterio.env.local._env.options == expected
         s.get_aws_credentials()
         expected.update({
             'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
             'aws_secret_access_key': 'key', 'aws_session_token': 'token'})
-        assert getenv() == rasterio.env._env.options == expected
+        assert getenv() == rasterio.env.local._env.options == expected
 
 
 def test_session_env_lazy(monkeypatch, gdalenv):
@@ -178,7 +178,7 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
     with rasterio.Env() as s:
         s.get_aws_credentials()
-        assert getenv() == rasterio.env._env.options
+        assert getenv() == rasterio.env.local._env.options
         expected = {
             'aws_access_key_id': 'id',
             'aws_secret_access_key': 'key',
@@ -288,7 +288,7 @@ def test_ensure_defaults_teardown(gdalenv):
         pass
 
     _check_defaults()
-    assert rasterio.env._env is None
+    assert rasterio.env.local._env is None
 
 
 @pytest.mark.parametrize("key,val", [
