@@ -17,6 +17,7 @@ from rasterio.vfs import parse_path, vsi_path
 class ThreadEnv(threading.local):
     def __init__(self):
         self._env = None  # Initialises in each thread
+        self._discovered_options = None
 
 local = ThreadEnv()
 
@@ -42,9 +43,6 @@ local = ThreadEnv()
 # versions of GDAL halfway there.  One major assumption is that environment
 # variables are not set directly with 'osgeo.gdal.SetConfigOption()' OR
 # 'rasterio.env.set_gdal_config()' inside of a 'rasterio.Env()'.
-
-_discovered_options = None
-
 
 log = logging.getLogger(__name__)
 
@@ -170,7 +168,6 @@ class Env(object):
         return local._env.drivers()
 
     def __enter__(self):
-        global _discovered_options
         log.debug("Entering env context: %r", self)
 
         # No parent Rasterio environment exists.
@@ -180,14 +177,14 @@ class Env(object):
 
             # See note directly above where _discovered_options is globally
             # defined.  This MUST happen before calling 'defenv()'.
-            _discovered_options = {}
+            local._discovered_options = {}
             # Don't want to reinstate the "RASTERIO_ENV" option.
             probe_env = {k for k in default_options if k != "RASTERIO_ENV"}
             probe_env |= set(self.options.keys())
             for key in probe_env:
                 val = get_gdal_config(key, normalize=False)
                 if val is not None:
-                    _discovered_options[key] = val
+                    local._discovered_options[key] = val
                     logging.debug("Discovered option: %s=%s", key, val)
 
             defenv()
@@ -200,7 +197,6 @@ class Env(object):
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        global _discovered_options
         log.debug("Exiting env context: %r", self)
         delenv()
         if self._has_parent_env:
@@ -210,12 +206,12 @@ class Env(object):
             logging.debug("Exiting outermost env")
             # See note directly above where _discovered_options is globally
             # defined.
-            while _discovered_options:
-                key, val = _discovered_options.popitem()
+            while local._discovered_options:
+                key, val = local._discovered_options.popitem()
                 set_gdal_config(key, val, normalize=False)
                 logging.debug(
                     "Set discovered option back to: '%s=%s", key, val)
-            _discovered_options = None
+            local._discovered_options = None
         log.debug("Exited env context: %r", self)
 
 

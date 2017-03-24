@@ -299,7 +299,7 @@ def test_env_discovery(key, val):
     environment default.
     """
 
-    assert rasterio.env._discovered_options is None, \
+    assert rasterio.env.local._discovered_options is None, \
         "Something has gone horribly wrong."
 
     try:
@@ -309,20 +309,20 @@ def test_env_discovery(key, val):
         # Start an environment and overwrite the value that should persist
         with rasterio.Env(**{key: True}):
             assert get_gdal_config(key) is True
-            assert rasterio.env._discovered_options == {key: val}
+            assert rasterio.env.local._discovered_options == {key: val}
 
             # Start another nested environment, again overwriting the value
             # that should persist
             with rasterio.Env(**{key: False}):
-                assert rasterio.env._discovered_options == {key: val}
+                assert rasterio.env.local._discovered_options == {key: val}
                 assert get_gdal_config(key) is False
 
             # Ensure the outer state is restored.
-            assert rasterio.env._discovered_options == {key: val}
+            assert rasterio.env.local._discovered_options == {key: val}
             assert get_gdal_config(key) is True
 
         # Ensure the discovered value remains unchanged.
-        assert rasterio.env._discovered_options is None
+        assert rasterio.env.local._discovered_options is None
         assert get_gdal_config(key, normalize=False) == val
 
     # Leaving this option in the GDAL environment could cause a problem
