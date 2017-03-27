@@ -49,6 +49,7 @@ install:
   - "pip install coveralls>=1.1"
   - "rio --version"
   - "rio --gdal-version"
+  - "pip list"
 script:
   - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart and not switch' ; fi"
   - py.test --cov rasterio --cov-report term-missing
