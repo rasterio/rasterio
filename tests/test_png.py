@@ -1,7 +1,6 @@
 import logging
 import subprocess
 import sys
-import re
 import numpy as np
 import rasterio
 

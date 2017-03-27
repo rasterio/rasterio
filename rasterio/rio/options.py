@@ -188,7 +188,7 @@ def bounds_handler(ctx, param, value):
     if retval is None and value is not None:
         try:
             value = value.strip(', []')
-            retval = tuple(float(x) for x in re.split('[,\s]+', value))
+            retval = tuple(float(x) for x in re.split(r'[,\s]+', value))
             assert len(retval) == 4
             return retval
         except:

@@ -1,5 +1,4 @@
 import logging
-import re
 import sys
 
 from click.testing import CliRunner
