@@ -85,7 +85,7 @@ def test_env_accessors(gdalenv):
     setenv(foo='1', bar='2')
     expected = default_options.copy()
     expected.update({'foo': '1', 'bar': '2'})
-    assert getenv() == rasterio.env._env.options
+    assert getenv() == rasterio.env.local._env.options
     assert getenv() == expected
     assert get_gdal_config('foo') == '1'
     assert get_gdal_config('bar') == '2'
@@ -109,7 +109,7 @@ def test_env_accessors_no_env():
 def test_ensure_env_decorator(gdalenv):
     @ensure_env
     def f():
-        return getenv()['WITH_RASTERIO_ENV']
+        return getenv()['RASTERIO_ENV']
     assert f() is True
 
 
@@ -129,7 +129,7 @@ def test_env_defaults(gdalenv):
     with env:
         assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is True
         assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is False
-        assert get_gdal_config("I'M_ON_RASTERIO") is True
+        assert get_gdal_config("RASTERIO_ENV") is True
 
 
 def test_aws_session(gdalenv):
@@ -163,12 +163,12 @@ def test_with_aws_session_credentials(gdalenv):
             aws_access_key_id='id', aws_secret_access_key='key',
             aws_session_token='token', region_name='null-island-1') as s:
         expected = default_options.copy()
-        assert getenv() == rasterio.env._env.options == expected
+        assert getenv() == rasterio.env.local._env.options == expected
         s.get_aws_credentials()
         expected.update({
             'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
             'aws_secret_access_key': 'key', 'aws_session_token': 'token'})
-        assert getenv() == rasterio.env._env.options == expected
+        assert getenv() == rasterio.env.local._env.options == expected
 
 
 def test_session_env_lazy(monkeypatch, gdalenv):
@@ -178,7 +178,7 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
     with rasterio.Env() as s:
         s.get_aws_credentials()
-        assert getenv() == rasterio.env._env.options
+        assert getenv() == rasterio.env.local._env.options
         expected = {
             'aws_access_key_id': 'id',
             'aws_secret_access_key': 'key',
@@ -288,7 +288,7 @@ def test_ensure_defaults_teardown(gdalenv):
         pass
 
     _check_defaults()
-    assert rasterio.env._env is None
+    assert rasterio.env.local._env is None
 
 
 @pytest.mark.parametrize("key,val", [
@@ -304,7 +304,7 @@ def test_env_discovery(key, val):
     environment default.
     """
 
-    assert rasterio.env._discovered_options is None, \
+    assert rasterio.env.local._discovered_options is None, \
         "Something has gone horribly wrong."
 
     try:
@@ -314,20 +314,20 @@ def test_env_discovery(key, val):
         # Start an environment and overwrite the value that should persist
         with rasterio.Env(**{key: True}):
             assert get_gdal_config(key) is True
-            assert rasterio.env._discovered_options == {key: val}
+            assert rasterio.env.local._discovered_options == {key: val}
 
             # Start another nested environment, again overwriting the value
             # that should persist
             with rasterio.Env(**{key: False}):
-                assert rasterio.env._discovered_options == {key: val}
+                assert rasterio.env.local._discovered_options == {key: val}
                 assert get_gdal_config(key) is False
 
             # Ensure the outer state is restored.
-            assert rasterio.env._discovered_options == {key: val}
+            assert rasterio.env.local._discovered_options == {key: val}
             assert get_gdal_config(key) is True
 
         # Ensure the discovered value remains unchanged.
-        assert rasterio.env._discovered_options is None
+        assert rasterio.env.local._discovered_options is None
         assert get_gdal_config(key, normalize=False) == val
 
     # Leaving this option in the GDAL environment could cause a problem

@@ -1,46 +1,49 @@
 """Rasterio's GDAL/AWS environment"""
 
 from functools import wraps
-import itertools as it
 import logging
+import threading
 
 from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
+from rasterio.compat import string_types
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError
-from rasterio.compat import string_types
 from rasterio.transform import guard_transform
 from rasterio.vfs import parse_path, vsi_path
 
 
-# The currently active GDAL/AWS environment is a private attribute.
-_env = None
+class ThreadEnv(threading.local):
+    def __init__(self):
+        self._env = None  # Initialises in each thread
+
+        # When the outermost 'rasterio.Env()' executes '__enter__' it
+        # probes the GDAL environment to see if any of the supplied
+        # config options already exist, the assumption being that they
+        # were set with 'osgeo.gdal.SetConfigOption()' or possibly
+        # 'rasterio.env.set_gdal_config()'.  The discovered options are
+        # reinstated when the outermost Rasterio environment exits.
+        # Without this check any environment options that are present in
+        # the GDAL environment and are also passed to 'rasterio.Env()'
+        # will be unset when 'rasterio.Env()' tears down, regardless of
+        # their value.  For example:
+        #
+        #   from osgeo import gdal import rasterio
+        #
+        #   gdal.SetConfigOption('key', 'value') with
+        #   rasterio.Env(key='something'): pass
+        #
+        # The config option 'key' would be unset when 'Env()' exits.
+        # A more comprehensive solution would also leverage
+        # https://trac.osgeo.org/gdal/changeset/37273 but this gets
+        # Rasterio + older versions of GDAL halfway there.  One major
+        # assumption is that environment variables are not set directly
+        # with 'osgeo.gdal.SetConfigOption()' OR
+        # 'rasterio.env.set_gdal_config()' inside of a 'rasterio.Env()'.
+        self._discovered_options = None
 
 
-# When the outermost 'rasterio.Env()' executes '__enter__' it probes the
-# GDAL environment to see if any of the supplied config options already
-# exist, the assumption being that they were set with
-# 'osgeo.gdal.SetConfigOption()' or possibly 'rasterio.env.set_gdal_config()'.
-# The discovered options are reinstated when the outermost Rasterio environment
-# exits.  Without this check any environment options that are present in the
-# GDAL environment and are also passed to 'rasterio.Env()' will be unset
-# when 'rasterio.Env()' tears down, regardless of their value.  For example:
-#
-#   from osgeo import gdal
-#   import rasterio
-#
-#   gdal.SetConfigOption('key', 'value')
-#   with rasterio.Env(key='something'):
-#       pass
-#
-# The config option 'key' would be unset when 'Env()' exits.  A more
-# comprehensive solution would also leverage https://trac.osgeo.org/gdal/changeset/37273
-# but this gets Rasterio + older versions of GDAL halfway there.  One major
-# assumption is that environment variables are not set directly with
-# 'osgeo.gdal.SetConfigOption()' OR 'rasterio.env.set_gdal_config()' inside
-# of a 'rasterio.Env()'.
-_discovered_options = None
-
+local = ThreadEnv()
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +51,7 @@ log = logging.getLogger(__name__)
 default_options = {
     'CHECK_WITH_INVERT_PROJ': True,
     'GTIFF_IMPLICIT_JPEG_OVR': False,
-    "I'M_ON_RASTERIO": True
+    "RASTERIO_ENV": True
 }
 
 class Env(object):
@@ -159,34 +162,30 @@ class Env(object):
             options.update(aws_region=self.aws_session.region_name)
 
         # Pass these credentials to the GDAL environment.
-        global _env
-        _env.update_config_options(**options)
+        local._env.update_config_options(**options)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
-        global _env
-        return _env.drivers()
+        return local._env.drivers()
 
     def __enter__(self):
-        global _env
-        global _discovered_options
         log.debug("Entering env context: %r", self)
 
         # No parent Rasterio environment exists.
-        if _env is None:
+        if local._env is None:
             logging.debug("Starting outermost env")
             self._has_parent_env = False
 
             # See note directly above where _discovered_options is globally
             # defined.  This MUST happen before calling 'defenv()'.
-            _discovered_options = {}
-            # Don't want to reinstate the "I'M_ON_RASTERIO" option.
-            probe_env = {k for k in default_options if k != "I'M_ON_RASTERIO"}
+            local._discovered_options = {}
+            # Don't want to reinstate the "RASTERIO_ENV" option.
+            probe_env = {k for k in default_options if k != "RASTERIO_ENV"}
             probe_env |= set(self.options.keys())
             for key in probe_env:
                 val = get_gdal_config(key, normalize=False)
                 if val is not None:
-                    _discovered_options[key] = val
+                    local._discovered_options[key] = val
                     logging.debug("Discovered option: %s=%s", key, val)
 
             defenv()
@@ -199,8 +198,6 @@ class Env(object):
         return self
 
     def __exit__(self, exc_type=None, exc_val=None, exc_tb=None):
-        global _env
-        global _discovered_options
         log.debug("Exiting env context: %r", self)
         delenv()
         if self._has_parent_env:
@@ -210,66 +207,65 @@ class Env(object):
             logging.debug("Exiting outermost env")
             # See note directly above where _discovered_options is globally
             # defined.
-            while _discovered_options:
-                key, val = _discovered_options.popitem()
+            while local._discovered_options:
+                key, val = local._discovered_options.popitem()
                 set_gdal_config(key, val, normalize=False)
                 logging.debug(
                     "Set discovered option back to: '%s=%s", key, val)
-            _discovered_options = None
+            local._discovered_options = None
         log.debug("Exited env context: %r", self)
 
 
 def defenv():
     """Create a default environment if necessary."""
-    global _env
-    if _env:
-        log.debug("GDAL environment exists: %r", _env)
+    if local._env:
+        log.debug("GDAL environment exists: %r", local._env)
     else:
         log.debug("No GDAL environment exists")
-        _env = GDALEnv()
-        _env.update_config_options(**default_options)
+        local._env = GDALEnv()
+        local._env.update_config_options(**default_options)
         log.debug(
-            "New GDAL environment %r created", _env)
-    _env.start()
+            "New GDAL environment %r created", local._env)
+    local._env.start()
 
 
 def getenv():
     """Get a mapping of current options."""
-    global _env
-    if not _env:
+    if not local._env:
         raise EnvError("No GDAL environment exists")
     else:
-        log.debug("Got a copy of environment %r options", _env)
-        return _env.options.copy()
+        log.debug("Got a copy of environment %r options", local._env)
+        return local._env.options.copy()
 
 
 def setenv(**options):
     """Set options in the existing environment."""
-    global _env
-    if not _env:
+    if not local._env:
         raise EnvError("No GDAL environment exists")
     else:
-        _env.update_config_options(**options)
-        log.debug("Updated existing %r with options %r", _env, options)
+        local._env.update_config_options(**options)
+        log.debug("Updated existing %r with options %r", local._env, options)
 
 
 def delenv():
     """Delete options in the existing environment."""
-    global _env
-    if not _env:
+    if not local._env:
         raise EnvError("No GDAL environment exists")
     else:
-        _env.clear_config_options()
-        log.debug("Cleared existing %r options", _env)
-    _env.stop()
-    _env = None
+        local._env.clear_config_options()
+        log.debug("Cleared existing %r options", local._env)
+    local._env.stop()
+    local._env = None
 
 
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        with Env(WITH_RASTERIO_ENV=True):
-            return f(*args, **kwds)
-    return wrapper
+    if local._env:
+        return f
+    else:
+        @wraps(f)
+        def wrapper(*args, **kwds):
+            with Env():
+                return f(*args, **kwds)
+        return wrapper

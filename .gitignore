@@ -79,6 +79,7 @@ rasterio/_crs.c
 rasterio/_env.c
 rasterio/_shim.c
 rasterio/_shim.pyx
+tests/data/white-gemini-iv.zip
 
 # vim
 .*.swp
