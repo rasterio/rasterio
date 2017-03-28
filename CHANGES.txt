@@ -1,14 +1,22 @@
 Changes
 =======
 
-Next
-----
+1.0a8 (2017-03-29)
+------------------
 
 Bug fixes:
 
 - Secrets kept in GDAL config options could have been leaked via the Python
   logger. AWS keys and tokens have always been redacted, but other options like
   GDAL_HTTP_USERPWD were not. Logging of GDAL config options has been removed.
+- Use of Rasterio with Python threads has not been well tested in
+  previous versions and a bug (#986) involving shared GDAL environment
+  state was found. Rasterio now uses thread local variables to track
+  GDAL environment state and uses the appropriate GDAL API functions to
+  isolate the environments of child threads from each other while
+  permitting inheritance from the main Python thread (#993, #996, #997).
+  Tests using both `ThreadPoolExecutor` and `ProcessPoolExecutor` have
+  been added to guard against regresion.
 
 1.0a7 (2017-02-14)
 ------------------
