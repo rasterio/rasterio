@@ -149,7 +149,7 @@ def test_write_crs_transform(tmpdir):
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
-    assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+    assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -169,7 +169,7 @@ def test_write_crs_transform_affine(tmpdir):
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
-    assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+    assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 def test_write_crs_transform_2(tmpdir):
     """Using 'EPSG:32618' as CRS."""
@@ -189,7 +189,7 @@ def test_write_crs_transform_2(tmpdir):
     assert 'PROJCS["WGS 84 / UTM zone 18N",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
-    assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+    assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
 def test_write_crs_transform_3(tmpdir):
@@ -211,7 +211,7 @@ def test_write_crs_transform_3(tmpdir):
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
-    assert re.search("Pixel Size = \(300.03792\d+,-300.04178\d+\)", info)
+    assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 def test_write_meta(tmpdir):
     name = str(tmpdir.join("test_write_meta.tif"))
