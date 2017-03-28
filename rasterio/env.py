@@ -13,36 +13,37 @@ from rasterio.transform import guard_transform
 from rasterio.vfs import parse_path, vsi_path
 
 
-# The currently active GDAL/AWS environment is a private attribute.
 class ThreadEnv(threading.local):
     def __init__(self):
         self._env = None  # Initialises in each thread
+
+        # When the outermost 'rasterio.Env()' executes '__enter__' it
+        # probes the GDAL environment to see if any of the supplied
+        # config options already exist, the assumption being that they
+        # were set with 'osgeo.gdal.SetConfigOption()' or possibly
+        # 'rasterio.env.set_gdal_config()'.  The discovered options are
+        # reinstated when the outermost Rasterio environment exits.
+        # Without this check any environment options that are present in
+        # the GDAL environment and are also passed to 'rasterio.Env()'
+        # will be unset when 'rasterio.Env()' tears down, regardless of
+        # their value.  For example:
+        #
+        #   from osgeo import gdal import rasterio
+        #
+        #   gdal.SetConfigOption('key', 'value') with
+        #   rasterio.Env(key='something'): pass
+        #
+        # The config option 'key' would be unset when 'Env()' exits.
+        # A more comprehensive solution would also leverage
+        # https://trac.osgeo.org/gdal/changeset/37273 but this gets
+        # Rasterio + older versions of GDAL halfway there.  One major
+        # assumption is that environment variables are not set directly
+        # with 'osgeo.gdal.SetConfigOption()' OR
+        # 'rasterio.env.set_gdal_config()' inside of a 'rasterio.Env()'.
         self._discovered_options = None
 
-local = ThreadEnv()
 
-# When the outermost 'rasterio.Env()' executes '__enter__' it probes the
-# GDAL environment to see if any of the supplied config options already
-# exist, the assumption being that they were set with
-# 'osgeo.gdal.SetConfigOption()' or possibly 'rasterio.env.set_gdal_config()'.
-# The discovered options are reinstated when the outermost Rasterio environment
-# exits.  Without this check any environment options that are present in the
-# GDAL environment and are also passed to 'rasterio.Env()' will be unset
-# when 'rasterio.Env()' tears down, regardless of their value.  For example:
-#
-#   from osgeo import gdal
-#   import rasterio
-#
-#   gdal.SetConfigOption('key', 'value')
-#   with rasterio.Env(key='something'):
-#       pass
-#
-# The config option 'key' would be unset when 'Env()' exits.  A more
-# comprehensive solution would also leverage
-# https://trac.osgeo.org/gdal/changeset/37273 but this gets Rasterio + older
-# versions of GDAL halfway there.  One major assumption is that environment
-# variables are not set directly with 'osgeo.gdal.SetConfigOption()' OR
-# 'rasterio.env.set_gdal_config()' inside of a 'rasterio.Env()'.
+local = ThreadEnv()
 
 log = logging.getLogger(__name__)
 

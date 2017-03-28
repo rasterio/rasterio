@@ -310,6 +310,10 @@ extra_reqs = {
         'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging'],
     'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']}
 
+# Add futures to 'test' for Python < 3.2.
+if sys.version_info < (3, 2):
+    extra_reqs['test'].append('futures')
+
 # Add all extra requirements
 extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
 

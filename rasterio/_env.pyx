@@ -1,18 +1,11 @@
 # cython: c_string_type=unicode, c_string_encoding=utf8
 """GDAL and OGR driver and configuration management
 
-Note: Only the main thread may load drivers. This means that new threads
-must be started within a Rasterio environment:
-
-    with rasterio.Env():
-        thread.start()
-        thread.join()
-
 The main thread always utilizes CPLSetConfigOption. Child threads
 utilize CPLSetThreadLocalConfigOption instead. All threads use
 CPLGetConfigOption and not CPLGetThreadLocalConfigOption, thus child
-threads will inherit config options from the main thread.
-
+threads will inherit config options from the main thread unless the
+option is set to a new value inside the thread.
 """
 
 include "gdal.pxi"
