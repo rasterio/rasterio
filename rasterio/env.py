@@ -173,7 +173,7 @@ class Env(object):
 
         # No parent Rasterio environment exists.
         if local._env is None:
-            logging.debug("Starting outermost env")
+            log.debug("Starting outermost env")
             self._has_parent_env = False
 
             # See note directly above where _discovered_options is globally
@@ -186,7 +186,7 @@ class Env(object):
                 val = get_gdal_config(key, normalize=False)
                 if val is not None:
                     local._discovered_options[key] = val
-                    logging.debug("Discovered option: %s=%s", key, val)
+                    log.debug("Discovered option: %s=%s", key, val)
 
             defenv()
             self.context_options = {}
@@ -204,13 +204,13 @@ class Env(object):
             defenv()
             setenv(**self.context_options)
         else:
-            logging.debug("Exiting outermost env")
+            log.debug("Exiting outermost env")
             # See note directly above where _discovered_options is globally
             # defined.
             while local._discovered_options:
                 key, val = local._discovered_options.popitem()
                 set_gdal_config(key, val, normalize=False)
-                logging.debug(
+                log.debug(
                     "Set discovered option back to: '%s=%s", key, val)
             local._discovered_options = None
         log.debug("Exited env context: %r", self)
