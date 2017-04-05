@@ -989,9 +989,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 key_c = key_b
                 val_c = val_b
                 options = CSLSetNameValue(options, key_c, val_c)
-                log.debug(
-                    "Option: %r\n",
-                    (k, CSLFetchNameValue(options, key_c)))
+                log.debug("Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
             try:
                 self._hds = exc_wrap_pointer(
