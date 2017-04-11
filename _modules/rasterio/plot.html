@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.plot &mdash; rasterio 1.0a7 documentation</title>
+  <title>rasterio.plot &mdash; rasterio 0.35.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a7 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0a7
+                0.35.1
               </div>
             
           
@@ -81,40 +81,10 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/memory-files.html">In-Memory Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
 </ul>
 
             
@@ -177,155 +147,75 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="kn">import</span> <span class="n">DatasetReader</span>
-<span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">guard_transform</span>
-<span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="n">plt</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="c1"># Certain environment configurations can trigger a RuntimeError like:</span>
+
+    <span class="c1"># Trying to import matplotlibRuntimeError: Python is not installed as a</span>
+    <span class="c1"># framework. The Mac OS X backend will not be able to function correctly</span>
+    <span class="c1"># if Python is not installed as a framework. See the Python ...</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span> <span class="o">=</span> <span class="bp">None</span>
+
+
+<span class="kn">from</span> <span class="nn">rasterio.five</span> <span class="kn">import</span> <span class="n">zip_longest</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_plt"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.get_plt">[docs]</a><span class="k">def</span> <span class="nf">get_plt</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;import matplotlib.pyplot</span>
-<span class="sd">    raise import error if matplotlib is not installed</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-        <span class="k">return</span> <span class="n">plt</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Could not import matplotlib</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;matplotlib required for plotting functions&quot;</span>
-        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="show"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">with_bounds</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">contour</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">contour_label_kws</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-         <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="show"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">with_bounds</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Display a raster or raster band using matplotlib.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : array-like in raster axis order,</span>
-<span class="sd">        or (raster dataset, bidx) tuple,</span>
-<span class="sd">        or raster dataset,</span>
-<span class="sd">        If the tuple (raster dataset, bidx),</span>
-<span class="sd">        selects band `bidx` from raster.  If raster dataset display the rgb image</span>
-<span class="sd">        as defined in the colorinterp metadata, or default to first band.</span>
+<span class="sd">    source : array-like or (raster dataset, bidx)</span>
+<span class="sd">        If array-like, should be of format compatible with</span>
+<span class="sd">        matplotlib.pyplot.imshow. If the tuple (raster dataset, bidx),</span>
+<span class="sd">        selects band `bidx` from raster.</span>
+<span class="sd">    cmap : str (opt)</span>
+<span class="sd">        Specifies the colormap to use in plotting. See</span>
+<span class="sd">        matplotlib.Colors.Colormap. Default is &#39;gray&#39;.</span>
 <span class="sd">    with_bounds : bool (opt)</span>
 <span class="sd">        Whether to change the image extent to the spatial bounds of the image,</span>
 <span class="sd">        rather than pixel coordinates. Only works when source is</span>
-<span class="sd">        (raster dataset, bidx) or raster dataset.</span>
-<span class="sd">    contour : bool (opt)</span>
-<span class="sd">        Whether to plot the raster data as contours</span>
-<span class="sd">    contour_label_kws : dictionary (opt)</span>
-<span class="sd">        Keyword arguments for labeling the contours,</span>
-<span class="sd">        empty dictionary for no labels.</span>
-<span class="sd">    ax : matplotlib axis (opt)</span>
-<span class="sd">        Axis to plot on, otherwise uses current axis.</span>
-<span class="sd">    title : str, optional</span>
-<span class="sd">        Title for the figure.</span>
-<span class="sd">    transform : Affine, optional</span>
-<span class="sd">        Defines the affine transform if source is an array</span>
-<span class="sd">    **kwargs : key, value pairings optional</span>
-<span class="sd">        These will be passed to the matplotlib imshow or contour method</span>
-<span class="sd">        depending on contour argument.</span>
-<span class="sd">        See full lists at:</span>
-<span class="sd">        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.imshow</span>
-<span class="sd">        or</span>
-<span class="sd">        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.contour</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    ax : matplotlib Axes</span>
-<span class="sd">        Axes with plot.</span>
+<span class="sd">        (raster dataset, bidx).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">plt</span> <span class="o">=</span> <span class="n">get_plt</span><span class="p">()</span>
-
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">with_bounds</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">DatasetReader</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">with_bounds</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">extent</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">source_colorinterp</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="o">.</span><span class="n">colorinterp</span><span class="p">(</span><span class="n">n</span><span class="p">):</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">indexes</span><span class="p">}</span>
-                <span class="n">colorinterp</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">enums</span><span class="o">.</span><span class="n">ColorInterp</span>
-                <span class="n">rgb_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_colorinterp</span><span class="p">[</span><span class="n">ci</span><span class="p">]</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span>
-                               <span class="p">(</span><span class="n">colorinterp</span><span class="o">.</span><span class="n">red</span><span class="p">,</span> <span class="n">colorinterp</span><span class="o">.</span><span class="n">green</span><span class="p">,</span> <span class="n">colorinterp</span><span class="o">.</span><span class="n">blue</span><span class="p">)]</span>
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">rgb_indexes</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
-
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">extent</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># The source is a numpy array reshape it to image if it has 3+ bands</span>
-        <span class="n">source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">reshape_as_image</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
-        <span class="k">if</span> <span class="n">transform</span> <span class="ow">and</span> <span class="n">with_bounds</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plotting_extent</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
-
-    <span class="n">show</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
-        <span class="n">show</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">contour</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s1">&#39;cmap&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;colors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;colors&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;linewidths&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;linewidths&#39;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
-
-        <span class="n">C</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;upper&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contour_label_kws</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># no explicit label kws passed use defaults</span>
-            <span class="n">contour_label_kws</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                                     <span class="n">inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contour_label_kws</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">clabel</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="o">**</span><span class="n">contour_label_kws</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="n">ax</span></div>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">plt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">)</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;matplotlib could not be imported&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="plotting_extent"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.plotting_extent">[docs]</a><span class="k">def</span> <span class="nf">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="plotting_extent"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.plotting_extent">[docs]</a><span class="k">def</span> <span class="nf">plotting_extent</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns an extent in the format needed</span>
 <span class="sd">     for matplotlib&#39;s imshow (left, right, bottom, top)</span>
 <span class="sd">     instead of rasterio&#39;s bounds (left, bottom, top, right)</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : raster dataset or array in image order (see reshape_as_image)</span>
-<span class="sd">    transform: Affine, required if source is array</span>
+<span class="sd">    source : raster dataset</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">):</span>
-        <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
-                  <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="n">transform</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;transform is required if source is an array&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
-        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-        <span class="n">left</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
-        <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
-
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
+              <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">extent</span></div>
 
 
-<div class="viewcode-block" id="reshape_as_image"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.reshape_as_image">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<div class="viewcode-block" id="reshape_as_image"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.reshape_as_image">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the source array reshaped into the order</span>
 <span class="sd">    expected by image processing and visualization software</span>
 <span class="sd">    (matplotlib, scikit-image, etc)</span>
@@ -337,11 +227,11 @@
 <span class="sd">    source : array-like in a of format (bands, rows, columns)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># swap the axes order from (bands, rows, columns) to (rows, columns, bands)</span>
-    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">im</span></div>
 
 
-<div class="viewcode-block" id="reshape_as_raster"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.reshape_as_raster">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<div class="viewcode-block" id="reshape_as_raster"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.reshape_as_raster">[docs]</a><span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns the array in a raster order</span>
 <span class="sd">    by swapping the axes order from (rows, columns, bands)</span>
 <span class="sd">    to (bands, rows, columns)</span>
@@ -351,59 +241,43 @@
 <span class="sd">    arr : array-like in the image form of (rows, columns, bands)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># swap the axes order from (rows, columns, bands) to (bands, rows, columns)</span>
-    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">im</span></div>
 
 
-<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../api/rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="show_hist"><a class="viewcode-back" href="../../rasterio.plot.html#rasterio.plot.show_hist">[docs]</a><span class="k">def</span> <span class="nf">show_hist</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Histogram&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Easily display a histogram with matplotlib.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : np.array or DatasetReader, rasterio.Band or tuple(dataset, bidx)</span>
-<span class="sd">        Input data to display.  The first three arrays in multi-dimensional</span>
-<span class="sd">        arrays are plotted as red, green, and blue.</span>
 <span class="sd">    bins : int, optional</span>
 <span class="sd">        Compute histogram across N bins.</span>
+<span class="sd">    data : np.array or rasterio.Band or tuple(dataset, bidx)</span>
+<span class="sd">        Input data to display.  The first three arrays in multi-dimensional</span>
+<span class="sd">        arrays are plotted as red, green, and blue.</span>
 <span class="sd">    masked : bool, optional</span>
 <span class="sd">        When working with a `rasterio.Band()` object, specifies if the data</span>
 <span class="sd">        should be masked on read.</span>
 <span class="sd">    title : str, optional</span>
 <span class="sd">        Title for the figure.</span>
-<span class="sd">    ax : matplotlib axes (opt)</span>
-<span class="sd">        The raster will be added to this axes if passed.</span>
-<span class="sd">    **kwargs : optional keyword arguments</span>
-<span class="sd">        These will be passed to the matplotlib hist method. See full list at:</span>
-<span class="sd">        http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.hist</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">plt</span> <span class="o">=</span> <span class="n">get_plt</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">plt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Could not import matplotlib&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">DatasetReader</span><span class="p">):</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">masked</span><span class="o">=</span><span class="n">masked</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Band</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Band</span><span class="p">)):</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">masked</span><span class="o">=</span><span class="n">masked</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">source</span>
 
     <span class="c1"># The histogram is computed individually for each &#39;band&#39; in the array</span>
     <span class="c1"># so we need the overall min/max to constrain the plot</span>
-    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="n">arr</span><span class="p">]</span>
         <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gold&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;violet&#39;</span><span class="p">,</span> <span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;saddlebrown&#39;</span><span class="p">]</span>
-
-    <span class="c1"># The goal is to provide a curated set of colors for working with</span>
-    <span class="c1"># smaller datasets and let matplotlib define additional colors when</span>
-    <span class="c1"># working with larger datasets.</span>
-    <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">):</span>
-        <span class="n">n</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
-        <span class="n">colors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Accent&#39;</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[:</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;violet&#39;</span><span class="p">,</span> <span class="s1">&#39;gold&#39;</span><span class="p">,</span> <span class="s1">&#39;saddlebrown&#39;</span><span class="p">)</span>
 
     <span class="c1"># If a rasterio.Band() is given make sure the proper index is displayed</span>
     <span class="c1"># in the legend.</span>
@@ -412,28 +286,31 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)))</span>
 
-    <span class="k">if</span> <span class="n">ax</span><span class="p">:</span>
-        <span class="n">show</span> <span class="o">=</span> <span class="bp">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">show</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="c1"># This loop should add a single plot each band in the input array,</span>
+    <span class="c1"># regardless of if the number of bands exceeds the number of colors.</span>
+    <span class="c1"># The colors slicing ensures that the number of iterations always</span>
+    <span class="c1"># matches the number of bands.</span>
+    <span class="c1"># The goal is to provide a curated set of colors for working with</span>
+    <span class="c1"># smaller datasets and let matplotlib define additional colors when</span>
+    <span class="c1"># working with larger datasets.</span>
+    <span class="k">for</span> <span class="n">bnd</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">colors</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)],</span> <span class="n">labels</span><span class="p">):</span>
 
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
-
-    <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+            <span class="n">bnd</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
             <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-            <span class="nb">range</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+            <span class="nb">range</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">)</span>
 
-    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;DN&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;DN&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 </pre></div>
 
            </div>
@@ -467,7 +344,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a7',
+            VERSION:'0.35.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

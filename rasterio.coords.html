@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.coords module &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+        <link rel="up" title="API Documentation" href="api_docs.html"/>
+        <link rel="next" title="rasterio.crs module" href="rasterio.crs.html"/>
+        <link rel="prev" title="rasterio.aws module" href="rasterio.aws.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="api_docs.html">API Documentation</a> &raquo;</li>
+      
+    <li>rasterio.coords module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/rasterio.coords.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-rasterio.coords">
+<span id="rasterio-coords-module"></span><h1>rasterio.coords module<a class="headerlink" href="#module-rasterio.coords" title="Permalink to this headline">¶</a></h1>
+<p>Bounding box tuple, and disjoint operator.</p>
+<dl class="class">
+<dt id="rasterio.coords.BoundingBox">
+<em class="property">class </em><code class="descclassname">rasterio.coords.</code><code class="descname">BoundingBox</code><a class="reference internal" href="_modules/rasterio/coords.html#BoundingBox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.coords.BoundingBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rasterio.coords.BoundingBox" title="rasterio.coords.BoundingBox"><code class="xref py py-class docutils literal"><span class="pre">rasterio.coords.BoundingBox</span></code></a></p>
+<p>Bounding box named tuple, defining extent in cartesian coordinates.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">BoundingBox</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="68%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>left :</td>
+<td>Left coordinate</td>
+</tr>
+<tr class="row-even"><td>bottom :</td>
+<td>Bottom coordinate</td>
+</tr>
+<tr class="row-odd"><td>right :</td>
+<td>Right coordinate</td>
+</tr>
+<tr class="row-even"><td>top :</td>
+<td>Top coordinate</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.coords.disjoint_bounds">
+<code class="descclassname">rasterio.coords.</code><code class="descname">disjoint_bounds</code><span class="sig-paren">(</span><em>bounds1</em>, <em>bounds2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/coords.html#disjoint_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.coords.disjoint_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two bounds and determine if they are disjoint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bounds1: 4-tuple</strong></p>
+<blockquote>
+<div><p>rasterio bounds tuple (xmin, ymin, xmax, ymax)</p>
+</div></blockquote>
+<p><strong>bounds2: 4-tuple</strong></p>
+<blockquote>
+<div><p>rasterio bounds tuple</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">boolean</p>
+<p><code class="docutils literal"><span class="pre">True</span></code> if bounds are disjoint,</p>
+<p class="last"><code class="docutils literal"><span class="pre">False</span></code> if bounds overlap</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rasterio.crs.html" class="btn btn-neutral float-right" title="rasterio.crs module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rasterio.aws.html" class="btn btn-neutral" title="rasterio.aws module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

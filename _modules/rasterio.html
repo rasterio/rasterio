@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio &mdash; rasterio 1.0a7 documentation</title>
+  <title>rasterio &mdash; rasterio 0.35.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a7 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 0.35.1 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                1.0a7
+                0.35.1
               </div>
             
           
@@ -81,40 +81,10 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/concurrency.html">Concurrent processing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/errors.html">Error Handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/features.html">Vector Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/fillnodata.html">Filling nodata areas</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/georeferencing.html">Georeferencing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/image_options.html">Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/reproject.html">Reprojection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community.html">Community</a></li>
 </ul>
 
             
@@ -165,26 +135,22 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">NullHandler</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
     <span class="k">class</span> <span class="nc">NullHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Handler</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
             <span class="k">pass</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="n">gdal_version</span>
-<span class="kn">from</span> <span class="nn">rasterio.drivers</span> <span class="kn">import</span> <span class="n">is_blacklisted</span>
+<span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">eval_window</span><span class="p">,</span> <span class="n">window_shape</span><span class="p">,</span> <span class="n">window_index</span><span class="p">,</span> <span class="n">gdal_version</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">rasterio.dtypes</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">bool_</span><span class="p">,</span> <span class="n">ubyte</span><span class="p">,</span> <span class="n">uint8</span><span class="p">,</span> <span class="n">uint16</span><span class="p">,</span> <span class="n">int16</span><span class="p">,</span> <span class="n">uint32</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">float64</span><span class="p">,</span>
     <span class="n">complex_</span><span class="p">,</span> <span class="n">check_dtype</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">rasterio.env</span> <span class="kn">import</span> <span class="n">ensure_env</span><span class="p">,</span> <span class="n">Env</span>
-<span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="kn">import</span> <span class="n">RasterioIOError</span>
-<span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">string_types</span>
-<span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DatasetReader</span><span class="p">,</span> <span class="n">get_writer_for_path</span><span class="p">,</span> <span class="n">get_writer_for_driver</span><span class="p">,</span> <span class="n">MemoryFile</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">rasterio.five</span> <span class="kn">import</span> <span class="n">string_types</span>
 <span class="kn">from</span> <span class="nn">rasterio.profiles</span> <span class="kn">import</span> <span class="n">default_gtiff_profile</span>
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">Affine</span><span class="p">,</span> <span class="n">guard_transform</span>
 <span class="kn">from</span> <span class="nn">rasterio.vfs</span> <span class="kn">import</span> <span class="n">parse_path</span>
@@ -194,29 +160,11 @@
 <span class="c1"># here to help tools like cx_Freeze find them automatically</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">_err</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">enums</span><span class="p">,</span> <span class="n">vfs</span>
 
-
-<span class="c1"># TODO deprecate or remove in factor of rasterio.windows.___</span>
-<span class="k">def</span> <span class="nf">eval_window</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">evaluate</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">window_shape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">shape</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">shape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">window_index</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="kn">import</span> <span class="n">window_index</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">window_index</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
+<span class="c1"># Classes in rasterio._io are imported below just before we need them.</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;band&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;copy&#39;</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">]</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0a7&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.35.1&quot;</span>
 <span class="n">__gdal_version__</span> <span class="o">=</span> <span class="n">gdal_version</span><span class="p">()</span>
 
 <span class="c1"># Rasterio attaches NullHandler to the &#39;rasterio&#39; logger and its</span>
@@ -228,59 +176,53 @@
 <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">NullHandler</span><span class="p">())</span>
 
 
-<div class="viewcode-block" id="open"><a class="viewcode-back" href="../api/index.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-         <span class="n">crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Open a dataset for reading or writing.</span>
-
-<span class="sd">    The dataset may be located in a local file, in a resource located</span>
-<span class="sd">    by a URL, or contained within a stream of bytes.</span>
-
-<span class="sd">    To access a dataset within a zip file without unzipping the archive</span>
-<span class="sd">    use an Apache VFS style zip:// URL like</span>
-
-<span class="sd">      zip://path/to/archive.zip!path/to/example.tif</span>
-
-<span class="sd">    In read (&#39;r&#39;) or read/write (&#39;r+&#39;) mode, no other keyword arguments</span>
-<span class="sd">    are required: the attributes are supplied by the opened dataset.</span>
+<span class="nd">@ensure_env</span>
+<div class="viewcode-block" id="open"><a class="viewcode-back" href="../rasterio.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+         <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Open file at ``path`` in ``mode`` &#39;r&#39; (read), &#39;r+&#39; (read and</span>
+<span class="sd">    write), or &#39;w&#39; (write) and return a dataset Reader or Updater</span>
+<span class="sd">    object.</span>
 
 <span class="sd">    In write mode, a driver name such as &quot;GTiff&quot; or &quot;JPEG&quot; (see GDAL</span>
-<span class="sd">    docs or ``gdal_translate --help`` on the command line), ``width``</span>
-<span class="sd">    (number of pixels per line) and ``height`` (number of lines), the</span>
-<span class="sd">    ``count`` number of bands in the new file must be specified.</span>
-<span class="sd">    Additionally, the data type for bands such as ``rasterio.ubyte`` for</span>
-<span class="sd">    8-bit bands or ``rasterio.uint16`` for 16-bit bands must be</span>
-<span class="sd">    specified using the ``dtype`` argument.</span>
+<span class="sd">    docs or ``gdal_translate --help`` on the command line),</span>
+<span class="sd">    ``width`` (number of pixels per line) and ``height`` (number of</span>
+<span class="sd">    lines), the ``count`` number of bands in the new file must be</span>
+<span class="sd">    specified.  Additionally, the data type for bands such as</span>
+<span class="sd">    ``rasterio.ubyte`` for 8-bit bands or ``rasterio.uint16`` for</span>
+<span class="sd">    16-bit bands must be specified using the ``dtype`` argument.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    fp: string or file</span>
-<span class="sd">        A filename or URL, or file object opened in binary mode.</span>
 <span class="sd">    mode: string</span>
 <span class="sd">        &quot;r&quot; (read), &quot;r+&quot; (read/write), or &quot;w&quot; (write)</span>
 <span class="sd">    driver: string</span>
-<span class="sd">        Driver code specifying the format name (e.g. &quot;GTiff&quot; or</span>
+<span class="sd">        driver code specifying the format name (e.g. &quot;GTiff&quot; or</span>
 <span class="sd">        &quot;JPEG&quot;). See GDAL docs at</span>
 <span class="sd">        http://www.gdal.org/formats_list.html (optional, required</span>
 <span class="sd">        for writing).</span>
 <span class="sd">    width: int</span>
-<span class="sd">        Number of pixels per line (optional, required for write).</span>
+<span class="sd">        number of pixels per line</span>
+<span class="sd">        (optional, required for write)</span>
 <span class="sd">    height: int</span>
-<span class="sd">        Number of lines (optional, required for write).</span>
+<span class="sd">        number of lines</span>
+<span class="sd">        (optional, required for write)</span>
 <span class="sd">    count: int &gt; 0</span>
-<span class="sd">        Count of bands (optional, required for write).</span>
+<span class="sd">        number of bands</span>
+<span class="sd">        (optional, required for write)</span>
 <span class="sd">    dtype: rasterio.dtype</span>
 <span class="sd">        the data type for bands such as ``rasterio.ubyte`` for</span>
 <span class="sd">        8-bit bands or ``rasterio.uint16`` for 16-bit bands</span>
 <span class="sd">        (optional, required for write)</span>
 <span class="sd">    crs: dict or string</span>
-<span class="sd">        Coordinate reference system (optional, recommended for write).</span>
+<span class="sd">        Coordinate reference system</span>
+<span class="sd">        (optional, recommended for write)</span>
 <span class="sd">    transform: Affine instance</span>
 <span class="sd">        Affine transformation mapping the pixel space to geographic</span>
 <span class="sd">        space (optional, recommended for writing).</span>
 <span class="sd">    nodata: number</span>
 <span class="sd">        Defines pixel value to be interpreted as null/nodata</span>
-<span class="sd">        (optional, recommended for write, will be broadcast to all</span>
-<span class="sd">        bands).</span>
+<span class="sd">        (optional, recommended for write)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -308,7 +250,7 @@
 <span class="sd">    .. code:: python</span>
 
 <span class="sd">        &gt;&gt;&gt; from affine import Affine</span>
-<span class="sd">        &gt;&gt;&gt; transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)</span>
+<span class="sd">        &gt;&gt;&gt; Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)</span>
 
 <span class="sd">    These coefficients are shown in the figure below.</span>
 
@@ -336,117 +278,56 @@
 <span class="sd">    be an Apache Commons VFS style string beginning with &quot;zip://&quot; or</span>
 <span class="sd">    &quot;tar://&quot;&quot;. In this case, the ``path`` must be an absolute path</span>
 <span class="sd">    within that container.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid path or file: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid path: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">mode</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid mode: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mode</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">driver</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid driver: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">dtype</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">check_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid dtype: {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">nodata</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;affine&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-        <span class="c1"># DeprecationWarning&#39;s are ignored by default</span>
-        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The &#39;affine&#39; kwarg in rasterio.open() is deprecated at 1.0 &quot;</span>
-                <span class="s2">&quot;and only remains to ease the transition.  Please switch to &quot;</span>
-                <span class="s2">&quot;the &#39;transform&#39; kwarg.  See &quot;</span>
-                <span class="s2">&quot;https://github.com/mapbox/rasterio/issues/86 for details.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">transform</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;Found both &#39;affine&#39; and &#39;transform&#39; in rasterio.open() - &quot;</span>
-                    <span class="s2">&quot;choosing &#39;transform&#39;&quot;</span><span class="p">)</span>
-                <span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">transform</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;affine&#39;</span><span class="p">)</span>
-
     <span class="k">if</span> <span class="n">transform</span><span class="p">:</span>
         <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s1">&#39;affine&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">affine</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;affine&#39;</span><span class="p">)</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">affine</span><span class="p">)</span>
 
-    <span class="c1"># Check driver/mode blacklist.</span>
-    <span class="k">if</span> <span class="n">driver</span> <span class="ow">and</span> <span class="n">is_blacklisted</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">RasterioIOError</span><span class="p">(</span>
-            <span class="s2">&quot;Blacklisted: file cannot be opened by &quot;</span>
-            <span class="s2">&quot;driver &#39;{0}&#39; in &#39;{1}&#39; mode&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="n">mode</span><span class="p">))</span>
+    <span class="c1"># Get AWS credentials if we&#39;re attempting to access a raster</span>
+    <span class="c1"># on S3.</span>
+    <span class="n">pth</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">parse_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;s3&#39;</span><span class="p">:</span>
+        <span class="n">Env</span><span class="p">()</span><span class="o">.</span><span class="n">get_aws_credentials</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;AWS credentials have been obtained&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Special case for file object argument.</span>
-    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">):</span>
-
-        <span class="nd">@contextmanager</span>
-        <span class="k">def</span> <span class="nf">fp_reader</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
-            <span class="n">memfile</span> <span class="o">=</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="n">dataset</span>
-            <span class="k">finally</span><span class="p">:</span>
-                <span class="n">dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                <span class="n">memfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">fp_reader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">):</span>
-
-        <span class="nd">@contextmanager</span>
-        <span class="k">def</span> <span class="nf">fp_writer</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
-            <span class="n">memfile</span> <span class="o">=</span> <span class="n">MemoryFile</span><span class="p">()</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
-                                   <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-                                   <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="n">dataset</span>
-            <span class="k">finally</span><span class="p">:</span>
-                <span class="n">dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                <span class="n">memfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-                <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">memfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-                <span class="n">memfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">fp_writer</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-
+    <span class="c1"># Create dataset instances and pass the given env, which will</span>
+    <span class="c1"># be taken over by the dataset&#39;s context manager if it is not</span>
+    <span class="c1"># None.</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">RasterReader</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">RasterReader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r+&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">writer</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">writer</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r-&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="n">DatasetReader</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">rasterio._io</span> <span class="kn">import</span> <span class="n">writer</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">writer</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span>
+                   <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span>
+                   <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                   <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># The &#39;normal&#39; filename or URL path.</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">scheme</span> <span class="o">=</span> <span class="n">parse_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="n">Env</span><span class="p">()</span> <span class="k">as</span> <span class="n">env</span><span class="p">:</span>
-            <span class="c1"># Get AWS credentials only if we&#39;re attempting to access a</span>
-            <span class="c1"># raster using the S3 scheme.</span>
-            <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;s3&#39;</span><span class="p">:</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">get_aws_credentials</span><span class="p">()</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;AWS credentials have been obtained&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Create dataset instances and pass the given env, which will</span>
-            <span class="c1"># be taken over by the dataset&#39;s context manager if it is not</span>
-            <span class="c1"># None.</span>
-            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r-&#39;</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&#39;r-&#39; mode is deprecated, use &#39;r&#39;&quot;</span><span class="p">,</span>
-                              <span class="ne">DeprecationWarning</span><span class="p">)</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r+&#39;</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_driver</span><span class="p">(</span><span class="n">driver</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span>
-                                                  <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
-                                                  <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
-                                                  <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-                                                  <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
-                                                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;mode must be one of &#39;r&#39;, &#39;r+&#39;, or &#39;w&#39;, not </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;mode string must be one of &#39;r&#39;, &#39;r+&#39;, or &#39;w&#39;, not </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">s</span></div>
 
 
 <span class="nd">@ensure_env</span>
-<div class="viewcode-block" id="copy"><a class="viewcode-back" href="../api/index.html#rasterio.copy">[docs]</a><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<div class="viewcode-block" id="copy"><a class="viewcode-back" href="../rasterio.html#rasterio.copy">[docs]</a><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy a source raster to a new destination with driver specific</span>
 <span class="sd">    creation options.</span>
 
@@ -477,27 +358,55 @@
     <span class="k">return</span> <span class="n">RasterCopier</span><span class="p">()(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span></div>
 
 
-<span class="n">Band</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Band&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ds&#39;</span><span class="p">,</span> <span class="s1">&#39;bidx&#39;</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;shape&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">drivers</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a gdal environment with registered drivers and creation</span>
+<span class="sd">    options.</span>
 
-
-<div class="viewcode-block" id="band"><a class="viewcode-back" href="../api/index.html#rasterio.band">[docs]</a><span class="k">def</span> <span class="nf">band</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">bidx</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A dataset and one or more of its bands</span>
+<span class="sd">    This function is deprecated; please use ``env.Env`` instead.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ds: dataset object</span>
-<span class="sd">        An opened rasterio dataset object.</span>
-<span class="sd">    bidx: int or sequence of ints</span>
-<span class="sd">        Band number(s), index starting at 1.</span>
+<span class="sd">    **kwargs:: keyword arguments</span>
+<span class="sd">        Configuration options that define GDAL driver behavior</span>
+
+<span class="sd">        See https://trac.osgeo.org/gdal/wiki/ConfigOptions</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    rasterio.Band</span>
+<span class="sd">    GDALEnv responsible for managing the environment.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Use as a context manager, ``with rasterio.drivers(): ...``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">Band</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">bidx</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use env.Env instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Env</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="pad"><a class="viewcode-back" href="../api/index.html#rasterio.pad">[docs]</a><span class="k">def</span> <span class="nf">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="n">Band</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Band&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ds&#39;</span><span class="p">,</span> <span class="s1">&#39;bidx&#39;</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;shape&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="band"><a class="viewcode-back" href="../rasterio.html#rasterio.band">[docs]</a><span class="k">def</span> <span class="nf">band</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">bidx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps a dataset and a band index up as a &#39;Band&#39;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds: rasterio.RasterReader</span>
+<span class="sd">        Open rasterio dataset</span>
+<span class="sd">    bidx: int</span>
+<span class="sd">        Band number, index starting at 1</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a rasterio.Band</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Band</span><span class="p">(</span>
+        <span class="n">ds</span><span class="p">,</span>
+        <span class="n">bidx</span><span class="p">,</span>
+        <span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span>
+        <span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pad"><a class="viewcode-back" href="../rasterio.html#rasterio.pad">[docs]</a><span class="k">def</span> <span class="nf">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;pad array and adjust affine transform matrix.</span>
 
 <span class="sd">    Parameters</span>
@@ -521,13 +430,32 @@
 <span class="sd">    See numpy docs for details on mode and other kwargs:</span>
 <span class="sd">    http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.pad.html</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">numpy</span>
     <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
-    <span class="n">padded_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">padded_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">padded_trans</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
     <span class="n">padded_trans</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">pad_width</span> <span class="o">*</span> <span class="n">padded_trans</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">padded_trans</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">-=</span> <span class="n">pad_width</span> <span class="o">*</span> <span class="n">padded_trans</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">padded_array</span><span class="p">,</span> <span class="n">Affine</span><span class="p">(</span><span class="o">*</span><span class="n">padded_trans</span><span class="p">[:</span><span class="mi">6</span><span class="p">])</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_data_window</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">get_data_window</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nodata</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">window_union</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">window_intersection</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">windows_intersect</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">windows</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 
            </div>
@@ -561,7 +489,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a7',
+            VERSION:'0.35.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

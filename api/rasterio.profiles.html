@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.profiles module &mdash; rasterio 1.0a7 documentation</title>
+  <title>rasterio.profiles module &mdash; rasterio 1.0a8 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,8 +32,12 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a7 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a8 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
+        <link rel="next" title="rasterio.sample module" href="rasterio.sample.html"/>
         <link rel="prev" title="rasterio.plot module" href="rasterio.plot.html"/> 
 
   
@@ -41,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +67,7 @@
             
             
               <div class="version">
-                1.0a7
+                1.0a8
               </div>
             
           
@@ -81,7 +88,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -125,9 +135,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.mask.html">rasterio.mask module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.merge.html">rasterio.merge module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.plot.html">rasterio.plot module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rasterio.profiles module</a><ul class="simple">
-</ul>
-</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rasterio.profiles module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
@@ -135,7 +143,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#module-rasterio">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -156,8 +164,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -166,159 +176,65 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="index.html">rasterio package</a> &raquo;</li>
-      
-    <li>rasterio.profiles module</li>
+        
+      <li>rasterio.profiles module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/api/rasterio.profiles.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/api/rasterio.profiles.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-rasterio.profiles">
-<span id="rasterio-profiles-module"></span><h1>rasterio.profiles module<a class="headerlink" href="#module-rasterio.profiles" title="Permalink to this headline">¶</a></h1>
-<p>Raster dataset profiles.</p>
-<dl class="class">
-<dt id="rasterio.profiles.DefaultGTiffProfile">
-<em class="property">class </em><code class="descclassname">rasterio.profiles.</code><code class="descname">DefaultGTiffProfile</code><span class="sig-paren">(</span><em>data={}</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/profiles.html#DefaultGTiffProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#rasterio.profiles.Profile" title="rasterio.profiles.Profile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.profiles.Profile</span></code></a></p>
-<p>Tiled, band-interleaved, LZW-compressed, 8-bit GTiff.</p>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">__call__</span></code>(**kwds)</td>
-<td>Return a mapping of keyword args.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">clear</span></code>(()&nbsp;-&gt;&nbsp;None.&nbsp;&nbsp;Remove&nbsp;all&nbsp;items&nbsp;from&nbsp;D.)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">fromkeys</span></code>(iterable[,&nbsp;value])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get</span></code>((k[,d])&nbsp;-&gt;&nbsp;D[k]&nbsp;if&nbsp;k&nbsp;in&nbsp;D,&nbsp;...)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">items</span></code>(...)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">keys</span></code>(...)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">pop</span></code>((k[,d])&nbsp;-&gt;&nbsp;v,&nbsp;...)</td>
-<td>If key is not found, d is returned if given, otherwise KeyError is raised.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">popitem</span></code>(()&nbsp;-&gt;&nbsp;(k,&nbsp;v),&nbsp;...)</td>
-<td>as a 2-tuple; but raise KeyError if D is empty.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">setdefault</span></code>((k[,d])&nbsp;-&gt;&nbsp;D.get(k,d),&nbsp;...)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">update</span></code>(([E,&nbsp;...)</td>
-<td>If E present and has a .keys() method, does:     for k in E: D[k] = E[k]</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">values</span></code>(...)</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="rasterio.profiles.DefaultGTiffProfile.defaults">
-<code class="descname">defaults</code><em class="property"> = {'interleave': 'band', 'blockysize': 256, 'tiled': True, 'nodata': 0, 'compress': 'lzw', 'driver': 'GTiff', 'blockxsize': 256, 'dtype': 'uint8'}</em><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile.defaults" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="rasterio.profiles.Profile">
-<em class="property">class </em><code class="descclassname">rasterio.profiles.</code><code class="descname">Profile</code><span class="sig-paren">(</span><em>data={}</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/profiles.html#Profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.profiles.Profile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">collections.UserDict</span></code></p>
-<p>Base class for Rasterio dataset profiles.</p>
-<p>Subclasses will declare driver-specific creation options.</p>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">__call__</span></code>(**kwds)</td>
-<td>Return a mapping of keyword args.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">clear</span></code>(()&nbsp;-&gt;&nbsp;None.&nbsp;&nbsp;Remove&nbsp;all&nbsp;items&nbsp;from&nbsp;D.)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">fromkeys</span></code>(iterable[,&nbsp;value])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get</span></code>((k[,d])&nbsp;-&gt;&nbsp;D[k]&nbsp;if&nbsp;k&nbsp;in&nbsp;D,&nbsp;...)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">items</span></code>(...)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">keys</span></code>(...)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">pop</span></code>((k[,d])&nbsp;-&gt;&nbsp;v,&nbsp;...)</td>
-<td>If key is not found, d is returned if given, otherwise KeyError is raised.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">popitem</span></code>(()&nbsp;-&gt;&nbsp;(k,&nbsp;v),&nbsp;...)</td>
-<td>as a 2-tuple; but raise KeyError if D is empty.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">setdefault</span></code>((k[,d])&nbsp;-&gt;&nbsp;D.get(k,d),&nbsp;...)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">update</span></code>(([E,&nbsp;...)</td>
-<td>If E present and has a .keys() method, does:     for k in E: D[k] = E[k]</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">values</span></code>(...)</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="rasterio.profiles.Profile.defaults">
-<code class="descname">defaults</code><em class="property"> = {}</em><a class="headerlink" href="#rasterio.profiles.Profile.defaults" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+  <div class="section" id="rasterio-profiles-module">
+<h1>rasterio.profiles module<a class="headerlink" href="#rasterio-profiles-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="rasterio.sample.html" class="btn btn-neutral float-right" title="rasterio.sample module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="rasterio.plot.html" class="btn btn-neutral" title="rasterio.plot module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="rasterio.plot.html" class="btn btn-neutral" title="rasterio.plot module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -349,10 +265,11 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a7',
+            VERSION:'1.0a8',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
