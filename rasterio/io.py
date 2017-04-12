@@ -3,17 +3,17 @@
 Instances of these classes are called dataset objects.
 """
 
+
 import logging
 import math
-import uuid
 import warnings
 
 from rasterio._base import (
-    DatasetBase, get_dataset_driver, driver_can_create, driver_can_create_copy)
+    get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
-from rasterio import enums, windows
+from rasterio import windows
 from rasterio.env import Env
 from rasterio.transform import guard_transform, xy, rowcol
 
