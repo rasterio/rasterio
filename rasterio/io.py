@@ -266,8 +266,8 @@ class MemoryFile(MemoryFileBase):
                               height=height, count=count, crs=crs,
                               transform=transform, dtype=dtype,
                               nodata=nodata, **kwargs)
-            s.start()
-            return s
+        s.start()
+        return s
 
     def __enter__(self):
         return self
