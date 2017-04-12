@@ -1,6 +1,15 @@
 Changes
 =======
 
+Next Release
+------------
+
+Breaking changes:
+
+- Removed `**options` argument from `rasterio.warp.transform()`.  Transformer
+  options should be set explicitly inside the currently active
+  `rasterio.env.Env()`(#1010).  This argument was initially added in `1.0a1`.
+
 1.0a8 (2017-03-29)
 ------------------
 
