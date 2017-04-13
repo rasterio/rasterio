@@ -207,9 +207,8 @@ def test_open_with_env(gdalenv):
 @pytest.mark.network
 def test_s3_open_with_session(gdalenv):
     """Read from S3 demonstrating lazy credentials."""
-    with rasterio.Env():
-        with rasterio.open(L8TIF) as dataset:
-            assert dataset.count == 1
+    with rasterio.open(L8TIF) as dataset:
+        assert dataset.count == 1
 
 
 @mingdalversion
@@ -225,9 +224,8 @@ def test_s3_open_with_default_session(gdalenv):
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""
-    with rasterio.Env():
-        with rasterio.open(httpstif) as dataset:
-            assert dataset.count == 1
+    with rasterio.open(httpstif) as dataset:
+        assert dataset.count == 1
 
 
 # CLI tests.
