@@ -1,9 +1,9 @@
-# Testing use of cpl_errs
+"""Testing use of ``cpl_errors``."""
+
 
 import pytest
 
 import rasterio
-from rasterio.env import Env
 from rasterio._err import CPLE_BaseError
 from rasterio.errors import RasterioIOError
 
