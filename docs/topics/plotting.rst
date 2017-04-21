@@ -40,7 +40,7 @@ you can pass in a transform in order to get extent labels.
     <matplotlib.axes._subplots.AxesSubplot object at 0x...>
 
 
-.. image:: img/rgb.jpg
+.. image:: ../img/rgb.jpg
 
 and similarly for single band plots. Note that you can pass in ``cmap`` to
 specify a matplotlib color ramp. Any kwargs passed to ``show`` will passed
@@ -54,7 +54,7 @@ through to the underlying pyplot functions.
     <matplotlib.axes._subplots.AxesSubplot object at 0x...>
 
 
-.. image:: img/singleband.jpg
+.. image:: ../img/singleband.jpg
 
 You can create a figure with multiple subplots by passing the ``show(..., ax=ax1)``
 argument. Also note that this example demonstrates setting the overall figure size
@@ -73,7 +73,7 @@ and sets a title for each subplot.
     >>> pyplot.show()
 
 
-.. image:: img/subplots.jpg
+.. image:: ../img/subplots.jpg
 
 For single-band rasters, there is also an option to generate contours.
 
@@ -86,7 +86,7 @@ For single-band rasters, there is also an option to generate contours.
     <matplotlib.axes._subplots.AxesSubplot object at 0x...>
     >>> pyplot.show()
 
-.. image:: img/contours.jpg
+.. image:: ../img/contours.jpg
 
 Rasterio also provides a ``plot.show_hist`` function for generating histograms of
 single or multiband rasters:
@@ -99,7 +99,7 @@ single or multiband rasters:
     ...     histtype='stepfilled', title="Histogram")
 
 
-.. image:: img/hist.jpg
+.. image:: ../img/hist.jpg
 
 The ``show_hist`` function also takes an ``ax`` argument to allow subplot configurations
 
@@ -112,4 +112,4 @@ The ``show_hist`` function also takes an ``ax`` argument to allow subplot config
     ...           lw=0.0, stacked=False, alpha=0.3, ax=axhist)
     >>> pyplot.show()
 
-.. image:: img/rgb_hist.jpg
+.. image:: ../img/rgb_hist.jpg
