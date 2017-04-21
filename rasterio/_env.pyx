@@ -195,7 +195,11 @@ cdef class GDALEnv(ConfigEnv):
                     if 'PROJ_LIB' not in os.environ:
                         whl_datadir = os.path.abspath(
                             os.path.join(os.path.dirname(__file__), 'proj_data'))
-                        os.environ['PROJ_LIB'] = whl_datadir
+                        share_datadir = os.path.join(sys.prefix, 'share/proj')
+                        if os.path.exists(whl_datadir):
+                            os.environ['PROJ_LIB'] = whl_datadir
+                        elif os.path.exists(share_datadir):
+                            os.environ['PROJ_LIB'] = share_datadir
 
                     if driver_count() == 0:
                         CPLPopErrorHandler()
