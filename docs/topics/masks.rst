@@ -80,7 +80,7 @@ array shows the ``255`` values that indicate *valid data* regions.
 
 Displayed using Matplotlib's `imshow()`, the mask looks like this:
 
-.. image:: img/mask_band.png
+.. image:: ../img/mask_band.png
 
 Wait, what are these 0 values in the mask interior? This is an example of
 a problem inherent in 8-bit raster data: lack of dynamic range. The dataset
@@ -147,7 +147,7 @@ as an RGB image (with the help of `numpy.dstack()`):
     >>> msk = src.read_masks()
     >>> show(np.dstack(msk))  # doctest: +SKIP
 
-.. image:: img/mask_bands_rgb.png
+.. image:: ../img/mask_bands_rgb.png
 
 Colored regions appear where valid data pixels don't quite coincide. This is,
 again, an artifact of scaling data down to 8 bits per band. We'll begin by
@@ -159,7 +159,7 @@ masks we've read.
     >>> new_msk = (msk[0] & msk[1] & msk[2])
     >>> show(new_msk)  # doctest: +SKIP
 
-.. image:: img/mask_conj.png
+.. image:: ../img/mask_conj.png
 
 Now we'll use `sieve()` to shake out the small buggy regions of the mask. I've
 found the right value for the ``size`` argument empirically.
@@ -170,7 +170,7 @@ found the right value for the ``size`` argument empirically.
     >>> sieved_msk = sieve(new_msk, size=800)
     >>> show(sieved_msk)  # doctest: +SKIP
 
-.. image:: img/mask_sieved.png
+.. image:: ../img/mask_sieved.png
 
 Last thing to do is write that sieved mask back to the dataset.
 

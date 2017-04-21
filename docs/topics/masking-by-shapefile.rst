@@ -22,7 +22,7 @@ This shapefile contains a single polygon, a box near the center of the raster, s
 
 Using ``plot`` and ``imshow`` from ``matplotlib``, we can see the region defined by the shapefile in red overlaid on the original raster.
 
-.. image:: img/box_rgb.png
+.. image:: ../img/box_rgb.png
 
 Applying the features in the shapefile as a mask on the raster sets all pixels outside of the features to be zero. Since ``crop=True`` in this example, the extent of the raster is also set to be the extent of the features in the shapefile. We can then use the updated spatial transform and raster height and width to write the masked raster to a new file.
 
@@ -35,4 +35,4 @@ Applying the features in the shapefile as a mask on the raster sets all pixels o
         with rasterio.open("RGB.byte.masked.tif", "w", **out_meta) as dest:
             dest.write(out_image) 
 
-.. image:: img/box_masked_rgb.png
+.. image:: ../img/box_masked_rgb.png
