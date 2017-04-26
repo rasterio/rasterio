@@ -63,7 +63,6 @@ venv/
 venv2/
 
 # rasterio
-test.tif
 gdal-config.txt
 VERSION.txt
 rasterio/_fill.cpp

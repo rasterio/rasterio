@@ -57,12 +57,11 @@ class ReprojectParams(object):
         self.src_crs = src_crs
         self.dst_crs = dst_crs
 
-        with rasterio.Env():
-            dt, dw, dh = calculate_default_transform(
-                src_crs, dst_crs, width, height, left, bottom, right, top)
-            self.dst_transform = dt
-            self.dst_width = dw
-            self.dst_height = dh
+        dt, dw, dh = calculate_default_transform(
+            src_crs, dst_crs, width, height, left, bottom, right, top)
+        self.dst_transform = dt
+        self.dst_width = dw
+        self.dst_height = dh
 
 
 def default_reproject_params():
@@ -105,16 +104,15 @@ def test_transform():
 
 
 def test_transform_bounds():
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            l, b, r, t = src.bounds
-            assert np.allclose(
-                transform_bounds(src.crs, {'init': 'EPSG:4326'}, l, b, r, t),
-                (
-                    -78.95864996545055, 23.564991210854686,
-                    -76.57492370013823, 25.550873767433984
-                )
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        l, b, r, t = src.bounds
+        assert np.allclose(
+            transform_bounds(src.crs, {'init': 'EPSG:4326'}, l, b, r, t),
+            (
+                -78.95864996545055, 23.564991210854686,
+                -76.57492370013823, 25.550873767433984
             )
+        )
 
 
 def test_transform_bounds_densify():
@@ -141,13 +139,12 @@ def test_transform_bounds_densify():
 
 def test_transform_bounds_no_change():
     """Make sure that going from and to the same crs causes no change."""
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            l, b, r, t = src.bounds
-            assert np.allclose(
-                transform_bounds(src.crs, src.crs, l, b, r, t),
-                src.bounds
-            )
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        l, b, r, t = src.bounds
+        assert np.allclose(
+            transform_bounds(src.crs, src.crs, l, b, r, t),
+            src.bounds
+        )
 
 
 def test_transform_bounds_densify_out_of_bounds():
@@ -165,142 +162,136 @@ def test_calculate_default_transform():
         0.0028535715391804096, 0.0, -78.95864996545055,
         0.0, -0.0028535715391804096, 25.550873767433984)
 
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            wgs84_crs = {'init': 'EPSG:4326'}
-            dst_transform, width, height = calculate_default_transform(
-                src.crs, wgs84_crs, src.width, src.height, *src.bounds)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        wgs84_crs = {'init': 'EPSG:4326'}
+        dst_transform, width, height = calculate_default_transform(
+            src.crs, wgs84_crs, src.width, src.height, *src.bounds)
 
-            assert dst_transform.almost_equals(target_transform)
-            assert width == 835
-            assert height == 696
+        assert dst_transform.almost_equals(target_transform)
+        assert width == 835
+        assert height == 696
 
 
 def test_calculate_default_transform_single_resolution():
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            target_resolution = 0.1
-            target_transform = Affine(
-                target_resolution, 0.0, -78.95864996545055,
-                0.0, -target_resolution, 25.550873767433984
-            )
-            dst_transform, width, height = calculate_default_transform(
-                src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
-                *src.bounds, resolution=target_resolution
-            )
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        target_resolution = 0.1
+        target_transform = Affine(
+            target_resolution, 0.0, -78.95864996545055,
+            0.0, -target_resolution, 25.550873767433984
+        )
+        dst_transform, width, height = calculate_default_transform(
+            src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+            *src.bounds, resolution=target_resolution
+        )
 
-            assert dst_transform.almost_equals(target_transform)
-            assert width == 24
-            assert height == 20
+        assert dst_transform.almost_equals(target_transform)
+        assert width == 24
+        assert height == 20
 
 
 def test_calculate_default_transform_multiple_resolutions():
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            target_resolution = (0.2, 0.1)
-            target_transform = Affine(
-                target_resolution[0], 0.0, -78.95864996545055,
-                0.0, -target_resolution[1], 25.550873767433984
-            )
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        target_resolution = (0.2, 0.1)
+        target_transform = Affine(
+            target_resolution[0], 0.0, -78.95864996545055,
+            0.0, -target_resolution[1], 25.550873767433984
+        )
 
-            dst_transform, width, height = calculate_default_transform(
-                src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
-                *src.bounds, resolution=target_resolution
-            )
+        dst_transform, width, height = calculate_default_transform(
+            src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+            *src.bounds, resolution=target_resolution
+        )
 
-            assert dst_transform.almost_equals(target_transform)
-            assert width == 12
-            assert height == 20
+        assert dst_transform.almost_equals(target_transform)
+        assert width == 12
+        assert height == 20
 
 
 def test_reproject_ndarray():
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read(1)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
 
-        dst_crs = dict(
-            proj='merc',
-            a=6378137,
-            b=6378137,
-            lat_ts=0.0,
-            lon_0=0.0,
-            x_0=0.0,
-            y_0=0,
-            k=1.0,
-            units='m',
-            nadgrids='@null',
-            wktext=True,
-            no_defs=True)
-        out = np.empty(src.shape, dtype=np.uint8)
-        reproject(
-            source,
-            out,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=DST_TRANSFORM,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
-        assert (out > 0).sum() == 438113
+    dst_crs = dict(
+        proj='merc',
+        a=6378137,
+        b=6378137,
+        lat_ts=0.0,
+        lon_0=0.0,
+        x_0=0.0,
+        y_0=0,
+        k=1.0,
+        units='m',
+        nadgrids='@null',
+        wktext=True,
+        no_defs=True)
+    out = np.empty(src.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest)
+    assert (out > 0).sum() == 438113
 
 
 def test_reproject_view():
     """Source views are reprojected properly"""
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read(1)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
 
-        window = windows.Window(100, 100, 500, 500)
-        # window = windows.get_data_window(source)
-        reduced_array = source[window.toslices()]
-        reduced_transform = windows.transform(window, src.transform)
+    window = windows.Window(100, 100, 500, 500)
+    # window = windows.get_data_window(source)
+    reduced_array = source[window.toslices()]
+    reduced_transform = windows.transform(window, src.transform)
 
-        # Assert that we're working with a view.
-        assert reduced_array.base is source
+    # Assert that we're working with a view.
+    assert reduced_array.base is source
 
-        dst_crs = dict(
-            proj='merc',
-            a=6378137,
-            b=6378137,
-            lat_ts=0.0,
-            lon_0=0.0,
-            x_0=0.0,
-            y_0=0,
-            k=1.0,
-            units='m',
-            nadgrids='@null',
-            wktext=True,
-            no_defs=True)
+    dst_crs = dict(
+        proj='merc',
+        a=6378137,
+        b=6378137,
+        lat_ts=0.0,
+        lon_0=0.0,
+        x_0=0.0,
+        y_0=0,
+        k=1.0,
+        units='m',
+        nadgrids='@null',
+        wktext=True,
+        no_defs=True)
 
-        out = np.empty(src.shape, dtype=np.uint8)
+    out = np.empty(src.shape, dtype=np.uint8)
 
-        reproject(
-            reduced_array,
-            out,
-            src_transform=reduced_transform,
-            src_crs=src.crs,
-            dst_transform=DST_TRANSFORM,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
+    reproject(
+        reduced_array,
+        out,
+        src_transform=reduced_transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest)
 
-        assert (out > 0).sum() == 299199
+    assert (out > 0).sum() == 299199
 
 
 def test_reproject_epsg():
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read(1)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
 
-        dst_crs = {'init': 'EPSG:3857'}
-        out = np.empty(src.shape, dtype=np.uint8)
-        reproject(
-            source,
-            out,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=DST_TRANSFORM,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
-        assert (out > 0).sum() == 438113
+    dst_crs = {'init': 'EPSG:3857'}
+    out = np.empty(src.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest)
+    assert (out > 0).sum() == 438113
 
 
 def test_reproject_out_of_bounds():
@@ -308,21 +299,20 @@ def test_reproject_out_of_bounds():
 
     Should return blank image.
     """
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read(1)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
 
-        dst_crs = {'init': 'EPSG:32619'}
-        out = np.zeros(src.shape, dtype=np.uint8)
-        reproject(
-            source,
-            out,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=DST_TRANSFORM,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
-        assert not out.any()
+    dst_crs = {'init': 'EPSG:32619'}
+    out = np.zeros(src.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest)
+    assert not out.any()
 
 
 @pytest.mark.parametrize("options, expected", reproj_expected)
@@ -407,62 +397,59 @@ def test_reproject_invalid_dst_nodata():
     """dst_nodata must be in value range of data type."""
     params = default_reproject_params()
 
-    with rasterio.Env():
-        source = np.ones((params.width, params.height), dtype=np.uint8)
-        out = source.copy()
+    source = np.ones((params.width, params.height), dtype=np.uint8)
+    out = source.copy()
 
-        with pytest.raises(ValueError):
-            reproject(
-                source,
-                out,
-                src_transform=params.src_transform,
-                src_crs=params.src_crs,
-                src_nodata=0,
-                dst_transform=params.dst_transform,
-                dst_crs=params.dst_crs,
-                dst_nodata=999999999
-            )
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            out,
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=0,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=999999999
+        )
 
 
 def test_reproject_missing_src_nodata():
     """src_nodata is required if dst_nodata is not None."""
     params = default_reproject_params()
 
-    with rasterio.Env():
-        source = np.ones((params.width, params.height), dtype=np.uint8)
-        out = source.copy()
+    source = np.ones((params.width, params.height), dtype=np.uint8)
+    out = source.copy()
 
-        with pytest.raises(ValueError):
-            reproject(
-                source,
-                out,
-                src_transform=params.src_transform,
-                src_crs=params.src_crs,
-                dst_transform=params.dst_transform,
-                dst_crs=params.dst_crs,
-                dst_nodata=215
-            )
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            out,
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=215
+        )
 
 
 def test_reproject_invalid_src_nodata():
     """src_nodata must be in range for data type."""
     params = default_reproject_params()
 
-    with rasterio.Env():
-        source = np.ones((params.width, params.height), dtype=np.uint8)
-        out = source.copy()
+    source = np.ones((params.width, params.height), dtype=np.uint8)
+    out = source.copy()
 
-        with pytest.raises(ValueError):
-            reproject(
-                source,
-                out,
-                src_transform=params.src_transform,
-                src_crs=params.src_crs,
-                src_nodata=999999999,
-                dst_transform=params.dst_transform,
-                dst_crs=params.dst_crs,
-                dst_nodata=215
-            )
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            out,
+            src_transform=params.src_transform,
+            src_crs=params.src_crs,
+            src_nodata=999999999,
+            dst_transform=params.dst_transform,
+            dst_crs=params.dst_crs,
+            dst_nodata=215
+        )
 
 
 def test_reproject_init_nodata_tofile(tmpdir):
@@ -583,65 +570,63 @@ def test_reproject_no_init_nodata_toarray():
     source1[:rows // 2, :cols // 2] = 200
     source2[rows // 2:, cols // 2:] = 100
 
-    with rasterio.Env():
-        reproject(
-            source1,
-            out,
-            src_transform=params.src_transform,
-            src_crs=params.src_crs,
-            src_nodata=0.0,
-            dst_transform=params.dst_transform,
-            dst_crs=params.dst_crs,
-            dst_nodata=0.0
-        )
+    reproject(
+        source1,
+        out,
+        src_transform=params.src_transform,
+        src_crs=params.src_crs,
+        src_nodata=0.0,
+        dst_transform=params.dst_transform,
+        dst_crs=params.dst_crs,
+        dst_nodata=0.0
+    )
 
-        assert out.max() == 200
-        assert out.min() == 0
+    assert out.max() == 200
+    assert out.min() == 0
 
-        reproject(
-            source2,
-            out,
-            src_transform=params.src_transform,
-            src_crs=params.src_crs,
-            src_nodata=0.0,
-            dst_transform=params.dst_transform,
-            dst_crs=params.dst_crs,
-            dst_nodata=0.0,
-            init_dest_nodata=False
-        )
+    reproject(
+        source2,
+        out,
+        src_transform=params.src_transform,
+        src_crs=params.src_crs,
+        src_nodata=0.0,
+        dst_transform=params.dst_transform,
+        dst_crs=params.dst_crs,
+        dst_nodata=0.0,
+        init_dest_nodata=False
+    )
 
-        # 200s should NOT be overwritten by 100s
-        assert out.max() == 200
-        assert out.min() == 0
+    # 200s should NOT be overwritten by 100s
+    assert out.max() == 200
+    assert out.min() == 0
 
 
 def test_reproject_multi():
     """Ndarry to ndarray."""
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read()
-        dst_crs = dict(
-            proj='merc',
-            a=6378137,
-            b=6378137,
-            lat_ts=0.0,
-            lon_0=0.0,
-            x_0=0.0,
-            y_0=0,
-            k=1.0,
-            units='m',
-            nadgrids='@null',
-            wktext=True,
-            no_defs=True)
-        destin = np.empty(source.shape, dtype=np.uint8)
-        reproject(
-            source,
-            destin,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=DST_TRANSFORM,
-            dst_crs=dst_crs,
-            resampling=Resampling.nearest)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read()
+    dst_crs = dict(
+        proj='merc',
+        a=6378137,
+        b=6378137,
+        lat_ts=0.0,
+        lon_0=0.0,
+        x_0=0.0,
+        y_0=0,
+        k=1.0,
+        units='m',
+        nadgrids='@null',
+        wktext=True,
+        no_defs=True)
+    destin = np.empty(source.shape, dtype=np.uint8)
+    reproject(
+        source,
+        destin,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest)
     assert destin.any()
 
 
@@ -830,40 +815,38 @@ def test_transform_geom_multipolygon(polygon_3373):
 
 def test_reproject_unsupported_resampling():
     """Values not in enums. Resampling are not supported."""
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read(1)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
 
-        dst_crs = {'init': 'EPSG:32619'}
-        out = np.empty(src.shape, dtype=np.uint8)
-        with pytest.raises(ValueError):
-            reproject(
-                source,
-                out,
-                src_transform=src.transform,
-                src_crs=src.crs,
-                dst_transform=DST_TRANSFORM,
-                dst_crs=dst_crs,
-                resampling=99)
+    dst_crs = {'init': 'EPSG:32619'}
+    out = np.empty(src.shape, dtype=np.uint8)
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=99)
 
 
 def test_reproject_unsupported_resampling_guass():
     """Resampling.gauss is unsupported."""
-    with rasterio.Env():
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            source = src.read(1)
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
 
-        dst_crs = {'init': 'EPSG:32619'}
-        out = np.empty(src.shape, dtype=np.uint8)
-        with pytest.raises(ValueError):
-            reproject(
-                source,
-                out,
-                src_transform=src.transform,
-                src_crs=src.crs,
-                dst_transform=DST_TRANSFORM,
-                dst_crs=dst_crs,
-                resampling=Resampling.gauss)
+    dst_crs = {'init': 'EPSG:32619'}
+    out = np.empty(src.shape, dtype=np.uint8)
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=Resampling.gauss)
 
 
 @pytest.mark.parametrize("method", Resampling)
@@ -874,33 +857,32 @@ def test_resample_default_invert_proj(method):
     if not supported_resampling(method):
         pytest.skip()
 
-    with rasterio.Env():
-        with rasterio.open('tests/data/world.rgb.tif') as src:
-            source = src.read(1)
-            profile = src.profile.copy()
+    with rasterio.open('tests/data/world.rgb.tif') as src:
+        source = src.read(1)
+        profile = src.profile.copy()
 
-        dst_crs = {'init': 'EPSG:32619'}
+    dst_crs = {'init': 'EPSG:32619'}
 
-        # Calculate the ideal dimensions and transformation in the new crs
-        dst_affine, dst_width, dst_height = calculate_default_transform(
-            src.crs, dst_crs, src.width, src.height, *src.bounds)
+    # Calculate the ideal dimensions and transformation in the new crs
+    dst_affine, dst_width, dst_height = calculate_default_transform(
+        src.crs, dst_crs, src.width, src.height, *src.bounds)
 
-        profile['height'] = dst_height
-        profile['width'] = dst_width
+    profile['height'] = dst_height
+    profile['width'] = dst_width
 
-        out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
+    out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
 
-        out = np.empty(src.shape, dtype=np.uint8)
-        reproject(
-            source,
-            out,
-            src_transform=src.transform,
-            src_crs=src.crs,
-            dst_transform=dst_affine,
-            dst_crs=dst_crs,
-            resampling=method)
+    out = np.empty(src.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=dst_affine,
+        dst_crs=dst_crs,
+        resampling=method)
 
-        assert out.mean() > 0
+    assert out.mean() > 0
 
 
 @pytest.mark.xfail()
@@ -972,14 +954,13 @@ def test_reproject_identity():
     dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
     dstcrs = {'init': 'epsg:3857'}
 
-    with rasterio.Env():
-        reproject(
-            src, dst,
-            src_transform=srcaff,
-            src_crs=srccrs,
-            dst_transform=dstaff,
-            dst_crs=dstcrs,
-            resampling=Resampling.nearest)
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
 
     # note the affines are both positive e, dst is identity
     src = np.random.random(100).reshape((1, 10, 10))
@@ -990,14 +971,13 @@ def test_reproject_identity():
     dstaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
     dstcrs = {'init': 'epsg:3857'}
 
-    with rasterio.Env():
-        reproject(
-            src, dst,
-            src_transform=srcaff,
-            src_crs=srccrs,
-            dst_transform=dstaff,
-            dst_crs=dstcrs,
-            resampling=Resampling.nearest)
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
 
 
 @pytest.fixture(scope='function')

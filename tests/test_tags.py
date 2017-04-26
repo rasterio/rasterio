@@ -46,9 +46,11 @@ def test_tags_update(tmpdir):
         assert src.tags(1) == {'c': '3'}
         assert src.tags(ns='rasterio_testing') == {'rus': u'другая строка'}
 
-def test_tags_update_twice():
+
+def test_tags_update_twice(tmpdir):
+    path = str(tmpdir.join('test.tif'))
     with rasterio.open(
-            'test.tif', 'w', 
+            path, 'w',
             'GTiff', 3, 4, 1, dtype=rasterio.ubyte) as dst:
         dst.update_tags(a=1, b=2)
         assert dst.tags() == {'a': '1', 'b': '2'}
@@ -56,9 +58,10 @@ def test_tags_update_twice():
         assert dst.tags() == {'a': '1', 'b': '2', 'c': '3'}
 
 
-def test_tags_eq():
+def test_tags_eq(tmpdir):
+    path = str(tmpdir.join('test.tif'))
     with rasterio.open(
-            'test.tif', 'w', 
+            path, 'w',
             'GTiff', 3, 4, 1, dtype=rasterio.ubyte) as dst:
         dst.update_tags(a="foo=bar")
         assert dst.tags() == {'a': "foo=bar"}
