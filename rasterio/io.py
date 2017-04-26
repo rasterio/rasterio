@@ -3,18 +3,18 @@
 Instances of these classes are called dataset objects.
 """
 
+
 import logging
 import math
-import uuid
 import warnings
 
 from rasterio._base import (
-    DatasetBase, get_dataset_driver, driver_can_create, driver_can_create_copy)
+    get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
-from rasterio import enums, windows
-from rasterio.env import Env
+from rasterio import windows
+from rasterio.env import ensure_env
 from rasterio.transform import guard_transform, xy, rowcol
 
 
@@ -238,6 +238,7 @@ class MemoryFile(MemoryFileBase):
     def __init__(self, file_or_bytes=None, ext=''):
         super(MemoryFile, self).__init__(file_or_bytes=file_or_bytes, ext=ext)
 
+    @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
              transform=None, dtype=None, nodata=None, **kwargs):
         """Open the file and return a Rasterio dataset object.
@@ -256,18 +257,17 @@ class MemoryFile(MemoryFileBase):
         """
         vsi_path = self.name
 
-        with Env():
-            if self.closed:
-                raise IOError("I/O operation on closed file.")
-            if self.exists():
-                s = DatasetReader(vsi_path, 'r+')
-            else:
-                s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
-                                  height=height, count=count, crs=crs,
-                                  transform=transform, dtype=dtype,
-                                  nodata=nodata, **kwargs)
-            s.start()
-            return s
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
+        if self.exists():
+            s = DatasetReader(vsi_path, 'r+')
+        else:
+            s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
+                              height=height, count=count, crs=crs,
+                              transform=transform, dtype=dtype,
+                              nodata=nodata, **kwargs)
+        s.start()
+        return s
 
     def __enter__(self):
         return self
@@ -286,6 +286,7 @@ class ZipMemoryFile(MemoryFile):
     def __init__(self, file_or_bytes=None):
         super(ZipMemoryFile, self).__init__(file_or_bytes, ext='zip')
 
+    @ensure_env
     def open(self, path):
         """Open a dataset within the zipped stream.
 
@@ -301,12 +302,11 @@ class ZipMemoryFile(MemoryFile):
         """
         vsi_path = '/vsizip{0}/{1}'.format(self.name, path.lstrip('/'))
 
-        with Env():
-            if self.closed:
-                raise IOError("I/O operation on closed file.")
-            s = DatasetReader(vsi_path, 'r')
-            s.start()
-            return s
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
+        s = DatasetReader(vsi_path, 'r')
+        s.start()
+        return s
 
 
 def get_writer_for_driver(driver):
