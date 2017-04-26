@@ -78,6 +78,7 @@ libraries = []
 extra_link_args = []
 gdal2plus = False
 gdal_output = [None] * 4
+gdalversion = None
 
 try:
     import numpy as np
