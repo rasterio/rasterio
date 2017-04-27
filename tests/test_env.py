@@ -332,3 +332,10 @@ def test_env_discovery(key, val):
     # for other tests.
     finally:
         del_gdal_config(key)
+
+
+def test_have_registered_drivers():
+    """Ensure drivers are only registered once, otherwise each thread will
+    acquire a threadlock whenever an environment is started."""
+    with rasterio.Env():
+        assert rasterio.env.local._env._have_registered_drivers
