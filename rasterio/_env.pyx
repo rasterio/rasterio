@@ -206,7 +206,11 @@ cdef class GDALEnv(ConfigEnv):
                         log.debug("Error handler popped")
                         raise ValueError("Drivers not registered.")
 
-                    self._have_registered_drivers
+                    # Flag the drivers as registered, otherwise every thread
+                    # will acquire a threadlock every time a new environment
+                    # is started rather than just whenever the first thread
+                    # actually makes it this far.
+                    self._have_registered_drivers = True
 
         log.debug("Started GDALEnv %r.", self)
 
