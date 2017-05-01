@@ -1,7 +1,10 @@
 """$ rio shapes"""
 
+from __future__ import division
+
 
 import logging
+import math
 import os
 
 import click
@@ -136,6 +139,8 @@ def shapes(
                         src.width % sampling, src.height % sampling)
                     # And follow by scaling.
                     transform *= Affine.scale(float(sampling))
+                    shape = (int(math.ceil(src.height / sampling)),
+                             int(math.ceil(src.width / sampling)))
 
                 # Most of the time, we'll use the valid data mask.
                 # We skip reading it if we're extracting every possible
@@ -144,8 +149,7 @@ def shapes(
                     if sampling == 1:
                         msk = src.read_masks(bidx)
                     else:
-                        msk_shape = (
-                            src.height // sampling, src.width // sampling)
+                        msk_shape = shape
                         if bidx is None:
                             msk = np.zeros(
                                 (src.count,) + msk_shape, 'uint8')
@@ -165,7 +169,7 @@ def shapes(
                         img = src.read(bidx, masked=False)
                     else:
                         img = np.zeros(
-                            (src.height // sampling, src.width // sampling),
+                            shape,
                             dtype=src.dtypes[src.indexes.index(bidx)])
                         img = src.read(bidx, img, masked=False)
 
