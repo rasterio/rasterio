@@ -54,7 +54,7 @@ def transform_geom(
         src_crs,
         dst_crs,
         geom,
-        antimeridian_cutting=False,
+        antimeridian_cutting=True,
         antimeridian_offset=10.0,
         precision=-1):
     """Transform geometry from source coordinate reference system into target.

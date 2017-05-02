@@ -62,7 +62,7 @@ def test_feature_precision():
     result = runner.invoke(
         main_group, ['gcps', 'tests/data/white-gemini-iv.vrt', '--projected', '--precision', '1'])
     assert result.exit_code == 0
-    assert '116792.0,' in result.output
+    assert '"x": 116792.0' in result.output
 
 
 def test_collection_precision():
@@ -72,7 +72,7 @@ def test_collection_precision():
         main_group, ['gcps', 'tests/data/white-gemini-iv.vrt', '--collection', '--projected', '--precision', '1'])
     assert result.exit_code == 0
     assert '"FeatureCollection"' in result.output
-    assert '116792.0,' in result.output
+    assert '"x": 116792.0' in result.output
 
 
 def test_collection_geographic_precision():
