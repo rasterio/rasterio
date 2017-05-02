@@ -15,6 +15,8 @@ cdef class GeomBuilder:
     cpdef _buildLinearRing(self)
     cdef _buildParts(self, OGRGeometryH geom)
     cpdef _buildPolygon(self)
+    cpdef _buildMultiPoint(self)
+    cpdef _buildMultiLineString(self)
     cpdef _buildMultiPolygon(self)
     cdef build(self, OGRGeometryH geom)
 

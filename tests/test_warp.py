@@ -24,6 +24,16 @@ DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708,
                        0.0, -300.0, 2943560.235)
 
 
+def flatten_coords(coordinates):
+    """Yield a flat sequence of coordinates to help testing"""
+    for elem in coordinates:
+        if isinstance(elem, (float, int)):
+            yield elem
+        else:
+            for x in flatten_coords(elem):
+                yield x
+
+
 def supported_resampling(method):
     if method == Resampling.gauss:
         return False
@@ -749,13 +759,6 @@ def polygon_3373():
                 (798842.3090855901, 6569056.500655151)),)}
 
 
-def test_transform_geom_polygon(polygon_3373):
-    geom = polygon_3373
-    result = transform_geom('EPSG:3373', 'EPSG:4326', geom)
-    assert result['type'] == 'Polygon'
-    assert len(result['coordinates']) == 1
-
-
 def test_transform_geom_polygon_cutting(polygon_3373):
     geom = polygon_3373
     result = transform_geom(
@@ -778,15 +781,15 @@ def test_transform_geom_polygon_offset(polygon_3373):
 
 def test_transform_geom_polygon_precision(polygon_3373):
     geom = polygon_3373
-    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
-    assert int(result['coordinates'][0][0][0] * 10) == -1778
+    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1, antimeridian_cutting=True)
+    assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
 
 
 def test_transform_geom_linestring_precision(polygon_3373):
     ring = polygon_3373['coordinates'][0]
     geom = {'type': 'LineString', 'coordinates': ring}
-    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
-    assert int(result['coordinates'][0][0] * 10) == -1778
+    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1, antimeridian_cutting=True)
+    assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
 
 
 def test_transform_geom_linestring_precision_iso(polygon_3373):
