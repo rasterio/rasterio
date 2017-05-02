@@ -437,6 +437,14 @@ cdef class GeomBuilder:
         coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
         return {'type': 'Polygon', 'coordinates': coordinates}
 
+    cpdef _buildMultiPoint(self):
+        coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
+        return {'type': 'MultiPoint', 'coordinates': coordinates}
+
+    cpdef _buildMultiLineString(self):
+        coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
+        return {'type': 'MultiLineString', 'coordinates': coordinates}
+
     cpdef _buildMultiPolygon(self):
         coordinates = [p['coordinates'] for p in self._buildParts(self.geom)]
         return {'type': 'MultiPolygon', 'coordinates': coordinates}
