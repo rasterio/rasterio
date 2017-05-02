@@ -813,7 +813,7 @@ def test_transform_geom_multipolygon(polygon_3373):
     geom = {
         'type': 'MultiPolygon', 'coordinates': [polygon_3373['coordinates']]}
     result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1)
-    assert int(result['coordinates'][0][0][0][0] * 10) == -1778
+    assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
 
 
 def test_reproject_unsupported_resampling():
