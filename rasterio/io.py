@@ -204,6 +204,15 @@ class BufferedDatasetWriter(BufferedDatasetWriterBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
 
+class WarpedVRTReader(WarpedVRTReaderBase, WindowMethodsMixin,
+                      TransformMethodsMixin):
+    """A virtual warped dataset reader"""
+
+    def __repr__(self):
+        return "<{} WarpedVRTReader name='{}' mode='{}'>".format(
+            self.closed and 'closed' or 'open', self.name, self.mode)
+
+
 class MemoryFile(MemoryFileBase):
     """A BytesIO-like object, backed by an in-memory file.
 
@@ -356,8 +365,8 @@ class VirtualWarpedFile(object):
 
         Returns a dataset object opened in 'r' mode.
         """
-        s = WarpedVRTReaderBase(self.path, dst_crs=self.dst_crs,
-                resampling=self.resampling, tolerance=self.tolerance)
+        s = WarpedVRTReader(self.path, dst_crs=self.dst_crs,
+            resampling=self.resampling, tolerance=self.tolerance)
         s.start()
         return s
 
