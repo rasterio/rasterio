@@ -12,8 +12,9 @@ from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
-    MemoryFileBase)
+    MemoryFileBase, WarpedVRTReaderBase)
 from rasterio import windows
+from rasterio.enums import Resampling
 from rasterio.env import ensure_env
 from rasterio.transform import guard_transform, xy, rowcol
 
@@ -307,6 +308,32 @@ class ZipMemoryFile(MemoryFile):
         s = DatasetReader(vsi_path, 'r')
         s.start()
         return s
+
+
+class WarpWrapper(object):
+
+    """A virtual warped dataset backed by an in-memory VRT file."""
+
+    def __init__(self, path, dst_crs=None, resampling=Resampling.nearest,
+                 tolerance=0.15):
+        self.path = path
+        self.dst_crs = dst_crs
+        self.resampling = resampling
+        self.tolerance = tolerance
+
+    @ensure_env
+    def open(self):
+        """Open the resource and return a Rasterio dataset object."""
+        s = WarpedVRTReaderBase(self.path, dst_crs=self.dst_crs,
+                resampling=self.resampling, tolerance=self.tolerance)
+        s.start()
+        return s
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        pass
 
 
 def get_writer_for_driver(driver):

@@ -1801,3 +1801,85 @@ def virtual_file_to_buffer(filename):
     log.debug("Buffer length: %d bytes", n)
     cdef np.uint8_t[:] buff_view = <np.uint8_t[:n]>buff
     return buff_view
+
+
+
+cdef class WarpedVRTReaderBase(DatasetReaderBase):
+
+    def __init__(self, name, dst_crs=None, resampling=Resampling.nearest,
+                 tolerance=0.15, ):
+        super(WarpedVRTReaderBase, self).__init__(self)
+        self.name = name
+        self.dst_crs = dst_crs
+        self.resampling = resampling
+        self.tolerance = tolerance
+
+    def start(self):
+        """Called to start reading a dataset."""
+        cdef GDALDriverH driver = NULL
+        cdef GDALDatasetH hds = NULL
+        cdef GDALDatasetH hds_warped = NULL
+        cdef const char *cypath = NULL
+        cdef char *dst_crs_wkt = NULL
+        cdef OGRSpatialReferenceH osr = NULL
+
+        cdef float tolerance = self.tolerance
+        cdef int resampling = self.resampling
+
+        # Get source identifier.
+        path = vsi_path(*parse_path(self.name))
+        path = path.encode('utf-8')
+        cypath = path
+
+        # Convert destination CRS to a C WKT string.
+        try:
+            osr = _osr_from_crs(self.dst_crs)
+            OSRExportToWkt(osr, &dst_crs_wkt)
+        finally:
+            OSRRelease(osr)
+            log.debug("Exported CRS to WKT.")
+
+        # Open source dataset.
+        try:
+            with nogil:
+                hds = GDALOpen(cypath, 0)
+            hds = exc_wrap_pointer(hds)
+        except CPLE_OpenFailedError as err:
+            raise RasterioIOError(err.errmsg)
+
+        # Wrap it.
+        try:
+            with nogil:
+                hds_warped = GDALAutoCreateWarpedVRT(
+                    hds, NULL, dst_crs_wkt, <GDALResampleAlg>resampling,
+                    tolerance, NULL)
+            self._hds = exc_wrap_pointer(hds_warped)
+        except CPLE_OpenFailedError as err:
+            raise RasterioIOError(err.errmsg)
+
+        CPLFree(dst_crs_wkt)
+
+        driver = GDALGetDatasetDriver(self._hds)
+        self.driver = get_driver_name(driver)
+
+        self._count = GDALGetRasterCount(self._hds)
+        self.width = GDALGetRasterXSize(self._hds)
+        self.height = GDALGetRasterYSize(self._hds)
+        self.shape = (self.height, self.width)
+
+        self._transform = self.read_transform()
+        self._crs = self.read_crs()
+
+        # touch self.meta
+        _ = self.meta
+
+        self._closed = False
+        log.debug("Dataset %r is started.", self)
+
+    def stop(self):
+        """Ends the dataset's life cycle"""
+        if self._hds != NULL:
+            GDALFlushCache(self._hds)
+            GDALClose(self._hds)
+        self._hds = NULL
+        log.debug("Dataset %r has been stopped.", self)

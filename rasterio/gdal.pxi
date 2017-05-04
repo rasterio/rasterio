@@ -238,8 +238,6 @@ cdef extern from "gdal.h" nogil:
     const char *GDALGetGCPProjection(GDALDatasetH hDS)
 
 
-
-
 cdef extern from "ogr_api.h" nogil:
 
     ctypedef void * OGRLayerH
@@ -431,6 +429,11 @@ cdef extern from "gdalwarper.h" nogil:
     GDALWarpOptions *GDALCreateWarpOptions()
     void GDALDestroyWarpOptions(GDALWarpOptions *options)
 
+    GDALDatasetH GDALAutoCreateWarpedVRT(
+        GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
+        GDALResampleAlg eResampleAlg, double dfMaxError,
+        const GDALWarpOptions *psOptionsIn)
+
 
 cdef extern from "gdal_alg.h" nogil:
 
@@ -484,4 +487,5 @@ cdef extern from "gdal_alg.h" nogil:
 
 
 cdef extern from "ogr_core.h" nogil:
+
     char *OGRGeometryTypeToName(int type)
