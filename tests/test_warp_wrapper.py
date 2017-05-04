@@ -1,4 +1,19 @@
+import boto3
+from packaging.version import parse
+import pytest
+
+import rasterio
 from rasterio.io import WarpWrapper
+
+
+# Custom markers.
+mingdalversion = pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.1.0dev'),
+    reason="S3 raster access requires GDAL 2.1")
+
+credentials = pytest.mark.skipif(
+    not(boto3.Session()._session.get_credentials()),
+    reason="S3 raster access requires credentials")
 
 
 def test_wrap_file():
@@ -15,6 +30,9 @@ def test_wrap_file():
             assert dataset.read().shape == (3, 736, 803)
 
 
+@mingdalversion
+@credentials
+@pytest.mark.network
 def test_wrap_s3():
     """A warp wrapper's dataset has the expected properties"""
     L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
