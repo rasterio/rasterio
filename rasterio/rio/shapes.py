@@ -133,14 +133,22 @@ def shapes(
                 # Adjust transforms.
                 transform = src.transform
                 if sampling > 1:
+                    # Determine the target shape (to decimate)
+                    shape = (int(math.ceil(src.height / sampling)),
+                             int(math.ceil(src.width / sampling)))
+
+                    # Calculate independent sampling factors
+                    x_sampling = src.width / shape[1]
+                    y_sampling = src.height / shape[0]
+
                     # Decimation of the raster produces a georeferencing
                     # shift that we correct with a translation.
                     transform *= Affine.translation(
-                        src.width % sampling, src.height % sampling)
+                        src.width % x_sampling, src.height % y_sampling)
+
                     # And follow by scaling.
-                    transform *= Affine.scale(float(sampling))
-                    shape = (int(math.ceil(src.height / sampling)),
-                             int(math.ceil(src.width / sampling)))
+                    transform *= Affine(
+                        shape[1] / src.width, shape[0] / src.height)
 
                 # Most of the time, we'll use the valid data mask.
                 # We skip reading it if we're extracting every possible
