@@ -310,12 +310,41 @@ class ZipMemoryFile(MemoryFile):
         return s
 
 
-class WarpWrapper(object):
+class VirtualWarpedFile(object):
 
-    """A virtual warped dataset backed by an in-memory VRT file."""
+    """Creates a virtual warped dataset.
 
+    Abstracts many details of raster warping and allows access to data
+    that is reprojected as needed.
+
+    This class is backed by an in-memory GDAL VRTWarpedDataset VRT file.
+
+    Attributes
+    ----------
+
+    path : str
+        The file path or network resource identifier for the dataset to
+        be virtually warped.
+    dst_crs : CRS or str
+        The warp operation's destination coordinate reference system.
+    resampling : int
+        One of the values from rasterio.enums.Resampling. The default is
+        `Resampling.nearest`.
+    tolerance : float
+        The maximum error tolerance in input pixels when approximating
+        the warp transformation. The default is 0.125.
+
+    Example
+    -------
+
+    >>> with VirtualWarpedFile('tests/data/RGB.byte.tif', dst_crs='EPSG:3857'
+    ...         ).open() as src:
+    ...     data = src.read()
+
+    """
+    
     def __init__(self, path, dst_crs=None, resampling=Resampling.nearest,
-                 tolerance=0.15):
+                 tolerance=0.125):
         self.path = path
         self.dst_crs = dst_crs
         self.resampling = resampling
@@ -323,7 +352,10 @@ class WarpWrapper(object):
 
     @ensure_env
     def open(self):
-        """Open the resource and return a Rasterio dataset object."""
+        """Open the virtual warped dataset
+
+        Returns a dataset object opened in 'r' mode.
+        """
         s = WarpedVRTReaderBase(self.path, dst_crs=self.dst_crs,
                 resampling=self.resampling, tolerance=self.tolerance)
         s.start()
