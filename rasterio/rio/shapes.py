@@ -147,8 +147,7 @@ def shapes(
                         src.width % x_sampling, src.height % y_sampling)
 
                     # And follow by scaling.
-                    transform *= Affine(
-                        shape[1] / src.width, shape[0] / src.height)
+                    transform *= Affine.scale(x_sampling, y_sampling)
 
                 # Most of the time, we'll use the valid data mask.
                 # We skip reading it if we're extracting every possible
