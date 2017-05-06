@@ -33,6 +33,16 @@ def test_validate_dtype_str(tmpdir):
             dtype='Int16')
 
 
+def test_validate_dtype_int8(tmpdir, basic_image):
+    """Raise TypeError if dtype is unsupported by GDAL."""
+    name = str(tmpdir.join('int8.tif'))
+    basic_image_int8 = basic_image.astype('int8')
+    height, width = basic_image_int8.shape
+    with pytest.raises(TypeError):
+        rasterio.open(name, 'w', driver='GTiff', width=width, height=height,
+                      count=1, dtype=basic_image_int8.dtype)
+
+
 def test_validate_count_None(tmpdir):
     name = str(tmpdir.join("lol.tif"))
     with pytest.raises(TypeError):
