@@ -83,7 +83,6 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSRAutoIdentifyEPSG(OGRSpatialReferenceH srs)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
-    void OSRDestroySpatialReference(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
     int OSRExportToWkt(OGRSpatialReferenceH srs, char **params)
     int OSRFixup(OGRSpatialReferenceH srs)
