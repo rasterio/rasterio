@@ -27,7 +27,7 @@ class _CRS(UserDict):
             retval = OSRIsGeographic(osr_crs)
             return bool(retval == 1)
         finally:
-            OSRDestroySpatialReference(osr_crs)
+            OSRRelease(osr_crs)
 
     @property
     def is_projected(self):
@@ -39,7 +39,7 @@ class _CRS(UserDict):
             retval = OSRIsProjected(osr_crs)
             return bool(retval == 1)
         finally:
-            OSRDestroySpatialReference(osr_crs)
+            OSRRelease(osr_crs)
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
@@ -55,8 +55,8 @@ class _CRS(UserDict):
             retval = OSRIsSame(osr_crs1, osr_crs2)
             return bool(retval == 1)
         finally:
-            OSRDestroySpatialReference(osr_crs1)
-            OSRDestroySpatialReference(osr_crs2)
+            OSRRelease(osr_crs1)
+            OSRRelease(osr_crs2)
 
     @property
     def wkt(self):
@@ -72,4 +72,4 @@ class _CRS(UserDict):
             return srcwkt.decode('utf-8')
         finally:
             CPLFree(srcwkt)
-            OSRDestroySpatialReference(osr)
+            OSRRelease(osr)

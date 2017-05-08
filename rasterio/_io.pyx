@@ -1101,7 +1101,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         GDALSetProjection(self._hds, wkt)
 
         CPLFree(wkt)
-        OSRDestroySpatialReference(osr)
+        OSRRelease(osr)
         self._crs = crs
         log.debug("Self CRS: %r", self._crs)
 
@@ -1598,7 +1598,7 @@ cdef class InMemoryRaster:
                 GDALSetProjection(self._hds, srcwkt)
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
                 CPLFree(<void *>srcwkt)
-                OSRDestroySpatialReference(osr)
+                OSRRelease(osr)
 
         elif gcps and crs:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
