@@ -960,13 +960,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
-            if hasattr(self._init_dtype, 'type'):
-                tp = self._init_dtype.type
-                if tp not in dtypes.dtype_rev:
-                    raise ValueError(
-                        "Unsupported dtype: %s" % self._init_dtype)
-                else:
-                    gdal_dtype = dtypes.dtype_rev.get(tp)
+            if self._init_dtype not in dtypes.dtype_rev:
+                raise TypeError(
+                    "Unsupported dtype: %s" % self._init_dtype)
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
