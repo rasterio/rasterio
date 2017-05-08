@@ -47,11 +47,11 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            if self.data == other.data:
-                # use inherited equality rules for dict
+            if self.data == other:
+                # use dictionary equality rules first
                 return True
             else:
-                # return False if either value is falsey
+                # dicts are not exactly equal, check equivalence using OSR
                 if not self or not other:
                     return False
                 osr_crs1 = osr_from_crs(self)
