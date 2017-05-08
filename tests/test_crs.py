@@ -134,7 +134,7 @@ def test_is_same_crs():
 
 def test_null_crs_equality():
     """Null CRS should be equal"""
-    assert (CRS() == CRS()) is True
+    assert CRS() == CRS()
 
 
 def test_null_crs_inequality():
