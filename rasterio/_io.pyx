@@ -960,13 +960,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
-            if hasattr(self._init_dtype, 'type'):
-                tp = self._init_dtype.type
-                if tp not in dtypes.dtype_rev:
-                    raise ValueError(
-                        "Unsupported dtype: %s" % self._init_dtype)
-                else:
-                    gdal_dtype = dtypes.dtype_rev.get(tp)
+            if self._init_dtype not in dtypes.dtype_rev:
+                raise TypeError(
+                    "Unsupported dtype: %s" % self._init_dtype)
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
@@ -1101,7 +1097,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         GDALSetProjection(self._hds, wkt)
 
         CPLFree(wkt)
-        OSRDestroySpatialReference(osr)
+        OSRRelease(osr)
         self._crs = crs
         log.debug("Self CRS: %r", self._crs)
 
@@ -1598,7 +1594,7 @@ cdef class InMemoryRaster:
                 GDALSetProjection(self._hds, srcwkt)
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
                 CPLFree(<void *>srcwkt)
-                OSRDestroySpatialReference(osr)
+                OSRRelease(osr)
 
         elif gcps and crs:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))

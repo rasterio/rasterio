@@ -57,8 +57,8 @@ def _transform_geom(
     try:
         transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
     except:
-        OSRDestroySpatialReference(src)
-        OSRDestroySpatialReference(dst)
+        OSRRelease(src)
+        OSRRelease(dst)
         raise
 
     # Transform options.
@@ -92,8 +92,8 @@ def _transform_geom(
         OCTDestroyCoordinateTransformation(transform)
         if options != NULL:
             CSLDestroy(options)
-        OSRDestroySpatialReference(src)
-        OSRDestroySpatialReference(dst)
+        OSRRelease(src)
+        OSRRelease(dst)
 
 
 def _reproject(
@@ -130,7 +130,7 @@ def _reproject(
         Source affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from source if it is a rasterio Band.
     gcps: sequence of `GroundControlPoint` instances, optional
-        Ground control points for the source. May be used in place of 
+        Ground control points for the source. May be used in place of
         src_transform.
     src_crs: dict, optional
         Source coordinate reference system, in rasterio dict format.
@@ -242,7 +242,7 @@ def _reproject(
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
             finally:
                 CPLFree(srcwkt)
-                OSRDestroySpatialReference(osr)
+                OSRRelease(osr)
 
         elif gcps:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
@@ -325,7 +325,7 @@ def _reproject(
                     dst_dataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
-            OSRDestroySpatialReference(osr)
+            OSRRelease(osr)
             CPLFree(dstwkt)
 
         retval = io_auto(destination, dst_dataset, 1)
@@ -545,7 +545,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
     osr = osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
-    OSRDestroySpatialReference(osr)
+    OSRRelease(osr)
 
     with InMemoryRaster(width=width, height=height, transform=transform,
                         gcps=gcps, crs=src_crs) as temp:

@@ -242,7 +242,7 @@ cdef class DatasetBase(object):
                     crs[k] = v
 
             CPLFree(proj)
-            OSRDestroySpatialReference(osr)
+            OSRRelease(osr)
         else:
             log.debug("No projection detected.")
 
@@ -911,8 +911,8 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
-        OSRDestroySpatialReference(src)
-        OSRDestroySpatialReference(dst)
+        OSRRelease(src)
+        OSRRelease(dst)
 
     return retval
 
@@ -937,7 +937,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
             auth, val = init.split(':')
 
             if not val:
-                OSRDestroySpatialReference(osr)
+                OSRRelease(osr)
                 raise CRSError("Invalid CRS: {!r}".format(crs))
 
             if auth.upper() == 'EPSG':
@@ -958,7 +958,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     log.debug("OSRSetFromUserInput return value: %s", retval)
 
     if retval:
-        OSRDestroySpatialReference(osr)
+        OSRRelease(osr)
         raise CRSError("Invalid CRS: {!r}".format(crs))
 
     return osr
@@ -996,5 +996,5 @@ def _can_create_osr(crs):
         return False
 
     finally:
-        OSRDestroySpatialReference(osr)
+        OSRRelease(osr)
         CPLFree(wkt)
