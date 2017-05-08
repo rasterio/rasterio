@@ -47,13 +47,17 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            # return False immediately if either value is undefined
-            if not (self and other):
-                return False
-            osr_crs1 = osr_from_crs(self)
-            osr_crs2 = osr_from_crs(other)
-            retval = OSRIsSame(osr_crs1, osr_crs2)
-            return bool(retval == 1)
+            if self.data == other.data:
+                # use inherited equality rules for dict
+                return True
+            else:
+                # return False if either value is falsey
+                if not self or not other:
+                    return False
+                osr_crs1 = osr_from_crs(self)
+                osr_crs2 = osr_from_crs(other)
+                retval = OSRIsSame(osr_crs1, osr_crs2)
+                return bool(retval == 1)
         finally:
             OSRRelease(osr_crs1)
             OSRRelease(osr_crs2)
