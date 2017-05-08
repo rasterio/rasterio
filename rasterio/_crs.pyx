@@ -62,6 +62,9 @@ class _CRS(UserDict):
             OSRRelease(osr_crs1)
             OSRRelease(osr_crs2)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @property
     def wkt(self):
         """An OGC WKT string representation of the coordinate reference
