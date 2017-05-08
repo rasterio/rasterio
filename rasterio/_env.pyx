@@ -39,7 +39,7 @@ code_map = {
     9: 'CPLE_UserInterrupt',
     10: 'ObjectNull',
 
-    # error numbers 11-16 are introduced in GDAL 2.1. See 
+    # error numbers 11-16 are introduced in GDAL 2.1. See
     # https://github.com/OSGeo/gdal/pull/98.
     11: 'CPLE_HttpResponse',
     12: 'CPLE_AWSBucketNotFound',
@@ -144,7 +144,7 @@ cdef class ConfigEnv(object):
     """Configuration option management"""
 
     def __init__(self, **options):
-        self.options = {}
+        self.options = options.copy()
         self.update_config_options(**self.options)
 
     def update_config_options(self, **kwargs):
