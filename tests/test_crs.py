@@ -133,31 +133,11 @@ def test_is_same_crs():
 
 
 def test_null_crs_equality():
-    """Null CRS should be equal"""
-    assert CRS() == CRS()
-
-
-def test_null_crs_inequality():
-    """Null CRS should not be inequal"""
-    assert (CRS() != CRS()) is False
+    assert (CRS() == CRS()) is False
 
 
 def test_null_and_valid_crs_equality():
     assert (CRS() == CRS(init='EPSG:4326')) is False
-
-
-def test_crs_OSR_equivalence():
-    crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
-    crs2 = CRS.from_string('+proj=latlong +datum=WGS84 +no_defs')
-    crs3 = CRS({'init': 'EPSG:4326'})
-    assert crs1 == crs2
-    assert crs1 == crs3
-
-
-def test_crs_OSR_no_equivalence():
-    crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
-    crs2 = CRS.from_string('+proj=longlat +datum=NAD27 +no_defs')
-    assert crs1 != crs2
 
 
 def test_to_string():
