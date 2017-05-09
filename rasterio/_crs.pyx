@@ -54,7 +54,6 @@ class _CRS(UserDict):
                 # dicts are not exactly equal, check equivalence using OSR
                 if not (self and other):
                     return False
-                print("GOTODSFSDS" * 100)
                 osr_crs1 = osr_from_crs(self)
                 osr_crs2 = osr_from_crs(other)
                 retval = OSRIsSame(osr_crs1, osr_crs2)
