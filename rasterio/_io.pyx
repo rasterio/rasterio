@@ -102,18 +102,22 @@ cdef class DatasetReaderBase(DatasetBase):
 
         out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
-            output array with the same dimensions and shape into which
-            data will be placed.
+            output array into which data will be placed. If the height
+            and width of `out` differ from that of the specified 
+            window (see below), the raster image will be decimated or
+            replicated using the specified resampling method (also see
+            below).
 
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
 
-            Cannot combined with `out_shape`.
+            This parameter cannot be combined with `out_shape`.
 
         out_shape : tuple, optional
-            A tuple describing the output array's shape.  Allows for decimated
-            reads without constructing an output Numpy array.
+            A tuple describing the shape of a new output array. See
+            `out` (above) for notes on image decimation and
+            replication.
 
             Cannot combined with `out`.
 
@@ -249,7 +253,12 @@ cdef class DatasetReaderBase(DatasetBase):
             # We're filling in both the bounded and boundless cases.
             # TODO: profile and see if we should avoid this in the
             # bounded case.
-            out = np.zeros(out_shape, dtype=dtype)
+
+            if boundless:
+                out = np.zeros(out_shape, dtype=dtype)
+            else:
+                out = np.empty(out_shape, dtype=dtype)
+
             for i, (ndv, arr) in enumerate(zip(
                     nodatavals, out if len(out.shape) == 3 else [out])):
 
