@@ -1,4 +1,4 @@
-# cython: boundscheck=False
+include "directives.pxi"
 
 # The baseline GDAL API.
 include "gdal.pxi"

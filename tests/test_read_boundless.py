@@ -19,10 +19,21 @@ def test_read_boundless_natural_extent():
 
 
 def test_read_boundless_beyond():
+    """Reading entirely outside the dataset returns no data"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         data = src.read(window=((-200, -100), (-200, -100)), boundless=True)
         assert data.shape == (3, 100, 100)
         assert not data.any()
+        assert (data == 0).all()
+
+
+def test_read_boundless_beyond_fill_value():
+    """Reading entirely outside the dataset returns the fill value"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        data = src.read(window=((-200, -100), (-200, -100)), boundless=True,
+                        fill_value=1)
+        assert data.shape == (3, 100, 100)
+        assert (data == 1).all()
 
 
 def test_read_boundless_beyond2():
@@ -85,6 +96,7 @@ def test_read_boundless_masks_zero_stop():
         data = src.read_masks(window=((-200, 0), (-200, 0)), boundless=True)
         assert data.shape == (3, 200, 200)
         assert data.min() == data.max() == src.nodata
+
 
 def test_read_boundless_noshift():
     with rasterio.open('tests/data/rgb4.tif') as src:

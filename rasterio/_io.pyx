@@ -1,8 +1,8 @@
-# cython: boundscheck=False
 """Rasterio input/output."""
 
 from __future__ import absolute_import
 
+include "directives.pxi"
 include "gdal.pxi"
 
 import logging
@@ -90,7 +90,8 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
 cdef class DatasetReaderBase(DatasetBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
-            out_shape=None, boundless=False, resampling=Resampling.nearest):
+            out_shape=None, boundless=False, resampling=Resampling.nearest,
+            fill_value=None):
         """Read raster bands as a multidimensional array
 
         Parameters
@@ -135,6 +136,9 @@ cdef class DatasetReaderBase(DatasetBase):
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
 
+        fill_value : scalar
+            Fill value applied in the `boundless=True` case only.
+
         Returns
         -------
         Numpy ndarray or a view on a Numpy ndarray
@@ -169,10 +173,17 @@ cdef class DatasetReaderBase(DatasetBase):
             check_dtypes.add(dtype)
 
             ndv = self._nodatavals[idx]
+
+            log.debug("Output nodata value read from file: %r", ndv)
+
             # Change given nodatavals to the closest value that
             # can be represented by this band's data type to
             # match GDAL's strategy.
-            if ndv is not None:
+            if fill_value:
+                ndv = fill_value
+                log.debug("Output nodata value set from fill value")
+
+            elif ndv is not None:
                 if np.dtype(dtype).kind in ('i', 'u'):
                     info = np.iinfo(dtype)
                     dt_min, dt_max = info.min, info.max
@@ -187,6 +198,8 @@ cdef class DatasetReaderBase(DatasetBase):
                     ndv = dt_max
 
             nodatavals.append(ndv)
+
+        log.debug("Output nodata values: %r", nodatavals)
 
         # Mixed dtype reads are not supported at this time.
         if len(check_dtypes) > 1:
@@ -214,12 +227,9 @@ cdef class DatasetReaderBase(DatasetBase):
 
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
-        elif out_shape is not None:
-            if len(out_shape) == 2:
-                out_shape = (1,) + out_shape
-            out = np.empty(out_shape, dtype=dtype)
 
-        if out is not None:
+        # `out` takes precedence over `out_shape`.
+        elif out is not None:
             if out.dtype != dtype:
                 raise ValueError(
                     "the array's dtype '%s' does not match "
@@ -228,6 +238,23 @@ cdef class DatasetReaderBase(DatasetBase):
                 raise ValueError(
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
+
+        else:
+            if out_shape is not None:
+                if len(out_shape) == 2:
+                    out_shape = (1,) + out_shape
+            else:
+                out_shape = win_shape
+
+            # We're filling in both the bounded and boundless cases.
+            # TODO: profile and see if we should avoid this in the
+            # bounded case.
+            out = np.zeros(out_shape, dtype=dtype)
+            for i, (ndv, arr) in enumerate(zip(
+                    nodatavals, out if len(out.shape) == 3 else [out])):
+
+                if ndv is not None:
+                    arr.fill(ndv)
 
         # Masking
         # -------
@@ -245,13 +272,6 @@ cdef class DatasetReaderBase(DatasetBase):
             log.debug("all_valid: %s", all_valid)
             log.debug("mask_flags: %r", enums)
 
-        if out is None:
-            out = np.zeros(win_shape, dtype)
-            for ndv, arr in zip(
-                    nodatavals, out if len(out.shape) == 3 else [out]):
-                if ndv is not None:
-                    arr.fill(ndv)
-
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
@@ -262,7 +282,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 if all_valid:
                     mask = np.ma.nomask
                 else:
-                    mask = np.empty(out.shape, 'uint8')
+                    mask = np.zeros(out.shape, 'uint8')
                     mask = ~self._read(
                         indexes, mask, window, 'uint8', masks=True,
                         resampling=resampling).astype('bool')
@@ -293,12 +313,12 @@ cdef class DatasetReaderBase(DatasetBase):
                 buffer_shape = (
                         int(round(overlap_h*scaling_h)),
                         int(round(overlap_w*scaling_w)))
-                data = np.empty(win_shape[:-2] + buffer_shape, dtype)
+                data = np.zeros(win_shape[:-2] + buffer_shape, dtype)
                 data = self._read(indexes, data, overlap, dtype,
                                   resampling=resampling)
 
                 if masked:
-                    mask = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
+                    mask = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
                     mask = ~self._read(
                         indexes, mask, overlap, 'uint8', masks=True,
                         resampling=resampling).astype('bool')
@@ -472,7 +492,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
                 buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
-                data = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
+                data = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
                 data = self._read(indexes, data, overlap, dtype, masks=True,
                                   resampling=resampling)
             else:
@@ -645,7 +665,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 window
                 and windows.shape(window, self.height, self.width)
                 or self.shape)
-            out = np.empty(out_shape, np.uint8)
+            out = np.zeros(out_shape, np.uint8)
         if window:
             window = windows.evaluate(window, self.height, self.width)
             yoff = window[0][0]
