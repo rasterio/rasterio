@@ -1,12 +1,11 @@
 """Raster copying."""
 
+
 include "gdal.pxi"
 
 import logging
-import os
-import os.path
 
-from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
+from rasterio._err cimport exc_wrap_pointer
 
 
 log = logging.getLogger(__name__)
@@ -14,7 +13,26 @@ log = logging.getLogger(__name__)
 
 cdef class RasterCopier:
 
+    """Copy a raster from a path or open dataset handle."""
+
     def __call__(self, srcpath, dstpath, driver='GTiff', strict=False, **kwds):
+
+        """
+        Parameters
+        ----------
+        src : str or rasterio.io.DatasetReader
+            Path to source dataset or open dataset handle.
+        dstpath : str
+            Output dataset path.
+        driver : str, optional
+            Output driver name.
+        strict : bool, optional
+            Indicates if the output must be strictly equivalent or if the
+            driver may adapt as necessary.
+        kwds : **kwargs, optional
+            Creation options for output dataset. 
+        """
+
         cdef char **options = NULL
         cdef GDALDatasetH src_dataset = NULL
         cdef GDALDatasetH dst_dataset = NULL
