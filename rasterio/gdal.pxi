@@ -235,8 +235,8 @@ cdef extern from "gdal.h" nogil:
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
     int GDALGetGCPCount(GDALDatasetH hDS)
     const char *GDALGetGCPProjection(GDALDatasetH hDS)
-
-
+    int GDALGetCacheMax64()
+    void GDALSetCacheMax64(int nBytes)
 
 
 cdef extern from "ogr_api.h" nogil:

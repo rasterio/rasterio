@@ -90,6 +90,11 @@ cpdef get_gdal_config(key, normalize=True):
         Convert values of ``"ON"'`` and ``"OFF"`` to ``True`` and ``False``.
     """
     key = key.encode('utf-8')
+
+    # GDAL_CACHEMAX is a special case
+    if key.lower() == b'gdal_cachemax':
+        return GDALGetCacheMax64()
+
     val = CPLGetConfigOption(<const char *>key, NULL)
     if not val:
         return None
@@ -115,11 +120,18 @@ cpdef set_gdal_config(key, val, normalize=True):
         Convert ``True`` to `"ON"` and ``False`` to `"OFF"``.
     """
     key = key.encode('utf-8')
+
     if isinstance(val, string_types):
         val = val.encode('utf-8')
-    elif normalize:
-        val = ('ON' if val else 'OFF').encode('utf-8')
-    if isinstance(threading.current_thread(), threading._MainThread):
+
+    # Only normalize True and False.  Some options accept integers.
+    elif normalize and isinstance(val, bool):
+        val = ('ON' if val and val else 'OFF').encode('utf-8')
+
+    # GDAL_CACHEMAX is a special case
+    if key.lower() == b'gdal_cachemax':
+        GDALSetCacheMax64(val)
+    elif isinstance(threading.current_thread(), threading._MainThread):
         CPLSetConfigOption(<const char *>key, <const char *>val)
     else:
         CPLSetThreadLocalConfigOption(<const char *>key, <const char *>val)
