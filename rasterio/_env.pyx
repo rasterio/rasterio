@@ -80,7 +80,8 @@ def driver_count():
 
 
 cpdef get_gdal_config(key, normalize=True):
-    """Get the value of a GDAL configuration option
+    """Get the value of a GDAL configuration option.  When requesting
+    ``GDAL_CACHEMAX`` the value is returned unaltered. 
 
     Parameters
     ----------
