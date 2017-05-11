@@ -24,7 +24,7 @@ corresponding to its central zoom 9 tile, do the following.
       dst_tile = mercantile.tile(*src.lnglat(), 9)
       left, top = mercantile.xy(*mercantile.ul(*dst_tile))
       right, bottom = mercantile.xy(*mercantile.ul(
-          mercantile.Tile(tile.x + 1, tile.y + 1, tile.z)))
+          mercantile.Tile(dst_tile.x + 1, dst_tile.y + 1, dst_tile.z)))
 
       # Determine the window to use in reading from the dataset.
       dst_window = src.window(left, bottom, right, top)
@@ -46,9 +46,8 @@ corresponding to its central zoom 9 tile, do the following.
       scaling = Affine.scale(dst_window.num_cols / 512,
                              dst_window.num_rows / 512)
       dst_transform *= scaling
-      profile['transform'] = tile_transform
+      profile['transform'] = dst_transform
 
       # Write the image tile to disk.
       with rasterio.open('/tmp/test-tile.tif', 'w', **profile) as dst:
           dst.write(rgb)
-
