@@ -22,7 +22,7 @@ cdef class RasterCopier:
 
         # Creation options
         for key, val in kwds.items():
-            kb, vb = (x.upper().encode('utf-8') for x in (key, val))
+            kb, vb = (x.upper().encode('utf-8') for x in (key, str(val)))
             options = CSLSetNameValue(
                 options, <const char *>kb, <const char *>vb)
             log.debug("Option %r:%r", kb, vb)
@@ -41,7 +41,7 @@ cdef class RasterCopier:
             src_dataset = exc_wrap_pointer(GDALOpen(<const char *>srcpath, 0))
             dst_dataset = exc_wrap_pointer(
                 GDALCreateCopy(drv, <const char *>dstpath, src_dataset,
-                               strictness, NULL, NULL, NULL))
+                               strictness, options, NULL, NULL))
         finally:
             CSLDestroy(options)
             GDALClose(src_dataset)
