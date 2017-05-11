@@ -5,6 +5,7 @@ include "gdal.pxi"
 
 import logging
 
+from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_pointer
 
 
@@ -13,23 +14,24 @@ log = logging.getLogger(__name__)
 
 cdef class RasterCopier:
 
-    """Copy a raster from a path or open dataset handle."""
+    def __call__(
+            self, src, dst, driver='GTiff', strict=False,
+            **creation_options):
 
-    def __call__(self, srcpath, dstpath, driver='GTiff', strict=False, **kwds):
-
-        """
+        """Copy a raster from a path or open dataset handle.
+    
         Parameters
         ----------
         src : str or rasterio.io.DatasetReader
             Path to source dataset or open dataset handle.
-        dstpath : str
+        dst : str
             Output dataset path.
         driver : str, optional
             Output driver name.
         strict : bool, optional
             Indicates if the output must be strictly equivalent or if the
             driver may adapt as necessary.
-        kwds : **kwargs, optional
+        creation_options : **kwargs, optional
             Creation options for output dataset. 
         """
 
@@ -39,7 +41,7 @@ cdef class RasterCopier:
         cdef GDALDriverH drv = NULL
 
         # Creation options
-        for key, val in kwds.items():
+        for key, val in creation_options.items():
             kb, vb = (x.upper().encode('utf-8') for x in (key, str(val)))
             options = CSLSetNameValue(
                 options, <const char *>kb, <const char *>vb)
@@ -52,15 +54,24 @@ cdef class RasterCopier:
         if drv == NULL:
             raise ValueError("NULL driver")
 
-        srcpath = srcpath.encode('utf-8')
-        dstpath = dstpath.encode('utf-8')
+        # Input is a path or GDAL connection string
+        if isinstance(src, str):
+            src = src.encode('utf-8')
+            src_dataset = exc_wrap_pointer(GDALOpen(<const char *>src, 0))
+            close_src = True
+        # Input is something like 'rasterio.open()'
+        else:
+            src_dataset = (<DatasetReaderBase?>src).handle()
+            close_src = False
+
+        dst = dst.encode('utf-8')
 
         try:
-            src_dataset = exc_wrap_pointer(GDALOpen(<const char *>srcpath, 0))
             dst_dataset = exc_wrap_pointer(
-                GDALCreateCopy(drv, <const char *>dstpath, src_dataset,
+                GDALCreateCopy(drv, <const char *>dst, src_dataset,
                                strictness, options, NULL, NULL))
         finally:
             CSLDestroy(options)
-            GDALClose(src_dataset)
+            if close_src:
+                GDALClose(src_dataset)
             GDALClose(dst_dataset)

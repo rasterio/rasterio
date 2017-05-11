@@ -284,35 +284,33 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
 
 @ensure_env
-def copy(src, dst, **kw):
+def copy(src, dst, driver='GTiff', strict=False, **creation_options):
+
     """Copy a source raster to a new destination with driver specific
     creation options.
 
     Parameters
     ----------
-    src: string
-        an existing raster file
-    dst: string
-        valid path to output file.
-
-    Returns
-    -------
-    None
-
-    Raises
-    ------
-    ValueError:
-        If source path is not a valid Dataset
-
-    Notes
-    -----
-    A ``driver`` keyword argument with value like 'GTiff' or 'JPEG' is
-    used to control the output format.
-
-    This is the one way to create write-once files like JPEGs.
+    src : str or rasterio.io.DatasetReader
+        Path to source dataset or open dataset handle.
+    dst : str
+        Output dataset path.
+    driver : str, optional
+        Output driver name.
+    strict : bool, optional
+        Indicates if the output must be strictly equivalent or if the
+        driver may adapt as necessary.
+    creation_options : **kwargs, optional
+        Creation options for output dataset.
     """
+
     from rasterio._copy import RasterCopier
-    return RasterCopier()(src, dst, **kw)
+    return RasterCopier()(
+        src=src,
+        dst=dst,
+        driver=driver,
+        strict=strict,
+        **creation_options)
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
