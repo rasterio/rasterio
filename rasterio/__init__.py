@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
+from rasterio._copy import copy
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
@@ -281,36 +282,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
                     "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
             s.start()
             return s
-
-
-@ensure_env
-def copy(src, dst, driver='GTiff', strict=False, **creation_options):
-
-    """Copy a source raster to a new destination with driver specific
-    creation options.
-
-    Parameters
-    ----------
-    src : str or rasterio.io.DatasetReader
-        Path to source dataset or open dataset handle.
-    dst : str
-        Output dataset path.
-    driver : str, optional
-        Output driver name.
-    strict : bool, optional
-        Indicates if the output must be strictly equivalent or if the
-        driver may adapt as necessary.
-    creation_options : **kwargs, optional
-        Creation options for output dataset.
-    """
-
-    from rasterio._copy import RasterCopier
-    return RasterCopier()(
-        src=src,
-        dst=dst,
-        driver=driver,
-        strict=strict,
-        **creation_options)
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])
