@@ -25,7 +25,7 @@ cdef class RasterCopier:
             kb, vb = (x.upper().encode('utf-8') for x in (key, val))
             options = CSLSetNameValue(
                 options, <const char *>kb, <const char *>vb)
-            log.debug("Option %r:%r", (key, val))
+            log.debug("Option %r:%r", kb, vb)
 
         strictness = int(strict)
 
