@@ -16,8 +16,6 @@ import os.path
 import sys
 import threading
 
-from rasterio.compat import string_types
-
 
 level_map = {
     0: 0,
@@ -48,7 +46,11 @@ code_map = {
     15: 'CPLE_AWSInvalidCredentials',
     16: 'CPLE_AWSSignatureDoesNotMatch'}
 
+
 log = logging.getLogger(__name__)
+
+
+cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
@@ -94,7 +96,10 @@ cpdef get_gdal_config(key, normalize=True):
 
     # GDAL_CACHEMAX is a special case
     if key.lower() == b'gdal_cachemax':
-        return GDALGetCacheMax64()
+        if is_64bit:
+            return GDALGetCacheMax64()
+        else:
+            return GDALGetCacheMax()
     else:
         val = CPLGetConfigOption(<const char *>key, NULL)
 
@@ -127,7 +132,10 @@ cpdef set_gdal_config(key, val, normalize=True):
 
     # GDAL_CACHEMAX is a special case
     if key.lower() == b'gdal_cachemax':
-        GDALSetCacheMax64(val)
+        if is_64bit:
+            GDALSetCacheMax64(val)
+        else:
+            GDALSetCacheMax(val)
         return
     elif normalize and isinstance(val, bool):
         val = ('ON' if val and val else 'OFF').encode('utf-8')
