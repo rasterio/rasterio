@@ -94,12 +94,15 @@ cpdef get_gdal_config(key, normalize=True):
     # GDAL_CACHEMAX is a special case
     if key.lower() == b'gdal_cachemax':
         return GDALGetCacheMax64()
+    else:
+        val = CPLGetConfigOption(<const char *>key, NULL)
 
-    val = CPLGetConfigOption(<const char *>key, NULL)
     if not val:
         return None
     elif not normalize:
         return val
+    elif val.isdigit():
+        return int(val)
     else:
         if val == u'ON':
             return True
@@ -121,17 +124,17 @@ cpdef set_gdal_config(key, val, normalize=True):
     """
     key = key.encode('utf-8')
 
-    if isinstance(val, string_types):
-        val = val.encode('utf-8')
-
-    # Only normalize True and False.  Some options accept integers.
-    elif normalize and isinstance(val, bool):
-        val = ('ON' if val and val else 'OFF').encode('utf-8')
-
     # GDAL_CACHEMAX is a special case
     if key.lower() == b'gdal_cachemax':
         GDALSetCacheMax64(val)
-    elif isinstance(threading.current_thread(), threading._MainThread):
+        return
+    elif normalize and isinstance(val, bool):
+        val = ('ON' if val and val else 'OFF').encode('utf-8')
+    else:
+        # Value could be an int
+        val = str(val).encode('utf-8')
+
+    if isinstance(threading.current_thread(), threading._MainThread):
         CPLSetConfigOption(<const char *>key, <const char *>val)
     else:
         CPLSetThreadLocalConfigOption(<const char *>key, <const char *>val)
