@@ -12,7 +12,7 @@ import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
 from rasterio.env import default_options
-from rasterio.errors import EnvError
+from rasterio.errors import EnvError, RasterioIOError
 from rasterio.rio.main import main_group
 
 
@@ -200,6 +200,13 @@ def test_open_with_env(gdalenv):
     with rasterio.Env():
         with rasterio.open('tests/data/RGB.byte.tif') as dataset:
             assert dataset.count == 3
+
+
+def test_skip_gtiff(gdalenv):
+    """De-register GTiff driver, verify that it will not be used."""
+    with rasterio.Env(GDAL_SKIP='GTiff'):
+        with pytest.raises(RasterioIOError):
+            rasterio.open('tests/data/RGB.byte.tif')
 
 
 @mingdalversion
