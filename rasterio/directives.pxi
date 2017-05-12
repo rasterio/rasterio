@@ -1,0 +1,1 @@
+# cython: boundscheck=False
