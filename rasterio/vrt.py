@@ -6,30 +6,20 @@ from rasterio.env import ensure_env
 from rasterio.io import WindowMethodsMixin, TransformMethodsMixin
 
 
-class WarpedVRTReader(WarpedVRTReaderBase, WindowMethodsMixin,
-                      TransformMethodsMixin):
-    """A virtual warped dataset reader"""
-
-    def __repr__(self):
-        return "<{} WarpedVRTReader name='{}' mode='{}'>".format(
-            self.closed and 'closed' or 'open', self.name, self.mode)
-
-
-class WarpedVRT(object):
-
+class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
+                TransformMethodsMixin):
     """Creates a virtual warped dataset.
 
-    Abstracts many details of raster warping and allows access to data
-    that is reprojected as needed.
+    Abstracts the details of raster warping and allows access to data
+    that is reprojected when read.
 
     This class is backed by an in-memory GDAL VRTWarpedDataset VRT file.
 
     Attributes
     ----------
 
-    path : str
-        The file path or network resource identifier for the dataset to
-        be virtually warped.
+    src_dataset : dataset
+        The dataset object that is virtually warped.
     dst_crs : CRS or str
         The warp operation's destination coordinate reference system.
     resampling : int
@@ -38,37 +28,29 @@ class WarpedVRT(object):
     tolerance : float
         The maximum error tolerance in input pixels when approximating
         the warp transformation. The default is 0.125.
+    src_nodata : float, int, or None
+        The nodata value for the source dataset.
+    dst_nodata : float, int, or None
+        The nodata value for the virtually warped dataset.
+    warp_extras : dict
+        GDAL extra warp options.
 
     Example
     -------
 
-    >>> with VirtualWarpedFile('tests/data/RGB.byte.tif', dst_crs='EPSG:3857'
-    ...         ).open() as src:
-    ...     data = src.read()
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
+    ...     with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:
+    ...         data = vrt.read()
 
     """
 
-    def __init__(self, path, dst_crs=None, resampling=Resampling.nearest,
-                 tolerance=0.125):
-        self.path = path
-        self.dst_crs = dst_crs
-        self.resampling = resampling
-        self.tolerance = tolerance
-
-    @ensure_env
-    def open(self):
-        """Open the virtual warped dataset
-
-        Returns a dataset object opened in 'r' mode.
-        """
-        s = WarpedVRTReader(self.path, dst_crs=self.dst_crs,
-                            resampling=self.resampling,
-                            tolerance=self.tolerance)
-        s.start()
-        return s
+    def __repr__(self):
+        return "<{} WarpedVRTReader name='{}' mode='{}'>".format(
+            self.closed and 'closed' or 'open', self.name, self.mode)
 
     def __enter__(self):
+        self.start()
         return self
 
     def __exit__(self, *args, **kwargs):
-        pass
+        self.stop()

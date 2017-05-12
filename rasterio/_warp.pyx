@@ -611,19 +611,21 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
-    def __init__(self, name, dst_crs=None, resampling=Resampling.nearest,
+    def __init__(self, src_dataset, dst_crs=None, resampling=Resampling.nearest,
                  tolerance=0.125, src_nodata=None, dst_nodata=None,
                  init_dest_nodata=True, **warp_extras):
         # kwargs become warp options.
         super(WarpedVRTReaderBase, self).__init__(self)
-        self.name = name
+        self.src_dataset = src_dataset
+        self.name = "WarpedVRT({})".format(src_dataset.name)
         self.dst_crs = dst_crs
         self.resampling = resampling
         self.tolerance = tolerance
         self.src_nodata = src_nodata
         self.dst_nodata = dst_nodata
-        self.warp_extras = warp_extras
-        self.warp_extras['init_dest'] = init_dest_nodata
+        self.warp_extras = warp_extras.copy()
+        if init_dest_nodata is True and 'init_dest' not in warp_extras:
+            self.warp_extras['init_dest'] = 'NO_DATA'
 
     def start(self):
         """Called to start reading a dataset."""
@@ -639,11 +641,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef float tolerance = self.tolerance
         cdef int resampling = self.resampling
 
-        # Get source identifier.
-        path = vsi_path(*parse_path(self.name))
-        path = path.encode('utf-8')
-        cypath = path
-
         # Convert destination CRS to a C WKT string.
         try:
             osr = _osr_from_crs(self.dst_crs)
@@ -653,12 +650,17 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         log.debug("Exported CRS to WKT.")
 
-        try:
-            with nogil:
-                hds = GDALOpen(cypath, <GDALAccess>0)
-            hds = exc_wrap_pointer(hds)
-        except CPLE_OpenFailedError as err:
-            raise RasterioIOError(err.errmsg)
+        #try:
+        #    with nogil:
+        #        hds = GDALOpen(cypath, <GDALAccess>0)
+        #    hds = exc_wrap_pointer(hds)
+        #except CPLE_OpenFailedError as err:
+        #    raise RasterioIOError(err.errmsg)
+
+        hds = (<DatasetReaderBase?>self.src_dataset).handle()
+        hds = exc_wrap_pointer(hds)
+
+        log.debug("Warp_extras: %r", self.warp_extras)
 
         for key, val in self.warp_extras.items():
             key = key.upper().encode('utf-8')
@@ -685,7 +687,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
 
         driver = GDALGetDatasetDriver(self._hds)
-        self.driver = get_driver_name(driver)
+        self.driver = get_driver_name(driver).decode('utf-8')
 
         self._count = GDALGetRasterCount(self._hds)
         self.width = GDALGetRasterXSize(self._hds)
