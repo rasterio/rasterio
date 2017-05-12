@@ -3,7 +3,7 @@ from packaging.version import parse
 import pytest
 
 import rasterio
-from rasterio.io import VirtualWarpedFile
+from rasterio.vrt import WarpedVRT
 
 
 # Custom markers.
@@ -18,7 +18,7 @@ credentials = pytest.mark.skipif(
 
 def test_wrap_file():
     """A warp wrapper's dataset has the expected properties"""
-    with VirtualWarpedFile(
+    with WarpedVRT(
             'tests/data/RGB.byte.tif', dst_crs='EPSG:3857').open() as dataset:
         assert dataset.crs == 'EPSG:3857'
         assert tuple(round(x, 1) for x in dataset.bounds) == (
@@ -36,7 +36,7 @@ def test_wrap_file():
 def test_wrap_s3():
     """A warp wrapper's dataset has the expected properties"""
     L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
-    with VirtualWarpedFile(L8TIF, dst_crs='EPSG:3857').open() as dataset:
+    with WarpedVRT(L8TIF, dst_crs='EPSG:3857').open() as dataset:
         assert dataset.crs == 'EPSG:3857'
         assert tuple(round(x, 1) for x in dataset.bounds) == (
             9556764.6, 2345109.3, 9804595.9, 2598509.1)

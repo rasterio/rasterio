@@ -44,6 +44,7 @@ cdef extern from "cpl_string.h" nogil:
     const char *CSLFetchNameValue(char **papszStrList, const char *pszName)
     char **CSLSetNameValue(char **list, char *name, char *val)
     void CSLDestroy(char **list)
+    char **CSLMerge(char **first, char **second)
 
 
 cdef extern from "cpl_vsi.h" nogil:

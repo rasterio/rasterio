@@ -2,6 +2,9 @@
 
 cdef extern from "gdalwarper.h" nogil:
 
+    ctypedef enum GDALResampleAlg:
+        pass
+
     ctypedef struct GDALWarpOptions
 
     cdef cppclass GDALWarpOperation:
