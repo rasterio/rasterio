@@ -10,8 +10,6 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
-    - secure: "hvRtEFBJ7qoRNxM+xCcSp4RAXMIRhllFtXZbEAs8xdz6ov3DHBB16QKXLIQ713R9gQHsoyZkEShLSU22pqD/37EqdFtGQ7V6iICfVZMzUp4YLxbw2JClT4MHmjTzbtrkh4LvxpUS2e+sZUukFisfYiNgklDyaNPTl15f0YFTr18="
-    - secure: "xYB0j68QKkKTHa2fdVTr8SAmge8FITZCLyIcdIVdc0PcowEHXEgYcGScXYgWUarQrpfshBlf7xV8jRMzLSWj8ut5k52ozRunm1tjSYhHrROQhZIntfuFgEkF7N05o144XslrrESh6L0q6scFMPvOOepHRMbiApYLhTHRAhHFp7Q="
   matrix:
     - GDALVERSION="1.9.2"
     - GDALVERSION="1.11.5"
