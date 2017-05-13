@@ -23,7 +23,8 @@ def test_wrap_file(path_rgb_byte_tif):
             assert vrt.crs == 'EPSG:3857'
             assert tuple(round(x, 1) for x in vrt.bounds) == (
                 -8789636.7, 2700460.0, -8524406.4, 2943560.2)
-            assert vrt.name == 'WarpedVRT(/Users/sean/code/rasterio/tests/data/RGB.byte.tif)'
+            assert vrt.name.startswith('WarpedVRT(')
+            assert vrt.name.endswith('tests/data/RGB.byte.tif')
             assert vrt.indexes == (1, 2, 3)
             assert vrt.nodatavals == (0, 0, 0)
             assert vrt.dtypes == ('uint8', 'uint8', 'uint8')
@@ -31,7 +32,9 @@ def test_wrap_file(path_rgb_byte_tif):
 
 
 def test_extras(path_rgb_byte_tif):
-    """The cutline extra has expected effect"""
+    """The cutline extra has expected effect
+
+    TODO: add a GeoJSON cutline option."""
     with rasterio.open(path_rgb_byte_tif) as src:
         with WarpedVRT(
                 src, dst_crs='EPSG:3857',
