@@ -627,19 +627,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
             self.warp_extras['init_dest'] = 'NO_DATA'
 
-    def start(self):
-        """Called to start reading a dataset."""
         cdef GDALDriverH driver = NULL
         cdef GDALDatasetH hds = NULL
         cdef GDALDatasetH hds_warped = NULL
         cdef const char *cypath = NULL
         cdef char *dst_crs_wkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
-        cdef char **warp_extras = NULL
+        cdef char **c_warp_extras = NULL
         cdef GDALWarpOptions *psWOptions = NULL
-
-        cdef float tolerance = self.tolerance
-        cdef int resampling = self.resampling
+        cdef float c_tolerance = tolerance
+        cdef GDALResampleAlg c_resampling = resampling
 
         # Convert destination CRS to a C WKT string.
         try:
@@ -650,13 +647,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         log.debug("Exported CRS to WKT.")
 
-        #try:
-        #    with nogil:
-        #        hds = GDALOpen(cypath, <GDALAccess>0)
-        #    hds = exc_wrap_pointer(hds)
-        #except CPLE_OpenFailedError as err:
-        #    raise RasterioIOError(err.errmsg)
-
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
 
@@ -665,24 +655,24 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         for key, val in self.warp_extras.items():
             key = key.upper().encode('utf-8')
             val = str(val).upper().encode('utf-8')
-            warp_extras = CSLSetNameValue(
-                warp_extras, <const char *>key, <const char *>val)
+            c_warp_extras = CSLSetNameValue(
+                c_warp_extras, <const char *>key, <const char *>val)
 
         psWOptions = create_warp_options(
-            <GDALResampleAlg>self.resampling, self.src_nodata,
-            self.dst_nodata, GDALGetRasterCount(hds), <const char **>warp_extras)
+            <GDALResampleAlg>c_resampling, self.src_nodata,
+            self.dst_nodata, GDALGetRasterCount(hds), <const char **>c_warp_extras)
 
         try:
             with nogil:
                 hds_warped = GDALAutoCreateWarpedVRT(
-                    hds, NULL, dst_crs_wkt, <GDALResampleAlg>resampling,
-                    tolerance, psWOptions)
+                    hds, NULL, dst_crs_wkt, c_resampling,
+                    c_tolerance, psWOptions)
             self._hds = exc_wrap_pointer(hds_warped)
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
         finally:
             CPLFree(dst_crs_wkt)
-            CSLDestroy(warp_extras)
+            CSLDestroy(c_warp_extras)
             GDALDestroyWarpOptions(psWOptions)
 
 
@@ -702,10 +692,13 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         self._closed = False
 
+    def start(self):
+        """Starts the VRT's life cycle."""
+
         log.debug("Dataset %r is started.", self)
 
     def stop(self):
-        """Ends the dataset's life cycle"""
+        """Ends the VRT's life cycle"""
         if self._hds != NULL:
             GDALFlushCache(self._hds)
             GDALClose(self._hds)

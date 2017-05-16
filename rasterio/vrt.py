@@ -19,7 +19,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     ----------
 
     src_dataset : dataset
-        The dataset object that is virtually warped.
+        The dataset object to be virtually warped.
     dst_crs : CRS or str
         The warp operation's destination coordinate reference system.
     resampling : int
@@ -28,12 +28,14 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     tolerance : float
         The maximum error tolerance in input pixels when approximating
         the warp transformation. The default is 0.125.
-    src_nodata : float, int, or None
-        The nodata value for the source dataset.
-    dst_nodata : float, int, or None
+    src_nodata : float
+        A nodata value for the source data. It may be a value other
+        than the nodata value of src_dataset.
+    dst_nodata : float, int
         The nodata value for the virtually warped dataset.
     warp_extras : dict
-        GDAL extra warp options.
+        GDAL extra warp options. See
+        http://www.gdal.org/structGDALWarpOptions.html.
 
     Example
     -------
@@ -53,4 +55,10 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         return self
 
     def __exit__(self, *args, **kwargs):
+        self.close()
+
+    def __del__(self):
+        self.close()
+
+    def close(self):
         self.stop()
