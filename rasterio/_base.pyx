@@ -61,7 +61,7 @@ def get_dataset_driver(path):
     path = path.encode('utf-8')
 
     try:
-        dataset = exc_wrap_pointer(GDALOpen(<const char *>path, 0))
+        dataset = exc_wrap_pointer(GDALOpenShared(<const char *>path, <GDALAccess>0))
         driver = GDALGetDatasetDriver(dataset)
         drivername = get_driver_name(driver)
 
@@ -142,7 +142,7 @@ cdef class DatasetBase(object):
 
         try:
             with nogil:
-                hds = GDALOpen(cypath, 0)
+                hds = GDALOpenShared(cypath, <GDALAccess>0)
             self._hds = exc_wrap_pointer(hds)
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)

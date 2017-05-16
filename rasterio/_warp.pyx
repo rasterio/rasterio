@@ -650,6 +650,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
 
+        #hds = GDALOpenShared(<const char *>self.src_dataset.name, <GDALAccess>0)
+        #hds = exc_wrap_pointer(hds)
+
         log.debug("Warp_extras: %r", self.warp_extras)
 
         for key, val in self.warp_extras.items():
@@ -704,4 +707,4 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             GDALClose(self._hds)
         self._hds = NULL
 
-        log.debug("Dataset %r has been stopped.", self)
+        

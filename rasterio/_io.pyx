@@ -1019,7 +1019,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         elif self.mode == 'r+':
             try:
-                self._hds = exc_wrap_pointer(GDALOpen(fname, 1))
+                self._hds = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>1))
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -1712,7 +1712,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         elif self.mode == 'r+':
             try:
-                temp = exc_wrap_pointer(GDALOpen(fname, 0))
+                temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 
