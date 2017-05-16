@@ -314,7 +314,7 @@ def calculate_default_transform(src_crs, dst_crs, width, height,
     transform: Affine
         Output affine transformation matrix
     width, height: int
-        Output dimesions
+        Output dimensions
 
     Notes
     -----
