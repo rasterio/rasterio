@@ -522,7 +522,6 @@ cdef class DatasetReaderBase(DatasetBase):
         cdef GDALDatasetH dataset = NULL
 
         dataset = self.handle()
-        GDALFlushCache(dataset)
 
         # Prepare the IO window.
         if window:
@@ -1047,6 +1046,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
+
+    def stop(self):
+        """Ends the dataset's life cycle"""
+        if self._hds != NULL:
+            GDALFlushCache(self._hds)
+            GDALClose(self._hds)
+        self._hds = NULL
+        self._closed = True
+        log.debug("Dataset %r has been stopped.", self)
 
     def set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""

@@ -274,7 +274,6 @@ cdef class DatasetBase(object):
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:
-            GDALFlushCache(self._hds)
             GDALClose(self._hds)
         self._hds = NULL
         log.debug("Dataset %r has been stopped.", self)

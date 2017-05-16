@@ -703,8 +703,5 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
     def stop(self):
         """Ends the VRT's life cycle"""
         if self._hds != NULL:
-            GDALFlushCache(self._hds)
             GDALClose(self._hds)
         self._hds = NULL
-
-        
