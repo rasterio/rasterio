@@ -262,10 +262,11 @@ class MemoryFile(MemoryFileBase):
         if self.exists():
             s = DatasetReader(vsi_path, 'r+')
         else:
-            s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
-                              height=height, count=count, crs=crs,
-                              transform=transform, dtype=dtype,
-                              nodata=nodata, **kwargs)
+            writer = get_writer_for_driver(driver)
+            s = writer(vsi_path, 'w', driver=driver, width=width,
+                       height=height, count=count, crs=crs,
+                       transform=transform, dtype=dtype,
+                       nodata=nodata, **kwargs)
         s.start()
         return s
 
