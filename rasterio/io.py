@@ -235,8 +235,9 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, ext=''):
-        super(MemoryFile, self).__init__(file_or_bytes=file_or_bytes, ext=ext)
+    def __init__(self, file_or_bytes=None, filename=None, ext=''):
+        super(MemoryFile, self).__init__(
+            file_or_bytes=file_or_bytes, filename=filename, ext=ext)
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
