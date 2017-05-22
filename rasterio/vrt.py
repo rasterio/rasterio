@@ -47,7 +47,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     """
 
     def __repr__(self):
-        return "<{} WarpedVRTReader name='{}' mode='{}'>".format(
+        return "<{} WarpedVRT name='{}' mode='{}'>".format(
             self.closed and 'closed' or 'open', self.name, self.mode)
 
     def __enter__(self):

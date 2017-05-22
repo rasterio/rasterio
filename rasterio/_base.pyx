@@ -176,11 +176,6 @@ cdef class DatasetBase(object):
             raise IndexError("No such band index: {!s}".format(bidx))
         return band
 
-        #if band == NULL:
-        #    raise ValueError("NULL band")
-
-        #return band
-
     def _has_band(self, bidx):
         cdef GDALRasterBandH band = NULL
         try:
