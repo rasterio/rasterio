@@ -718,15 +718,18 @@ cdef class DatasetReaderBase(DatasetBase):
 cdef class MemoryFileBase(object):
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, file_or_bytes=None, ext=''):
+    def __init__(self, file_or_bytes=None, filename=None, ext=''):
         """A file in an in-memory filesystem.
 
         Parameters
         ----------
         file_or_bytes : file or bytes
             A file opened in binary mode or bytes or a bytearray
+        filename : str
+            A filename for the in-memory file under /vsimem
         ext : str
-            A file extension for the in-memory file under /vsimem
+            A file extension for the in-memory file under /vsimem. Ignored if
+            filename was provided.
         """
         cdef VSILFILE *vsi_handle = NULL
 
@@ -742,8 +745,13 @@ cdef class MemoryFileBase(object):
         else:
             initial_bytes = b''
 
-        # GDAL 2.1 requires a .zip extension for zipped files.
-        self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+        if filename:
+            # GDAL's SRTMHGT driver requires the filename to be "correct" (match
+            # the bounds being written)
+            self.name = '/vsimem/{0}'.format(filename)
+        else:
+            # GDAL 2.1 requires a .zip extension for zipped files.
+            self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
 
         self.path = self.name.encode('utf-8')
         self._pos = 0
