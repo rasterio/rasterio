@@ -9,16 +9,18 @@ import uuid
 import numpy as np
 
 from rasterio._err import (
-    GDALError, CPLE_NotSupportedError, CPLE_AppDefinedError)
+    GDALError, CPLE_IllegalArgError, CPLE_NotSupportedError,
+    CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
-from rasterio.errors import DriverRegistrationError, CRSError
+from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError
 from rasterio.transform import Affine, from_bounds, tastes_like_gdal
+from rasterio.vfs import parse_path, vsi_path
 
 cimport numpy as np
 
-from rasterio._base cimport _osr_from_crs as osr_from_crs
+from rasterio._base cimport _osr_from_crs, get_driver_name
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
@@ -49,8 +51,8 @@ def _transform_geom(
     cdef OGRGeometryH dst_geom = NULL
     cdef int i
 
-    src = osr_from_crs(src_crs)
-    dst = osr_from_crs(dst_crs)
+    src = _osr_from_crs(src_crs)
+    dst = _osr_from_crs(dst_crs)
 
     try:
         transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
@@ -92,6 +94,67 @@ def _transform_geom(
             CSLDestroy(options)
         OSRRelease(src)
         OSRRelease(dst)
+
+
+cdef GDALWarpOptions * create_warp_options(
+        GDALResampleAlg resampling, object src_nodata, object dst_nodata,
+        int src_count, const char **options) except NULL:
+    """Return a pointer to a GDALWarpOptions composed from input params
+    """
+
+    # First, we make sure we have consistent source and destination
+    # nodata values. TODO: alpha bands.
+
+    # We require source nodata if destination nodata is passed.
+    if src_nodata is None and dst_nodata is not None:
+        raise ValueError("src_nodata must be provided because dst_nodata "
+                         "is not None")
+
+    if dst_nodata is None:
+        if src_nodata is not None:
+            dst_nodata = src_nodata
+        else:
+            dst_nodata = 0
+            src_nodata = 0
+
+    # Convert to float to validate.
+    dst_nodata = float(dst_nodata)
+    src_nodata = float(src_nodata)
+
+    cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
+
+    # Note: warp_extras is pointed to different memory locations on every
+    # call to CSLSetNameValue call below, but needs to be set here to
+    # get the defaults.
+    cdef char **warp_extras = psWOptions.papszWarpOptions
+
+    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # for a list of supported options. Copying unsupported options
+    # is fine.
+
+    # Use the same default nodata logic as gdalwarp.
+    warp_extras = CSLSetNameValue(
+        warp_extras, "UNIFIED_SRC_NODATA", "YES")
+
+    warp_extras = CSLMerge(warp_extras, <char **>options)
+
+    psWOptions.eResampleAlg = <GDALResampleAlg>resampling
+
+    psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
+    psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+    psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
+    psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+    for i in range(src_count):
+        psWOptions.padfSrcNoDataReal[i] = src_nodata
+        psWOptions.padfSrcNoDataImag[i] = 0.0
+        psWOptions.padfDstNoDataReal[i] = dst_nodata
+        psWOptions.padfDstNoDataImag[i] = 0.0
+
+    # Important: set back into struct or values set above are lost
+    # This is because CSLSetNameValue returns a new list each time
+    psWOptions.papszWarpOptions = warp_extras
+
+    return psWOptions
 
 
 def _reproject(
@@ -193,6 +256,20 @@ def _reproject(
     cdef int i
     cdef double tolerance = 0.125
     cdef GDAL_GCP *gcplist = NULL
+    cdef void *hTransformArg = NULL
+    cdef GDALTransformerFunc pfnTransformer = NULL
+    cdef GDALWarpOptions *psWOptions = NULL
+
+    # Validate nodata values immediately.
+    if src_nodata is not None:
+        if not in_dtype_range(src_nodata, source.dtype):
+            raise ValueError("src_nodata must be in valid range for "
+                             "source dtype")
+
+    if dst_nodata is not None:
+        if not in_dtype_range(dst_nodata, destination.dtype):
+            raise ValueError("dst_nodata must be in valid range for "
+                             "destination dtype")
 
     # If the source is an ndarray, we copy to a MEM dataset.
     # We need a src_transform and src_dst in this case. These will
@@ -225,19 +302,23 @@ def _reproject(
 
         GDALSetDescription(
             src_dataset, "Temporary source dataset for _reproject()")
+
         log.debug("Created temp source dataset")
 
         if src_transform:
             for i in range(6):
                 gt[i] = src_transform[i]
             retval = GDALSetGeoTransform(src_dataset, gt)
+
             log.debug("Set transform on temp source dataset: %d", retval)
 
             try:
-                osr = osr_from_crs(src_crs)
+                osr = _osr_from_crs(src_crs)
                 OSRExportToWkt(osr, &srcwkt)
                 GDALSetProjection(src_dataset, srcwkt)
+
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
+
             finally:
                 CPLFree(srcwkt)
                 OSRRelease(osr)
@@ -264,6 +345,7 @@ def _reproject(
         # Copy arrays to the dataset.
         retval = io_auto(source, src_dataset, 1)
         # TODO: handle errors (by retval).
+
         log.debug("Wrote array to temp source dataset")
 
     # If the source is a rasterio MultiBand, no copy necessary.
@@ -306,6 +388,7 @@ def _reproject(
 
         GDALSetDescription(
             dst_dataset, "Temporary destination dataset for _reproject()")
+
         log.debug("Created temp destination dataset.")
 
         for i in range(6):
@@ -316,9 +399,11 @@ def _reproject(
                 "Failed to set transform on temp destination dataset.")
 
         try:
-            osr = osr_from_crs(dst_crs)
+            osr = _osr_from_crs(dst_crs)
             OSRExportToWkt(osr, &dstwkt)
+
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
+
             if not GDALError.none == GDALSetProjection(
                     dst_dataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
@@ -327,6 +412,7 @@ def _reproject(
             CPLFree(dstwkt)
 
         retval = io_auto(destination, dst_dataset, 1)
+
         log.debug("Wrote array to temp output dataset")
 
         if dst_nodata is None and hasattr(destination, "fill_value"):
@@ -343,10 +429,6 @@ def _reproject(
             dst_nodata = udr.nodata
     else:
         raise ValueError("Invalid destination")
-
-    cdef void *hTransformArg = NULL
-    cdef GDALTransformerFunc pfnTransformer = NULL
-    cdef GDALWarpOptions *psWOptions = NULL
 
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
@@ -372,22 +454,26 @@ def _reproject(
                 GDALGenImgProjTransform, hTransformArg, tolerance))
         pfnTransformer = GDALApproxTransform
         GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
-        psWOptions = GDALCreateWarpOptions()
+
         log.debug("Created transformer and options.")
+
     except:
         GDALDestroyApproxTransformer(hTransformArg)
-        GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
         raise
 
     # Note: warp_extras is pointed to different memory locations on every
     # call to CSLSetNameValue call below, but needs to be set here to
     # get the defaults.
-    warp_extras = psWOptions.papszWarpOptions
+    # warp_extras = psWOptions.papszWarpOptions
 
     valb = str(num_threads).encode('utf-8')
     warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
+
     log.debug("Setting NUM_THREADS option: %d", num_threads)
+
+    if init_dest_nodata:
+        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
 
     # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
@@ -398,69 +484,9 @@ def _reproject(
         warp_extras = CSLSetNameValue(
             warp_extras, <const char *>key, <const char *>val)
 
-    log.debug("Created warp options")
-
-    psWOptions.eResampleAlg = <GDALResampleAlg>resampling
-
-    # Set src_nodata and dst_nodata
-    if src_nodata is None and dst_nodata is not None:
-        psWOptions.papszWarpOptions = warp_extras
-        GDALDestroyApproxTransformer(hTransformArg)
-        GDALDestroyWarpOptions(psWOptions)
-        CPLFree(imgProjOptions)
-        raise ValueError("src_nodata must be provided because dst_nodata "
-                         "is not None")
-    log.debug("src_nodata: %s" % src_nodata)
-
-    if dst_nodata is None:
-        if src_nodata is not None:
-            dst_nodata = src_nodata
-        else:
-            dst_nodata = 0  # GDAL default
-    log.debug("dst_nodata: %s" % dst_nodata)
-
-    # Validate nodata values
-    if src_nodata is not None:
-        if not in_dtype_range(src_nodata, source.dtype):
-            psWOptions.papszWarpOptions = warp_extras
-            GDALDestroyApproxTransformer(hTransformArg)
-            GDALDestroyWarpOptions(psWOptions)
-            CPLFree(imgProjOptions)
-            raise ValueError("src_nodata must be in valid range for "
-                            "source dtype")
-
-        psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(
-            src_count * sizeof(double))
-        psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(
-            src_count * sizeof(double))
-        for i in range(src_count):
-            psWOptions.padfSrcNoDataReal[i] = src_nodata
-            psWOptions.padfSrcNoDataImag[i] = 0.0
-        warp_extras = CSLSetNameValue(
-            warp_extras, "UNIFIED_SRC_NODATA", "YES")
-
-
-    if dst_nodata is not None and not in_dtype_range(
-            dst_nodata, destination.dtype):
-        psWOptions.papszWarpOptions = warp_extras
-        GDALDestroyApproxTransformer(hTransformArg)
-        GDALDestroyWarpOptions(psWOptions)
-        CPLFree(imgProjOptions)
-        raise ValueError("dst_nodata must be in valid range for "
-                         "destination dtype")
-
-    psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-    psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
-    for i in range(src_count):
-        psWOptions.padfDstNoDataReal[i] = dst_nodata
-        psWOptions.padfDstNoDataImag[i] = 0.0
-
-    if init_dest_nodata:
-        warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
-
-    # Important: set back into struct or values set above are lost
-    # This is because CSLSetNameValue returns a new list each time
-    psWOptions.papszWarpOptions = warp_extras
+    psWOptions = create_warp_options(
+        <GDALResampleAlg>resampling, src_nodata,
+        dst_nodata, src_count, <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
@@ -476,14 +502,13 @@ def _reproject(
 
     log.debug("Set transformer options")
 
-    # TODO: alpha band.
-
     # Now that the transformer and warp options are set up, we init
     # and run the warper.
     cdef GDALWarpOperation oWarper
     try:
         exc_wrap_int(oWarper.Initialize(psWOptions))
         rows, cols = destination.shape[-2:]
+
         log.debug(
             "Chunk and warp window: %d, %d, %d, %d.",
             0, 0, cols, rows)
@@ -541,7 +566,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         transform = None
     img = np.empty((height, width))
 
-    osr = osr_from_crs(dst_crs)
+    osr = _osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
     OSRRelease(osr)
 
@@ -555,6 +580,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
                 GDALSuggestedWarpOutput2(
                     temp._hds, GDALGenImgProjTransform, hTransformArg,
                     geotransform, &npixels, &nlines, extent, 0))
+
             log.debug("Created transformer and warp output.")
 
         except CPLE_NotSupportedError as err:
@@ -565,7 +591,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
                 # This "exception" should be treated as a debug msg, not error
                 # "Reprojection failed, err = -14, further errors will be
                 # suppressed on the transform object."
-                log.debug("Encountered points outside of valid dst crs region")
+                log.info("Encountered points outside of valid dst crs region")
                 pass
             else:
                 raise err
@@ -581,3 +607,98 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     dst_height = nlines
 
     return dst_affine, dst_width, dst_height
+
+
+cdef class WarpedVRTReaderBase(DatasetReaderBase):
+
+    def __init__(self, src_dataset, dst_crs=None, resampling=Resampling.nearest,
+                 tolerance=0.125, src_nodata=None, dst_nodata=None,
+                 init_dest_nodata=True, **warp_extras):
+        # kwargs become warp options.
+        super(WarpedVRTReaderBase, self).__init__(self)
+        self.src_dataset = src_dataset
+        self.name = "WarpedVRT({})".format(src_dataset.name)
+        self.dst_crs = dst_crs
+        self.resampling = resampling
+        self.tolerance = tolerance
+        self.src_nodata = src_nodata
+        self.dst_nodata = dst_nodata
+        self.warp_extras = warp_extras.copy()
+        if init_dest_nodata is True and 'init_dest' not in warp_extras:
+            self.warp_extras['init_dest'] = 'NO_DATA'
+
+        cdef GDALDriverH driver = NULL
+        cdef GDALDatasetH hds = NULL
+        cdef GDALDatasetH hds_warped = NULL
+        cdef const char *cypath = NULL
+        cdef char *dst_crs_wkt = NULL
+        cdef OGRSpatialReferenceH osr = NULL
+        cdef char **c_warp_extras = NULL
+        cdef GDALWarpOptions *psWOptions = NULL
+        cdef float c_tolerance = tolerance
+        cdef GDALResampleAlg c_resampling = resampling
+
+        # Convert destination CRS to a C WKT string.
+        try:
+            osr = _osr_from_crs(self.dst_crs)
+            OSRExportToWkt(osr, &dst_crs_wkt)
+        finally:
+            OSRRelease(osr)
+
+        log.debug("Exported CRS to WKT.")
+
+        hds = (<DatasetReaderBase?>self.src_dataset).handle()
+        hds = exc_wrap_pointer(hds)
+
+        log.debug("Warp_extras: %r", self.warp_extras)
+
+        for key, val in self.warp_extras.items():
+            key = key.upper().encode('utf-8')
+            val = str(val).upper().encode('utf-8')
+            c_warp_extras = CSLSetNameValue(
+                c_warp_extras, <const char *>key, <const char *>val)
+
+        psWOptions = create_warp_options(
+            <GDALResampleAlg>c_resampling, self.src_nodata,
+            self.dst_nodata, GDALGetRasterCount(hds), <const char **>c_warp_extras)
+
+        try:
+            with nogil:
+                hds_warped = GDALAutoCreateWarpedVRT(
+                    hds, NULL, dst_crs_wkt, c_resampling,
+                    c_tolerance, psWOptions)
+            self._hds = exc_wrap_pointer(hds_warped)
+        except CPLE_OpenFailedError as err:
+            raise RasterioIOError(err.errmsg)
+        finally:
+            CPLFree(dst_crs_wkt)
+            CSLDestroy(c_warp_extras)
+            GDALDestroyWarpOptions(psWOptions)
+
+
+        driver = GDALGetDatasetDriver(self._hds)
+        self.driver = get_driver_name(driver).decode('utf-8')
+
+        self._count = GDALGetRasterCount(self._hds)
+        self.width = GDALGetRasterXSize(self._hds)
+        self.height = GDALGetRasterYSize(self._hds)
+        self.shape = (self.height, self.width)
+
+        self._transform = self.read_transform()
+        self._crs = self.read_crs()
+
+        # touch self.meta
+        _ = self.meta
+
+        self._closed = False
+
+    def start(self):
+        """Starts the VRT's life cycle."""
+
+        log.debug("Dataset %r is started.", self)
+
+    def stop(self):
+        """Ends the VRT's life cycle"""
+        if self._hds != NULL:
+            GDALClose(self._hds)
+        self._hds = NULL

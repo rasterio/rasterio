@@ -551,7 +551,6 @@ cdef class DatasetReaderBase(DatasetBase):
         cdef GDALDatasetH dataset = NULL
 
         dataset = self.handle()
-        GDALFlushCache(dataset)
 
         # Prepare the IO window.
         if window:
@@ -1056,7 +1055,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         elif self.mode == 'r+':
             try:
-                self._hds = exc_wrap_pointer(GDALOpen(fname, 1))
+                self._hds = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>1))
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -1084,6 +1083,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
+
+    def stop(self):
+        """Ends the dataset's life cycle"""
+        if self._hds != NULL:
+            GDALFlushCache(self._hds)
+            GDALClose(self._hds)
+        self._hds = NULL
+        self._closed = True
+        log.debug("Dataset %r has been stopped.", self)
 
     def set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
@@ -1749,7 +1757,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         elif self.mode == 'r+':
             try:
-                temp = exc_wrap_pointer(GDALOpen(fname, 0))
+                temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 

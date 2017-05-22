@@ -14,6 +14,7 @@ from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
 from rasterio import windows
+from rasterio.enums import Resampling
 from rasterio.env import ensure_env
 from rasterio.transform import guard_transform, xy, rowcol
 

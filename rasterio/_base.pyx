@@ -12,6 +12,7 @@ from rasterio._err import (
     GDALError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
@@ -60,7 +61,7 @@ def get_dataset_driver(path):
     path = path.encode('utf-8')
 
     try:
-        dataset = exc_wrap_pointer(GDALOpen(<const char *>path, 0))
+        dataset = exc_wrap_pointer(GDALOpenShared(<const char *>path, <GDALAccess>0))
         driver = GDALGetDatasetDriver(dataset)
         drivername = get_driver_name(driver)
 
@@ -141,7 +142,7 @@ cdef class DatasetBase(object):
 
         try:
             with nogil:
-                hds = GDALOpen(cypath, 0)
+                hds = GDALOpenShared(cypath, <GDALAccess>0)
             self._hds = exc_wrap_pointer(hds)
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
@@ -174,11 +175,6 @@ cdef class DatasetBase(object):
         if band == NULL:
             raise IndexError("No such band index: {!s}".format(bidx))
         return band
-
-        #if band == NULL:
-        #    raise ValueError("NULL band")
-
-        #return band
 
     def _has_band(self, bidx):
         cdef GDALRasterBandH band = NULL
@@ -273,7 +269,6 @@ cdef class DatasetBase(object):
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:
-            GDALFlushCache(self._hds)
             GDALClose(self._hds)
         self._hds = NULL
         log.debug("Dataset %r has been stopped.", self)

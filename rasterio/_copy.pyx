@@ -38,7 +38,7 @@ cdef class RasterCopier:
         dstpath = dstpath.encode('utf-8')
 
         try:
-            src_dataset = exc_wrap_pointer(GDALOpen(<const char *>srcpath, 0))
+            src_dataset = exc_wrap_pointer(GDALOpenShared(<const char *>srcpath, <GDALAccess>0))
             dst_dataset = exc_wrap_pointer(
                 GDALCreateCopy(drv, <const char *>dstpath, src_dataset,
                                strictness, NULL, NULL, NULL))
