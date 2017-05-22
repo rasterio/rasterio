@@ -10,12 +10,12 @@ from packaging.version import parse
 import rasterio
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
-from rasterio.errors import CRSError
+from rasterio.errors import GDALBehaviorChangeException
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
 from rasterio import windows
-from rasterio.plot import show
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -1018,3 +1018,20 @@ def test_reproject_gcps(rgb_byte_profile):
     assert not out[:, 0, -1].any()
     assert not out[:, -1, -1].any()
     assert not out[:, -1, 0].any()
+
+
+@pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.2.0'),
+    reason="GDAL 2.2.0 and newer has different antimeridian cutting behavior.")
+def test_transform_geom_gdal22():
+    """Enabling `antimeridian_cutting` has no effect on GDAL 2.2.0 or newer
+    where antimeridian cutting is always enabled.  This could produce
+    unexpected geometries, so an exception is raised.
+    """
+    geom = {
+        'type': 'Point',
+        'coordinates': [0, 0]
+    }
+    with pytest.raises(GDALBehaviorChangeException):
+        transform_geom(
+            'EPSG:4326', 'EPSG:3857', geom, antimeridian_cutting=False)

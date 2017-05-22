@@ -236,8 +236,9 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, ext=''):
-        super(MemoryFile, self).__init__(file_or_bytes=file_or_bytes, ext=ext)
+    def __init__(self, file_or_bytes=None, filename=None, ext=''):
+        super(MemoryFile, self).__init__(
+            file_or_bytes=file_or_bytes, filename=filename, ext=ext)
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
@@ -263,10 +264,11 @@ class MemoryFile(MemoryFileBase):
         if self.exists():
             s = DatasetReader(vsi_path, 'r+')
         else:
-            s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
-                              height=height, count=count, crs=crs,
-                              transform=transform, dtype=dtype,
-                              nodata=nodata, **kwargs)
+            writer = get_writer_for_driver(driver)
+            s = writer(vsi_path, 'w', driver=driver, width=width,
+                       height=height, count=count, crs=crs,
+                       transform=transform, dtype=dtype,
+                       nodata=nodata, **kwargs)
         s.start()
         return s
 

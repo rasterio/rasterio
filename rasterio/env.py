@@ -188,12 +188,12 @@ class Env(object):
                     local._discovered_options[key] = val
                     log.debug("Discovered option: %s=%s", key, val)
 
-            defenv()
+            defenv(**self.options)
             self.context_options = {}
         else:
             self._has_parent_env = True
             self.context_options = getenv()
-        setenv(**self.options)
+            setenv(**self.options)
         log.debug("Entered env context: %r", self)
         return self
 
@@ -216,14 +216,19 @@ class Env(object):
         log.debug("Exited env context: %r", self)
 
 
-def defenv():
+def defenv(**options):
     """Create a default environment if necessary."""
     if local._env:
         log.debug("GDAL environment exists: %r", local._env)
     else:
         log.debug("No GDAL environment exists")
         local._env = GDALEnv()
-        local._env.update_config_options(**default_options)
+        # first set default options, then add user options
+        set_options = {}
+        for d in (default_options, options):
+            for (k, v) in d.items():
+                set_options[k] = v
+        local._env.update_config_options(**set_options)
         log.debug(
             "New GDAL environment %r created", local._env)
     local._env.start()

@@ -110,6 +110,7 @@ cdef extern from "gdal.h" nogil:
     ctypedef void * GDALAsyncReaderH
 
     ctypedef long long GSpacing
+    ctypedef unsigned long long GIntBig
 
     ctypedef enum GDALDataType:
         GDT_Unknown
@@ -237,6 +238,10 @@ cdef extern from "gdal.h" nogil:
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
     int GDALGetGCPCount(GDALDatasetH hDS)
     const char *GDALGetGCPProjection(GDALDatasetH hDS)
+    int GDALGetCacheMax()
+    void GDALSetCacheMax(int nBytes)
+    GIntBig GDALGetCacheMax64()
+    void GDALSetCacheMax64(GIntBig nBytes)
 
 
 cdef extern from "ogr_api.h" nogil:
