@@ -87,8 +87,8 @@ def test_env_accessors(gdalenv):
     expected.update({'foo': '1', 'bar': '2'})
     assert getenv() == rasterio.env.local._env.options
     assert getenv() == expected
-    assert get_gdal_config('foo') == '1'
-    assert get_gdal_config('bar') == '2'
+    assert get_gdal_config('foo') == 1
+    assert get_gdal_config('bar') == 2
     delenv()
     with pytest.raises(EnvError):
         getenv()
@@ -346,3 +346,20 @@ def test_have_registered_drivers():
     acquire a threadlock whenever an environment is started."""
     with rasterio.Env():
         assert rasterio.env.local._env._have_registered_drivers
+
+
+def test_gdal_cachemax():
+    """``GDAL_CACHEMAX`` is a special case."""
+    original_cachemax = get_gdal_config('GDAL_CACHEMAX')
+    assert original_cachemax != 4321
+    # GDALSetCacheMax() has a limit of somewhere between 2 and 3 GB.
+    # We use GDALSetCacheMax64(), so use a value that is outside the 32 bit
+    # range to verify it is not being truncated.
+    set_gdal_config('GDAL_CACHEMAX', 4321)
+    assert get_gdal_config('GDAL_CACHEMAX', 4321) == 4321
+
+    # On first read the number will be in bytes.  Drop to MB if necessary.
+    try:
+        set_gdal_config('GDAL_CACHEMAX', original_cachemax)
+    except OverflowError:
+        set_gdal_config('GDAL_CACHEMAX', int(original_cachemax / 1000000))

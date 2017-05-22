@@ -4,6 +4,11 @@ Changes
 Next Release
 ------------
 
+New features:
+
+- Enable setting and getting `GDAL_CACHEMAX` (#1042).
+- Integer config option values are now properly encoded and decoded (#1042).
+
 Breaking changes:
 
 - Removed `**options` argument from `rasterio.warp.transform()`.  Transformer
