@@ -151,9 +151,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
     Returns
     -------
     rows : list of ints
-        list of row indicies
+        list of row indices
     cols : list of ints
-        list of column indicies
+        list of column indices
     """
 
     single_x = False
