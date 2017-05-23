@@ -9,6 +9,7 @@ import affine
 from click.testing import CliRunner
 import numpy as np
 from pytest import fixture
+import pytest
 
 import rasterio
 from rasterio.merge import merge
@@ -116,11 +117,12 @@ def test_merge_warn(test_data_dir_1):
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
     runner = CliRunner()
-    result = runner.invoke(
-        main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1'])
+    with pytest.warns(UserWarning) as warnings:
+        result = runner.invoke(
+            main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1'])
     assert result.exit_code == 0
+    assert '--nodata option for better results' in warnings[0].message.args[0]
     assert os.path.exists(outputname)
-    assert "using the --nodata option for better results" in result.output
 
 
 def test_merge_without_nodata(test_data_dir_2):
