@@ -914,7 +914,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
     if not crs:
-        raise ValueError("A crs is required")  # CRSError("CRS cannot be None")
+        raise CRSError("A defined coordinate reference system is required")
 
     cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 
