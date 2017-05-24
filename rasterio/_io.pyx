@@ -1106,7 +1106,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         log.debug("Input CRS: %r", crs)
 
-        # Normally, we expect a CRS dict.
         if isinstance(crs, dict):
             crs = CRS(crs)
         if isinstance(crs, CRS):
@@ -1130,6 +1129,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 OSRImportFromProj4(osr, proj_c)
         # Fall back for CRS strings like "EPSG:3857."
         else:
+            if crs is None:
+                crs = ''
             proj_b = crs.encode('utf-8')
             proj_c = proj_b
             OSRSetFromUserInput(osr, proj_c)
