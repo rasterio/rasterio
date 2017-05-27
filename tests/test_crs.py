@@ -211,3 +211,18 @@ def test_crs_OSR_no_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     crs2 = CRS.from_string('+proj=longlat +datum=NAD27 +no_defs')
     assert crs1 != crs2
+
+
+def test_safe_osr_release(tmpdir):
+    log = logging.getLogger('rasterio._gdal')
+    log.setLevel(logging.DEBUG)
+    logfile = str(tmpdir.join('test.log'))
+    fh = logging.FileHandler(logfile)
+    log.addHandler(fh)
+
+    with rasterio.Env():
+        CRS({}) == CRS({})
+
+    print(log)
+    log = open(logfile).read()
+    assert "Pointer 'hSRS' is NULL in 'OSRRelease'" not in log
