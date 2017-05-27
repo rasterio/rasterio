@@ -20,7 +20,7 @@ from rasterio.vfs import parse_path, vsi_path
 
 cimport numpy as np
 
-from rasterio._base cimport _osr_from_crs, get_driver_name
+from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
@@ -57,8 +57,8 @@ def _transform_geom(
     try:
         transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
     except:
-        OSRRelease(src)
-        OSRRelease(dst)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
         raise
 
     # Transform options.
@@ -92,8 +92,8 @@ def _transform_geom(
         OCTDestroyCoordinateTransformation(transform)
         if options != NULL:
             CSLDestroy(options)
-        OSRRelease(src)
-        OSRRelease(dst)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
 
 
 cdef GDALWarpOptions * create_warp_options(
@@ -321,7 +321,7 @@ def _reproject(
 
             finally:
                 CPLFree(srcwkt)
-                OSRRelease(osr)
+                _safe_osr_release(osr)
 
         elif gcps:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
@@ -411,7 +411,7 @@ def _reproject(
                     dst_dataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
-            OSRRelease(osr)
+            _safe_osr_release(osr)
             CPLFree(dstwkt)
 
         retval = io_auto(destination, dst_dataset, 1)
@@ -571,7 +571,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
     osr = _osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
-    OSRRelease(osr)
+    _safe_osr_release(osr)
 
     with InMemoryRaster(width=width, height=height, transform=transform,
                         gcps=gcps, crs=src_crs) as temp:
@@ -646,7 +646,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             osr = _osr_from_crs(self.dst_crs)
             OSRExportToWkt(osr, &dst_crs_wkt)
         finally:
-            OSRRelease(osr)
+            _safe_osr_release(osr)
 
         log.debug("Exported CRS to WKT.")
 

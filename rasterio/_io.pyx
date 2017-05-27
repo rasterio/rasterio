@@ -33,7 +33,8 @@ from rasterio import windows
 from libc.stdio cimport FILE
 cimport numpy as np
 
-from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
+from rasterio._base cimport (
+    _osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 from rasterio._shim cimport (
     delete_nodata_value, io_band, io_multi_band, io_multi_mask)
@@ -103,7 +104,7 @@ cdef class DatasetReaderBase(DatasetBase):
         out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
             output array into which data will be placed. If the height
-            and width of `out` differ from that of the specified 
+            and width of `out` differ from that of the specified
             window (see below), the raster image will be decimated or
             replicated using the specified resampling method (also see
             below).
@@ -1142,7 +1143,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         GDALSetProjection(self._hds, wkt)
 
         CPLFree(wkt)
-        OSRRelease(osr)
+        _safe_osr_release(osr)
         self._crs = crs
         log.debug("Self CRS: %r", self._crs)
 
@@ -1639,7 +1640,7 @@ cdef class InMemoryRaster:
                 GDALSetProjection(self._hds, srcwkt)
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
                 CPLFree(<void *>srcwkt)
-                OSRRelease(osr)
+                _safe_osr_release(osr)
 
         elif gcps and crs:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))

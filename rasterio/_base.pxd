@@ -32,3 +32,4 @@ cdef class DatasetBase:
 
 cdef const char *get_driver_name(GDALDriverH driver)
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL
+cdef _safe_osr_release(OGRSpatialReferenceH srs)
