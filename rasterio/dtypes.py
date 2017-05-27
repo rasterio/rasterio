@@ -108,7 +108,7 @@ def get_minimum_dtype(values):
     min_value = values.min()
     max_value = values.max()
 
-    if values.dtype.kind == 'i':
+    if values.dtype.kind in ('i', 'u'):
         if min_value >= 0:
             if max_value <= 255:
                 return uint8
