@@ -22,7 +22,7 @@ from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
-from rasterio.errors import DriverRegistrationError
+from rasterio.errors import CRSError, DriverRegistrationError
 from rasterio.errors import RasterioIOError
 from rasterio.errors import NodataShadowWarning
 from rasterio.sample import sample_gen
@@ -1128,12 +1128,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 proj_c = proj_b
                 OSRImportFromProj4(osr, proj_c)
         # Fall back for CRS strings like "EPSG:3857."
-        else:
-            if crs is None:
+        elif isinstance(crs, str) or crs is None:
+            if not crs:
                 crs = ''
             proj_b = crs.encode('utf-8')
             proj_c = proj_b
             OSRSetFromUserInput(osr, proj_c)
+        else:
+            raise CRSError(
+                "{!r} does not define a valid CRS".format(crs))
 
         # Fixup, export to WKT, and set the GDAL dataset's projection.
         OSRFixup(osr)

@@ -8,15 +8,23 @@ import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
+from rasterio.io import DatasetWriter
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+@pytest.fixture(scope='session')
+def profile_rgb_byte_tif(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        return src.profile
 
 
 # When possible, Rasterio gives you the CRS in the form of an EPSG code.
 def test_read_epsg(tmpdir):
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.crs.to_dict() == {'init': 'epsg:32618'}
+
 
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
@@ -25,6 +33,7 @@ def test_read_epsg3857(tmpdir):
         'tests/data/RGB.byte.tif', tiffname])
     with rasterio.open(tiffname) as src:
         assert src.crs.to_dict() == {'init': 'epsg:3857'}
+
 
 # Ensure that CRS sticks when we write a file.
 def test_write_3857(tmpdir):
@@ -40,6 +49,15 @@ def test_write_3857(tmpdir):
         'gdalinfo', dst_path])
     # WKT string may vary a bit w.r.t GDAL versions
     assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in info.decode('utf-8')
+
+
+def test_write_bogus_fails(tmpdir, profile_rgb_byte_tif):
+    src_path = str(tmpdir.join('lol.tif'))
+    profile = profile_rgb_byte_tif.copy()
+    profile['crs'] = ['foo']
+    with pytest.raises(CRSError):
+        rasterio.open(src_path, 'w', **profile)
+        # TODO: switch to DatasetWriter here and don't require a .start().
 
 
 def test_from_proj4_json():
