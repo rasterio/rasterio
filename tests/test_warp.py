@@ -10,7 +10,7 @@ from packaging.version import parse
 import rasterio
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
-from rasterio.errors import GDALBehaviorChangeException
+from rasterio.errors import GDALBehaviorChangeException, CRSError
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
@@ -96,6 +96,53 @@ def uninvertable_reproject_params():
         height=80,
         src_crs={'init': 'EPSG:4326'},
         dst_crs={'init': 'EPSG:26836'})
+
+
+WGS84_crs = {'init': 'EPSG:4326'}
+
+
+def test_transform_src_crs_none():
+    with pytest.raises(CRSError):
+        transform(None, WGS84_crs, [], [])
+
+
+def test_transform_dst_crs_none():
+    with pytest.raises(CRSError):
+        transform(WGS84_crs, None, [], [])
+
+
+def test_transform_bounds_src_crs_none():
+    with pytest.raises(CRSError):
+        transform_bounds(None, WGS84_crs, 0, 0, 0, 0)
+
+
+def test_transform_bounds_dst_crs_none():
+    with pytest.raises(CRSError):
+        transform_bounds(WGS84_crs, None, 0, 0, 0, 0)
+
+
+def test_transform_geom_src_crs_none():
+    with pytest.raises(CRSError):
+        transform_geom(None, WGS84_crs, None)
+
+
+def test_transform_geom_dst_crs_none():
+    with pytest.raises(CRSError):
+        transform_geom(WGS84_crs, None, None)
+
+
+def test_reproject_src_crs_none():
+    with pytest.raises(CRSError):
+        reproject(np.ones((2, 2)), np.zeros((2, 2)),
+                  src_transform=Affine.identity(),
+                  dst_transform=Affine.identity(), dst_crs=WGS84_crs)
+
+
+def test_reproject_dst_crs_none():
+    with pytest.raises(CRSError):
+        reproject(np.ones((2, 2)), np.zeros((2, 2)),
+                  src_transform=Affine.identity(),
+                  dst_transform=Affine.identity(), src_crs=WGS84_crs)
 
 
 def test_transform():

@@ -283,6 +283,7 @@ def _reproject(
         rows = source.shape[1]
         cols = source.shape[2]
         dtype = np.dtype(source.dtype).name
+
         if src_nodata is None and hasattr(source, 'fill_value'):
             # source is a masked array
             src_nodata = source.fill_value
@@ -322,6 +323,7 @@ def _reproject(
             finally:
                 CPLFree(srcwkt)
                 OSRRelease(osr)
+                osr = NULL
 
         elif gcps:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
@@ -411,8 +413,9 @@ def _reproject(
                     dst_dataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
-            OSRRelease(osr)
             CPLFree(dstwkt)
+            OSRRelease(osr)
+            osr = NULL
 
         retval = io_auto(destination, dst_dataset, 1)
 
@@ -572,6 +575,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     osr = _osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
     OSRRelease(osr)
+    osr = NULL
 
     with InMemoryRaster(width=width, height=height, transform=transform,
                         gcps=gcps, crs=src_crs) as temp:
@@ -647,6 +651,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             OSRExportToWkt(osr, &dst_crs_wkt)
         finally:
             OSRRelease(osr)
+            osr = NULL
 
         log.debug("Exported CRS to WKT.")
 
