@@ -1082,3 +1082,19 @@ def test_transform_geom_gdal22():
     with pytest.raises(GDALBehaviorChangeException):
         transform_geom(
             'EPSG:4326', 'EPSG:3857', geom, antimeridian_cutting=False)
+
+
+def test_issue1056():
+    """Warp sucessfully from RGB's upper bands to an array"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+
+        dst_crs = {'init': 'EPSG:3857'}
+        out = np.zeros(src.shape, dtype=np.uint8)
+        reproject(
+            rasterio.band(src, 2),
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest)

@@ -43,6 +43,13 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype([-1.5, 0, 1.5]) == float32
     assert get_minimum_dtype([-1.5e+100, 0, 1.5e+100]) == float64
 
+    assert get_minimum_dtype(np.array([0, 1], dtype=np.uint)) == uint8
+    assert get_minimum_dtype(np.array([0, 1000], dtype=np.uint)) == uint16
+    assert get_minimum_dtype(np.array([0, 100000], dtype=np.uint)) == uint32
+    assert get_minimum_dtype(np.array([-1, 0, 1], dtype=np.int)) == int16
+    assert get_minimum_dtype(np.array([-1, 0, 100000], dtype=np.int)) == int32
+    assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
+
 
 def test_can_cast_dtype():
     assert can_cast_dtype((1, 2, 3), np.uint8) == True

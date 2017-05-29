@@ -368,9 +368,12 @@ def _reproject(
     if dtypes.is_ndarray(destination):
         if len(destination.shape) == 2:
             destination = destination.reshape(1, *destination.shape)
+            dst_bidx = [1]
+        else:
+            dst_bidx = src_bidx
+
         if destination.shape[0] != src_count:
             raise ValueError("Destination's shape is invalid")
-        dst_bidx = src_bidx
 
         try:
             driver = exc_wrap_pointer(GDALGetDriverByName("MEM"))

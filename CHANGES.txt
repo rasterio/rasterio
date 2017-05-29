@@ -15,7 +15,7 @@ Breaking changes:
   options should be set explicitly inside the currently active
   `rasterio.env.Env()`(#1010).  This argument was initially added in `1.0a1`.
 - The function `transform_geom()` now always splits geometries at the anti-
-  meridian (#1023).
+  meridian (#1024).
 - The `crs` property of a dataset is now `None` instead of `CRS()` when the
   dataset's coordinate reference system is undefined (#1057).
 
