@@ -575,7 +575,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
     if all(x is not None for x in (left, bottom, right, top)):
         transform = from_bounds(left, bottom, right, top, width, height)
-        transform=transform.to_gdal()
+        transform = transform.to_gdal()
     elif any(x is not None for x in (left, bottom, right, top)):
         raise ValueError(
             "Some, but not all, bounding box parameters were provided.")
