@@ -440,6 +440,10 @@ cdef extern from "gdalwarper.h" nogil:
         GDALResampleAlg eResampleAlg, double dfMaxError,
         const GDALWarpOptions *psOptionsIn)
 
+    GDALDatasetH GDALCreateWarpedVRT(
+        GDALDatasetH hSrcDS, int nPixels, int nLines,
+         double *padfGeoTransform, const GDALWarpOptions *psOptionsIn)
+
 
 cdef extern from "gdal_alg.h" nogil:
 

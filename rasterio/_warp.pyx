@@ -631,6 +631,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def __init__(self, src_dataset, dst_crs=None, resampling=Resampling.nearest,
                  tolerance=0.125, src_nodata=None, dst_nodata=None,
+                 dst_width=None, dst_height=None, dst_transform=None,
                  init_dest_nodata=True, **warp_extras):
         # kwargs become warp options.
         super(WarpedVRTReaderBase, self).__init__(self)
@@ -641,6 +642,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.tolerance = tolerance
         self.src_nodata = src_nodata
         self.dst_nodata = dst_nodata
+        self.dst_width = dst_width
+        self.dst_height = dst_height
+        self.dst_transform = dst_transform
         self.warp_extras = warp_extras.copy()
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
             self.warp_extras['init_dest'] = 'NO_DATA'
@@ -655,6 +659,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef GDALWarpOptions *psWOptions = NULL
         cdef float c_tolerance = tolerance
         cdef GDALResampleAlg c_resampling = resampling
+        cdef int c_width = dst_width or 0
+        cdef int c_height = dst_height or 0
+        cdef double gt[6]
+        cdef void *hTransformArg = NULL
+        cdef GDALTransformerFunc pfnTransformer = NULL
 
         # Convert destination CRS to a C WKT string.
         try:
@@ -669,6 +678,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
 
+        if dst_transform:
+            t = dst_transform.to_gdal()
+            for i in range(6):
+                gt[i] = t[i]
+
         log.debug("Warp_extras: %r", self.warp_extras)
 
         for key, val in self.warp_extras.items():
@@ -682,11 +696,38 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             self.dst_nodata, GDALGetRasterCount(hds), <const char **>c_warp_extras)
 
         try:
-            with nogil:
-                hds_warped = GDALAutoCreateWarpedVRT(
-                    hds, NULL, dst_crs_wkt, c_resampling,
-                    c_tolerance, psWOptions)
-            self._hds = exc_wrap_pointer(hds_warped)
+            if dst_width and dst_height and dst_transform:
+                # set up transform args (otherwise handled in GDALAutoCreateWarpedVRT)
+                try:
+                    hTransformArg = exc_wrap_pointer(
+                        GDALCreateGenImgProjTransformer(
+                            hds, NULL, NULL, dst_crs_wkt, True, 1.0, 0))
+                    if c_tolerance > 0.0:
+                        hTransformArg = exc_wrap_pointer(
+                            GDALCreateApproxTransformer(
+                                GDALGenImgProjTransform, hTransformArg, c_tolerance))
+                        pfnTransformer = GDALApproxTransform
+                        GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+
+                    log.debug("Created transformer and options.")
+
+                except:
+                    GDALDestroyApproxTransformer(hTransformArg)
+                    raise
+
+                psWOptions.hSrcDS = hds
+                psWOptions.pfnTransformer = pfnTransformer
+
+                with nogil:
+                    hds_warped = GDALCreateWarpedVRT(
+                        hds, c_width, c_height, gt, psWOptions)
+                self._hds = exc_wrap_pointer(hds_warped)
+            else:
+                with nogil:
+                    hds_warped = GDALAutoCreateWarpedVRT(
+                        hds, NULL, dst_crs_wkt, c_resampling,
+                        c_tolerance, psWOptions)
+                self._hds = exc_wrap_pointer(hds_warped)
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
         finally:
