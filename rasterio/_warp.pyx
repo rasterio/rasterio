@@ -154,6 +154,17 @@ cdef GDALWarpOptions * create_warp_options(
     # This is because CSLSetNameValue returns a new list each time
     psWOptions.papszWarpOptions = warp_extras
 
+    # Set up band info
+    if psWOptions.nBandCount == 0:
+        psWOptions.nBandCount = src_count
+
+        psWOptions.panSrcBands = <int*>CPLMalloc(src_count * sizeof(int))
+        psWOptions.panDstBands = <int*>CPLMalloc(src_count * sizeof(int))
+
+        for i in range(src_count):
+            psWOptions.panSrcBands[i] = i + 1
+            psWOptions.panDstBands[i] = i + 1
+
     return psWOptions
 
 
