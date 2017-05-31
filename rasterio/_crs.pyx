@@ -7,6 +7,7 @@ import logging
 
 from rasterio.compat import UserDict
 from rasterio.compat import string_types
+from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 
@@ -72,4 +73,36 @@ class _CRS(UserDict):
             return srcwkt.decode('utf-8')
         finally:
             CPLFree(srcwkt)
+            OSRRelease(osr)
+
+    @classmethod
+    def from_wkt(cls, wkt):
+
+        """Turn an OGC WKT string representation of a coordinate reference
+        system into a mapping of PROJ.4 parameters.
+
+        Parameters
+        ----------
+        wkt : str
+            OGC WKT text representation of a coordinate reference system.
+
+        Returns
+        -------
+        CRS
+        """
+
+        if isinstance(wkt, string_types):
+            b_wkt = wkt.encode('utf-8')
+
+        cdef char *proj4 = NULL
+        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(b_wkt)
+
+        if osr == NULL:
+            raise CRSError("Invalid WKT: {}".format(wkt))
+
+        try:
+            OSRExportToProj4(osr, &proj4)
+            return cls.from_string(proj4.decode('utf-8'))
+        finally:
+            CPLFree(proj4)
             OSRRelease(osr)

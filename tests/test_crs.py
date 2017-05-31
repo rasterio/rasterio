@@ -228,3 +228,14 @@ def test_crs_OSR_no_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     crs2 = CRS.from_string('+proj=longlat +datum=NAD27 +no_defs')
     assert crs1 != crs2
+
+
+def test_from_wkt():
+    wgs84 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
+    from_wkt = CRS.from_wkt(wgs84.wkt)
+    assert wgs84.wkt == from_wkt.wkt
+
+
+def test_from_wkt_invalid():
+    with pytest.raises(CRSError):
+        CRS.from_wkt('trash')
