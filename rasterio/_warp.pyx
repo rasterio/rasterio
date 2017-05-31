@@ -663,7 +663,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef int c_height = dst_height or 0
         cdef double gt[6]
         cdef void *hTransformArg = NULL
-        cdef GDALTransformerFunc pfnTransformer = NULL
 
         # Convert destination CRS to a C WKT string.
         try:
@@ -697,27 +696,35 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         try:
             if dst_width and dst_height and dst_transform:
-                # set up transform args (otherwise handled in GDALAutoCreateWarpedVRT)
+                # set up transform args (otherwise handled in
+                # GDALAutoCreateWarpedVRT)
                 try:
                     hTransformArg = exc_wrap_pointer(
                         GDALCreateGenImgProjTransformer(
                             hds, NULL, NULL, dst_crs_wkt, True, 1.0, 0))
+
+                    GDALSetGenImgProjTransformerDstGeoTransform(
+                        hTransformArg, gt)
+
                     if c_tolerance > 0.0:
                         hTransformArg = exc_wrap_pointer(
                             GDALCreateApproxTransformer(
-                                GDALGenImgProjTransform, hTransformArg, c_tolerance))
-                        pfnTransformer = GDALApproxTransform
-                        GDALApproxTransformerOwnsSubtransformer(hTransformArg, 1)
+                                GDALGenImgProjTransform,
+                                hTransformArg,
+                                c_tolerance))
+
+                        psWOptions.pfnTransformer = GDALApproxTransform
+
+                        GDALApproxTransformerOwnsSubtransformer(
+                            hTransformArg, 1)
 
                     log.debug("Created transformer and options.")
-
-                except:
+                    psWOptions.pTransformerArg = hTransformArg
+                except Exception:
                     GDALDestroyApproxTransformer(hTransformArg)
                     raise
 
                 psWOptions.hSrcDS = hds
-                psWOptions.pfnTransformer = pfnTransformer
-                psWOptions.pTransformerArg = hTransformArg
 
                 with nogil:
                     hds_warped = GDALCreateWarpedVRT(

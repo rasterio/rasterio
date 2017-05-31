@@ -473,6 +473,7 @@ cdef extern from "gdal_alg.h" nogil:
     void *GDALCreateGenImgProjTransformer3(
             const char *pszSrcWKT, const double *padfSrcGeoTransform,
             const char *pszDstWKT, const double *padfDstGeoTransform)
+    void GDALSetGenImgProjTransformerDstGeoTransform(void *hTransformArg, double *padfGeoTransform)
     int GDALGenImgProjTransform(void *pTransformArg, int bDstToSrc,
                                 int nPointCount, double *x, double *y,
                                 double *z, int *panSuccess)
