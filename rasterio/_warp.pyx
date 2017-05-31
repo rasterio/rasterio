@@ -717,6 +717,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
                 psWOptions.hSrcDS = hds
                 psWOptions.pfnTransformer = pfnTransformer
+                psWOptions.pTransformerArg = hTransformArg
 
                 with nogil:
                     hds_warped = GDALCreateWarpedVRT(
