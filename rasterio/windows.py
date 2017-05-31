@@ -180,10 +180,12 @@ def from_bounds(left, bottom, right, top, transform,
         A new Window
     """
     window_start = rowcol(
-        transform, left, top, op=math.floor, precision=precision)
+        # transform, left, top, op=math.floor, precision=precision)
+        transform, left, top, op=float, precision=precision)
 
     window_stop = rowcol(
-        transform, right, bottom, op=math.ceil, precision=precision)
+        # transform, right, bottom, op=math.ceil, precision=precision)
+        transform, right, bottom, op=float, precision=precision)
 
     window = Window.from_ranges(*tuple(zip(window_start, window_stop)))
 

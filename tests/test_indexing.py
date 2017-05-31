@@ -7,6 +7,12 @@ from rasterio import windows
 DATA_WINDOW = ((3, 5), (2, 6))
 
 
+def assert_window_almost_equals(a, b, precision=6):
+    for pair_outer in zip(a, b):
+        for x, y in zip(*pair_outer):
+            assert round(x, precision) == round(y, precision)
+
+
 def test_index():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
@@ -19,15 +25,18 @@ def test_index():
 def test_full_window():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
-        assert src.window(left, bottom, right, top) == tuple(zip((0, 0), src.shape))
+        assert_window_almost_equals(
+            src.window(left, bottom, right, top),
+            tuple(zip((0, 0), src.shape)))
 
 
 def test_window_no_exception():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
         left -= 1000.0
-        assert src.window(left, bottom, right, top, boundless=True) == (
-                (0, src.height), (-4, src.width))
+        assert_window_almost_equals(
+            src.window(left, bottom, right, top, boundless=True),
+            ((0, src.height), (-4, src.width)))
 
 
 def test_index_values():
@@ -62,8 +71,8 @@ def test_window_full_cover():
     def bound_covers(bounds1, bounds2):
         """Does bounds1 cover bounds2?
         """
-        return (bounds1[0] <= bounds2[0] and bounds1[1] <= bounds2[1] and
-                bounds1[2] >= bounds2[2] and bounds1[3] >= bounds2[3])
+        return (round(bounds1[0], 6) <= round(bounds2[0], 6) and round(bounds1[1], 6) <= round(bounds2[1], 6) and
+                round(bounds1[2], 6) >= round(bounds2[2], 6) and round(bounds1[3], 6) >= round(bounds2[3], 6))
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         bounds = list(src.window_bounds(((100, 200), (100, 200))))

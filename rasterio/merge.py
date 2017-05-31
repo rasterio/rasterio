@@ -153,17 +153,17 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
         # 4. Initialize temp array.
         tcount = first.count
-        trows, tcols = tuple(b - a for a, b in dst_window)
+        trows, tcols = tuple(int(round(b - a)) for a, b in dst_window)
 
         temp_shape = (tcount, trows, tcols)
         logger.debug("Temp shape: %r", temp_shape)
 
-        temp = np.zeros(temp_shape, dtype=dtype)
+        temp = np.zeros(tuple(int(round(x)) for  x in temp_shape), dtype=dtype)
         temp = src.read(out=temp, window=src_window, boundless=False,
                         masked=True)
 
         # 5. Copy elements of temp into dest.
-        roff, coff = dst_window[0][0], dst_window[1][0]
+        roff, coff = int(round(dst_window[0][0])), int(round(dst_window[1][0]))
 
         region = dest[:, roff:roff + trows, coff:coff + tcols]
         np.copyto(

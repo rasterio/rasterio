@@ -255,9 +255,9 @@ cdef class DatasetReaderBase(DatasetBase):
             # bounded case.
 
             if boundless:
-                out = np.zeros(out_shape, dtype=dtype)
+                out = np.zeros(tuple(int(round(x)) for x in out_shape), dtype=dtype)
             else:
-                out = np.empty(out_shape, dtype=dtype)
+                out = np.empty(tuple(int(round(x)) for x in out_shape), dtype=dtype)
 
             for i, (ndv, arr) in enumerate(zip(
                     nodatavals, out if len(out.shape) == 3 else [out])):
@@ -284,6 +284,10 @@ cdef class DatasetReaderBase(DatasetBase):
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
+
+            log.debug("Jump straight to _read()")
+            log.debug("Window: %r", window)
+
             out = self._read(indexes, out, window, dtype,
                              resampling=resampling)
 
@@ -311,6 +315,8 @@ cdef class DatasetReaderBase(DatasetBase):
                 max(min(window[0][1], self.height), 0)), (
                 max(min(window[1][0], self.width), 0),
                 max(min(window[1][1], self.width), 0)))
+
+            log.debug("Overlap: %r", overlap)
 
             if overlap != ((0, 0), (0, 0)):
                 # Prepare a buffer.
@@ -546,7 +552,8 @@ cdef class DatasetReaderBase(DatasetBase):
         `out` (if used), or will be masked if any of the nodatavals are
         not `None`.
         """
-        cdef int height, width, xoff, yoff, aix, bidx, indexes_count
+        cdef int aix, bidx, indexes_count
+        cdef double height, width, xoff, yoff
         cdef int retval = 0
         cdef GDALDatasetH dataset = NULL
 
@@ -555,10 +562,17 @@ cdef class DatasetReaderBase(DatasetBase):
         # Prepare the IO window.
         if window:
             window = windows.evaluate(window, self.height, self.width)
-            yoff = <int>window[0][0]
-            xoff = <int>window[1][0]
-            height = <int>window[0][1] - yoff
-            width = <int>window[1][1] - xoff
+
+            log.debug("Eval'd window: %r", window)
+
+            # yoff = <int>window[0][0]
+            # xoff = <int>window[1][0]
+            # height = <int>window[0][1] - yoff
+            # width = <int>window[1][1] - xoff
+            yoff = window[0][0]
+            xoff = window[1][0]
+            height = window[0][1] - yoff
+            width = window[1][1] - xoff
         else:
             xoff = yoff = <int>0
             width = <int>self.width
