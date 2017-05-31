@@ -106,4 +106,4 @@ class _CRS(UserDict):
             return cls.from_string(proj4.decode('utf-8'))
         finally:
             CPLFree(proj4)
-            _safe_osr_relase(osr)
+            _safe_osr_release(osr)
