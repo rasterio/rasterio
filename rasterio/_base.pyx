@@ -191,11 +191,10 @@ cdef class DatasetBase(object):
         wkt_b = wkt.encode('utf-8')
         cdef const char *wkt_c = wkt_b
 
-        crs = CRS()
-
         # Test that the WKT definition isn't just an empty string, which
         # can happen when the source dataset is not georeferenced.
         if len(wkt) > 0:
+            crs = CRS()
 
             osr = OSRNewSpatialReference(wkt_c)
             if osr == NULL:
@@ -238,10 +237,10 @@ cdef class DatasetBase(object):
 
             CPLFree(proj)
             _safe_osr_release(osr)
+            return crs
+
         else:
             log.debug("No projection detected.")
-
-        return crs
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
@@ -915,7 +914,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
     if not crs:
-        raise ValueError("A crs is required")  # CRSError("CRS cannot be None")
+        raise CRSError("A defined coordinate reference system is required")
 
     cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 

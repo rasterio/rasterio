@@ -79,7 +79,7 @@ def _transform_geom(
         result = GeomBuilder().build(dst_geom)
 
         if precision >= 0:
-            # TODO: Geometry collectons.
+            # TODO: Geometry collections.
             result['coordinates'] = recursive_round(result['coordinates'],
                                                     precision)
 
@@ -283,6 +283,7 @@ def _reproject(
         rows = source.shape[1]
         cols = source.shape[2]
         dtype = np.dtype(source.dtype).name
+
         if src_nodata is None and hasattr(source, 'fill_value'):
             # source is a masked array
             src_nodata = source.fill_value
@@ -411,8 +412,8 @@ def _reproject(
                     dst_dataset, dstwkt):
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
-            _safe_osr_release(osr)
             CPLFree(dstwkt)
+            _safe_osr_release(osr)
 
         retval = io_auto(destination, dst_dataset, 1)
 

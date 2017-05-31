@@ -171,7 +171,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             dst.nodata = nodata
 
         if unset_crs:
-            dst.crs = CRS()
+            dst.crs = None  # CRS()
         elif crs:
             dst.crs = crs
 
@@ -190,7 +190,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
     # Post check - ensure that crs was unset properly
     if unset_crs:
         with ctx.obj['env'], rasterio.open(input, 'r') as src:
-            if dict(src.crs) != {}:
+            if src.crs:
                 warnings.warn(
                     'CRS was not unset. Availability of his functionality '
                     'differs depending on GDAL version and driver')

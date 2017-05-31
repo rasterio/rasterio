@@ -44,7 +44,8 @@ def test_unset_crs(data):
                            ['edit-info', inputfile, '--unset-crs'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert dict(src.crs) == {}
+        assert src.crs is None
+
 
 @pytest.mark.skip(
     Version(rasterio.__gdal_version__) >= Version('1.10'),
