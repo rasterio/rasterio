@@ -1,0 +1,88 @@
+# An image for building manylinux1 wheels equivalent to those that
+# https://github.com/sgillies/frs-wheel-builds makes for macosx.
+#
+# Note well: a very limited set of format drivers are included in these
+# wheels. See the GDAL configuration below for details.
+
+FROM quay.io/pypa/manylinux1_x86_64
+
+RUN yum update -y && yum install -y curl-devel json-c-devel
+
+# Install geos
+RUN mkdir -p /src \
+    && cd /src \
+    && curl -f -L -O http://download.osgeo.org/geos/geos-3.5.0.tar.bz2 \
+    && tar jxf geos-3.5.0.tar.bz2 \
+    && cd /src/geos-3.5.0 \
+    && ./configure \
+    && make \
+    && make install \
+    && rm -rf /src
+
+# Install jasper
+RUN mkdir -p /src \
+    && cd /src \
+    && curl -f -L -O http://download.osgeo.org/gdal/jasper-1.900.1.uuid.tar.gz \
+    && tar xzf jasper-1.900.1.uuid.tar.gz \
+    && cd /src/jasper-1.900.1.uuid \
+    && ./configure --disable-debug --enable-shared \
+    && make \
+    && make install \
+    && rm -rf /src
+
+# proj4
+RUN mkdir -p /src \
+    && cd /src \
+    && curl -f -L -O http://download.osgeo.org/proj/proj-4.9.1.tar.gz \
+    && tar xzf proj-4.9.1.tar.gz \
+    && cd /src/proj-4.9.1 \
+    && ./configure \
+    && make \
+    && make install \
+    && rm -rf /src
+
+# gdal
+RUN mkdir -p /src \
+    && cd /src \
+    && curl -f -L -O http://download.osgeo.org/gdal/2.1.0/gdal-2.1.1.tar.gz \
+    && tar xzf gdal-2.1.1.tar.gz \
+    && cd /src/gdal-2.1.1 \
+    && ./configure \
+        --with-threads \
+        --disable-debug \
+        --disable-static \
+        --without-grass \
+        --without-libgrass \
+        --without-jpeg12 \
+        --with-jasper=/usr/local \
+        --with-libtiff=internal \
+        --with-jpeg \
+        --with-gif \
+        --with-png \
+        --with-geotiff=internal \
+        --with-sqlite3=/usr \
+        --with-pcraster=internal \
+        --with-pcraster=internal \
+        --with-pcidsk=internal \
+        --with-bsb \
+        --with-grib \
+        --with-pam \
+        --with-geos=/usr/local/bin/geos-config \
+        --with-static-proj4=/usr/local \
+        --with-expat=/usr \
+        --with-libjson-c \
+        --with-libiconv-prefix=/usr \
+        --with-libz=/usr \
+        --with-curl=curl-config \
+        --without-python \
+    && make \
+    && make install
+
+# Bake dev requirements into the Docker image for faster builds
+ADD requirements-dev.txt /tmp/requirements-dev.txt
+RUN for PYBIN in /opt/python/*/bin; do \
+        $PYBIN/pip install -r /tmp/requirements-dev.txt ; \
+    done
+
+WORKDIR /io
+CMD ["/io/build-linux-wheels.sh"]
