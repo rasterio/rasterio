@@ -105,7 +105,7 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, boundless=False):
+    def window(self, left, bottom, right, top, boundless=False, precision=6):
         """Get the window corresponding to the bounding coordinates.
 
         Parameters
@@ -121,6 +121,9 @@ class WindowMethodsMixin(object):
         boundless: boolean, optional
             If boundless is False, window is limited
             to extent of this dataset.
+        precision : int, optional
+            Number of decimal points of precision when computing inverse
+            transform.
 
         Returns
         -------
@@ -133,7 +136,8 @@ class WindowMethodsMixin(object):
         transform = guard_transform(self.transform)
         return windows.from_bounds(
             left, bottom, right, top, transform=transform,
-            height=self.height, width=self.width, boundless=boundless)
+            height=self.height, width=self.width, boundless=boundless,
+            precision=precision)
 
     def window_transform(self, window):
         """Get the affine transform for a dataset window.
