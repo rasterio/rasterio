@@ -79,7 +79,7 @@ def _transform_geom(
         result = GeomBuilder().build(dst_geom)
 
         if precision >= 0:
-            # TODO: Geometry collectons.
+            # TODO: Geometry collections.
             result['coordinates'] = recursive_round(result['coordinates'],
                                                     precision)
 
