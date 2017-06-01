@@ -4,6 +4,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import Resampling
+from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window
 
@@ -50,6 +51,30 @@ def test_wrap_file(path_rgb_byte_tif):
         assert vrt.nodatavals == (0, 0, 0)
         assert vrt.dtypes == ('uint8', 'uint8', 'uint8')
         assert vrt.read().shape == (3, 736, 803)
+
+
+def test_warped_vrt_dimensions(path_rgb_byte_tif):
+    """
+    A WarpedVRT with target dimensions has the expected dataset
+    properties.
+    """
+    with rasterio.open(path_rgb_byte_tif) as src:
+        extent = (-20037508.34, 20037508.34)
+        size = (2 ** 16) * 256
+        resolution = (extent[1] - extent[0]) / size
+        dst_transform = Affine(resolution, 0.0, extent[0],
+                               0.0, -resolution, extent[1])
+        vrt = WarpedVRT(src, dst_crs='EPSG:3857',
+                        dst_width=size, dst_height=size,
+                        dst_transform=dst_transform)
+        assert vrt.dst_crs == 'EPSG:3857'
+        assert vrt.src_nodata is None
+        assert vrt.dst_nodata is None
+        assert vrt.resampling == Resampling.nearest
+        assert vrt.width == size
+        assert vrt.height == size
+        assert vrt.transform == dst_transform
+        assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
 
 
 def test_warp_extras(path_rgb_byte_tif):
