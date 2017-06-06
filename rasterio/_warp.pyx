@@ -676,9 +676,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             if not self.src_transform:
                 self.src_transform = self.src_dataset.transform
 
-            if not self.src_crs:
-                self.src_crs = self.src_dataset.crs
-
             t = self.src_transform.to_gdal()
             for i in range(6):
                 src_gt[i] = t[i]
@@ -687,16 +684,24 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             for i in range(6):
                 dst_gt[i] = t[i]
 
+        if not self.src_crs:
+            self.src_crs = self.src_dataset.crs
+
         # Convert CRSes to C WKT strings.
         try:
             osr = _osr_from_crs(self.src_crs)
             OSRExportToWkt(osr, &src_crs_wkt)
-            OSRRelease(osr)
+        finally:
+            if osr != NULL:
+                OSRRelease(osr)
+            osr = NULL
 
+        try:
             osr = _osr_from_crs(self.dst_crs)
             OSRExportToWkt(osr, &dst_crs_wkt)
         finally:
-            OSRRelease(osr)
+            if osr != NULL:
+                OSRRelease(osr)
             osr = NULL
 
         log.debug("Exported CRS to WKT.")
