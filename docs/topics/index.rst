@@ -22,6 +22,7 @@ General Concepts
     reproject
     resampling
     tags
+    virtual-warping
     vsi
     windowed-rw
 

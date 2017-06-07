@@ -58,12 +58,15 @@ MAX_OUTPUT_HEIGHT = 100000
               help='Number of processing threads.')
 @click.option('--check-invert-proj/--no-check-invert-proj', default=True,
               help='Constrain output to valid coordinate region in dst-crs')
+@click.option('--target-aligned-pixels/--no-target-aligned-pixels', default=False,
+              help='align the output bounds based on the resolution')
 @options.force_overwrite_opt
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
          dst_bounds, res, resampling, src_nodata, dst_nodata, threads,
-         check_invert_proj, force_overwrite, creation_options):
+         check_invert_proj, force_overwrite, creation_options,
+         target_aligned_pixels):
     """
     Warp a raster dataset.
 
@@ -117,6 +120,15 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
     else:
         # Expand one value to two if needed
         res = (res[0], res[0]) if len(res) == 1 else res
+
+    if target_aligned_pixels:
+        if not res:
+            raise click.BadParameter(
+                '--target-aligned-pixels requires a specified resolution')
+        if src_bounds or dst_bounds:
+            raise click.BadParameter(
+                '--target-aligned-pixels cannot be used with '
+                '--src-bounds or --dst-bounds')
 
     # Check invalid parameter combinations
     if like:
@@ -198,6 +210,23 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
                     dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
 
+                elif target_aligned_pixels:
+                    try:
+                        xmin, ymin, xmax, ymax = transform_bounds(
+                            src.crs, dst_crs, *src.bounds)
+                    except CRSError as err:
+                        raise click.BadParameter(
+                            str(err), param='dst_crs', param_hint='dst_crs')
+
+                    xmin = floor(xmin / res[0]) * res[0]
+                    xmax = ceil(xmax / res[0]) * res[0]
+                    ymin = floor(ymin / res[1]) * res[1]
+                    ymax = ceil(ymax / res[1]) * res[1]
+
+                    dst_transform = Affine(res[0], 0, xmin, 0, -res[1], ymax)
+                    dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
+                    dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
+
                 else:
                     try:
                         if src.transform.is_identity and src.gcps:
@@ -207,7 +236,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                             src_crs = src.crs
                             kwargs = src.bounds._asdict()
                         dst_transform, dst_width, dst_height = calcdt(
-                            src_crs , dst_crs, src.width, src.height,
+                            src_crs, dst_crs, src.width, src.height,
                             resolution=res, **kwargs)
                     except CRSError as err:
                         raise click.BadParameter(

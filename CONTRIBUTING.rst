@@ -161,7 +161,7 @@ Installing Rasterio
 
 Rasterio, its Cython extensions, normal dependencies, and dev dependencies can
 be installed with ``$ pip``.  Installing Rasterio in editable mode while
-developing is very but only affects the Python files.  Specifying the
+developing is very convenient but only affects the Python files.  Specifying the
 ``[test]`` extra in the command below tells ``$ pip`` to also install
 Rasterio's dev dependencies.
 

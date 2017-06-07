@@ -79,6 +79,7 @@ Advanced topics
    topics/reproject
    topics/resampling
    topics/tags
+   topics/virtual-warping
    topics/vsi
    topics/windowed-rw
 
