@@ -8,11 +8,9 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.errors module &mdash; rasterio 1.0a8 documentation</title>
+  <title>rasterio.errors module &mdash; rasterio 1.0a9 documentation</title>
   
 
-  
-  
   
   
 
@@ -32,13 +30,9 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="rasterio 1.0a8 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
-        <link rel="next" title="rasterio.features module" href="rasterio.features.html"/>
-        <link rel="prev" title="rasterio.env module" href="rasterio.env.html"/> 
+        <link rel="next" title="rasterio.features module" href="rasterio.features.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -47,7 +41,6 @@
 
 <body class="wy-body-for-nav" role="document">
 
-   
   <div class="wy-grid-for-nav">
 
     
@@ -67,7 +60,7 @@
             
             
               <div class="version">
-                1.0a8
+                1.0a9
               </div>
             
           
@@ -88,10 +81,7 @@
           
             
             
-              
-            
-            
-              <ul>
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -143,7 +133,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rasterio">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -164,10 +154,8 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">rasterio</a>
-        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
       </nav>
 
 
@@ -176,65 +164,112 @@
         <div class="rst-content">
           
 
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
-
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
           <li><a href="index.html">rasterio package</a> &raquo;</li>
-        
-      <li>rasterio.errors module</li>
-    
-    
+      
+    <li>rasterio.errors module</li>
       <li class="wy-breadcrumbs-aside">
         
-            
-            <a href="../_sources/api/rasterio.errors.rst.txt" rel="nofollow"> View page source</a>
+          
+            <a href="../_sources/api/rasterio.errors.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rasterio-errors-module">
-<h1>rasterio.errors module<a class="headerlink" href="#rasterio-errors-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-rasterio.errors">
+<span id="rasterio-errors-module"></span><h1>rasterio.errors module<a class="headerlink" href="#module-rasterio.errors" title="Permalink to this headline">¶</a></h1>
+<p>Errors and Warnings.</p>
+<dl class="exception">
+<dt id="rasterio.errors.CRSError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">CRSError</code><a class="reference internal" href="../_modules/rasterio/errors.html#CRSError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.CRSError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<p>Raised when a CRS string or mapping is invalid or cannot serve
+to define a coordinate transformation.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.DriverRegistrationError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">DriverRegistrationError</code><a class="reference internal" href="../_modules/rasterio/errors.html#DriverRegistrationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.DriverRegistrationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<p>Raised when a format driver is requested but is not registered.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.EnvError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">EnvError</code><a class="reference internal" href="../_modules/rasterio/errors.html#EnvError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.EnvError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<p>Raised when the state of GDAL/AWS environment cannot be created
+or modified.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.FileOverwriteError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">FileOverwriteError</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/errors.html#FileOverwriteError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.FileOverwriteError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">click.exceptions.FileError</span></code></p>
+<p>Raised when Rasterio&#8217;s CLI refuses to clobber output files.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.GDALBehaviorChangeException">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">GDALBehaviorChangeException</code><a class="reference internal" href="../_modules/rasterio/errors.html#GDALBehaviorChangeException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.GDALBehaviorChangeException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></p>
+<p>Raised when GDAL&#8217;s behavior differs from the given arguments.  For
+example, antimeridian cutting is always on as of GDAL 2.2.0.  Users
+expecting it to be off will be presented with a MultiPolygon when the
+rest of their code expects a Polygon.</p>
+<blockquote>
+<div><p># Raises an exception on GDAL &gt;= 2.2.0
+rasterio.warp.transform_geometry(</p>
+<blockquote>
+<div>src_crs, dst_crs, antimeridian_cutting=False)</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.NodataShadowWarning">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">NodataShadowWarning</code><a class="reference internal" href="../_modules/rasterio/errors.html#NodataShadowWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.NodataShadowWarning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Warning</span></code></p>
+<p>Warn that a dataset&#8217;s nodata attribute is shadowing its alpha band.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.NotGeoreferencedWarning">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">NotGeoreferencedWarning</code><a class="reference internal" href="../_modules/rasterio/errors.html#NotGeoreferencedWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.NotGeoreferencedWarning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Warning</span></code></p>
+<p>Warn that a dataset isn&#8217;t georeferenced.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.RasterioIOError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">RasterioIOError</code><a class="reference internal" href="../_modules/rasterio/errors.html#RasterioIOError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.RasterioIOError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">OSError</span></code></p>
+<p>Raised when a dataset cannot be opened using one of the
+registered format drivers.</p>
+</dd></dl>
+
 </div>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rasterio.features.html" class="btn btn-neutral float-right" title="rasterio.features module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rasterio.features.html" class="btn btn-neutral float-right" title="rasterio.features module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="rasterio.env.html" class="btn btn-neutral" title="rasterio.env module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -265,11 +300,10 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a8',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
+            HAS_SOURCE:  true
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

@@ -8,11 +8,9 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Concurrent processing &mdash; rasterio 1.0a8 documentation</title>
+  <title>Concurrent processing &mdash; rasterio 1.0a9 documentation</title>
   
 
-  
-  
   
   
 
@@ -32,10 +30,7 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="rasterio 1.0a8 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
         <link rel="next" title="Error Handling" href="errors.html"/>
         <link rel="prev" title="Color" href="color.html"/> 
 
@@ -46,7 +41,6 @@
 
 <body class="wy-body-for-nav" role="document">
 
-   
   <div class="wy-grid-for-nav">
 
     
@@ -66,7 +60,7 @@
             
             
               <div class="version">
-                1.0a8
+                1.0a9
               </div>
             
           
@@ -87,10 +81,7 @@
           
             
             
-              
-            
-            
-              <ul>
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -137,10 +128,8 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">rasterio</a>
-        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
       </nav>
 
 
@@ -149,40 +138,23 @@
         <div class="rst-content">
           
 
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
-
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-      <li>Concurrent processing</li>
-    
-    
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Concurrent processing</li>
       <li class="wy-breadcrumbs-aside">
         
-            
-            <a href="../_sources/topics/concurrency.rst.txt" rel="nofollow"> View page source</a>
+          
+            <a href="../_sources/topics/concurrency.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -287,7 +259,7 @@ raster processing function.</p>
                         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
     <span class="kn">import</span> <span class="nn">argparse</span>
 
@@ -316,7 +288,7 @@ raster processing function.</p>
 spread over multiple cores using the <code class="docutils literal"><span class="pre">ThreadPoolExecutor</span></code> from Python 3&#8217;s
 <code class="docutils literal"><span class="pre">concurrent.futures</span></code> module. Compared to the case of one concurrent job
 (<code class="docutils literal"><span class="pre">-j</span> <span class="pre">1</span></code>)</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j <span class="m">1</span>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 1
 
 <span class="go">real    0m3.474s</span>
 <span class="go">user    0m3.426s</span>
@@ -324,7 +296,7 @@ spread over multiple cores using the <code class="docutils literal"><span class=
 </pre></div>
 </div>
 <p>we get an almost 3x speed up with four concurrent jobs.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j <span class="m">4</span>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 4
 
 <span class="go">real    0m1.335s</span>
 <span class="go">user    0m3.400s</span>
@@ -335,18 +307,15 @@ spread over multiple cores using the <code class="docutils literal"><span class=
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="errors.html" class="btn btn-neutral float-right" title="Error Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="errors.html" class="btn btn-neutral float-right" title="Error Handling" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="color.html" class="btn btn-neutral" title="Color" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="color.html" class="btn btn-neutral" title="Color" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -377,11 +346,10 @@ spread over multiple cores using the <code class="docutils literal"><span class=
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a8',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
+            HAS_SOURCE:  true
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

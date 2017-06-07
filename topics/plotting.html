@@ -8,11 +8,9 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Plotting &mdash; rasterio 1.0a8 documentation</title>
+  <title>Plotting &mdash; rasterio 1.0a9 documentation</title>
   
 
-  
-  
   
   
 
@@ -32,10 +30,7 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="rasterio 1.0a8 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
         <link rel="next" title="Reprojection" href="reproject.html"/>
         <link rel="prev" title="Overviews" href="overviews.html"/> 
 
@@ -46,7 +41,6 @@
 
 <body class="wy-body-for-nav" role="document">
 
-   
   <div class="wy-grid-for-nav">
 
     
@@ -66,7 +60,7 @@
             
             
               <div class="version">
-                1.0a8
+                1.0a9
               </div>
             
           
@@ -87,10 +81,7 @@
           
             
             
-              
-            
-            
-              <ul>
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -137,10 +128,8 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">rasterio</a>
-        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
       </nav>
 
 
@@ -149,40 +138,23 @@
         <div class="rst-content">
           
 
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
-
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
-      <li>Plotting</li>
-    
-    
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Plotting</li>
       <li class="wy-breadcrumbs-aside">
         
-            
-            <a href="../_sources/topics/plotting.rst.txt" rel="nofollow"> View page source</a>
+          
+            <a href="../_sources/topics/plotting.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -221,7 +193,7 @@ you can pass in a transform in order to get extent labels.</p>
 <span class="go">&lt;matplotlib.axes._subplots.AxesSubplot object at 0x...&gt;</span>
 </pre></div>
 </div>
-<img alt="topics/img/rgb.jpg" src="topics/img/rgb.jpg" />
+<img alt="../_images/rgb.jpg" src="../_images/rgb.jpg" />
 <p>and similarly for single band plots. Note that you can pass in <code class="docutils literal"><span class="pre">cmap</span></code> to
 specify a matplotlib color ramp. Any kwargs passed to <code class="docutils literal"><span class="pre">show</span></code> will passed
 through to the underlying pyplot functions.</p>
@@ -231,7 +203,7 @@ through to the underlying pyplot functions.</p>
 <span class="go">&lt;matplotlib.axes._subplots.AxesSubplot object at 0x...&gt;</span>
 </pre></div>
 </div>
-<img alt="topics/img/singleband.jpg" src="topics/img/singleband.jpg" />
+<img alt="../_images/singleband.jpg" src="../_images/singleband.jpg" />
 <p>You can create a figure with multiple subplots by passing the <code class="docutils literal"><span class="pre">show(...,</span> <span class="pre">ax=ax1)</span></code>
 argument. Also note that this example demonstrates setting the overall figure size
 and sets a title for each subplot.</p>
@@ -245,7 +217,7 @@ and sets a title for each subplot.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="topics/img/subplots.jpg" src="topics/img/subplots.jpg" />
+<img alt="../_images/subplots.jpg" src="../_images/subplots.jpg" />
 <p>For single-band rasters, there is also an option to generate contours.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">((</span><span class="n">src</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Greys_r&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
@@ -255,7 +227,7 @@ and sets a title for each subplot.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="topics/img/contours.jpg" src="topics/img/contours.jpg" />
+<img alt="../_images/contours.jpg" src="../_images/contours.jpg" />
 <p>Rasterio also provides a <code class="docutils literal"><span class="pre">plot.show_hist</span></code> function for generating histograms of
 single or multiband rasters:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.plot</span> <span class="kn">import</span> <span class="n">show_hist</span>
@@ -264,7 +236,7 @@ single or multiband rasters:</p>
 <span class="gp">... </span>    <span class="n">histtype</span><span class="o">=</span><span class="s1">&#39;stepfilled&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Histogram&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<img alt="topics/img/hist.jpg" src="topics/img/hist.jpg" />
+<img alt="../_images/hist.jpg" src="../_images/hist.jpg" />
 <p>The <code class="docutils literal"><span class="pre">show_hist</span></code> function also takes an <code class="docutils literal"><span class="pre">ax</span></code> argument to allow subplot configurations</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">axrgb</span><span class="p">,</span> <span class="n">axhist</span><span class="p">)</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axrgb</span><span class="p">)</span>
@@ -274,23 +246,20 @@ single or multiband rasters:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<img alt="topics/img/rgb_hist.jpg" src="topics/img/rgb_hist.jpg" />
+<img alt="../_images/rgb_hist.jpg" src="../_images/rgb_hist.jpg" />
 </div>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="reproject.html" class="btn btn-neutral float-right" title="Reprojection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="reproject.html" class="btn btn-neutral float-right" title="Reprojection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="overviews.html" class="btn btn-neutral" title="Overviews" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="overviews.html" class="btn btn-neutral" title="Overviews" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -321,11 +290,10 @@ single or multiband rasters:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a8',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
+            HAS_SOURCE:  true
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.crs &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.crs &mdash; rasterio 1.0a9 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0a9
               </div>
             
           
@@ -81,10 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -132,114 +163,134 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rasterio.crs</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Coordinate reference systems and functions.</span>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
 
-<span class="sd">PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4</span>
-<span class="sd">coordinate reference systems are described by strings of parameters such as</span>
-
-<span class="sd">    +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</span>
-
-<span class="sd">here we use mappings:</span>
-
-<span class="sd">    {&#39;proj&#39;: &#39;longlat&#39;, &#39;ellps&#39;: &#39;WGS84&#39;, &#39;datum&#39;: &#39;WGS84&#39;, &#39;no_defs&#39;: True}</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="kn">import</span> <span class="nn">json</span>
-
-<span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="n">is_geographic_crs</span><span class="p">,</span> <span class="n">is_projected_crs</span><span class="p">,</span> <span class="n">is_same_crs</span>
+<span class="kn">from</span> <span class="nn">rasterio._crs</span> <span class="kn">import</span> <span class="n">_CRS</span>
 <span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="kn">import</span> <span class="n">CRSError</span>
-<span class="kn">from</span> <span class="nn">rasterio.five</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">string_types</span>
 
 
-<div class="viewcode-block" id="is_valid_crs"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.is_valid_crs">[docs]</a><span class="k">def</span> <span class="nf">is_valid_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if valid geographic or projected coordinate reference system.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">is_geographic_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_projected_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span></div>
+<div class="viewcode-block" id="CRS"><a class="viewcode-back" href="../../api/rasterio.crs.html#rasterio.crs.CRS">[docs]</a><span class="k">class</span> <span class="nc">CRS</span><span class="p">(</span><span class="n">_CRS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A container class for coordinate reference system info</span>
 
+<span class="sd">    PROJ.4 is the law of this land: http://proj.osgeo.org/. But whereas PROJ.4</span>
+<span class="sd">    coordinate reference systems are described by strings of parameters such as</span>
 
-<div class="viewcode-block" id="to_string"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.to_string">[docs]</a><span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="n">crs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn a parameter mapping into a more conventional PROJ.4 string.</span>
+<span class="sd">        +proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</span>
 
-<span class="sd">    Mapping keys are tested against the ``all_proj_keys`` list. Values of</span>
-<span class="sd">    ``True`` are omitted, leaving the key bare: {&#39;no_defs&#39;: True} -&gt; &quot;+no_defs&quot;</span>
-<span class="sd">    and items where the value is otherwise not a str, int, or float are</span>
-<span class="sd">    omitted.</span>
+<span class="sd">    here we use mappings:</span>
+
+<span class="sd">        {&#39;proj&#39;: &#39;longlat&#39;, &#39;ellps&#39;: &#39;WGS84&#39;, &#39;datum&#39;: &#39;WGS84&#39;, &#39;no_defs&#39;: True}</span>
+
+<span class="sd">    One can set/get any PROJ.4 parameter using a dict-like key/value pair on the</span>
+<span class="sd">    object. You can instantiate the object by simply passing a dict to the</span>
+<span class="sd">    constructor. E.g.</span>
+
+<span class="sd">        crs = CRS({&#39;init&#39;: &#39;epsg:3005&#39;})</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_proj_keys</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">string_types</span><span class="p">)),</span>
-            <span class="n">crs</span><span class="o">.</span><span class="n">items</span><span class="p">())):</span>
-        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">y</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)))))</span>
-    <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if valid geographic or projected coordinate reference system.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_geographic</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_projected</span>
 
-<div class="viewcode-block" id="from_string"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.from_string">[docs]</a><span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="n">prjs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Turn a PROJ.4 string into a mapping of parameters.</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_epsg_code</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">string_types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">val</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;epsg&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
 
-<span class="sd">    Bare parameters like &quot;+no_defs&quot; are given a value of ``True``. All keys</span>
-<span class="sd">    are checked against the ``all_proj_keys`` list.</span>
+<div class="viewcode-block" id="CRS.to_string"><a class="viewcode-back" href="../../api/rasterio.crs.html#rasterio.crs.CRS.to_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn a parameter mapping into a more conventional PROJ.4 string.</span>
 
-<span class="sd">    EPSG:nnnn is allowed.</span>
+<span class="sd">        Mapping keys are tested against the ``all_proj_keys`` list. Values of</span>
+<span class="sd">        ``True`` are omitted, leaving the key bare: {&#39;no_defs&#39;: True} -&gt; &quot;+no_defs&quot;</span>
+<span class="sd">        and items where the value is otherwise not a str, int, or float are</span>
+<span class="sd">        omitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_proj_keys</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">string_types</span><span class="p">)),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())):</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;+&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">filter</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">y</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)))))</span>
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
 
-<span class="sd">    JSON text-encoded strings are allowed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39;{&#39;</span> <span class="ow">in</span> <span class="n">prjs</span><span class="p">:</span>
-        <span class="c1"># may be json, try to decode it</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">prjs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s1">&#39;crs appears to be JSON but is not valid&#39;</span><span class="p">)</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CRS.from_string"><a class="viewcode-back" href="../../api/rasterio.crs.html#rasterio.crs.CRS.from_string">[docs]</a>    <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="n">prjs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Turn a PROJ.4 string into a mapping of parameters.</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s2">&quot;crs is empty JSON&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">val</span>
+<span class="sd">        Bare parameters like &quot;+no_defs&quot; are given a value of ``True``. All keys</span>
+<span class="sd">        are checked against the ``all_proj_keys`` list.</span>
 
-    <span class="k">if</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;EPSG:&#39;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">from_epsg</span><span class="p">(</span><span class="n">prjs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+<span class="sd">        EPSG:nnnn is allowed.</span>
 
-    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
-
-    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">True</span>
-        <span class="k">elif</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">False</span>
-        <span class="k">else</span><span class="p">:</span>
+<span class="sd">        JSON text-encoded strings are allowed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;{&#39;</span> <span class="ow">in</span> <span class="n">prjs</span><span class="p">:</span>
+            <span class="c1"># may be json, try to decode it</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">prjs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">v</span>
+                <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s1">&#39;crs appears to be JSON but is not valid&#39;</span><span class="p">)</span>
 
-    <span class="n">items</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
-        <span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">kv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">parse</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">True</span><span class="p">),</span>
-        <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s2">&quot;crs is empty JSON&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">val</span>
 
-    <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">all_proj_keys</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;EPSG:&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="n">prjs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s2">&quot;crs is empty or invalid: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prjs</span><span class="p">))</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">prjs</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
 
-    <span class="k">return</span> <span class="n">out</span></div>
+        <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;False&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">v</span>
 
+        <span class="n">items</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">kv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">parse</span><span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">True</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">))</span>
 
-<div class="viewcode-block" id="from_epsg"><a class="viewcode-back" href="../../rasterio.crs.html#rasterio.crs.from_epsg">[docs]</a><span class="k">def</span> <span class="nf">from_epsg</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Given an integer code, returns an EPSG-like mapping.</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">CRS</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">all_proj_keys</span><span class="p">)</span>
 
-<span class="sd">    Note: the input code is not validated against an EPSG database.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;EPSG codes are positive integers&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;init&#39;</span><span class="p">:</span> <span class="s2">&quot;epsg:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">code</span><span class="p">,</span> <span class="s1">&#39;no_defs&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">}</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CRSError</span><span class="p">(</span><span class="s2">&quot;crs is empty or invalid: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prjs</span><span class="p">))</span>
 
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CRS.from_epsg"><a class="viewcode-back" href="../../api/rasterio.crs.html#rasterio.crs.CRS.from_epsg">[docs]</a>    <span class="k">def</span> <span class="nf">from_epsg</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given an integer code, returns an EPSG-like mapping.</span>
+
+<span class="sd">        Note: the input code is not validated against an EPSG database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;EPSG codes are positive integers&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CRS</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="s2">&quot;epsg:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">code</span><span class="p">,</span> <span class="n">no_defs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Should use super() here, but what&#39;s the best way to be compatible</span>
+        <span class="c1"># between Python 2 and 3?</span>
+        <span class="k">return</span> <span class="s2">&quot;CRS({})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+<div class="viewcode-block" id="CRS.to_dict"><a class="viewcode-back" href="../../api/rasterio.crs.html#rasterio.crs.CRS.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span></div></div>
 
 <span class="c1"># Below is the big list of PROJ4 parameters from</span>
 <span class="c1"># http://trac.osgeo.org/proj/wiki/GenParms.</span>
@@ -354,9 +405,8 @@
 <span class="s2">&quot;&quot;&quot;</span>
 
 <span class="n">_lines</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">_param_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
-<span class="n">all_proj_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-    <span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_lines</span><span class="p">)</span>
-    <span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;no_mayo&#39;</span><span class="p">]</span>
+<span class="n">all_proj_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">_lines</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;no_mayo&#39;</span><span class="p">]</span>
 </pre></div>
 
            </div>
@@ -390,7 +440,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.35.1',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

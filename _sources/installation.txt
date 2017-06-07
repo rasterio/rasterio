@@ -1,19 +1,21 @@
+============
 Installation
 ============
 
 Dependencies
-************************
+============
 
 Rasterio has one C library dependency: ``GDAL >=1.9``. GDAL itself depends on
 many of other libraries provided by most major operating systems and also
 depends on the non standard GEOS and PROJ4 libraries.
 
-Python package dependencies (see also requirements.txt): ``affine, cligj, click, enum34, numpy``.
+Python package dependencies (see also requirements.txt): ``affine, cligj,
+click, enum34, numpy``.
 
 Development also requires (see requirements-dev.txt) Cython and other packages.
 
 Installing from binaries
-************************
+========================
 
 OS X
 ----
@@ -50,14 +52,15 @@ this from the downloads folder:
 
 
 Installing with Anaconda
-*************************
+=========================
+
 To install rasterio on the Anaconda Python distribution, please visit the
 `rasterio conda-forge`_ page for install instructions. This build is maintained
 separately from the rasterio distribution on PyPi and packaging issues should
 be addressed on the `rasterio conda-forge`_ issue tracker. 
 
 Installing from the source distribution
-***************************************
+=======================================
 
 Rasterio is a Python C extension and to build you'll need a working compiler
 (XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy headers are
@@ -76,7 +79,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 
     $ sudo add-apt-repository ppa:ubuntugis/ppa
     $ sudo apt-get update
-    $ sudo apt-get install python-numpy libgdal1h gdal-bin libgdal-dev
+    $ sudo apt-get install python-numpy gdal-bin libgdal-dev
     $ pip install rasterio
 
 Adapt them as necessary for your Linux system.
@@ -117,51 +120,5 @@ versions used `here
 
 Note: The GDAL dll (gdal111.dll) and gdal-data directory need to be in your
 Windows PATH otherwise rasterio will fail to work.
-
-Testing
-***************************************
-
-From the repo directory, run py.test
-
-.. code-block:: console
-
-    $ py.test
-
-Note: some tests do not succeed on Windows (see
-`#66
-<https://github.com/mapbox/rasterio/issues/66>`__.).
-
-
-Downstream testing
-------------------
-
-If your project depends on Rasterio and uses Travis-CI, you can speed up your
-builds by fetching Rasterio and its dependencies as a set of wheels from 
-GitHub as done in `rio-plugin-example 
-<https://github.com/sgillies/rio-plugin-example/blob/master/.travis.yml>`__.
-
-.. code-block:: yaml
-
-    language: python
-    env:
-      - RASTERIO_VERSION=0.26
-    python:
-      - "2.7"
-      - "3.4"
-    cache:
-      directories:
-        - $HOME/.pip-cache/
-        - $HOME/wheelhouse
-    before_install:
-      - sudo add-apt-repository -y ppa:ubuntugis/ppa
-      - sudo apt-get update -qq
-      - sudo apt-get install -y libgdal1h gdal-bin
-      - curl -L https://github.com/mapbox/rasterio/releases/download/$RASTERIO_VERSION/rasterio-travis-wheels-$TRAVIS_PYTHON_VERSION.tar.gz > /tmp/wheelhouse.tar.gz
-      - tar -xzvf /tmp/wheelhouse.tar.gz -C $HOME
-    install:
-      - pip install --use-wheel --find-links=$HOME/wheelhouse -e .[test] --cache-dir $HOME/.pip-cache
-    script: 
-      - py.test
-
 
 .. _rasterio conda-forge: https://github.com/conda-forge/rasterio-feedstock

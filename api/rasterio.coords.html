@@ -8,11 +8,9 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.coords module &mdash; rasterio 1.0a8 documentation</title>
+  <title>rasterio.coords module &mdash; rasterio 1.0a9 documentation</title>
   
 
-  
-  
   
   
 
@@ -32,12 +30,8 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="rasterio 1.0a8 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
-        <link rel="next" title="rasterio.crs module" href="rasterio.crs.html"/>
         <link rel="prev" title="rasterio.compat module" href="rasterio.compat.html"/> 
 
   
@@ -47,7 +41,6 @@
 
 <body class="wy-body-for-nav" role="document">
 
-   
   <div class="wy-grid-for-nav">
 
     
@@ -67,7 +60,7 @@
             
             
               <div class="version">
-                1.0a8
+                1.0a9
               </div>
             
           
@@ -88,10 +81,7 @@
           
             
             
-              
-            
-            
-              <ul>
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
@@ -122,7 +112,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">rasterio package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#submodules">Submodules</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rasterio.compat.html">rasterio.compat module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rasterio.coords module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rasterio.coords module</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.crs.html">rasterio.crs module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.drivers.html">rasterio.drivers module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.dtypes.html">rasterio.dtypes module</a></li>
@@ -143,7 +135,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rasterio">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -164,10 +156,8 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">rasterio</a>
-        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
       </nav>
 
 
@@ -176,65 +166,117 @@
         <div class="rst-content">
           
 
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
-
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="../index.html">Docs</a> &raquo;</li>
-        
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
           <li><a href="index.html">rasterio package</a> &raquo;</li>
-        
-      <li>rasterio.coords module</li>
-    
-    
+      
+    <li>rasterio.coords module</li>
       <li class="wy-breadcrumbs-aside">
         
-            
-            <a href="../_sources/api/rasterio.coords.rst.txt" rel="nofollow"> View page source</a>
+          
+            <a href="../_sources/api/rasterio.coords.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rasterio-coords-module">
-<h1>rasterio.coords module<a class="headerlink" href="#rasterio-coords-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-rasterio.coords">
+<span id="rasterio-coords-module"></span><h1>rasterio.coords module<a class="headerlink" href="#module-rasterio.coords" title="Permalink to this headline">¶</a></h1>
+<p>Bounding box tuple, and disjoint operator.</p>
+<dl class="class">
+<dt id="rasterio.coords.BoundingBox">
+<em class="property">class </em><code class="descclassname">rasterio.coords.</code><code class="descname">BoundingBox</code><a class="reference internal" href="../_modules/rasterio/coords.html#BoundingBox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.coords.BoundingBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rasterio.coords.BoundingBox" title="rasterio.coords.BoundingBox"><code class="xref py py-class docutils literal"><span class="pre">rasterio.coords.BoundingBox</span></code></a></p>
+<p>Bounding box named tuple, defining extent in cartesian coordinates.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">BoundingBox</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="68%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>left :</td>
+<td>Left coordinate</td>
+</tr>
+<tr class="row-even"><td>bottom :</td>
+<td>Bottom coordinate</td>
+</tr>
+<tr class="row-odd"><td>right :</td>
+<td>Right coordinate</td>
+</tr>
+<tr class="row-even"><td>top :</td>
+<td>Top coordinate</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;...)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.coords.disjoint_bounds">
+<code class="descclassname">rasterio.coords.</code><code class="descname">disjoint_bounds</code><span class="sig-paren">(</span><em>bounds1</em>, <em>bounds2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/coords.html#disjoint_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.coords.disjoint_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two bounds and determine if they are disjoint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bounds1: 4-tuple</strong></p>
+<blockquote>
+<div><p>rasterio bounds tuple (xmin, ymin, xmax, ymax)</p>
+</div></blockquote>
+<p><strong>bounds2: 4-tuple</strong></p>
+<blockquote>
+<div><p>rasterio bounds tuple</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">boolean</p>
+<p><code class="docutils literal"><span class="pre">True</span></code> if bounds are disjoint,</p>
+<p class="last"><code class="docutils literal"><span class="pre">False</span></code> if bounds overlap</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rasterio.crs.html" class="btn btn-neutral float-right" title="rasterio.crs module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="rasterio.compat.html" class="btn btn-neutral" title="rasterio.compat module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rasterio.compat.html" class="btn btn-neutral" title="rasterio.compat module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -265,11 +307,10 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a8',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
+            HAS_SOURCE:  true
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

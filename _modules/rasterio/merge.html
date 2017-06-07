@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.merge &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.merge &mdash; rasterio 1.0a9 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0a9
               </div>
             
           
@@ -81,10 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -134,7 +165,6 @@
   <h1>Source code for rasterio.merge</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Copy valid pixels from input files to an output file.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -142,14 +172,14 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="kn">import</span> <span class="n">get_window</span>
+<span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">windows</span>
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">Affine</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="merge"><a class="viewcode-back" href="../../rasterio.merge.html#rasterio.merge.merge">[docs]</a><span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+<div class="viewcode-block" id="merge"><a class="viewcode-back" href="../../api/rasterio.merge.html#rasterio.merge.merge">[docs]</a><span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy valid pixels from input files to an output file.</span>
 
 <span class="sd">    All files must have the same number of bands, data type, and</span>
@@ -180,11 +210,16 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    dest: numpy ndarray</span>
-<span class="sd">        Contents of all input rasters in single array.</span>
-<span class="sd">    out_transform: affine object</span>
-<span class="sd">        Information for mapping pixel coordinates in `dest` to another</span>
-<span class="sd">        coordinate system</span>
+<span class="sd">    tuple</span>
+
+<span class="sd">        Two elements:</span>
+
+<span class="sd">            dest: numpy ndarray</span>
+<span class="sd">                Contents of all input rasters in single array.</span>
+
+<span class="sd">            out_transform: affine.Affine()</span>
+<span class="sd">                Information for mapping pixel coordinates in `dest` to another</span>
+<span class="sd">                coordinate system</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">first</span> <span class="o">=</span> <span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">first_res</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">res</span>
@@ -269,13 +304,16 @@
         <span class="n">int_n</span> <span class="o">=</span> <span class="n">src_n</span> <span class="k">if</span> <span class="n">src_n</span> <span class="o">&lt;</span> <span class="n">dst_n</span> <span class="k">else</span> <span class="n">dst_n</span>
 
         <span class="c1"># 2. Compute the source window.</span>
-        <span class="n">src_window</span> <span class="o">=</span> <span class="n">get_window</span><span class="p">(</span>
-            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
+        <span class="n">src_window</span> <span class="o">=</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
+            <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Src </span><span class="si">%s</span><span class="s2"> window: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">src_window</span><span class="p">)</span>
 
         <span class="c1"># 3. Compute the destination window.</span>
-        <span class="n">dst_window</span> <span class="o">=</span> <span class="n">get_window</span><span class="p">(</span>
-            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
+        <span class="n">dst_window</span> <span class="o">=</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
+            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">,</span>
+            <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
+
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dst window: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dst_window</span><span class="p">)</span>
 
         <span class="c1"># 4. Initialize temp array.</span>
@@ -331,7 +369,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.35.1',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

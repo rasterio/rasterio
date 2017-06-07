@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.profiles &mdash; rasterio 0.35.1 documentation</title>
+  <title>rasterio.profiles &mdash; rasterio 1.0a9 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="rasterio 0.35.1 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.35.1
+                1.0a9
               </div>
             
           
@@ -81,10 +81,41 @@
             
             
                 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_docs.html">API Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../community.html">Community</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 </ul>
 
             
@@ -134,42 +165,70 @@
   <h1>Source code for rasterio.profiles</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Raster dataset profiles.&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="kn">import</span> <span class="n">UserDict</span>
 <span class="kn">from</span> <span class="nn">rasterio.dtypes</span> <span class="kn">import</span> <span class="n">uint8</span>
 
 
-<div class="viewcode-block" id="Profile"><a class="viewcode-back" href="../../rasterio.profiles.html#rasterio.profiles.Profile">[docs]</a><span class="k">class</span> <span class="nc">Profile</span><span class="p">:</span>
+<div class="viewcode-block" id="Profile"><a class="viewcode-back" href="../../api/rasterio.profiles.html#rasterio.profiles.Profile">[docs]</a><span class="k">class</span> <span class="nc">Profile</span><span class="p">(</span><span class="n">UserDict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for Rasterio dataset profiles.</span>
 
-<span class="sd">    Subclasses will declare a format driver and driver-specific</span>
-<span class="sd">    creation options.</span>
+<span class="sd">    Subclasses will declare driver-specific creation options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">driver</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return a mapping of keyword args for writing a new datasets.</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new profile based on the class defaults, which are</span>
+<span class="sd">        overlaid with items from the `data` dict and keyword arguments.&quot;&quot;&quot;</span>
+        <span class="n">UserDict</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">initdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">initdata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">initdata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
 
-<span class="sd">        Example:</span>
+        <span class="k">if</span> <span class="s1">&#39;affine&#39;</span> <span class="ow">in</span> <span class="n">initdata</span> <span class="ow">and</span> <span class="s1">&#39;transform&#39;</span> <span class="ow">in</span> <span class="n">initdata</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;affine item is deprecated, use transform only&quot;</span><span class="p">,</span>
+                          <span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">initdata</span><span class="p">[</span><span class="s1">&#39;affine&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;affine&#39;</span> <span class="ow">in</span> <span class="n">initdata</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;affine item is deprecated, use transform instead&quot;</span><span class="p">,</span>
+                          <span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="n">initdata</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initdata</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;affine&#39;</span><span class="p">)</span>
 
-<span class="sd">            profile = SomeProfile()</span>
-<span class="sd">            with rasterio.open(&#39;foo.tif&#39;, &#39;w&#39;, **profile()) as dst:</span>
-<span class="sd">                # Write data ...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">initdata</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Like normal item access but with affine alias.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;affine&#39;</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;transform&#39;</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;affine item is deprecated, use transform instead&quot;</span><span class="p">,</span>
+                          <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Like normal item setter but forbidding affine item.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;affine&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;affine key is prohibited&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a mapping of keyword args.</span>
+
+<span class="sd">        DEPRECATED.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;driver&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Overriding this profile&#39;s driver is not allowed.&quot;</span><span class="p">)</span>
-        <span class="n">profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">profile</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;__call__() is deprecated, use mapping methods instead&quot;</span><span class="p">,</span>
+                      <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">profile</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">profile</span></div>
 
 
-<div class="viewcode-block" id="DefaultGTiffProfile"><a class="viewcode-back" href="../../rasterio.profiles.html#rasterio.profiles.DefaultGTiffProfile">[docs]</a><span class="k">class</span> <span class="nc">DefaultGTiffProfile</span><span class="p">(</span><span class="n">Profile</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A tiled, band-interleaved, LZW-compressed, 8-bit GTiff profile.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DefaultGTiffProfile"><a class="viewcode-back" href="../../api/rasterio.profiles.html#rasterio.profiles.DefaultGTiffProfile">[docs]</a><span class="k">class</span> <span class="nc">DefaultGTiffProfile</span><span class="p">(</span><span class="n">Profile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tiled, band-interleaved, LZW-compressed, 8-bit GTiff.&quot;&quot;&quot;</span>
 
-    <span class="n">driver</span> <span class="o">=</span> <span class="s1">&#39;GTiff&#39;</span>
     <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;driver&#39;</span><span class="p">:</span> <span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
         <span class="s1">&#39;interleave&#39;</span><span class="p">:</span> <span class="s1">&#39;band&#39;</span><span class="p">,</span>
         <span class="s1">&#39;tiled&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
         <span class="s1">&#39;blockxsize&#39;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
@@ -214,7 +273,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.35.1',
+            VERSION:'1.0a9',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Virtual Warping &mdash; rasterio 1.0a9 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="next" title="Virtual Files" href="vsi.html"/>
+        <link rel="prev" title="Tagging datasets and bands" href="tags.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Virtual Warping</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/topics/virtual-warping.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="virtual-warping">
+<h1>Virtual Warping<a class="headerlink" href="#virtual-warping" title="Permalink to this headline">¶</a></h1>
+<p>Rasterio has a <code class="docutils literal"><span class="pre">WarpedVRT</span></code> class that abstracts many of the details of raster
+warping by using an in-memory <a class="reference external" href="http://www.gdal.org/gdal_vrttut.html#gdal_vrttut_warped">Warped VRT</a>. A <code class="docutils literal"><span class="pre">WarpedVRT</span></code> can
+be the easiest solution for tiling large datasets.</p>
+<p>For example, to virtually warp the <code class="docutils literal"><span class="pre">RGB.byte.tif</span></code> test dataset from its
+proper EPSG:32618 coordinate reference system to EPSG:3857 (Web Mercator) and
+extract pixels corresponding to its central zoom 9 tile, do the following.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mercantile</span>
+
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="kn">import</span> <span class="n">Resampling</span>
+<span class="kn">from</span> <span class="nn">rasterio.vrt</span> <span class="kn">import</span> <span class="n">WarpedVRT</span>
+
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">WarpedVRT</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst_crs</span><span class="o">=</span><span class="s1">&#39;EPSG:3857&#39;</span><span class="p">,</span>
+                   <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">bilinear</span><span class="p">)</span> <span class="k">as</span> <span class="n">vrt</span><span class="p">:</span>
+
+        <span class="c1"># Determine the destination tile and its mercator bounds using</span>
+        <span class="c1"># functions from the mercantile module.</span>
+        <span class="n">dst_tile</span> <span class="o">=</span> <span class="n">mercantile</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="o">*</span><span class="n">vrt</span><span class="o">.</span><span class="n">lnglat</span><span class="p">(),</span> <span class="mi">9</span><span class="p">)</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="n">mercantile</span><span class="o">.</span><span class="n">xy_bounds</span><span class="p">(</span><span class="o">*</span><span class="n">dst_tile</span><span class="p">)</span>
+
+        <span class="c1"># Determine the window to use in reading from the dataset.</span>
+        <span class="n">dst_window</span> <span class="o">=</span> <span class="n">vrt</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+
+        <span class="c1"># Read into a 3 x 512 x 512 array. Our output tile will be</span>
+        <span class="c1"># 512 wide x 512 tall.</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">vrt</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">dst_window</span><span class="p">,</span> <span class="n">out_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
+
+        <span class="c1"># Use the source&#39;s profile as a template for our output file.</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">vrt</span><span class="o">.</span><span class="n">profile</span>
+        <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">512</span>
+        <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">512</span>
+        <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;driver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;GTiff&#39;</span>
+
+        <span class="c1"># We need determine the appropriate affine transformation matrix</span>
+        <span class="c1"># for the dataset read window and then scale it by the dimensions</span>
+        <span class="c1"># of the output array.</span>
+        <span class="n">dst_transform</span> <span class="o">=</span> <span class="n">vrt</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">dst_window</span><span class="p">)</span>
+        <span class="n">scaling</span> <span class="o">=</span> <span class="n">Affine</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">dst_window</span><span class="o">.</span><span class="n">num_cols</span> <span class="o">/</span> <span class="mi">512</span><span class="p">,</span>
+                               <span class="n">dst_window</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">/</span> <span class="mi">512</span><span class="p">)</span>
+        <span class="n">dst_transform</span> <span class="o">*=</span> <span class="n">scaling</span>
+        <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dst_transform</span>
+
+        <span class="c1"># Write the image tile to disk.</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/test-tile.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vsi.html" class="btn btn-neutral float-right" title="Virtual Files" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tags.html" class="btn btn-neutral" title="Tagging datasets and bands" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0a9',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
