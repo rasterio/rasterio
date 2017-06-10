@@ -191,8 +191,8 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
 
     output = str(tmpdir.join('test.tif'))
 
-    truth = np.zeros((4, 3))
-    truth[1:3, 0:2] = 1
+    truth = np.zeros((3, 3))
+    truth[0:2, 0:2] = 1
 
     result = runner.invoke(
         main_group,
@@ -214,8 +214,8 @@ def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_fil
 
     output = str(tmpdir.join('test.tif'))
 
-    truth = np.zeros((4, 3))
-    truth[1:3, 0:2] = 1
+    truth = np.zeros((3, 3))
+    truth[0:2, 0:2] = 1
 
     result = runner.invoke(
         main_group, [

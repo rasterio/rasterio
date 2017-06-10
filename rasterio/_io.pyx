@@ -581,14 +581,24 @@ cdef class DatasetReaderBase(DatasetBase):
         # Turning the read window into GDAL offsets and lengths is
         # the job of _read().
         if window:
+            if isinstance(window, tuple):
+                window = windows.Window.from_ranges(*window)
+
             window = windows.evaluate(window, self.height, self.width)
 
             log.debug("Eval'd window: %r", window)
 
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
+            yoff = window.row_off  # window[0][0]
+            xoff = window.col_off  # [1][0]
+            height = window.num_rows  # [0][1] - yoff
+            width = window.num_cols  # [1][1] - xoff
+
+            # Now that we have floating point windows it's easy for
+            # the number of pixels to read to slip below 1 due to
+            # loss of floating point precision. Here we ensure that
+            # we're reading at least one pixel.
+            height = max(1.0, height)
+            width = max(1.0, width)
 
         else:
             xoff = yoff = <int>0

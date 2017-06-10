@@ -11,6 +11,7 @@ import functools
 import math
 from operator import itemgetter
 
+import attr
 from affine import Affine
 import numpy as np
 
@@ -28,6 +29,14 @@ def iter_args(function):
         else:
             return function(*args)
     return wrapper
+
+
+def toranges(window):
+    """Normalize Windows to range tuples"""
+    if isinstance(window, Window):
+        return window.toranges()
+    else:
+        return window
 
 
 def get_data_window(arr, nodata=None):
@@ -92,7 +101,7 @@ def union(*windows):
     Window
     """
 
-    stacked = np.dstack(windows)
+    stacked = np.dstack([toranges(w) for w in windows])
     return Window.from_ranges(
         (stacked[0, 0].min(), stacked[0, 1].max()),
         (stacked[1, 0].min(), stacked[1, 1]. max()))
@@ -116,7 +125,7 @@ def intersection(*windows):
     if not intersect(windows):
         raise ValueError('windows do not intersect')
 
-    stacked = np.dstack(windows)
+    stacked = np.dstack([toranges(w) for w in windows])
     return Window.from_ranges(
         (stacked[0, 0].max(), stacked[0, 1].min()),
         (stacked[1, 0].max(), stacked[1, 1]. min()))
@@ -141,10 +150,9 @@ def intersect(*windows):
 
     def intersects(range1, range2):
         return not (
-            range1[0] >= range2[1] or range1[1] <= range2[0]
-        )
+            range1[0] >= range2[1] or range1[1] <= range2[0])
 
-    windows = np.array(windows)
+    windows = np.array([toranges(w) for w in windows])
 
     for i in (0, 1):
         for c in combinations(windows[:, i], 2):
@@ -195,6 +203,26 @@ def from_bounds(left, bottom, right, top, transform,
         if None in (height, width):
             raise ValueError("Must supply height and width unless boundless")
         return crop(window, height, width)
+
+
+def int_reshape(window, pixel_precision=3):
+    """Converts floating point value Windows to integer value Windows.
+
+    Parameters
+    ----------
+    window : Window
+        Input window with floating point values.
+    pixel_precision : int
+        Rounding precision in decimal places.
+    Returns
+    -------
+    Window
+        A new Window
+    """
+    return Window.from_offlen(
+        window.col_off, window.row_off,
+        math.ceil(round(window.num_cols, pixel_precision)),
+        math.ceil(round(window.num_rows, pixel_precision)))
 
 
 def transform(window, transform):
@@ -388,9 +416,10 @@ def round_window_to_full_blocks(window, block_shapes):
     return Window.from_ranges((row_min, row_max), (col_min, col_max))
 
 
-class Window(tuple):
+@attr.s(slots=True)
+class Window(object):
     """Windows are rectangular subsets of rasters.
-    
+
     This class abstracts the 2-tuples mentioned in the module docstring
     and adds methods and new constructors.
 
@@ -402,14 +431,24 @@ class Window(tuple):
     num_rows
     """
 
-    __slots__ = ()
-    _fields = ('col_off', 'row_off', 'num_cols', 'num_rows')
+    col_off = attr.ib(default=0.0)
+    row_off = attr.ib(default=0.0)
+    num_cols = attr.ib(default=0.0)
+    num_rows = attr.ib(default=0.0)
 
-    def __new__(cls, col_off=0, row_off=0, num_cols=0, num_rows=0):
-        """Create new instance of Window."""
-        return tuple.__new__(
-            cls,
-            ((row_off, row_off + num_rows), (col_off, col_off + num_cols)))
+    #__slots__ = ()
+    #_fields = ('col_off', 'row_off', 'num_cols', 'num_rows')
+
+#    def __init__(self, col_off=0, row_off=0, num_cols=0, num_rows=0):
+#        self.col_off = col_off
+#        self.row_off = row_off
+#        self.num_cols = num_cols
+#        self.num_rows
+#    def __new__(cls, col_off=0, row_off=0, num_cols=0, num_rows=0):
+#        """Create new instance of Window."""
+#        return tuple.__new__(
+#            cls,
+#            ((row_off, row_off + num_rows), (col_off, col_off + num_cols)))
 
     def __repr__(self):
         """Return a nicely formatted representation string"""
@@ -430,8 +469,7 @@ class Window(tuple):
         col_off, row_off, num_cols, num_rows: int
             Window offsets and lengths.
         """
-        return (self[1][0], self[0][0],
-                self[1][1] - self[1][0], self[0][1] - self[0][0])
+        return (self.col_off, self.row_off, self.num_cols, self.num_rows)
 
     def todict(self):
         """A mapping of field names and values.
@@ -440,7 +478,15 @@ class Window(tuple):
         -------
         dict
         """
-        return collections.OrderedDict(zip(self._fields, self.flatten()))
+        return collections.OrderedDict(
+            col_off=self.col_off, row_off=self.row_off, num_cols=self.num_cols,
+            num_rows=self.num_rows)
+
+    def toranges(self):
+        """A pair of range tuples"""
+        return (
+            (self.row_off, self.row_off + self.num_rows),
+            (self.col_off, self.col_off + self.num_cols))
 
     def toslices(self):
         """Slice objects for use as an ndarray indexer.
@@ -450,7 +496,15 @@ class Window(tuple):
         row_slice, col_slice: slice
             A pair of slices in row, column order
         """
-        return tuple(slice(*rng) for rng in self)
+        return tuple(slice(*rng) for rng in self.toranges())
+
+    @property
+    def __array_interface__(self):
+        return {'shape': (2, 2), 'typestr': 'f', 'version': 3,
+                'data': np.array(self.toranges())}
+
+    def __getitem__(self, index):
+        return self.toranges()[index]
 
     @classmethod
     def from_ranges(cls, row_range, col_range):
@@ -486,42 +540,4 @@ class Window(tuple):
         """
         return cls(col_off, row_off, num_cols, num_rows)
 
-    @property
-    def col_off(self):
-        """Column (x) offset of the window.
 
-        Returns
-        -------
-        int
-        """
-        return self[1][0]
-
-    @property
-    def num_cols(self):
-        """Number of cols in the window.
-
-        Returns
-        -------
-        int
-        """
-        return self[1][1] - self[1][0]
-
-    @property
-    def row_off(self):
-        """Row (y) offset of the window.
-
-        Returns
-        -------
-        int
-        """
-        return self[0][0]
-
-    @property
-    def num_rows(self):
-        """Number of rows in the window.
-
-        Returns
-        -------
-        int
-        """
-        return self[0][1] - self[0][0]

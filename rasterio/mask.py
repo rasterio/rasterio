@@ -1,10 +1,11 @@
 """Mask the area outside of the input shapes with no data."""
 
-
+import math
 import warnings
 
 import rasterio
 from rasterio.features import geometry_mask
+from rasterio.windows import int_reshape
 
 
 def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
@@ -78,17 +79,45 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         mask_bounds = [mask_bounds[0], mask_bounds[3],
                        mask_bounds[2], mask_bounds[1]]
     if crop:
-        window = raster.window(*mask_bounds)
-        out_transform = raster.window_transform(window)
+
+        # TODO: pull this out to another module for reuse?
+        pixel_precision = 3
+
+        if invert_y:
+            cropped_mask_bounds = [
+                math.floor(round(mask_bounds[0], pixel_precision)),
+                math.ceil(round(mask_bounds[1], pixel_precision)),
+                math.ceil(round(mask_bounds[2], pixel_precision)),
+                math.floor(round(mask_bounds[3], pixel_precision))]
+        else:
+            cropped_mask_bounds = [
+                math.floor(round(mask_bounds[0], pixel_precision)),
+                math.floor(round(mask_bounds[1], pixel_precision)),
+                math.ceil(round(mask_bounds[2], pixel_precision)),
+                math.ceil(round(mask_bounds[3], pixel_precision))]
+
+        bounds_window = raster.window(*cropped_mask_bounds)
+
+        # Call int_reshape to get the window with integer height
+        # and width that contains the bounds window.
+        out_window = int_reshape(bounds_window)
+        height = int(out_window.num_rows)
+        width = int(out_window.num_cols)
+
+        out_shape = (raster.count, height, width)
+        out_transform = raster.window_transform(out_window)
+
     else:
-        window = None
+        out_window = None
+        out_shape = (raster.count, raster.height, raster.width)
         out_transform = raster.transform
 
-    out_image = raster.read(window=window, masked=True)
-    out_shape = out_image.shape[1:]
+    out_image = raster.read(window=out_window, out_shape=out_shape,
+                            masked=True)
+    mask_shape = out_image.shape[1:]
 
     shape_mask = geometry_mask(shapes, transform=out_transform, invert=invert,
-                               out_shape=out_shape, all_touched=all_touched)
+                               out_shape=mask_shape, all_touched=all_touched)
     out_image.mask = out_image.mask | shape_mask
     out_image.fill_value = nodata
 

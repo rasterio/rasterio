@@ -32,8 +32,9 @@ def test_crop(basic_image, basic_image_file, basic_geometry):
     image = basic_image
     image[4, :] = 0
     image[:, 4] = 0
-    assert(masked.shape == (1, 4, 3))
-    assert((masked[0] == image[1:5, 2:5]).all())
+
+    assert masked.shape == (1, 3, 3)
+    assert (masked[0] == image[2:5, 2:5]).all()
 
 
 def test_crop_all_touched(basic_image, basic_image_file, basic_geometry):
@@ -42,8 +43,8 @@ def test_crop_all_touched(basic_image, basic_image_file, basic_geometry):
         masked, transform = mask_tool(src, geometries, crop=True,
                                       all_touched=True)
 
-    assert(masked.shape == (1, 4, 3))
-    assert((masked[0] == basic_image[1:5, 2:5]).all())
+    assert masked.shape == (1, 3, 3)
+    assert (masked[0] == basic_image[2:5, 2:5]).all()
 
 
 def test_crop_and_invert(basic_image_file, basic_geometry):

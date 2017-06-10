@@ -6,6 +6,13 @@ from rasterio.io import WindowMethodsMixin
 
 EPS = 1.0e-8
 
+
+def assert_window_almost_equals(a, b, precision=6):
+    for pair_outer in zip(a, b):
+        for x, y in zip(*pair_outer):
+            assert round(x, precision) == round(y, precision)
+
+
 class MockDatasetBase(object):
     def __init__(self):
         # from tests/data/RGB.byte.tif
@@ -23,11 +30,15 @@ def test_windows_mixin():
         pass
 
     src = MockDataset()
-    assert src.window(*src.bounds) == ((0, src.height),
-                                       (0, src.width))
+
+    assert_window_almost_equals(
+        src.window(*src.bounds),
+        ((0, src.height), (0, src.width)))
+
     assert src.window_bounds(
         ((0, src.height),
          (0, src.width))) == src.bounds
+
     assert src.window_transform(
         ((0, src.height),
          (0, src.width))) == src.transform
@@ -66,16 +77,28 @@ def test_window_method():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
         dx, dy = src.res
-        assert src.window(
-            left+EPS, bottom+EPS, right-EPS, top-EPS) == ((0, src.height),
-                                                          (0, src.width))
-        assert src.window(left, top-400, left+400, top) == ((0, 2), (0, 2))
-        assert src.window(left, top-2*dy-EPS, left+2*dx-EPS, top) == ((0, 2), (0, 2))
+
+        assert_window_almost_equals(
+            src.window(left + EPS, bottom + EPS, right - EPS, top - EPS),
+            ((0, src.height), (0, src.width)))
+
+        assert_window_almost_equals(
+            src.window(left, top - 400, left + 400, top),
+            ((0, 400 / src.res[1]), (0, 400 / src.res[0])))
+
+        assert_window_almost_equals(
+            src.window(left, top - 2 * dy - EPS, left + 2 * dx - EPS, top),
+            ((0, 2), (0, 2)))
+
         # bounds cropped
-        assert src.window(left-2*dx, top-2*dy, left+2*dx, top+2*dy) == ((0, 2), (0, 2))
+        assert_window_almost_equals(
+            src.window(left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy),
+            ((0, 2), (0, 2)))
+
         # boundless
-        assert src.window(left-2*dx, top-2*dy,
-                          left+2*dx, top+2*dy, boundless=True) == ((-2, 2), (-2, 2))
+        assert_window_almost_equals(
+            src.window(left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy, boundless=True),
+            ((-2, 2), (-2, 2)))
 
 
 def test_window_bounds_function():

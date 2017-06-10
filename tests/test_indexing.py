@@ -1,8 +1,13 @@
+"""Test windows and indexing"""
+
+# TODO: break up multi-assertion tests.
+
 import numpy as np
 import pytest
 
 import rasterio
 from rasterio import windows
+
 
 DATA_WINDOW = ((3, 5), (2, 6))
 
@@ -36,14 +41,14 @@ def test_window_no_exception():
         left -= 1000.0
         assert_window_almost_equals(
             src.window(left, bottom, right, top, boundless=True),
-            ((0, src.height), (-4, src.width)))
+            ((0, src.height), (-1000 / src.res[0], src.width)))
 
 
 def test_index_values():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert src.index(101985.0, 2826915.0) == (0, 0)
-        assert src.index(101985.0+400.0, 2826915.0) == (0, 1)
-        assert src.index(101985.0+400.0, 2826915.0-700.0) == (2, 1)
+        assert src.index(101985.0 + 400.0, 2826915.0) == (0, 1)
+        assert src.index(101985.0 + 400.0, 2826915.0 - 700.0) == (2, 1)
 
 
 def test_window():
@@ -51,28 +56,31 @@ def test_window():
         left, bottom, right, top = src.bounds
         dx, dy = src.res
         eps = 1.0e-8
-        assert src.window(
-            left+eps, bottom+eps, right-eps, top-eps) == ((0, src.height),
-                                                          (0, src.width))
-        assert src.index(left+400, top-400) == (1, 1)
-        assert src.index(left+dx+eps, top-dy-eps) == (1, 1)
-        assert src.window(left, top-400, left+400, top) == ((0, 2), (0, 2))
-        assert src.window(left, top-2*dy-eps, left+2*dx-eps, top) == ((0, 2), (0, 2))
+        assert_window_almost_equals(src.window(
+            left + eps, bottom + eps, right - eps, top - eps),
+            ((0, src.height), (0, src.width)))
+        assert src.index(left + 400, top - 400) == (1, 1)
+        assert src.index(left + dx + eps, top - dy - eps) == (1, 1)
+        assert_window_almost_equals(src.window(left, top - 400, left + 400, top), ((0, 400 / src.res[1]), (0, 400 / src.res[0])))
+        assert_window_almost_equals(src.window(left, top - 2 * dy - eps, left + 2 * dx - eps, top), ((0, 2), (0, 2)))
 
 
 def test_window_bounds_roundtrip():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        assert ((100, 200), (100, 200)) == src.window(
-            *src.window_bounds(((100, 200), (100, 200))))
+        assert_window_almost_equals(
+            ((100, 200), (100, 200)),
+            src.window(*src.window_bounds(((100, 200), (100, 200)))))
 
 
 def test_window_full_cover():
 
-    def bound_covers(bounds1, bounds2):
+    def assert_bound_covers(bounds1, bounds2, precision=5):
         """Does bounds1 cover bounds2?
         """
-        return (round(bounds1[0], 6) <= round(bounds2[0], 6) and round(bounds1[1], 6) <= round(bounds2[1], 6) and
-                round(bounds1[2], 6) >= round(bounds2[2], 6) and round(bounds1[3], 6) >= round(bounds2[3], 6))
+        assert round(bounds1[0], precision) <= round(bounds2[0], precision)
+        assert round(bounds1[1], precision) <= round(bounds2[1], precision)
+        assert round(bounds1[2], precision) >= round(bounds2[2], precision)
+        assert round(bounds1[3], precision) >= round(bounds2[3], precision)
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         bounds = list(src.window_bounds(((100, 200), (100, 200))))
@@ -81,7 +89,7 @@ def test_window_full_cover():
 
         win = src.window(*bounds)
         bounds_calc = list(src.window_bounds(win))
-        assert bound_covers(bounds_calc, bounds)
+        assert_bound_covers(bounds_calc, bounds)
 
 
 @pytest.fixture
@@ -93,21 +101,21 @@ def data():
 
 def test_data_window_unmasked(data):
     window = windows.get_data_window(data)
-    assert window == ((0, data.shape[0]), (0, data.shape[1]))
+    assert window == windows.Window.from_ranges((0, data.shape[0]), (0, data.shape[1]))
 
 
 def test_data_window_masked(data):
     data = np.ma.masked_array(data, data == 0)
     window = windows.get_data_window(data)
-    assert window == DATA_WINDOW
+    assert window == windows.Window.from_ranges(*DATA_WINDOW)
 
 
 def test_data_window_nodata(data):
     window = windows.get_data_window(data, nodata=0)
-    assert window == DATA_WINDOW
+    assert window == windows.Window.from_ranges(*DATA_WINDOW)
 
     window = windows.get_data_window(np.ones_like(data), nodata=0)
-    assert window == ((0, data.shape[0]), (0, data.shape[1]))
+    assert window == windows.Window.from_ranges((0, data.shape[0]), (0, data.shape[1]))
 
 
 def test_data_window_nodata_disjunct():
@@ -116,42 +124,42 @@ def test_data_window_nodata_disjunct():
     data[1, 2:5, 2:8] = 1
     data[2, 1:6, 1:6] = 1
     window = windows.get_data_window(data, nodata=0)
-    assert window == ((0, 6), (1, 8))
+    assert window == windows.Window.from_ranges((0, 6), (1, 8))
 
 
 def test_data_window_empty_result():
     data = np.zeros((3, 10, 10), dtype='uint8')
     window = windows.get_data_window(data, nodata=0)
-    assert window == ((0, 0), (0, 0))
+    assert window == windows.Window.from_ranges((0, 0), (0, 0))
 
 
 def test_data_window_masked_file():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         window = windows.get_data_window(src.read(1, masked=True))
-        assert window == ((3, 714), (13, 770))
+        assert window == windows.Window.from_ranges((3, 714), (13, 770))
 
         window = windows.get_data_window(src.read(masked=True))
-        assert window == ((3, 714), (13, 770))
+        assert window == windows.Window.from_ranges((3, 714), (13, 770))
 
 
 def test_window_union():
     assert windows.union(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
-    ) == ((0, 6), (1, 6))
+    ) == windows.Window.from_ranges((0, 6), (1, 6))
 
 
 def test_window_intersection():
     assert windows.intersection(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5))
-    ) == ((2, 4), (3, 5))
+    ) == windows.Window.from_ranges((2, 4), (3, 5))
 
     assert windows.intersection(
         ((0, 6), (3, 6)),
         ((2, 4), (1, 5)),
         ((3, 6), (0, 6))
-    ) == ((3, 4), (3, 5))
+    ) == windows.Window.from_ranges((3, 4), (3, 5))
 
 
 def test_window_intersection_disjunct():
