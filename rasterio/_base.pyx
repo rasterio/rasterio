@@ -534,7 +534,8 @@ cdef class DatasetBase(object):
             for i in range(ncols):
                 col = i * w
                 width = min(w, self.width - col)
-                yield (j, i), ((row, row+height), (col, col+width))
+                yield (j, i), windows.Window(
+                    col_off=col, row_off=row, num_cols=width, num_rows=height)
 
     property bounds:
         """Returns the lower left and upper right bounds of the dataset

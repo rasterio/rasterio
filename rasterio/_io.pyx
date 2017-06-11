@@ -225,22 +225,16 @@ cdef class DatasetReaderBase(DatasetBase):
 
         if window:
 
-            if boundless:
-                win_shape += (
-                    int(round(window[0][1] - window[0][0], 6)),
-                    int(round(window[1][1] - window[1][0], 6)))
+            if isinstance(window, tuple):
+                windows.warn_window_deprecation()
 
-            else:
+            if not boundless:
                 window = windows.crop(
                     windows.evaluate(window, self.height, self.width),
                     self.height, self.width)
-                (r_start, r_stop), (c_start, c_stop) = window
 
-                log.debug("Cropped window: %r", window)
-
-                win_shape += (
-                    int(round(r_stop - r_start, 6)),
-                    int(round(c_stop - c_start, 6)))
+            int_window = windows.int_reshape(window)
+            win_shape += (int_window.num_rows, int_window.num_cols)
 
         else:
             win_shape += self.shape
@@ -271,9 +265,9 @@ cdef class DatasetReaderBase(DatasetBase):
             # bounded case.
 
             if boundless:
-                out = np.zeros(tuple(int(round(x)) for x in out_shape), dtype=dtype)
+                out = np.zeros(out_shape, dtype=dtype)
             else:
-                out = np.empty(tuple(int(round(x)) for x in out_shape), dtype=dtype)
+                out = np.empty(out_shape, dtype=dtype)
 
             for i, (ndv, arr) in enumerate(zip(
                     nodatavals, out if len(out.shape) == 3 else [out])):
@@ -463,19 +457,23 @@ cdef class DatasetReaderBase(DatasetBase):
             raise ValueError("No indexes to read")
 
         # Get the natural shape of the read window, boundless or not.
+
+        # Stub the win_shape.
         win_shape = (len(indexes),)
+
         if window:
-            if boundless:
-                win_shape += (
-                        window[0][1]-window[0][0], window[1][1]-window[1][0])
-            else:
-                w = windows.evaluate(window, self.height, self.width)
-                minr = min(max(w[0][0], 0), self.height)
-                maxr = max(0, min(w[0][1], self.height))
-                minc = min(max(w[1][0], 0), self.width)
-                maxc = max(0, min(w[1][1], self.width))
-                win_shape += (maxr - minr, maxc - minc)
-                window = ((minr, maxr), (minc, maxc))
+
+            if isinstance(window, tuple):
+                windows.warn_window_deprecation()
+
+            if not boundless:
+                window = windows.crop(
+                    windows.evaluate(window, self.height, self.width),
+                    self.height, self.width)
+
+            int_window = windows.int_reshape(window)
+            win_shape += (int_window.num_rows, int_window.num_cols)
+
         else:
             win_shape += self.shape
 
@@ -588,10 +586,10 @@ cdef class DatasetReaderBase(DatasetBase):
 
             log.debug("Eval'd window: %r", window)
 
-            yoff = window.row_off  # window[0][0]
-            xoff = window.col_off  # [1][0]
-            height = window.num_rows  # [0][1] - yoff
-            width = window.num_cols  # [1][1] - xoff
+            yoff = window.row_off
+            xoff = window.col_off
+            height = window.num_rows
+            width = window.num_cols
 
             # Now that we have floating point windows it's easy for
             # the number of pixels to read to slip below 1 due to
@@ -701,7 +699,7 @@ cdef class DatasetReaderBase(DatasetBase):
         warnings.warn(
             "read_mask() is deprecated and will be removed by Rasterio 1.0. "
             "Please use read_masks() instead.",
-            FutureWarning,
+            DeprecationWarning,
             stacklevel=2)
 
         band = self.band(1)
@@ -1864,7 +1862,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 "Option: %r\n",
                 (k, CSLFetchNameValue(options, key_c)))
 
-        #self.update_tags(ns='rio_creation_kwds', **kwds)
         try:
             temp = exc_wrap_pointer(
                 GDALCreateCopy(drv, fname, self._hds, 1, options, NULL, NULL))

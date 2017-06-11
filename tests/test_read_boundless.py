@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.windows import Window
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -67,20 +68,20 @@ def test_read_boundless_overlap(rgb_byte_tif_reader):
         data = src.read(window=((-200, 200), (-200, 200)), boundless=True)
         assert data.shape == (3, 400, 400)
         assert data.any()
-        assert data[0,399,399] == 13
+        assert data[0, 399, 399] == 13
 
 
 def test_read_boundless_resample(rgb_byte_tif_reader):
     with rgb_byte_tif_reader as src:
         out = np.zeros((3, 800, 800), dtype=np.uint8)
         data = src.read(
-                out=out,
-                window=((-200, 200), (-200, 200)),
-                masked=True,
-                boundless=True)
+            out=out,
+            window=((-200, 200), (-200, 200)),
+            masked=True,
+            boundless=True)
         assert data.shape == (3, 800, 800)
         assert data.any()
-        assert data[0,798,798] == 13
+        assert data[0, 798, 798] == 13
 
 
 def test_read_boundless_masked_no_overlap(rgb_byte_tif_reader):
@@ -98,8 +99,8 @@ def test_read_boundless_masked_overlap(rgb_byte_tif_reader):
         assert data.shape == (3, 400, 400)
         assert data.mask.any()
         assert not data.mask.all()
-        assert data.mask[0,399,399] == False
-        assert data.mask[0,0,0] == True
+        assert not data.mask[0, 399, 399]
+        assert data.mask[0, 0, 0]
 
 
 def test_read_boundless_zero_stop(rgb_byte_tif_reader):
@@ -144,6 +145,6 @@ def test_np_warning(recwarn, rgb_byte_tif_reader):
     import warnings
     warnings.simplefilter('always')
     with rgb_byte_tif_reader as src:
-        window = ((-10, 100), (-10, 100))
+        window = Window(-10, -10, 110, 110)
         src.read(1, window=window, boundless=True)
     assert len(recwarn) == 0
