@@ -4,16 +4,13 @@ import sys
 
 import click
 from click.testing import CliRunner
-from packaging.version import Version
+from packaging.version import Version, parse
 import pytest
 
 import rasterio
 from rasterio.rio.edit_info import (
     all_handler, crs_handler, tags_handler, transform_handler)
 from rasterio.rio.main import main_group
-
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_delete_nodata_exclusive_opts(data):
@@ -34,8 +31,8 @@ def test_delete_crs_exclusive_opts(data):
     assert result.exit_code == 2
 
 
-@pytest.mark.xfail(
-    Version(rasterio.__gdal_version__) < Version('1.10'),
+@pytest.mark.skip(
+    parse(rasterio.__gdal_version__) < parse('1.10'),
     reason='GDAL version >= 1.10 required')
 def test_unset_crs(data):
     runner = CliRunner()
@@ -48,7 +45,7 @@ def test_unset_crs(data):
 
 
 @pytest.mark.skip(
-    Version(rasterio.__gdal_version__) >= Version('1.10'),
+    parse(rasterio.__gdal_version__) >= parse('1.10'),
     reason='Test applies to GDAL version < 1.10')
 def test_unset_crs_gdal19(data):
     """unsetting crs doesn't work for geotiff and gdal 1.9
@@ -59,7 +56,7 @@ def test_unset_crs_gdal19(data):
         orig_crs = src.crs
     with pytest.warns(UserWarning):
         result = runner.invoke(main_group,
-                            ['edit-info', inputfile, '--unset-crs'])
+                               ['edit-info', inputfile, '--unset-crs'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == orig_crs  # nochange

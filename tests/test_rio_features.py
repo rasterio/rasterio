@@ -7,6 +7,7 @@ import warnings
 
 from affine import Affine
 import numpy as np
+from packaging.version import parse
 import pytest
 
 import rasterio
@@ -17,6 +18,12 @@ from rasterio.rio.main import main_group
 DEFAULT_SHAPE = (10, 10)
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+
+# Custom markers.
+xfail_without_gdal2 = pytest.mark.xfail(
+    parse(rasterio.__gdal_version__) < parse('2.0dev'),
+    reason="This test is sensitive to pixel values and requires GDAL 2.0+")
 
 
 def bbox(*args):
@@ -169,6 +176,7 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
     assert 'Invalid GeoJSON' in result.output
 
 
+@xfail_without_gdal2
 def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
     """
     In order to test --crop option, we need to use a transform more similar to
@@ -206,6 +214,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
             out.read(1, masked=True).filled(0))
 
 
+@xfail_without_gdal2
 def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_file):
     """
     --crop option should also work if raster has a positive y pixel size

@@ -234,7 +234,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     self.height, self.width)
 
             int_window = windows.int_reshape(window)
-            win_shape += (int_window.num_rows, int_window.num_cols)
+            win_shape += (int(int_window.num_rows), int(int_window.num_cols))
 
         else:
             win_shape += self.shape
@@ -472,7 +472,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     self.height, self.width)
 
             int_window = windows.int_reshape(window)
-            win_shape += (int_window.num_rows, int_window.num_cols)
+            win_shape += (int(int_window.num_rows), int(int_window.num_cols))
 
         else:
             win_shape += self.shape

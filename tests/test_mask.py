@@ -1,10 +1,16 @@
 """Unittests for rasterio.mask"""
 
-
+from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio.mask import mask as mask_tool
+
+
+# Custom markers.
+xfail_pixel_sensitive_gdal2 = pytest.mark.xfail(
+    parse(rasterio.__gdal_version__) < parse('2.0dev'),
+    reason="This test is sensitive to pixel values and requires GDAL 2.0+")
 
 
 def test_nodata(basic_image_file, basic_geometry):
@@ -24,6 +30,7 @@ def test_no_nodata(basic_image_file, basic_geometry):
     assert(masked.data.all() == default_nodata_val)
 
 
+@xfail_pixel_sensitive_gdal2
 def test_crop(basic_image, basic_image_file, basic_geometry):
     geometries = [basic_geometry]
     with rasterio.open(basic_image_file, "r") as src:
@@ -37,6 +44,7 @@ def test_crop(basic_image, basic_image_file, basic_geometry):
     assert (masked[0] == image[2:5, 2:5]).all()
 
 
+@xfail_pixel_sensitive_gdal2
 def test_crop_all_touched(basic_image, basic_image_file, basic_geometry):
     geometries = [basic_geometry]
     with rasterio.open(basic_image_file, "r") as src:

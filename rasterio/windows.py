@@ -26,7 +26,7 @@ def warn_window_deprecation():
     """Standard warning about range tuple deprecation"""
     warnings.warn(
         "Range tuple window are deprecated. Please switch to Window class",
-        DeprecationWarning, stacklevel=2)
+        DeprecationWarning)
 
 
 def iter_args(function):
