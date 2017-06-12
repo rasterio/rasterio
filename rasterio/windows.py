@@ -534,7 +534,8 @@ class Window(object):
     @property
     def __array_interface__(self):
         return {'shape': (2, 2), 'typestr': 'f', 'version': 3,
-                'data': np.array(self.toranges())}
+                'data': np.array(
+                    [[a, b] for a, b in self.toranges()], dtype='float')}
 
     def __getitem__(self, index):
         return self.toranges()[index]

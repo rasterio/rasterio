@@ -101,25 +101,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
                           "reference systems?")
 
     if crop:
-
-#         # TODO: pull this out to another module for reuse?
-#         pixel_precision = 3
-# 
-#         if invert_y:
-#             cropped_mask_bounds = (
-#                 math.floor(round(mask_bounds[0], pixel_precision)),
-#                 math.ceil(round(mask_bounds[1], pixel_precision)),
-#                 math.ceil(round(mask_bounds[2], pixel_precision)),
-#                 math.floor(round(mask_bounds[3], pixel_precision))]
-#         else:
-#             cropped_mask_bounds = [
-#                 math.floor(round(mask_bounds[0], pixel_precision)),
-#                 math.floor(round(mask_bounds[1], pixel_precision)),
-#                 math.ceil(round(mask_bounds[2], pixel_precision)),
-#                 math.ceil(round(mask_bounds[3], pixel_precision))]
-
-        cropped_mask_bounds = mask_bounds
-        bounds_window = raster.window(*cropped_mask_bounds)
+        bounds_window = raster.window(*mask_bounds)
 
         # Call int_reshape to get the window with integer height
         # and width that contains the bounds window.

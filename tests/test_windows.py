@@ -3,6 +3,8 @@ import logging
 import sys
 
 from affine import Affine
+from hypothesis import given
+from hypothesis.strategies import floats
 import numpy as np
 import pytest
 
@@ -21,6 +23,18 @@ def assert_window_almost_equals(a, b, precision=6):
     for pair_outer in zip(a, b):
         for x, y in zip(*pair_outer):
             assert round(x, precision) == round(y, precision)
+
+
+@given(col_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       row_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       num_cols=floats(min_value=0.0, max_value=1.0e+7),
+       num_rows=floats(min_value=0.0, max_value=1.0e+7)) 
+def test_window_ctor(col_off, row_off, num_cols, num_rows):
+    window = Window(col_off, row_off, num_cols, num_rows)
+    assert window.col_off == col_off
+    assert window.row_off == row_off
+    assert window.num_cols == num_cols
+    assert window.num_rows == num_rows
 
 
 def test_window_function():
@@ -69,6 +83,68 @@ def test_window_bounds_south_up():
         from_bounds(0, 10, 10, 0, identity, 10, 10),
         Window(0, 0, 10, 10),
         precision=5)
+
+def test_toranges():
+    assert Window(0, 0, 1, 1).toranges() == ((0, 1), (0, 1))
+
+
+def test_window_function():
+    # TODO: break this test up.
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        left, bottom, right, top = src.bounds
+        dx, dy = src.res
+        height = src.height
+        width = src.width
+
+        assert_window_almost_equals(from_bounds(
+            left + EPS, bottom + EPS, right - EPS, top - EPS, src.transform,
+            height, width), ((0, height), (0, width)))
+
+        assert_window_almost_equals(from_bounds(
+            left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
+            height, width), ((0, 2), (0, 2)))
+
+        # bounds cropped
+        assert_window_almost_equals(from_bounds(
+            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
+            src.transform, height, width), ((0, 2), (0, 2)))
+
+        # boundless
+        assert_window_almost_equals(from_bounds(
+            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
+            src.transform, boundless=True), ((-2, 2), (-2, 2)))
+
+
+def test_window_float():
+    """Test window float values"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        left, bottom, right, top = src.bounds
+        dx, dy = src.res
+        height = src.height
+        width = src.width
+
+        assert_window_almost_equals(from_bounds(
+            left, top - 400, left + 400, top, src.transform,
+            height, width), ((0, 400 / src.res[1]), (0, 400 / src.res[0])))
+
+
+def test_window_bounds_south_up():
+    identity = Affine.identity()
+    assert_window_almost_equals(
+        from_bounds(0, 10, 10, 0, identity, 10, 10),
+        Window(0, 0, 10, 10),
+        precision=5)
+
+def test_toranges():
+    assert Window(0, 0, 1, 1).toranges() == ((0, 1), (0, 1))
+
+@given(col_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       row_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       num_cols=floats(min_value=0.0, max_value=1.0e+7),
+       num_rows=floats(min_value=0.0, max_value=1.0e+7)) 
+def test_array_interface(col_off, row_off, num_cols, num_rows):
+    arr = np.array(Window(col_off, row_off, num_cols, num_rows))
+    assert arr.shape == (2, 2)
 
 
 def test_window_bounds_north_up():

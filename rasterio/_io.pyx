@@ -31,7 +31,6 @@ from rasterio.vfs import parse_path, vsi_path
 from rasterio import windows
 
 from libc.stdio cimport FILE
-from libc.math cimport ceil
 cimport numpy as np
 
 from rasterio._base cimport _osr_from_crs, get_driver_name, DatasetBase
