@@ -308,7 +308,8 @@ extra_reqs = {
     's3': ['boto3>=1.2.4'],
     'plot': ['matplotlib'],
     'test': [
-        'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging'],
+        'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging',
+        'hypothesis'],
     'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']}
 
 # Add futures to 'test' for Python < 3.2.
