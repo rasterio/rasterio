@@ -382,6 +382,8 @@ def test_merge_tiny_output_opt(tiffs):
 
 
 @xfail_pixel_sensitive_gdal2
+@pytest.mark.xfail(sys.version_info < (3,),
+                   reason="Test is sensitive to rounding behavior")
 def test_merge_tiny_res_bounds(tiffs):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]

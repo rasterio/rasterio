@@ -34,7 +34,7 @@ def test_no_nodata(basic_image_file, basic_geometry):
 def test_crop(basic_image, basic_image_file, basic_geometry):
     geometries = [basic_geometry]
     with rasterio.open(basic_image_file, "r") as src:
-        masked, transform = mask_tool(src, geometries, crop=True)
+        masked, transform = mask_tool(src, geometries, crop=True, pad=False)
 
     image = basic_image
     image[4, :] = 0

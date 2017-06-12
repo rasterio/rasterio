@@ -63,6 +63,22 @@ def test_window_float():
             height, width), ((0, 400 / src.res[1]), (0, 400 / src.res[0])))
 
 
+def test_window_bounds_south_up():
+    identity = Affine.identity()
+    assert_window_almost_equals(
+        from_bounds(0, 10, 10, 0, identity, 10, 10),
+        Window(0, 0, 10, 10),
+        precision=5)
+
+
+def test_window_bounds_north_up():
+    transform = Affine.translation(0.0, 10.0) * Affine.scale(1.0, -1.0) * Affine.identity()
+    assert_window_almost_equals(
+        from_bounds(0, 0, 10, 10, transform, 10, 10),
+        Window(0, 0, 10, 10),
+        precision=5)
+
+
 def test_window_function_valuerror():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds

@@ -546,7 +546,7 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             a, b, c, d, e, f, _, _, _ = self.transform
-            return BoundingBox(c, f+e*self.height, c+a*self.width, f)
+            return BoundingBox(c, f + e * self.height, c + a * self.width, f)
 
     property res:
         """Returns the (width, height) of pixels in the units of its
@@ -556,7 +556,7 @@ cdef class DatasetBase(object):
             if b == d == 0:
                 return a, -e
             else:
-                return math.sqrt(a*a+d*d), math.sqrt(b*b+e*e)
+                return math.sqrt(a * a+ d * d), math.sqrt(b * b + e * e)
 
     @property
     def meta(self):

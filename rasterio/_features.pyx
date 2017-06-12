@@ -331,8 +331,14 @@ def _explode(coords):
                 yield f
 
 
-def _bounds(geometry):
-    """Bounding box of a GeoJSON geometry.  
+def _bounds(geometry, north_up=True):
+    """Bounding box of a GeoJSON geometry.
+
+    left, bottom, right, top
+    *not* xmin, ymin, xmax, ymax
+
+    If not north_up, y will be switched to guarantee the above.
+
     From Fiona 1.4.8 with updates here to handle feature collections.
     TODO: add to Fiona.
     """
@@ -347,10 +353,17 @@ def _bounds(geometry):
             ymins.append(ymin)
             xmaxs.append(xmax)
             ymaxs.append(ymax)
-        return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+        if north_up:
+            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+        else:
+            return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
+
     else:
         xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
-        return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
+        if north_up:
+            return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
+        else:
+            return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
 
 
 # Mapping of OGR integer geometry types to GeoJSON type names.
