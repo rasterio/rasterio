@@ -1,8 +1,6 @@
 """rasterio.vrt: a module concerned with GDAL VRTs"""
 
 from rasterio._warp import WarpedVRTReaderBase
-from rasterio.enums import Resampling
-from rasterio.env import ensure_env
 from rasterio.io import WindowMethodsMixin, TransformMethodsMixin
 
 
