@@ -8,7 +8,7 @@ ghp-import
 numpy>=1.10
 snuggs>=1.2
 packaging
-pytest>=2.8.2
+pytest>=3.1.0
 pytest-cov>=2.2.0
 setuptools>=0.9.8
 wheel

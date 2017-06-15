@@ -10,12 +10,12 @@ from packaging.version import parse
 import rasterio
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
-from rasterio.errors import CRSError
+from rasterio.errors import GDALBehaviorChangeException, CRSError
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
 from rasterio import windows
-from rasterio.plot import show
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -96,6 +96,53 @@ def uninvertable_reproject_params():
         height=80,
         src_crs={'init': 'EPSG:4326'},
         dst_crs={'init': 'EPSG:26836'})
+
+
+WGS84_crs = {'init': 'EPSG:4326'}
+
+
+def test_transform_src_crs_none():
+    with pytest.raises(CRSError):
+        transform(None, WGS84_crs, [], [])
+
+
+def test_transform_dst_crs_none():
+    with pytest.raises(CRSError):
+        transform(WGS84_crs, None, [], [])
+
+
+def test_transform_bounds_src_crs_none():
+    with pytest.raises(CRSError):
+        transform_bounds(None, WGS84_crs, 0, 0, 0, 0)
+
+
+def test_transform_bounds_dst_crs_none():
+    with pytest.raises(CRSError):
+        transform_bounds(WGS84_crs, None, 0, 0, 0, 0)
+
+
+def test_transform_geom_src_crs_none():
+    with pytest.raises(CRSError):
+        transform_geom(None, WGS84_crs, None)
+
+
+def test_transform_geom_dst_crs_none():
+    with pytest.raises(CRSError):
+        transform_geom(WGS84_crs, None, None)
+
+
+def test_reproject_src_crs_none():
+    with pytest.raises(CRSError):
+        reproject(np.ones((2, 2)), np.zeros((2, 2)),
+                  src_transform=Affine.identity(),
+                  dst_transform=Affine.identity(), dst_crs=WGS84_crs)
+
+
+def test_reproject_dst_crs_none():
+    with pytest.raises(CRSError):
+        reproject(np.ones((2, 2)), np.zeros((2, 2)),
+                  src_transform=Affine.identity(),
+                  dst_transform=Affine.identity(), src_crs=WGS84_crs)
 
 
 def test_transform():
@@ -1018,3 +1065,36 @@ def test_reproject_gcps(rgb_byte_profile):
     assert not out[:, 0, -1].any()
     assert not out[:, -1, -1].any()
     assert not out[:, -1, 0].any()
+
+
+@pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.2.0'),
+    reason="GDAL 2.2.0 and newer has different antimeridian cutting behavior.")
+def test_transform_geom_gdal22():
+    """Enabling `antimeridian_cutting` has no effect on GDAL 2.2.0 or newer
+    where antimeridian cutting is always enabled.  This could produce
+    unexpected geometries, so an exception is raised.
+    """
+    geom = {
+        'type': 'Point',
+        'coordinates': [0, 0]
+    }
+    with pytest.raises(GDALBehaviorChangeException):
+        transform_geom(
+            'EPSG:4326', 'EPSG:3857', geom, antimeridian_cutting=False)
+
+
+def test_issue1056():
+    """Warp sucessfully from RGB's upper bands to an array"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+
+        dst_crs = {'init': 'EPSG:3857'}
+        out = np.zeros(src.shape, dtype=np.uint8)
+        reproject(
+            rasterio.band(src, 2),
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest)

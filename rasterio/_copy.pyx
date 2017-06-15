@@ -56,7 +56,8 @@ def copy(src, dst, driver='GTiff', strict=False, **creation_options):
     # Input is a path or GDAL connection string
     if isinstance(src, str):
         src = src.encode('utf-8')
-        src_dataset = exc_wrap_pointer(GDALOpen(<const char *>src, 0))
+        src_dataset = exc_wrap_pointer(
+            GDALOpenShared(<const char *>src, <GDALAccess>0))
         close_src = True
     # Input is something like 'rasterio.open()'
     else:
@@ -73,4 +74,3 @@ def copy(src, dst, driver='GTiff', strict=False, **creation_options):
         CSLDestroy(options)
         if close_src:
             GDALClose(src_dataset)
-        GDALClose(dst_dataset)

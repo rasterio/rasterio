@@ -16,8 +16,6 @@ import os.path
 import sys
 import threading
 
-from rasterio.compat import string_types
-
 
 level_map = {
     0: 0,
@@ -39,7 +37,7 @@ code_map = {
     9: 'CPLE_UserInterrupt',
     10: 'ObjectNull',
 
-    # error numbers 11-16 are introduced in GDAL 2.1. See 
+    # error numbers 11-16 are introduced in GDAL 2.1. See
     # https://github.com/OSGeo/gdal/pull/98.
     11: 'CPLE_HttpResponse',
     12: 'CPLE_AWSBucketNotFound',
@@ -48,7 +46,11 @@ code_map = {
     15: 'CPLE_AWSInvalidCredentials',
     16: 'CPLE_AWSSignatureDoesNotMatch'}
 
+
 log = logging.getLogger(__name__)
+
+
+cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
@@ -80,7 +82,8 @@ def driver_count():
 
 
 cpdef get_gdal_config(key, normalize=True):
-    """Get the value of a GDAL configuration option
+    """Get the value of a GDAL configuration option.  When requesting
+    ``GDAL_CACHEMAX`` the value is returned unaltered. 
 
     Parameters
     ----------
@@ -90,11 +93,22 @@ cpdef get_gdal_config(key, normalize=True):
         Convert values of ``"ON"'`` and ``"OFF"`` to ``True`` and ``False``.
     """
     key = key.encode('utf-8')
-    val = CPLGetConfigOption(<const char *>key, NULL)
+
+    # GDAL_CACHEMAX is a special case
+    if key.lower() == b'gdal_cachemax':
+        if is_64bit:
+            return GDALGetCacheMax64()
+        else:
+            return GDALGetCacheMax()
+    else:
+        val = CPLGetConfigOption(<const char *>key, NULL)
+
     if not val:
         return None
     elif not normalize:
         return val
+    elif val.isdigit():
+        return int(val)
     else:
         if val == u'ON':
             return True
@@ -115,10 +129,20 @@ cpdef set_gdal_config(key, val, normalize=True):
         Convert ``True`` to `"ON"` and ``False`` to `"OFF"``.
     """
     key = key.encode('utf-8')
-    if isinstance(val, string_types):
-        val = val.encode('utf-8')
-    elif normalize:
-        val = ('ON' if val else 'OFF').encode('utf-8')
+
+    # GDAL_CACHEMAX is a special case
+    if key.lower() == b'gdal_cachemax':
+        if is_64bit:
+            GDALSetCacheMax64(val)
+        else:
+            GDALSetCacheMax(val)
+        return
+    elif normalize and isinstance(val, bool):
+        val = ('ON' if val and val else 'OFF').encode('utf-8')
+    else:
+        # Value could be an int
+        val = str(val).encode('utf-8')
+
     if isinstance(threading.current_thread(), threading._MainThread):
         CPLSetConfigOption(<const char *>key, <const char *>val)
     else:
@@ -144,7 +168,7 @@ cdef class ConfigEnv(object):
     """Configuration option management"""
 
     def __init__(self, **options):
-        self.options = {}
+        self.options = options.copy()
         self.update_config_options(**self.options)
 
     def update_config_options(self, **kwargs):

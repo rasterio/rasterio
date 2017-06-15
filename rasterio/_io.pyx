@@ -1,8 +1,8 @@
-# cython: boundscheck=False
 """Rasterio input/output."""
 
 from __future__ import absolute_import
 
+include "directives.pxi"
 include "gdal.pxi"
 
 import logging
@@ -22,7 +22,7 @@ from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
-from rasterio.errors import DriverRegistrationError
+from rasterio.errors import CRSError, DriverRegistrationError
 from rasterio.errors import RasterioIOError
 from rasterio.errors import NodataShadowWarning
 from rasterio.sample import sample_gen
@@ -90,7 +90,8 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
 cdef class DatasetReaderBase(DatasetBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
-            out_shape=None, boundless=False, resampling=Resampling.nearest):
+            out_shape=None, boundless=False, resampling=Resampling.nearest,
+            fill_value=None):
         """Read raster bands as a multidimensional array
 
         Parameters
@@ -101,18 +102,22 @@ cdef class DatasetReaderBase(DatasetBase):
 
         out : numpy ndarray, optional
             As with Numpy ufuncs, this is an optional reference to an
-            output array with the same dimensions and shape into which
-            data will be placed.
+            output array into which data will be placed. If the height
+            and width of `out` differ from that of the specified 
+            window (see below), the raster image will be decimated or
+            replicated using the specified resampling method (also see
+            below).
 
             *Note*: the method's return value may be a view on this
             array. In other words, `out` is likely to be an
             incomplete representation of the method's results.
 
-            Cannot combined with `out_shape`.
+            This parameter cannot be combined with `out_shape`.
 
         out_shape : tuple, optional
-            A tuple describing the output array's shape.  Allows for decimated
-            reads without constructing an output Numpy array.
+            A tuple describing the shape of a new output array. See
+            `out` (above) for notes on image decimation and
+            replication.
 
             Cannot combined with `out`.
 
@@ -134,6 +139,9 @@ cdef class DatasetReaderBase(DatasetBase):
             If `True`, windows that extend beyond the dataset's extent
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
+
+        fill_value : scalar
+            Fill value applied in the `boundless=True` case only.
 
         Returns
         -------
@@ -169,10 +177,17 @@ cdef class DatasetReaderBase(DatasetBase):
             check_dtypes.add(dtype)
 
             ndv = self._nodatavals[idx]
+
+            log.debug("Output nodata value read from file: %r", ndv)
+
             # Change given nodatavals to the closest value that
             # can be represented by this band's data type to
             # match GDAL's strategy.
-            if ndv is not None:
+            if fill_value:
+                ndv = fill_value
+                log.debug("Output nodata value set from fill value")
+
+            elif ndv is not None:
                 if np.dtype(dtype).kind in ('i', 'u'):
                     info = np.iinfo(dtype)
                     dt_min, dt_max = info.min, info.max
@@ -187,6 +202,8 @@ cdef class DatasetReaderBase(DatasetBase):
                     ndv = dt_max
 
             nodatavals.append(ndv)
+
+        log.debug("Output nodata values: %r", nodatavals)
 
         # Mixed dtype reads are not supported at this time.
         if len(check_dtypes) > 1:
@@ -214,12 +231,9 @@ cdef class DatasetReaderBase(DatasetBase):
 
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
-        elif out_shape is not None:
-            if len(out_shape) == 2:
-                out_shape = (1,) + out_shape
-            out = np.empty(out_shape, dtype=dtype)
 
-        if out is not None:
+        # `out` takes precedence over `out_shape`.
+        elif out is not None:
             if out.dtype != dtype:
                 raise ValueError(
                     "the array's dtype '%s' does not match "
@@ -228,6 +242,28 @@ cdef class DatasetReaderBase(DatasetBase):
                 raise ValueError(
                     "'out' shape %s does not match window shape %s" %
                     (out.shape, win_shape))
+
+        else:
+            if out_shape is not None:
+                if len(out_shape) == 2:
+                    out_shape = (1,) + out_shape
+            else:
+                out_shape = win_shape
+
+            # We're filling in both the bounded and boundless cases.
+            # TODO: profile and see if we should avoid this in the
+            # bounded case.
+
+            if boundless:
+                out = np.zeros(out_shape, dtype=dtype)
+            else:
+                out = np.empty(out_shape, dtype=dtype)
+
+            for i, (ndv, arr) in enumerate(zip(
+                    nodatavals, out if len(out.shape) == 3 else [out])):
+
+                if ndv is not None:
+                    arr.fill(ndv)
 
         # Masking
         # -------
@@ -245,13 +281,6 @@ cdef class DatasetReaderBase(DatasetBase):
             log.debug("all_valid: %s", all_valid)
             log.debug("mask_flags: %r", enums)
 
-        if out is None:
-            out = np.zeros(win_shape, dtype)
-            for ndv, arr in zip(
-                    nodatavals, out if len(out.shape) == 3 else [out]):
-                if ndv is not None:
-                    arr.fill(ndv)
-
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
@@ -262,7 +291,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 if all_valid:
                     mask = np.ma.nomask
                 else:
-                    mask = np.empty(out.shape, 'uint8')
+                    mask = np.zeros(out.shape, 'uint8')
                     mask = ~self._read(
                         indexes, mask, window, 'uint8', masks=True,
                         resampling=resampling).astype('bool')
@@ -293,12 +322,12 @@ cdef class DatasetReaderBase(DatasetBase):
                 buffer_shape = (
                         int(round(overlap_h*scaling_h)),
                         int(round(overlap_w*scaling_w)))
-                data = np.empty(win_shape[:-2] + buffer_shape, dtype)
+                data = np.zeros(win_shape[:-2] + buffer_shape, dtype)
                 data = self._read(indexes, data, overlap, dtype,
                                   resampling=resampling)
 
                 if masked:
-                    mask = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
+                    mask = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
                     mask = ~self._read(
                         indexes, mask, overlap, 'uint8', masks=True,
                         resampling=resampling).astype('bool')
@@ -472,7 +501,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
                 buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
-                data = np.empty(win_shape[:-2] + buffer_shape, 'uint8')
+                data = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
                 data = self._read(indexes, data, overlap, dtype, masks=True,
                                   resampling=resampling)
             else:
@@ -522,7 +551,6 @@ cdef class DatasetReaderBase(DatasetBase):
         cdef GDALDatasetH dataset = NULL
 
         dataset = self.handle()
-        GDALFlushCache(dataset)
 
         # Prepare the IO window.
         if window:
@@ -645,7 +673,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 window
                 and windows.shape(window, self.height, self.width)
                 or self.shape)
-            out = np.empty(out_shape, np.uint8)
+            out = np.zeros(out_shape, np.uint8)
         if window:
             window = windows.evaluate(window, self.height, self.width)
             yoff = window[0][0]
@@ -689,15 +717,18 @@ cdef class DatasetReaderBase(DatasetBase):
 cdef class MemoryFileBase(object):
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, file_or_bytes=None, ext=''):
+    def __init__(self, file_or_bytes=None, filename=None, ext=''):
         """A file in an in-memory filesystem.
 
         Parameters
         ----------
         file_or_bytes : file or bytes
             A file opened in binary mode or bytes or a bytearray
+        filename : str
+            A filename for the in-memory file under /vsimem
         ext : str
-            A file extension for the in-memory file under /vsimem
+            A file extension for the in-memory file under /vsimem. Ignored if
+            filename was provided.
         """
         cdef VSILFILE *vsi_handle = NULL
 
@@ -713,8 +744,13 @@ cdef class MemoryFileBase(object):
         else:
             initial_bytes = b''
 
-        # GDAL 2.1 requires a .zip extension for zipped files.
-        self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+        if filename:
+            # GDAL's SRTMHGT driver requires the filename to be "correct" (match
+            # the bounds being written)
+            self.name = '/vsimem/{0}'.format(filename)
+        else:
+            # GDAL 2.1 requires a .zip extension for zipped files.
+            self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
 
         self.path = self.name.encode('utf-8')
         self._pos = 0
@@ -1019,7 +1055,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         elif self.mode == 'r+':
             try:
-                self._hds = exc_wrap_pointer(GDALOpen(fname, 1))
+                self._hds = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>1))
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
@@ -1048,6 +1084,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self.update_tags(ns='rio_creation_kwds', **kwds)
         self._closed = False
 
+    def stop(self):
+        """Ends the dataset's life cycle"""
+        if self._hds != NULL:
+            GDALFlushCache(self._hds)
+            GDALClose(self._hds)
+        self._hds = NULL
+        self._closed = True
+        log.debug("Dataset %r has been stopped.", self)
+
     def set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
         cdef char *proj_c = NULL
@@ -1061,7 +1106,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         log.debug("Input CRS: %r", crs)
 
-        # Normally, we expect a CRS dict.
         if isinstance(crs, dict):
             crs = CRS(crs)
         if isinstance(crs, CRS):
@@ -1084,10 +1128,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 proj_c = proj_b
                 OSRImportFromProj4(osr, proj_c)
         # Fall back for CRS strings like "EPSG:3857."
-        else:
+        elif isinstance(crs, str) or crs is None:
+            if not crs:
+                crs = ''
             proj_b = crs.encode('utf-8')
             proj_c = proj_b
             OSRSetFromUserInput(osr, proj_c)
+        else:
+            raise CRSError(
+                "{!r} does not define a valid CRS".format(crs))
 
         # Fixup, export to WKT, and set the GDAL dataset's projection.
         OSRFixup(osr)
@@ -1712,7 +1761,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         elif self.mode == 'r+':
             try:
-                temp = exc_wrap_pointer(GDALOpen(fname, 0))
+                temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 

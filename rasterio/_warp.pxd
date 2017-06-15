@@ -2,6 +2,9 @@
 
 cdef extern from "gdalwarper.h" nogil:
 
+    ctypedef enum GDALResampleAlg:
+        pass
+
     ctypedef struct GDALWarpOptions
 
     cdef cppclass GDALWarpOperation:
@@ -43,6 +46,7 @@ cdef extern from "ogr_spatialref.h":
 
 
 cdef extern from "gdal_alg.h":
-     ctypedef int (*GDALTransformerFunc)(
+
+    ctypedef int (*GDALTransformerFunc)(
         void *pTransformerArg, int bDstToSrc, int nPointCount, double *x,
         double *y, double *z, int *panSuccess)

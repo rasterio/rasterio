@@ -67,10 +67,15 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             info = dict(src.profile)
             info['shape'] = (info['height'], info['width'])
             info['bounds'] = src.bounds
-            proj4 = src.crs.to_string()
-            if proj4.startswith('+init=epsg'):
-                proj4 = proj4.split('=')[1].upper()
-            info['crs'] = proj4
+
+            if src.crs:
+                proj4 = src.crs.to_string()
+                if proj4.startswith('+init=epsg'):
+                    proj4 = proj4.split('=')[1].upper()
+                info['crs'] = proj4
+            else:
+                info['crs'] = None
+
             info['res'] = src.res
             info['colorinterp'] = [src.colorinterp(i).name
                                    for i in src.indexes]

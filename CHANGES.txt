@@ -1,8 +1,8 @@
 Changes
 =======
 
-Next Release
-------------
+1.0a9 (2017-06-02)
+------------------
 
 Breaking changes:
 
@@ -10,7 +10,29 @@ Breaking changes:
   options should be set explicitly inside the currently active
   `rasterio.env.Env()`(#1010).  This argument was initially added in `1.0a1`.
 - The function `transform_geom()` now always splits geometries at the anti-
-  meridian (#1023).
+  meridian (#1024).
+- The `crs` property of a dataset is now `None` instead of `CRS()` when the
+  dataset's coordinate reference system is undefined (#1057).
+
+New features:
+
+- Enable setting and getting `GDAL_CACHEMAX` (#1042).
+- Integer config option values are now properly encoded and decoded (#1042).
+- A `from_wkt()` CRS constructor has been added (#1070).
+- Targeting aligned pixels in rio-warp (#941).
+- A new `WarpedVRT` class that surfaces GDAL's warp-on-demand VRT features. No
+  XML editing is required (#1071, #1029).
+
+Bug fixes:
+
+- `dtypes.get_minimum_dtype()` now returns proper value for uint* types
+  (#1064).
+- Rasterio now uses `OSRRelease()` to avoid destroying shared spatial 
+  reference system objects (#1031).
+- GDAL_SKIP and GDAL_DRIVER_PATH options, when needed, are now set before
+  driver registration (#1001).
+- A failure of reprojection to an array when source dataset bands have an
+  index higher than 1 has been fixed (#1056).
 
 1.0a8 (2017-03-29)
 ------------------

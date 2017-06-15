@@ -9,11 +9,13 @@ from math import ceil
 from affine import Affine
 import numpy as np
 
+import rasterio
 from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
 from rasterio.env import ensure_env
+from rasterio.errors import GDALBehaviorChangeException
 from rasterio.transform import guard_transform
 
 
@@ -68,8 +70,10 @@ def transform_geom(
         Target coordinate reference system.
     geom: GeoJSON like dict object
     antimeridian_cutting: bool, optional
-        If True, cut geometries at the antimeridian, otherwise geometries will
-        not be cut (default).
+        If True, cut geometries at the antimeridian, otherwise geometries 
+        will not be cut (default).  If False and GDAL is 2.2.0 or newer
+        an exception is raised.  Antimeridian cutting is always on as of
+        GDAL 2.2.0 but this could produce an unexpected geometry.
     antimeridian_offset: float
         Offset from the antimeridian in degrees (default: 10) within which
         any geometries will be split.
@@ -80,10 +84,19 @@ def transform_geom(
 
     Returns
     ---------
-
     out: GeoJSON like dict object
         Transformed geometry in GeoJSON dict format
     """
+
+    loose_gdal_version = filter(
+        lambda x: x.isdigit(),
+        rasterio.__gdal_version__.split('.'))
+    loose_gdal_version = tuple(map(int, loose_gdal_version))
+    if loose_gdal_version[:2] >= (2, 2) and not antimeridian_cutting:
+        raise GDALBehaviorChangeException(
+            "Antimeridian cutting is always enabled on GDAL 2.2.0 or "
+            "newer, which could produce a different geometry than expected.")
+
     return _transform_geom(
         src_crs,
         dst_crs,
@@ -314,7 +327,7 @@ def calculate_default_transform(src_crs, dst_crs, width, height,
     transform: Affine
         Output affine transformation matrix
     width, height: int
-        Output dimesions
+        Output dimensions
 
     Notes
     -----

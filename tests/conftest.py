@@ -11,6 +11,8 @@ import pytest
 import numpy as np
 
 from rasterio.crs import CRS
+import rasterio
+
 
 DEFAULT_SHAPE = (10, 10)
 

@@ -315,7 +315,7 @@ Python's context manager protocol, it is possible to do the following instead.
         dst.write(Z, 1)
 
 These are the basics of reading and writing raster data files. More features
-and examples are contained in the `advanced topics <advanced>`__ section.
+and examples are contained in the `advanced topics <topics>`__ section.
 
 .. [#] "example.tif" is an alias for band 4 of Landsat scene
    LC80370342016194LGN00.

@@ -44,6 +44,7 @@ cdef extern from "cpl_string.h" nogil:
     const char *CSLFetchNameValue(char **papszStrList, const char *pszName)
     char **CSLSetNameValue(char **list, char *name, char *val)
     void CSLDestroy(char **list)
+    char **CSLMerge(char **first, char **second)
 
 
 cdef extern from "cpl_vsi.h" nogil:
@@ -109,6 +110,7 @@ cdef extern from "gdal.h" nogil:
     ctypedef void * GDALAsyncReaderH
 
     ctypedef long long GSpacing
+    ctypedef unsigned long long GIntBig
 
     ctypedef enum GDALDataType:
         GDT_Unknown
@@ -167,7 +169,8 @@ cdef extern from "gdal.h" nogil:
     const char* GDALGetDescription(GDALMajorObjectH obj)
     void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
-    GDALDatasetH GDALOpen(const char *filename, int access) # except -1
+    GDALDatasetH GDALOpen(const char *filename, GDALAccess access) # except -1
+    GDALDatasetH GDALOpenShared(const char *filename, GDALAccess access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
     void GDALClose(GDALDatasetH hds)
     GDALDriverH GDALGetDatasetDriver(GDALDatasetH hds)
@@ -235,8 +238,10 @@ cdef extern from "gdal.h" nogil:
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
     int GDALGetGCPCount(GDALDatasetH hDS)
     const char *GDALGetGCPProjection(GDALDatasetH hDS)
-
-
+    int GDALGetCacheMax()
+    void GDALSetCacheMax(int nBytes)
+    GIntBig GDALGetCacheMax64()
+    void GDALSetCacheMax64(GIntBig nBytes)
 
 
 cdef extern from "ogr_api.h" nogil:
@@ -430,6 +435,15 @@ cdef extern from "gdalwarper.h" nogil:
     GDALWarpOptions *GDALCreateWarpOptions()
     void GDALDestroyWarpOptions(GDALWarpOptions *options)
 
+    GDALDatasetH GDALAutoCreateWarpedVRT(
+        GDALDatasetH hSrcDS, const char *pszSrcWKT, const char *pszDstWKT,
+        GDALResampleAlg eResampleAlg, double dfMaxError,
+        const GDALWarpOptions *psOptionsIn)
+
+    GDALDatasetH GDALCreateWarpedVRT(
+        GDALDatasetH hSrcDS, int nPixels, int nLines,
+         double *padfGeoTransform, const GDALWarpOptions *psOptionsIn)
+
 
 cdef extern from "gdal_alg.h" nogil:
 
@@ -459,6 +473,7 @@ cdef extern from "gdal_alg.h" nogil:
     void *GDALCreateGenImgProjTransformer3(
             const char *pszSrcWKT, const double *padfSrcGeoTransform,
             const char *pszDstWKT, const double *padfDstGeoTransform)
+    void GDALSetGenImgProjTransformerDstGeoTransform(void *hTransformArg, double *padfGeoTransform)
     int GDALGenImgProjTransform(void *pTransformArg, int bDstToSrc,
                                 int nPointCount, double *x, double *y,
                                 double *z, int *panSuccess)
@@ -483,4 +498,5 @@ cdef extern from "gdal_alg.h" nogil:
 
 
 cdef extern from "ogr_core.h" nogil:
+
     char *OGRGeometryTypeToName(int type)

@@ -14,6 +14,7 @@ from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
 from rasterio import windows
+from rasterio.enums import Resampling
 from rasterio.env import ensure_env
 from rasterio.transform import guard_transform, xy, rowcol
 
@@ -104,7 +105,7 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, boundless=False):
+    def window(self, left, bottom, right, top, boundless=False, precision=6):
         """Get the window corresponding to the bounding coordinates.
 
         Parameters
@@ -120,6 +121,9 @@ class WindowMethodsMixin(object):
         boundless: boolean, optional
             If boundless is False, window is limited
             to extent of this dataset.
+        precision : int, optional
+            Number of decimal points of precision when computing inverse
+            transform.
 
         Returns
         -------
@@ -132,7 +136,8 @@ class WindowMethodsMixin(object):
         transform = guard_transform(self.transform)
         return windows.from_bounds(
             left, bottom, right, top, transform=transform,
-            height=self.height, width=self.width, boundless=boundless)
+            height=self.height, width=self.width, boundless=boundless,
+            precision=precision)
 
     def window_transform(self, window):
         """Get the affine transform for a dataset window.
@@ -235,8 +240,9 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, ext=''):
-        super(MemoryFile, self).__init__(file_or_bytes=file_or_bytes, ext=ext)
+    def __init__(self, file_or_bytes=None, filename=None, ext=''):
+        super(MemoryFile, self).__init__(
+            file_or_bytes=file_or_bytes, filename=filename, ext=ext)
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
@@ -262,10 +268,11 @@ class MemoryFile(MemoryFileBase):
         if self.exists():
             s = DatasetReader(vsi_path, 'r+')
         else:
-            s = DatasetWriter(vsi_path, 'w', driver=driver, width=width,
-                              height=height, count=count, crs=crs,
-                              transform=transform, dtype=dtype,
-                              nodata=nodata, **kwargs)
+            writer = get_writer_for_driver(driver)
+            s = writer(vsi_path, 'w', driver=driver, width=width,
+                       height=height, count=count, crs=crs,
+                       transform=transform, dtype=dtype,
+                       nodata=nodata, **kwargs)
         s.start()
         return s
 

@@ -7,6 +7,7 @@ import warnings
 
 from affine import Affine
 import numpy as np
+import pytest
 
 import rasterio
 from rasterio.crs import CRS
@@ -116,12 +117,13 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
 
     output = str(tmpdir.join('test.tif'))
 
-    result = runner.invoke(
-        main_group,
-        ['mask', pixelated_image_file, output, '--geojson-mask', '-'],
-        input=json.dumps(basic_feature))
+    with pytest.warns(UserWarning) as warnings:
+        result = runner.invoke(
+            main_group,
+            ['mask', pixelated_image_file, output, '--geojson-mask', '-'],
+            input=json.dumps(basic_feature))
     assert result.exit_code == 0
-    assert 'outside bounds' in result.output
+    assert any(['outside bounds' in w.message.args[0] for w in warnings])
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:

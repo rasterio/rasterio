@@ -19,6 +19,13 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
     pass
 
 
+cdef class WarpedVRTReaderBase(DatasetReaderBase):
+    cdef GDALDatasetH _hds_source
+    cdef object dst_crs
+    cdef object resampling
+    cdef object tolerance
+
+
 cdef class InMemoryRaster:
     cdef GDALDatasetH _hds
     cdef double transform[6]
