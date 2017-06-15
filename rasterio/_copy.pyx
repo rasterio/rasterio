@@ -8,6 +8,7 @@ import logging
 from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_pointer
 from rasterio.env import ensure_env
+from rasterio.errors import DriverRegistrationError
 
 
 log = logging.getLogger(__name__)
@@ -49,9 +50,10 @@ def copy(src, dst, driver='GTiff', strict=False, **creation_options):
     strictness = int(strict)
 
     driverb = driver.encode('utf-8')
-    drv = GDALGetDriverByName(<const char *>driverb)
+
+    drv = GDALGetDriverByName(driverb)
     if drv == NULL:
-        raise ValueError("NULL driver")
+        raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
 
     # Input is a path or GDAL connection string
     if isinstance(src, str):

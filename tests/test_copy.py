@@ -4,6 +4,7 @@
 import pytest
 
 import rasterio
+from rasterio.errors import DriverRegistrationError
 
 
 @pytest.mark.parametrize("pass_handle", (True, False))
@@ -37,3 +38,8 @@ def test_copy(tmpdir, path_rgb_byte_tif, pass_handle):
     with rasterio.open(outfile) as src:
         assert src.driver == 'GTiff'
         assert set(src.block_shapes) == {(256, 512)}
+
+
+def test_bad_driver():
+    with pytest.raises(DriverRegistrationError):
+        rasterio.copy('tests/data/RGB.byte.tif', None, driver='trash')
