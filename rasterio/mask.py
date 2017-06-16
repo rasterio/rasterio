@@ -6,7 +6,6 @@ import warnings
 
 import rasterio
 from rasterio.features import geometry_mask
-from rasterio.windows import int_reshape
 
 
 logger = logging.getLogger(__name__)
@@ -103,9 +102,9 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
     if crop:
         bounds_window = raster.window(*mask_bounds)
 
-        # Call int_reshape to get the window with integer height
+        # Get the window with integer height
         # and width that contains the bounds window.
-        out_window = int_reshape(bounds_window)
+        out_window = bounds_window.round_shape()
         height = int(out_window.num_rows)
         width = int(out_window.num_cols)
 

@@ -29,6 +29,15 @@ def warn_window_deprecation():
         DeprecationWarning)
 
 
+def coerce_and_warn(ranges):
+    """Coerce ranges to Window and warn"""
+    warn_window_deprecation()
+    if not (len(ranges) == 2 and len(ranges[0]) == 2 and len(ranges[1]) == 2):
+        raise ValueError("Not a valid pair of ranges")
+
+    return Window.from_ranges(*ranges)
+
+
 def iter_args(function):
     """Decorator to allow function to take either *args or
     a single iterable which gets expanded to *args.
@@ -172,7 +181,7 @@ def intersect(*windows):
     return True
 
 
-def from_bounds(left, bottom, right, top, transform,
+def from_bounds(left, bottom, right, top, transform=None,
                 height=None, width=None, boundless=False, precision=6):
     """Get the window corresponding to the bounding coordinates.
 
@@ -213,33 +222,6 @@ def from_bounds(left, bottom, right, top, transform,
         return crop(window, height, width)
 
 
-def int_reshape(window, pixel_precision=3):
-    """Converts floating point value Windows to integer value Windows.
-
-    Parameters
-    ----------
-    window : Window
-        Input window with floating point values.
-    pixel_precision : int
-        Rounding precision in decimal places.
-    Returns
-    -------
-    Window
-        A new Window
-    """
-    if isinstance(window, tuple):
-        warn_window_deprecation()
-        return Window.from_offlen(
-            window[1][0], window[0][0],
-            math.ceil(round(window[1][1] - window[1][0], pixel_precision)),
-            math.ceil(round(window[0][1] - window[0][0], pixel_precision)))
-    else:
-        return Window.from_offlen(
-            window.col_off, window.row_off,
-            math.ceil(round(window.num_cols, pixel_precision)),
-            math.ceil(round(window.num_rows, pixel_precision)))
-
-
 def transform(window, transform):
     """Construct an affine transform matrix relative to a window.
 
@@ -255,13 +237,12 @@ def transform(window, transform):
     Affine
         The affine transform matrix for the given window
     """
-    if isinstance(window, tuple):
-        warn_window_deprecation()
-        r, c = window[0][0], window[1][0]
-    else:
-        r, c = window.row_off, window.col_off
+    window = (coerce_and_warn(window) if isinstance(window, tuple) else
+              window)
 
-    return transform * Affine.translation(c or 0, r or 0)
+    x, y = transform * (window.col_off or 0.0, window.row_off or 0.0)
+    return Affine.translation(
+        x - transform.c, y - transform.f) * transform
 
 
 def bounds(window, transform):
@@ -269,28 +250,27 @@ def bounds(window, transform):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window: a Window or window tuple
         The input window.
     transform: Affine
         an affine transform matrix.
 
     Returns
     -------
-    x_min, y_min, x_max, y_max : float
+    left, bottom, right, top: float
         A tuple of spatial coordinate bounding values.
     """
-    if isinstance(window, tuple):
-        warn_window_deprecation()
-        (row_min, row_max), (col_min, col_max) = window
-    else:
-        row_min = window.row_off
-        row_max = row_min + window.num_rows
-        col_min = window.col_off
-        col_max = col_min + window.num_cols
+    window = (coerce_and_warn(window) if isinstance(window, tuple) else
+              window)
+    
+    row_min = window.row_off
+    row_max = row_min + window.num_rows
+    col_min = window.col_off
+    col_max = col_min + window.num_cols
 
-    x_min, y_min = transform * (col_min, row_max)
-    x_max, y_max = transform * (col_max, row_min)
-    return x_min, y_min, x_max, y_max
+    left, bottom = transform * (col_min, row_max)
+    right, top = transform * (col_max, row_min)
+    return left, bottom, right, top
 
 
 def crop(window, height, width):
@@ -309,18 +289,15 @@ def crop(window, height, width):
         A new Window object.
     """
     if isinstance(window, tuple):
-        warn_window_deprecation()
-        (row_min, row_max), (col_min, col_max) = window
-    else:
-        row_min = window.row_off
-        row_max = row_min + window.num_rows
-        col_min = window.col_off
-        col_max = col_min + window.num_cols
+        window = coerce_and_warn(window)
 
-    return Window.from_ranges(
-        (min(max(row_min, 0), height), max(0, min(row_max, height))),
-        (min(max(col_min, 0), width), max(0, min(col_max, width))))
+    row_start = min(max(window.row_off, 0), height)
+    col_start = min(max(window.col_off, 0), width)
+    row_stop = max(0, min(window.row_off + window.num_rows, height))
+    col_stop = max(0, min(window.col_off + window.num_cols, width))
 
+    return Window.from_ranges((row_start, row_stop), (col_start, col_stop))
+ 
 
 def evaluate(window, height, width):
     """Evaluates a window tuple that may contain relative index values.
@@ -342,16 +319,9 @@ def evaluate(window, height, width):
         A new Window object with absolute index values.
     """
     if isinstance(window, tuple):
-        warn_window_deprecation()
-        try:
-            r, c = window
-            assert len(r) == 2
-            assert len(c) == 2
-        except (ValueError, TypeError, AssertionError):
-            raise ValueError("invalid window structure; expecting ints"
-                             "((row_start, row_stop), (col_start, col_stop))")
-    else:
-        r, c = window.toranges()
+        window = coerce_and_warn(window)
+    
+    r, c = window.toranges()
 
     r_start = r[0] or 0
     if r_start < 0:
@@ -408,6 +378,8 @@ def shape(window, height=-1, width=-1):
 def window_index(window):
     """Construct a pair of slice objects for ndarray indexing
 
+    Starting indexes are rounded down, Stopping indexes are rounded up.
+
     Parameters
     ----------
     window : a Window or window tuple
@@ -418,11 +390,13 @@ def window_index(window):
     row_slice, col_slice: slice
         A pair of slices in row, column order
     """
-    if isinstance(window, tuple):
-        warn_window_deprecation()
-        return tuple(slice(*w) for w in window)
-    else:
-        return tuple(slice(*w) for w in window.toranges())
+    window = (coerce_and_warn(window) if isinstance(window, tuple) else
+              window)
+
+    r, c = window.toranges()
+    return (
+        slice(int(math.floor(r[0])), int(math.ceil(r[1]))),
+        slice(int(math.floor(c[0])), int(math.ceil(c[1]))))
 
 
 def round_window_to_full_blocks(window, block_shapes):
@@ -441,17 +415,17 @@ def round_window_to_full_blocks(window, block_shapes):
     -------
     Window
     """
-    if len(set(block_shapes)) != 1:
-        raise ValueError('All bands must have the same block/stripe structure')
+    if len(set(block_shapes)) != 1:  # pragma: no cover
+        raise ValueError(
+            "All bands must have the same block/stripe structure")
 
+    window = (coerce_and_warn(window) if isinstance(window, tuple) else
+              window)
+    
     height_shape = block_shapes[0][0]
     width_shape = block_shapes[0][1]
 
-    if isinstance(window, tuple):
-        warn_window_deprecation()
-        row_range, col_range = window
-    else:
-        row_range, col_range = window.toranges()
+    row_range, col_range = window.toranges()
 
     row_min = int(row_range[0] // height_shape) * height_shape
     row_max = int(row_range[1] // height_shape) * height_shape + \
@@ -516,10 +490,11 @@ class Window(object):
             num_rows=self.num_rows)
 
     def toranges(self):
-        """A pair of range tuples"""
+        """Makes an equivalent pair of range tuples"""
+        row_stop = None if self.num_rows is None else self.row_off + self.num_rows
+        col_stop = None if self.num_cols is None else self.col_off + self.num_cols
         return (
-            (self.row_off, self.row_off + self.num_rows),
-            (self.col_off, self.col_off + self.num_cols))
+            (self.row_off, row_stop), (self.col_off, col_stop))
 
     def toslices(self):
         """Slice objects for use as an ndarray indexer.
@@ -553,9 +528,12 @@ class Window(object):
         -------
         Window
         """
-        return cls(col_range[0], row_range[0],
-                   col_range[1] - col_range[0],
-                   row_range[1] - row_range[0])
+        col_off = col_range[0] or 0.0
+        row_off = row_range[0] or 0.0
+        num_cols = None if col_range[1] is None else col_range[1] - col_off
+        num_rows = None if row_range[1] is None else row_range[1] - row_off
+        return cls(col_off, row_off, num_cols, num_rows)
+
 
     @classmethod
     def from_offlen(cls, col_off, row_off, num_cols, num_rows):
@@ -573,3 +551,28 @@ class Window(object):
         Window
         """
         return cls(col_off, row_off, num_cols, num_rows)
+
+    def round_shape(self, op='ceil', pixel_precision=3):
+        """Return a copy with column and row numbers rounded
+        
+        Numbers are rounded to the nearest whole number. The offsets
+        are not changed.
+
+        Parameters
+        ----------
+        op: str
+            'ceil' or 'floor'
+        pixel_precision: int
+            Number of places of rounding precision.
+
+        Returns
+        -------
+        Window
+        """
+        operator = getattr(math, op, None)
+        if not operator:
+            raise ValueError("operator must be 'ceil' or 'floor'")
+        
+        return Window(self.col_off, self.row_off, 
+                      operator(round(self.num_cols, pixel_precision)),
+                      operator(round(self.num_rows, pixel_precision)))

@@ -30,7 +30,7 @@ class RasterioIOError(IOError):
     registered format drivers."""
 
 
-class NodataShadowWarning(Warning):
+class NodataShadowWarning(UserWarning):
     """Warn that a dataset's nodata attribute is shadowing its alpha band."""
 
     def __str__(self):
@@ -39,7 +39,7 @@ class NodataShadowWarning(Warning):
                 "by the nodata attribute")
 
 
-class NotGeoreferencedWarning(Warning):
+class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
 
 

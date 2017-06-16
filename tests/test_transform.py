@@ -3,6 +3,7 @@ import pytest
 import rasterio
 from rasterio import transform
 from rasterio.transform import xy, rowcol
+from rasterio.windows import Window
 
 
 def test_window_transform():
@@ -59,7 +60,7 @@ def test_window_bounds():
 
         # Test a small window in each corner, both in and slightly out of bounds
         p = 10
-        for window in (
+        for ranges in (
                 # In bounds (UL, UR, LL, LR)
                 ((0, p), (0, p)),
                 ((0, p), (cols - p, p)),
@@ -74,7 +75,8 @@ def test_window_bounds():
 
             # Alternate formula
 
-            ((row_min, row_max), (col_min, col_max)) = window
+            window = Window.from_ranges(*ranges)
+            (row_min, row_max), (col_min, col_max) = ranges
             win_aff = src.window_transform(window)
 
             x_min, y_max = win_aff.c, win_aff.f

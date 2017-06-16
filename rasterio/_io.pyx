@@ -225,14 +225,14 @@ cdef class DatasetReaderBase(DatasetBase):
         if window:
 
             if isinstance(window, tuple):
-                windows.warn_window_deprecation()
+                window = windows.coerce_and_warn(window)
 
             if not boundless:
                 window = windows.crop(
                     windows.evaluate(window, self.height, self.width),
                     self.height, self.width)
 
-            int_window = windows.int_reshape(window)
+            int_window = window.round_shape()
             win_shape += (int(int_window.num_rows), int(int_window.num_cols))
 
         else:
@@ -463,14 +463,14 @@ cdef class DatasetReaderBase(DatasetBase):
         if window:
 
             if isinstance(window, tuple):
-                windows.warn_window_deprecation()
+                window = windows.coerce_and_warn(window)
 
             if not boundless:
                 window = windows.crop(
                     windows.evaluate(window, self.height, self.width),
                     self.height, self.width)
 
-            int_window = windows.int_reshape(window)
+            int_window = window.round_shape()
             win_shape += (int(int_window.num_rows), int(int_window.num_cols))
 
         else:

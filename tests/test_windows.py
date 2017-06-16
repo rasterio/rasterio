@@ -1,25 +1,26 @@
 from copy import copy
 import logging
+import math
 import sys
 
 from affine import Affine
 from hypothesis import given
-from hypothesis.strategies import floats
+from hypothesis.strategies import floats, integers
 import numpy as np
 import pytest
 
 import rasterio
 from rasterio.windows import (
-    from_bounds, bounds, transform, evaluate, window_index, shape, Window,
-    intersect, intersection, get_data_window, union, round_window_to_full_blocks)
-
+    crop, from_bounds, bounds, transform, evaluate, window_index, shape, Window,
+    intersect, intersection, get_data_window, union, round_window_to_full_blocks,
+    toranges)
 
 EPS = 1.0e-8
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
-def assert_window_almost_equals(a, b, precision=6):
+def assert_window_almost_equals(a, b, precision=3):
     for pair_outer in zip(a, b):
         for x, y in zip(*pair_outer):
             assert round(x, precision) == round(y, precision)
@@ -37,6 +38,53 @@ def test_window_ctor(col_off, row_off, num_cols, num_rows):
     assert window.num_rows == num_rows
 
 
+
+@given(col_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       row_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       num_cols=floats(min_value=0.0, max_value=1.0e+7),
+       num_rows=floats(min_value=0.0, max_value=1.0e+7)) 
+def test_window_round_up(col_off, row_off, num_cols, num_rows):
+    window = Window(col_off, row_off, num_cols, num_rows).round_shape()
+    assert window.col_off == col_off
+    assert window.row_off == row_off
+    assert window.num_cols == math.ceil(round(num_cols, 3))
+    assert window.num_rows == math.ceil(round(num_rows, 3))
+
+
+def test_round_shape_invalid_op():
+    with pytest.raises(ValueError):
+        Window(0, 0, 1, 1).round_shape(op='bogus')
+
+
+@given(col_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       row_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       num_cols=floats(min_value=0.0, max_value=1.0e+7),
+       num_rows=floats(min_value=0.0, max_value=1.0e+7),
+       height=integers(min_value=0, max_value=10000000),
+       width=integers(min_value=0, max_value=10000000))
+def test_crop(col_off, row_off, num_cols, num_rows, height, width):
+    window = crop(Window(col_off, row_off, num_cols, num_rows), height, width)
+    assert 0.0 <= round(window.col_off, 3) <= width
+    assert 0.0 <= round(window.row_off, 3) <= height
+    assert round(window.num_cols, 3) <= round(width - window.col_off, 3)
+    assert round(window.num_rows, 3) <= round(height - window.row_off, 3)
+
+
+def test_crop_coerce():
+    with pytest.warns(DeprecationWarning):
+        assert crop(((-10, 10), (-10, 10)), 5, 5).num_cols == 5
+
+
+def test_transform_coerce():
+    with pytest.warns(DeprecationWarning):
+        assert transform(((-10, 10), (-10, 10)), Affine.identity()).a == 1.0
+
+
+def test_window_index_coerce():
+    with pytest.warns(DeprecationWarning):
+        assert window_index(((-10, 10), (-10, 10)))[0].start == -10
+
+
 def test_window_function():
     # TODO: break this test up.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -52,11 +100,6 @@ def test_window_function():
         assert_window_almost_equals(from_bounds(
             left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
             height, width), ((0, 2), (0, 2)))
-
-        # bounds cropped
-        assert_window_almost_equals(from_bounds(
-            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
-            src.transform, height, width), ((0, 2), (0, 2)))
 
         # boundless
         assert_window_almost_equals(from_bounds(
@@ -84,8 +127,14 @@ def test_window_bounds_south_up():
         Window(0, 0, 10, 10),
         precision=5)
 
+
 def test_toranges():
     assert Window(0, 0, 1, 1).toranges() == ((0, 1), (0, 1))
+
+
+def test_toranges_warn():
+    with pytest.warns(DeprecationWarning):
+        toranges(((0, 1), (0, 1)))
 
 
 def test_window_function():
@@ -103,11 +152,6 @@ def test_window_function():
         assert_window_almost_equals(from_bounds(
             left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
             height, width), ((0, 2), (0, 2)))
-
-        # bounds cropped
-        assert_window_almost_equals(from_bounds(
-            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
-            src.transform, height, width), ((0, 2), (0, 2)))
 
         # boundless
         assert_window_almost_equals(from_bounds(
@@ -155,6 +199,7 @@ def test_window_bounds_north_up():
         precision=5)
 
 
+@pytest.mark.xfail(reason="feature eliminated")
 def test_window_function_valuerror():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
@@ -186,14 +231,24 @@ def test_window_bounds_function():
         assert bounds(((0, rows), (0, cols)), src.transform) == src.bounds
 
 
-bad_windows = (
+bad_value_windows = [
     (1, 2, 3),
-    (1, 2),
-    ((1, 0), 2))
+    ((1, 0), (2,))]
 
-@pytest.mark.parametrize("window", bad_windows)
-def test_eval_window_bad_structure(window):
+bad_type_windows = [
+    (1, 2),
+    ((1, 0), 2)]
+
+
+@pytest.mark.parametrize("window", bad_value_windows)
+def test_eval_window_bad_value(window):
     with pytest.raises(ValueError):
+        evaluate(window, 10, 10)
+
+
+@pytest.mark.parametrize("window", bad_type_windows)
+def test_eval_window_bad_type(window):
+    with pytest.raises(TypeError):
         evaluate(window, 10, 10)
 
 
@@ -257,6 +312,9 @@ def test_shape_positive():
 def test_shape_negative():
     assert shape(((-10, None), (-10, None)), 100, 90) == (10, 10)
     assert shape(((~0, None), (~0, None)), 100, 90) == (1, 1)
+
+
+def test_shape_negative_start():
     assert shape(((None, ~0), (None, ~0)), 100, 90) == (99, 89)
 
 
@@ -409,7 +467,7 @@ def test_intersection():
 
 
 def test_round_window_to_full_blocks():
-    with rasterio.open('tests/data/alpha.tif') as src:
+    with rasterio.open('tests/data/alpha.tif') as src, pytest.warns(DeprecationWarning):
         block_shapes = src.block_shapes
         test_window = ((321, 548), (432, 765))
         rounded_window = round_window_to_full_blocks(test_window, block_shapes)
@@ -420,6 +478,13 @@ def test_round_window_to_full_blocks():
         assert rounded_window[0][1] % height_shape == 0
         assert rounded_window[1][0] % width_shape == 0
         assert rounded_window[1][1] % width_shape == 0
+
+
+def test_round_window_to_full_blocks_error():
+    with pytest.raises(ValueError):
+        round_window_to_full_blocks(
+            Window(0, 0, 10, 10), block_shapes=[(1, 1), (2, 2)])
+
 
 def test_round_window_already_at_edge():
     with rasterio.open('tests/data/alpha.tif') as src:
