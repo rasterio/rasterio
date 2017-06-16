@@ -144,8 +144,8 @@ class WindowMethodsMixin(object):
 
         Parameters
         ----------
-        window: tuple
-            Dataset window tuple
+        window: rasterio.windows.Window
+            Dataset window
 
         Returns
         -------
@@ -161,8 +161,8 @@ class WindowMethodsMixin(object):
 
         Parameters
         ----------
-        window: tuple
-            Dataset window tuple
+        window: rasterio.windows.Window
+            Dataset window
 
         Returns
         -------

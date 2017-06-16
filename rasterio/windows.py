@@ -115,7 +115,7 @@ def union(*windows):
     Parameters
     ----------
     windows: sequence
-        One or more Windows or window tuples.
+        One or more Windows.
 
     Returns
     -------
@@ -136,7 +136,7 @@ def intersection(*windows):
     Parameters
     ----------
     windows: sequence
-        One or more Windows or window tuples.
+        One or more Windows.
 
     Returns
     -------
@@ -158,7 +158,7 @@ def intersect(*windows):
     Parameters
     ----------
     windows: sequence
-        One or more Windows or window tuples.
+        One or more Windows.
 
     Returns
     -------
@@ -227,7 +227,7 @@ def transform(window, transform):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window: Window
         The input window.
     transform: Affine
         an affine transform matrix.
@@ -250,7 +250,7 @@ def bounds(window, transform):
 
     Parameters
     ----------
-    window: a Window or window tuple
+    window: Window
         The input window.
     transform: Affine
         an affine transform matrix.
@@ -278,7 +278,7 @@ def crop(window, height, width):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window : Window.
         The input window.
     height, width : int
         The number of rows and cols in the cropped window.
@@ -307,7 +307,7 @@ def evaluate(window, height, width):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window : Window.
         The input window.
     height, width : int
         The number of rows or columns in the array that the window
@@ -360,7 +360,7 @@ def shape(window, height=-1, width=-1):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window: Window
         The input window.
     height, width : int, optional
         The number of rows or columns in the array that the window
@@ -382,7 +382,7 @@ def window_index(window):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window: Window
         The input window.
 
     Returns
@@ -405,7 +405,7 @@ def round_window_to_full_blocks(window, block_shapes):
 
     Parameters
     ----------
-    window : a Window or window tuple
+    window: Window
         The input window.
 
     block_shapes : tuple of block shapes
