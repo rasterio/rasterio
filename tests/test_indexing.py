@@ -6,13 +6,14 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.errors import WindowError
 from rasterio import windows
 
 
 DATA_WINDOW = ((3, 5), (2, 6))
 
 
-def assert_window_almost_equals(a, b, precision=6):
+def assert_window_almost_equals(a, b, precision=3):
     for pair_outer in zip(a, b):
         for x, y in zip(*pair_outer):
             assert round(x, precision) == round(y, precision)
@@ -163,7 +164,7 @@ def test_window_intersection():
 
 
 def test_window_intersection_disjunct():
-    with pytest.raises(ValueError):
+    with pytest.raises(WindowError):
         windows.intersection(
             ((0, 6), (3, 6)),
             ((100, 200), (0, 12)),
@@ -208,7 +209,7 @@ def test_3x3matrix():
     arrangement = product(pairs, pairs)
     for wins in combinations(arrangement, 2):
         assert not windows.intersect(*wins)
-        with pytest.raises(ValueError):
+        with pytest.raises(WindowError):
             windows.intersection(*wins)
 
 

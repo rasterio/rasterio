@@ -14,20 +14,7 @@ import rasterio
 from rasterio import windows
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
 class WindowTest(unittest.TestCase):
-
-    def test_window_shape_errors(self):
-        # Positive height and width are needed when stop is None.
-        self.assertRaises(
-            ValueError,
-            rasterio.window_shape,
-            (((10, 20), (10, None)),))
-        self.assertRaises(
-            ValueError,
-            rasterio.window_shape,
-            (((None, 10), (10, 20)),))
 
     def test_window_shape_None_start(self):
         self.assertEqual(
@@ -131,7 +118,7 @@ class WindowWriteTest(unittest.TestCase):
             s.write(a, indexes=1, window=windows.Window(10, 30, 50, 50))
         # subprocess.call(["open", name])
         info = subprocess.check_output(["gdalinfo", "-stats", name])
-        self.assert_(
+        self.assertTrue(
             "Minimum=0.000, Maximum=127.000, "
             "Mean=31.750, StdDev=54.993" in info.decode('utf-8'),
             info)
@@ -169,7 +156,8 @@ def test_block_windows_filtered_none(path_rgb_byte_tif):
     """Get no block windows using filter"""
     with rasterio.open(path_rgb_byte_tif) as src:
         w, s, e, n = src.bounds
-        focus_window = src.window(w - 100.0, n + 100.0, w - 1.0, n + 1.0)
+        focus_window = src.window(w - 100.0, n + 1.0, w - 1.0, n + 100.0,
+                                  boundless=True)
         filter_func = partial(windows.intersect, focus_window)
         itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
         with pytest.raises(StopIteration):

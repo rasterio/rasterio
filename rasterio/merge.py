@@ -155,7 +155,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         # 4. Initialize temp array.
         tcount = first.count
         trows, tcols = (
-            int(round(dst_window.num_rows)), int(round(dst_window.num_cols)))
+            int(round(dst_window.height)), int(round(dst_window.width)))
 
         temp_shape = (tcount, trows, tcols)
 

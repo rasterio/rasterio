@@ -11,18 +11,18 @@ def test_window_transform():
         assert src.window_transform(((0, None), (0, None))) == src.transform
         assert src.window_transform(((None, None), (None, None))) == src.transform
         assert src.window_transform(
-                ((1, None), (1, None))).c == src.bounds.left + src.res[0]
+            ((1, None), (1, None))).c == src.bounds.left + src.res[0]
         assert src.window_transform(
-                ((1, None), (1, None))).f == src.bounds.top - src.res[1]
+            ((1, None), (1, None))).f == src.bounds.top - src.res[1]
         assert src.window_transform(
-                ((-1, None), (-1, None))).c == src.bounds.left - src.res[0]
+            ((-1, None), (-1, None))).c == src.bounds.left - src.res[0]
         assert src.window_transform(
-                ((-1, None), (-1, None))).f == src.bounds.top + src.res[1]
+            ((-1, None), (-1, None))).f == src.bounds.top + src.res[1]
 
 
 def test_from_origin():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        w, n = src.ul(0, 0)
+        w, n = src.xy(0, 0, offset='ul')
         xs, ys = src.res
         tr = transform.from_origin(w, n, xs, ys)
         assert [round(v, 7) for v in tr] == [round(v, 7) for v in src.transform]
@@ -57,37 +57,6 @@ def test_window_bounds():
             w_x_min, w_y_min, w_x_max, w_y_max = src.window_bounds(window)
             assert ds_x_min <= w_x_min <= w_x_max <= ds_x_max
             assert ds_y_min <= w_y_min <= w_y_max <= ds_y_max
-
-        # Test a small window in each corner, both in and slightly out of bounds
-        p = 10
-        for ranges in (
-                # In bounds (UL, UR, LL, LR)
-                ((0, p), (0, p)),
-                ((0, p), (cols - p, p)),
-                ((rows - p, p), (0, p)),
-                ((rows - p, p), (cols - p, p)),
-
-                # Out of bounds (UL, UR, LL, LR)
-                ((-1, p), (-1, p)),
-                ((-1, p), (cols - p, p + 1)),
-                ((rows - p, p + 1), (-1, p)),
-                ((rows - p, p + 1), (cols - p, p + 1))):
-
-            # Alternate formula
-
-            window = Window.from_ranges(*ranges)
-            (row_min, row_max), (col_min, col_max) = ranges
-            win_aff = src.window_transform(window)
-
-            x_min, y_max = win_aff.c, win_aff.f
-            x_max = win_aff.c + (src.res[0] * (col_max - col_min))
-            y_min = win_aff.f - (src.res[1] * (row_max - row_min))
-
-            expected = (x_min, y_min, x_max, y_max)
-            actual = src.window_bounds(window)
-
-            for e, a in zip(expected, actual):
-                assert round(e, 7) == round(a, 7)
 
 
 def test_affine_roundtrip(tmpdir):
@@ -174,6 +143,11 @@ def test_xy():
         xy(aff, 1, 0, offset='ur')
 
 
+def test_bogus_offset():
+    with pytest.raises(ValueError):
+        xy(None, 1, 0, offset='bogus')
+
+
 def test_guard_transform_gdal_TypeError(path_rgb_byte_tif):
     """As part of the 1.0 migration, guard_transform() should raise a TypeError
     if a GDAL geotransform is encountered"""
@@ -200,7 +174,7 @@ def test_rowcol():
         assert rowcol(aff, right, bottom) == (src.height, src.width)
         assert rowcol(aff, left, bottom) == (src.height, 0)
         assert rowcol(aff, 101985.0, 2826915.0) == (0, 0)
-        assert rowcol(aff, 101985.0+400.0, 2826915.0) == (0, 1)
+        assert rowcol(aff, 101985.0 + 400.0, 2826915.0) == (0, 1)
 
 
 def test_xy_rowcol_inverse():

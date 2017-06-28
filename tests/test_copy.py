@@ -25,4 +25,4 @@ class CopyTest(unittest.TestCase):
             'tests/data/RGB.byte.tif',
             name)
         info = subprocess.check_output(["gdalinfo", name])
-        self.assert_("GTiff" in info.decode('utf-8'))
+        self.assertTrue("GTiff" in info.decode('utf-8'))

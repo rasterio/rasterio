@@ -24,7 +24,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError,
-    NotGeoreferencedWarning)
+    NotGeoreferencedWarning, RasterioDeprecationWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -425,7 +425,7 @@ cdef class DatasetBase(object):
         def __get__(self):
             warnings.warn(
                 "'mask_flags' is deprecated. Switch to 'mask_flag_enums'",
-                DeprecationWarning,
+                RasterioDeprecationWarning,
                 stacklevel=2)
             return self._mask_flags
 
@@ -535,7 +535,7 @@ cdef class DatasetBase(object):
                 col = i * w
                 width = min(w, self.width - col)
                 yield (j, i), windows.Window(
-                    col_off=col, row_off=row, num_cols=width, num_rows=height)
+                    col_off=col, row_off=row, width=width, height=height)
 
     property bounds:
         """Returns the lower left and upper right bounds of the dataset
@@ -703,7 +703,7 @@ cdef class DatasetBase(object):
                 "'src.affine' is deprecated.  Please switch to "
                 "'src.transform'. See "
                 "https://github.com/mapbox/rasterio/issues/86 for details.",
-                DeprecationWarning,
+                RasterioDeprecationWarning,
                 stacklevel=2)
             return Affine.from_gdal(*self.get_transform())
 

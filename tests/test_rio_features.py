@@ -1,4 +1,3 @@
-import logging
 import json
 import os
 import re
@@ -16,8 +15,6 @@ from rasterio.rio.main import main_group
 
 
 DEFAULT_SHAPE = (10, 10)
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 # Custom markers.
@@ -124,13 +121,13 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
 
     output = str(tmpdir.join('test.tif'))
 
-    with pytest.warns(UserWarning) as warnings:
+    with pytest.warns(UserWarning) as rec:
         result = runner.invoke(
             main_group,
             ['mask', pixelated_image_file, output, '--geojson-mask', '-'],
             input=json.dumps(basic_feature))
     assert result.exit_code == 0
-    assert any(['outside bounds' in w.message.args[0] for w in warnings])
+    assert any(['outside bounds' in w.message.args[0] for w in rec])
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
@@ -277,8 +274,7 @@ def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,
 
 
 def test_shapes(runner, pixelated_image_file):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(main_group, ['shapes', pixelated_image_file])
 
@@ -303,8 +299,7 @@ def test_shapes_sequence(runner, pixelated_image_file):
     --sequence option should produce 4 features in series rather than
     inside a feature collection.
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--sequence'])
@@ -349,8 +344,7 @@ def test_shapes_indent(runner, pixelated_image_file):
     """
     --indent option should produce lots of newlines and contiguous spaces
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--indent', 2])
@@ -363,8 +357,7 @@ def test_shapes_indent(runner, pixelated_image_file):
 
 
 def test_shapes_compact(runner, pixelated_image_file):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--compact'])
@@ -408,8 +401,7 @@ def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--mask'])
         assert result.exit_code == 0
@@ -431,8 +423,8 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
+
         result = runner.invoke(
             main_group,
             ['shapes', pixelated_image_file, '--mask', '--sampling', 5])
@@ -457,8 +449,7 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
         result = runner.invoke(
             main_group,
             ['shapes', pixelated_image_file, '--band', '--bidx', '1', '--as-mask'])

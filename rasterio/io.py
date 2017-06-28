@@ -105,7 +105,7 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, boundless=False, precision=6):
+    def window(self, left, bottom, right, top, boundless=True, precision=6):
         """Get the window corresponding to the bounding coordinates.
 
         Parameters
@@ -127,10 +127,7 @@ class WindowMethodsMixin(object):
 
         Returns
         -------
-        window: tuple
-            ((row_start, row_stop), (col_start, col_stop))
-            corresponding to the bounding coordinates
-
+        window: Window
         """
 
         transform = guard_transform(self.transform)

@@ -7,6 +7,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.coords import disjoint_bounds
+from rasterio.windows import Window
 
 
 # Geographic (default), projected, or Mercator switch.
@@ -100,13 +101,15 @@ def clip(ctx, files, output, bounds, like, driver, projection,
                 raise click.UsageError('--bounds or --like required')
 
             bounds_window = src.window(*bounds)
+            bounds_window = bounds_window.intersection(
+                Window(0, 0, src.width, src.height))
 
             # Get the window with integer height
             # and width that contains the bounds window.
-            out_window = bounds_window.round_shape()
+            out_window = bounds_window.round_lengths(op='ceil')
 
-            height = int(out_window.num_rows)
-            width = int(out_window.num_cols)
+            height = int(out_window.height)
+            width = int(out_window.width)
 
             out_kwargs = src.meta.copy()
             out_kwargs.update({

@@ -104,7 +104,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
 
         # Get the window with integer height
         # and width that contains the bounds window.
-        out_window = bounds_window.round_shape()
+        out_window = bounds_window.round_shape(op='ceil')
         height = int(out_window.num_rows)
         width = int(out_window.num_cols)
 

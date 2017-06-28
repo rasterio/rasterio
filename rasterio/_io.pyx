@@ -24,11 +24,11 @@ from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import CRSError, DriverRegistrationError
 from rasterio.errors import RasterioIOError
-from rasterio.errors import NodataShadowWarning
+from rasterio.errors import NodataShadowWarning, WindowError
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
-from rasterio import windows
+from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
 cimport numpy as np
@@ -121,7 +121,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
             Cannot combined with `out`.
 
-        window : a pair (tuple) of pairs of ints, optional
+        window : a pair (tuple) of pairs of ints or Window, optional
             The optional `window` argument is a 2 item tuple. The first
             item is a tuple containing the indexes of the rows at which
             the window starts and stops and the second is a tuple
@@ -225,15 +225,15 @@ cdef class DatasetReaderBase(DatasetBase):
         if window:
 
             if isinstance(window, tuple):
-                window = windows.coerce_and_warn(window)
+                window = Window.from_slices(
+                    *window, height=self.height, width=self.width,
+                    boundless=boundless)
 
             if not boundless:
-                window = windows.crop(
-                    windows.evaluate(window, self.height, self.width),
-                    self.height, self.width)
+                window = window.crop(self.height, self.width)
 
-            int_window = window.round_shape()
-            win_shape += (int(int_window.num_rows), int(int_window.num_cols))
+            int_window = window.round_lengths()
+            win_shape += (int(int_window.height), int(int_window.width))
 
         else:
             win_shape += self.shape
@@ -319,19 +319,23 @@ cdef class DatasetReaderBase(DatasetBase):
 
         else:
             # Compute the overlap between the dataset and the boundless window.
-            overlap = ((
-                max(min(window[0][0], self.height), 0),
-                max(min(window[0][1], self.height), 0)), (
-                max(min(window[1][0], self.width), 0),
-                max(min(window[1][1], self.width), 0)))
-
-            log.debug("Overlap: %r", overlap)
-
-            if overlap != ((0, 0), (0, 0)):
+            try:
+                overlap = intersection(
+                    window, Window(0, 0, self.width, self.height))
+            except WindowError:
+                log.info("Dataset and window do not overlap")
+                data = None
+                if masked:
+                    kwds = {'mask': True}
+                    if len(set(nodatavals)) == 1:
+                        if nodatavals[0] is not None:
+                            kwds['fill_value'] = nodatavals[0]
+                    out = np.ma.array(out, **kwds)
+            else:
                 # Prepare a buffer.
                 window_h, window_w = win_shape[-2:]
-                overlap_h = overlap[0][1] - overlap[0][0]
-                overlap_w = overlap[1][1] - overlap[1][0]
+                overlap_h = overlap.height
+                overlap_w = overlap.width
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
                 buffer_shape = (
@@ -352,24 +356,15 @@ cdef class DatasetReaderBase(DatasetBase):
                             kwds['fill_value'] = nodatavals[0]
                     data = np.ma.array(data, **kwds)
 
-            else:
-                data = None
-                if masked:
-                    kwds = {'mask': True}
-                    if len(set(nodatavals)) == 1:
-                        if nodatavals[0] is not None:
-                            kwds['fill_value'] = nodatavals[0]
-                    out = np.ma.array(out, **kwds)
-
             if data is not None:
                 # Determine where to put the data in the output window.
                 data_h, data_w = buffer_shape
                 roff = 0
                 coff = 0
-                if window[0][0] < 0:
-                    roff = int(-window[0][0] * scaling_h)
-                if window[1][0] < 0:
-                    coff = int(-window[1][0] * scaling_w)
+                if window.row_off < 0:
+                    roff = int(-window.row_off * scaling_h)
+                if window.col_off < 0:
+                    coff = int(-window.col_off * scaling_w)
 
                 for dst, src in zip(
                         out if len(out.shape) == 3 else [out],
@@ -422,7 +417,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
             Cannot combined with `out`.
 
-        window : a pair (tuple) of pairs of ints, optional
+        window : a pair (tuple) of pairs of ints or Window, optional
             The optional `window` argument is a 2 item tuple. The first
             item is a tuple containing the indexes of the rows at which
             the window starts and stops and the second is a tuple
@@ -463,15 +458,15 @@ cdef class DatasetReaderBase(DatasetBase):
         if window:
 
             if isinstance(window, tuple):
-                window = windows.coerce_and_warn(window)
+                window = Window.from_slices(
+                    *window, height=self.height, width=self.width,
+                    boundless=boundless)
 
             if not boundless:
-                window = windows.crop(
-                    windows.evaluate(window, self.height, self.width),
-                    self.height, self.width)
+                window = window.crop(self.height, self.width)
 
-            int_window = window.round_shape()
-            win_shape += (int(int_window.num_rows), int(int_window.num_cols))
+            int_window = window.round_lengths()
+            win_shape += (int(int_window.height), int(int_window.width))
 
         else:
             win_shape += self.shape
@@ -506,25 +501,23 @@ cdef class DatasetReaderBase(DatasetBase):
 
         else:
             # Compute the overlap between the dataset and the boundless window.
-            overlap = ((
-                max(min(window[0][0], self.height), 0),
-                max(min(window[0][1], self.height), 0)), (
-                max(min(window[1][0], self.width), 0),
-                max(min(window[1][1], self.width), 0)))
-
-            if overlap != ((0, 0), (0, 0)):
+            try:
+                overlap = intersection(
+                    window, Window(0, 0, self.width, self.height))
+            except WindowError:
+                log.info("Window and dataset do not overlap")
+                data = None
+            else:
                 # Prepare a buffer.
                 window_h, window_w = win_shape[-2:]
-                overlap_h = overlap[0][1] - overlap[0][0]
-                overlap_w = overlap[1][1] - overlap[1][0]
+                overlap_h = overlap.height
+                overlap_w = overlap.width
                 scaling_h = float(out.shape[-2:][0])/window_h
                 scaling_w = float(out.shape[-2:][1])/window_w
                 buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
                 data = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
                 data = self._read(indexes, data, overlap, dtype, masks=True,
                                   resampling=resampling)
-            else:
-                data = None
 
             if data is not None:
                 # Determine where to put the data in the output window.
@@ -575,27 +568,19 @@ cdef class DatasetReaderBase(DatasetBase):
 
         dataset = self.handle()
 
-        # Turning the read window into GDAL offsets and lengths is
-        # the job of _read().
         if window:
-            if isinstance(window, tuple):
-                window = windows.Window.from_ranges(*window)
-
-            window = windows.evaluate(window, self.height, self.width)
-
-            log.debug("Eval'd window: %r", window)
+            if not isinstance(window, Window):
+                raise WindowError("window must be an instance of Window")
 
             yoff = window.row_off
             xoff = window.col_off
-            height = window.num_rows
-            width = window.num_cols
 
             # Now that we have floating point windows it's easy for
             # the number of pixels to read to slip below 1 due to
             # loss of floating point precision. Here we ensure that
             # we're reading at least one pixel.
-            height = max(1.0, height)
-            width = max(1.0, width)
+            height = max(1.0, window.height)
+            width = max(1.0, window.width)
 
         else:
             xoff = yoff = <int>0
@@ -685,46 +670,13 @@ cdef class DatasetReaderBase(DatasetBase):
         """Read the mask band into an `out` array if provided,
         otherwise return a new array containing the dataset's
         valid data mask.
-
-        The optional `window` argument takes a tuple like:
-
-            ((row_start, row_stop), (col_start, col_stop))
-
-        specifying a raster subset to write into.
         """
-        cdef GDALRasterBandH band
-        cdef GDALRasterBandH mask
-
         warnings.warn(
             "read_mask() is deprecated and will be removed by Rasterio 1.0. "
             "Please use read_masks() instead.",
             DeprecationWarning,
             stacklevel=2)
-
-        band = self.band(1)
-        mask = GDALGetMaskBand(band)
-        if mask == NULL:
-            return None
-
-        if out is None:
-            out_shape = (
-                window
-                and windows.shape(window, self.height, self.width)
-                or self.shape)
-            out = np.zeros(out_shape, np.uint8)
-        if window:
-            window = windows.evaluate(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
-        else:
-            xoff = yoff = 0
-            width = self.width
-            height = self.height
-
-        io_band(mask, 0, xoff, yoff, width, height, out)
-        return out
+        return self.read_masks(1, out=out, window=window, boundless=boundless)
 
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
@@ -1315,11 +1267,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Prepare the IO window.
         if window:
-            window = windows.evaluate(window, self.height, self.width)
-            yoff = <int>window[0][0]
-            xoff = <int>window[1][0]
-            height = <int>window[0][1] - yoff
-            width = <int>window[1][1] - xoff
+            if isinstance(window, tuple):
+                window = Window.from_slices(*window, self.height, self.width)
+            yoff = window.row_off
+            xoff = window.col_off
+            height = window.height
+            width = window.width
         else:
             xoff = yoff = <int>0
             width = <int>self.width
@@ -1497,11 +1450,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             raise RasterioIOError("Failed to get mask.")
 
         if window:
-            window = windows.evaluate(window, self.height, self.width)
-            yoff = window[0][0]
-            xoff = window[1][0]
-            height = window[0][1] - yoff
-            width = window[1][1] - xoff
+            if isinstance(window, tuple):
+                window = Window.from_slices(*window, self.height, self.width)
+            yoff = window.row_off
+            xoff = window.col_off
+            height = window.height
+            width = window.width
         else:
             xoff = yoff = 0
             width = self.width

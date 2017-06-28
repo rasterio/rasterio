@@ -12,7 +12,7 @@ def sample_gen(dataset, xy, indexes=None):
         indexes = [indexes]
 
     for x, y in xy:
-        r, c = index(x, y)
-        window = Window(c, r, 1, 1)
+        row_off, col_off = index(x, y)
+        window = Window(col_off, row_off, 1, 1)
         data = read(indexes, window=window, masked=False, boundless=True)
         yield data[:, 0, 0]

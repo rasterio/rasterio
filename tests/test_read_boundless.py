@@ -8,9 +8,6 @@ import rasterio
 from rasterio.windows import Window
 
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
-
 @pytest.fixture(scope='session')
 def rgb_array(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -134,17 +131,3 @@ def test_read_boundless_noshift():
         r2 = src.read(boundless=True,
                       window=((-1, src.shape[0] + 1), (100, 101)))[0, 0, 0:9]
         assert np.array_equal(r1, r2)
-
-
-def test_np_warning(recwarn, rgb_byte_tif_reader):
-    """Ensure no deprecation warnings
-    On np 1.11 and previous versions of rasterio you might see:
-        VisibleDeprecationWarning: using a non-integer number
-        instead of an integer will result in an error in the future
-    """
-    import warnings
-    warnings.simplefilter('always')
-    with rgb_byte_tif_reader as src:
-        window = Window(-10, -10, 110, 110)
-        src.read(1, window=window, boundless=True)
-    assert len(recwarn) == 0
