@@ -1,57 +1,95 @@
 from copy import copy
 import logging
+import math
 import sys
+import warnings
 
 from affine import Affine
+from hypothesis import given
+from hypothesis.strategies import floats, integers
 import numpy as np
 import pytest
 
 import rasterio
+from rasterio.errors import RasterioDeprecationWarning, WindowError
 from rasterio.windows import (
-    from_bounds, bounds, transform, evaluate, window_index, shape, Window,
-    intersect, intersection, get_data_window, union, round_window_to_full_blocks)
-
+    crop, from_bounds, bounds, transform, evaluate, window_index, shape,
+    Window, intersect, intersection, get_data_window, union,
+    round_window_to_full_blocks, toranges)
 
 EPS = 1.0e-8
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
+def assert_window_almost_equals(a, b):
+    assert np.allclose(a.flatten(), b.flatten(), rtol=1e-3, atol=1e-4)
+
+
+@given(col_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       row_off=floats(min_value=-1.0e+7, max_value=1.0e+7),
+       num_cols=floats(min_value=0.0, max_value=1.0e+7),
+       num_rows=floats(min_value=0.0, max_value=1.0e+7),
+       height=integers(min_value=0, max_value=10000000),
+       width=integers(min_value=0, max_value=10000000))
+def test_crop(col_off, row_off, num_cols, num_rows, height, width):
+    window = crop(Window(col_off, row_off, num_cols, num_rows), height, width)
+    assert 0.0 <= round(window.col_off, 3) <= width
+    assert 0.0 <= round(window.row_off, 3) <= height
+    assert round(window.width, 3) <= round(width - window.col_off, 3)
+    assert round(window.height, 3) <= round(height - window.row_off, 3)
+
+
 def test_window_function():
+    # TODO: break this test up.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
         dx, dy = src.res
         height = src.height
         width = src.width
-        assert from_bounds(
-            left + EPS, bottom + EPS, right - EPS, top - EPS, src.transform,
-            height, width) == ((0, height), (0, width))
-        assert from_bounds(
-            left, top - 400, left + 400, top, src.transform,
-            height, width) == ((0, 2), (0, 2))
-        assert from_bounds(
-            left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
-            height, width) == ((0, 2), (0, 2))
 
-        # bounds cropped
-        assert from_bounds(
-            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
-            src.transform, height, width) == ((0, 2), (0, 2))
+        assert_window_almost_equals(from_bounds(
+            left + EPS, bottom + EPS, right - EPS, top - EPS, src.transform,
+            height, width), Window.from_slices((0, height), (0, width)))
+
+        assert_window_almost_equals(from_bounds(
+            left, top - 2 * dy - EPS, left + 2 * dx - EPS, top, src.transform,
+            height, width), Window.from_slices((0, 2), (0, 2)))
 
         # boundless
-        assert from_bounds(
-            left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy,
-            src.transform, boundless=True) == ((-2, 2), (-2, 2))
+        assert_window_almost_equals(
+            from_bounds(left - 2 * dx, top - 2 * dy, left + 2 * dx,
+                        top + 2 * dy, src.transform, height=height,
+                        width=width),
+            Window.from_slices((-2, 2), (-2, 2), boundless=True, height=height,
+                               width=width))
 
 
-def test_window_function_valuerror():
+def test_window_float():
+    """Test window float values"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         left, bottom, right, top = src.bounds
+        dx, dy = src.res
+        height = src.height
+        width = src.width
 
-        with pytest.raises(ValueError):
-            # No height or width
-            from_bounds(left + EPS, bottom + EPS, right - EPS, top - EPS,
-                        src.transform)
+        assert_window_almost_equals(from_bounds(
+            left, top - 400, left + 400, top, src.transform,
+            height, width), Window.from_slices((0, 400 / src.res[1]), (0, 400 / src.res[0])))
+
+
+def test_window_bounds_south_up():
+    identity = Affine.identity()
+    assert_window_almost_equals(
+        from_bounds(0, 10, 10, 0, identity, 10, 10),
+        Window(0, 0, 10, 10))
+
+
+def test_window_bounds_north_up():
+    transform = Affine.translation(0.0, 10.0) * Affine.scale(1.0, -1.0) * Affine.identity()
+    assert_window_almost_equals(
+        from_bounds(0, 0, 10, 10, transform, 10, 10),
+        Window(0, 0, 10, 10))
 
 
 def test_window_transform_function():
@@ -75,39 +113,15 @@ def test_window_bounds_function():
         assert bounds(((0, rows), (0, cols)), src.transform) == src.bounds
 
 
-bad_windows = (
-    (1, 2, 3),
+bad_type_windows = [
     (1, 2),
-    ((1, 0), 2))
+    ((1, 0), 2)]
 
-@pytest.mark.parametrize("window", bad_windows)
-def test_eval_window_bad_structure(window):
-    with pytest.raises(ValueError):
+
+@pytest.mark.parametrize("window", bad_type_windows)
+def test_eval_window_bad_type(window):
+    with pytest.raises(WindowError):
         evaluate(window, 10, 10)
-
-
-bad_params = (
-    (((-1, 10), (0, 10)), -1, 10),
-    (((1, -1), (0, 10)), -1, 10),
-    (((0, 10), (-1, 10)), 10, -1),
-    (((0, 10), (1, -1)), 10, -1),
-    (((10, 5), (0, 5)), 10, 10),
-    (((0, 5), (10, 5)), 10, 10))
-
-
-@pytest.mark.parametrize("params", bad_params)
-def test_eval_window_invalid_dims(params):
-    with pytest.raises(ValueError):
-        evaluate(*params)
-
-
-@pytest.mark.parametrize("params,expected", [
-        ([((2, 4), (2, 4)), 10, 10], ((2, 4), (2, 4))),
-        ([((-10, None), (-10, None)), 100, 90], ((90, 100), (80, 90))),
-        ([((None, -10), (None, -10)), 100, 90], ((0, 90), (0, 80))),
-        ([((0, 256), (0, 256)), 7791, 7621], ((0, 256), (0, 256)))])
-def test_windows_evaluate(params,expected):
-    assert evaluate(*params) == expected
 
 
 def test_window_index():
@@ -124,11 +138,8 @@ def test_window_index():
 
 def test_window_shape_errors():
     # Positive height and width are needed when stop is None.
-    with pytest.raises(ValueError):
+    with pytest.raises(WindowError):
         assert shape(((10, 20), (10, None)))
-
-    with pytest.raises(ValueError):
-        assert shape(((-1, 10), (10, 20)))
 
 
 def test_window_shape_None_start():
@@ -146,58 +157,10 @@ def test_shape_positive():
 def test_shape_negative():
     assert shape(((-10, None), (-10, None)), 100, 90) == (10, 10)
     assert shape(((~0, None), (~0, None)), 100, 90) == (1, 1)
+
+
+def test_shape_negative_start():
     assert shape(((None, ~0), (None, ~0)), 100, 90) == (99, 89)
-
-
-def test_window_class_constructor():
-    """Construct a Window from offsets, height, and width"""
-    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    assert window == ((0, 100), (1, 201))
-
-
-def test_window_class_constructor_positional():
-    """Construct a Window using positional parameters"""
-    window = Window(1, 0, 200, 100)
-    assert window == ((0, 100), (1, 201))
-
-
-def test_window_class_attrs():
-    """Test Window attributes"""
-    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    assert window.col_off == 1
-    assert window.row_off == 0
-    assert window.num_cols == 200
-    assert window.num_rows == 100
-
-
-def test_window_class_repr():
-    """Test Window respresentation"""
-    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    assert repr(window) == 'Window(col_off=1, row_off=0, num_cols=200, num_rows=100)'
-    assert eval(repr(window)) == ((0, 100), (1, 201))
-
-
-def test_window_class_copy():
-    """Test Window copying"""
-    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    assert copy(window) == ((0, 100), (1, 201))
-
-
-def test_window_class_todict():
-    """Test Window.todict"""
-    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    assert window.todict() == {
-        'col_off': 1, 'num_cols': 200, 'num_rows': 100, 'row_off': 0}
-
-
-def test_window_class_toslices():
-    """Test Window.toslices"""
-    window = Window(row_off=0, col_off=1, num_rows=100, num_cols=200)
-    yslice, xslice = window.toslices()
-    assert yslice.start == 0
-    assert yslice.stop == 100
-    assert xslice.start == 1
-    assert xslice.stop == 201
 
 
 def test_window_class_intersects():
@@ -215,14 +178,15 @@ def test_window_class_nonintersects():
     assert not intersect(Window(0, 0, 10, 10), Window(10, 10, 10, 10))
 
 
-def test_window_from_ranges():
-    """from_ranges classmethod works."""
-    assert Window.from_ranges((0, 1), (2, 3)) == ((0, 1), (2, 3))
+def test_window_from_slices():
+    """from_slices classmethod works."""
+    assert Window.from_slices((0, 1), (2, 3)) == Window.from_slices((0, 1), (2, 3))
 
 
 def test_window_from_offlen():
     """from_offlen classmethod works."""
-    assert Window.from_offlen(2, 0, 1, 1) == ((0, 1), (2, 3))
+    with pytest.warns(RasterioDeprecationWarning):
+        assert Window.from_offlen(2, 0, 1, 1) == Window.from_slices((0, 1), (2, 3))
 
 
 def test_read_with_window_class():
@@ -234,16 +198,16 @@ def test_read_with_window_class():
 
 def test_data_window_invalid_arr_dims():
     """An array of more than 3 dimensions is invalid."""
-    arr = np.ones((3,3,3,3))
-    with pytest.raises(ValueError):
+    arr = np.ones((3, 3, 3, 3))
+    with pytest.raises(WindowError):
         get_data_window(arr)
 
 
 def test_data_window_full():
     """Get window of entirely valid data array."""
-    arr = np.ones((3,3))
+    arr = np.ones((3, 3))
     window = get_data_window(arr)
-    assert window == ((0, 3), (0, 3))
+    assert window == Window.from_slices((0, 3), (0, 3))
 
 
 def test_data_window_nodata():
@@ -251,7 +215,7 @@ def test_data_window_nodata():
     arr = np.ones((3, 3))
     arr[0, :] = 0
     window = get_data_window(arr, nodata=0)
-    assert window == ((1, 3), (0, 3))
+    assert window == Window.from_slices((1, 3), (0, 3))
 
 
 def test_data_window_novalid():
@@ -259,7 +223,7 @@ def test_data_window_novalid():
     arr = np.ones((3, 3))
     arr[:, :] = 0
     window = get_data_window(arr, nodata=0)
-    assert window == ((0, 0), (0, 0))
+    assert window == Window.from_slices((0, 0), (0, 0))
 
 
 def test_data_window_maskedarray():
@@ -268,7 +232,7 @@ def test_data_window_maskedarray():
     arr[0, :] = 0
     arr = np.ma.masked_array(arr, arr == 0)
     window = get_data_window(arr)
-    assert window == ((1, 3), (0, 3))
+    assert window == Window.from_slices((1, 3), (0, 3))
 
 
 def test_data_window_nodata_3d():
@@ -276,25 +240,25 @@ def test_data_window_nodata_3d():
     arr = np.ones((3, 3, 3))
     arr[:, 0, :] = 0
     window = get_data_window(arr, nodata=0)
-    assert window == ((1, 3), (0, 3))
+    assert window == Window.from_slices((1, 3), (0, 3))
 
 
 def test_window_union():
     """Window union works."""
     window = union(Window(0, 0, 1, 1), Window(1, 1, 2, 2))
-    assert window == ((0, 3), (0, 3))
+    assert window == Window.from_slices((0, 3), (0, 3))
 
 
 def test_no_intersection():
     """Non intersecting windows raises error."""
-    with pytest.raises(ValueError):
+    with pytest.raises(WindowError):
         intersection(Window(0, 0, 1, 1), Window(1, 1, 2, 2))
 
 
 def test_intersection():
     """Window intersection works."""
     window = intersection(Window(0, 0, 10, 10), Window(8, 8, 12, 12))
-    assert window == ((8, 10), (8, 10))
+    assert window == Window.from_slices((8, 10), (8, 10))
 
 
 def test_round_window_to_full_blocks():
@@ -305,17 +269,25 @@ def test_round_window_to_full_blocks():
         block_shape = block_shapes[0]
         height_shape = block_shape[0]
         width_shape = block_shape[1]
-        assert rounded_window[0][0] % height_shape == 0
-        assert rounded_window[0][1] % height_shape == 0
-        assert rounded_window[1][0] % width_shape == 0
-        assert rounded_window[1][1] % width_shape == 0
+        assert rounded_window.row_off % height_shape == 0
+        assert rounded_window.height % height_shape == 0
+        assert rounded_window.col_off % width_shape == 0
+        assert rounded_window.width % width_shape == 0
+
+
+def test_round_window_to_full_blocks_error():
+    with pytest.raises(WindowError):
+        round_window_to_full_blocks(
+            Window(0, 0, 10, 10), block_shapes=[(1, 1), (2, 2)])
+
 
 def test_round_window_already_at_edge():
     with rasterio.open('tests/data/alpha.tif') as src:
         block_shapes = src.block_shapes
         test_window = ((256, 512), (512, 768))
         rounded_window = round_window_to_full_blocks(test_window, block_shapes)
-        assert rounded_window == test_window
+        assert rounded_window == Window.from_slices(*test_window)
+
 
 def test_round_window_boundless():
     with rasterio.open('tests/data/alpha.tif') as src:
@@ -325,7 +297,7 @@ def test_round_window_boundless():
         block_shape = block_shapes[0]
         height_shape = block_shape[0]
         width_shape = block_shape[1]
-        assert rounded_window[0][0] % height_shape == 0
-        assert rounded_window[0][1] % height_shape == 0
-        assert rounded_window[1][0] % width_shape == 0
-        assert rounded_window[1][1] % width_shape == 0
+        assert rounded_window.row_off % height_shape == 0
+        assert rounded_window.height % height_shape == 0
+        assert rounded_window.col_off % width_shape == 0
+        assert rounded_window.width % width_shape == 0

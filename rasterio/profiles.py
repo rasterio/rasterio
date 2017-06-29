@@ -4,6 +4,7 @@ import warnings
 
 from rasterio.compat import UserDict
 from rasterio.dtypes import uint8
+from rasterio.errors import RasterioDeprecationWarning
 
 
 class Profile(UserDict):
@@ -24,11 +25,11 @@ class Profile(UserDict):
 
         if 'affine' in initdata and 'transform' in initdata:
             warnings.warn("affine item is deprecated, use transform only",
-                          DeprecationWarning)
+                          RasterioDeprecationWarning)
             del initdata['affine']
         elif 'affine' in initdata:
             warnings.warn("affine item is deprecated, use transform instead",
-                          DeprecationWarning)
+                          RasterioDeprecationWarning)
             initdata['transform'] = initdata.pop('affine')
 
         self.data.update(initdata)
@@ -38,7 +39,7 @@ class Profile(UserDict):
         if key == 'affine':
             key = 'transform'
             warnings.warn("affine item is deprecated, use transform instead",
-                          DeprecationWarning)
+                          RasterioDeprecationWarning)
         return self.data[key]
 
     def __setitem__(self, key, val):
@@ -53,7 +54,7 @@ class Profile(UserDict):
         DEPRECATED.
         """
         warnings.warn("__call__() is deprecated, use mapping methods instead",
-                      DeprecationWarning)
+                      RasterioDeprecationWarning)
         profile = self.data.copy()
         profile.update(**kwds)
         return profile
