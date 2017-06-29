@@ -2,7 +2,7 @@
 
 Since 0.13 we are not importing numpy here and data types are strings.
 Happily strings can be used throughout Numpy and so existing code will
-break.
+not break.
 
 Within Rasterio, to test data types, we use Numpy's dtype() factory to
 do something like this:
@@ -77,12 +77,11 @@ def _gdal_typename(dt):
 
 def check_dtype(dt):
     """Check if dtype is a known dtype."""
-    if dt not in dtype_rev:
-        try:
-            return dt().dtype.name in dtype_rev
-        except:
-            return False
-    return True
+    if str(dt) in dtype_rev:
+        return True
+    elif callable(dt) and str(dt().dtype) in dtype_rev:
+        return True
+    return False
 
 
 def get_minimum_dtype(values):

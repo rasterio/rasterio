@@ -3,12 +3,20 @@
 from click import FileError
 
 
+class RasterioError(Exception):
+    """Root exception class"""
+
+
+class WindowError(RasterioError):
+    """Raised when errors occur during window operations"""
+
+
 class CRSError(ValueError):
     """Raised when a CRS string or mapping is invalid or cannot serve
     to define a coordinate transformation."""
 
 
-class EnvError(Exception):
+class EnvError(RasterioError):
     """Raised when the state of GDAL/AWS environment cannot be created
     or modified."""
 
@@ -30,7 +38,7 @@ class RasterioIOError(IOError):
     registered format drivers."""
 
 
-class NodataShadowWarning(Warning):
+class NodataShadowWarning(UserWarning):
     """Warn that a dataset's nodata attribute is shadowing its alpha band."""
 
     def __str__(self):
@@ -39,7 +47,7 @@ class NodataShadowWarning(Warning):
                 "by the nodata attribute")
 
 
-class NotGeoreferencedWarning(Warning):
+class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
 
 
@@ -48,8 +56,15 @@ class GDALBehaviorChangeException(RuntimeError):
     example, antimeridian cutting is always on as of GDAL 2.2.0.  Users
     expecting it to be off will be presented with a MultiPolygon when the
     rest of their code expects a Polygon.
-        
+
         # Raises an exception on GDAL >= 2.2.0
         rasterio.warp.transform_geometry(
             src_crs, dst_crs, antimeridian_cutting=False)
     """
+
+class WindowEvaluationError(ValueError):
+    """Raised when window evaluation fails"""
+
+
+class RasterioDeprecationWarning(UserWarning):
+    """Rasterio module deprecations"""

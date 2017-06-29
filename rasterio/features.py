@@ -286,8 +286,8 @@ def rasterize(
     return out
 
 
-def bounds(geometry):
-    """Return a (minx, miny, maxx, maxy) bounding box.
+def bounds(geometry, north_up=True):
+    """Return a (left, bottom, right, top) bounding box.
 
     From Fiona 1.4.8. Modified to return bbox from geometry if available.
 
@@ -298,10 +298,10 @@ def bounds(geometry):
     Returns
     -------
     tuple
-        Bounding box: (minx, miny, maxx, maxy)
+        Bounding box: (left, bottom, right, top)
     """
     if 'bbox' in geometry:
         return tuple(geometry['bbox'])
 
     geom = geometry.get('geometry') or geometry
-    return _bounds(geom)
+    return _bounds(geom, north_up=north_up)

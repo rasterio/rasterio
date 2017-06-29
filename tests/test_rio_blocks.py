@@ -37,9 +37,9 @@ def check_features_block_windows(features, src, bidx):
             json.loads(feat['properties']['block']),
             block))
 
-        out.append(np.array_equal(
-            json.loads(feat['properties']['window']),
-            window))
+        f_win = feat['properties']['window']
+        assert f_win['col_off'] == window.col_off
+        assert f_win['row_off'] == window.row_off
 
     return all(out)
 
@@ -111,7 +111,7 @@ def test_windows_indent(runner, path_rgb_byte_tif):
     lines = result.output.splitlines()
     assert result.output.count('"FeatureCollection') == 1
     assert result.output.count('"Feature"') == 240
-    assert len(lines) == 7451
+    assert len(lines) == 8651
     for l in lines:
         if l.strip() not in ('{', '}'):
             assert l.startswith('    ')
@@ -138,7 +138,8 @@ def test_windows_exception(runner, path_rgb_byte_tif):
         'blocks',
         path_rgb_byte_tif,
         '--bidx', 4])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
+    assert "Not a valid band index" in result.output
 
 
 def test_windows_projected(runner, path_rgb_byte_tif):

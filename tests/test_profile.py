@@ -3,6 +3,7 @@ import warnings
 import pytest
 
 import rasterio
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio.profiles import Profile, DefaultGTiffProfile
 from rasterio.profiles import default_gtiff_profile
 
@@ -15,12 +16,10 @@ def test_base_profile_kwarg():
     assert Profile(foo='bar')['foo'] == 'bar'
 
 
-def test_gtiff_profile_format(recwarn):
+def test_gtiff_profile_format():
     assert DefaultGTiffProfile()['driver'] == 'GTiff'
-    warnings.simplefilter('always')
-    assert DefaultGTiffProfile()()['driver'] == 'GTiff'
-    assert len(recwarn) == 1
-    assert recwarn.pop(DeprecationWarning)
+    with pytest.warns(RasterioDeprecationWarning):
+        assert DefaultGTiffProfile()()['driver'] == 'GTiff'
 
 
 def test_gtiff_profile_interleave():
@@ -116,33 +115,27 @@ def test_dataset_profile_creation_kwds(data):
         assert src.profile['foo'] == 'bar'
 
 
-def test_profile_affine_stashing(recwarn):
+def test_profile_affine_stashing():
     """Passing affine sets transform, with a warning"""
-    warnings.simplefilter('always')
-    profile = Profile(affine='foo')
-    assert len(recwarn) == 1
-    assert recwarn.pop(DeprecationWarning)
-    assert 'affine' not in profile
-    assert profile['transform'] == 'foo'
+    with pytest.warns(RasterioDeprecationWarning):
+        profile = Profile(affine='foo')
+        assert 'affine' not in profile
+        assert profile['transform'] == 'foo'
 
 
-def test_profile_mixed_error(recwarn):
+def test_profile_mixed_error():
     """Warn if both affine and transform are passed"""
-    warnings.simplefilter('always')
-    profile = Profile(affine='foo', transform='bar')
-    assert len(recwarn) == 1
-    assert recwarn.pop(DeprecationWarning)
-    assert 'affine' not in profile
-    assert profile['transform'] == 'bar'
+    with pytest.warns(RasterioDeprecationWarning):
+        profile = Profile(affine='foo', transform='bar')
+        assert 'affine' not in profile
+        assert profile['transform'] == 'bar'
 
 
-def test_profile_affine_alias(recwarn):
+def test_profile_affine_alias():
     """affine is an alias for transform, with a warning"""
     profile = Profile(transform='foo')
-    warnings.simplefilter('always')
-    assert profile['affine'] == 'foo'
-    assert len(recwarn) == 1
-    assert recwarn.pop(DeprecationWarning)
+    with pytest.warns(RasterioDeprecationWarning):
+        assert profile['affine'] == 'foo'
 
 
 def test_profile_affine_set():
