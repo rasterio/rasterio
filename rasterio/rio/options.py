@@ -54,6 +54,7 @@ import click
 
 import rasterio
 from rasterio.vfs import parse_path
+from rasterio.rio.helpers import path_exists
 
 
 class IgnoreOptionMarker(object):
@@ -110,11 +111,6 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path, archive, scheme = parse_path(value)
-        path_to_check = archive or path
-        if (scheme not in ['http', 'https', 's3'] and not
-                os.path.exists(path_to_check)):
-            raise IOError(
-                "Input file {0} does not exist".format(path_to_check))
         if archive and scheme:
             archive = abspath_forward_slashes(archive)
             path = "{0}://{1}!{2}".format(scheme, archive, path)
@@ -122,8 +118,13 @@ def file_in_handler(ctx, param, value):
             path = "{0}://{1}".format(scheme, path)
         elif scheme == 's3':
             path = "{0}://{1}".format(scheme, path)
-        else:
+        elif os.path.exists(path):
             path = abspath_forward_slashes(path)
+
+        if not path_exists(path):
+            raise FileNotFoundError(
+                "Input raster does not exist: {}".format(value))
+
         return path
     except Exception as e:
         raise click.BadParameter(str(e))

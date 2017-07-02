@@ -14,7 +14,7 @@ import rasterio
 from rasterio.errors import CRSError
 from rasterio.coords import disjoint_bounds
 from rasterio.rio import options
-from rasterio.rio.helpers import resolve_inout
+from rasterio.rio.helpers import path_exists, resolve_inout
 
 
 logger = logging.getLogger('rio')
@@ -153,7 +153,7 @@ def rasterize(
 
         geojson_bounds = geojson.get('bbox', calculate_bounds(geojson))
 
-        if os.path.exists(output):
+        if path_exists(output):
             with rasterio.open(output, 'r+') as out:
                 if has_src_crs and src_crs != out.crs:
                     raise click.BadParameter('GeoJSON does not match crs of '
