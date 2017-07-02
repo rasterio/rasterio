@@ -29,6 +29,7 @@ def test_fail_overwrite(tmpdir):
         helpers.resolve_inout(files=[str(x) for x in tmpdir.listdir()])
         assert "file exists and won't be overwritten without use of the " in str(excinfo.value)
 
+
 def test_force_overwrite(tmpdir):
     """Forced overwrite of existing file succeeds."""
     foo_tif = tmpdir.join('foo.tif')
@@ -48,3 +49,22 @@ def test_implicit_overwrite(tmpdir):
 
 def test_to_lower():
     assert helpers.to_lower(None, None, 'EPSG:3857') == 'epsg:3857'
+
+
+@pytest.mark.parametrize("path,expected", [
+    ('tests/data/RGB.byte.tif', True),
+    ('setup.py', True),
+    ('trash', False)])
+def test_path_exists(path, expected):
+    """A remote file is tested in a different function that has been marked
+    as requiring network access.
+    """
+    assert helpers.path_exists(path) is expected
+
+
+@pytest.mark.network
+def test_path_exists_s3(path_l8_s3_b1):
+    """This doesn't test something like a PostGIS connection string, but
+    its still a non-local file.
+    """
+    assert helpers.path_exists(path_l8_s3_b1)
