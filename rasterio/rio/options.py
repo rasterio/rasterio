@@ -125,8 +125,8 @@ def file_in_handler(ctx, param, value):
         else:
             path = abspath_forward_slashes(path)
         return path
-    except Exception:
-        raise click.BadParameter("{} is not a valid input file".format(value))
+    except Exception as e:
+        raise click.BadParameter(str(e))
 
 
 def from_like_context(ctx, param, value):
