@@ -9,6 +9,9 @@ Rasterio reads and writes geospatial raster data.
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
+   
+.. image:: https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fmapbox%2Frasterio.svg?type=shield
+   :target: https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fmapbox%2Frasterio?ref=badge_shield
 
 Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
@@ -300,6 +303,9 @@ License
 -------
 
 See `LICENSE.txt <LICENSE.txt>`__.
+
+.. image:: https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fmapbox%2Frasterio.svg?type=large
+   :target: https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fmapbox%2Frasterio?ref=badge_large
 
 Authors
 -------
