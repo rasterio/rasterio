@@ -314,15 +314,15 @@ def _reproject(
             log.debug("Set transform on temp source dataset: %d", retval)
 
             try:
-                osr = _osr_from_crs(src_crs)
-                OSRExportToWkt(osr, &srcwkt)
+                src_osr = _osr_from_crs(src_crs)
+                OSRExportToWkt(src_osr, &srcwkt)
                 GDALSetProjection(src_dataset, srcwkt)
 
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
 
             finally:
                 CPLFree(srcwkt)
-                _safe_osr_release(osr)
+                _safe_osr_release(src_osr)
 
         elif gcps:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
@@ -403,8 +403,8 @@ def _reproject(
                 "Failed to set transform on temp destination dataset.")
 
         try:
-            osr = _osr_from_crs(dst_crs)
-            OSRExportToWkt(osr, &dstwkt)
+            dst_osr = _osr_from_crs(dst_crs)
+            OSRExportToWkt(dst_osr, &dstwkt)
 
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
 
@@ -413,7 +413,7 @@ def _reproject(
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
             CPLFree(dstwkt)
-            _safe_osr_release(osr)
+            _safe_osr_release(dst_osr)
 
         retval = io_auto(destination, dst_dataset, 1)
 
