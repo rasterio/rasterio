@@ -1,4 +1,3 @@
-import logging
 import json
 import os
 import re
@@ -7,6 +6,7 @@ import warnings
 
 from affine import Affine
 import numpy as np
+from packaging.version import parse
 import pytest
 
 import rasterio
@@ -16,7 +16,11 @@ from rasterio.rio.main import main_group
 
 DEFAULT_SHAPE = (10, 10)
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+# Custom markers.
+xfail_pixel_sensitive_gdal22 = pytest.mark.xfail(
+    parse(rasterio.__gdal_version__) < parse('2.2'),
+    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 
 
 def bbox(*args):
@@ -117,13 +121,13 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
 
     output = str(tmpdir.join('test.tif'))
 
-    with pytest.warns(UserWarning) as warnings:
+    with pytest.warns(UserWarning) as rec:
         result = runner.invoke(
             main_group,
             ['mask', pixelated_image_file, output, '--geojson-mask', '-'],
             input=json.dumps(basic_feature))
     assert result.exit_code == 0
-    assert any(['outside bounds' in w.message.args[0] for w in warnings])
+    assert any(['outside bounds' in w.message.args[0] for w in rec])
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
@@ -169,6 +173,7 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
     assert 'Invalid GeoJSON' in result.output
 
 
+@xfail_pixel_sensitive_gdal22
 def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
     """
     In order to test --crop option, we need to use a transform more similar to
@@ -191,8 +196,8 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
 
     output = str(tmpdir.join('test.tif'))
 
-    truth = np.zeros((4, 3))
-    truth[1:3, 0:2] = 1
+    truth = np.zeros((3, 3))
+    truth[0:2, 0:2] = 1
 
     result = runner.invoke(
         main_group,
@@ -206,6 +211,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
             out.read(1, masked=True).filled(0))
 
 
+@xfail_pixel_sensitive_gdal22
 def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_file):
     """
     --crop option should also work if raster has a positive y pixel size
@@ -214,8 +220,8 @@ def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_fil
 
     output = str(tmpdir.join('test.tif'))
 
-    truth = np.zeros((4, 3))
-    truth[1:3, 0:2] = 1
+    truth = np.zeros((3, 3))
+    truth[0:2, 0:2] = 1
 
     result = runner.invoke(
         main_group, [
@@ -268,8 +274,7 @@ def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,
 
 
 def test_shapes(runner, pixelated_image_file):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(main_group, ['shapes', pixelated_image_file])
 
@@ -294,8 +299,7 @@ def test_shapes_sequence(runner, pixelated_image_file):
     --sequence option should produce 4 features in series rather than
     inside a feature collection.
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--sequence'])
@@ -340,8 +344,7 @@ def test_shapes_indent(runner, pixelated_image_file):
     """
     --indent option should produce lots of newlines and contiguous spaces
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--indent', 2])
@@ -354,8 +357,7 @@ def test_shapes_indent(runner, pixelated_image_file):
 
 
 def test_shapes_compact(runner, pixelated_image_file):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
 
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--compact'])
@@ -399,8 +401,7 @@ def test_shapes_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
         result = runner.invoke(
             main_group, ['shapes', pixelated_image_file, '--mask'])
         assert result.exit_code == 0
@@ -422,8 +423,8 @@ def test_shapes_mask_sampling(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
+
         result = runner.invoke(
             main_group,
             ['shapes', pixelated_image_file, '--mask', '--sampling', 5])
@@ -448,8 +449,7 @@ def test_shapes_band1_as_mask(runner, pixelated_image, pixelated_image_file):
     with rasterio.open(pixelated_image_file, 'r+') as out:
         out.write(pixelated_image, indexes=1)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    with pytest.warns(None):
         result = runner.invoke(
             main_group,
             ['shapes', pixelated_image_file, '--band', '--bidx', '1', '--as-mask'])

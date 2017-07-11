@@ -440,6 +440,10 @@ cdef extern from "gdalwarper.h" nogil:
         GDALResampleAlg eResampleAlg, double dfMaxError,
         const GDALWarpOptions *psOptionsIn)
 
+    GDALDatasetH GDALCreateWarpedVRT(
+        GDALDatasetH hSrcDS, int nPixels, int nLines,
+         double *padfGeoTransform, const GDALWarpOptions *psOptionsIn)
+
 
 cdef extern from "gdal_alg.h" nogil:
 
@@ -469,6 +473,7 @@ cdef extern from "gdal_alg.h" nogil:
     void *GDALCreateGenImgProjTransformer3(
             const char *pszSrcWKT, const double *padfSrcGeoTransform,
             const char *pszDstWKT, const double *padfDstGeoTransform)
+    void GDALSetGenImgProjTransformerDstGeoTransform(void *hTransformArg, double *padfGeoTransform)
     int GDALGenImgProjTransform(void *pTransformArg, int bDstToSrc,
                                 int nPointCount, double *x, double *y,
                                 double *z, int *panSuccess)

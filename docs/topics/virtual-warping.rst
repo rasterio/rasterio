@@ -1,12 +1,14 @@
 Virtual Warping
 ===============
 
-Rasterio has a class that abstracts many of the details of raster warping by
-using an in-memory `Warped VRT
-<http://www.gdal.org/gdal_vrttut.html#gdal_vrttut_warped>`__.
+Rasterio has a ``WarpedVRT`` class that abstracts many of the details of raster
+warping by using an in-memory `Warped VRT
+<http://www.gdal.org/gdal_vrttut.html#gdal_vrttut_warped>`__. A ``WarpedVRT`` can
+be the easiest solution for tiling large datasets.
 
-To virtually warp the Rasterio test dataset to EPSG:3857 and extract pixels
-corresponding to its central zoom 9 tile, do the following.
+For example, to virtually warp the ``RGB.byte.tif`` test dataset from its
+proper EPSG:32618 coordinate reference system to EPSG:3857 (Web Mercator) and
+extract pixels corresponding to its central zoom 9 tile, do the following.
 
 .. code-block:: python
 
@@ -23,9 +25,7 @@ corresponding to its central zoom 9 tile, do the following.
           # Determine the destination tile and its mercator bounds using
           # functions from the mercantile module.
           dst_tile = mercantile.tile(*vrt.lnglat(), 9)
-          left, top = mercantile.xy(*mercantile.ul(*dst_tile))
-          right, bottom = mercantile.xy(*mercantile.ul(
-              mercantile.Tile(dst_tile.x + 1, dst_tile.y + 1, dst_tile.z)))
+          left, top, right, bottom = mercantile.xy_bounds(*dst_tile)
 
           # Determine the window to use in reading from the dataset.
           dst_window = vrt.window(left, bottom, right, top)
@@ -52,3 +52,4 @@ corresponding to its central zoom 9 tile, do the following.
           # Write the image tile to disk.
           with rasterio.open('/tmp/test-tile.tif', 'w', **profile) as dst:
               dst.write(rgb)
+

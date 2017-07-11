@@ -7,10 +7,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import MaskFlags
-from rasterio.errors import NodataShadowWarning
-
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+from rasterio.errors import NodataShadowWarning, RasterioDeprecationWarning
 
 
 @pytest.fixture(scope='function')
@@ -46,8 +43,7 @@ def tiffs(tmpdir):
 
 def test_mask_flags_deprecation():
     """mask_flags is deprecated"""
-    warnings.simplefilter('always')
-    with pytest.warns(DeprecationWarning):
+    with pytest.warns(RasterioDeprecationWarning):
         with rasterio.open('tests/data/RGB.byte.tif') as src:
             src.mask_flags
 

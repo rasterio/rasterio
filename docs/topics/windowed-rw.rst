@@ -1,8 +1,9 @@
 
 .. _windowrw:
 
+============================
 Windowed reading and writing
-****************************
+============================
 
 Beginning in rasterio 0.3, you can read and write "windows" of raster files.
 This feature allows you to work on rasters that are larger than your
@@ -10,14 +11,25 @@ computers RAM or process chunks of large rasters in parallel.
 
 
 Windows
--------
+=======
 
 A window is a view onto a rectangular subset of a raster dataset and is
-described in rasterio by a pair of range tuples.
+described in rasterio by a pair of offsets and a pair of lengths.
+
+.. code-block:: python
+
+   Window(col_off, row_off, width, height)
+
+The ``Window`` class has a number of useful methods and is the generally
+preferred way of describing subsets. It's also the one way to describe subsets
+with float precision offsets and lengths, a feature of GDAL version 2.
+
+Windows can also be described by a pair of tuples or slices.
 
 .. code-block:: python
 
     ((row_start, row_stop), (col_start, col_stop))
+    (slice(row_start, row_stop), slice(col_start, col_stop))
 
 The first pair contains the indexes of the raster rows at which the window
 starts and stops. The second contains the indexes of the raster columns at
@@ -61,23 +73,29 @@ and slice() produces a object that can be used in slicing expressions.
     >>> list(range(10, 20)[slice(4, None)])
     [14, 15, 16, 17, 18, 19]
 
-Reading
--------
+Such pairs can be converted to instances of ``Window``.
 
-Here is an example of reading a 100 row x 100 column subset of the rasterio
+.. code-block:: python
+
+    window = Window.from_slices((0, 10), (0, 10))
+
+Reading
+=======
+
+Here is an example of reading a 256 row x 512 column subset of the rasterio
 test file.
 
 .. code-block:: pycon
 
     >>> import rasterio
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
-    ...     w = src.read(1, window=((0, 100), (0, 100)))
+    ...     w = src.read(1, window=Window(0, 0, 512, 256))
     ...
     >>> print(w.shape)
-    (100, 100)
+    (256, 512)
 
 Writing
--------
+=======
 
 Writing works similarly. The following creates a blank 500 column x 300 row
 GeoTIFF and plops 37500 pixels with value 127 into a window 30 pixels down from
@@ -91,7 +109,7 @@ and 50 pixels to the right of the upper left corner of the GeoTIFF.
             '/tmp/example.tif', 'w',
             driver='GTiff', width=500, height=300, count=1,
             dtype=image.dtype) as dst:
-        dst.write(image, window=((30, 180), (50, 300)), indexes=1)
+        dst.write(image, window=Window(50, 30, 250, 150, indexes=1)
 
 The result:
 
@@ -100,7 +118,7 @@ The result:
    :height: 300
 
 Decimation
-----------
+==========
 
 If the write window is smaller than the data, the data will be decimated.
 Below, the window is scaled to one third of the source image.
@@ -110,7 +128,7 @@ Below, the window is scaled to one third of the source image.
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read(k) for k in (1, 2, 3))
 
-    write_window = (30, 269), (50, 313)
+    write_window = Window.from_slices((30, 269), (50, 313))
 
     with rasterio.open(
             '/tmp/example.tif', 'w',
@@ -126,7 +144,7 @@ And the result:
    :height: 300
 
 Advanced windows
-----------------
+================
 
 Since windows are like slices, you can also use negative numbers in rasterio
 windows.
@@ -167,7 +185,7 @@ This example also demonstrates decimation.
 
 
 Data windows
-------------
+============
 
 Sometimes it is desirable to crop off an outer boundary of NODATA values around
 a dataset:
@@ -178,21 +196,20 @@ a dataset:
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         window = get_data_window(src.read(1, masked=True))
-        # window = ((3, 714), (13, 770))
+        # window = Window(col_off=13, row_off=3, width=757, height=711)
 
         kwargs = src.meta.copy()
         kwargs.update({
-            'height': window[0][1] - window[0][0],
-            'width': window[1][1] - window[1][0],
-            'affine': src.window_transform(window)
-        })
+            'height': window.height,
+            'width': window.width,
+            'affine': src.window_transform(window)})
 
         with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
             dst.write(src.read(window=window))
 
 
 Window utilities
-----------------
+================
 
 Basic union and intersection operations are available for windows, to streamline
 operations across dynamically created windows for a series of bands or datasets
@@ -202,16 +219,16 @@ with the same full extent.
 
     >>> from rasterio import windows
     >>> # Full window is ((0, 1000), (0, 500))
-    >>> window1 = ((100, 500), (10, 500))
-    >>> window2 = ((10, 150), (50, 250))
+    >>> window1 = Window(10, 100, 490, 400)
+    >>> window2 = Window(50, 10, 200, 140)
     >>> windows.union(window1, window2)
-    ((10, 500), (10, 500))
+    Window(col_off=10, row_off=10, width=490, height=490)
     >>> windows.intersection(window1, window2)
-    ((100, 150), (50, 250))
+    Window(col_off=50, row_off=100, width=200, height=50)
 
 
 Blocks
-------
+======
 
 Raster datasets are generally composed of multiple blocks of data and
 windowed reads and writes are most efficient when the windows match the
@@ -277,4 +294,3 @@ The block_shapes property is a band-ordered list of block shapes and
 there is only one item in the set is effectively the same as asserting that all
 bands have the same block structure. If they do, you can use the same windows
 for each.
-

@@ -1,8 +1,6 @@
 """rasterio.vrt: a module concerned with GDAL VRTs"""
 
 from rasterio._warp import WarpedVRTReaderBase
-from rasterio.enums import Resampling
-from rasterio.env import ensure_env
 from rasterio.io import WindowMethodsMixin, TransformMethodsMixin
 
 
@@ -33,6 +31,13 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         than the nodata value of src_dataset.
     dst_nodata : float, int
         The nodata value for the virtually warped dataset.
+    dst_width : int, optional
+        Target width. dst_height and dst_transform must also be provided.
+    dst_height : int, optional
+        Target height. dst_width and dst_transform must also be provided.
+    dst_transform: affine.Affine(), optional
+        Target affine transformation.  Required if width and height are
+        provided.
     warp_extras : dict
         GDAL extra warp options. See
         http://www.gdal.org/structGDALWarpOptions.html.

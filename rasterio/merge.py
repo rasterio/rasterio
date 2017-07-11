@@ -8,6 +8,7 @@ import warnings
 import numpy as np
 
 from rasterio import windows
+from rasterio.enums import Resampling
 from rasterio.transform import Affine
 
 
@@ -127,8 +128,8 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
     for src in sources:
         # Real World (tm) use of boundless reads.
-        # This approach uses the maximum amount of memory to solve the problem.
-        # Making it more efficient is a TODO.
+        # This approach uses the maximum amount of memory to solve the
+        # problem. Making it more efficient is a TODO.
 
         # 1. Compute spatial intersection of destination and source.
         src_w, src_s, src_e, src_n = src.bounds
@@ -141,31 +142,32 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         # 2. Compute the source window.
         src_window = windows.from_bounds(
             int_w, int_s, int_e, int_n, src.transform,
-            boundless=True, precision=precision)
+            boundless=True)
         logger.debug("Src %s window: %r", src.name, src_window)
+
+        src_window = src_window.round_shape()
 
         # 3. Compute the destination window.
         dst_window = windows.from_bounds(
             int_w, int_s, int_e, int_n, output_transform,
-            boundless=True, precision=precision)
-
-        logger.debug("Dst window: %r", dst_window)
+            boundless=True)
 
         # 4. Initialize temp array.
         tcount = first.count
-        trows, tcols = tuple(b - a for a, b in dst_window)
+        trows, tcols = (
+            int(round(dst_window.height)), int(round(dst_window.width)))
 
         temp_shape = (tcount, trows, tcols)
-        logger.debug("Temp shape: %r", temp_shape)
 
-        temp = np.zeros(temp_shape, dtype=dtype)
-        temp = src.read(out=temp, window=src_window, boundless=False,
-                        masked=True)
+        temp = src.read(out_shape=temp_shape, window=src_window,
+                        boundless=False, masked=True)
 
         # 5. Copy elements of temp into dest.
-        roff, coff = dst_window[0][0], dst_window[1][0]
+        roff, coff = (
+            int(round(dst_window.row_off)), int(round(dst_window.col_off)))
 
         region = dest[:, roff:roff + trows, coff:coff + tcols]
+
         np.copyto(
             region, temp,
             where=np.logical_and(region == nodataval, temp.mask == False))

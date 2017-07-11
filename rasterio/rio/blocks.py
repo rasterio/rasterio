@@ -68,7 +68,7 @@ class _Collection(object):
                 'id': '{0}:{1}'.format(os.path.basename(self._src.name), idx),
                 'properties': {
                     'block': json.dumps(block),
-                    'window': json.dumps(window)
+                    'window': window.todict(),
                 },
                 'geometry': {
                     'type': 'Polygon',
@@ -143,22 +143,20 @@ def blocks(
     stdout = click.open_file(
         output, 'w') if output else click.get_text_stream('stdout')
 
-    try:
-        with ctx.obj['env'], rasterio.open(input) as src:
+    with ctx.obj['env'], rasterio.open(input) as src:
 
-            collection = _Collection(
-                src=src,
-                bidx=bidx,
-                precision=precision,
-                geographic=projection != 'projected')
+        if bidx and bidx not in src.indexes:
+            raise click.BadParameter("Not a valid band index")
 
-            write_features(
-                stdout, collection,
-                sequence=sequence,
-                geojson_type='feature' if sequence else 'collection',
-                use_rs=use_rs,
-                **dump_kwds)
+        collection = _Collection(
+            src=src,
+            bidx=bidx,
+            precision=precision,
+            geographic=projection != 'projected')
 
-    except Exception:
-        logger.exception("Exception caught during processing")
-        raise click.Abort()
+        write_features(
+            stdout, collection,
+            sequence=sequence,
+            geojson_type='feature' if sequence else 'collection',
+            use_rs=use_rs,
+            **dump_kwds)

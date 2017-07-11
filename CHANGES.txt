@@ -1,13 +1,27 @@
 Changes
 =======
 
-Next Release
-------------
+Next
+----
+
+Breaking changes:
+
+- In the GeoJSON output of rio-blocks, the windows are now JSON
+  representations of the `Window` class (#1074).
+- The `rasterio.windows.Window` class no longer derives from `tuple`.
+  Comparisons like `Window(0, 0, 1, 1) == ((0, 1), (0, 1))` are no
+  longer possible. Instead, call the `.toranges()` method of the 
+  former or coerce the latter using `Window.from_ranges()` (#1074).
 
 New features:
 
-- Enable setting and getting `GDAL_CACHEMAX` (#1042).
-- Integer config option values are now properly encoded and decoded (#1042).
+- Float precision read/write windows are now supported throughout
+  Rasterio (#1074).
+- Use of old style range tuples as windows is deprecated and warned
+  against (#1074).
+
+1.0a9 (2017-06-02)
+------------------
 
 Breaking changes:
 
@@ -18,6 +32,26 @@ Breaking changes:
   meridian (#1024).
 - The `crs` property of a dataset is now `None` instead of `CRS()` when the
   dataset's coordinate reference system is undefined (#1057).
+
+New features:
+
+- Enable setting and getting `GDAL_CACHEMAX` (#1042).
+- Integer config option values are now properly encoded and decoded (#1042).
+- A `from_wkt()` CRS constructor has been added (#1070).
+- Targeting aligned pixels in rio-warp (#941).
+- A new `WarpedVRT` class that surfaces GDAL's warp-on-demand VRT features. No
+  XML editing is required (#1071, #1029).
+
+Bug fixes:
+
+- `dtypes.get_minimum_dtype()` now returns proper value for uint* types
+  (#1064).
+- Rasterio now uses `OSRRelease()` to avoid destroying shared spatial 
+  reference system objects (#1031).
+- GDAL_SKIP and GDAL_DRIVER_PATH options, when needed, are now set before
+  driver registration (#1001).
+- A failure of reprojection to an array when source dataset bands have an
+  index higher than 1 has been fixed (#1056).
 
 1.0a8 (2017-03-29)
 ------------------

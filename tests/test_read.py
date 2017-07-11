@@ -36,7 +36,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.nodatavals, (0, 0, 0))
             self.assertEqual(s.indexes, (1, 2, 3))
             self.assertEqual(s.crs['init'], 'epsg:32618')
-            self.assert_(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
+            self.assertTrue(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
             self.assertEqual(
@@ -69,10 +69,10 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_derived_spatial(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            self.assert_(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
+            self.assertTrue(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
-            for a, b in zip(s.ul(0, 0), (101985.0, 2826915.0)):
+            for a, b in zip(s.xy(0, 0, offset='ul'), (101985.0, 2826915.0)):
                 self.assertAlmostEqual(a, b)
 
     def test_read_ubyte(self):
@@ -127,7 +127,7 @@ class ReaderContextTest(unittest.TestCase):
             a = s.read(masked=True)  # floating point values
             self.assertEqual(a.ndim, 3)
             self.assertEqual(a.shape, (1, 2, 3))
-            self.assert_(hasattr(a, 'mask'))
+            self.assertTrue(hasattr(a, 'mask'))
             self.assertEqual(list(set(s.nodatavals)), [None])
             self.assertEqual(a.dtype, rasterio.float64)
 
@@ -169,8 +169,6 @@ class ReaderContextTest(unittest.TestCase):
 
     def test_read_window(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
-            # correct format
-            self.assertRaises(ValueError, s.read, window=(300, 320, 320, 330))
             # window with 1 nodata on band 3
             a = s.read(window=((300, 320), (320, 330)), masked=True)
             self.assertEqual(a.ndim, 3)
