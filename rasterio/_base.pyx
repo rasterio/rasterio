@@ -236,7 +236,7 @@ cdef class DatasetBase(object):
                     crs[k] = v
 
             CPLFree(proj)
-            OSRRelease(osr)
+            _safe_osr_release(osr)
             return crs
 
         else:
@@ -905,8 +905,8 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
-        OSRRelease(src)
-        OSRRelease(dst)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
 
     return retval
 
@@ -931,7 +931,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
             auth, val = init.split(':')
 
             if not val:
-                OSRRelease(osr)
+                _safe_osr_release(osr)
                 raise CRSError("Invalid CRS: {!r}".format(crs))
 
             if auth.upper() == 'EPSG':
@@ -952,10 +952,18 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     log.debug("OSRSetFromUserInput return value: %s", retval)
 
     if retval:
-        OSRRelease(osr)
+        _safe_osr_release(osr)
         raise CRSError("Invalid CRS: {!r}".format(crs))
 
     return osr
+
+
+cdef _safe_osr_release(OGRSpatialReferenceH srs):
+    """Wrapper to handle OSR release when NULL."""
+
+    if srs != NULL:
+        OSRRelease(srs)
+    srs = NULL
 
 
 def _can_create_osr(crs):
@@ -990,5 +998,5 @@ def _can_create_osr(crs):
         return False
 
     finally:
-        OSRRelease(osr)
+        _safe_osr_release(osr)
         CPLFree(wkt)

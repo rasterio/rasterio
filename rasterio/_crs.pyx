@@ -10,6 +10,7 @@ from rasterio.compat import string_types
 from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
+from rasterio._base cimport _safe_osr_release
 
 
 log = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class _CRS(UserDict):
             retval = OSRIsGeographic(osr_crs)
             return bool(retval == 1)
         finally:
-            OSRRelease(osr_crs)
+            _safe_osr_release(osr_crs)
 
     @property
     def is_projected(self):
@@ -40,7 +41,7 @@ class _CRS(UserDict):
             retval = OSRIsProjected(osr_crs)
             return bool(retval == 1)
         finally:
-            OSRRelease(osr_crs)
+            _safe_osr_release(osr_crs)
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
@@ -56,8 +57,8 @@ class _CRS(UserDict):
             retval = OSRIsSame(osr_crs1, osr_crs2)
             return bool(retval == 1)
         finally:
-            OSRRelease(osr_crs1)
-            OSRRelease(osr_crs2)
+            _safe_osr_release(osr_crs1)
+            _safe_osr_release(osr_crs2)
 
     @property
     def wkt(self):
@@ -73,7 +74,7 @@ class _CRS(UserDict):
             return srcwkt.decode('utf-8')
         finally:
             CPLFree(srcwkt)
-            OSRRelease(osr)
+            _safe_osr_release(osr)
 
     @classmethod
     def from_wkt(cls, wkt):
@@ -105,4 +106,4 @@ class _CRS(UserDict):
             return cls.from_string(proj4.decode('utf-8'))
         finally:
             CPLFree(proj4)
-            OSRRelease(osr)
+            _safe_osr_release(osr)

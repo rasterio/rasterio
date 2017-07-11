@@ -20,7 +20,7 @@ from rasterio.vfs import parse_path, vsi_path
 
 cimport numpy as np
 
-from rasterio._base cimport _osr_from_crs, get_driver_name
+from rasterio._base cimport _osr_from_crs, get_driver_name, _safe_osr_release
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
@@ -57,8 +57,8 @@ def _transform_geom(
     try:
         transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
     except:
-        OSRRelease(src)
-        OSRRelease(dst)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
         raise
 
     # Transform options.
@@ -92,8 +92,8 @@ def _transform_geom(
         OCTDestroyCoordinateTransformation(transform)
         if options != NULL:
             CSLDestroy(options)
-        OSRRelease(src)
-        OSRRelease(dst)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
 
 
 cdef GDALWarpOptions * create_warp_options(
@@ -325,16 +325,15 @@ def _reproject(
             log.debug("Set transform on temp source dataset: %d", retval)
 
             try:
-                osr = _osr_from_crs(src_crs)
-                OSRExportToWkt(osr, &srcwkt)
+                src_osr = _osr_from_crs(src_crs)
+                OSRExportToWkt(src_osr, &srcwkt)
                 GDALSetProjection(src_dataset, srcwkt)
 
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
 
             finally:
                 CPLFree(srcwkt)
-                OSRRelease(osr)
-                osr = NULL
+                _safe_osr_release(src_osr)
 
         elif gcps:
             gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
@@ -415,8 +414,8 @@ def _reproject(
                 "Failed to set transform on temp destination dataset.")
 
         try:
-            osr = _osr_from_crs(dst_crs)
-            OSRExportToWkt(osr, &dstwkt)
+            dst_osr = _osr_from_crs(dst_crs)
+            OSRExportToWkt(dst_osr, &dstwkt)
 
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
 
@@ -425,8 +424,7 @@ def _reproject(
                 raise ("Failed to set projection on temp destination dataset.")
         finally:
             CPLFree(dstwkt)
-            OSRRelease(osr)
-            osr = NULL
+            _safe_osr_release(dst_osr)
 
         retval = io_auto(destination, dst_dataset, 1)
 
@@ -585,8 +583,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
     osr = _osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
-    OSRRelease(osr)
-    osr = NULL
+    _safe_osr_release(osr)
 
     with InMemoryRaster(width=width, height=height, transform=transform,
                         gcps=gcps, crs=src_crs) as temp:
@@ -700,9 +697,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             osr = _osr_from_crs(self.dst_crs)
             OSRExportToWkt(osr, &dst_crs_wkt)
         finally:
-            if osr != NULL:
-                OSRRelease(osr)
-            osr = NULL
+            _safe_osr_release(osr)
 
         log.debug("Exported CRS to WKT.")
 

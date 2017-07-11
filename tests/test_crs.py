@@ -230,6 +230,20 @@ def test_crs_OSR_no_equivalence():
     assert crs1 != crs2
 
 
+def test_safe_osr_release(tmpdir):
+    log = logging.getLogger('rasterio._gdal')
+    log.setLevel(logging.DEBUG)
+    logfile = str(tmpdir.join('test.log'))
+    fh = logging.FileHandler(logfile)
+    log.addHandler(fh)
+
+    with rasterio.Env():
+        CRS({}) == CRS({})
+
+    log = open(logfile).read()
+    assert "Pointer 'hSRS' is NULL in 'OSRRelease'" not in log
+
+
 def test_from_wkt():
     wgs84 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     from_wkt = CRS.from_wkt(wgs84.wkt)
