@@ -449,6 +449,45 @@ cdef class DatasetBase(object):
                     GDALGetRasterUnitType(self.band(j)) for j in self.indexes)
             return self._units
 
+    def block(self, bidx, i, j):
+        """Returns info about a particular block
+
+        Parameters
+        ----------
+        bidx: int
+            Band index, starting with 1.
+        i: int
+            Row index of the block, starting with 0.
+        j: int
+            Column index of the block, starting with 0.
+
+        Returns
+        -------
+        {'window': Window, 'size': int (bytes)}
+        """
+        cdef GDALMajorObjectH obj = NULL
+        cdef char *value = NULL
+        cdef const char *key_c = NULL
+
+        obj = self.band(bidx)
+
+        if self.driver == 'GTiff':
+            key_b = 'BLOCK_SIZE_{0}_{1}'.format(j, i).encode('utf-8')
+            key_c = key_b
+            value = GDALGetMetadataItem(obj, key_c, 'TIFF')
+            size = int(value)
+        else:
+            size = None
+
+        h, w = self.block_shapes[bidx-1]
+        row = i * h
+        height = min(h, self.height - row)
+        col = j * w
+        width = min(w, self.width - col)
+        window = windows.Window(col, row, width, height)
+
+        return {'window': window, 'size': size}
+
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's blocks and their corresponding
         windows.  Produces tuples like ``(block, window)``.  The primary use

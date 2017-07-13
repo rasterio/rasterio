@@ -8,10 +8,10 @@ Breaking changes:
 
 - In the GeoJSON output of rio-blocks, the windows are now JSON
   representations of the `Window` class (#1074).
-- The `rasterio.windows.Window` class no longer derives from `tuple`.
-  Comparisons like `Window(0, 0, 1, 1) == ((0, 1), (0, 1))` are no
-  longer possible. Instead, call the `.toranges()` method of the 
-  former or coerce the latter using `Window.from_ranges()` (#1074).
+- The ``rasterio.windows.Window`` class no longer derives from ``tuple``.
+  Comparisons like ``Window(0, 0, 1, 1) == ((0, 1), (0, 1))`` are no
+  longer possible. Instead, call the ``.toranges()`` method of the 
+  former or coerce the latter using ``Window.from_ranges()`` (#1074).
 
 New features:
 
@@ -19,6 +19,7 @@ New features:
   Rasterio (#1074).
 - Use of old style range tuples as windows is deprecated and warned
   against (#1074).
+- Addition of dataset ``block()`` method (#1077).
 
 1.0a9 (2017-06-02)
 ------------------
