@@ -123,7 +123,7 @@ class WindowMethodsMixin(object):
             Number of decimal points of precision when computing inverse
             transform.
         kwargs: mapping
-            For backwards compatibility: absorbs deprecated keyword args
+            For backwards compatibility: absorbs deprecated keyword args.
 
         Returns
         -------

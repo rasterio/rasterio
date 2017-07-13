@@ -22,8 +22,8 @@ New features:
 
 Bug fixes:
 
-- Eliminate boundless keyword argument and a DeprecationWarning when calling
-  from_bounds in dataset.window() (#1082).
+- Eliminate boundless keyword argument and deprecation warnings when calling
+  from_bounds() (#1082).
 
 1.0a9 (2017-06-02)
 ------------------
