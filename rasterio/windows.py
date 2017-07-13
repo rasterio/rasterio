@@ -184,16 +184,18 @@ def from_bounds(left, bottom, right, top, transform=None,
 
     Parameters
     ----------
-    left, bottom, right, top : float
+    left, bottom, right, top: float
         Left (west), bottom (south), right (east), and top (north)
         bounding coordinates.
-    transform : Affine
+    transform: Affine
         Affine transform matrix.
-    height, width : int
+    height, width: int
         Number of rows and columns of the window.
-    precision : int, optional
+    precision: int, optional
         Number of decimal points of precision when computing inverse
         transform.
+    kwargs: mapping
+        Absorbs deprecated keyword args
 
     Returns
     -------
@@ -476,7 +478,8 @@ class Window(object):
 
     @property
     def num_cols(self):
-        warnings.warn("use 'width' attribute instead", RasterioDeprecationWarning)
+        warnings.warn("use 'width' attribute instead",
+                      RasterioDeprecationWarning)
         return self.width
 
     @property

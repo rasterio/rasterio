@@ -88,8 +88,7 @@ def test_read_vfs_none():
 @pytest.mark.parametrize('mode', ['r+', 'w'])
 def test_update_vfs(tmpdir, mode):
     """VFS datasets can not be created or updated"""
+    profile = default_gtiff_profile.copy()
+    profile.update(count=1, width=1, height=1)
     with pytest.raises(TypeError):
-        rasterio.open(
-            'zip://{0}'.format(tmpdir), mode,
-            **default_gtiff_profile(
-                count=1, width=1, height=1))
+        rasterio.open('zip://{0}'.format(tmpdir), mode, **profile)

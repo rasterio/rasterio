@@ -20,6 +20,11 @@ New features:
 - Use of old style range tuples as windows is deprecated and warned
   against (#1074).
 
+Bug fixes:
+
+- Eliminate boundless keyword argument and a DeprecationWarning when calling
+  from_bounds in dataset.window() (#1082).
+
 1.0a9 (2017-06-02)
 ------------------
 
