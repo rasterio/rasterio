@@ -68,3 +68,7 @@ class WindowEvaluationError(ValueError):
 
 class RasterioDeprecationWarning(UserWarning):
     """Rasterio module deprecations"""
+
+
+class TIFFTagError(RasterioError):
+    """Raised when TIFF tag access fails"""

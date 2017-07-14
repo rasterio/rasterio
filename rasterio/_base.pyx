@@ -13,6 +13,7 @@ from rasterio._err import (
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 
+from rasterio.block import BlockInfo
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
@@ -24,7 +25,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError,
-    NotGeoreferencedWarning, RasterioDeprecationWarning)
+    NotGeoreferencedWarning, RasterioDeprecationWarning, TIFFTagError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -463,7 +464,7 @@ cdef class DatasetBase(object):
 
         Returns
         -------
-        {'window': Window, 'size': int (bytes)}
+        BlockInfo
         """
         cdef GDALMajorObjectH obj = NULL
         cdef char *value = NULL
@@ -475,7 +476,11 @@ cdef class DatasetBase(object):
             key_b = 'BLOCK_SIZE_{0}_{1}'.format(j, i).encode('utf-8')
             key_c = key_b
             value = GDALGetMetadataItem(obj, key_c, 'TIFF')
-            size = int(value)
+            if value == NULL:
+                raise TIFFTagError(
+                    "Block i={0}, j={1} size can't be determined".format(i, j))
+            else:
+                size = int(value)
         else:
             size = None
 
@@ -485,8 +490,7 @@ cdef class DatasetBase(object):
         col = j * w
         width = min(w, self.width - col)
         window = windows.Window(col, row, width, height)
-
-        return {'window': window, 'size': size}
+        return BlockInfo(i, j, window, size)
 
     def block_windows(self, bidx=0):
         """Returns an iterator over a band's blocks and their corresponding

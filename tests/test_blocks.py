@@ -168,6 +168,6 @@ def test_block_tiff(path_rgb_byte_tif):
     """Without compression a TIFF's blocks are all the same size"""
     with rasterio.open(path_rgb_byte_tif) as src:
         block_windows = list(src.block_windows())
-        sizes = [src.block(1, i, j)['size'] for (i, j), w in block_windows]
+        sizes = [src.block(1, i, j).size for (i, j), w in block_windows]
         assert sizes.count(2373) == 1
         assert sizes.count(7119) == len(block_windows) - 1

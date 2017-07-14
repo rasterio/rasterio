@@ -298,7 +298,9 @@ with open('README.rst') as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ['affine', 'attrs', 'cligj', 'numpy', 'snuggs>=1.4.1', 'click-plugins']
+inst_reqs = [
+    'affine', 'attrs>=16.0.0', 'cligj', 'numpy', 'snuggs>=1.4.1',
+    'click-plugins']
 
 if sys.version_info < (3, 4):
     inst_reqs.append('enum34')
