@@ -165,9 +165,9 @@ Rasterio has a C library dependency: GDAL >=1.9. GDAL itself depends on some oth
 depends on the non standard GEOS and PROJ4 libraries. How to meet these
 requirement will be explained below.
 
-Rasterio's Python dependencies are listed in its requirements.txt file.
+Rasterio's Python dependencies are listed in its `requirements.txt` file.
 
-Development also requires (see requirements-dev.txt) Cython and other packages.
+Development also requires (see `requirements-dev.txt`) Cython and other packages.
 
 Binary Distributions
 --------------------
@@ -181,7 +181,7 @@ Linux
 Rasterio distributions are available from UbuntuGIS and Anaconda's conda-forge
 channel.
 
-`Manylinux1 <https://github.com/pypa/manylinux>`__ distributions may be
+`Manylinux <https://github.com/pypa/manylinux>`__ distributions may be
 available in the future.
 
 OS X
@@ -266,12 +266,12 @@ You can download a binary distribution of GDAL from `here
 <http://www.gisinternals.com/release.php>`__.  You will also need to download
 the compiled libraries and headers (include files).
 
-When building from source on Windows, it is important to know that setup.py
+When building from source on Windows, it is important to know that `setup.py`
 cannot rely on gdal-config, which is only present on UNIX systems, to discover
 the locations of header files and libraries that rasterio needs to compile its
 C extensions. On Windows, these paths need to be provided by the user. You
 will need to find the include files and the library files for gdal and use
-setup.py as follows.
+`setup.py` as follows.
 
 .. code-block:: console
 
