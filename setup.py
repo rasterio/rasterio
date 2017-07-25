@@ -18,8 +18,11 @@ import shutil
 import subprocess
 import sys
 
+import pkg_resources
+
 from setuptools import setup
 from setuptools.extension import Extension
+from distutils.command.build_ext import build_ext as _build_ext
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -80,12 +83,16 @@ gdal2plus = False
 gdal_output = [None] * 4
 gdalversion = None
 
-try:
-    import numpy as np
-    include_dirs.append(np.get_include())
-except ImportError:
-    log.critical("Numpy and its headers are required to run setup(). Exiting.")
-    sys.exit(1)
+
+class build_ext(_build_ext):
+    # Extention builder from pandas without the cython stuff
+    def build_extensions(self):
+        numpy_incl = pkg_resources.resource_filename('numpy', 'core/include')
+
+        for ext in self.extensions:
+            if hasattr(ext, 'include_dirs') and not numpy_incl in ext.include_dirs:
+                ext.include_dirs.append(numpy_incl)
+        _build_ext.build_extensions(self)
 
 try:
     gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
@@ -320,7 +327,7 @@ if sys.version_info < (3, 2):
 extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
 
 setup_args = dict(
-    cmdclass={'sdist': sdist_multi_gdal},
+    cmdclass={'sdist': sdist_multi_gdal, 'build_ext': build_ext},
     name='rasterio',
     version=version,
     description="Fast and direct raster I/O for use with Numpy and SciPy",
