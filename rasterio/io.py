@@ -109,6 +109,9 @@ class WindowMethodsMixin(object):
     def window(self, left, bottom, right, top, precision=6, **kwargs):
         """Get the window corresponding to the bounding coordinates.
 
+        The resulting window is not cropped to the row and column
+        limits of the dataset.
+
         Parameters
         ----------
         left: float
@@ -129,9 +132,10 @@ class WindowMethodsMixin(object):
         -------
         window: Window
         """
-        if 'boundless' in kwargs:
+        if 'boundless' in kwargs:  # pragma: no branch
             warnings.warn("boundless keyword arg should not be used",
                           RasterioDeprecationWarning)
+
         transform = guard_transform(self.transform)
         return windows.from_bounds(
             left, bottom, right, top, transform=transform,
