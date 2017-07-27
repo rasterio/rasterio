@@ -70,5 +70,5 @@ class RasterioDeprecationWarning(UserWarning):
     """Rasterio module deprecations"""
 
 
-class TIFFTagError(RasterioError):
-    """Raised when TIFF tag access fails"""
+class RasterBlockError(RasterioError):
+    """Raised when raster block access fails"""
