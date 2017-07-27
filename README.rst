@@ -249,7 +249,7 @@ For a Homebrew based Python environment, do the following.
 
 .. code-block:: console
 
-    $ brew upgrade
+    $ brew update
     $ brew install gdal
     $ pip install -U pip
     $ pip install --no-use-wheel rasterio
