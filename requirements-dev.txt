@@ -11,6 +11,7 @@ cython>=0.23.4
 delocate
 enum34
 ghp-import
+hypothesis
 numpydoc
 packaging
 pytest>=3.1.0
