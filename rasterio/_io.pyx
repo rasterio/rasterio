@@ -1655,7 +1655,7 @@ cdef class InMemoryRaster:
             OSRExportToWkt(osr, <char**>&srcwkt)
             GDALSetGCPs(self._hds, len(gcps), gcplist, srcwkt)
             CPLFree(gcplist)
-            CPLFree(srcwkt)
+            CPLFree(<void *>srcwkt)
 
         if self._image is not None:
             self.write(self._image)
