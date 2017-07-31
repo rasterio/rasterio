@@ -6,7 +6,7 @@ Using ``rasterio`` with ``fiona``, it is simple to open a shapefile, read geomet
 
         import fiona
         import rasterio
-        import rasterio.tools.mask
+        import rasterio.mask
 
         with fiona.open("tests/data/box.shp", "r") as shapefile:
             features = [feature["geometry"] for feature in shapefile] 
@@ -16,7 +16,7 @@ This shapefile contains a single polygon, a box near the center of the raster, s
 .. code-block:: python
 
         with rasterio.open("tests/data/RGB.byte.tif") as src:
-            out_image, out_transform = rasterio.tools.mask.mask(src, features,
+            out_image, out_transform = rasterio.mask.mask(src, features,
                                                                 crop=True)
             out_meta = src.meta.copy()
 

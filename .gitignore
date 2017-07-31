@@ -42,7 +42,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
-rasterio/_*.html
+rasterio/*.html
 
 # Translations
 *.mo

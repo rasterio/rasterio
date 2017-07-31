@@ -162,8 +162,7 @@ def test_block_windows_filtered_none(path_rgb_byte_tif):
     """Get no block windows using filter"""
     with rasterio.open(path_rgb_byte_tif) as src:
         w, s, e, n = src.bounds
-        focus_window = src.window(w - 100.0, n + 1.0, w - 1.0, n + 100.0,
-                                  boundless=True)
+        focus_window = src.window(w - 100.0, n + 1.0, w - 1.0, n + 100.0)
         filter_func = partial(windows.intersect, focus_window)
         itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
         with pytest.raises(StopIteration):

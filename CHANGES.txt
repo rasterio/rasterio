@@ -7,11 +7,18 @@ Next
 Breaking changes:
 
 - In the GeoJSON output of rio-blocks, the windows are now JSON
-  representations of the `Window` class (#1074).
+  representations of the ``Window`` class (#1074).
 - The ``rasterio.windows.Window`` class no longer derives from ``tuple``.
   Comparisons like ``Window(0, 0, 1, 1) == ((0, 1), (0, 1))`` are no
   longer possible. Instead, call the ``.toranges()`` method of the 
   former or coerce the latter using ``Window.from_ranges()`` (#1074).
+- The ``rasterio.windows.from_bounds()`` function now always returns unbounded,
+  meaning uncropped, Windows. For example, if given a bounding box entirely
+  to the west and north of the geotransform's origin, the result will be a 
+  Window entirely to the left and above the dataset's row and column origin.
+  Passing a ``boundless`` keyword argument to this function will result in a 
+  warning.
+
 
 New features:
 
@@ -20,6 +27,11 @@ New features:
 - Use of old style range tuples as windows is deprecated and warned
   against (#1074).
 - Addition of dataset ``block()`` method (#1077).
+
+Bug fixes:
+
+- We always reacquire the GIL when GDAL calls the rasterio logging error
+  handler (#1103, #1104).
 
 1.0a9 (2017-06-02)
 ------------------

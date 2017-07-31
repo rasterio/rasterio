@@ -2,6 +2,7 @@ from affine import Affine
 import pytest
 
 import rasterio
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio.io import WindowMethodsMixin
 from rasterio.windows import Window
 
@@ -99,3 +100,9 @@ def test_window_bounds_function():
         rows = src.height
         cols = src.width
         assert src.window_bounds(((0, rows), (0, cols))) == src.bounds
+
+
+def test_boundless_deprecation():
+    with pytest.warns(RasterioDeprecationWarning):
+        with rasterio.open('tests/data/RGB.byte.tif') as src:
+            src.window(*src.bounds, boundless=True)
