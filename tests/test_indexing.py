@@ -41,7 +41,7 @@ def test_window_no_exception():
         left, bottom, right, top = src.bounds
         left -= 1000.0
         assert_window_almost_equals(
-            src.window(left, bottom, right, top, boundless=True),
+            src.window(left, bottom, right, top),
             ((0, src.height), (-1000 / src.res[0], src.width)))
 
 
