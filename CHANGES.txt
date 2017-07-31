@@ -12,6 +12,8 @@ Breaking changes:
   Comparisons like `Window(0, 0, 1, 1) == ((0, 1), (0, 1))` are no
   longer possible. Instead, call the `.toranges()` method of the 
   former or coerce the latter using `Window.from_ranges()` (#1074).
+- The ``TransformMethodsMixin.ul()`` method, deprecated since 0.36, has been
+  removed (#1100).
 
 New features:
 
