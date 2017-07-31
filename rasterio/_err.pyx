@@ -5,7 +5,7 @@ Exception-raising wrappers for GDAL API functions.
 
 include "gdal.pxi"
 
-from enums import IntEnum
+from enum import IntEnum
 import logging
 import sys
 
@@ -174,7 +174,6 @@ cdef int exc_wrap_int(int err) except -1:
         exc = exc_check()
         if exc:
             raise exc
-            return -1
     return err
 
 
@@ -187,7 +186,6 @@ cdef void *exc_wrap_pointer(void *ptr) except NULL:
         exc = exc_check()
         if exc:
             raise exc
-            return NULL
     return ptr
 
 
@@ -200,5 +198,4 @@ cdef VSILFILE *exc_wrap_vsilfile(VSILFILE *f) except NULL:
         exc = exc_check()
         if exc:
             raise exc
-            return NULL
     return f

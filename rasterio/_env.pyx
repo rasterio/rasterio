@@ -68,11 +68,11 @@ cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
 # other platforms. Each calls log_error().
 IF UNAME_SYSNAME == "Windows":
     cdef void __stdcall logging_error_handler(CPLErr err_class, int err_no,
-                                              const char* msg):
+                                              const char* msg) with gil:
         log_error(err_class, err_no, msg)
 ELSE:
     cdef void logging_error_handler(CPLErr err_class, int err_no,
-                                    const char* msg):
+                                    const char* msg) with gil:
         log_error(err_class, err_no, msg)
 
 
