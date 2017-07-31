@@ -68,3 +68,7 @@ class WindowEvaluationError(ValueError):
 
 class RasterioDeprecationWarning(UserWarning):
     """Rasterio module deprecations"""
+
+
+class RasterBlockError(RasterioError):
+    """Raised when raster block access fails"""

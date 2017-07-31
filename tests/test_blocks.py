@@ -8,10 +8,12 @@ import tempfile
 import unittest
 
 import numpy as np
+from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio import windows
+from rasterio.errors import RasterBlockError
 
 
 class WindowTest(unittest.TestCase):
@@ -61,6 +63,7 @@ def test_window_index():
     arr = np.ones((20, 20))
     assert arr[idx].shape == (4, 11)
 
+
 class RasterBlocksTest(unittest.TestCase):
 
     def test_blocks(self):
@@ -80,7 +83,8 @@ class RasterBlocksTest(unittest.TestCase):
             self.assertEqual(second, windows.Window.from_ranges((3, 6), (0, 791)))
             (j, i), last = list(itr)[~0]
             self.assertEqual((j, i), (239, 0))
-            self.assertEqual(last, windows.Window.from_ranges((717, 718), (0, 791)))
+            self.assertEqual(
+                last, windows.Window.from_ranges((717, 718), (0, 791)))
 
     def test_block_coverage(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -88,6 +92,7 @@ class RasterBlocksTest(unittest.TestCase):
                 s.width * s.height,
                 sum((w[0][1] - w[0][0]) * (w[1][1] - w[1][0])
                     for ji, w in s.block_windows(1)))
+
 
 class WindowReadTest(unittest.TestCase):
     def test_read_window(self):
@@ -99,6 +104,7 @@ class WindowReadTest(unittest.TestCase):
             self.assertEqual(
                 first_block.shape,
                 rasterio.window_shape(first_window))
+
 
 class WindowWriteTest(unittest.TestCase):
 
@@ -161,3 +167,32 @@ def test_block_windows_filtered_none(path_rgb_byte_tif):
         itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
         with pytest.raises(StopIteration):
             next(itr)
+
+
+@pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.0.0'),
+    reason="TIFF block size access requires GDAL 2.0")
+def test_block_size_tiff(path_rgb_byte_tif):
+    """Without compression a TIFF's blocks are all the same size"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        block_windows = list(src.block_windows())
+        sizes = [src.block_size(1, i, j) for (i, j), w in block_windows]
+        assert sizes.count(2373) == 1
+        assert sizes.count(7119) == len(block_windows) - 1
+
+
+@pytest.mark.skipif(
+    parse(rasterio.__gdal_version__) < parse('2.0.0'),
+    reason="TIFF block size access requires GDAL 2.0")
+def test_block_size_exception():
+    """A JPEG has no TIFF metadata and no API for block size"""
+    with pytest.raises(RasterBlockError):
+        with rasterio.open('tests/data/389225main_sw_1965_1024.jpg') as src:
+            src.block_size(1, 0, 0)
+
+
+def test_block_window_tiff(path_rgb_byte_tif):
+    """Block window accessors are consistent"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        for (i, j), w in src.block_windows():
+            assert src.block_window(1, i, j) == w

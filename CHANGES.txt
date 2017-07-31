@@ -19,12 +19,14 @@ Breaking changes:
   Passing a ``boundless`` keyword argument to this function will result in a 
   warning.
 
+
 New features:
 
 - Float precision read/write windows are now supported throughout
   Rasterio (#1074).
 - Use of old style range tuples as windows is deprecated and warned
   against (#1074).
+- Addition of dataset ``block()`` method (#1077).
 
 Bug fixes:
 
