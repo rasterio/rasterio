@@ -13,7 +13,6 @@ from rasterio._err import (
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 
-from rasterio.block import BlockInfo
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
