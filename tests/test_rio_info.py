@@ -378,6 +378,11 @@ def test_info():
     assert result.exit_code == 0
     assert '"count": 3' in result.output
 
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/float.tif'])
+    assert result.exit_code == 0
+    assert '"count": 1' in result.output
+
 
 def test_info_units():
     """Find a units item"""
