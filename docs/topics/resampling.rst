@@ -40,7 +40,7 @@ by ``x``, you need to *divide* the affine parameters defining the cell size by `
         dst_transform = newaff,
         src_crs = src.crs,
         dst_crs = src.crs,
-        resample = Resampling.bilinear)
+        resampling = Resampling.bilinear)
 
 
 Use scipy
