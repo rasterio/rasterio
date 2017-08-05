@@ -108,11 +108,24 @@ def driver_can_create_copy(drivername):
 cdef class DatasetBase(object):
     """Dataset base class."""
 
-    def __init__(self, path, options=None):
+    def __init__(self, path=None, options=None):
+        cdef GDALDriverH driver = NULL
+        cdef GDALDatasetH hds = NULL
+        cdef const char *path_c = NULL
+
+        if path is not None:
+            path_b = vsi_path(*parse_path(path)).encode('utf-8')
+            path_c = path_b
+            try:
+                with nogil:
+                    hds = GDALOpenShared(path_c, <GDALAccess>0)
+                self._hds = exc_wrap_pointer(hds)
+            except CPLE_OpenFailedError as err:
+                raise RasterioIOError(err.errmsg)
+
         self.name = path
         self.mode = 'r'
         self.options = options or {}
-        self._hds = NULL
         self._count = 0
         self._closed = True
         self._dtypes = []
@@ -123,6 +136,7 @@ cdef class DatasetBase(object):
         self._crs = None
         self._gcps = None
         self._read = False
+        self._begin()
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -132,35 +146,19 @@ cdef class DatasetBase(object):
 
     def start(self):
         """Called to start reading a dataset."""
+
+    def _begin(self):
         cdef GDALDriverH driver = NULL
-        cdef GDALDatasetH hds = NULL
-        cdef const char *cypath
-
-        path = vsi_path(*parse_path(self.name))
-        path = path.encode('utf-8')
-        cypath = path
-
-        try:
-            with nogil:
-                hds = GDALOpenShared(cypath, <GDALAccess>0)
-            self._hds = exc_wrap_pointer(hds)
-        except CPLE_OpenFailedError as err:
-            raise RasterioIOError(err.errmsg)
-
         driver = GDALGetDatasetDriver(self._hds)
         self.driver = get_driver_name(driver)
-
         self._count = GDALGetRasterCount(self._hds)
         self.width = GDALGetRasterXSize(self._hds)
         self.height = GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
-
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-
         # touch self.meta
         _ = self.meta
-
         self._closed = False
         log.debug("Dataset %r is started.", self)
 

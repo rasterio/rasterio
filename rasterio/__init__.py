@@ -280,7 +280,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             else:
                 raise ValueError(
                     "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
-            s.start()
+            # s.start()
             return s
 
 
