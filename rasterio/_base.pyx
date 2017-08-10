@@ -113,6 +113,8 @@ cdef class DatasetBase(object):
         cdef GDALDatasetH hds = NULL
         cdef const char *path_c = NULL
 
+        self._hds = NULL
+
         if path is not None:
             path_b = vsi_path(*parse_path(path)).encode('utf-8')
             path_c = path_b
@@ -121,22 +123,20 @@ cdef class DatasetBase(object):
                     hds = GDALOpenShared(path_c, <GDALAccess>0)
                 self._hds = exc_wrap_pointer(hds)
             except CPLE_OpenFailedError as err:
-                raise RasterioIOError(err.errmsg)
+                raise RasterioIOError(str(err))
 
         self.name = path
         self.mode = 'r'
         self.options = options or {}
-        self._count = 0
-        self._closed = True
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []
         self._units = ()
         self._descriptions = ()
-        self._crs = None
         self._gcps = None
         self._read = False
-        self._begin()
+
+        self._set_attrs_from_dataset_handle()
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -144,10 +144,7 @@ cdef class DatasetBase(object):
             self.name,
             self.mode)
 
-    def start(self):
-        """Called to start reading a dataset."""
-
-    def _begin(self):
+    def _set_attrs_from_dataset_handle(self):
         cdef GDALDriverH driver = NULL
         driver = GDALGetDatasetDriver(self._hds)
         self.driver = get_driver_name(driver)
@@ -157,8 +154,10 @@ cdef class DatasetBase(object):
         self.shape = (self.height, self.width)
         self._transform = self.read_transform()
         self._crs = self.read_crs()
-        # touch self.meta
+
+        # touch self.meta, triggering data type evaluation.
         _ = self.meta
+
         self._closed = False
         log.debug("Dataset %r is started.", self)
 
@@ -897,7 +896,7 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             retval = (res_xs, res_ys)
 
     except CPLE_NotSupportedError as exc:
-        raise CRSError(exc.errmsg)
+        raise CRSError(str(exc))
 
     finally:
         CPLFree(x)

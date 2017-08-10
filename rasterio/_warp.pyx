@@ -724,7 +724,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
-            self.dst_nodata, GDALGetRasterCount(hds), <const char **>c_warp_extras)
+            self.dst_nodata,
+            GDALGetRasterCount(hds), <const char **>c_warp_extras)
 
         try:
             if dst_width and dst_height and dst_transform:
@@ -771,11 +772,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             CSLDestroy(c_warp_extras)
             GDALDestroyWarpOptions(psWOptions)
 
-        self._begin()
+        self._set_attrs_from_dataset_handle()
 
     def start(self):
         """Starts the VRT's life cycle."""
-
         log.debug("Dataset %r is started.", self)
 
     def stop(self):

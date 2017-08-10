@@ -907,7 +907,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef const char *drv_name = NULL
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
-        cdef int success = -1
         cdef const char *fname = NULL
 
         # Validate write mode arguments.
@@ -947,7 +946,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         name_b = path.encode('utf-8')
         fname = name_b
 
-        kwds = []
+        #kwds = []
 
         if mode == 'w':
 
@@ -972,28 +971,31 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
-            # Creation options
-            for k, v in kwargs.items():
-                # Skip items that are definitely *not* valid driver options.
-                if k.lower() in ['affine']:
-                    continue
-                kwds.append((k.lower(), v))
-                k, v = k.upper(), str(v).upper()
-
-                # Guard against block size that exceed image size.
-                if k == 'BLOCKXSIZE' and int(v) > width:
-                    raise ValueError("blockxsize exceeds raster width.")
-                if k == 'BLOCKYSIZE' and int(v) > height:
-                    raise ValueError("blockysize exceeds raster height.")
-
-                key_b = k.encode('utf-8')
-                val_b = v.encode('utf-8')
-                key_c = key_b
-                val_c = val_b
-                options = CSLSetNameValue(options, key_c, val_c)
-                log.debug("Option: %r", (k, CSLFetchNameValue(options, key_c)))
-
+            # Create a GDAL dataset handle.
             try:
+                for k, v in kwargs.items():
+                    # Skip items that are definitely *not* valid driver
+                    # options.
+                    if k.lower() in ['affine']:
+                        continue
+
+                    #kwds.append((k.lower(), v))
+                    k, v = k.upper(), str(v).upper()
+
+                    # Guard against block size that exceed image size.
+                    if k == 'BLOCKXSIZE' and int(v) > width:
+                        raise ValueError("blockxsize exceeds raster width.")
+                    if k == 'BLOCKYSIZE' and int(v) > height:
+                        raise ValueError("blockysize exceeds raster height.")
+
+                    key_b = k.encode('utf-8')
+                    val_b = v.encode('utf-8')
+                    key_c = key_b
+                    val_c = val_b
+                    options = CSLSetNameValue(options, key_c, val_c)
+                    log.debug(
+                        "Option: %r", (k, CSLFetchNameValue(options, key_c)))
+
                 self._hds = exc_wrap_pointer(
                     GDALCreate(drv, fname, width, height,
                                count, gdal_dtype, options))
@@ -1012,7 +1014,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 # Broadcast the nodata value to all bands.
                 for i in range(count):
                     band = self.band(i + 1)
-                    success = GDALSetRasterNoDataValue(band, nodata)
+                    try:
+                        exc_wrap_int(
+                            GDALSetRasterNoDataValue(band, nodata))
+                    except Exception as err:
+                        raise RasterioIOError(str(err))
 
         elif mode == 'r+':
             try:
@@ -1862,13 +1868,13 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         if drv == NULL:
             raise ValueError("NULL driver for %s", self.driver)
 
-        kwds = []
+        #kwds = []
         # Creation options
         for k, v in self._options.items():
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            kwds.append((k.lower(), v))
+            #kwds.append((k.lower(), v))
             k, v = k.upper(), str(v).upper()
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
