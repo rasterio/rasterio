@@ -18,7 +18,8 @@ Breaking changes:
   Window entirely to the left and above the dataset's row and column origin.
   Passing a ``boundless`` keyword argument to this function will result in a 
   warning.
-
+- The ``TransformMethodsMixin.ul()`` method, deprecated since 0.36, has been
+  removed (#1100).
 
 New features:
 

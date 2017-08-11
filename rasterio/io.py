@@ -57,17 +57,6 @@ class TransformMethodsMixin(object):
         """
         return xy(self.transform, row, col, offset=offset)
 
-    def ul(self, row, col):
-        """Returns the coordinates (x, y) of the upper left corner of a
-        pixel at `row` and `col` in the units of the dataset's
-        coordinate reference system.
-
-        Deprecated; Use `xy(row, col, offset='ul')` instead.
-        """
-        warnings.warn("ul method is deprecated. Use xy(row, col, offset='ul')",
-                      DeprecationWarning)
-        return xy(self.transform, row, col, offset='ul')
-
     def index(self, x, y, op=math.floor, precision=6):
         """
         Returns the (row, col) index of the pixel containing (x, y) given a
