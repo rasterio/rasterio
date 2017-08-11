@@ -95,36 +95,40 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, boundless=True, precision=6):
+    def window(self, left, bottom, right, top, precision=6, **kwargs):
         """Get the window corresponding to the bounding coordinates.
+
+        The resulting window is not cropped to the row and column
+        limits of the dataset.
 
         Parameters
         ----------
-        left : float
+        left: float
             Left (west) bounding coordinate
-        bottom : float
+        bottom: float
             Bottom (south) bounding coordinate
-        right : float
+        right: float
             Right (east) bounding coordinate
-        top : float
+        top: float
             Top (north) bounding coordinate
-        boundless: boolean, optional
-            If boundless is False, window is limited
-            to extent of this dataset.
-        precision : int, optional
+        precision: int, optional
             Number of decimal points of precision when computing inverse
             transform.
+        kwargs: mapping
+            For backwards compatibility: absorbs deprecated keyword args.
 
         Returns
         -------
         window: Window
         """
+        if 'boundless' in kwargs:  # pragma: no branch
+            warnings.warn("boundless keyword arg should not be used",
+                          RasterioDeprecationWarning)
 
         transform = guard_transform(self.transform)
         return windows.from_bounds(
             left, bottom, right, top, transform=transform,
-            height=self.height, width=self.width, boundless=boundless,
-            precision=precision)
+            height=self.height, width=self.width, precision=precision)
 
     def window_transform(self, window):
         """Get the affine transform for a dataset window.

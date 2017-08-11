@@ -1,6 +1,4 @@
 import json
-import logging
-import sys
 
 import click
 from click.testing import CliRunner
@@ -365,10 +363,15 @@ def test_env():
 
 
 def test_info_err():
+    """Trying to get info of a directory raises an exception"""
     runner = CliRunner()
     result = runner.invoke(
         main_group, ['info', 'tests'])
-    assert result.exit_code == 1
+    assert result.exit_code == -1
+    assert result.exception
+    exc_str = str(result.exception)
+    # Note: text of exception changed after 2.1, don't test on full string
+    assert 'not ' in exc_str and ' a supported file format' in exc_str
 
 
 def test_info():
@@ -376,7 +379,18 @@ def test_info():
     result = runner.invoke(
         main_group, ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
-    assert '"count": 3' in result.output
+    info = json.loads(result.output)
+    assert info['count'] == 3
+    assert info['dtype'] == 'uint8'
+    assert info['crs'] == 'EPSG:32618'
+
+    result = runner.invoke(
+        main_group, ['info', 'tests/data/float.tif'])
+    assert result.exit_code == 0
+    info = json.loads(result.output)
+    assert info['count'] == 1
+    assert info['dtype'] == 'float64'
+    assert info['crs'] == None
 
 
 def test_info_units():

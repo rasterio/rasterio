@@ -141,16 +141,14 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
         # 2. Compute the source window.
         src_window = windows.from_bounds(
-            int_w, int_s, int_e, int_n, src.transform,
-            boundless=True)
+            int_w, int_s, int_e, int_n, src.transform)
         logger.debug("Src %s window: %r", src.name, src_window)
 
         src_window = src_window.round_shape()
 
         # 3. Compute the destination window.
         dst_window = windows.from_bounds(
-            int_w, int_s, int_e, int_n, output_transform,
-            boundless=True)
+            int_w, int_s, int_e, int_n, output_transform)
 
         # 4. Initialize temp array.
         tcount = first.count
@@ -170,6 +168,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
 
         np.copyto(
             region, temp,
-            where=np.logical_and(region == nodataval, temp.mask == False))
+            where=np.logical_and(region == nodataval,
+                                 np.logical_not(temp.mask)))
 
     return dest, output_transform

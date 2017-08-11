@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 @ensure_env
-def copy(src, dst, driver='GTiff', strict=False, **creation_options):
+def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
     """Copy a raster from a path or open dataset handle to a new destination
     with driver specific creation options.
@@ -28,7 +28,7 @@ def copy(src, dst, driver='GTiff', strict=False, **creation_options):
         Output dataset path.
     driver : str, optional
         Output driver name.
-    strict : bool, optional
+    strict : bool, optional.  Default: True
         Indicates if the output must be strictly equivalent or if the
         driver may adapt as necessary.
     creation_options : **kwargs, optional
@@ -76,3 +76,6 @@ def copy(src, dst, driver='GTiff', strict=False, **creation_options):
         CSLDestroy(options)
         if close_src:
             GDALClose(src_dataset)
+
+        if dst_dataset != NULL:
+            GDALClose(dst_dataset)
