@@ -220,8 +220,12 @@ Tickets
 Removed: ``rasterio.warp.RESAMPLING``
 -------------------------------------
 
-Replaced with ``rasterio.warp.Resampling``
+This enum has been replaced by ``rasterio.warp.Resampling``.
 
+Removed: dataset's ``ul()`` method
+----------------------------------
+
+This method has been replaced by the ``xy()`` method.
 
 Signature Changes
 -----------------
