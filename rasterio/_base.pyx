@@ -108,21 +108,35 @@ def driver_can_create_copy(drivername):
 cdef class DatasetBase(object):
     """Dataset base class."""
 
-    def __init__(self, path, options=None):
+    def __init__(self, path=None, options=None):
+        cdef GDALDriverH driver = NULL
+        cdef GDALDatasetH hds = NULL
+        cdef const char *path_c = NULL
+
+        self._hds = NULL
+
+        if path is not None:
+            path_b = vsi_path(*parse_path(path)).encode('utf-8')
+            path_c = path_b
+            try:
+                with nogil:
+                    hds = GDALOpenShared(path_c, <GDALAccess>0)
+                self._hds = exc_wrap_pointer(hds)
+            except CPLE_OpenFailedError as err:
+                raise RasterioIOError(str(err))
+
         self.name = path
         self.mode = 'r'
         self.options = options or {}
-        self._hds = NULL
-        self._count = 0
-        self._closed = True
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []
         self._units = ()
         self._descriptions = ()
-        self._crs = None
         self._gcps = None
         self._read = False
+
+        self._set_attrs_from_dataset_handle()
 
     def __repr__(self):
         return "<%s DatasetBase name='%s' mode='%s'>" % (
@@ -130,35 +144,18 @@ cdef class DatasetBase(object):
             self.name,
             self.mode)
 
-    def start(self):
-        """Called to start reading a dataset."""
+    def _set_attrs_from_dataset_handle(self):
         cdef GDALDriverH driver = NULL
-        cdef GDALDatasetH hds = NULL
-        cdef const char *cypath
-
-        path = vsi_path(*parse_path(self.name))
-        path = path.encode('utf-8')
-        cypath = path
-
-        try:
-            with nogil:
-                hds = GDALOpenShared(cypath, <GDALAccess>0)
-            self._hds = exc_wrap_pointer(hds)
-        except CPLE_OpenFailedError as err:
-            raise RasterioIOError(err.errmsg)
-
         driver = GDALGetDatasetDriver(self._hds)
         self.driver = get_driver_name(driver)
-
         self._count = GDALGetRasterCount(self._hds)
         self.width = GDALGetRasterXSize(self._hds)
         self.height = GDALGetRasterYSize(self._hds)
         self.shape = (self.height, self.width)
-
         self._transform = self.read_transform()
         self._crs = self.read_crs()
 
-        # touch self.meta
+        # touch self.meta, triggering data type evaluation.
         _ = self.meta
 
         self._closed = False
@@ -958,7 +955,7 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             retval = (res_xs, res_ys)
 
     except CPLE_NotSupportedError as exc:
-        raise CRSError(exc.errmsg)
+        raise CRSError(str(exc))
 
     finally:
         CPLFree(x)

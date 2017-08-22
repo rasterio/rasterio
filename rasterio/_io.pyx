@@ -899,6 +899,16 @@ cdef class DatasetWriterBase(DatasetReaderBase):
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
                  gcps=None, **kwargs):
+        """Initialize a DatasetWriterBase instance."""
+
+        cdef char **options = NULL
+        cdef char *key_c = NULL
+        cdef char *val_c = NULL
+        cdef const char *drv_name = NULL
+        cdef GDALDriverH drv = NULL
+        cdef GDALRasterBandH band = NULL
+        cdef const char *fname = NULL
+
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode == 'w':
@@ -918,46 +928,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 _ = np.dtype(dtype)
             except:
                 raise TypeError("A valid dtype is required.")
-        self.name = path
-        self.mode = mode
-        self.driver = driver
-        self.width = width
-        self.height = height
-        self._count = count
+
         self._init_dtype = np.dtype(dtype).name
-        self._init_nodata = nodata
-        self._hds = NULL
-        self._count = count
-        self._crs = crs
-        if transform is not None:
-            self._transform = transform.to_gdal()
-        self._gcps = None
-        self._init_gcps = gcps
-        self._closed = True
-        self._dtypes = []
-        self._nodatavals = []
-        self._units = ()
-        self._descriptions = ()
-        self._options = kwargs.copy()
 
-    def __repr__(self):
-        return "<%s RasterUpdater name='%s' mode='%s'>" % (
-            self.closed and 'closed' or 'open',
-            self.name,
-            self.mode)
-
-    def start(self):
-        cdef const char *drv_name = NULL
-        cdef char **options = NULL
-        cdef char *key_c = NULL
-        cdef char *val_c = NULL
-        cdef GDALDriverH drv = NULL
-        cdef GDALRasterBandH band = NULL
-        cdef int success
+        # Make and store a GDAL dataset handle.
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path, archive, scheme = parse_path(self.name)
+        path, archive, scheme = parse_path(path)
         path = vsi_path(path, archive, scheme)
 
         if scheme and scheme != 'file':
@@ -966,17 +944,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     scheme))
 
         name_b = path.encode('utf-8')
-        cdef const char *fname = name_b
+        fname = name_b
 
-        kwds = []
-
-        if self.mode == 'w':
+        if mode == 'w':
 
             # Delete existing file, create.
             if os.path.exists(path):
                 os.unlink(path)
 
-            driver_b = self.driver.encode('utf-8')
+            driver_b = driver.encode('utf-8')
             drv_name = driver_b
             try:
                 drv = exc_wrap_pointer(GDALGetDriverByName(drv_name))
@@ -993,58 +969,55 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
-            # Creation options
-            for k, v in self._options.items():
-                # Skip items that are definitely *not* valid driver options.
-                if k.lower() in ['affine']:
-                    continue
-                kwds.append((k.lower(), v))
-                k, v = k.upper(), str(v).upper()
-
-                # Guard against block size that exceed image size.
-                if k == 'BLOCKXSIZE' and int(v) > self.width:
-                    raise ValueError("blockxsize exceeds raster width.")
-                if k == 'BLOCKYSIZE' and int(v) > self.height:
-                    raise ValueError("blockysize exceeds raster height.")
-
-                key_b = k.encode('utf-8')
-                val_b = v.encode('utf-8')
-                key_c = key_b
-                val_c = val_b
-                options = CSLSetNameValue(options, key_c, val_c)
-                log.debug("Option: %r", (k, CSLFetchNameValue(options, key_c)))
-
+            # Create a GDAL dataset handle.
             try:
+                for k, v in kwargs.items():
+                    # Skip items that are definitely *not* valid driver
+                    # options.
+                    if k.lower() in ['affine']:
+                        continue
+
+                    k, v = k.upper(), str(v).upper()
+
+                    # Guard against block size that exceed image size.
+                    if k == 'BLOCKXSIZE' and int(v) > width:
+                        raise ValueError("blockxsize exceeds raster width.")
+                    if k == 'BLOCKYSIZE' and int(v) > height:
+                        raise ValueError("blockysize exceeds raster height.")
+
+                    key_b = k.encode('utf-8')
+                    val_b = v.encode('utf-8')
+                    key_c = key_b
+                    val_c = val_b
+                    options = CSLSetNameValue(options, key_c, val_c)
+                    log.debug(
+                        "Option: %r", (k, CSLFetchNameValue(options, key_c)))
+
                 self._hds = exc_wrap_pointer(
-                    GDALCreate(drv, fname, self.width, self.height,
-                               self._count, gdal_dtype, options))
-            except Exception as err:
+                    GDALCreate(drv, fname, width, height,
+                               count, gdal_dtype, options))
+            finally:
                 if options != NULL:
                     CSLDestroy(options)
-                raise
 
-            if self._init_nodata is not None:
+            if nodata is not None:
 
-                if not in_dtype_range(self._init_nodata, self._init_dtype):
+                if not in_dtype_range(nodata, dtype):
                     raise ValueError(
                         "Given nodata value, %s, is beyond the valid "
                         "range of its data type, %s." % (
-                            self._init_nodata, self._init_dtype))
+                            nodata, dtype))
 
                 # Broadcast the nodata value to all bands.
-                for i in range(self._count):
+                for i in range(count):
                     band = self.band(i + 1)
-                    success = GDALSetRasterNoDataValue(band,
-                                                       self._init_nodata)
+                    try:
+                        exc_wrap_int(
+                            GDALSetRasterNoDataValue(band, nodata))
+                    except Exception as err:
+                        raise RasterioIOError(str(err))
 
-            if self._transform:
-                self.write_transform(self._transform)
-            if self._crs:
-                self.set_crs(self._crs)
-            if self._init_gcps:
-                self.set_gcps(self._init_gcps, self.crs)
-
-        elif self.mode == 'r+':
+        elif mode == 'r+':
             try:
                 self._hds = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>1))
             except CPLE_OpenFailedError as err:
@@ -1052,7 +1025,35 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         else:
             # Raise an exception if we have any other mode.
-            raise ValueError("Invalid mode: '%s'", self.mode)
+            raise ValueError("Invalid mode: '%s'", mode)
+
+        self.name = path
+        self.mode = mode
+        self.driver = driver
+        self.width = width
+        self.height = height
+        self._count = count
+        self._init_nodata = nodata
+        self._count = count
+        self._crs = crs
+        if transform is not None:
+            self._transform = transform.to_gdal()
+        self._gcps = None
+        self._init_gcps = gcps
+        self._closed = True
+        self._dtypes = []
+        self._nodatavals = []
+        self._units = ()
+        self._descriptions = ()
+        self._options = kwargs.copy()
+
+        if self.mode == 'w':
+            if self._transform:
+                self.write_transform(self._transform)
+            if self._crs:
+                self.set_crs(self._crs)
+            if self._init_gcps:
+                self.set_gcps(self._init_gcps, self.crs)
 
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)
@@ -1066,14 +1067,20 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._transform = self.read_transform()
         self._crs = self.read_crs()
 
-        if options != NULL:
-            CSLDestroy(options)
-
         # touch self.meta
         _ = self.meta
 
-        self.update_tags(ns='rio_creation_kwds', **kwds)
+        self.update_tags(ns='rio_creation_kwds', **kwargs)
         self._closed = False
+
+    def __repr__(self):
+        return "<%s RasterUpdater name='%s' mode='%s'>" % (
+            self.closed and 'closed' or 'open',
+            self.name,
+            self.mode)
+
+    def start(self):
+        pass
 
     def stop(self):
         """Ends the dataset's life cycle"""
@@ -1706,19 +1713,70 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             self.name,
             self.mode)
 
-    def start(self):
-        cdef const char *drv_name = NULL
+    def __init__(self, path, mode, driver=None, width=None, height=None,
+                 count=None, crs=None, transform=None, dtype=None, nodata=None,
+                 gcps=None, **kwargs):
+
+        cdef char **options = NULL
+        cdef char *key_c = NULL
+        cdef char *val_c = NULL
         cdef GDALDriverH drv = NULL
-        cdef GDALDriverH memdrv = NULL
         cdef GDALRasterBandH band = NULL
+        cdef int success = -1
+        cdef const char *fname = NULL
+        cdef const char *drv_name = NULL
+        cdef GDALDriverH memdrv = NULL
         cdef GDALDatasetH temp = NULL
-        cdef int success
+
+        # Validate write mode arguments.
+
+        log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
+        if mode == 'w':
+            if not isinstance(driver, string_types):
+                raise TypeError("A driver name string is required.")
+            try:
+                width = int(width)
+                height = int(height)
+            except:
+                raise TypeError("Integer width and height are required.")
+            try:
+                count = int(count)
+            except:
+                raise TypeError("Integer band count is required.")
+            try:
+                assert dtype is not None
+                _ = np.dtype(dtype)
+            except:
+                raise TypeError("A valid dtype is required.")
+
+        self._init_dtype = np.dtype(dtype).name
+
+        self.name = path
+        self.mode = mode
+        self.driver = driver
+        self.width = width
+        self.height = height
+        self._count = count
+        self._init_nodata = nodata
+        self._count = count
+        self._crs = crs
+        if transform is not None:
+            self._transform = transform.to_gdal()
+        self._gcps = None
+        self._init_gcps = gcps
+        self._closed = True
+        self._dtypes = []
+        self._nodatavals = []
+        self._units = ()
+        self._descriptions = ()
+        self._options = kwargs.copy()
+
+        # Make and store a GDAL dataset handle.
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = vsi_path(*parse_path(self.name))
+        path = vsi_path(*parse_path(path))
         name_b = path.encode('utf-8')
-        cdef const char *fname = name_b
 
         memdrv = GDALGetDriverByName("MEM")
 
@@ -1765,6 +1823,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             self.driver = get_driver_name(drv)
             GDALClose(temp)
 
+        # Instead of calling _begin() we do the following.
+
         self._count = GDALGetRasterCount(self._hds)
         self.width = GDALGetRasterXSize(self._hds)
         self.height = GDALGetRasterYSize(self._hds)
@@ -1773,9 +1833,13 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         self._transform = self.read_transform()
         self._crs = self.read_crs()
 
+        if options != NULL:
+            CSLDestroy(options)
+
         # touch self.meta
         _ = self.meta
 
+        self.update_tags(ns='rio_creation_kwds', **kwargs)
         self._closed = False
 
     def close(self):
@@ -1785,9 +1849,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef char *val_c = NULL
         cdef GDALDriverH drv = NULL
         cdef GDALDatasetH temp = NULL
-        cdef int success
+        cdef int success = -1
+        cdef const char *fname = NULL
+
         name_b = self.name.encode('utf-8')
-        cdef const char *fname = name_b
+        fname = name_b
 
         # Delete existing file, create.
         if os.path.exists(self.name):
@@ -1799,13 +1865,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         if drv == NULL:
             raise ValueError("NULL driver for %s", self.driver)
 
-        kwds = []
         # Creation options
         for k, v in self._options.items():
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            kwds.append((k.lower(), v))
             k, v = k.upper(), str(v).upper()
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')

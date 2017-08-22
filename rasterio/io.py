@@ -257,15 +257,13 @@ class MemoryFile(MemoryFileBase):
         if self.closed:
             raise IOError("I/O operation on closed file.")
         if self.exists():
-            s = DatasetReader(vsi_path, 'r+')
+            return DatasetReader(vsi_path, 'r+')
         else:
             writer = get_writer_for_driver(driver)
-            s = writer(vsi_path, 'w', driver=driver, width=width,
-                       height=height, count=count, crs=crs,
-                       transform=transform, dtype=dtype,
-                       nodata=nodata, **kwargs)
-        s.start()
-        return s
+            return writer(vsi_path, 'w', driver=driver, width=width,
+                          height=height, count=count, crs=crs,
+                          transform=transform, dtype=dtype,
+                          nodata=nodata, **kwargs)
 
     def __enter__(self):
         return self
@@ -302,9 +300,7 @@ class ZipMemoryFile(MemoryFile):
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        s = DatasetReader(vsi_path, 'r')
-        s.start()
-        return s
+        return DatasetReader(vsi_path, 'r')
 
 
 def get_writer_for_driver(driver):

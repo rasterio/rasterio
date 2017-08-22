@@ -631,8 +631,21 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, dst_width=None,
                  dst_height=None, src_transform=None, dst_transform=None,
                  init_dest_nodata=True, **warp_extras):
+
+        self.mode = 'r'
+        self.options = {}
+        self._count = 0
+        self._closed = True
+        self._dtypes = []
+        self._block_shapes = None
+        self._nodatavals = []
+        self._units = ()
+        self._descriptions = ()
+        self._crs = None
+        self._gcps = None
+        self._read = False
+
         # kwargs become warp options.
-        super(WarpedVRTReaderBase, self).__init__(self)
         self.src_dataset = src_dataset
         self.src_crs = src_crs
         self.src_transform = src_transform
@@ -711,7 +724,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
-            self.dst_nodata, GDALGetRasterCount(hds), <const char **>c_warp_extras)
+            self.dst_nodata,
+            GDALGetRasterCount(hds), <const char **>c_warp_extras)
 
         try:
             if dst_width and dst_height and dst_transform:
@@ -758,26 +772,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             CSLDestroy(c_warp_extras)
             GDALDestroyWarpOptions(psWOptions)
 
-
-        driver = GDALGetDatasetDriver(self._hds)
-        self.driver = get_driver_name(driver).decode('utf-8')
-
-        self._count = GDALGetRasterCount(self._hds)
-        self.width = GDALGetRasterXSize(self._hds)
-        self.height = GDALGetRasterYSize(self._hds)
-        self.shape = (self.height, self.width)
-
-        self._transform = self.read_transform()
-        self._crs = self.read_crs()
-
-        # touch self.meta
-        _ = self.meta
-
-        self._closed = False
+        self._set_attrs_from_dataset_handle()
 
     def start(self):
         """Starts the VRT's life cycle."""
-
         log.debug("Dataset %r is started.", self)
 
     def stop(self):
