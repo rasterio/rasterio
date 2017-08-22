@@ -946,8 +946,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         name_b = path.encode('utf-8')
         fname = name_b
 
-        #kwds = []
-
         if mode == 'w':
 
             # Delete existing file, create.
@@ -979,7 +977,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     if k.lower() in ['affine']:
                         continue
 
-                    #kwds.append((k.lower(), v))
                     k, v = k.upper(), str(v).upper()
 
                     # Guard against block size that exceed image size.
@@ -1868,13 +1865,11 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         if drv == NULL:
             raise ValueError("NULL driver for %s", self.driver)
 
-        #kwds = []
         # Creation options
         for k, v in self._options.items():
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            #kwds.append((k.lower(), v))
             k, v = k.upper(), str(v).upper()
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
