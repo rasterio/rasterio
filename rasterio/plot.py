@@ -77,6 +77,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
     if isinstance(source, tuple):
         arr = source[0].read(source[1])
+        if len(arr.shape) >= 3:
+            arr = reshape_as_image(arr)
         if with_bounds:
             kwargs['extent'] = plotting_extent(source[0])
     elif isinstance(source, DatasetReader):
