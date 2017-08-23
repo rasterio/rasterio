@@ -1,0 +1,33 @@
+name: rasterio
+version: master
+summary: Rasterio reads and writes geospatial raster datasets
+description: |
+  Geographic information systems use GeoTIFF and other formats to organize and
+  store gridded, or raster, datasets. Rasterio reads and writes these formats
+  and provides a Python API based on N-D arrays.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: strict
+
+apps:
+  rasterio:
+    environment:
+      LC_ALL: C.UTF-8
+    command: rio
+    plugs: [home, removable-media]
+    aliases: [rio]
+
+parts:
+  rasterio:
+    source: .
+    plugin: python
+    stage-packages: [libcurl3-gnutls, libxml2]
+    after: [setup-deps]
+  setup-deps:
+    source: snap  # XXX: https://bugs.launchpad.net/snapcraft/+bug/1712634
+    prepare: |
+      sudo add-apt-repository --yes ppa:ubuntugis/ppa
+      sudo apt-key adv --keyserver keyserver.ubuntu.com --recv 6B827C12C2D425E227EDCA75089EBE08314DF160
+      sudo apt-get install --yes gdal-bin libgdal-dev
+    plugin: python
+    python-packages: [cython, numpy]
