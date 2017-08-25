@@ -110,7 +110,11 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path, archive, scheme = parse_path(value)
+        scheme = scheme.lower()
         path_to_check = archive or path
+        # Often we're going to be handling values like filename:layername
+        # such as in the NetCDF case.
+        path_to_check = path_to_check.split(':')[0]
         if (scheme not in ['http', 'https', 's3'] and not
                 os.path.exists(path_to_check)):
             raise IOError(
@@ -122,6 +126,8 @@ def file_in_handler(ctx, param, value):
             path = "{0}://{1}".format(scheme, path)
         elif scheme == 's3':
             path = "{0}://{1}".format(scheme, path)
+        elif scheme == 'netcdf':
+            path = "{0}:{1}".format(scheme, path)
         else:
             path = abspath_forward_slashes(path)
         return path

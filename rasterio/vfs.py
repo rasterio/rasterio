@@ -38,10 +38,10 @@ def parse_path(uri, vfs=None):
             path = parts.pop() if parts else None
             archive = parts.pop() if parts else None
         # For filesystem paths.
-        elif scheme in (None, '', 'file'):
+        elif scheme.lower() in (None, '', 'file', 'netcdf'):
             pass
         # We permit GDAL's idiosyncratic URI-like dataset paths such as
-        # 'NETCDF:...' to fall right through with no parsed archive
+        # to fall right through with no parsed archive
         # or scheme.
         else:
             archive = scheme = None
@@ -58,6 +58,8 @@ def vsi_path(path, archive=None, scheme=None):
         result = "/vsicurl/{0}://{1}".format(scheme, path)
     elif scheme and scheme == 's3':
         result = "/vsis3/{0}".format(path)
+    elif scheme.lower() == 'netcdf':
+        result = "{0}:{1}".format(scheme, path)
     elif scheme and scheme != 'file':
         if archive:
             result = '/vsi{0}/{1}/{2}'.format(scheme, archive, path.lstrip('/'))

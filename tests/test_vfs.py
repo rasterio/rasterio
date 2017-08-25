@@ -36,9 +36,15 @@ def test_parse_path_file():
 
 
 def test_parse_netcdf():
+    """Correctly parse a NetCDF identifier"""
+    assert parse_path('netcdf:filepath:varname') == (
+        'filepath:varname', None, 'netcdf')
+
+
+def test_parse_gdal():
     """Annoying URI-like GDAL dataset names fall through properly"""
-    assert parse_path('NETCDF:filepath:varname') == (
-        'NETCDF:filepath:varname', None, None)
+    assert parse_path('GDAL:filepath:varname') == (
+        'GDAL:filepath:varname', None, None)
 
 
 def test_vsi_path_scheme():
