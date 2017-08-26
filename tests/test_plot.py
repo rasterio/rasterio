@@ -13,7 +13,8 @@ except ImportError:
     plt = None
 
 import rasterio
-from rasterio.plot import show, show_hist, get_plt, plotting_extent
+from rasterio.plot import (show, show_hist, get_plt,
+                           plotting_extent, normalize_band)
 from rasterio.enums import ColorInterp
 
 
@@ -208,7 +209,7 @@ def test_show_hist_mplargs():
     """
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
-            show_hist(src, bins=50, lw=0.0, stacked=False, alpha=0.3, 
+            show_hist(src, bins=50, lw=0.0, stacked=False, alpha=0.3,
                histtype='stepfilled', title="World Histogram overlaid")
             fig = plt.gcf()
             plt.close(fig)
@@ -237,7 +238,7 @@ def test_show_contour_mplargs():
     """
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         try:
-            show((src, 1), contour=True, 
+            show((src, 1), contour=True,
                 levels=[25, 125], colors=['white', 'red'], linewidths=4,
                 contour_label_kws=dict(fontsize=18, fmt="%1.0f", inline_spacing=15, use_clabeltext=True))
             fig = plt.gcf()
@@ -275,3 +276,8 @@ def test_plotting_extent():
         # array requires a transform
         with pytest.raises(ValueError):
             plotting_extent(src.read(1))
+
+def test_plot_normalize():
+    a = np.linspace(1, 6, 10)
+    b = normalize_band(a, 'linear')
+    np.testing.assert_array_almost_equal(np.linspace(0, 1, 10), b)
