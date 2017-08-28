@@ -14,7 +14,7 @@ except ImportError:
 
 import rasterio
 from rasterio.plot import (show, show_hist, get_plt,
-                           plotting_extent, normalize_band)
+                           plotting_extent, adjust_band)
 from rasterio.enums import ColorInterp
 
 
@@ -279,5 +279,5 @@ def test_plotting_extent():
 
 def test_plot_normalize():
     a = np.linspace(1, 6, 10)
-    b = normalize_band(a, 'linear')
+    b = adjust_band(a, 'linear')
     np.testing.assert_array_almost_equal(np.linspace(0, 1, 10), b)
