@@ -2,7 +2,7 @@ import rasterio
 
 
 def test_subdatasets():
-    with rasterio.open('tests/data/RGB.nc') as src:
+    with rasterio.open('netcdf:tests/data/RGB.nc') as src:
         subs = src.subdatasets()
         assert len(subs) == 3
         for sub in subs:
