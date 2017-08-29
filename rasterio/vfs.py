@@ -69,8 +69,6 @@ def vsi_path(path, archive=None, scheme=None):
         result = "/vsicurl/{0}://{1}".format(scheme, path)
     elif scheme and scheme == 's3':
         result = "/vsis3/{0}".format(path)
-    elif scheme.lower() == 'netcdf':
-        result = "{0}:{1}".format(scheme, path)
     elif scheme and scheme != 'file':
         if archive:
             result = '/vsi{0}/{1}/{2}'.format(

@@ -110,7 +110,6 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path, archive, scheme = parse_path(value)
-        scheme = scheme.lower()
         path_to_check = archive or path
 
         # Validate existence of files.

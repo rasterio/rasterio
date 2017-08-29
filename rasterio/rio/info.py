@@ -50,6 +50,8 @@ from rasterio.rio import options
 @click.option('--checksum', 'meta_member', flag_value='checksum',
               help="Print integer checksum of a single band "
                    "(use --bidx).")
+@click.option('--subdatasets', 'meta_member', flag_value='subdatasets',
+              help="Print subdataset identifiers.")
 @click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
               help="Output extra information.")
 @options.bidx_opt
@@ -106,7 +108,10 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     'crs': proj4, 'points': [p.asdict() for p in gcps]}
 
         if aspect == 'meta':
-            if meta_member == 'stats':
+            if meta_member == 'subdatasets':
+                click.echo(json.dumps(
+                    src.subdatasets(), sort_keys=True, indent=indent))
+            elif meta_member == 'stats':
                 band = src.read(bidx, masked=masked)
                 click.echo('%f %f %f' % (
                     float(band.min()),
