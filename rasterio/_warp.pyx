@@ -579,7 +579,6 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             "Some, but not all, bounding box parameters were provided.")
     else:
         transform = None
-    img = np.empty((height, width))
 
     osr = _osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
