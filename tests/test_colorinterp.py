@@ -34,36 +34,44 @@ def test_ycbcr_interp(tmpdir):
         assert dst.colorinterp(3) == ColorInterp.blue
 
 
-def test_set_colorinterp(path_rgba_byte_tif, tmpdir):
+@pytest.mark.parametrize("dtype", [rasterio.ubyte, rasterio.int16])
+def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
+
     """Test setting color interpretation by creating an image without CI
-    and then setting to unusual values.
+    and then setting to unusual values.  Also test with a non-uint8 image.
     """
+
     no_ci_path = str(tmpdir.join('no-ci.tif'))
-    rasterio.copy(
-        path_rgba_byte_tif,
-        no_ci_path,
-        photometric='minisblack',
-        alpha='unspecified')
+    with rasterio.open(path_rgba_byte_tif) as src:
+        meta = src.meta.copy()
+        meta.update(
+            height=10,
+            width=10,
+            dtype=dtype,
+            photometric='minisblack',
+            alpha='unspecified')
+    with rasterio.open(no_ci_path, 'w', **meta):
+        pass
 
     # This is should be the default color interpretation of the copied
     # image.  GDAL defines these defaults, not Rasterio.
-    initial_ci_map = {
+    src_ci_map = {
         1: ColorInterp.gray,
         2: ColorInterp.undefined,
         3: ColorInterp.undefined,
         4: ColorInterp.undefined
     }
 
-    end_ci_map = {
+    dst_ci_map = {
         1: ColorInterp.alpha,
         2: ColorInterp.blue,
         3: ColorInterp.green,
         4: ColorInterp.red
     }
     with rasterio.open(no_ci_path, 'r+') as src:
-        for bidx, ci in initial_ci_map.items():
+        for bidx, ci in src_ci_map.items():
             assert src.colorinterp(bidx) == ci
-        for bidx, ci in end_ci_map.items():
+        for bidx, ci in dst_ci_map.items():
             src.set_colorinterp(bidx, ci)
-        for bidx, ci in end_ci_map.items():
+        for bidx, ci in dst_ci_map.items():
             assert src.colorinterp(bidx) == ci
