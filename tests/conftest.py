@@ -5,13 +5,15 @@ import shutil
 import sys
 import zipfile
 
+import affine
 from click.testing import CliRunner
 import py
 import pytest
 import numpy as np
 
-from rasterio.crs import CRS
 import rasterio
+from rasterio.crs import CRS
+from rasterio.enums import ColorInterp
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -269,6 +271,32 @@ def path_rgb_byte_tif(data_dir):
 @pytest.fixture(scope='session')
 def path_rgba_byte_tif(data_dir):
     return os.path.join(data_dir, 'RGBA.byte.tif')
+
+
+@pytest.fixture(scope='function')
+def path_4band_no_colorinterp(tmpdir):
+    dst_path = str(tmpdir.join('4band-byte-no-ci.tif'))
+    profile = {
+        'height': 10,
+        'width': 10,
+        'count': 4,
+        'dtype': rasterio.ubyte,
+        'transform': affine.Affine(1, 0.0, 0,
+                                   0.0, -1, 1),
+        'driver': 'GTiff',
+        'photometric': 'minisblack',
+        'alpha': 'unspecified'
+    }
+    src_ci_map = {
+        1: ColorInterp.gray,
+        2: ColorInterp.undefined,
+        3: ColorInterp.undefined,
+        4: ColorInterp.undefined
+    }
+    with rasterio.open(dst_path, 'w', **profile) as src:
+        for bidx, ci in src_ci_map.items():
+            assert src.colorinterp(bidx) == ci
+    return dst_path
 
 
 @pytest.fixture(scope='session')
