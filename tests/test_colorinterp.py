@@ -81,14 +81,32 @@ def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
         for bidx, ci in dst_ci_map.items():
             src.set_colorinterp(bidx, ci)
 
-    # GDAL's RGBA assumptions can get weird.  Opening the file a
-    # second time ensures a clean check.
+    # See note in 'test_set_colorinterp_undefined'.  Opening a second
+    # time catches situations like that.
     with rasterio.open(no_ci_path) as src:
         for bidx, ci in dst_ci_map.items():
             assert src.colorinterp(bidx) == ci
 
 
 def test_set_colorinterp_undefined(path_4band_no_colorinterp):
+    """Setting a band's color interpretation to 'undefined' appears to work
+    until the datasource is opened again, at which point the previous color
+    interpretation is still present.  Rasterio issues an exception in this
+    case.
+    """
     with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
         with pytest.raises(ValueError):
             src.set_colorinterp(1, ColorInterp.undefined)
+
+
+@pytest.mark.parametrize("ci", [
+    e for m, e in ColorInterp.__members__.items()
+    if m != ColorInterp.undefined.name])
+def test_set_colorinterp_all(path_4band_no_colorinterp, ci):
+    """Test setting all color interpretations to catch potential situations
+    like 'test_set_colorinterp_undefined' for background.
+    """
+    with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
+        src.set_colorinterp(2, ci)
+    with rasterio.open(path_4band_no_colorinterp) as src:
+        assert src.colorinterp(2) == ci
