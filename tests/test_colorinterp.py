@@ -80,5 +80,15 @@ def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
             assert src.colorinterp(bidx) == ci
         for bidx, ci in dst_ci_map.items():
             src.set_colorinterp(bidx, ci)
+
+    # GDAL's RGBA assumptions can get weird.  Opening the file a
+    # second time ensures a clean check.
+    with rasterio.open(no_ci_path) as src:
         for bidx, ci in dst_ci_map.items():
             assert src.colorinterp(bidx) == ci
+
+
+def test_set_colorinterp_undefined(path_4band_no_colorinterp):
+    with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
+        with pytest.raises(ValueError):
+            src.set_colorinterp(1, ColorInterp.undefined)

@@ -12,7 +12,7 @@ import rasterio
 from rasterio.enums import ColorInterp
 from rasterio.rio.edit_info import (
     all_handler, crs_handler, tags_handler, transform_handler,
-    colorinterp_handler)
+    colorinterp_handler, WRITABLE_COLORINTERP)
 from rasterio.rio.main import main_group
 
 
@@ -422,6 +422,21 @@ def test_colorinterp_bad_name():
     result = runner.invoke(main_group, [
         'edit-info', 'whatever', '--colorinterp', '1=trash'])
     assert result.exit_code != 0
-    msg = ', '.join([m.name for m in ColorInterp.__members__.values()])
+    msg = ', '.join([m.name for m in WRITABLE_COLORINTERP])
     assert msg in result.output
     assert "'trash' is an unrecognized color interpretation" in result.output
+
+
+def test_colorinterp_undefined(path_rgb_byte_tif):
+
+    """As of this writing a band's color interpretation cannot be set to
+    undefined.  Attempting to do so appears to work until the datasource is
+    closed and reopened, at which point the original color interpretation
+    is still present.
+    """
+
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', path_rgb_byte_tif, '--colorinterp', '1=undefined'])
+    assert result.exit_code != 0
+    assert "'undefined' is a valid" in result.output

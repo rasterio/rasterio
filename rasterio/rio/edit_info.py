@@ -17,6 +17,12 @@ from rasterio.transform import guard_transform
 
 # Handlers for info module options.
 
+
+# GDAL does not allow setting a band's color interpretation to 'undefined'
+WRITABLE_COLORINTERP = [
+    ColorInterp[m] for m in ColorInterp.__members__ if m != 'undefined']
+
+
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
     if ctx.obj and ctx.obj.get('like') and value is not None:
@@ -113,20 +119,28 @@ def colorinterp_handler(ctx, param, value):
 
     # Something like the example in the docstring
     else:
-        try:
-            out = {}
-            for bidx_ci in value.split(','):
+        out = {}
+        for bidx_ci in value.split(','):
+            try:
                 bidx, ci = bidx_ci.split('=')
-                out[int(bidx)] = ColorInterp[ci]
-            return out
-        except KeyError:
-            ci_list = ', '.join([
-                k.name for k in ColorInterp.__members__.values()])
-            raise click.BadParameter(
-                "'{}' is an unrecognized color interpretation.  Must be one "
-                "of: {}".format(ci, ci_list))
-        except Exception:
-            raise click.BadParameter("could not parse: {}".format(value))
+                bidx = int(bidx)
+                ci = ColorInterp[ci]
+                out[bidx] = ci
+            except KeyError:
+                ci_list = ', '.join([ci.name for ci in WRITABLE_COLORINTERP])
+                raise click.BadParameter(
+                    "'{}' is an unrecognized color interpretation.  Must be "
+                    "one of: {}".format(ci, ci_list))
+            except Exception:
+                raise click.BadParameter("could not parse: {}".format(value))
+
+            if ci == ColorInterp.undefined:
+                raise click.BadParameter(
+                    "'{}' is a valid color interpretation but it is read "
+                    "only and cannot be used for setting.".format(
+                        ColorInterp.undefined.name))
+
+        return out
 
 
 @click.command('edit-info', short_help="Edit dataset metadata.")
