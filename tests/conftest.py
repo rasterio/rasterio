@@ -267,6 +267,11 @@ def path_rgb_byte_tif(data_dir):
 
 
 @pytest.fixture(scope='session')
+def path_rgba_byte_tif(data_dir):
+    return os.path.join(data_dir, 'RGBA.byte.tif')
+
+
+@pytest.fixture(scope='session')
 def path_float_tif(data_dir):
     return os.path.join(data_dir, 'float.tif')
 
