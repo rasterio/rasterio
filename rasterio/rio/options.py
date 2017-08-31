@@ -150,6 +150,9 @@ def like_handler(ctx, param, value):
             ctx.obj['like'] = metadata
             ctx.obj['like']['transform'] = metadata['transform']
             ctx.obj['like']['tags'] = src.tags()
+            ctx.obj['like']['colorinterp'] = {
+                bidx: src.colorinterp(bidx)
+                for bidx in range(1, src.count + 1)}
     else:  # pragma: no cover
         pass
 
