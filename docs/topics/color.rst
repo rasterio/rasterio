@@ -18,8 +18,8 @@ GDAL builds the color interpretation based on the driver and creation options.
 With the ``GTiff`` driver, rasters with exactly 3 bands of uint8 type will be RGB,
 4 bands of uint8 will be RGBA by default.
 
-You cannot set the color interpretation on existing data but you can
-specify a ``photometric`` string when writing a new raster.
+Color interpretation can be set when creating a new datasource with the
+``photometric`` creation option:
 
 .. code:: python
 
@@ -27,6 +27,17 @@ specify a ``photometric`` string when writing a new raster.
     >>> profile['photometric'] = "RGB"
     >>> with rasterio.open("/tmp/rgb.tif", 'w', **profile) as dst:
     ...     dst.write(src.read())
+
+or via the ``set_colorinterp()`` method when a datasource is opened in
+update mode:
+
+.. code:: python
+
+    >>> from rasterio.enums import ColorInterp
+    >>> with rasterio.open('/tmp/rgb.tif', 'r+', **profile) as src:
+    ...     src.set_colorinterp(1, ColorInterp.red)
+    ...     src.set_colorinterp(2, ColorInterp.green)
+    ...     src.set_colorinterp(3, ColorInterp.blue)
 
 And the resulting raster will be interpretted as RGB.
 
