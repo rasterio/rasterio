@@ -6,12 +6,18 @@ import pytest
 import rasterio
 from rasterio.mask import mask as mask_tool
 
+import numpy
 
 # Custom markers.
 xfail_pixel_sensitive_gdal22 = pytest.mark.xfail(
     parse(rasterio.__gdal_version__) < parse('2.2'),
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 
+def test_return_type(basic_image_file, basic_geometry):
+    geometries = [basic_geometry]
+    with rasterio.open(basic_image_file, "r") as src:
+        masked, transform = mask_tool(src, geometries)
+    assert(type(masked) == numpy.ndarray)
 
 def test_nodata(basic_image_file, basic_geometry):
     nodata_val = 0
