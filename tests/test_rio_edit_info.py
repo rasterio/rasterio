@@ -414,3 +414,14 @@ def test_set_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
     with rasterio.open(path_4band_no_colorinterp) as src:
         for bidx, ci in expected.items():
             assert src.colorinterp(bidx) == ci
+
+
+def test_colorinterp_bad_name():
+    """Refernce an invalid ``ColorInterp``."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', 'whatever', '--colorinterp', '1=trash'])
+    assert result.exit_code != 0
+    msg = ', '.join([m.name for m in ColorInterp.__members__.values()])
+    assert msg in result.output
+    assert "'trash' is an unrecognized color interpretation" in result.output
