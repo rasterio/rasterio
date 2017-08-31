@@ -341,7 +341,7 @@ def test_all_callback_None(data):
     assert all_handler(ctx, None, None) is None
 
 
-def test_set_colorinterp_simple(path_4band_no_colorinterp):
+def test_colorinterp_simple(path_4band_no_colorinterp):
     """Set color interpretation for a single band."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
@@ -352,7 +352,7 @@ def test_set_colorinterp_simple(path_4band_no_colorinterp):
         assert src.colorinterp(4) == ColorInterp.alpha
 
 
-def test_set_colorinterp_complex(path_4band_no_colorinterp):
+def test_colorinterp_complex(path_4band_no_colorinterp):
     """Set color interpretation for all bands."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
@@ -374,7 +374,7 @@ def test_set_colorinterp_complex(path_4band_no_colorinterp):
     ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
     ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha))
 ])
-def test_set_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
+def test_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
     """Set color interpretation from 'RGB' and 'RGBA' shorthand."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
@@ -387,7 +387,7 @@ def test_set_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinter
             assert src.colorinterp(bidx) == ci
 
 
-def test_set_colorinterp_bad_instructions():
+def test_colorinterp_bad_instructions():
     """Can't combine shorthand and normal band instructions."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
@@ -397,7 +397,7 @@ def test_set_colorinterp_bad_instructions():
     assert 'could not parse: RGB,4=alpha' in result.output
 
 
-def test_set_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
+def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
     """Set color interpretation from a ``--like`` image."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
