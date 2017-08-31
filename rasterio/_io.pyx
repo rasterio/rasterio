@@ -1587,41 +1587,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 for bidx, ci in ci_mapping.items():
                     src.set_colorinterp(bidx, ci)
 
-        cdef GDALRasterBandH hBand = NULL
-        cdef GDALColorTableH hTable = NULL
-        cdef GDALColorEntry color
-
-        hBand = self.band(bidx)
-
-        # RGB only for now. TODO: the other types.
-        # GPI_Gray=0,  GPI_RGB=1, GPI_CMYK=2,     GPI_HLS=3
-        hTable = GDALCreateColorTable(1)
-        vals = range(256)
-
-        for i, rgba in colormap.items():
-            if len(rgba) == 4 and self.driver in ('GTiff'):
-                warnings.warn(
-                    "This format doesn't support alpha in colormap entries. "
-                    "The value will be ignored.")
-
-            elif len(rgba) == 3:
-                rgba = tuple(rgba) + (255,)
-
-            if i not in vals:
-                log.warn("Invalid colormap key %d", i)
-                continue
-
-            color.c1, color.c2, color.c3, color.c4 = rgba
-            GDALSetColorEntry(hTable, i, &color)
-
-        # TODO: other color interpretations?
-        GDALSetRasterColorInterpretation(hBand, 1)
-        GDALSetRasterColorTable(hBand, hTable)
-        GDALDestroyColorTable(hTable)
-
-
-
-
         Parameters
         ----------
         bidx : int
