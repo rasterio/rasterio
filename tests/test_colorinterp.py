@@ -1,3 +1,8 @@
+"""Tests for interacting with color interpretation."""
+
+
+import os
+
 import pytest
 
 import rasterio
@@ -19,7 +24,9 @@ def test_cmyk_interp(tmpdir):
         assert dst.colorinterp(4) == ColorInterp.black
 
 
-@pytest.mark.skip(reason="crashing on OS X with Homebrew's GDAL")
+@pytest.mark.skipif(
+    os.environ.get('TRAVIS', os.environ.get('CI', 'false')).lower() != 'true',
+    reason="Crashing on OS X with Homebrew's GDAL")
 def test_ycbcr_interp(tmpdir):
     """A YCbCr TIFF has red, green, blue bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
