@@ -9,6 +9,7 @@ import click
 import rasterio
 import rasterio.crs
 from rasterio.crs import CRS
+from rasterio.enums import ColorInterp
 from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.transform import guard_transform
@@ -74,6 +75,60 @@ def transform_handler(ctx, param, value):
     return retval
 
 
+def colorinterp_handler(ctx, param, value):
+
+    """Translate a string like '1=red,2=green,3=blue,4=alpha' to a mapping
+    like:
+
+        {
+            1: ColorInterp.red,
+            2: ColorInterp.green,
+            3: ColorInterp.blue,
+            4: ColorInterp.alpha
+        }
+
+    The above can also be expressed as 'RGBA' instead.
+    """
+
+    # For handling '--set-colorinterp RGB|A'
+    shorthand = {
+        'r': ColorInterp.red,
+        'g': ColorInterp.green,
+        'b': ColorInterp.blue,
+        'a': ColorInterp.alpha
+    }
+
+    if value is None:
+        return value
+
+    # Using '--like'
+    elif value.lower() == 'like':
+        return options.from_like_context(ctx, param, value)
+
+    # Using shorthand
+    elif value.lower() in ('rgb', 'rgba'):
+        return {
+            bidx: shorthand[channel]
+            for bidx, channel in enumerate(value.lower(), 1)}
+
+    # Something like the example in the docstring
+    else:
+        try:
+            out = {}
+            for bidx_ci in value.split(','):
+                bidx, ci = bidx_ci.split('=')
+                out[int(bidx)] = ColorInterp[ci]
+            return out
+        except KeyError:
+            ci_list = ', '.join([
+                k.name for k in ColorInterp.__members__.values()])
+            raise click.BadParameter(
+                "'{}' is an unrecognized color interpretation.  Must be one "
+                "of: {}".format(ci, ci_list))
+        except Exception:
+            raise click.BadParameter("could not parse: {}".format(value))
+
+
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
 @options.bidx_opt
@@ -94,10 +149,17 @@ def transform_handler(ctx, param, value):
 @click.option('--all', 'allmd', callback=all_handler, flag_value='like',
               is_eager=True, default=False,
               help="Copy all metadata items from the template file.")
+@click.option(
+    '--colorinterp', callback=colorinterp_handler,
+    metavar="bidx=ci[,bidx=ci,...]|RGB|RGBA",
+    help="Set color interpretation for one or more bands.  Can also use "
+         "'RGBA' as shorthand for '1=red,2=green,3=blue,4=alpha' and 'RGB' "
+         "for the same sans alpha band.  This cannot be combined with "
+         "individual band definitions.")
 @options.like_opt
 @click.pass_context
 def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
-         units, description, tags, allmd, like):
+         units, description, tags, allmd, like, colorinterp):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -186,6 +248,10 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
 
         if description:
             dst.set_description(bidx, description)
+
+        if colorinterp:
+            for bidx, ci in colorinterp.items():
+                dst.set_colorinterp(bidx, ci)
 
     # Post check - ensure that crs was unset properly
     if unset_crs:

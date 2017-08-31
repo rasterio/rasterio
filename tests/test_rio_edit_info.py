@@ -9,8 +9,10 @@ from packaging.version import Version, parse
 import pytest
 
 import rasterio
+from rasterio.enums import ColorInterp
 from rasterio.rio.edit_info import (
-    all_handler, crs_handler, tags_handler, transform_handler)
+    all_handler, crs_handler, tags_handler, transform_handler,
+    colorinterp_handler)
 from rasterio.rio.main import main_group
 
 
@@ -331,6 +333,24 @@ def test_transform_callback(data):
     assert transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
 
 
+def test_colorinterp_callback(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'colorinterp': 'foo'}
+    assert colorinterp_handler(ctx, MockOption('colorinterp'), 'like') == 'foo'
+
+
+def test_colorinterp_callback_pass(data):
+    ctx = MockContext()
+    ctx.obj['like'] = {'colorinterp': 'foo'}
+    assert transform_handler(ctx, MockOption('colorinterp'), None) is None
+
+
+def test_colorinterp_callback_err(data):
+    ctx = MockContext()
+    with pytest.raises(click.BadParameter):
+        colorinterp_handler(ctx, MockOption('colorinterp'), '?')
+
+
 def test_crs_callback_pass(data):
     """Always return None if the value is None."""
     ctx = MockContext()
@@ -356,3 +376,77 @@ def test_tags_callback(data):
     ctx.obj['like'] = {'tags': {'foo': 'bar'}}
     assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
 
+
+def test_set_colorinterp_simple(path_4band_no_colorinterp):
+    """Set color interpretation for a single band."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', path_4band_no_colorinterp,
+        '--colorinterp', '4=alpha'])
+    assert result.exit_code == 0
+    with rasterio.open(path_4band_no_colorinterp) as src:
+        assert src.colorinterp(4) == ColorInterp.alpha
+
+
+def test_set_colorinterp_complex(path_4band_no_colorinterp):
+    """Set color interpretation for all bands."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', path_4band_no_colorinterp,
+        '--colorinterp', '4=alpha,3=red,2=blue,1=green'])
+    assert result.exit_code == 0
+    expected = {
+        4: ColorInterp.alpha,
+        3: ColorInterp.red,
+        2: ColorInterp.blue,
+        1: ColorInterp.green
+    }
+    with rasterio.open(path_4band_no_colorinterp) as src:
+        for bidx, ci in expected.items():
+            assert src.colorinterp(bidx) == ci
+
+
+@pytest.mark.parametrize("shorthand,expected", [
+    ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
+    ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha))
+])
+def test_set_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
+    """Set color interpretation from 'RGB' and 'RGBA' shorthand."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', path_4band_no_colorinterp,
+        '--colorinterp', shorthand])
+    assert result.exit_code == 0
+    expected = dict(enumerate(expected, 1))
+    with rasterio.open(path_4band_no_colorinterp) as src:
+        for bidx, ci in expected.items():
+            assert src.colorinterp(bidx) == ci
+
+
+def test_set_colorinterp_bad_instructions():
+    """Can't combine shorthand and normal band instructions."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', 'path-to-something',
+        '--colorinterp', 'RGB,4=alpha'])
+    assert result.exit_code != 0
+    assert 'could not parse: RGB,4=alpha' in result.output
+
+
+def test_set_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
+    """Set color interpretation from a ``--like`` image."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', path_4band_no_colorinterp,
+        '--like', path_rgba_byte_tif,
+        '--colorinterp', 'like'])
+    assert result.exit_code == 0
+    expected = {
+        1: ColorInterp.red,
+        2: ColorInterp.green,
+        3: ColorInterp.blue,
+        4: ColorInterp.alpha
+    }
+    with rasterio.open(path_4band_no_colorinterp) as src:
+        for bidx, ci in expected.items():
+            assert src.colorinterp(bidx) == ci
