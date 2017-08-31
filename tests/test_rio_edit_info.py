@@ -16,6 +16,14 @@ from rasterio.rio.edit_info import (
 from rasterio.rio.main import main_group
 
 
+PARAM_HANDLER = {
+    'crs': crs_handler,
+    'tags': tags_handler,
+    'transform': transform_handler,
+    'colorinterp': colorinterp_handler
+}
+
+
 class MockContext:
 
     def __init__(self):
@@ -294,6 +302,26 @@ def test_edit_all_like(data):
         assert src.nodata == 0.0
 
 
+@pytest.mark.parametrize("param", PARAM_HANDLER.keys())
+def test_like_handler_pass(param):
+    ctx = MockContext()
+    ctx.obj['like'] = {param: 'foo'}
+    assert PARAM_HANDLER[param](ctx, MockOption(param), None) is None
+
+
+@pytest.mark.parametrize("param", PARAM_HANDLER.keys())
+def test_like_handler_get(param):
+    ctx = MockContext()
+    ctx.obj['like'] = {param: 'foo'}
+    assert PARAM_HANDLER[param](ctx, MockOption(param), 'like') == 'foo'
+
+
+@pytest.mark.parametrize("param", PARAM_HANDLER.keys())
+def test_like_handler_err(param):
+    ctx = MockContext()
+    ctx.obj['like'] = {param: 'foo'}
+    with pytest.raises(click.BadParameter):
+        PARAM_HANDLER[param](ctx, MockOption(param), '?')
 
 
 def test_all_callback_pass(data):
@@ -311,70 +339,6 @@ def test_all_callback(data):
 def test_all_callback_None(data):
     ctx = MockContext()
     assert all_handler(ctx, None, None) is None
-
-
-def test_transform_callback_pass(data):
-    """Always return None if the value is None"""
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert transform_handler(ctx, MockOption('transform'), None) is None
-
-
-def test_transform_callback_err(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    with pytest.raises(click.BadParameter):
-        transform_handler(ctx, MockOption('transform'), '?')
-
-
-def test_transform_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
-
-
-def test_colorinterp_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'colorinterp': 'foo'}
-    assert colorinterp_handler(ctx, MockOption('colorinterp'), 'like') == 'foo'
-
-
-def test_colorinterp_callback_pass(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'colorinterp': 'foo'}
-    assert transform_handler(ctx, MockOption('colorinterp'), None) is None
-
-
-def test_colorinterp_callback_err(data):
-    ctx = MockContext()
-    with pytest.raises(click.BadParameter):
-        colorinterp_handler(ctx, MockOption('colorinterp'), '?')
-
-
-def test_crs_callback_pass(data):
-    """Always return None if the value is None."""
-    ctx = MockContext()
-    ctx.obj['like'] = {'crs': 'foo'}
-    assert crs_handler(ctx, MockOption('crs'), None) is None
-
-
-def test_crs_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'crs': 'foo'}
-    assert crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
-
-
-def test_tags_callback_err(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    with pytest.raises(click.BadParameter):
-        tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
-
-
-def test_tags_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
 
 
 def test_set_colorinterp_simple(path_4band_no_colorinterp):
