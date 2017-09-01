@@ -15,7 +15,8 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
     """Mask the area outside of the input shapes with nodata.
 
     For all regions in the input raster outside of the regions defined by
-    `shapes`, sets any data present to nodata.
+    `shapes`, sets any data present to nodata.  Original pixel values are
+    returned within the `shapes`.
 
     Parameters
     ----------
@@ -30,18 +31,18 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         defaults to the nodata value for the input raster. If there is no
         set nodata value for the raster, it defaults to 0.
     crop: bool (opt)
-        Whether to crop the raster to the extent of the data. Defaults to
+        Whether to crop the raster to the extent of the shapes. Defaults to
         False.
     all_touched: bool (opt)
         Use all pixels touched by features. If False (default), use only
         pixels whose center is within the polygon or that are selected by
         Bresenhams line algorithm.
     invert: bool (opt)
-        If True, mask will be True for pixels that overlap shapes.
+        If True, nodata value will be returned for pixels that overlap shapes.
         False by default.
     pad: bool (opt)
-        If True, the cropped output will be padded in each direction by
-        one half of a pixel. Defaults to False.
+        If True, the features will be padded in each direction by
+        one half of a pixel prior to cropping raster. Defaults to False.
 
     Returns
     -------
@@ -58,6 +59,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
     """
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
+
     if nodata is None:
         if raster.nodata is not None:
             nodata = raster.nodata
@@ -73,37 +75,38 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
         rasterio.features.bounds(shape, north_up=north_up) for shape in shapes]
     lefts, bottoms, rights, tops = zip(*all_bounds)
 
-    if pad:
-        dx = raster.res[0] / 2
-        dy = raster.res[1] / 2
-    else:
-        dx = 0.0
-        dy = 0.0
-
-    if north_up:
-        mask_bounds = (min(lefts) - dx, min(bottoms) - dy,
-                       max(rights) + dx, max(tops) + dy)
-    else:
-        mask_bounds = (min(lefts) - dx, max(bottoms) + dy,
-                       max(rights) + dx, min(tops) - dy)
-
     source_bounds = raster.bounds
 
-    # Raise or warn about bounds mismatches.
-    if rasterio.coords.disjoint_bounds(source_bounds, mask_bounds):
-        if crop:
-            raise ValueError("Input shapes do not overlap raster.")
-        else:
-            warnings.warn("GeoJSON outside bounds of existing output " +
-                          "raster. Are they in different coordinate " +
-                          "reference systems?")
-
     if crop:
+        if pad:
+            dx = raster.res[0] / 2
+            dy = abs(raster.res[1] / 2)
+        else:
+            dx = 0.0
+            dy = 0.0
+
+        if north_up:
+            mask_bounds = (min(lefts) - dx, min(bottoms) - dy,
+                           max(rights) + dx, max(tops) + dy)
+        else:
+            mask_bounds = (min(lefts) - dx, max(bottoms) + dy,
+                           max(rights) + dx, min(tops) - dy)
+
+        # Raise or warn about bounds mismatches.
+        if rasterio.coords.disjoint_bounds(source_bounds, mask_bounds):
+            if crop:
+                raise ValueError("Input shapes do not overlap raster.")
+            else:
+                warnings.warn("GeoJSON outside bounds of existing output " +
+                              "raster. Are they in different coordinate " +
+                              "reference systems?")
+
         bounds_window = raster.window(*mask_bounds)
 
         # Get the window with integer height
         # and width that contains the bounds window.
         out_window = bounds_window.round_shape(op='ceil')
+
         height = int(out_window.height)
         width = int(out_window.width)
 
@@ -125,10 +128,7 @@ def mask(raster, shapes, nodata=None, crop=False, all_touched=False,
 
     shape_mask = geometry_mask(shapes, transform=out_transform, invert=invert,
                                out_shape=mask_shape, all_touched=all_touched)
+
     out_image.mask = out_image.mask | shape_mask
-    out_image.fill_value = nodata
 
-    for i in range(raster.count):
-        out_image[i] = out_image[i].filled(nodata)
-
-    return out_image, out_transform
+    return out_image.filled(nodata), out_transform
