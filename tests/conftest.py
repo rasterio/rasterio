@@ -275,6 +275,7 @@ def path_rgba_byte_tif(data_dir):
 
 @pytest.fixture(scope='function')
 def path_4band_no_colorinterp(tmpdir):
+    """A 4 band image with undefined color interpretation."""
     dst_path = str(tmpdir.join('4band-byte-no-ci.tif'))
     profile = {
         'height': 10,
@@ -287,6 +288,9 @@ def path_4band_no_colorinterp(tmpdir):
         'photometric': 'minisblack',
         'alpha': 'unspecified'
     }
+    # The first band's color interpretation is set to gray due to
+    # 'photometric=minisblack' and cannot be set to 'undefined' if all other
+    # bands are undefined as of GDAL 2.2.1
     src_ci_map = {
         1: ColorInterp.gray,
         2: ColorInterp.undefined,
@@ -295,7 +299,8 @@ def path_4band_no_colorinterp(tmpdir):
     }
     with rasterio.open(dst_path, 'w', **profile) as src:
         for bidx, ci in src_ci_map.items():
-            assert src.colorinterp(bidx) == ci
+            assert src.colorinterp(bidx) == ci, src.colorinterp(bidx)
+    assert not os.path.exists(dst_path + '.aux.xml')
     return dst_path
 
 

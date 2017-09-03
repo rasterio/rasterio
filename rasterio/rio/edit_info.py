@@ -18,11 +18,6 @@ from rasterio.transform import guard_transform
 # Handlers for info module options.
 
 
-# GDAL does not allow setting a band's color interpretation to 'undefined'
-WRITABLE_COLORINTERP = [
-    ColorInterp[m] for m in ColorInterp.__members__ if m != 'undefined']
-
-
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
     if ctx.obj and ctx.obj.get('like') and value is not None:
@@ -127,18 +122,11 @@ def colorinterp_handler(ctx, param, value):
                 ci = ColorInterp[ci]
                 out[bidx] = ci
             except KeyError:
-                ci_list = ', '.join([ci.name for ci in WRITABLE_COLORINTERP])
                 raise click.BadParameter(
                     "'{}' is an unrecognized color interpretation.  Must be "
-                    "one of: {}".format(ci, ci_list))
+                    "one of: {}".format(ci, ColorInterp.__members__.keys()))
             except Exception:
                 raise click.BadParameter("could not parse: {}".format(value))
-
-            if ci == ColorInterp.undefined:
-                raise click.BadParameter(
-                    "'{}' is a valid color interpretation but it is read "
-                    "only and cannot be used for setting.".format(
-                        ColorInterp.undefined.name))
 
         return out
 
