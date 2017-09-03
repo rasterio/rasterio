@@ -285,19 +285,25 @@ def path_4band_no_colorinterp(tmpdir):
         'transform': affine.Affine(1, 0.0, 0,
                                    0.0, -1, 1),
         'driver': 'GTiff',
-        'photometric': 'minisblack',
+        'photometric': 'rgb',
         'alpha': 'unspecified'
     }
     # The first band's color interpretation is set to gray due to
     # 'photometric=minisblack' and cannot be set to 'undefined' if all other
     # bands are undefined as of GDAL 2.2.1
     src_ci_map = {
-        1: ColorInterp.gray,
+        1: ColorInterp.undefined,
         2: ColorInterp.undefined,
         3: ColorInterp.undefined,
         4: ColorInterp.undefined
     }
+    # Get GDAL's 4 band defaults and override
     with rasterio.open(dst_path, 'w', **profile) as src:
+        for bidx, ci in src_ci_map.items():
+            src.set_colorinterp(bidx, ci)
+    # Ensure override occurred.  Setting color interpretation on an existing
+    # file is surrounded by holes.
+    with rasterio.open(dst_path, 'r+') as src:
         for bidx, ci in src_ci_map.items():
             assert src.colorinterp(bidx) == ci, src.colorinterp(bidx)
     assert not os.path.exists(dst_path + '.aux.xml')
