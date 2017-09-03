@@ -28,6 +28,8 @@ New features:
 - Use of old style range tuples as windows is deprecated and warned
   against (#1074).
 - Addition of dataset ``block()`` method (#1077).
+- Allow setting band color interpretation in a ``set_colorinterp()`` method
+  and in ``$ rio edit-info --colorinterp`` (#1133).
 
 Bug fixes:
 

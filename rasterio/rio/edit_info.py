@@ -153,11 +153,13 @@ def colorinterp_handler(ctx, param, value):
               help="Copy all metadata items from the template file.")
 @click.option(
     '--colorinterp', callback=colorinterp_handler,
-    metavar="bidx=ci[,bidx=ci,...]|RGB|RGBA",
+    metavar="bidx=ci[,bidx=ci,...]|RGB|RGBA|like",
     help="Set color interpretation for one or more bands.  Can also use "
          "'RGBA' as shorthand for '1=red,2=green,3=blue,4=alpha' and 'RGB' "
          "for the same sans alpha band.  This cannot be combined with "
-         "individual band definitions.")
+         "individual band definitions.  Use 'like' to inherit color "
+         "interpretation from '--like'.  Results may be unexpected if the "
+         "input image and template image have a differing number of bands.")
 @options.like_opt
 @click.pass_context
 def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
