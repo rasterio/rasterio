@@ -1595,17 +1595,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             See ``ColorInterp``.
         """
 
-        cdef GDALRasterBandH hBand = NULL
-
-        ci = ColorInterp(colorinterp)
-        if ci == ColorInterp.undefined:
-            raise ValueError(
-                "'{}' is a valid color interpretation but it is read "
-                "only and cannot be used for setting.".format(
-                        ColorInterp.undefined.name))
-        hBand = self.band(bidx)
-
-        GDALSetRasterColorInterpretation(hBand, ci.value)
+        GDALSetRasterColorInterpretation(
+            self.band(bidx),
+            ColorInterp(colorinterp).value)
 
 
 cdef class InMemoryRaster:
