@@ -1595,9 +1595,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             See ``ColorInterp``.
         """
 
-        GDALSetRasterColorInterpretation(
+        # Catch return code to raise exceptions for drivers that do not
+        # support setting color interpretation
+        exc_wrap_int(GDALSetRasterColorInterpretation(
             self.band(bidx),
-            ColorInterp(colorinterp).value)
+            ColorInterp(colorinterp).value))
 
 
 cdef class InMemoryRaster:
