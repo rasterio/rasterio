@@ -92,12 +92,22 @@ def test_wrap_s3():
     """A warp wrapper's dataset has the expected properties"""
     L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
     with rasterio.open(L8TIF) as src:
-        with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:
+        with WarpedVRT(src, dst_crs='EPSG:3857', src_nodata=0, dst_nodata=0) as vrt:
             assert vrt.crs == 'EPSG:3857'
             assert tuple(round(x, 1) for x in vrt.bounds) == (
                 9556764.6, 2345109.3, 9804595.9, 2598509.1)
             assert vrt.name == 'WarpedVRT(s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF)'
             assert vrt.indexes == (1,)
-            assert vrt.nodatavals == (None,)
+            assert vrt.nodatavals == (0,)
             assert vrt.dtypes == ('uint16',)
             assert vrt.shape == (7827, 7655)
+
+
+def test_warped_vrt_nodata_read(path_rgb_byte_tif):
+    """A read from a VirtualVRT respects dst_nodata."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with WarpedVRT(src, dst_crs='EPSG:3857', src_nodata=0) as vrt:
+            data = vrt.read(1, masked=True)
+            assert data.mask.any()
+            mask = vrt.dataset_mask()
+            assert not mask.all()
