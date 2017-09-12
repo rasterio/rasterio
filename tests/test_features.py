@@ -1,11 +1,13 @@
 import logging
 import sys
+
 import numpy as np
 import pytest
-
 from affine import Affine
+
 import rasterio
-from rasterio.features import bounds, geometry_mask, rasterize, sieve, shapes
+from rasterio.features import (
+    bounds, geometry_mask, geometry_window, rasterize, sieve, shapes)
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -78,6 +80,86 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
             invert=True
         )
     )
+
+
+def test_geometry_window(basic_image_file, basic_geometry):
+    with rasterio.open(basic_image_file) as src:
+        window = geometry_window(src, [basic_geometry], north_up=False)
+        assert window.flatten() == (2, 2, 3, 3)
+
+
+@pytest.mark.xfail
+# This test is failing due to https://github.com/mapbox/rasterio/issues/1139
+def test_geometry_window_pixel_precision(basic_image_file):
+    """Window offsets should be floor, width and height ceiling"""
+
+    geom2 = {
+        'type': 'Polygon',
+        'coordinates': [[
+            (1.99999, 2),
+            (1.99999, 4.0001), (4.0001, 4.0001), (4.0001, 2),
+            (1.99999, 2)
+        ]]
+    }
+
+    with rasterio.open(basic_image_file) as src:
+        window = geometry_window(src, [geom2], north_up=False,
+                                 pixel_precision=6)
+        assert window.flatten() == (1, 2, 3, 3)
+
+
+def test_geometry_window_north_up(path_rgb_byte_tif):
+    geometry = {
+        'type': 'Polygon',
+        'coordinates': [[
+            (200000, 2700000),
+            (200000, 2750000),
+            (250000, 2750000),
+            (250000, 2700000),
+            (200000, 2700000)
+        ]]
+    }
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        window = geometry_window(src, [geometry], north_up=True)
+
+    assert window.flatten() == (326, 256, 167, 167)
+
+
+def test_geometry_window_pad(basic_image_file, basic_geometry):
+    with rasterio.open(basic_image_file) as src:
+        window = geometry_window(src, [basic_geometry], north_up=False,
+                                 pad_x=0.5, pad_y=0.5)
+
+    assert window.flatten() == (1, 1, 4, 4)
+
+
+def test_geometry_large_shapes(basic_image_file):
+    geometry = {
+        'type': 'Polygon',
+        'coordinates': [[
+            (-2000, -2000),
+            (-2000, 2000),
+            (2000, 2000),
+            (2000, -2000),
+            (-2000, -2000)
+        ]]
+    }
+
+    with rasterio.open(basic_image_file) as src:
+        window = geometry_window(src, [geometry], north_up=False)
+
+        assert window.flatten() == (0, 0, src.height, src.width)
+
+
+def test_geometry_no_overlap(path_rgb_byte_tif, basic_geometry):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with pytest.warns(UserWarning) as warning:
+            window = geometry_window(src, [basic_geometry], north_up=False)
+
+            assert 'outside bounds of raster' in warning[0].message.args[0]
+
+    assert window.flatten() == (0, 0, 0, 0)
 
 
 def test_rasterize(basic_geometry, basic_image_2x2):

@@ -2,14 +2,16 @@
 
 
 import logging
+import warnings
 
 import numpy as np
 
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 from rasterio.env import ensure_env
+from rasterio.errors import WindowError
 from rasterio.transform import IDENTITY, guard_transform
-
+from rasterio.windows import Window
 
 log = logging.getLogger(__name__)
 
@@ -305,3 +307,69 @@ def bounds(geometry, north_up=True):
 
     geom = geometry.get('geometry') or geometry
     return _bounds(geom, north_up=north_up)
+
+
+def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
+                    pixel_precision=3):
+    """Calculate the window within the raster that fits the bounds of the 
+    geometry plus optional padding.  The window is the outermost pixel indices
+    that contain the geometry (floor of offsets, ceiling of width and height).
+    
+    If shapes do not overlap raster, a warning is raised and an empty window 
+    `Window(0, 0, 0, 0)` is returned.
+
+    Parameters
+    ----------
+    raster: rasterio RasterReader object
+        Raster for which the mask will be created.
+    shapes: iterable over geometries.
+        A geometry is a GeoJSON-like object or implements the geo interface.
+        Must be in same coordinate system as raster.
+    pad_x: float
+        Amount of padding (as fraction of raster's x pixel size) to add to left 
+        and right side of bounds.
+    pad_y: float
+        Amount of padding (as fraction of raster's y pixel size) to add to top 
+        and bottom of bounds.
+    pixel_precision: int
+        Number of places of rounding precision for evaluating bounds of shapes.
+
+    Returns
+    -------
+    window: rasterio.windows.Window instance
+    """
+
+    if pad_x:
+        pad_x = abs(pad_x * raster.res[0])
+
+    if pad_y:
+        pad_y = abs(pad_y * raster.res[1])
+
+    all_bounds = [bounds(shape, north_up=north_up) for shape in shapes]
+    lefts, bottoms, rights, tops = zip(*all_bounds)
+
+    left = min(lefts) - pad_x
+    right = max(rights) + pad_x
+
+    if north_up:
+        bottom = min(bottoms) - pad_y
+        top = max(tops) + pad_y
+    else:
+        bottom = max(bottoms) + pad_y
+        top = min(tops) - pad_y
+
+    window = raster.window(left, bottom, right, top)
+    window = window.round_offsets(op='floor', pixel_precision=pixel_precision)
+    window = window.round_shape(op='ceil', pixel_precision=pixel_precision)
+
+    # Make sure that window overlaps raster
+    raster_window = Window(0, 0, raster.height, raster.width)
+    try:
+        window = window.intersection(raster_window)
+
+    except WindowError:
+        window = Window(0, 0, 0, 0)
+        warnings.warn("shapes are outside bounds of raster. "
+                      "Are they in different coordinate reference systems?")
+
+    return window

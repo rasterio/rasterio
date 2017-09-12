@@ -254,7 +254,7 @@ def test_mask_crop_out_of_bounds(runner, tmpdir, basic_feature,
             '--geojson-mask', '-'],
         input=json.dumps(basic_feature))
     assert result.exit_code == 2
-    assert 'not allowed' in result.output
+    assert 'GeoJSON outside the extent' in result.output
 
 
 def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,
