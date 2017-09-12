@@ -1,6 +1,5 @@
 language: python
-dist: precise
-sudo: required
+sudo: false
 cache:
   directories:
     - $GDALINST
@@ -23,7 +22,6 @@ addons:
     - gdal-bin
     - libproj-dev
     - libhdf5-serial-dev
-    - libpng12-dev
     - libgdal-dev
     - libatlas-dev
     - libatlas-base-dev
