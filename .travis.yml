@@ -1,6 +1,6 @@
 language: python
 dist: precise
-sudo: false
+sudo: required
 cache:
   directories:
     - $GDALINST
