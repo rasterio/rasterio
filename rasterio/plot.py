@@ -34,7 +34,7 @@ def get_plt():
 
 
 def show(source, with_bounds=True, contour=False, contour_label_kws=None,
-         ax=None, title=None, transform=None, **kwargs):
+         ax=None, title=None, transform=None, adjust='linear', **kwargs):
     """Display a raster or raster band using matplotlib.
 
     Parameters
@@ -60,6 +60,11 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
         Title for the figure.
     transform : Affine, optional
         Defines the affine transform if source is an array
+    adjust : 'linear' | None
+        If the plotted data is an RGB image, adjust the values of
+        each band so that they fall between 0 and 1 before plotting. If
+        'linear', values will be adjusted by the min / max of each band. If
+        None, no adjustment will be applied.
     **kwargs : key, value pairings optional
         These will be passed to the matplotlib imshow or contour method
         depending on contour argument.
@@ -105,6 +110,12 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             arr = source
         if transform and with_bounds:
             kwargs['extent'] = plotting_extent(arr, transform)
+    if adjust is True and arr.ndim >= 3:
+        # Adjust each band by the min/max so it will plot as RGB.
+        arr = reshape_as_raster(arr)
+        for ii, band in enumerate(arr):
+            arr[ii] = adjust_band(band, kind='linear')
+        arr = reshape_as_image(arr)
 
     show = False
     if not ax:
@@ -270,3 +281,28 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     ax.set_ylabel('Frequency')
     if show:
         plt.show()
+
+
+def adjust_band(band, kind='linear'):
+    """Adjust a band to be between 0 and 1.
+
+    Parameters
+    ----------
+    band : array, shape (height, width)
+        A band of a raster object.
+    kind : 'linear'
+        The kind of normalization to apply. For now, there
+        is only one option ('linear').
+
+    Returns
+    -------
+    band_normed : array, shape (height, width)
+        An adjusted version of the input band.
+    """
+    band_normed = np.zeros_like(band)
+    if kind == 'linear':
+        # Including this `if` statement in case future norms are added.
+        imin = np.nanmin(band)
+        imax = np.nanmax(band)
+        band_normed = (band - imin) / (imax - imin)
+    return band_normed
