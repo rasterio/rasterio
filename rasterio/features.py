@@ -331,6 +331,9 @@ def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
     pad_y: float
         Amount of padding (as fraction of raster's y pixel size) to add to top 
         and bottom of bounds.
+    north_up: bool
+        If True (default), the origin point of the raster's transform is the 
+        northernmost point and y pixel values are negative.
     pixel_precision: int
         Number of places of rounding precision for evaluating bounds of shapes.
 
