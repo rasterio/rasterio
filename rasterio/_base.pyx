@@ -773,6 +773,8 @@ cdef class DatasetBase(object):
             fld = fld.lower()
             if fld == 'desc':
                 fld = 'description'
+            if fld == 'name':
+                val = val.replace('NETCDF', 'netcdf')
             subs[idx][fld] = val.replace('"', '')
         return [subs[idx] for idx in sorted(subs.keys())]
 

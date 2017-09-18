@@ -18,7 +18,7 @@ def test_parse_path_with_vfs():
 
 
 def test_parse_path_zip():
-    """Correctly parse VFS scheme URL"""
+    """Correctly parse zip scheme URL"""
     assert parse_path('zip://tests/data/files.zip!foo.tif') == (
         'foo.tif', 'tests/data/files.zip', 'zip')
 
