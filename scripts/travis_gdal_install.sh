@@ -16,7 +16,7 @@ GDALOPTS="  --with-ogr \
             --without-libgrass \
             --without-cfitsio \
             --without-pcraster \
-            --without-netcdf \
+            --with-netcdf \
             --with-png=/usr \
             --with-jpeg=internal \
             --without-gif \
