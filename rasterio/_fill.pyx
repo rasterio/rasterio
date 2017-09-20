@@ -26,21 +26,15 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
 
     driver = GDALGetDriverByName("MEM")
 
-    if dtypes.is_ndarray(image):
-        # copy numpy ndarray into an in-memory dataset.
-        datasetname = str(uuid.uuid4()).encode('utf-8')
-        image_dataset = GDALCreate(
-            driver, <const char *>datasetname, image.shape[1], image.shape[0],
-            1, <GDALDataType>dtypes.dtype_rev[image.dtype.name], NULL)
-        image_band = GDALGetRasterBand(image_dataset, 1)
-        io_auto(image, image_band, True)
-    elif isinstance(image, tuple):
-        rdr = image.ds
-        band = (<DatasetReaderBase?>rdr).band(image.bidx)
-    else:
-        raise ValueError("Invalid source image")
+    # copy numpy ndarray into an in-memory dataset.
+    datasetname = str(uuid.uuid4()).encode('utf-8')
+    image_dataset = GDALCreate(
+        driver, <const char *>datasetname, image.shape[1], image.shape[0],
+        1, <GDALDataType>dtypes.dtype_rev[image.dtype.name], NULL)
+    image_band = GDALGetRasterBand(image_dataset, 1)
+    io_auto(image, image_band, True)
 
-    if dtypes.is_ndarray(mask):
+    if mask is not None:
         mask_cast = mask.astype('uint8')
         datasetname = str(uuid.uuid4()).encode('utf-8')
         mask_dataset = GDALCreate(
@@ -48,16 +42,6 @@ def _fillnodata(image, mask, double max_search_distance=100.0,
             <GDALDataType>dtypes.dtype_rev['uint8'], NULL)
         mask_band = GDALGetRasterBand(mask_dataset, 1)
         io_auto(mask_cast, mask_band, True)
-    elif isinstance(mask, tuple):
-        if mask.shape != image.shape:
-            raise ValueError("Mask must have same shape as image")
-        elif isinstance(mask, tuple):
-            mrdr = mask.ds
-            maskband = (<DatasetReaderBase?>mrdr).band(mask.bidx)
-    elif mask is None:
-        mask_band = NULL
-    else:
-        raise ValueError("Invalid source image mask")
 
     try:
         alg_options = CSLSetNameValue(alg_options, "TEMP_FILE_DRIVER", "MEM")

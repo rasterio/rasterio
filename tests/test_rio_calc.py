@@ -121,7 +121,7 @@ def test_fillnodata(tmpdir):
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
         data = src.read(masked=True)
-        assert round(data.mean(), 1) == 60.6
+        assert round(data.mean(), 1) == 58.6
 
 
 def test_fillnodata_map(tmpdir):
@@ -135,8 +135,8 @@ def test_fillnodata_map(tmpdir):
         assert src.count == 3
         assert src.meta['dtype'] == 'uint8'
         data = src.read(masked=True)
-        assert round(data.mean(), 1) == 60.6
-
+        assert round(data.mean(), 1) == 58.6
+        assert data[0][60][60] > 0
 
 def test_sieve_band(tmpdir):
     outfile = str(tmpdir.join('out.tif'))

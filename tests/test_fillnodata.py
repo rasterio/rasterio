@@ -6,7 +6,9 @@ import pytest
 import rasterio
 from rasterio.fill import fillnodata
 
+
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
 
 def test_fillnodata():
     """Test filling nodata values in an ndarray"""
@@ -19,12 +21,26 @@ def test_fillnodata():
     result = fillnodata(a, mask)
     assert(np.all((np.ones([3, 3]) * 42) == result))
 
+
+def test_fillnodata_masked_array():
+    """Test filling nodata values in a masked ndarray"""
+    # create a 5x5 array, with some missing data
+    a = np.ones([3, 3]) * 42
+    a[1][1] = 0
+    # find the missing data
+    a = np.ma.masked_array(a, (a == 0))
+    # fill the missing data using interpolation from the edges
+    result = fillnodata(a)
+    assert(np.all((np.ones([3, 3]) * 42) == result))
+
+
 def test_fillnodata_invalid_types():
     a = np.ones([3, 3])
     with pytest.raises(ValueError):
         fillnodata(None, a)
     with pytest.raises(ValueError):
         fillnodata(a, 42)
+
 
 def test_fillnodata_mask_ones():
     # when mask is all ones, image should be unmodified
