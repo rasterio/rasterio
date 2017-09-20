@@ -36,7 +36,8 @@ def fillnodata(
         A mask band indicating which pixels to interpolate. Pixels to
         interpolate into are indicated by the value 0. Values > 0
         indicate areas to use during interpolation. Must be same shape
-        as image.
+        as image. If None, the inverse of the image's mask will be used
+        if available.
     max_search_distance : float, optional
         The maxmimum number of pixels to search in all directions to
         find values to interpolate from. The default is 100.
@@ -49,17 +50,15 @@ def fillnodata(
     out : numpy ndarray
         The filled raster array.
     """
-    if mask is None:
-        if hasattr(image, 'mask'):  # pragma: no cover
-            mask = ~image.mask
-    else:
-        if not dtypes.is_ndarray(mask):
-            raise ValueError("mask is not an array")
+    if mask is None and hasattr(image, 'mask'):  # pragma: no cover
+        mask = ~image.mask
+    if not dtypes.is_ndarray(mask):
+        raise ValueError("An mask array is required")
 
     if hasattr(image, 'mask'):  # pragma: no cover
         image = image.data
     if not dtypes.is_ndarray(image):
-        raise ValueError("image is not an array")
+        raise ValueError("An image array is required")
 
     max_search_distance = float(max_search_distance)
     smoothing_iterations = int(smoothing_iterations)
