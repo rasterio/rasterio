@@ -2,14 +2,12 @@
 
 
 import logging
-import warnings
 
 import numpy as np
 
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 from rasterio.env import ensure_env
-from rasterio.errors import WindowError
 from rasterio.transform import IDENTITY, guard_transform
 from rasterio.windows import Window
 
@@ -315,8 +313,7 @@ def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
     geometry plus optional padding.  The window is the outermost pixel indices
     that contain the geometry (floor of offsets, ceiling of width and height).
     
-    If shapes do not overlap raster, a warning is raised and an empty window 
-    `Window(0, 0, 0, 0)` is returned.
+    If shapes do not overlap raster, a WindowError is raised.
 
     Parameters
     ----------
@@ -367,12 +364,8 @@ def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
 
     # Make sure that window overlaps raster
     raster_window = Window(0, 0, raster.height, raster.width)
-    try:
-        window = window.intersection(raster_window)
 
-    except WindowError:
-        window = Window(0, 0, 0, 0)
-        warnings.warn("shapes are outside bounds of raster. "
-                      "Are they in different coordinate reference systems?")
+    # This will raise a WindowError if windows do not overlap
+    window = window.intersection(raster_window)
 
     return window

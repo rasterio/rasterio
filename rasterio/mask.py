@@ -5,6 +5,7 @@ import warnings
 
 import numpy as np
 
+from rasterio.errors import WindowError
 from rasterio.features import geometry_mask, geometry_window
 
 
@@ -19,7 +20,7 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
     By default, mask is intended for use as a numpy mask, where pixels that 
     overlap shapes are False.
     
-    If shapes do not overlap the raster and crop=True, an exception is 
+    If shapes do not overlap the raster and crop=True, a ValueError is 
     raised.  Otherwise, a warning is raised, and a completely True mask
     is returned (if invert is False).
 
@@ -74,12 +75,13 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
 
     north_up = raster.transform.e <= 0
 
-    window = geometry_window(raster, shapes, north_up=north_up, pad_x=pad_x, 
-                             pad_y=pad_y)
+    try:
+        window = geometry_window(raster, shapes, north_up=north_up, pad_x=pad_x,
+                                 pad_y=pad_y)
 
-    # If shapes do not overlap raster, raise Exception or UserWarning
-    # depending on value of crop
-    if window.flatten() == (0, 0, 0, 0):
+    except WindowError:
+        # If shapes do not overlap raster, raise Exception or UserWarning
+        # depending on value of crop
         if crop:
             raise ValueError('Input shapes do not overlap raster.')
         else:
@@ -111,7 +113,7 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
     Pixels are masked or set to nodata outside the input shapes, unless 
     `invert` is `True`.
     
-    If shapes do not overlap the raster and crop=True, an exception is 
+    If shapes do not overlap the raster and crop=True, a ValueError is 
     raised.  Otherwise, a warning is raised.
 
     Parameters

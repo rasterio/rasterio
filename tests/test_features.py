@@ -6,6 +6,7 @@ import pytest
 from affine import Affine
 
 import rasterio
+from rasterio.errors import WindowError
 from rasterio.features import (
     bounds, geometry_mask, geometry_window, rasterize, sieve, shapes)
 
@@ -153,13 +154,12 @@ def test_geometry_large_shapes(basic_image_file):
 
 
 def test_geometry_no_overlap(path_rgb_byte_tif, basic_geometry):
+    """Geometries that do not overlap raster raises WindowError"""
+    
     with rasterio.open(path_rgb_byte_tif) as src:
-        with pytest.warns(UserWarning) as warning:
+        with pytest.raises(WindowError):
             window = geometry_window(src, [basic_geometry], north_up=False)
 
-            assert 'outside bounds of raster' in warning[0].message.args[0]
-
-    assert window.flatten() == (0, 0, 0, 0)
 
 
 def test_rasterize(basic_geometry, basic_image_2x2):
