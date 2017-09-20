@@ -24,8 +24,8 @@ def test_warped_vrt(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         vrt = WarpedVRT(src, dst_crs='EPSG:3857')
         assert vrt.dst_crs == 'EPSG:3857'
-        assert vrt.src_nodata is None
-        assert vrt.dst_nodata is None
+        assert vrt.src_nodata == 0.0
+        assert vrt.dst_nodata == 0.0
         assert vrt.tolerance == 0.125
         assert vrt.resampling == Resampling.nearest
         assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
@@ -68,8 +68,8 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
                         dst_width=size, dst_height=size,
                         dst_transform=dst_transform)
         assert vrt.dst_crs == 'EPSG:3857'
-        assert vrt.src_nodata is None
-        assert vrt.dst_nodata is None
+        assert vrt.src_nodata == 0.0
+        assert vrt.dst_nodata == 0.0
         assert vrt.resampling == Resampling.nearest
         assert vrt.width == size
         assert vrt.height == size

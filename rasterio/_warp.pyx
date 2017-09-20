@@ -653,8 +653,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.dst_crs = dst_crs
         self.resampling = resampling
         self.tolerance = tolerance
-        self.src_nodata = src_nodata
-        self.dst_nodata = dst_nodata
+
+        self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
+        self.dst_nodata = (self.src_nodata or 0.0) if dst_nodata is None else dst_nodata
         self.dst_width = dst_width
         self.dst_height = dst_height
         self.dst_transform = dst_transform
