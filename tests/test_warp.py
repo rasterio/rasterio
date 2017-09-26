@@ -470,25 +470,6 @@ def test_reproject_invalid_dst_nodata():
         )
 
 
-def test_reproject_missing_src_nodata():
-    """src_nodata is required if dst_nodata is not None."""
-    params = default_reproject_params()
-
-    source = np.ones((params.width, params.height), dtype=np.uint8)
-    out = source.copy()
-
-    with pytest.raises(ValueError):
-        reproject(
-            source,
-            out,
-            src_transform=params.src_transform,
-            src_crs=params.src_crs,
-            dst_transform=params.dst_transform,
-            dst_crs=params.dst_crs,
-            dst_nodata=215
-        )
-
-
 def test_reproject_invalid_src_nodata():
     """src_nodata must be in range for data type."""
     params = default_reproject_params()

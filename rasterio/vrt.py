@@ -29,8 +29,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     src_nodata: int or float, optional
         The source nodata value.  Pixels with this value will not be
         used for interpolation. If not set, it will be default to the
-        nodata value of the source image, if available. Must be provided
-        if dst_nodata is not None.
+        nodata value of the source image, if available.
     dst_nodata: int or float, optional
         The nodata value used to initialize the destination; it will
         remain in all areas not covered by the reprojected source.
