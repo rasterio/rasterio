@@ -5,6 +5,8 @@ from rasterio._fill import _fillnodata
 from rasterio.env import ensure_env
 from rasterio import dtypes
 
+from numpy.ma import MaskedArray
+
 
 @ensure_env
 def fillnodata(
@@ -12,7 +14,7 @@ def fillnodata(
         mask=None,
         max_search_distance=100.0,
         smoothing_iterations=0):
-    """Fill holes in a raster dataset by interpolation from the edges.
+    """Fill holes in raster data by interpolation
 
     This algorithm will interpolate values for all designated nodata
     pixels (marked by zeros in `mask`). For each pixel a four direction
@@ -31,7 +33,8 @@ def fillnodata(
     Parameters
     ----------
     image : numpy ndarray
-        The source containing nodata holes.
+        The source image with holes to be filled. If a MaskedArray, the
+        inverse of its mask will define the pixels to be filled.
     mask : numpy ndarray or None
         A mask band indicating which pixels to interpolate. Pixels to
         interpolate into are indicated by the value 0. Values > 0
@@ -50,12 +53,12 @@ def fillnodata(
     out : numpy ndarray
         The filled raster array.
     """
-    if mask is None and hasattr(image, 'mask'):  # pragma: no cover
+    if mask is None and isinstance(image, MaskedArray):
         mask = ~image.mask
     if not dtypes.is_ndarray(mask):
         raise ValueError("An mask array is required")
 
-    if hasattr(image, 'mask'):  # pragma: no cover
+    if isinstance(image, MaskedArray):
         image = image.data
     if not dtypes.is_ndarray(image):
         raise ValueError("An image array is required")
