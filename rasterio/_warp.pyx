@@ -105,21 +105,11 @@ cdef GDALWarpOptions * create_warp_options(
     # First, we make sure we have consistent source and destination
     # nodata values. TODO: alpha bands.
 
-    # We require source nodata if destination nodata is passed.
-    if src_nodata is None and dst_nodata is not None:
-        raise ValueError("src_nodata must be provided because dst_nodata "
-                         "is not None")
-
     if dst_nodata is None:
         if src_nodata is not None:
             dst_nodata = src_nodata
         else:
             dst_nodata = 0
-            src_nodata = 0
-
-    # Convert to float to validate.
-    dst_nodata = float(dst_nodata)
-    src_nodata = float(src_nodata)
 
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
 
@@ -140,15 +130,30 @@ cdef GDALWarpOptions * create_warp_options(
 
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
 
+    # Assign nodata values.
+    # We don't currently support an imaginary component.
+
     psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
     psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+
+    for i in range(src_count):
+        if src_nodata is not None:
+            psWOptions.padfSrcNoDataReal[i] = float(src_nodata)
+            psWOptions.padfSrcNoDataImag[i] = 0.0
+        else:
+            psWOptions.padfSrcNoDataReal[i] = -123456.789  # as in gdalwarp.
+            psWOptions.padfSrcNoDataImag[i] = 0.0
+
     psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
     psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+
     for i in range(src_count):
-        psWOptions.padfSrcNoDataReal[i] = src_nodata
-        psWOptions.padfSrcNoDataImag[i] = 0.0
-        psWOptions.padfDstNoDataReal[i] = dst_nodata
-        psWOptions.padfDstNoDataImag[i] = 0.0
+        if dst_nodata is not None:
+            psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
+            psWOptions.padfDstNoDataImag[i] = 0.0
+        else:
+            psWOptions.padfDstNoDataReal[i] = -123456.789  # as in gdalwarp.
+            psWOptions.padfDstNoDataImag[i] = 0.0
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -213,7 +218,7 @@ def _reproject(
         The source nodata value.  Pixels with this value will not be used
         for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
-        if available.  Must be provided if dst_nodata is not None.
+        if available.
     dst_transform: affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
@@ -653,8 +658,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.dst_crs = dst_crs
         self.resampling = resampling
         self.tolerance = tolerance
-        self.src_nodata = src_nodata
-        self.dst_nodata = dst_nodata
+
+        self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
+        self.dst_nodata = self.src_nodata if dst_nodata is None else dst_nodata
         self.dst_width = dst_width
         self.dst_height = dst_height
         self.dst_transform = dst_transform
@@ -773,6 +779,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             GDALDestroyWarpOptions(psWOptions)
 
         self._set_attrs_from_dataset_handle()
+
+        # This attribute will be used by read().
+        self._nodatavals = [
+            self.src_nodata for i in self.src_dataset.indexes]
 
     def start(self):
         """Starts the VRT's life cycle."""

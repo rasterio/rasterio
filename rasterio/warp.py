@@ -70,7 +70,7 @@ def transform_geom(
         Target coordinate reference system.
     geom: GeoJSON like dict object
     antimeridian_cutting: bool, optional
-        If True, cut geometries at the antimeridian, otherwise geometries 
+        If True, cut geometries at the antimeridian, otherwise geometries
         will not be cut (default).  If False and GDAL is 2.2.0 or newer
         an exception is raised.  Antimeridian cutting is always on as of
         GDAL 2.2.0 but this could produce an unexpected geometry.
@@ -212,8 +212,7 @@ def reproject(source, destination, src_transform=None, gcps=None,
         The source nodata value.Pixels with this value will not be
         used for interpolation. If not set, it will be default to the
         nodata value of the source image if a masked ndarray or
-        rasterio band, if available. Must be provided if dst_nodata is
-        not None.
+        rasterio band, if available.
     dst_transform: affine.Affine(), optional
         Target affine transformation. Required if source and
         destination are ndarrays. Will be derived from target if it is
