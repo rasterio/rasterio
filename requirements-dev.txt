@@ -8,7 +8,7 @@ snuggs>=1.4.1
 setuptools>=0.9.8
 
 # development specific requirements
-cython>=0.23.4
+cython==0.26.1
 delocate
 enum34
 ghp-import
