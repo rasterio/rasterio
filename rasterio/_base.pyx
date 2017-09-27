@@ -9,7 +9,7 @@ import math
 import warnings
 
 from rasterio._err import (
-    GDALError, CPLE_IllegalArgError, CPLE_OpenFailedError,
+    GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 
@@ -993,7 +993,6 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
             if auth.upper() == 'EPSG':
                 proj = 'EPSG:{}'.format(val).encode('utf-8')
         else:
-            crs['wktext'] = True
             params = []
             for k, v in crs.items():
                 if v is True or (k in ('no_defs', 'wktext') and v):
@@ -1004,12 +1003,14 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
             log.debug("PROJ.4 to be imported: %r", proj)
             proj = proj.encode('utf-8')
 
-    retval = OSRSetFromUserInput(osr, <const char *>proj)
-    log.debug("OSRSetFromUserInput return value: %s", retval)
-
-    if retval:
+    try:
+        retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>proj))
+        if retval:
+            _safe_osr_release(osr)
+            raise CRSError("Invalid CRS: {!r}".format(crs))
+    except CPLE_BaseError as exc:
         _safe_osr_release(osr)
-        raise CRSError("Invalid CRS: {!r}".format(crs))
+        raise CRSError(str(exc))
 
     return osr
 
