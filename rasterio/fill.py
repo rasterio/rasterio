@@ -34,13 +34,15 @@ def fillnodata(
     ----------
     image : numpy ndarray
         The source image with holes to be filled. If a MaskedArray, the
-        inverse of its mask will define the pixels to be filled.
+        inverse of its mask will define the pixels to be filled --
+        unless the ``mask`` argument is not None (see below).`
     mask : numpy ndarray or None
         A mask band indicating which pixels to interpolate. Pixels to
-        interpolate into are indicated by the value 0. Values > 0
-        indicate areas to use during interpolation. Must be same shape
-        as image. If None, the inverse of the image's mask will be used
-        if available.
+        interpolate into are indicated by the value 0. Values
+        > 0 indicate areas to use during interpolation. Must be same
+        shape as image. This array always takes precedence over the
+        image's mask (see above). If None, the inverse of the image's
+        mask will be used if available.
     max_search_distance : float, optional
         The maxmimum number of pixels to search in all directions to
         find values to interpolate from. The default is 100.

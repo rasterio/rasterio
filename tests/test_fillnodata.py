@@ -1,10 +1,8 @@
-import logging
-import sys
+"""Tests of nodata filling"""
 
 import numpy as np
 import pytest
 
-import rasterio
 from rasterio.fill import fillnodata
 
 
@@ -42,4 +40,4 @@ def test_fillnodata_mask_ones(hole_in_ones):
     """when mask is all ones, image should be unmodified"""
     mask = np.ones((5, 5))
     result = fillnodata(hole_in_ones, mask)
-    assert(np.all(hole_in_ones == result))
+    assert (hole_in_ones == result).all()
