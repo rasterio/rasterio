@@ -1114,7 +1114,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 if auth.upper() == 'EPSG':
                     OSRImportFromEPSG(osr, int(val))
             else:
-                crs['wktext'] = True
                 for k, v in crs.items():
                     if v is True or (k in ('no_defs', 'wktext') and v):
                         params.append("+%s" % k)
