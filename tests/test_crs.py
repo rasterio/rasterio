@@ -243,7 +243,7 @@ def test_safe_osr_release(tmpdir):
     assert "Pointer 'hSRS' is NULL in 'OSRRelease'" not in log
 
 
-@pytest.mark.xfail(parse(rasterio.__gdal_version__) < parse('2.0'), reason="CRS equality is buggy pre-2.0")
+@pytest.mark.xfail(parse(rasterio.__gdal_version__) < parse('2.1'), reason="CRS equality is buggy pre-2.1")
 def test_from_wkt():
     wgs84 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     from_wkt = CRS.from_wkt(wgs84.wkt)
