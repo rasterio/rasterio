@@ -47,7 +47,7 @@ def test_read_boundless_beyond(rgb_byte_tif_reader):
 def test_read_boundless_beyond_fill_value(rgb_byte_tif_reader):
     """Reading entirely outside the dataset returns the fill value"""
     with rgb_byte_tif_reader as src:
-        data = src.read(window=((-200, -100), (-200, -100)), boundless=True,
+        data = src.read(window=Window(-200, -200, 100, 100), boundless=True,
                         fill_value=1)
         assert data.shape == (3, 100, 100)
         assert (data == 1).all()
@@ -103,7 +103,7 @@ def test_read_boundless_masked_overlap(rgb_byte_tif_reader):
 def test_read_boundless_zero_stop(rgb_byte_tif_reader):
     with rgb_byte_tif_reader as src:
         data = src.read(
-            window=((-200, 0), (-200, 0)), boundless=True, masked=True)
+            window=Window(-200, -200, 200, 200), boundless=True, masked=True)
         assert data.shape == (3, 200, 200)
         assert data.mask.all()
 

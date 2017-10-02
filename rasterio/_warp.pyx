@@ -712,11 +712,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 OSRRelease(osr)
             osr = NULL
 
-        try:
-            osr = _osr_from_crs(self.dst_crs)
-            OSRExportToWkt(osr, &dst_crs_wkt)
-        finally:
-            _safe_osr_release(osr)
+        if self.dst_crs is not None:
+            try:
+                osr = _osr_from_crs(self.dst_crs)
+                OSRExportToWkt(osr, &dst_crs_wkt)
+            finally:
+                _safe_osr_release(osr)
 
         log.debug("Exported CRS to WKT.")
 
