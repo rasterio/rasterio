@@ -126,6 +126,7 @@ class WindowMethodsMixin(object):
                           RasterioDeprecationWarning)
 
         transform = guard_transform(self.transform)
+
         return windows.from_bounds(
             left, bottom, right, top, transform=transform,
             height=self.height, width=self.width, precision=precision)
