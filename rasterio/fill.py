@@ -3,6 +3,9 @@
 import rasterio
 from rasterio._fill import _fillnodata
 from rasterio.env import ensure_env
+from rasterio import dtypes
+
+from numpy.ma import MaskedArray
 
 
 @ensure_env
@@ -11,7 +14,7 @@ def fillnodata(
         mask=None,
         max_search_distance=100.0,
         smoothing_iterations=0):
-    """Fill holes in a raster dataset by interpolation from the edges.
+    """Fill holes in raster data by interpolation
 
     This algorithm will interpolate values for all designated nodata
     pixels (marked by zeros in `mask`). For each pixel a four direction
@@ -30,13 +33,16 @@ def fillnodata(
     Parameters
     ----------
     image : numpy ndarray
-        The source containing nodata holes.
+        The source image with holes to be filled. If a MaskedArray, the
+        inverse of its mask will define the pixels to be filled --
+        unless the ``mask`` argument is not None (see below).`
     mask : numpy ndarray or None
         A mask band indicating which pixels to interpolate. Pixels to
-        interpolate into are indicated by the value 0. Values > 0
-        indicate areas to use during interpolation. Must be same shape
-        as image. If `None`, a mask will be diagnosed from the source
-        data.
+        interpolate into are indicated by the value 0. Values
+        > 0 indicate areas to use during interpolation. Must be same
+        shape as image. This array always takes precedence over the
+        image's mask (see above). If None, the inverse of the image's
+        mask will be used if available.
     max_search_distance : float, optional
         The maxmimum number of pixels to search in all directions to
         find values to interpolate from. The default is 100.
@@ -49,6 +55,16 @@ def fillnodata(
     out : numpy ndarray
         The filled raster array.
     """
+    if mask is None and isinstance(image, MaskedArray):
+        mask = ~image.mask
+    if not dtypes.is_ndarray(mask):
+        raise ValueError("An mask array is required")
+
+    if isinstance(image, MaskedArray):
+        image = image.data
+    if not dtypes.is_ndarray(image):
+        raise ValueError("An image array is required")
+
     max_search_distance = float(max_search_distance)
     smoothing_iterations = int(smoothing_iterations)
     return _fillnodata(

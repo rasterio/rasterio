@@ -11,11 +11,16 @@ env:
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
   matrix:
-    - GDALVERSION="1.9.2"
     - GDALVERSION="1.11.5"
     - GDALVERSION="2.0.3"
     - GDALVERSION="2.1.4"
     - GDALVERSION="2.2.1"
+    - GDALVERSION="trunk"
+
+matrix:
+  allow_failures:
+    - env: GDALVERSION="trunk"
+
 addons:
   apt:
     packages:
@@ -40,7 +45,7 @@ before_install:
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 install:
-  - "if [ $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
+  - "if [ \"$GDALVERSION\" == \"trunk\" -o $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - "pip wheel -r requirements-dev.txt"
   - "pip install -r requirements-dev.txt"
   - "GDAL_CONFIG=$GDALINST/gdal-$GDALVERSION/bin/gdal-config pip install --upgrade --force-reinstall -e .[test,plot]"

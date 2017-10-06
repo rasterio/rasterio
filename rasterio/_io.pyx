@@ -256,7 +256,7 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             if out_shape is not None:
                 if len(out_shape) == 2:
-                    out_shape = (1,) + out_shape
+                    out_shape = (len(indexes),) + out_shape
             else:
                 out_shape = win_shape
 
@@ -478,7 +478,7 @@ cdef class DatasetReaderBase(DatasetBase):
             raise ValueError("out and out_shape are exclusive")
         elif out_shape is not None:
             if len(out_shape) == 2:
-                out_shape = (1,) + out_shape
+                out_shape = (len(indexes),) + out_shape
             out = np.zeros(out_shape, 'uint8')
 
         if out is not None:
@@ -1114,7 +1114,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 if auth.upper() == 'EPSG':
                     OSRImportFromEPSG(osr, int(val))
             else:
-                crs['wktext'] = True
                 for k, v in crs.items():
                     if v is True or (k in ('no_defs', 'wktext') and v):
                         params.append("+%s" % k)

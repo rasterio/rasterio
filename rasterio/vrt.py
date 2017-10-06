@@ -26,15 +26,20 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     tolerance : float
         The maximum error tolerance in input pixels when approximating
         the warp transformation. The default is 0.125.
-    src_nodata : float
-        A nodata value for the source data. It may be a value other
-        than the nodata value of src_dataset.
-    dst_nodata : float, int
-        The nodata value for the virtually warped dataset.
+    src_nodata: int or float, optional
+        The source nodata value.  Pixels with this value will not be
+        used for interpolation. If not set, it will be default to the
+        nodata value of the source image, if available.
+    dst_nodata: int or float, optional
+        The nodata value used to initialize the destination; it will
+        remain in all areas not covered by the reprojected source.
+        Defaults to the value of src_nodata, or 0 (gdal default).
     dst_width : int, optional
-        Target width. dst_height and dst_transform must also be provided.
+        Target width in pixels. dst_height and dst_transform must also be
+        provided.
     dst_height : int, optional
-        Target height. dst_width and dst_transform must also be provided.
+        Target height in pixels. dst_width and dst_transform must also be
+        provided.
     dst_transform: affine.Affine(), optional
         Target affine transformation.  Required if width and height are
         provided.

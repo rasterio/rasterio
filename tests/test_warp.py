@@ -9,6 +9,7 @@ from packaging.version import parse
 
 import rasterio
 from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.errors import GDALBehaviorChangeException, CRSError
 from rasterio.warp import (
@@ -467,25 +468,6 @@ def test_reproject_invalid_dst_nodata():
             dst_transform=params.dst_transform,
             dst_crs=params.dst_crs,
             dst_nodata=999999999
-        )
-
-
-def test_reproject_missing_src_nodata():
-    """src_nodata is required if dst_nodata is not None."""
-    params = default_reproject_params()
-
-    source = np.ones((params.width, params.height), dtype=np.uint8)
-    out = source.copy()
-
-    with pytest.raises(ValueError):
-        reproject(
-            source,
-            out,
-            src_transform=params.src_transform,
-            src_crs=params.src_crs,
-            dst_transform=params.dst_transform,
-            dst_crs=params.dst_crs,
-            dst_nodata=215
         )
 
 
