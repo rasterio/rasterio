@@ -769,6 +769,8 @@ def test_info_checksums_only():
     assert result.output.strip() == '29131'
 
 
+@pytest.mark.skipif(parse(rasterio.__gdal_version__) < parse('2.1'),
+                    reason='netCDF requires GDAL 2.1+')
 def test_info_subdatasets():
     runner = CliRunner()
     result = runner.invoke(
