@@ -109,8 +109,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
         if aspect == 'meta':
             if meta_member == 'subdatasets':
-                click.echo(json.dumps(
-                    src.subdatasets(), sort_keys=True, indent=indent))
+                for name in src.subdatasets:
+                    click.echo(name)
             elif meta_member == 'stats':
                 band = src.read(bidx, masked=masked)
                 click.echo('%f %f %f' % (
