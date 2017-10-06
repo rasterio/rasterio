@@ -133,26 +133,21 @@ cdef GDALWarpOptions * create_warp_options(
     # Assign nodata values.
     # We don't currently support an imaginary component.
 
-    psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-    psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+    if src_nodata is not None:
+        psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
 
-    for i in range(src_count):
-        if src_nodata is not None:
+        for i in range(src_count):
             psWOptions.padfSrcNoDataReal[i] = float(src_nodata)
             psWOptions.padfSrcNoDataImag[i] = 0.0
-        else:
-            psWOptions.padfSrcNoDataReal[i] = -123456.789  # as in gdalwarp.
-            psWOptions.padfSrcNoDataImag[i] = 0.0
 
-    psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-    psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
 
-    for i in range(src_count):
-        if dst_nodata is not None:
+    if dst_nodata is not None:
+        psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+
+        for i in range(src_count):
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
-            psWOptions.padfDstNoDataImag[i] = 0.0
-        else:
-            psWOptions.padfDstNoDataReal[i] = -123456.789  # as in gdalwarp.
             psWOptions.padfDstNoDataImag[i] = 0.0
 
     # Important: set back into struct or values set above are lost
