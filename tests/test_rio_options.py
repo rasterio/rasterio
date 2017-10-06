@@ -84,7 +84,7 @@ def test_file_in_handler_with_vfs_nonexistent():
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
         file_in_handler(
-            ctx, 'INPUT', 'zip://{0}/files.zip!/inputs/RGB.byte.tif'.format(
+            ctx, 'INPUT', 'zip://{0}/files.zip!/RGB.byte.tif'.format(
                 uuid.uuid4()))
 
 
@@ -92,8 +92,8 @@ def test_file_in_handler_with_vfs():
     """vfs file path is expanded"""
     ctx = MockContext()
     retval = file_in_handler(
-        ctx, 'INPUT', 'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
-    assert retval.endswith('tests/data/files.zip!/inputs/RGB.byte.tif')
+        ctx, 'INPUT', 'zip://tests/data/files.zip!/RGB.byte.tif')
+    assert retval.endswith('tests/data/files.zip!/RGB.byte.tif')
 
 
 def test_file_in_handler_with_vfs_file():
@@ -103,18 +103,19 @@ def test_file_in_handler_with_vfs_file():
     assert retval.endswith('tests/data/RGB.byte.tif')
 
 
-def test_file_in_handler_http():
+@pytest.mark.network
+def test_file_in_handler_http(path_l8_https_b1):
     """HTTP(S) URLs are handled"""
     ctx = MockContext()
-    retval = file_in_handler(ctx, 'INPUT', 'https://example.com/RGB.byte.tif')
-    assert retval == 'https://example.com/RGB.byte.tif'
+    retval = file_in_handler(ctx, 'INPUT', path_l8_https_b1)
+    assert retval == path_l8_https_b1
 
 
-def test_file_in_handler_s3():
+def test_file_in_handler_s3(path_l8_s3_b1):
     """HTTP(S) URLs are handled"""
     ctx = MockContext()
-    retval = file_in_handler(ctx, 'INPUT', 's3://example.com/RGB.byte.tif')
-    assert retval == 's3://example.com/RGB.byte.tif'
+    retval = file_in_handler(ctx, 'INPUT', path_l8_s3_b1)
+    assert retval == path_l8_s3_b1
 
 
 def test_like_dataset_callback(data):

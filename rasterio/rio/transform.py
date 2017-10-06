@@ -2,12 +2,11 @@
 
 import json
 import logging
-import os
 
 import click
 from cligj import precision_opt
 
-import rasterio
+from rasterio.rio.helpers import path_exists
 
 
 @click.command(short_help="Transform coordinates.")
@@ -33,12 +32,12 @@ def transform(ctx, input, src_crs, dst_crs, precision):
         with ctx.obj['env']:
             if src_crs.startswith('EPSG'):
                 src_crs = {'init': src_crs}
-            elif os.path.exists(src_crs):
+            elif path_exists(src_crs):
                 with rasterio.open(src_crs) as f:
                     src_crs = f.crs
             if dst_crs.startswith('EPSG'):
                 dst_crs = {'init': dst_crs}
-            elif os.path.exists(dst_crs):
+            elif path_exists(dst_crs):
                 with rasterio.open(dst_crs) as f:
                     dst_crs = f.crs
             for line in src:

@@ -2,10 +2,39 @@
 Helper objects used by multiple CLI commands.
 """
 
+
 import json
 import os
 
+import rasterio
 from rasterio.errors import FileOverwriteError
+
+
+def path_exists(path):
+
+    """Indicates if a path exists.  If ``path`` is a path to a local file on
+    disk ``True`` is returned, otherwise Rasterio attempts to open ``path``
+    in read-only mode.  If no exceptions are raised then the path is
+    assumed to exist.
+
+    Parameters
+    ----------
+    path : str
+        Path (or connection string) to raster.
+
+    Returns
+    -------
+    bool
+    """
+
+    if os.path.exists(path):
+        return True
+
+    try:
+        with rasterio.open(path):
+            return True
+    except Exception:
+        return False
 
 
 def coords(obj):
@@ -83,11 +112,11 @@ def resolve_inout(input=None, output=None, files=None, force_overwrite=False):
     :param:`force_overwrite` is `True`.
     """
     resolved_output = output or (files[-1] if files else None)
-    if not force_overwrite and resolved_output and os.path.exists(
-            resolved_output):
+    if not force_overwrite and resolved_output \
+            and path_exists(resolved_output):
         raise FileOverwriteError(
-            "file exists and won't be overwritten without use of the "
-            "`--force-overwrite` option.")
+            "raster exists and won't be overwritten without use of the "
+            "'--force-overwrite' option.")
     resolved_inputs = (
         [input] if input else [] +
         list(files[:-1 if not output else None]) if files else [])

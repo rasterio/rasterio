@@ -11,7 +11,6 @@ import pytest
 import numpy as np
 
 from rasterio.crs import CRS
-import rasterio
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -282,3 +281,17 @@ def path_zip_file():
                              '389225main_sw_1965_1024.jpg']:
                 zip.write(os.path.join(data_dir(), filename), filename)
     return path
+
+
+@pytest.fixture(scope='session')
+def path_l8_s3_b1():
+    """S3 URL for band 1 of the standard Landsat 8 scene used by the
+    test suite."""
+    return 's3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'
+
+
+@pytest.fixture(scope='session')
+def path_l8_https_b1():
+    """HTTPS S3 URL for band 1 of the standard Landsat 8 scene used by the
+    test suite."""
+    return 'https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'
