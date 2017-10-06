@@ -9,6 +9,7 @@ from packaging.version import parse
 
 import rasterio
 from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.errors import GDALBehaviorChangeException, CRSError
 from rasterio.warp import (
@@ -262,6 +263,24 @@ def test_calculate_default_transform_multiple_resolutions():
         assert dst_transform.almost_equals(target_transform)
         assert width == 12
         assert height == 20
+
+
+def test_calculate_default_transform_large_dimensions():
+    target_transform = Affine(0.027830579216425146, 0, 0, 0,
+                              -0.027830579216425146, 111325.14286638486)
+
+    src_crs = CRS.from_epsg(4326)
+    dst_crs = CRS.from_epsg(3857)
+    src_width = 4000000
+    src_height = 4000000
+    src_bounds = (0, 0, 1, 1)
+
+    dst_transform, width, height = calculate_default_transform(
+        src_crs, dst_crs, src_width, src_height, *src_bounds)
+
+    assert dst_transform.almost_equals(target_transform)
+    assert width == 3999898
+    assert height == 4000102
 
 
 def test_reproject_ndarray():
