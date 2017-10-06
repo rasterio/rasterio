@@ -127,7 +127,6 @@ def test_mask_out_of_bounds(runner, tmpdir, basic_feature,
             ['mask', pixelated_image_file, output, '--geojson-mask', '-'],
             input=json.dumps(basic_feature))
     assert result.exit_code == 0
-    assert any(['outside bounds' in w.message.args[0] for w in rec])
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
@@ -255,7 +254,7 @@ def test_mask_crop_out_of_bounds(runner, tmpdir, basic_feature,
             '--geojson-mask', '-'],
         input=json.dumps(basic_feature))
     assert result.exit_code == 2
-    assert 'not allowed' in result.output
+    assert 'GeoJSON outside the extent' in result.output
 
 
 def test_mask_crop_and_invert(runner, tmpdir, basic_feature, pixelated_image,

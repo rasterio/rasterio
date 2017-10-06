@@ -57,17 +57,28 @@ fi
 
 ls -l $GDALINST
 
-if [ "$GDALVERSION" = "1.9.2" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+if [ "$GDALVERSION" = "trunk" ]; then
   cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/gdal-$GDALVERSION.tar.gz
-  tar -xzf gdal-$GDALVERSION.tar.gz
-  cd gdal-$GDALVERSION
-  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
-  make -s -j 2
-  make install
+  git clone --depth 1 https://github.com/OSGeo/gdal gdal-$GDALVERSION
+  cd gdal-$GDALVERSION/gdal
+  git rev-parse HEAD > newrev.txt
+  BUILD=no
+  # Only build if nothing cached or if the GDAL revision changed
+  if test ! -f $GDALINST/gdal-$GDALVERSION/rev.txt; then
+    BUILD=yes
+  elif ! diff newrev.txt $GDALINST/gdal-$GDALVERSION/rev.txt >/dev/null; then
+    BUILD=yes
+  fi
+  if test "$BUILD" = "yes"; then
+    mkdir -p $GDALINST/gdal-$GDALVERSION
+    cp newrev.txt $GDALINST/gdal-$GDALVERSION/rev.txt
+    ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
+    make -s -j 2
+    make install
+  fi
 fi
 
-if [ "$GDALVERSION" != "1.9.2" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+if [ "$GDALVERSION" != "trunk" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   cd $GDALBUILD
   wget http://download.osgeo.org/gdal/$GDALVERSION/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
