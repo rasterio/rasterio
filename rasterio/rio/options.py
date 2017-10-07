@@ -53,7 +53,7 @@ import re
 import click
 
 import rasterio
-from rasterio.vfs import parse_path
+from rasterio.vfs import FILE_SCHEMES, parse_path
 
 
 class IgnoreOptionMarker(object):
@@ -111,10 +111,12 @@ def file_in_handler(ctx, param, value):
     try:
         path, archive, scheme = parse_path(value)
         path_to_check = archive or path
-        if (scheme not in ['http', 'https', 's3'] and not
-                os.path.exists(path_to_check)):
+
+        # Validate existence of files.
+        if scheme in FILE_SCHEMES and not os.path.exists(path_to_check):
             raise IOError(
                 "Input file {0} does not exist".format(path_to_check))
+
         if archive and scheme:
             archive = abspath_forward_slashes(archive)
             path = "{0}://{1}!{2}".format(scheme, archive, path)
@@ -122,8 +124,10 @@ def file_in_handler(ctx, param, value):
             path = "{0}://{1}".format(scheme, path)
         elif scheme == 's3':
             path = "{0}://{1}".format(scheme, path)
-        else:
+        elif scheme in FILE_SCHEMES:
             path = abspath_forward_slashes(path)
+        else:
+            path = path
         return path
     except Exception:
         raise click.BadParameter("{} is not a valid input file".format(value))

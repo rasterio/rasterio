@@ -72,13 +72,6 @@ def test_file_in_handler_no_vfs():
     assert retval == abspath_forward_slashes('tests/data/RGB.byte.tif')
 
 
-def test_file_in_handler_bad_scheme():
-    """lolwut scheme is not supported"""
-    ctx = MockContext()
-    with pytest.raises(click.BadParameter):
-        file_in_handler(ctx, 'INPUT', 'lolwut://bogus')
-
-
 def test_file_in_handler_with_vfs_nonexistent():
     """archive does not exist"""
     ctx = MockContext()

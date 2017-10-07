@@ -8,8 +8,19 @@ from rasterio.compat import urlparse
 # NB: As not to propagate fallacies of distributed computing, Rasterio
 # does not support HTTP or FTP URLs via GDAL's vsicurl handler. Only
 # the following local filesystem schemes are supported.
-SCHEMES = {'gzip': 'gzip', 'zip': 'zip', 'tar': 'tar', 'https': 'curl',
-           'http': 'curl', 's3': 's3'}
+SCHEMES = {
+    'gzip': 'gzip',
+    'gzip+file': 'gzip',
+    'zip': 'zip',
+    'zip+file': 'zip',
+    'tar': 'tar',
+    'tar+file': 'tar',
+    'https': 'curl',
+    'http': 'curl',
+    's3': 's3'}
+
+FILE_SCHEMES = [
+    '', 'file', 'gzip', 'gzip+file', 'zip', 'zip+file', 'tar', 'tar+file']
 
 
 def parse_path(uri, vfs=None):
@@ -38,10 +49,10 @@ def parse_path(uri, vfs=None):
             path = parts.pop() if parts else None
             archive = parts.pop() if parts else None
         # For filesystem paths.
-        elif scheme in (None, '', 'file'):
+        elif scheme.lower() in FILE_SCHEMES:
             pass
         # We permit GDAL's idiosyncratic URI-like dataset paths such as
-        # 'NETCDF:...' to fall right through with no parsed archive
+        # 'netcdf':... to fall right through with no parsed archive
         # or scheme.
         else:
             archive = scheme = None
@@ -60,7 +71,8 @@ def vsi_path(path, archive=None, scheme=None):
         result = "/vsis3/{0}".format(path)
     elif scheme and scheme != 'file':
         if archive:
-            result = '/vsi{0}/{1}/{2}'.format(scheme, archive, path.lstrip('/'))
+            result = '/vsi{0}/{1}/{2}'.format(
+                scheme, archive, path.lstrip('/'))
         else:
             result = '/vsi{0}/{1}'.format(scheme, path.lstrip('/'))
     else:

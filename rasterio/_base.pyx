@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+from collections import defaultdict
 import logging
 import math
 import warnings
@@ -762,6 +763,22 @@ cdef class DatasetBase(object):
                 RasterioDeprecationWarning,
                 stacklevel=2)
             return Affine.from_gdal(*self.get_transform())
+
+    property subdatasets:
+        """Sequence of subdatasets"""
+
+        def __get__(self):
+            tags = self.tags(ns='SUBDATASETS')
+            subs = defaultdict(dict)
+            for key, val in tags.items():
+                _, idx, fld = key.split('_')
+                fld = fld.lower()
+                if fld == 'desc':
+                    fld = 'description'
+                if fld == 'name':
+                    val = val.replace('NETCDF', 'netcdf')
+                subs[idx][fld] = val.replace('"', '')
+            return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
