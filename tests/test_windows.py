@@ -104,6 +104,9 @@ def test_window_transform_function():
             ((-1, None), (-1, None)), src.transform).c == src.bounds.left - src.res[0]
         assert transform(
             ((-1, None), (-1, None)), src.transform).f == src.bounds.top + src.res[1]
+        assert transform(
+            Window(-1, -1, src.width + 1, src.height + 1),
+            src.transform).f == src.bounds.top + src.res[1]
 
 
 def test_window_bounds_function():

@@ -33,6 +33,9 @@ Bug fixes:
 
 - We always reacquire the GIL when GDAL calls the rasterio logging error
   handler (#1103, #1104).
+- Rasterio's boundless reading has had a compositing bug. We are resolving
+  it by using a VRT internally and relying upon the VRT's windowing and
+  compositing logic (#1161).
 
 1.0a9 (2017-06-02)
 ------------------
