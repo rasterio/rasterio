@@ -106,10 +106,6 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         nodataval = nodata
         logger.debug("Set nodataval: %r", nodataval)
 
-    if np.dtype(dtype).kind == 'f':
-        if nodataval is None:
-            nodataval = np.nan
-
     if nodataval is not None:
         # Only fill if the nodataval is within dtype's range.
         inrange = False
