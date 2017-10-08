@@ -90,6 +90,19 @@ def test_edit_nodata(data):
         assert src.nodata == 255.0
 
 
+def test_edit_nodata_nan(data):
+    runner = CliRunner()
+    inputfile = str(data.join('float_nan.tif'))
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--unset-nodata'])
+    assert result.exit_code == 0
+    result = runner.invoke(
+        main_group, ['edit-info', inputfile, '--nodata', 'NaN'])
+    assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.nodata != src.nodata
+
+
 def test_edit_crs_err(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
