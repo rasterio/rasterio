@@ -4,6 +4,7 @@ from functools import wraps
 import logging
 import threading
 
+import rasterio
 from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
 from rasterio.compat import string_types
@@ -87,7 +88,7 @@ class Env(object):
     for GDAL as needed.
     """
 
-    def __init__(self, aws_session=None, aws_access_key_id=None,
+    def __init__(self, session=None, aws_access_key_id=None,
                  aws_secret_access_key=None, aws_session_token=None,
                  region_name=None, profile_name=None, **options):
         """Create a new GDAL/AWS environment.
@@ -97,7 +98,7 @@ class Env(object):
 
         Parameters
         ----------
-        aws_session: object, optional
+        session: object, optional
             A boto3 session.
         aws_access_key_id: string, optional
             An access key id, as per boto3.
@@ -131,38 +132,54 @@ class Env(object):
         self.aws_session_token = aws_session_token
         self.region_name = region_name
         self.profile_name = profile_name
-        self.aws_session = aws_session
-        self._creds = (
-            self.aws_session._session.get_credentials()
-            if self.aws_session else None)
+        self.session = session
+
         self.options = options.copy()
         self.context_options = {}
 
-    def get_aws_credentials(self):
-        """Get credentials and configure GDAL."""
-        import boto3
-        options = {}
-        if not self.aws_session:
-            self.aws_session = boto3.Session(
-                aws_access_key_id=self.aws_access_key_id,
-                aws_secret_access_key=self.aws_secret_access_key,
-                aws_session_token=self.aws_session_token,
-                region_name=self.region_name,
-                profile_name=self.profile_name)
-        self._creds = self.aws_session._session.get_credentials()
+        self._creds = None
 
-        # Pass these credentials to the GDAL environment.
-        if self._creds.access_key:  # pragma: no branch
-            options.update(aws_access_key_id=self._creds.access_key)
-        if self._creds.secret_key:  # pragma: no branch
-            options.update(aws_secret_access_key=self._creds.secret_key)
-        if self._creds.token:
-            options.update(aws_session_token=self._creds.token)
-        if self.aws_session.region_name:
-            options.update(aws_region=self.aws_session.region_name)
+    @property
+    def is_credentialized(self):
+        return bool(self._creds)
 
-        # Pass these credentials to the GDAL environment.
-        local._env.update_config_options(**options)
+    def credentialize(self):
+        """Get credentials and configure GDAL
+
+        Note well: this method is a no-op if the GDAL environment
+        already has credentials, unless session is not None.
+        """
+        if not hascreds():
+            import boto3
+            if not self.session and not self.aws_access_key_id and not self.profile_name:
+                self.session = boto3.Session()
+            elif not self.session:
+                self.session = boto3.Session(
+                    aws_access_key_id=self.aws_access_key_id,
+                    aws_secret_access_key=self.aws_secret_access_key,
+                    aws_session_token=self.aws_session_token,
+                    region_name=self.region_name,
+                    profile_name=self.profile_name)
+            else:
+                # use self.session
+                pass
+            self._creds = self.session._session.get_credentials()
+
+            # Pass these credentials to the GDAL environment.
+            cred_opts = {}
+            if self._creds.access_key:  # pragma: no branch
+                cred_opts['AWS_ACCESS_KEY_ID'] = self._creds.access_key
+            if self._creds.secret_key:  # pragma: no branch
+                cred_opts['AWS_SECRET_ACCESS_KEY'] = self._creds.secret_key
+            if self._creds.token:
+                cred_opts['AWS_SESSION_TOKEN'] = self._creds.token
+            if self.session.region_name:
+                cred_opts['AWS_REGION'] = self.session.region_name
+            self.options.update(**cred_opts)
+            setenv(**cred_opts)
+
+    def can_credentialize_on_enter(self):
+        return bool(self.session or self.aws_access_key_id or self.profile_name)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
@@ -170,7 +187,6 @@ class Env(object):
 
     def __enter__(self):
         log.debug("Entering env context: %r", self)
-
         # No parent Rasterio environment exists.
         if local._env is None:
             log.debug("Starting outermost env")
@@ -194,6 +210,10 @@ class Env(object):
             self._has_parent_env = True
             self.context_options = getenv()
             setenv(**self.options)
+
+        if self.can_credentialize_on_enter():
+            self.credentialize()
+
         log.debug("Entered env context: %r", self)
         return self
 
@@ -243,6 +263,10 @@ def getenv():
         return local._env.options.copy()
 
 
+def hasenv():
+    return bool(local._env)
+
+
 def setenv(**options):
     """Set options in the existing environment."""
     if not local._env:
@@ -250,6 +274,12 @@ def setenv(**options):
     else:
         local._env.update_config_options(**options)
         log.debug("Updated existing %r with options %r", local._env, options)
+
+
+def hascreds():
+    gdal_config = local._env.get_config_options()
+    return bool('AWS_ACCESS_KEY_ID' in gdal_config and
+                'AWS_SECRET_ACCESS_KEY' in gdal_config)
 
 
 def delenv():

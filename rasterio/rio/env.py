@@ -21,7 +21,6 @@ def env(ctx, key):
             for k, v in sorted(env.drivers().items()):
                 click.echo("{0}: {1}".format(k, v))
         elif key == 'credentials':
-            env.get_aws_credentials()
             click.echo(json.dumps({
                 'aws_access_key_id': env._creds.access_key,
                 'aws_secret_access_key': env._creds.secret_key,
