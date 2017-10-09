@@ -10,6 +10,7 @@ import pytest
 
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
+from rasterio._err import CPLE_BaseError
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
 from rasterio.env import default_options
 from rasterio.errors import EnvError, RasterioIOError
@@ -29,6 +30,7 @@ credentials = pytest.mark.skipif(
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
+L8TIFB2 = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B2.TIF"
 httpstif = "https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
 
 
@@ -137,11 +139,11 @@ def test_aws_session(gdalenv):
     aws_session = boto3.Session(
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
-    s = rasterio.env.Env(aws_session=aws_session)
-    assert s._creds.access_key == 'id'
-    assert s._creds.secret_key == 'key'
-    assert s._creds.token == 'token'
-    assert s.aws_session.region_name == 'null-island-1'
+    with rasterio.env.Env(session=aws_session) as s:
+        assert s._creds.access_key == 'id'
+        assert s._creds.secret_key == 'key'
+        assert s._creds.token == 'token'
+        assert s.session.region_name == 'null-island-1'
 
 
 def test_aws_session_credentials(gdalenv):
@@ -149,26 +151,25 @@ def test_aws_session_credentials(gdalenv):
     aws_session = boto3.Session(
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
-    with rasterio.env.Env(aws_session=aws_session) as s:
-        s.get_aws_credentials()
-        assert getenv()['aws_access_key_id'] == 'id'
-        assert getenv()['aws_region'] == 'null-island-1'
-        assert getenv()['aws_secret_access_key'] == 'key'
-        assert getenv()['aws_session_token'] == 'token'
+    with rasterio.env.Env(session=aws_session) as s:
+        s.credentialize()
+        assert getenv()['AWS_ACCESS_KEY_ID'] == 'id'
+        assert getenv()['AWS_REGION'] == 'null-island-1'
+        assert getenv()['AWS_SECRET_ACCESS_KEY'] == 'key'
+        assert getenv()['AWS_SESSION_TOKEN'] == 'token'
 
 
 def test_with_aws_session_credentials(gdalenv):
     """Create an Env with a boto3 session."""
-    with rasterio.Env(
-            aws_access_key_id='id', aws_secret_access_key='key',
-            aws_session_token='token', region_name='null-island-1') as s:
-        expected = default_options.copy()
-        assert getenv() == rasterio.env.local._env.options == expected
-        s.get_aws_credentials()
+    env = rasterio.Env(
+        aws_access_key_id='id', aws_secret_access_key='key',
+        aws_session_token='token', region_name='null-island-1')
+    expected = default_options.copy()
+    with env:
         expected.update({
-            'aws_access_key_id': 'id', 'aws_region': 'null-island-1',
-            'aws_secret_access_key': 'key', 'aws_session_token': 'token'})
-        assert getenv() == rasterio.env.local._env.options == expected
+            'AWS_ACCESS_KEY_ID': 'id', 'AWS_REGION': 'null-island-1',
+            'AWS_SECRET_ACCESS_KEY': 'key', 'AWS_SESSION_TOKEN': 'token'})
+        assert getenv() == expected
 
 
 def test_session_env_lazy(monkeypatch, gdalenv):
@@ -177,12 +178,12 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
     with rasterio.Env() as s:
-        s.get_aws_credentials()
+        s.credentialize()
         assert getenv() == rasterio.env.local._env.options
         expected = {
-            'aws_access_key_id': 'id',
-            'aws_secret_access_key': 'key',
-            'aws_session_token': 'token'}
+            'AWS_ACCESS_KEY_ID': 'id',
+            'AWS_SECRET_ACCESS_KEY': 'key',
+            'AWS_SESSION_TOKEN': 'token'}
         for k, v in expected.items():
             assert getenv()[k] == v
 
@@ -212,8 +213,18 @@ def test_skip_gtiff(gdalenv):
 @mingdalversion
 @credentials
 @pytest.mark.network
-def test_s3_open_with_session(gdalenv):
+def test_s3_open_with_env(gdalenv):
     """Read from S3 demonstrating lazy credentials."""
+    with rasterio.Env():
+        with rasterio.open(L8TIF) as dataset:
+            assert dataset.count == 1
+
+
+@mingdalversion
+@credentials
+@pytest.mark.network
+def test_s3_open_with_implicit_env(gdalenv):
+    """Read from S3 using default env."""
     with rasterio.open(L8TIF) as dataset:
         assert dataset.count == 1
 
@@ -221,10 +232,35 @@ def test_s3_open_with_session(gdalenv):
 @mingdalversion
 @credentials
 @pytest.mark.network
-def test_s3_open_with_default_session(gdalenv):
-    """Read from S3 using default env."""
-    with rasterio.open(L8TIF) as dataset:
-        assert dataset.count == 1
+def test_env_open_s3(gdalenv):
+    """Read using env as context."""
+    creds = boto3.Session().get_credentials()
+    with rasterio.Env(aws_access_key_id=creds.access_key,
+                      aws_secret_access_key=creds.secret_key):
+        with rasterio.open(L8TIF) as dataset:
+            assert dataset.count == 1
+
+
+@mingdalversion
+@credentials
+@pytest.mark.network
+def test_env_open_s3_credentials(gdalenv):
+    """Read using env as context."""
+    aws_session = boto3.Session()
+    with rasterio.Env(aws_session=aws_session):
+        with rasterio.open(L8TIF) as dataset:
+            assert dataset.count == 1
+
+
+@mingdalversion
+@credentials
+@pytest.mark.network
+def test_ensured_env_no_credentializing(gdalenv):
+    """open's extra env doesn't override outer env"""
+    with rasterio.Env(aws_access_key_id='foo',
+                      aws_secret_access_key='bar'):
+        with pytest.raises(Exception):
+            rasterio.open(L8TIFB2)
 
 
 @mingdalversion
