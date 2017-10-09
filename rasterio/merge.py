@@ -114,7 +114,10 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
             inrange = (info.min <= nodataval <= info.max)
         elif np.dtype(dtype).kind == 'f':
             info = np.finfo(dtype)
-            inrange = (info.min <= nodataval <= info.max)
+            if np.isnan(nodataval):
+                inrange = True
+            else:
+                inrange = (info.min <= nodataval <= info.max)
         if inrange:
             dest.fill(nodataval)
         else:
@@ -165,10 +168,13 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
             int(round(dst_window.row_off)), int(round(dst_window.col_off)))
 
         region = dest[:, roff:roff + trows, coff:coff + tcols]
-
-        np.copyto(
-            region, temp,
-            where=np.logical_and(region == nodataval,
-                                 np.logical_not(temp.mask)))
+        if np.isnan(nodataval):
+            region_nodata = np.isnan(region)
+            temp_nodata = np.isnan(temp)
+        else:
+            region_nodata = region == nodataval
+            temp_nodata = temp.mask
+        mask = np.logical_and(region_nodata, ~temp_nodata)
+        np.copyto(region, temp, where=mask)
 
     return dest, output_transform
