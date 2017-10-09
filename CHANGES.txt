@@ -40,6 +40,8 @@ Bug fixes:
   compositing logic (#1161).
 - AWS credentials set in an ``Env`` are no longer clobbered by credentials
   from a default boto3 session inside ``rasterio.open`` (#1075).
+- NaN can now be used as a nodata value in ``merge`` and when setting nodata
+  from `rio edit-info` (#1160).
 
 1.0a9 (2017-06-02)
 ------------------
