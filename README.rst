@@ -310,3 +310,8 @@ Changes
 -------
 
 See `CHANGES.txt <CHANGES.txt>`__.
+
+Who is Using Rasterio?
+----------------------
+
+See `here <https://libraries.io/pypi/rasterio/usage>`__.
