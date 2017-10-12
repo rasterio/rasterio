@@ -6,9 +6,11 @@ include "gdal.pxi"
 import logging
 
 from rasterio._io cimport DatasetReaderBase
-from rasterio._err cimport exc_wrap_pointer
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 from rasterio.env import ensure_env
-from rasterio.errors import DriverRegistrationError
+from rasterio._err import CPLE_OpenFailedError
+from rasterio.errors import DriverRegistrationError, RasterioIOError
+from rasterio.vfs import parse_path, vsi_path
 
 
 log = logging.getLogger(__name__)
@@ -79,3 +81,53 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
         if dst_dataset != NULL:
             GDALClose(dst_dataset)
+
+
+@ensure_env
+def delete(path, driver=None):
+
+    """Delete a GDAL dataset.
+
+    Parameters
+    ----------
+    path : path
+        Path to dataset to delete.
+    driver : str or None, optional
+        Name of driver to use for deleting.  Defaults to whatever GDAL
+        determines is the appropriate driver.
+    """
+
+    cdef GDALDatasetH h_dataset = NULL
+    cdef GDALDriverH h_driver = NULL
+
+    gdal_path = vsi_path(*parse_path(path))
+    b_path = gdal_path.encode('utf-8')
+    cdef char* c_path = b_path
+
+    if driver:
+        b_driver = driver.encode('utf-8')
+        h_driver = GDALGetDriverByName(b_driver)
+        if h_driver == NULL:
+            raise DriverRegistrationError(
+                "Unrecognized driver: {}".format(driver))
+
+    # Need to determine driver by opening the input dataset
+    else:
+        with nogil:
+            h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+
+        try:
+            h_dataset = exc_wrap_pointer(h_dataset)
+            h_driver = GDALGetDatasetDriver(h_dataset)
+            if h_driver == NULL:
+                raise DriverRegistrationError(
+                    "Could not determine driver for: {}".format(path))
+        except CPLE_OpenFailedError:
+            raise RasterioIOError(
+                "Invalid dataset: {}".format(path))
+        finally:
+            GDALClose(h_dataset)
+
+    with nogil:
+        res = GDALDeleteDataset(h_driver, c_path)
+    exc_wrap_int(res)
