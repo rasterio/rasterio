@@ -11,6 +11,10 @@ from rasterio.rio.edit_info import (
 from rasterio.rio.main import main_group
 
 
+with rasterio.Env() as env:
+    HAVE_NETCDF = 'NetCDF' in env.drivers().keys()
+
+
 def test_delete_nodata_exclusive_opts(data):
     """--unset-nodata and --nodata can't be used together"""
     runner = CliRunner()
@@ -781,6 +785,8 @@ def test_info_checksums_only():
 
 @pytest.mark.skipif(parse(rasterio.__gdal_version__) < parse('2.1'),
                     reason='netCDF requires GDAL 2.1+')
+@pytest.mark.skipif(not HAVE_NETCDF,
+                    reason="GDAL not compiled with NetCDF driver.")
 def test_info_subdatasets():
     runner = CliRunner()
     result = runner.invoke(
