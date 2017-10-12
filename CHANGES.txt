@@ -1,6 +1,15 @@
 Changes
 =======
 
+Next Release
+------------
+
+New features:
+
+- Addition of ``rasterio.delete()`` and ``$ rio rm`` for deleting
+  datasets (#929).
+
+
 1.0a10 (2017-10-09)
 -------------------
 

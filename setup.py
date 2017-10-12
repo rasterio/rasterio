@@ -369,6 +369,7 @@ setup_args = dict(
         merge=rasterio.rio.merge:merge
         overview=rasterio.rio.overview:overview
         rasterize=rasterio.rio.rasterize:rasterize
+        rm=rasterio.rio.rm:rm
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.shapes:shapes
         stack=rasterio.rio.stack:stack
