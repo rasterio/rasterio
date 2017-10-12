@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
-from rasterio._copy import copy
+from rasterio._manage import copy
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,

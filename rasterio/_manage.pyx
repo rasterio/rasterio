@@ -1,4 +1,4 @@
-"""Raster copying."""
+"""Raster management."""
 
 
 include "gdal.pxi"

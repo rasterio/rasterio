@@ -70,7 +70,7 @@ VERSION.txt
 rasterio/_fill.cpp
 rasterio/_warp.cpp
 rasterio/_base.c
-rasterio/_copy.c
+rasterio/_manage.c
 rasterio/_drivers.c
 rasterio/_err.c
 rasterio/_example.c
