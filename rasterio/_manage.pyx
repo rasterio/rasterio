@@ -17,6 +17,35 @@ log = logging.getLogger(__name__)
 
 
 @ensure_env
+def exists(path):
+
+    """Determine if a dataset exists by attempting to open it.
+
+    Parameters
+    ----------
+    path : str
+        Path to dataset.
+    """
+
+    cdef GDALDatasetH h_dataset = NULL
+
+    gdal_path = vsi_path(*parse_path(path))
+    b_path = gdal_path.encode('utf-8')
+    cdef char* c_path = b_path
+
+    with nogil:
+        h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+
+    try:
+        h_dataset = exc_wrap_pointer(h_dataset)
+        return True
+    except CPLE_OpenFailedError:
+        return False
+    finally:
+        GDALClose(h_dataset)
+
+
+@ensure_env
 def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
     """Copy a raster from a path or open dataset handle to a new destination

@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
-from rasterio._manage import copy, delete
+from rasterio._manage import copy, delete, exists
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
@@ -54,7 +54,7 @@ def window_index(*args, **kwargs):
 
 
 __all__ = [
-    'band', 'open', 'copy', 'delete', 'pad']
+    'band', 'open', 'copy', 'delete', 'exists', 'pad']
 __version__ = "1.0a10"
 __gdal_version__ = gdal_version()
 

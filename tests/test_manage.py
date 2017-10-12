@@ -38,3 +38,9 @@ def test_delete_invalid_driver(path_rgb_byte_tif, tmpdir):
     with pytest.raises(DriverRegistrationError) as e:
         rasterio.delete(path, driver='trash')
     assert 'Unrecognized driver' in str(e)
+
+
+def test_exists(path_rgb_byte_tif):
+
+    assert rasterio.exists(path_rgb_byte_tif)
+    assert not rasterio.exists('trash')
