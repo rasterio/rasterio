@@ -153,7 +153,7 @@ def rasterize(
 
         geojson_bounds = geojson.get('bbox', calculate_bounds(geojson))
 
-        if os.path.exists(output):
+        if rasterio.exists(output):
             with rasterio.open(output, 'r+') as out:
                 if has_src_crs and src_crs != out.crs:
                     raise click.BadParameter('GeoJSON does not match crs of '

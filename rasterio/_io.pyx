@@ -851,6 +851,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALRasterBandH band = NULL
         cdef const char *fname = NULL
 
+        # Used to delete an existing dataset when it is opened in write mode.
+        cdef GDALDatasetH h_del_dataset = NULL
+        cdef GDALDriverH h_del_driver = NULL
+        cdef char* c_del_path = NULL
+
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
         if mode == 'w':
@@ -890,9 +895,22 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if mode == 'w':
 
-            # Delete existing file, create.
-            if os.path.exists(path):
-                os.unlink(path)
+            # Delete dataset if it already exists.
+            # If dataset can't be opened it doesn't exist.
+            # If dataset can be opened get its driver and delete it.
+            c_del_path = name_b
+            with nogil:
+                h_del_dataset = GDALOpenShared(c_del_path, <GDALAccess>0)
+            try:
+                h_del_dataset = exc_wrap_pointer(h_del_dataset)
+                h_del_driver = GDALGetDatasetDriver(h_del_dataset)
+                if h_del_driver != NULL:
+                    with nogil:
+                        GDALDeleteDataset(h_del_driver, c_del_path)
+            except CPLE_OpenFailedError:
+                pass
+            finally:
+                GDALClose(h_del_dataset)
 
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
