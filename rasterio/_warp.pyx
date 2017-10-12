@@ -317,42 +317,47 @@ def _reproject(
 
         log.debug("Created temp source dataset")
 
-        if src_transform:
-            for i in range(6):
-                gt[i] = src_transform[i]
-            retval = GDALSetGeoTransform(src_dataset, gt)
+        try:
+            src_osr = _osr_from_crs(src_crs)
+            OSRExportToWkt(src_osr, &srcwkt)
 
-            log.debug("Set transform on temp source dataset: %d", retval)
+            if src_transform:
+                for i in range(6):
+                    gt[i] = src_transform[i]
 
-            try:
-                src_osr = _osr_from_crs(src_crs)
-                OSRExportToWkt(src_osr, &srcwkt)
-                GDALSetProjection(src_dataset, srcwkt)
+                if not GDALError.none == GDALSetGeoTransform(src_dataset, gt):
+                    raise ValueError(
+                        "Failed to set transform on temp source dataset.")
+
+                if not GDALError.none == GDALSetProjection(
+                        src_dataset, srcwkt):
+                    raise ("Failed to set projection on temp source dataset.")
 
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
 
-            finally:
-                CPLFree(srcwkt)
-                _safe_osr_release(src_osr)
+            elif gcps:
+                gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
+                try:
+                    for i, obj in enumerate(gcps):
+                        ident = str(i).encode('utf-8')
+                        info = "".encode('utf-8')
+                        gcplist[i].pszId = ident
+                        gcplist[i].pszInfo = info
+                        gcplist[i].dfGCPPixel = obj.col
+                        gcplist[i].dfGCPLine = obj.row
+                        gcplist[i].dfGCPX = obj.x
+                        gcplist[i].dfGCPY = obj.y
+                        gcplist[i].dfGCPZ = obj.z or 0.0
 
-        elif gcps:
-            gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
-            try:
-                for i, obj in enumerate(gcps):
-                    ident = str(i).encode('utf-8')
-                    info = "".encode('utf-8')
-                    gcplist[i].pszId = ident
-                    gcplist[i].pszInfo = info
-                    gcplist[i].dfGCPPixel = obj.col
-                    gcplist[i].dfGCPLine = obj.row
-                    gcplist[i].dfGCPX = obj.x
-                    gcplist[i].dfGCPY = obj.y
-                    gcplist[i].dfGCPZ = obj.z or 0.0
+                    if not GDALError.none == GDALSetGCPs(
+                            src_dataset, len(gcps), gcplist, srcwkt):
+                        raise ("Failed to assign GCPs to temp source dataset.")
+                finally:
+                    CPLFree(gcplist)
 
-                GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt)
-            finally:
-                CPLFree(gcplist)
-                CPLFree(srcwkt)
+        finally:
+            CPLFree(srcwkt)
+            _safe_osr_release(src_osr)
 
         # Copy arrays to the dataset.
         retval = io_auto(source, src_dataset, 1)
