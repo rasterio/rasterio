@@ -53,6 +53,8 @@ rasterio/*.html
 
 # Sphinx documentation
 docs/_build/
+docs/rasterio.*.rst
+docs/rasterio.rst
 
 # PyBuilder
 target/
@@ -82,3 +84,6 @@ tests/data/white-gemini-iv.zip
 
 # vim
 .*.swp
+
+# Random local dev files
+ignore/
