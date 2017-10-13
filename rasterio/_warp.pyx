@@ -9,7 +9,7 @@ import uuid
 import numpy as np
 
 from rasterio._err import (
-    GDALError, CPLE_IllegalArgError, CPLE_NotSupportedError,
+    CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
@@ -325,13 +325,9 @@ def _reproject(
                 for i in range(6):
                     gt[i] = src_transform[i]
 
-                if not GDALError.none == GDALSetGeoTransform(src_dataset, gt):
-                    raise ValueError(
-                        "Failed to set transform on temp source dataset.")
+                exc_wrap_int(GDALSetGeoTransform(src_dataset, gt))
 
-                if not GDALError.none == GDALSetProjection(
-                        src_dataset, srcwkt):
-                    raise ("Failed to set projection on temp source dataset.")
+                exc_wrap_int(GDALSetProjection(src_dataset, srcwkt))
 
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
 
@@ -349,9 +345,7 @@ def _reproject(
                         gcplist[i].dfGCPY = obj.y
                         gcplist[i].dfGCPZ = obj.z or 0.0
 
-                    if not GDALError.none == GDALSetGCPs(
-                            src_dataset, len(gcps), gcplist, srcwkt):
-                        raise ("Failed to assign GCPs to temp source dataset.")
+                    exc_wrap_int(GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt))
                 finally:
                     CPLFree(gcplist)
 
@@ -360,8 +354,7 @@ def _reproject(
             _safe_osr_release(src_osr)
 
         # Copy arrays to the dataset.
-        retval = io_auto(source, src_dataset, 1)
-        # TODO: handle errors (by retval).
+        exc_wrap_int(io_auto(source, src_dataset, 1))
 
         log.debug("Wrote array to temp source dataset")
 
@@ -414,9 +407,7 @@ def _reproject(
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.none == GDALSetGeoTransform(dst_dataset, gt):
-            raise ValueError(
-                "Failed to set transform on temp destination dataset.")
+        exc_wrap_int(GDALSetGeoTransform(dst_dataset, gt))
 
         try:
             dst_osr = _osr_from_crs(dst_crs)
@@ -424,14 +415,12 @@ def _reproject(
 
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
 
-            if not GDALError.none == GDALSetProjection(
-                    dst_dataset, dstwkt):
-                raise ("Failed to set projection on temp destination dataset.")
+            exc_wrap_int(GDALSetProjection(dst_dataset, dstwkt))
         finally:
             CPLFree(dstwkt)
             _safe_osr_release(dst_osr)
 
-        retval = io_auto(destination, dst_dataset, 1)
+        exc_wrap_int(io_auto(destination, dst_dataset, 1))
 
         log.debug("Wrote array to temp output dataset")
 
@@ -541,8 +530,7 @@ def _reproject(
                 oWarper.ChunkAndWarpImage(0, 0, cols, rows)
 
         if dtypes.is_ndarray(destination):
-            retval = io_auto(destination, dst_dataset, 0)
-            # TODO: handle errors (by retval).
+            exc_wrap_int(io_auto(destination, dst_dataset, 0))
 
             if dst_dataset != NULL:
                 GDALClose(dst_dataset)
