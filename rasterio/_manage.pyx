@@ -66,7 +66,10 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         Creation options for output dataset.
     """
 
+    cdef bint c_strictness
     cdef char **options = NULL
+    cdef char* c_src_path = NULL
+    cdef char* c_dst_path = NULL
     cdef GDALDatasetH src_dataset = NULL
     cdef GDALDatasetH dst_dataset = NULL
     cdef GDALDriverH drv = NULL
@@ -78,10 +81,8 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
             options, <const char *>kb, <const char *>vb)
         log.debug("Option %r:%r", kb, vb)
 
-    strictness = int(strict)
-
+    c_strictness = strict
     driverb = driver.encode('utf-8')
-
     drv = GDALGetDriverByName(driverb)
     if drv == NULL:
         raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
@@ -89,8 +90,10 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
     # Input is a path or GDAL connection string
     if isinstance(src, str):
         src = src.encode('utf-8')
-        src_dataset = exc_wrap_pointer(
-            GDALOpenShared(<const char *>src, <GDALAccess>0))
+        c_src_path = src
+        with nogil:
+            src_dataset = GDALOpenShared(c_src_path, <GDALAccess>0)
+        src_dataset = exc_wrap_pointer(src_dataset)
         close_src = True
     # Input is something like 'rasterio.open()'
     else:
@@ -98,11 +101,12 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         close_src = False
 
     dst = dst.encode('utf-8')
-
+    c_dst_path = dst
     try:
-        dst_dataset = exc_wrap_pointer(
-            GDALCreateCopy(drv, <const char *>dst, src_dataset,
-                           strictness, options, NULL, NULL))
+        with nogil:
+            dst_dataset = GDALCreateCopy(
+                drv, c_dst_path, src_dataset, c_strictness, options, NULL, NULL)
+        dst_dataset = exc_wrap_pointer(dst_dataset)
     finally:
         CSLDestroy(options)
         if close_src:
