@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
+from rasterio.shutil import copy as _copy  # This needs to be removed but triggers a wild error: ImportError: cannot import name 'WindowMethodsMixin'
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
