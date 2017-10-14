@@ -14,6 +14,8 @@ New features:
   datasets (#929).
 - Addition of ``rasterio.shutil.exists()`` for determining if a dataset
   exists (#1173).
+- Addition of ``rasterio.shutil.copyfiles()`` to copy files associated
+  with a datset from one location to another (#1173).
 
 
 1.0a10 (2017-10-09)

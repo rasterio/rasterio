@@ -117,6 +117,46 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
 
 @ensure_env
+def copyfiles(src, dst):
+
+    """Copy files associated with a dataset from one location to another.
+
+    Parameters
+    ----------
+    src : str
+        Source dataset.
+    dst : str
+        Target dataset.
+    """
+
+    cdef GDALDatasetH h_dataset = NULL
+    cdef GDALDriverH h_driver = NULL
+
+    # VFS paths probabaly don't work, but its hard to be completely certain
+    # so just attempt to use them.
+    gdal_src_path = vsi_path(*parse_path(src))
+    gdal_dst_path = vsi_path(*parse_path(dst))
+    b_gdal_src_path = gdal_src_path.encode('utf-8')
+    b_gdal_dst_path = gdal_dst_path.encode('utf-8')
+    cdef char* c_gdal_src_path = b_gdal_src_path
+    cdef char* c_gdal_dst_path = b_gdal_dst_path
+
+    with nogil:
+            h_dataset = GDALOpenShared(c_gdal_src_path, <GDALAccess>0)
+    try:
+        h_dataset = exc_wrap_pointer(h_dataset)
+        h_driver = exc_wrap_pointer(GDALGetDatasetDriver(h_dataset))
+        with nogil:
+            err = GDALCopyDatasetFiles(
+                h_driver, c_gdal_dst_path, c_gdal_src_path)
+        exc_wrap_int(err)
+    except CPLE_OpenFailedError as e:
+        raise RasterioIOError(str(e))
+    finally:
+        GDALClose(h_dataset)
+
+
+@ensure_env
 def delete(path, driver=None):
 
     """Delete a GDAL dataset.

@@ -120,3 +120,29 @@ def test_copy_strict_silent_failure(tmpdir, path_float_tif):
     with rasterio.open(outfile) as dst:
         assert dst.driver == 'JPEG'
         assert dst.read().max() == 0  # it should be 1.4099; 0 indicates bad data
+
+
+def test_copyfiles(path_rgb_byte_tif, tmpdir):
+    """``rasterio.shutil.copyfiles()``"""
+
+    outfile = str(tmpdir.join('test_copyfiles.tif'))
+
+    # Add an '.aux.xml' so more than 1 file is copied
+    aux = path_rgb_byte_tif + '.aux.xml'
+    with open(aux, 'w'):
+        pass
+
+    ret = rasterio.shutil.copyfiles(path_rgb_byte_tif, outfile)
+    assert ret is None
+
+    with rasterio.open(path_rgb_byte_tif) as expected, \
+            rasterio.open(outfile) as actual:
+        assert len(expected.files) == len(actual.files)
+        assert all(map(os.path.exists, actual.files))
+
+    os.unlink(aux)
+
+
+def test_copyfiles_fail():
+    with pytest.raises(RasterioIOError):
+        rasterio.shutil.copyfiles('trash', 'whatever')
