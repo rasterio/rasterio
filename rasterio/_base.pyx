@@ -164,7 +164,10 @@ cdef class DatasetBase(object):
 
     cdef GDALDatasetH handle(self) except NULL:
         """Return the object's GDAL dataset handle"""
-        return self._hds
+        if self._hds == NULL:
+            raise RasterioIOError("Dataset is closed: {}".format(self.name))
+        else:
+            return self._hds
 
     cdef GDALRasterBandH band(self, int bidx) except NULL:
         """Return a GDAL raster band handle"""

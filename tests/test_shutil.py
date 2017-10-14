@@ -16,14 +16,12 @@ from rasterio.errors import DriverRegistrationError, RasterioIOError
 def test_delete(driver, path_rgb_byte_tif, tmpdir):
 
     """Delete a file with ``rasterio.shutil.delete()``.  Also specifies
-    driver.  Also exercises ``src.files``.
+    driver.
     """
 
     path = str(tmpdir.join('test_delete.tif'))
     rasterio.shutil.copy(path_rgb_byte_tif, path)
-    with rasterio.open(path) as src:
-        for p in src.files:
-            assert os.path.exists(p)
+    assert os.path.exists(path)
     rasterio.shutil.delete(path, driver=driver)
 
 
@@ -122,8 +120,3 @@ def test_copy_strict_silent_failure(tmpdir, path_float_tif):
     with rasterio.open(outfile) as dst:
         assert dst.driver == 'JPEG'
         assert dst.read().max() == 0  # it should be 1.4099; 0 indicates bad data
-
-
-def test_copy_deprecated():
-
-    """``rasterio.copy()`` was moved to ``rasterio.shutil.cop"""
