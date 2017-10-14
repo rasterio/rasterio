@@ -1,7 +1,10 @@
 import json
 
 from click.testing import CliRunner
+from packaging.version import Version, parse
+import pytest
 
+import rasterio
 from rasterio.rio.main import main_group
 
 
