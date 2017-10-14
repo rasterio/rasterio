@@ -7,6 +7,7 @@ Primarily supports `$ rio insp`.
 
 from __future__ import absolute_import
 
+from collections import OrderedDict
 import logging
 import warnings
 
@@ -94,7 +95,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             arr = source.read(1, masked=True)
         else:
             try:
-                source_colorinterp = {source.colorinterp(n): n for n in source.indexes}
+                source_colorinterp = OrderedDict(zip(source.indexes, source.colorinterp))
                 colorinterp = rasterio.enums.ColorInterp
                 rgb_indexes = [source_colorinterp[ci] for ci in
                                (colorinterp.red, colorinterp.green, colorinterp.blue)]
