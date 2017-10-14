@@ -54,7 +54,7 @@ def _delete_dataset_if_exists(path):
     """
 
     b_path = path.encode('utf-8')
-    c_path = b_path
+    cdef char* c_path = b_path
     with nogil:
         h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
     try:
