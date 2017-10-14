@@ -11,7 +11,7 @@ Color interpretation of raster bands can be read from the dataset
 
     >>> import rasterio
     >>> src = rasterio.open("tests/data/RGB.byte.tif")
-    >>> src.colorinterp(1)
+    >>> src.colorinterp[0]
     <ColorInterp.red: 3>
 
 GDAL builds the color interpretation based on the driver and creation options.
@@ -28,23 +28,22 @@ Color interpretation can be set when creating a new datasource with the
     >>> with rasterio.open("/tmp/rgb.tif", 'w', **profile) as dst:
     ...     dst.write(src.read())
 
-or via the ``set_colorinterp()`` method when a datasource is opened in
+or via the ``colorinterp`` property when a datasource is opened in
 update mode:
 
 .. code:: python
 
     >>> from rasterio.enums import ColorInterp
     >>> with rasterio.open('/tmp/rgb.tif', 'r+', **profile) as src:
-    ...     src.set_colorinterp(1, ColorInterp.red)
-    ...     src.set_colorinterp(2, ColorInterp.green)
-    ...     src.set_colorinterp(3, ColorInterp.blue)
+    ...     src.colorinterp = [
+    ...         ColorInterp.red, ColorInterp.green, ColorInterp.blue]
 
 And the resulting raster will be interpretted as RGB.
 
 .. code:: python
 
     >>> with rasterio.open("/tmp/rgb.tif") as src2:
-    ...     src2.colorinterp(2)
+    ...     src2.colorinterp[1]
     <ColorInterp.green: 4>
 
 

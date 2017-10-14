@@ -1,6 +1,7 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 
+from collections import OrderedDict
 import json
 import warnings
 
@@ -254,8 +255,11 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             dst.set_description(bidx, description)
 
         if colorinterp:
-            for bidx, ci in colorinterp.items():
-                dst.set_colorinterp(bidx, ci)
+            # Construct a mapping of all color interpretations.  Use
+            # may have only supplied some.
+            ci_mapping = OrderedDict(zip(dst.indexes, dst.colorinterp))
+            ci_mapping.update(colorinterp.items())
+            dst.colorinterp = ci_mapping.values()
 
     # Post check - ensure that crs was unset properly
     if unset_crs:

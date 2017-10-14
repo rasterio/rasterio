@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import functools
 import operator
 import os
@@ -291,21 +292,22 @@ def path_4band_no_colorinterp(tmpdir):
     # The first band's color interpretation is set to gray due to
     # 'photometric=minisblack' and cannot be set to 'undefined' if all other
     # bands are undefined as of GDAL 2.2.1
-    src_ci_map = {
-        1: ColorInterp.undefined,
-        2: ColorInterp.undefined,
-        3: ColorInterp.undefined,
-        4: ColorInterp.undefined
-    }
+    src_ci_map = OrderedDict((
+        (1, ColorInterp.undefined),
+        (2, ColorInterp.undefined),
+        (3, ColorInterp.undefined),
+        (4, ColorInterp.undefined)))
     # Get GDAL's 4 band defaults and override
     with rasterio.open(dst_path, 'w', **profile) as src:
-        for bidx, ci in src_ci_map.items():
-            src.set_colorinterp(bidx, ci)
+        src.colorinterp = src_ci_map.values()
+
     # Ensure override occurred.  Setting color interpretation on an existing
     # file is surrounded by holes.
     with rasterio.open(dst_path, 'r+') as src:
+        ci_mapping = OrderedDict(zip(src.indexes, src.colorinterp))
         for bidx, ci in src_ci_map.items():
-            assert src.colorinterp(bidx) == ci, src.colorinterp(bidx)
+            assert ci == ci_mapping[bidx]
+
     assert not os.path.exists(dst_path + '.aux.xml')
     return dst_path
 

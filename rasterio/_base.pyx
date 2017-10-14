@@ -792,13 +792,78 @@ cdef class DatasetBase(object):
         num_items = CSLCount(metadata)
         return dict(metadata[i].split('=', 1) for i in range(num_items))
 
-    def colorinterp(self, bidx):
-        """Returns the color interpretation for a band or None."""
-        cdef GDALRasterBandH band = NULL
+    property colorinterp:
 
-        band = self.band(bidx)
-        value = GDALGetRasterColorInterpretation(band)
-        return ColorInterp(value)
+        """Returns a sequence of ``ColorInterp.<enum>`` representing
+        color interpretation in band order.
+
+        Pattern for converting to a band mapping:
+
+            from collections import OrderedDict
+            with rasterio.open('image.tif') as src:
+                band_mapping = OrderedDict(
+                    zip(src.colorinterp, self.indexes))
+                band_mapping[1] == src.colorinterp[0]
+
+        A normal dictionary would also work, however an ``OrderedDict()``
+        makes setting color interpretation easier as order is significant.
+
+            from collections import OrderedDict
+            with rasterio.open('image.tif', 'r+') as src:
+                band_mapping = OrderedDict((
+                    (1, ColorInterp.blue),
+                    (2, ColorInterp.green),
+                    (3, ColorInterp.red)))
+                src.colorinterp = band_mapping.values()
+
+        Returns
+        -------
+        tuple
+        """
+
+        def __get__(self):
+
+            """A sequence of ``ColorInterp.<enum>`` in band order.
+
+            Returns
+            -------
+            tuple
+            """
+
+            cdef GDALRasterBandH band = NULL
+
+            out = []
+            for bidx in self.indexes:
+                value = exc_wrap_int(
+                    GDALGetRasterColorInterpretation(self.band(bidx)))
+                out.append(ColorInterp(value))
+            return out
+
+        def __set__(self, value):
+
+            """Set band color interpretation with a sequence of
+            ``ColorInterp.<enum>`` in band order.
+
+            Parameters
+            ----------
+            value : iter
+                A sequence of ``ColorInterp.<enum>``.
+            """
+
+            value = tuple(value)
+
+            if self.mode == 'r':
+                raise RasterioIOError(
+                    "Can only set color interpretation when dataset is "
+                    "opened in 'r+' or 'w' mode, not '{}'.".format(self.mode))
+            elif len(value) != len(self.indexes):
+                raise ValueError(
+                    "Must set color interpretation for all bands.  Found "
+                    "{} bands: {}".format(len(self.indexes), value))
+
+            for bidx, ci in zip(self.indexes, value):
+                exc_wrap_int(
+                    GDALSetRasterColorInterpretation(self.band(bidx), ci.value))
 
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""

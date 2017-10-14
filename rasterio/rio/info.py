@@ -77,8 +77,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             proj4 = ''
 
         info['res'] = src.res
-        info['colorinterp'] = [src.colorinterp(i).name
-                               for i in src.indexes]
+        info['colorinterp'] = [ci.name for ci in src.colorinterp]
         info['units'] = [units or None for units in src.units]
         info['descriptions'] = src.descriptions
         info['indexes'] = src.indexes

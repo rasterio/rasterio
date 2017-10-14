@@ -1,6 +1,7 @@
 """Tests for interacting with color interpretation."""
 
 
+from collections import OrderedDict
 import os
 
 import pytest
@@ -18,10 +19,11 @@ def test_cmyk_interp(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
         assert dst.profile['photometric'] == 'cmyk'
-        assert dst.colorinterp(1) == ColorInterp.cyan
-        assert dst.colorinterp(2) == ColorInterp.magenta
-        assert dst.colorinterp(3) == ColorInterp.yellow
-        assert dst.colorinterp(4) == ColorInterp.black
+        dst.colorinterp = [
+            ColorInterp.cyan,
+            ColorInterp.magenta,
+            ColorInterp.yellow,
+            ColorInterp.black]
 
 
 @pytest.mark.skipif(
@@ -36,9 +38,8 @@ def test_ycbcr_interp(tmpdir):
     meta['count'] = 3
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
-        assert dst.colorinterp(1) == ColorInterp.red
-        assert dst.colorinterp(2) == ColorInterp.green
-        assert dst.colorinterp(3) == ColorInterp.blue
+        dst.colorinterp = [
+            ColorInterp.red, ColorInterp.green, ColorInterp.blue]
 
 
 @pytest.mark.parametrize("dtype", [rasterio.ubyte, rasterio.int16])
@@ -62,30 +63,30 @@ def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
 
     # This is should be the default color interpretation of the copied
     # image.  GDAL defines these defaults, not Rasterio.
-    src_ci_map = {
-        1: ColorInterp.gray,
-        2: ColorInterp.undefined,
-        3: ColorInterp.undefined,
-        4: ColorInterp.undefined
-    }
+    src_ci_map = OrderedDict((
+        (1, ColorInterp.gray),
+        (2, ColorInterp.undefined),
+        (3, ColorInterp.undefined),
+        (4, ColorInterp.undefined)))
 
-    dst_ci_map = {
-        1: ColorInterp.alpha,
-        2: ColorInterp.blue,
-        3: ColorInterp.green,
-        4: ColorInterp.red
-    }
+    dst_ci_map = OrderedDict((
+        (1, ColorInterp.alpha),
+        (2, ColorInterp.blue),
+        (3, ColorInterp.green),
+        (4, ColorInterp.red)))
+
     with rasterio.open(no_ci_path, 'r+') as src:
+        ci_mapping = OrderedDict(zip(src.indexes, src.colorinterp))
         for bidx, ci in src_ci_map.items():
-            assert src.colorinterp(bidx) == ci
-        for bidx, ci in dst_ci_map.items():
-            src.set_colorinterp(bidx, ci)
+            assert ci_mapping[bidx] == ci
+        src.colorinterp = dst_ci_map.values()
 
     # See note in 'test_set_colorinterp_undefined'.  Opening a second
     # time catches situations like that.
     with rasterio.open(no_ci_path) as src:
+        ci_mapping = OrderedDict(zip(src.indexes, src.colorinterp))
         for bidx, ci in dst_ci_map.items():
-            assert src.colorinterp(bidx) == ci
+            assert ci_mapping[bidx] == ci
 
 
 @pytest.mark.parametrize("ci", ColorInterp.__members__.values())
@@ -94,7 +95,9 @@ def test_set_colorinterp_all(path_4band_no_colorinterp, ci):
     """Test setting with all color interpretations."""
 
     with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
-        src.set_colorinterp(2, ci)
+        all_ci = src.colorinterp
+        all_ci[1] = ci
+        src.colorinterp = all_ci
 
     with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp(2) == ci
+        assert src.colorinterp[1] == ci

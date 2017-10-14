@@ -349,7 +349,7 @@ def test_colorinterp_simple(path_4band_no_colorinterp):
         '--colorinterp', '4=alpha'])
     assert result.exit_code == 0
     with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp(4) == ColorInterp.alpha
+        assert src.colorinterp[3] == ColorInterp.alpha
 
 
 def test_colorinterp_complex(path_4band_no_colorinterp):
@@ -359,20 +359,17 @@ def test_colorinterp_complex(path_4band_no_colorinterp):
         'edit-info', path_4band_no_colorinterp,
         '--colorinterp', '4=alpha,3=red,2=blue,1=green'])
     assert result.exit_code == 0
-    expected = {
-        4: ColorInterp.alpha,
-        3: ColorInterp.red,
-        2: ColorInterp.blue,
-        1: ColorInterp.green
-    }
     with rasterio.open(path_4band_no_colorinterp) as src:
-        for bidx, ci in expected.items():
-            assert src.colorinterp(bidx) == ci
+        assert src.colorinterp == [
+            ColorInterp.green,
+            ColorInterp.blue,
+            ColorInterp.red,
+            ColorInterp.alpha]
 
 
 @pytest.mark.parametrize("shorthand,expected", [
-    ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
-    ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha))
+    ('RGB', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined]),
+    ('RGBA', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha])
 ])
 def test_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
     """Set color interpretation from 'RGB' and 'RGBA' shorthand."""
@@ -381,10 +378,8 @@ def test_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
         'edit-info', path_4band_no_colorinterp,
         '--colorinterp', shorthand])
     assert result.exit_code == 0
-    expected = dict(enumerate(expected, 1))
     with rasterio.open(path_4band_no_colorinterp) as src:
-        for bidx, ci in expected.items():
-            assert src.colorinterp(bidx) == ci
+        assert src.colorinterp == expected
 
 
 def test_colorinterp_bad_instructions():
@@ -405,15 +400,12 @@ def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
         '--like', path_rgba_byte_tif,
         '--colorinterp', 'like'])
     assert result.exit_code == 0
-    expected = {
-        1: ColorInterp.red,
-        2: ColorInterp.green,
-        3: ColorInterp.blue,
-        4: ColorInterp.alpha
-    }
     with rasterio.open(path_4band_no_colorinterp) as src:
-        for bidx, ci in expected.items():
-            assert src.colorinterp(bidx) == ci
+        assert src.colorinterp == [
+            ColorInterp.red,
+            ColorInterp.green,
+            ColorInterp.blue,
+            ColorInterp.alpha]
 
 
 def test_colorinterp_bad_name():
