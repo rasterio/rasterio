@@ -381,11 +381,10 @@ def test_info_err():
     runner = CliRunner()
     result = runner.invoke(
         main_group, ['info', 'tests'])
-    assert result.exit_code == -1
+    assert result.exit_code != 0
     assert result.exception
-    exc_str = str(result.exception)
     # Note: text of exception changed after 2.1, don't test on full string
-    assert 'not ' in exc_str and ' a supported file format' in exc_str
+    assert 'not' in result.output and ' a valid input file' in result.output
 
 
 def test_info():
@@ -763,7 +762,7 @@ def test_insp():
 def test_insp_err():
     runner = CliRunner()
     result = runner.invoke(main_group, ['insp', 'tests'])
-    assert result.exit_code == 1
+    assert result.exit_code != 0
 
 
 def test_info_checksums():

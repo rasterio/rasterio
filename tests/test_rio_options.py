@@ -83,10 +83,11 @@ def test_file_in_handler_with_vfs_nonexistent():
 
 def test_file_in_handler_with_vfs():
     """vfs file path is expanded"""
+    uri = 'zip://tests/data/files.zip!/inputs/RGB.byte.tif'
     ctx = MockContext()
-    retval = file_in_handler(
-        ctx, 'INPUT', 'zip://tests/data/files.zip!/inputs/RGB.byte.tif')
-    assert retval.endswith('tests/data/files.zip!/inputs/RGB.byte.tif')
+    with pytest.raises(click.BadParameter) as e:
+        file_in_handler(ctx, 'INPUT', uri)
+        assert uri in str(e) and 'is not valid' in str(e)
 
 
 def test_file_in_handler_with_vfs_file():

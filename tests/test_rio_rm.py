@@ -12,7 +12,7 @@ from rasterio.rio.main import main_group
 def test_rm(runner, driver, path_rgb_byte_tif, tmpdir):
 
     path = str(tmpdir.join('test_rm.tif'))
-    rasterio.copy(path_rgb_byte_tif, path)
+    rasterio.shutil.copy(path_rgb_byte_tif, path)
 
     args = ['rm', path, '--yes']
     if driver is not None:
@@ -37,7 +37,7 @@ def test_rm_invalid_driver(runner, tmpdir, path_rgb_byte_tif):
     """Valid dataset invalid driver."""
 
     path = str(tmpdir.join('test_rm_invalid_driver.tif'))
-    rasterio.copy(path_rgb_byte_tif, path)
+    rasterio.shutil.copy(path_rgb_byte_tif, path)
 
     result = runner.invoke(
         main_group, ['rm', path, '--driver', 'trash', '--yes'])
