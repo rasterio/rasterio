@@ -9,7 +9,7 @@ import uuid
 import numpy as np
 
 from rasterio._err import (
-    GDALError, CPLE_IllegalArgError, CPLE_NotSupportedError,
+    CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
@@ -105,21 +105,11 @@ cdef GDALWarpOptions * create_warp_options(
     # First, we make sure we have consistent source and destination
     # nodata values. TODO: alpha bands.
 
-    # We require source nodata if destination nodata is passed.
-    if src_nodata is None and dst_nodata is not None:
-        raise ValueError("src_nodata must be provided because dst_nodata "
-                         "is not None")
-
     if dst_nodata is None:
         if src_nodata is not None:
             dst_nodata = src_nodata
         else:
             dst_nodata = 0
-            src_nodata = 0
-
-    # Convert to float to validate.
-    dst_nodata = float(dst_nodata)
-    src_nodata = float(src_nodata)
 
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
 
@@ -140,15 +130,25 @@ cdef GDALWarpOptions * create_warp_options(
 
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
 
-    psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-    psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
-    psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-    psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
-    for i in range(src_count):
-        psWOptions.padfSrcNoDataReal[i] = src_nodata
-        psWOptions.padfSrcNoDataImag[i] = 0.0
-        psWOptions.padfDstNoDataReal[i] = dst_nodata
-        psWOptions.padfDstNoDataImag[i] = 0.0
+    # Assign nodata values.
+    # We don't currently support an imaginary component.
+
+    if src_nodata is not None:
+        psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+
+        for i in range(src_count):
+            psWOptions.padfSrcNoDataReal[i] = float(src_nodata)
+            psWOptions.padfSrcNoDataImag[i] = 0.0
+
+
+    if dst_nodata is not None:
+        psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+
+        for i in range(src_count):
+            psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
+            psWOptions.padfDstNoDataImag[i] = 0.0
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -213,7 +213,7 @@ def _reproject(
         The source nodata value.  Pixels with this value will not be used
         for interpolation.  If not set, it will be default to the
         nodata value of the source image if a masked ndarray or rasterio band,
-        if available.  Must be provided if dst_nodata is not None.
+        if available.
     dst_transform: affine.Affine(), optional
         Target affine transformation.  Required if source and destination
         are ndarrays.  Will be derived from target if it is a rasterio Band.
@@ -317,46 +317,44 @@ def _reproject(
 
         log.debug("Created temp source dataset")
 
-        if src_transform:
-            for i in range(6):
-                gt[i] = src_transform[i]
-            retval = GDALSetGeoTransform(src_dataset, gt)
+        try:
+            src_osr = _osr_from_crs(src_crs)
+            OSRExportToWkt(src_osr, &srcwkt)
 
-            log.debug("Set transform on temp source dataset: %d", retval)
+            if src_transform:
+                for i in range(6):
+                    gt[i] = src_transform[i]
 
-            try:
-                src_osr = _osr_from_crs(src_crs)
-                OSRExportToWkt(src_osr, &srcwkt)
-                GDALSetProjection(src_dataset, srcwkt)
+                exc_wrap_int(GDALSetGeoTransform(src_dataset, gt))
+
+                exc_wrap_int(GDALSetProjection(src_dataset, srcwkt))
 
                 log.debug("Set CRS on temp source dataset: %s", srcwkt)
 
-            finally:
-                CPLFree(srcwkt)
-                _safe_osr_release(src_osr)
+            elif gcps:
+                gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
+                try:
+                    for i, obj in enumerate(gcps):
+                        ident = str(i).encode('utf-8')
+                        info = "".encode('utf-8')
+                        gcplist[i].pszId = ident
+                        gcplist[i].pszInfo = info
+                        gcplist[i].dfGCPPixel = obj.col
+                        gcplist[i].dfGCPLine = obj.row
+                        gcplist[i].dfGCPX = obj.x
+                        gcplist[i].dfGCPY = obj.y
+                        gcplist[i].dfGCPZ = obj.z or 0.0
 
-        elif gcps:
-            gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
-            try:
-                for i, obj in enumerate(gcps):
-                    ident = str(i).encode('utf-8')
-                    info = "".encode('utf-8')
-                    gcplist[i].pszId = ident
-                    gcplist[i].pszInfo = info
-                    gcplist[i].dfGCPPixel = obj.col
-                    gcplist[i].dfGCPLine = obj.row
-                    gcplist[i].dfGCPX = obj.x
-                    gcplist[i].dfGCPY = obj.y
-                    gcplist[i].dfGCPZ = obj.z or 0.0
+                    exc_wrap_int(GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt))
+                finally:
+                    CPLFree(gcplist)
 
-                GDALSetGCPs(src_dataset, len(gcps), gcplist, srcwkt)
-            finally:
-                CPLFree(gcplist)
-                CPLFree(srcwkt)
+        finally:
+            CPLFree(srcwkt)
+            _safe_osr_release(src_osr)
 
         # Copy arrays to the dataset.
-        retval = io_auto(source, src_dataset, 1)
-        # TODO: handle errors (by retval).
+        exc_wrap_int(io_auto(source, src_dataset, 1))
 
         log.debug("Wrote array to temp source dataset")
 
@@ -409,9 +407,7 @@ def _reproject(
         for i in range(6):
             gt[i] = dst_transform[i]
 
-        if not GDALError.none == GDALSetGeoTransform(dst_dataset, gt):
-            raise ValueError(
-                "Failed to set transform on temp destination dataset.")
+        exc_wrap_int(GDALSetGeoTransform(dst_dataset, gt))
 
         try:
             dst_osr = _osr_from_crs(dst_crs)
@@ -419,14 +415,12 @@ def _reproject(
 
             log.debug("CRS for temp destination dataset: %s.", dstwkt)
 
-            if not GDALError.none == GDALSetProjection(
-                    dst_dataset, dstwkt):
-                raise ("Failed to set projection on temp destination dataset.")
+            exc_wrap_int(GDALSetProjection(dst_dataset, dstwkt))
         finally:
             CPLFree(dstwkt)
             _safe_osr_release(dst_osr)
 
-        retval = io_auto(destination, dst_dataset, 1)
+        exc_wrap_int(io_auto(destination, dst_dataset, 1))
 
         log.debug("Wrote array to temp output dataset")
 
@@ -536,8 +530,7 @@ def _reproject(
                 oWarper.ChunkAndWarpImage(0, 0, cols, rows)
 
         if dtypes.is_ndarray(destination):
-            retval = io_auto(destination, dst_dataset, 0)
-            # TODO: handle errors (by retval).
+            exc_wrap_int(io_auto(destination, dst_dataset, 0))
 
             if dst_dataset != NULL:
                 GDALClose(dst_dataset)
@@ -579,7 +572,6 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             "Some, but not all, bounding box parameters were provided.")
     else:
         transform = None
-    img = np.empty((height, width))
 
     osr = _osr_from_crs(dst_crs)
     OSRExportToWkt(osr, &wkt)
@@ -653,8 +645,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.dst_crs = dst_crs
         self.resampling = resampling
         self.tolerance = tolerance
-        self.src_nodata = src_nodata
-        self.dst_nodata = dst_nodata
+
+        self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
+        self.dst_nodata = self.src_nodata if dst_nodata is None else dst_nodata
         self.dst_width = dst_width
         self.dst_height = dst_height
         self.dst_transform = dst_transform
@@ -706,11 +699,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 OSRRelease(osr)
             osr = NULL
 
-        try:
-            osr = _osr_from_crs(self.dst_crs)
-            OSRExportToWkt(osr, &dst_crs_wkt)
-        finally:
-            _safe_osr_release(osr)
+        if self.dst_crs is not None:
+            try:
+                osr = _osr_from_crs(self.dst_crs)
+                OSRExportToWkt(osr, &dst_crs_wkt)
+            finally:
+                _safe_osr_release(osr)
 
         log.debug("Exported CRS to WKT.")
 
@@ -773,6 +767,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             GDALDestroyWarpOptions(psWOptions)
 
         self._set_attrs_from_dataset_handle()
+
+        # This attribute will be used by read().
+        self._nodatavals = [
+            self.src_nodata for i in self.src_dataset.indexes]
 
     def start(self):
         """Starts the VRT's life cycle."""

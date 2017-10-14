@@ -28,6 +28,7 @@ from rasterio.errors import NodataShadowWarning, WindowError
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
+from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
@@ -256,7 +257,7 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             if out_shape is not None:
                 if len(out_shape) == 2:
-                    out_shape = (1,) + out_shape
+                    out_shape = (len(indexes),) + out_shape
             else:
                 out_shape = win_shape
 
@@ -318,72 +319,34 @@ cdef class DatasetReaderBase(DatasetBase):
                         kwds['fill_value'] = nodatavals[0]
                 out = np.ma.array(out, **kwds)
 
+        # If boundless.
+        # Create a WarpedVRT to use its window and compositing logic.
         else:
-            # Compute the overlap between the dataset and the boundless window.
-            try:
-                overlap = intersection(
-                    window, Window(0, 0, self.width, self.height))
-            except WindowError:
-                log.info("Dataset and window do not overlap")
-                data = None
+            with WarpedVRT(
+                    self,
+                    dst_nodata=ndv,
+                    dst_crs=self.crs,
+                    dst_width=max(self.width, window.num_cols),
+                    dst_height=max(self.height, window.num_rows),
+                    dst_transform=self.window_transform(window),
+                    resampling=resampling) as vrt:
+                out = vrt._read(indexes, out, Window(0, 0, window.num_cols, window.num_rows), None)
+
                 if masked:
-                    kwds = {'mask': True}
+                    if all_valid:
+                        mask = np.ma.nomask
+                    else:
+                        mask = np.zeros(out.shape, 'uint8')
+                        mask = ~vrt._read(
+                            indexes, mask, Window(0, 0, window.num_cols, window.num_rows), None, masks=True).astype('bool')
+
+                    kwds = {'mask': mask}
+                    # Set a fill value only if the read bands share a
+                    # single nodata value.
                     if len(set(nodatavals)) == 1:
                         if nodatavals[0] is not None:
                             kwds['fill_value'] = nodatavals[0]
                     out = np.ma.array(out, **kwds)
-            else:
-                # Prepare a buffer.
-                window_h, window_w = win_shape[-2:]
-                overlap_h = overlap.height
-                overlap_w = overlap.width
-                scaling_h = float(out.shape[-2:][0])/window_h
-                scaling_w = float(out.shape[-2:][1])/window_w
-                buffer_shape = (
-                        int(round(overlap_h*scaling_h)),
-                        int(round(overlap_w*scaling_w)))
-                data = np.zeros(win_shape[:-2] + buffer_shape, dtype)
-                data = self._read(indexes, data, overlap, dtype,
-                                  resampling=resampling)
-
-                if masked:
-                    mask = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
-                    mask = ~self._read(
-                        indexes, mask, overlap, 'uint8', masks=True,
-                        resampling=resampling).astype('bool')
-                    kwds = {'mask': mask}
-                    if len(set(nodatavals)) == 1:
-                        if nodatavals[0] is not None:
-                            kwds['fill_value'] = nodatavals[0]
-                    data = np.ma.array(data, **kwds)
-
-            if data is not None:
-                # Determine where to put the data in the output window.
-                data_h, data_w = buffer_shape
-                roff = 0
-                coff = 0
-                if window.row_off < 0:
-                    roff = int(-window.row_off * scaling_h)
-                if window.col_off < 0:
-                    coff = int(-window.col_off * scaling_w)
-
-                for dst, src in zip(
-                        out if len(out.shape) == 3 else [out],
-                        data if len(data.shape) == 3 else [data]):
-                    dst[roff:roff+data_h, coff:coff+data_w] = src
-
-                if masked:
-                    if not hasattr(out, 'mask'):
-                        kwds = {'mask': True}
-                        if len(set(nodatavals)) == 1:
-                            if nodatavals[0] is not None:
-                                kwds['fill_value'] = nodatavals[0]
-                        out = np.ma.array(out, **kwds)
-
-                    for dst, src in zip(
-                            out.mask if len(out.shape) == 3 else [out.mask],
-                            data.mask if len(data.shape) == 3 else [data.mask]):
-                        dst[roff:roff+data_h, coff:coff+data_w] = src
 
         if return2d:
             out.shape = out.shape[1:]
@@ -478,7 +441,7 @@ cdef class DatasetReaderBase(DatasetBase):
             raise ValueError("out and out_shape are exclusive")
         elif out_shape is not None:
             if len(out_shape) == 2:
-                out_shape = (1,) + out_shape
+                out_shape = (len(indexes),) + out_shape
             out = np.zeros(out_shape, 'uint8')
 
         if out is not None:
@@ -500,39 +463,18 @@ cdef class DatasetReaderBase(DatasetBase):
             out = self._read(indexes, out, window, dtype, masks=True,
                              resampling=resampling)
 
+        # If boundless is True.
+        # Create a temporary VRT to use its source/dest windowing
+        # and compositing logic.
         else:
-            # Compute the overlap between the dataset and the boundless window.
-            try:
-                overlap = intersection(
-                    window, Window(0, 0, self.width, self.height))
-            except WindowError:
-                log.info("Window and dataset do not overlap")
-                data = None
-            else:
-                # Prepare a buffer.
-                window_h, window_w = win_shape[-2:]
-                overlap_h = overlap.height
-                overlap_w = overlap.width
-                scaling_h = float(out.shape[-2:][0])/window_h
-                scaling_w = float(out.shape[-2:][1])/window_w
-                buffer_shape = (int(overlap_h*scaling_h), int(overlap_w*scaling_w))
-                data = np.zeros(win_shape[:-2] + buffer_shape, 'uint8')
-                data = self._read(indexes, data, overlap, dtype, masks=True,
-                                  resampling=resampling)
-
-            if data is not None:
-                # Determine where to put the data in the output window.
-                data_h, data_w = data.shape[-2:]
-                roff = 0
-                coff = 0
-                if window[0][0] < 0:
-                    roff = int(window_h*scaling_h) - data_h
-                if window[1][0] < 0:
-                    coff = int(window_w*scaling_w) - data_w
-                for dst, src in zip(
-                        out if len(out.shape) == 3 else [out],
-                        data if len(data.shape) == 3 else [data]):
-                    dst[roff:roff+data_h, coff:coff+data_w] = src
+            with WarpedVRT(
+                    self,
+                    dst_crs=self.crs,
+                    dst_width=max(self.width, window.num_cols),
+                    dst_height=max(self.height, window.num_rows),
+                    dst_transform=self.window_transform(window),
+                    resampling=resampling) as vrt:
+                out = vrt._read(indexes, out, Window(0, 0, window.num_cols, window.num_rows), None, masks=True)
 
         if return2d:
             out.shape = out.shape[1:]
@@ -1114,7 +1056,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 if auth.upper() == 'EPSG':
                     OSRImportFromEPSG(osr, int(val))
             else:
-                crs['wktext'] = True
                 for k, v in crs.items():
                     if v is True or (k in ('no_defs', 'wktext') and v):
                         params.append("+%s" % k)

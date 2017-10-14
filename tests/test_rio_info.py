@@ -43,7 +43,7 @@ def test_info():
     info = json.loads(result.output)
     assert info['count'] == 1
     assert info['dtype'] == 'float64'
-    assert info['crs'] == None
+    assert info['crs'] is None
 
 
 def test_info_units():
@@ -420,3 +420,15 @@ def test_info_checksums_only():
         ['info', 'tests/data/RGB.byte.tif', '--checksum', '--bidx', '2'])
     assert result.exit_code == 0
     assert result.output.strip() == '29131'
+
+
+@pytest.mark.skipif(parse(rasterio.__gdal_version__) < parse('2.1'),
+                    reason='netCDF requires GDAL 2.1+')
+def test_info_subdatasets():
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group,
+        ['info', 'netcdf:tests/data/RGB.nc', '--subdatasets'])
+    assert result.exit_code == 0
+    assert len(result.output) == 93
+    assert result.output.startswith('netcdf:tests/data/RGB.nc:Band1')

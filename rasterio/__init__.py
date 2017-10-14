@@ -253,11 +253,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         _, _, scheme = parse_path(fp)
 
         with Env() as env:
-            # Get AWS credentials only if we're attempting to access a
-            # raster using the S3 scheme.
             if scheme == 's3':
-                env.get_aws_credentials()
-                log.debug("AWS credentials have been obtained")
+                env.credentialize()
 
             # Create dataset instances and pass the given env, which will
             # be taken over by the dataset's context manager if it is not

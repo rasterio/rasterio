@@ -321,3 +321,10 @@ def test_out_shape_exceptions(path_rgb_byte_tif):
             with pytest.raises(ValueError):
                 out_shape = (5, src.height, src.width)
                 reader(1, out_shape=out_shape)
+
+
+def test_out_shape_implicit(path_rgb_byte_tif):
+    """out_shape is filled to match read indexes"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        out = src.read(indexes=(1, 2), out_shape=src.shape)
+        assert out.shape == (2,) + src.shape

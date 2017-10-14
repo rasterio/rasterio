@@ -406,6 +406,7 @@ def validate_length_value(instance, attribute, value):
     if value and value < 0:
         raise ValueError("Number of columns or rows must be non-negative")
 
+
 _default = attr.Factory(lambda x: 0.0 if x is None else float(x))
 
 
@@ -498,7 +499,8 @@ class Window(object):
         """For backwards compatibility only"""
         warnings.warn("Use the class constructor instead of this method",
                       RasterioDeprecationWarning)
-        return cls(col_off, row_off, num_cols, num_rows)
+        return cls(col_off=col_off, row_off=row_off, width=num_cols,
+                   height=num_rows)
 
     @classmethod
     def from_slices(cls, rows, cols, height=-1, width=-1, boundless=False):
@@ -568,7 +570,8 @@ class Window(object):
         num_cols = col_stop - col_off
         num_cols = max(num_cols, 0.0)
 
-        return cls(col_off, row_off, num_cols, num_rows)
+        return cls(col_off=col_off, row_off=row_off, width=num_cols,
+                   height=num_rows)
 
     @classmethod
     def from_ranges(cls, rows, cols):

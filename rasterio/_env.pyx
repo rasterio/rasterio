@@ -184,6 +184,9 @@ cdef class ConfigEnv(object):
             del_gdal_config(key)
             log.debug("Unset option %s in env %r", key, self)
 
+    def get_config_options(self):
+        return {k: get_gdal_config(k) for k in self.options}
+
 
 cdef class GDALEnv(ConfigEnv):
     """Configuration and driver management"""

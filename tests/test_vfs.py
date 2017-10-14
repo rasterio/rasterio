@@ -18,7 +18,7 @@ def test_parse_path_with_vfs():
 
 
 def test_parse_path_zip():
-    """Correctly parse VFS scheme URL"""
+    """Correctly parse zip scheme URL"""
     assert parse_path('zip://tests/data/files.zip!foo.tif') == (
         'foo.tif', 'tests/data/files.zip', 'zip')
 
@@ -35,10 +35,10 @@ def test_parse_path_file():
         '/foo.tif', None, '')
 
 
-def test_parse_netcdf():
-    """Annoying URI-like GDAL dataset names fall through properly"""
-    assert parse_path('NETCDF:filepath:varname') == (
-        'NETCDF:filepath:varname', None, None)
+def test_parse_gdal():
+    """GDAL dataset identifiers fall through properly"""
+    assert parse_path('GDAL:filepath:varname') == (
+        'GDAL:filepath:varname', None, None)
 
 
 def test_vsi_path_scheme():

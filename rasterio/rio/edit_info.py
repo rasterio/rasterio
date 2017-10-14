@@ -198,9 +198,12 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
     import numpy as np
 
     def in_dtype_range(value, dtype):
+        kind = np.dtype(dtype).kind
+        if kind == 'f' and np.isnan(value):
+            return True
         infos = {'c': np.finfo, 'f': np.finfo, 'i': np.iinfo,
                  'u': np.iinfo}
-        rng = infos[np.dtype(dtype).kind](dtype)
+        rng = infos[kind](dtype)
         return rng.min <= value <= rng.max
 
     with ctx.obj['env'], rasterio.open(input, 'r+') as dst:

@@ -8,6 +8,7 @@ import cligj
 from .helpers import resolve_inout
 from . import options
 import rasterio
+from rasterio.mask import mask as mask_tool
 
 logger = logging.getLogger('rio')
 
@@ -65,8 +66,6 @@ def mask(
     --crop option is not valid if features are completely outside extent of
     input raster.
     """
-    from rasterio.mask import mask as mask_tool
-    from rasterio.features import bounds as calculate_bounds
 
     output, files = resolve_inout(
         files=files, output=output, force_overwrite=force_overwrite)
@@ -112,6 +111,8 @@ def mask(
                                                  'input raster',
                                                  param=crop,
                                                  param_hint='--crop')
+                else: # pragma: no cover
+                    raise e
 
             meta = src.meta.copy()
             meta.update(**creation_options)
