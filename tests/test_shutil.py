@@ -1,4 +1,4 @@
-"""Tests for ``rasterio._manage.pyx```."""
+"""Tests for ``rasterio.shutil```."""
 
 
 import os
@@ -7,6 +7,7 @@ import numpy
 import pytest
 
 import rasterio
+import rasterio.shutil
 from rasterio._err import CPLE_NotSupportedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
 
@@ -14,12 +15,16 @@ from rasterio.errors import DriverRegistrationError, RasterioIOError
 @pytest.mark.parametrize("driver", (None, 'GTiff'))
 def test_delete(driver, path_rgb_byte_tif, tmpdir):
 
-    """Delete a file with ``rasterio.delete()``.  Also specifies driver."""
+    """Delete a file with ``rasterio.shutil.delete()``.  Also specifies
+    driver.  Also exercises ``src.files``.
+    """
 
     path = str(tmpdir.join('test_delete.tif'))
-    rasterio.copy(path_rgb_byte_tif, path)
-    assert os.path.exists(path)
-    rasterio.delete(path, driver=driver)
+    rasterio.shutil.copy(path_rgb_byte_tif, path)
+    with rasterio.open(path) as src:
+        for p in src.files:
+            assert os.path.exists(p)
+    rasterio.shutil.delete(path, driver=driver)
 
 
 def test_delete_invalid_path():
@@ -27,7 +32,7 @@ def test_delete_invalid_path():
     """Invalid dataset."""
 
     with pytest.raises(RasterioIOError) as e:
-        rasterio.delete('trash')
+        rasterio.shutil.delete('trash')
     assert 'Invalid dataset' in str(e)
 
 
@@ -36,22 +41,22 @@ def test_delete_invalid_driver(path_rgb_byte_tif, tmpdir):
     """Valid dataset and invalid driver."""
 
     path = str(tmpdir.join('test_invalid_driver.tif'))
-    rasterio.copy(path_rgb_byte_tif, path)
+    rasterio.shutil.copy(path_rgb_byte_tif, path)
     with pytest.raises(DriverRegistrationError) as e:
-        rasterio.delete(path, driver='trash')
+        rasterio.shutil.delete(path, driver='trash')
     assert 'Unrecognized driver' in str(e)
 
 
 def test_exists(path_rgb_byte_tif):
 
-    assert rasterio.exists(path_rgb_byte_tif)
-    assert not rasterio.exists('trash')
+    assert rasterio.shutil.exists(path_rgb_byte_tif)
+    assert not rasterio.shutil.exists('trash')
 
 
 @pytest.mark.parametrize("pass_handle", (True, False))
 def test_copy(tmpdir, path_rgb_byte_tif, pass_handle):
 
-    """Ensure ``rasterio.copy()`` can read from a path to a file on disk
+    """Ensure ``rasterio.shutil.copy()`` can read from a path to a file on disk
     and an open dataset handle.
     """
 
@@ -62,7 +67,7 @@ def test_copy(tmpdir, path_rgb_byte_tif, pass_handle):
     else:
         src = path_rgb_byte_tif
 
-    rasterio.copy(
+    rasterio.shutil.copy(
         src,
         outfile,
         # Test a mix of boolean, ints, and strings to make sure creation
@@ -88,7 +93,7 @@ def test_copy(tmpdir, path_rgb_byte_tif, pass_handle):
 
 def test_copy_bad_driver():
     with pytest.raises(DriverRegistrationError):
-        rasterio.copy('tests/data/RGB.byte.tif', None, driver='trash')
+        rasterio.shutil.copy('tests/data/RGB.byte.tif', None, driver='trash')
 
 
 def test_copy_strict_failure(tmpdir, path_float_tif):
@@ -98,7 +103,7 @@ def test_copy_strict_failure(tmpdir, path_float_tif):
     outfile = str(tmpdir.join('test_copy.jpg'))
 
     with pytest.raises(CPLE_NotSupportedError):
-        rasterio.copy(
+        rasterio.shutil.copy(
             path_float_tif, outfile, strict=True,
             driver='JPEG')
 
@@ -110,10 +115,15 @@ def test_copy_strict_silent_failure(tmpdir, path_float_tif):
 
     outfile = str(tmpdir.join('test_copy.jpg'))
 
-    rasterio.copy(
+    rasterio.shutil.copy(
         path_float_tif, outfile, strict=False,
         driver='JPEG')
 
     with rasterio.open(outfile) as dst:
         assert dst.driver == 'JPEG'
         assert dst.read().max() == 0  # it should be 1.4099; 0 indicates bad data
+
+
+def test_copy_deprecated():
+
+    """``rasterio.copy()`` was moved to ``rasterio.shutil.cop"""

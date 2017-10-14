@@ -3,7 +3,7 @@
 
 import click
 
-import rasterio
+import rasterio.shutil
 from rasterio.errors import DriverRegistrationError, RasterioIOError
 
 
@@ -28,6 +28,6 @@ def rm(path, yes, driver):
     """
 
     try:
-        rasterio.delete(path, driver=driver)
+        rasterio.shutil.delete(path, driver=driver)
     except (DriverRegistrationError, RasterioIOError) as e:
         raise click.ClickException(str(e))
