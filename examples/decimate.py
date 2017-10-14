@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 
 import rasterio
+import rasterio.shutil
 
 with rasterio.Env():
 
@@ -25,6 +26,6 @@ with rasterio.Env():
 
     outfilename = os.path.join(tempfile.mkdtemp(), 'decimate.jpg')
 
-    rasterio.copy(tmpfilename, outfilename, driver='JPEG', quality='30')
+    rasterio.shutil.copy(tmpfilename, outfilename, driver='JPEG', quality='30')
 
 info = subprocess.call(['open', outfilename])
