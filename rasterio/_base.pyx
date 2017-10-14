@@ -921,6 +921,22 @@ cdef class DatasetBase(object):
                 self._gcps = self.get_gcps()
             return self._gcps
 
+    property files:
+
+        """Returns a sequence of files associated with the dataset.
+
+        Returns
+        -------
+        tuple
+        """
+
+        def __get__(self):
+            cdef GDALDatasetH h_dataset = NULL
+            h_dataset = self.handle()
+            with nogil:
+                file_list = GDALGetFileList(h_dataset)
+            num_items = CSLCount(file_list)
+            return tuple([file_list[i] for i in range(num_items)])
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):

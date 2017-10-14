@@ -243,6 +243,7 @@ cdef extern from "gdal.h" nogil:
     GIntBig GDALGetCacheMax64()
     void GDALSetCacheMax64(GIntBig nBytes)
     CPLErr GDALDeleteDataset(GDALDriverH, const char *)
+    char** GDALGetFileList(GDALDatasetH hDS)
 
 
 cdef extern from "ogr_api.h" nogil:
