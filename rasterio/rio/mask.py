@@ -1,6 +1,5 @@
 import json
 import logging
-import shutil
 
 import click
 import cligj
@@ -8,6 +7,7 @@ import cligj
 from .helpers import resolve_inout
 from . import options
 import rasterio
+import rasterio.shutil
 from rasterio.mask import mask as mask_tool
 
 logger = logging.getLogger('rio')
@@ -74,7 +74,7 @@ def mask(
     if geojson_mask is None:
         click.echo('No GeoJSON provided, INPUT will be copied to OUTPUT',
                    err=True)
-        shutil.copy(input, output)
+        rasterio.shutil.copyfiles(input, output)
         return
 
     if crop and invert:
