@@ -831,7 +831,7 @@ def test_transform_geom_linestring_precision_iso(polygon_3373):
 def test_transform_geom_linestring_precision_z(polygon_3373):
     ring = polygon_3373['coordinates'][0]
     x, y = zip(*ring)
-    ring = zip(x, y, [0.0 for i in range(len(x))])
+    ring = list(zip(x, y, [0.0 for i in range(len(x))]))
     geom = {'type': 'LineString', 'coordinates': ring}
     result = transform_geom('EPSG:3373', 'EPSG:3373', geom, precision=1)
     assert int(result['coordinates'][0][0] * 10) == 7988423
