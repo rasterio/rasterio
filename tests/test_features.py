@@ -286,14 +286,107 @@ def test_is_valid_geom_invalid_inputs():
     assert not is_valid_geom({'type': 'Point'})  # Missing coordinates
 
 
+def test_rasterize_point(geojson_point):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
 
-
-def test_rasterize_out_shape(basic_geometry, basic_image_2x2):
-    """Rasterize operation should succeed for an out_shape."""
     assert np.array_equal(
-        basic_image_2x2,
-        rasterize([basic_geometry], out_shape=DEFAULT_SHAPE)
+        rasterize([geojson_point], out_shape=DEFAULT_SHAPE),
+        expected
     )
+
+
+def test_rasterize_multipoint(geojson_multipoint):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+    expected[4, 4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_multipoint], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_line(geojson_line):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+    expected[3, 3] = 1
+    expected[4, 4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_line], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_multiline(geojson_multiline):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+    expected[3, 3] = 1
+    expected[4, 4] = 1
+    expected[0, 0:5] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_multiline], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_polygon(geojson_polygon, basic_image_2x2):
+    assert np.array_equal(
+        rasterize([geojson_polygon], out_shape=DEFAULT_SHAPE),
+        basic_image_2x2
+    )
+
+
+def test_rasterize_multipolygon(geojson_multipolygon):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[0:1, 0:1] = 1
+    expected[2:4, 2:4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_multipolygon], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_geomcollection(geojson_geomcollection):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[0:1, 0:1] = 1
+    expected[2:4, 2:4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_geomcollection], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_invalid_geom():
+    """Invalid GeoJSON should fail with exception"""
+
+    with pytest.raises(ValueError):
+        rasterize([{'type'}], out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        rasterize([{'type': 'Invalid'}], out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        rasterize([{'type': 'Point'}], out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        # Empty coordinates should fail
+        rasterize([{'type': 'Point', 'coordinates': []}],
+                  out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        # Empty GeometryCollection should fail
+        rasterize([{'type': 'GeometryCollection', 'geometries': []}],
+                  out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        # GeometryCollection with bad geometry should fail
+        rasterize([{'type': 'GeometryCollection', 'geometries': [
+            {'type': 'Invalid', 'coordinates': []}]}], out_shape=DEFAULT_SHAPE)
 
 
 def test_rasterize_out_image(basic_geometry, basic_image_2x2):
