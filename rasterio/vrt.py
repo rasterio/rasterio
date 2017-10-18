@@ -1,7 +1,8 @@
 """rasterio.vrt: a module concerned with GDAL VRTs"""
 
 from rasterio._warp import WarpedVRTReaderBase
-from rasterio.io import WindowMethodsMixin, TransformMethodsMixin
+from rasterio.windows import WindowMethodsMixin
+from rasterio.transform import TransformMethodsMixin
 
 
 class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
