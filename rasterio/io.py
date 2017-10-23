@@ -5,165 +5,18 @@ Instances of these classes are called dataset objects.
 
 
 import logging
-import math
-import warnings
 
 from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
-from rasterio import windows
-from rasterio.enums import Resampling
+from rasterio.windows import WindowMethodsMixin
 from rasterio.env import ensure_env
-from rasterio.errors import RasterioDeprecationWarning
-from rasterio.transform import guard_transform, xy, rowcol
+from rasterio.transform import TransformMethodsMixin
 
 
 log = logging.getLogger(__name__)
-
-
-class TransformMethodsMixin(object):
-    """Mixin providing methods for calculations related
-    to transforming between rows and columns of the raster
-    array and the coordinates.
-
-    These methods are wrappers for the functionality in
-    `rasterio.transform` module.
-
-    A subclass with this mixin MUST provide a `transform`
-    property.
-    """
-
-    def xy(self, row, col, offset="center"):
-        """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
-        The pixel's center is returned by default, but a corner can be returned
-        by setting `offset` to one of `ul, ur, ll, lr`.
-
-        Parameters
-        ----------
-        row : int
-            Pixel row.
-        col : int
-            Pixel column.
-        offset : str, optional
-            Determines if the returned coordinates are for the center of the
-            pixel or for a corner.
-
-        Returns
-        -------
-        tuple
-            ``(x, y)``
-        """
-        return xy(self.transform, row, col, offset=offset)
-
-    def index(self, x, y, op=math.floor, precision=6):
-        """
-        Returns the (row, col) index of the pixel containing (x, y) given a
-        coordinate reference system.
-
-        Use an epsilon, magnitude determined by the precision parameter
-        and sign determined by the op function:
-            positive for floor, negative for ceil.
-
-        Parameters
-        ----------
-        x : float
-            x value in coordinate reference system
-        y : float
-            y value in coordinate reference system
-        op : function, optional (default: math.floor)
-            Function to convert fractional pixels to whole numbers (floor,
-            ceiling, round)
-        precision : int, optional (default: 6)
-            Decimal places of precision in indexing, as in `round()`.
-
-        Returns
-        -------
-        tuple
-            (row index, col index)
-        """
-        return rowcol(self.transform, x, y, op=op, precision=precision)
-
-
-class WindowMethodsMixin(object):
-    """Mixin providing methods for window-related calculations.
-    These methods are wrappers for the functionality in
-    `rasterio.windows` module.
-
-    A subclass with this mixin MUST provide the following
-    properties: `transform`, `height` and `width`
-    """
-
-    def window(self, left, bottom, right, top, precision=6, **kwargs):
-        """Get the window corresponding to the bounding coordinates.
-
-        The resulting window is not cropped to the row and column
-        limits of the dataset.
-
-        Parameters
-        ----------
-        left: float
-            Left (west) bounding coordinate
-        bottom: float
-            Bottom (south) bounding coordinate
-        right: float
-            Right (east) bounding coordinate
-        top: float
-            Top (north) bounding coordinate
-        precision: int, optional
-            Number of decimal points of precision when computing inverse
-            transform.
-        kwargs: mapping
-            For backwards compatibility: absorbs deprecated keyword args.
-
-        Returns
-        -------
-        window: Window
-        """
-        if 'boundless' in kwargs:  # pragma: no branch
-            warnings.warn("boundless keyword arg should not be used",
-                          RasterioDeprecationWarning)
-
-        transform = guard_transform(self.transform)
-
-        return windows.from_bounds(
-            left, bottom, right, top, transform=transform,
-            height=self.height, width=self.width, precision=precision)
-
-    def window_transform(self, window):
-        """Get the affine transform for a dataset window.
-
-        Parameters
-        ----------
-        window: rasterio.windows.Window
-            Dataset window
-
-        Returns
-        -------
-        transform: Affine
-            The affine transform matrix for the given window
-        """
-
-        transform = guard_transform(self.transform)
-        return windows.transform(window, transform)
-
-    def window_bounds(self, window):
-        """Get the bounds of a window
-
-        Parameters
-        ----------
-        window: rasterio.windows.Window
-            Dataset window
-
-        Returns
-        -------
-        bounds : tuple
-            x_min, y_min, x_max, y_max for the given window
-        """
-
-        transform = guard_transform(self.transform)
-        return windows.bounds(window, transform)
 
 
 class DatasetReader(DatasetReaderBase, WindowMethodsMixin,

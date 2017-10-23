@@ -12,6 +12,69 @@ IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
 
 
+class TransformMethodsMixin(object):
+    """Mixin providing methods for calculations related
+    to transforming between rows and columns of the raster
+    array and the coordinates.
+
+    These methods are wrappers for the functionality in
+    `rasterio.transform` module.
+
+    A subclass with this mixin MUST provide a `transform`
+    property.
+    """
+
+    def xy(self, row, col, offset="center"):
+        """Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.
+        The pixel's center is returned by default, but a corner can be returned
+        by setting `offset` to one of `ul, ur, ll, lr`.
+
+        Parameters
+        ----------
+        row : int
+            Pixel row.
+        col : int
+            Pixel column.
+        offset : str, optional
+            Determines if the returned coordinates are for the center of the
+            pixel or for a corner.
+
+        Returns
+        -------
+        tuple
+            ``(x, y)``
+        """
+        return xy(self.transform, row, col, offset=offset)
+
+    def index(self, x, y, op=math.floor, precision=6):
+        """
+        Returns the (row, col) index of the pixel containing (x, y) given a
+        coordinate reference system.
+
+        Use an epsilon, magnitude determined by the precision parameter
+        and sign determined by the op function:
+            positive for floor, negative for ceil.
+
+        Parameters
+        ----------
+        x : float
+            x value in coordinate reference system
+        y : float
+            y value in coordinate reference system
+        op : function, optional (default: math.floor)
+            Function to convert fractional pixels to whole numbers (floor,
+            ceiling, round)
+        precision : int, optional (default: 6)
+            Decimal places of precision in indexing, as in `round()`.
+
+        Returns
+        -------
+        tuple
+            (row index, col index)
+        """
+        return rowcol(self.transform, x, y, op=op, precision=precision)
+
+
 def tastes_like_gdal(seq):
     """Return True if `seq` matches the GDAL geotransform pattern."""
     return tuple(seq) == GDAL_IDENTITY or (
