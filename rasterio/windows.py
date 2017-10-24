@@ -21,7 +21,6 @@ from __future__ import division
 import collections
 import functools
 import math
-from operator import itemgetter
 import warnings
 
 import attr
@@ -29,10 +28,90 @@ from affine import Affine
 import numpy as np
 
 from rasterio.errors import RasterioDeprecationWarning, WindowError
-from rasterio.transform import rowcol
+from rasterio.transform import rowcol, guard_transform
 
 
 PIXEL_PRECISION = 6
+
+
+class WindowMethodsMixin(object):
+    """Mixin providing methods for window-related calculations.
+    These methods are wrappers for the functionality in
+    `rasterio.windows` module.
+
+    A subclass with this mixin MUST provide the following
+    properties: `transform`, `height` and `width`
+    """
+
+    def window(self, left, bottom, right, top, precision=6, **kwargs):
+        """Get the window corresponding to the bounding coordinates.
+
+        The resulting window is not cropped to the row and column
+        limits of the dataset.
+
+        Parameters
+        ----------
+        left: float
+            Left (west) bounding coordinate
+        bottom: float
+            Bottom (south) bounding coordinate
+        right: float
+            Right (east) bounding coordinate
+        top: float
+            Top (north) bounding coordinate
+        precision: int, optional
+            Number of decimal points of precision when computing inverse
+            transform.
+        kwargs: mapping
+            For backwards compatibility: absorbs deprecated keyword args.
+
+        Returns
+        -------
+        window: Window
+        """
+        if 'boundless' in kwargs:  # pragma: no branch
+            warnings.warn("boundless keyword arg should not be used",
+                          RasterioDeprecationWarning)
+
+        transform = guard_transform(self.transform)
+
+        return from_bounds(
+            left, bottom, right, top, transform=transform,
+            height=self.height, width=self.width, precision=precision)
+
+    def window_transform(self, window):
+        """Get the affine transform for a dataset window.
+
+        Parameters
+        ----------
+        window: rasterio.windows.Window
+            Dataset window
+
+        Returns
+        -------
+        transform: Affine
+            The affine transform matrix for the given window
+        """
+
+        gtransform = guard_transform(self.transform)
+        return transform(window, gtransform)
+
+    def window_bounds(self, window):
+        """Get the bounds of a window
+
+        Parameters
+        ----------
+        window: rasterio.windows.Window
+            Dataset window
+
+        Returns
+        -------
+        bounds : tuple
+            x_min, y_min, x_max, y_max for the given window
+        """
+
+        transform = guard_transform(self.transform)
+        return bounds(window, transform)
 
 
 def iter_args(function):

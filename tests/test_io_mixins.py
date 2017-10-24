@@ -3,8 +3,7 @@ import pytest
 
 import rasterio
 from rasterio.errors import RasterioDeprecationWarning
-from rasterio.io import WindowMethodsMixin
-from rasterio.windows import Window
+from rasterio.windows import Window, WindowMethodsMixin
 
 
 EPS = 1.0e-8

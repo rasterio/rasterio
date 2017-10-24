@@ -1,6 +1,19 @@
 Changes
 =======
 
+Next
+----
+
+Bug fixes:
+
+- Reprojection of numpy arrays using GCPs has never worked due to faulty code,
+  but has been fixed (#1166, #1171).
+- A circular import situation has been resolved by moving dataset mixin classes
+  from ``rasterio.io`` to ``rasterio.windows`` and ``rasterio.transform``
+  (#1174, #1173).
+- Prevent a segmentation fault in ``rasterio.features.rasterize()`` by guarding
+  against unsupported GeoJSON input (#1172, #1176).
+
 1.0a10 (2017-10-09)
 -------------------
 
@@ -35,6 +48,8 @@ Bug fixes:
 
 - We always reacquire the GIL when GDAL calls the rasterio logging error
   handler (#1103, #1104).
+- Initialization of an unneeded array, sometimes contributing to memory
+  exhaustion, has been eliminated (#1131, #1132).
 - Rasterio's boundless reading has had a compositing bug. We are resolving
   it by using a VRT internally and relying upon the VRT's windowing and
   compositing logic (#1161).
