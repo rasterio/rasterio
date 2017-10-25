@@ -48,7 +48,7 @@ transformation matrix.
 
 .. code-block:: pycon
 
-    >>> src.affine
+    >>> src.transform
     Affine(300.0379266750948, 0.0, 101985.0,
            0.0, -300.041782729805, 2826915.0)
 
