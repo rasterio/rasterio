@@ -554,40 +554,52 @@ cdef class OGRGeomBuilder:
             OGR_G_AddGeometryDirectly(geom, part)
         return geom
 
-    cdef OGRGeometryH _buildGeometryCollection(
-            self, object coordinates) except NULL:
+    cdef OGRGeometryH _buildGeomCollection(self, object geoms) except NULL:
         cdef OGRGeometryH part = NULL
-        cdef OGRGeometryH geom = self._createOgrGeometry(
+        cdef OGRGeometryH ogr_geom = self._createOgrGeometry(
             GEOJSON2OGR_GEOMETRY_TYPES['GeometryCollection'])
-        for colxn in coordinates:
-            part = OGRGeomBuilder().build(colxn)
-            OGR_G_AddGeometryDirectly(geom, part)
-        return geom
+        for g in geoms:
+            part = OGRGeomBuilder().build(g)
+            OGR_G_AddGeometryDirectly(ogr_geom, part)
+        return ogr_geom
 
     cdef OGRGeometryH build(self, object geometry) except NULL:
-        """Builds an OGR geometry from GeoJSON geometry."""
+        """Builds an OGR geometry from GeoJSON geometry.
+        Assumes that geometry has been validated prior to calling this; this
+        only does basic checks for validity.
+        """
         cdef object typename = geometry['type']
-        cdef object coordinates = geometry.get('coordinates')
+        cdef object coordinates
+        cdef object geometries
 
-        if not typename or not coordinates:
-            raise ValueError("Input is not a valid geometry object")
-        if typename == 'Point':
-            return self._buildPoint(coordinates)
-        elif typename == 'LineString':
-            return self._buildLineString(coordinates)
-        elif typename == 'LinearRing':
-            return self._buildLinearRing(coordinates)
-        elif typename == 'Polygon':
-            return self._buildPolygon(coordinates)
-        elif typename == 'MultiPoint':
-            return self._buildMultiPoint(coordinates)
-        elif typename == 'MultiLineString':
-            return self._buildMultiLineString(coordinates)
-        elif typename == 'MultiPolygon':
-            return self._buildMultiPolygon(coordinates)
+        valid_types = {'Point', 'MultiPoint', 'LineString', 'MultiLineString',
+                       'Polygon', 'MultiPolygon'}
+
+        if typename in valid_types:
+            coordinates = geometry.get('coordinates')
+            if not (coordinates and len(coordinates) > 0):
+                raise ValueError("Input is not a valid geometry object")
+
+            if typename == 'Point':
+                return self._buildPoint(coordinates)
+            elif typename == 'LineString':
+                return self._buildLineString(coordinates)
+            elif typename == 'Polygon':
+                return self._buildPolygon(coordinates)
+            elif typename == 'MultiPoint':
+                return self._buildMultiPoint(coordinates)
+            elif typename == 'MultiLineString':
+                return self._buildMultiLineString(coordinates)
+            elif typename == 'MultiPolygon':
+                return self._buildMultiPolygon(coordinates)
+
         elif typename == 'GeometryCollection':
-            coordinates = geometry.get('geometries')
-            return self._buildGeometryCollection(coordinates)
+            geometries = geometry.get('geometries')
+            if not (geometries and len(geometries) > 0):
+                raise ValueError("Input is not a valid geometry object")
+
+            return self._buildGeomCollection(geometries)
+
         else:
             raise ValueError("Unsupported geometry type %s" % typename)
 

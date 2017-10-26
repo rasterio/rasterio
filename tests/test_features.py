@@ -1,3 +1,4 @@
+from copy import deepcopy
 import logging
 import sys
 
@@ -8,7 +9,8 @@ from affine import Affine
 import rasterio
 from rasterio.errors import WindowError
 from rasterio.features import (
-    bounds, geometry_mask, geometry_window, rasterize, sieve, shapes)
+    bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
+    shapes)
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -162,13 +164,233 @@ def test_geometry_no_overlap(path_rgb_byte_tif, basic_geometry):
 
 
 
-def test_rasterize(basic_geometry, basic_image_2x2):
-    """Rasterize operation should succeed for both an out_shape and out."""
+def test_is_valid_geom_point(geojson_point):
+    """Properly formed GeoJSON Point is valid"""
+    assert is_valid_geom(geojson_point)
+
+    # Empty coordinates are invalid
+    geojson_point['coordinates'] = []
+    assert not is_valid_geom(geojson_point)
+
+
+def test_is_valid_geom_multipoint(geojson_multipoint):
+    """Properly formed GeoJSON MultiPoint is valid"""
+    assert is_valid_geom(geojson_multipoint)
+
+    # Empty iterable is invalid
+    geom = deepcopy(geojson_multipoint)
+    geom['coordinates'] = []
+    assert not is_valid_geom(geom)
+
+    # Empty first coordinate is invalid
+    geom = deepcopy(geojson_multipoint)
+    geom['coordinates'] = [[]]
+
+
+def test_is_valid_geom_line(geojson_line):
+    """Properly formed GeoJSON LineString is valid"""
+
+    assert is_valid_geom(geojson_line)
+
+    # Empty iterable is invalid
+    geom = deepcopy(geojson_line)
+    geom['coordinates'] = []
+    assert not is_valid_geom(geom)
+
+    # Empty first coordinate is invalid
+    geom = deepcopy(geojson_line)
+    geom['coordinates'] = [[]]
+
+
+def test_is_valid_geom_multiline(geojson_line):
+    """Properly formed GeoJSON MultiLineString is valid"""
+
+    assert is_valid_geom(geojson_line)
+
+    # Empty iterables are invalid
+    geom = deepcopy(geojson_line)
+    geom['coordinates'] = []
+    assert not is_valid_geom(geom)
+
+    geom = deepcopy(geojson_line)
+    geom['coordinates'] = [[]]
+    assert not is_valid_geom(geom)
+
+    # Empty first coordinate is invalid
+    geom = deepcopy(geojson_line)
+    geom['coordinates'] = [[[]]]
+    assert not is_valid_geom(geom)
+
+
+def test_is_valid_geom_polygon(geojson_polygon):
+    """Properly formed GeoJSON Polygon is valid"""
+
+    assert is_valid_geom(geojson_polygon)
+
+    # Empty iterables are invalid
+    geom = deepcopy(geojson_polygon)
+    geom['coordinates'] = []
+    assert not is_valid_geom(geom)
+
+    geom = deepcopy(geojson_polygon)
+    geom['coordinates'] = [[]]
+    assert not is_valid_geom(geom)
+
+    # Empty first coordinate is invalid
+    geom = deepcopy(geojson_polygon)
+    geom['coordinates'] = [[[]]]
+    assert not is_valid_geom(geom)
+
+
+def test_is_valid_geom_multipolygon(geojson_multipolygon):
+    """Properly formed GeoJSON MultiPolygon is valid"""
+
+    assert is_valid_geom(geojson_multipolygon)
+
+    # Empty iterables are invalid
+    geom = deepcopy(geojson_multipolygon)
+    geom['coordinates'] = []
+    assert not is_valid_geom(geom)
+
+    geom = deepcopy(geojson_multipolygon)
+    geom['coordinates'] = [[]]
+    assert not is_valid_geom(geom)
+
+    geom = deepcopy(geojson_multipolygon)
+    geom['coordinates'] = [[[]]]
+    assert not is_valid_geom(geom)
+
+    # Empty first coordinate is invalid
+    geom = deepcopy(geojson_multipolygon)
+    geom['coordinates'] = [[[[]]]]
+    assert not is_valid_geom(geom)
+
+
+def test_is_valid_geom_geomcollection(geojson_geomcollection):
+    """Properly formed GeoJSON GeometryCollection is valid"""
+
+    assert is_valid_geom(geojson_geomcollection)
+
+    # Empty GeometryCollection is invalid
+    geom = deepcopy(geojson_geomcollection)
+    geom['geometries'] = []
+    assert not is_valid_geom(geom)
+
+
+def test_is_valid_geom_invalid_inputs():
+    """Improperly formed GeoJSON objects should fail"""
+
+    assert not is_valid_geom('type')
+    assert not is_valid_geom(['type'])
+    assert not is_valid_geom({'type': 'Invalid'})  # wrong type
+    assert not is_valid_geom({'type': 'Point'})  # Missing coordinates
+
+
+def test_rasterize_point(geojson_point):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+
     assert np.array_equal(
-        basic_image_2x2,
-        rasterize([basic_geometry], out_shape=DEFAULT_SHAPE)
+        rasterize([geojson_point], out_shape=DEFAULT_SHAPE),
+        expected
     )
 
+
+def test_rasterize_multipoint(geojson_multipoint):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+    expected[4, 4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_multipoint], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_line(geojson_line):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+    expected[3, 3] = 1
+    expected[4, 4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_line], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_multiline(geojson_multiline):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[2, 2] = 1
+    expected[3, 3] = 1
+    expected[4, 4] = 1
+    expected[0, 0:5] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_multiline], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_polygon(geojson_polygon, basic_image_2x2):
+    assert np.array_equal(
+        rasterize([geojson_polygon], out_shape=DEFAULT_SHAPE),
+        basic_image_2x2
+    )
+
+
+def test_rasterize_multipolygon(geojson_multipolygon):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[0:1, 0:1] = 1
+    expected[2:4, 2:4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_multipolygon], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_geomcollection(geojson_geomcollection):
+    expected = np.zeros(shape=DEFAULT_SHAPE, dtype='uint8')
+    expected[0:1, 0:1] = 1
+    expected[2:4, 2:4] = 1
+
+    assert np.array_equal(
+        rasterize([geojson_geomcollection], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
+def test_rasterize_invalid_geom():
+    """Invalid GeoJSON should fail with exception"""
+
+    with pytest.raises(ValueError):
+        rasterize([{'type'}], out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        rasterize([{'type': 'Invalid'}], out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        rasterize([{'type': 'Point'}], out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        # Empty coordinates should fail
+        rasterize([{'type': 'Point', 'coordinates': []}],
+                  out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        # Empty GeometryCollection should fail
+        rasterize([{'type': 'GeometryCollection', 'geometries': []}],
+                  out_shape=DEFAULT_SHAPE)
+
+    with pytest.raises(ValueError):
+        # GeometryCollection with bad geometry should fail
+        rasterize([{'type': 'GeometryCollection', 'geometries': [
+            {'type': 'Invalid', 'coordinates': []}]}], out_shape=DEFAULT_SHAPE)
+
+
+def test_rasterize_out_image(basic_geometry, basic_image_2x2):
+    """Rasterize operation should succeed for an out image."""
     out = np.zeros(DEFAULT_SHAPE)
     rasterize([basic_geometry], out=out)
     assert np.array_equal(basic_image_2x2, out)
@@ -401,6 +623,18 @@ def test_rasterize_geometries_symmetric():
 def test_rasterize_internal_driver_manager(basic_geometry):
     """Rasterize should work without explicitly calling driver manager."""
     assert rasterize([basic_geometry], out_shape=DEFAULT_SHAPE).sum() == 4
+
+
+def test_rasterize_geo_interface(geojson_polygon):
+    """Objects that implement the geo interface should rasterize properly"""
+
+    class GeoObj:
+        @property
+        def __geo_interface__(self):
+            return geojson_polygon
+
+    assert rasterize([GeoObj()], out_shape=DEFAULT_SHAPE).sum() == 4
+
 
 
 def test_shapes(basic_image):

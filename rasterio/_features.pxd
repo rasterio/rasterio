@@ -32,7 +32,7 @@ cdef class OGRGeomBuilder:
     cdef OGRGeometryH _buildMultiPoint(self, object coordinates) except NULL
     cdef OGRGeometryH _buildMultiLineString(self, object coordinates) except NULL
     cdef OGRGeometryH _buildMultiPolygon(self, object coordinates) except NULL
-    cdef OGRGeometryH _buildGeometryCollection(self, object coordinates) except NULL
+    cdef OGRGeometryH _buildGeomCollection(self, object coordinates) except NULL
     cdef OGRGeometryH build(self, object geom) except NULL
 
 

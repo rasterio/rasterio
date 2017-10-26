@@ -21,7 +21,7 @@ from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import CRSError, DriverRegistrationError
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, NotGeoreferencedWarning
 from rasterio.errors import NodataShadowWarning, WindowError
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
@@ -1130,7 +1130,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             warnings.warn(
                 "Dataset uses default geotransform (Affine.identity). "
                 "No transform will be written to the output by GDAL.",
-                UserWarning
+                NotGeoreferencedWarning
             )
 
         cdef double gt[6]

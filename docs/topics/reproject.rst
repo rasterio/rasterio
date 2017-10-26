@@ -94,13 +94,12 @@ provided, and returns destination transform and dimensions.
     dst_crs = 'EPSG:4326'
 
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        affine, width, height = calculate_default_transform(
+        transform, width, height = calculate_default_transform(
             src.crs, dst_crs, src.width, src.height, *src.bounds)
         kwargs = src.meta.copy()
         kwargs.update({
             'crs': dst_crs,
-            'transform': affine,
-            'affine': affine,
+            'transform': transform,
             'width': width,
             'height': height
         })
@@ -110,9 +109,9 @@ provided, and returns destination transform and dimensions.
                 reproject(
                     source=rasterio.band(src, i),
                     destination=rasterio.band(dst, i),
-                    src_transform=src.affine,
+                    src_transform=src.transform,
                     src_crs=src.crs,
-                    dst_transform=affine,
+                    dst_transform=transform,
                     dst_crs=dst_crs,
                     resampling=RESAMPLING.nearest)
 
@@ -136,7 +135,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
     from rasterio.warp import reproject, RESAMPLING
 
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
-        src_transform = src.affine
+        src_transform = src.transform
 
         # Zoom out by a factor of 2 from the center of the source
         # dataset. The destination transform is the product of the

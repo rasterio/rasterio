@@ -80,6 +80,7 @@ rasterio/_shim.c
 rasterio/_shim.pyx
 rasterio/shutil.c
 tests/data/white-gemini-iv.zip
+.hypothesis/
 
 # vim
 .*.swp
