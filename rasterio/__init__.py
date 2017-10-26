@@ -14,13 +14,12 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
-from rasterio._copy import copy
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
-from rasterio.errors import RasterioIOError, RasterioDeprecationWarning
+from rasterio.errors import RasterioDeprecationWarning, RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
@@ -56,8 +55,7 @@ def window_index(*args, **kwargs):
     return window_index(*args, **kwargs)
 
 
-__all__ = [
-    'band', 'open', 'copy', 'pad']
+__all__ = ['band', 'open', 'pad']
 __version__ = "1.0a10"
 __gdal_version__ = gdal_version()
 

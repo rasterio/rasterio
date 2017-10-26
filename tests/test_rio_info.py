@@ -11,6 +11,10 @@ from rasterio.rio.edit_info import (
 from rasterio.rio.main import main_group
 
 
+with rasterio.Env() as env:
+    HAVE_NETCDF = 'NetCDF' in env.drivers().keys()
+
+
 def test_delete_nodata_exclusive_opts(data):
     """--unset-nodata and --nodata can't be used together"""
     runner = CliRunner()
@@ -377,11 +381,10 @@ def test_info_err():
     runner = CliRunner()
     result = runner.invoke(
         main_group, ['info', 'tests'])
-    assert result.exit_code == -1
+    assert result.exit_code != 0
     assert result.exception
-    exc_str = str(result.exception)
     # Note: text of exception changed after 2.1, don't test on full string
-    assert 'not ' in exc_str and ' a supported file format' in exc_str
+    assert 'not' in result.output and ' a valid input file' in result.output
 
 
 def test_info():
@@ -759,7 +762,7 @@ def test_insp():
 def test_insp_err():
     runner = CliRunner()
     result = runner.invoke(main_group, ['insp', 'tests'])
-    assert result.exit_code == 1
+    assert result.exit_code != 0
 
 
 def test_info_checksums():
@@ -781,6 +784,8 @@ def test_info_checksums_only():
 
 @pytest.mark.skipif(parse(rasterio.__gdal_version__) < parse('2.1'),
                     reason='netCDF requires GDAL 2.1+')
+@pytest.mark.skipif(not HAVE_NETCDF,
+                    reason="GDAL not compiled with NetCDF driver.")
 def test_info_subdatasets():
     runner = CliRunner()
     result = runner.invoke(

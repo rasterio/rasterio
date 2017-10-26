@@ -1,8 +1,22 @@
 Changes
 =======
 
-Next
-----
+
+Next Release
+------------
+
+Breaking changes:
+
+- ``rasterio.copy()`` moved to ``rasterio.shutil.copy() (#1173).
+
+New features:
+
+- Addition of ``rasterio.shutil.delete()`` and ``$ rio rm`` for deleting
+  datasets (#929).
+- Addition of ``rasterio.shutil.exists()`` for determining if a dataset
+  exists (#1173).
+- Addition of ``rasterio.shutil.copyfiles()`` to copy files associated
+  with a datset from one location to another (#1173).
 
 Bug fixes:
 
@@ -13,6 +27,7 @@ Bug fixes:
   (#1174, #1173).
 - Prevent a segmentation fault in ``rasterio.features.rasterize()`` by guarding
   against unsupported GeoJSON input (#1172, #1176).
+
 
 1.0a10 (2017-10-09)
 -------------------

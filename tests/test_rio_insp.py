@@ -16,7 +16,7 @@ def test_insp(runner):
 
 def test_insp_err(runner):
     result = runner.invoke(main_group, ['insp', 'tests'])
-    assert result.exit_code == 1
+    assert result.exit_code != 0
 
 
 def test_bad_interpreter():
