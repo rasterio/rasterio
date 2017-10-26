@@ -939,7 +939,10 @@ cdef class DatasetBase(object):
             with nogil:
                 file_list = GDALGetFileList(h_dataset)
             num_items = CSLCount(file_list)
-            return tuple([file_list[i] for i in range(num_items)])
+            try:
+                return tuple([file_list[i] for i in range(num_items)])
+            finally:
+                CSLDestroy(file_list)
 
 
 def _transform(src_crs, dst_crs, xs, ys, zs):

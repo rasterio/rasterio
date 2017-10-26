@@ -42,7 +42,8 @@ def exists(path):
     except CPLE_OpenFailedError:
         return False
     finally:
-        GDALClose(h_dataset)
+        with nogil:
+            GDALClose(h_dataset)
 
 
 @ensure_env
@@ -73,6 +74,7 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
     cdef GDALDatasetH src_dataset = NULL
     cdef GDALDatasetH dst_dataset = NULL
     cdef GDALDriverH drv = NULL
+    cdef bint close_src = False
 
     # Creation options
     for key, val in creation_options.items():
@@ -109,11 +111,10 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         dst_dataset = exc_wrap_pointer(dst_dataset)
     finally:
         CSLDestroy(options)
-        if close_src:
-            GDALClose(src_dataset)
-
-        if dst_dataset != NULL:
+        with nogil:
             GDALClose(dst_dataset)
+            if close_src:
+                GDALClose(src_dataset)
 
 
 @ensure_env
@@ -153,7 +154,8 @@ def copyfiles(src, dst):
     except CPLE_OpenFailedError as e:
         raise RasterioIOError(str(e))
     finally:
-        GDALClose(h_dataset)
+        with nogil:
+            GDALClose(h_dataset)
 
 
 @ensure_env
@@ -199,7 +201,8 @@ def delete(path, driver=None):
             raise RasterioIOError(
                 "Invalid dataset: {}".format(path))
         finally:
-            GDALClose(h_dataset)
+            with nogil:
+                GDALClose(h_dataset)
 
     with nogil:
         res = GDALDeleteDataset(h_driver, c_path)
