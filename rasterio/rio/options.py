@@ -155,8 +155,9 @@ def like_handler(ctx, param, value):
             ctx.obj['like']['transform'] = metadata['transform']
             ctx.obj['like']['tags'] = src.tags()
             ctx.obj['like']['colorinterp'] = dict(zip(src.indexes, src.colorinterp))
+        return True
     else:  # pragma: no cover
-        pass
+        return False
 
 
 def nodata_handler(ctx, param, value):
