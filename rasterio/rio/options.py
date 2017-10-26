@@ -47,12 +47,13 @@ Registry of common rio CLI options.  See cligj for more options.
 # TODO: move file_in_arg and file_out_arg to cligj
 
 
-import os.path
+import os
 import re
 
 import click
 
 import rasterio
+import rasterio.shutil
 from rasterio.vfs import FILE_SCHEMES, parse_path
 
 
@@ -113,7 +114,8 @@ def file_in_handler(ctx, param, value):
         path_to_check = archive or path
 
         # Validate existence of files.
-        if scheme in FILE_SCHEMES and not os.path.exists(path_to_check):
+        if scheme in FILE_SCHEMES and not \
+                rasterio.shutil.exists(path_to_check):
             raise IOError(
                 "Input file {0} does not exist".format(path_to_check))
 

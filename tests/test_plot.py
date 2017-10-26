@@ -275,7 +275,7 @@ def test_plotting_extent():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert plotting_extent(src) == expected
         assert plotting_extent(
-            reshape_as_image(src.read()), transform=src.affine) == expected
+            reshape_as_image(src.read()), transform=src.transform) == expected
         assert plotting_extent(
             src.read(1), transform=src.transform) == expected
         # array requires a transform

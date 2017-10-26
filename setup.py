@@ -239,8 +239,6 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._io', ['rasterio/_io.pyx'], **ext_options),
         Extension(
-            'rasterio._copy', ['rasterio/_copy.pyx'], **ext_options),
-        Extension(
             'rasterio._features', ['rasterio/_features.pyx'], **ext_options),
         Extension(
             'rasterio._env', ['rasterio/_env.pyx'], **ext_options),
@@ -255,7 +253,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._shim', ['rasterio/_shim.pyx'], **ext_options),
         Extension(
-            'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options)],
+            'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options),
+        Extension(
+            'rasterio.shutil', ['rasterio/shutil.pyx'], **ext_options)],
         quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
@@ -369,6 +369,7 @@ setup_args = dict(
         merge=rasterio.rio.merge:merge
         overview=rasterio.rio.overview:overview
         rasterize=rasterio.rio.rasterize:rasterize
+        rm=rasterio.rio.rm:rm
         sample=rasterio.rio.sample:sample
         shapes=rasterio.rio.shapes:shapes
         stack=rasterio.rio.stack:stack

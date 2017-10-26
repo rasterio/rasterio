@@ -6,8 +6,6 @@ include "directives.pxi"
 include "gdal.pxi"
 
 import logging
-import os
-import os.path
 import sys
 import uuid
 import warnings
@@ -23,7 +21,7 @@ from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import CRSError, DriverRegistrationError
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, NotGeoreferencedWarning
 from rasterio.errors import NodataShadowWarning, WindowError
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
@@ -42,6 +40,33 @@ from rasterio._shim cimport (
 
 
 log = logging.getLogger(__name__)
+
+
+def _delete_dataset_if_exists(path):
+
+    """Delete dataset if it already exists.  Not a substitute for
+    ``rasterio.shutil.exists()`` and ``rasterio.shutil.delete()``.
+
+    Parameters
+    ----------
+    path : str
+        Dataset path
+    """
+
+    b_path = path.encode('utf-8')
+    cdef char* c_path = b_path
+    with nogil:
+        h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+    try:
+        h_dataset = exc_wrap_pointer(h_dataset)
+        h_driver = GDALGetDatasetDriver(h_dataset)
+        if h_driver != NULL:
+            with nogil:
+                GDALDeleteDataset(h_driver, c_path)
+    except CPLE_OpenFailedError:
+        pass
+    finally:
+        GDALClose(h_dataset)
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -890,9 +915,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if mode == 'w':
 
-            # Delete existing file, create.
-            if os.path.exists(path):
-                os.unlink(path)
+            _delete_dataset_if_exists(path)
 
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
@@ -1107,7 +1130,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             warnings.warn(
                 "Dataset uses default geotransform (Affine.identity). "
                 "No transform will be written to the output by GDAL.",
-                UserWarning
+                NotGeoreferencedWarning
             )
 
         cdef double gt[6]
@@ -1798,8 +1821,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         fname = name_b
 
         # Delete existing file, create.
-        if os.path.exists(self.name):
-            os.unlink(self.name)
+        _delete_dataset_if_exists(self.name)
 
         driver_b = self.driver.encode('utf-8')
         drv_name = driver_b

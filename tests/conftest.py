@@ -70,6 +70,128 @@ def basic_geometry():
 
 
 @pytest.fixture
+def geojson_point():
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style Point geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return {
+        'type': 'Point',
+        'coordinates': (2, 2)
+    }
+
+
+@pytest.fixture
+def geojson_multipoint():
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style MultiPoint geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return {
+        'type': 'MultiPoint',
+        'coordinates': ((2, 2), (4, 4))
+    }
+
+
+@pytest.fixture
+def geojson_line():
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style LineString geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return {
+        'type': 'LineString',
+        'coordinates': ((2, 2), (4, 4))
+    }
+
+
+@pytest.fixture
+def geojson_multiline():
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style MultiLineString geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return {
+        'type': 'MultiLineString',
+        'coordinates': (((2, 2), (4, 4)), ((0, 0), (4, 0)))
+    }
+
+
+@pytest.fixture
+def geojson_polygon(basic_geometry):
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style Polygon geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return basic_geometry
+
+
+@pytest.fixture
+def geojson_multipolygon():
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style MultiPolygon geometry object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return {
+        'type': 'MultiPolygon',
+        'coordinates': (
+            (((2, 2), (2, 4), (4, 4), (4, 2), (2, 2)), ),
+            (((0, 0), (0, 1), (1, 1), (1, 0), (0, 0)), )
+        )
+    }
+
+
+@pytest.fixture
+def geojson_geomcollection():
+    """
+    Returns
+    -------
+
+    dict: GeoJSON-style GeometryCollection object.
+        Coordinates are in grid coordinates (Affine.identity()).
+    """
+
+    return {
+        'type': 'GeometryCollection',
+        'geometries': (
+            {
+                'type': 'Polygon',
+                'coordinates': (((2, 2), (2, 4), (4, 4), (4, 2), (2, 2)), )
+            },
+            {
+                'type': 'Polygon',
+                'coordinates': (((0, 0), (0, 1), (1, 1), (1, 0), (0, 0)), )
+            }
+        )
+    }
+
+
+
+@pytest.fixture
 def basic_feature(basic_geometry):
     """
     Returns
