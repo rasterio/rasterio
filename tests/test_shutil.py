@@ -2,6 +2,7 @@
 
 
 import os
+import shutil
 
 import numpy
 import pytest
@@ -122,25 +123,24 @@ def test_copy_strict_silent_failure(tmpdir, path_float_tif):
         assert dst.read().max() == 0  # it should be 1.4099; 0 indicates bad data
 
 
-def test_copyfiles(path_rgb_byte_tif, tmpdir):
+def test_copyfiles(data, tmpdir):
     """``rasterio.shutil.copyfiles()``"""
 
-    outfile = str(tmpdir.join('test_copyfiles.tif'))
-
-    # Add an '.aux.xml' so more than 1 file is copied
-    aux = path_rgb_byte_tif + '.aux.xml'
+    # Use the 'data' fixture to prevent the created '.aux.xml' file from
+    # triggering 'GDALPAMDataset()' interactions in other tests.
+    infile = str(data.join('RGB.byte.tif'))
+    outfile = str(tmpdir.join('test_copyfiles_outfile.tif'))
+    aux = infile + '.aux.xml'
     with open(aux, 'w'):
         pass
 
-    ret = rasterio.shutil.copyfiles(path_rgb_byte_tif, outfile)
+    ret = rasterio.shutil.copyfiles(infile, outfile)
     assert ret is None
 
-    with rasterio.open(path_rgb_byte_tif) as expected, \
+    with rasterio.open(infile) as expected, \
             rasterio.open(outfile) as actual:
         assert len(expected.files) == len(actual.files)
         assert all(map(os.path.exists, actual.files))
-
-    os.unlink(aux)
 
 
 def test_copyfiles_fail():

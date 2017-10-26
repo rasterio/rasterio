@@ -9,13 +9,13 @@ import rasterio
 from rasterio.errors import RasterioIOError
 
 
-def test_files(path_rgb_byte_tif):
-    aux = path_rgb_byte_tif + '.aux.xml'
+def test_files(data):
+    tif = str(data.join('RGB.byte.tif'))
+    aux = tif + '.aux.xml'
     with open(aux, 'w'):
         pass
-    with rasterio.open(path_rgb_byte_tif) as src:
-        assert src.files == (path_rgb_byte_tif, aux)
-    os.unlink(aux)
+    with rasterio.open(tif) as src:
+        assert src.files == (tif, aux)
 
 
 def test_handle_closed(path_rgb_byte_tif):
