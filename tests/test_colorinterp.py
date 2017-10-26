@@ -19,16 +19,13 @@ def test_cmyk_interp(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
         assert dst.profile['photometric'] == 'cmyk'
-        dst.colorinterp = [
+        assert dst.colorinterp == [
             ColorInterp.cyan,
             ColorInterp.magenta,
             ColorInterp.yellow,
             ColorInterp.black]
 
 
-@pytest.mark.skipif(
-    os.environ.get('TRAVIS', os.environ.get('CI', 'false')).lower() != 'true',
-    reason="Crashing on OS X with Homebrew's GDAL")
 def test_ycbcr_interp(tmpdir):
     """A YCbCr TIFF has red, green, blue bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -38,7 +35,7 @@ def test_ycbcr_interp(tmpdir):
     meta['count'] = 3
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
-        dst.colorinterp = [
+        assert dst.colorinterp == [
             ColorInterp.red, ColorInterp.green, ColorInterp.blue]
 
 

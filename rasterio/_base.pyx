@@ -813,25 +813,19 @@ cdef class DatasetBase(object):
 
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
-
-        Pattern for converting to a band mapping:
-
-            from collections import OrderedDict
-            with rasterio.open('image.tif') as src:
-                band_mapping = OrderedDict(
-                    zip(src.colorinterp, self.indexes))
-                band_mapping[1] == src.colorinterp[0]
-
-        A normal dictionary would also work, however an ``OrderedDict()``
-        makes setting color interpretation easier as order is significant.
-
-            from collections import OrderedDict
-            with rasterio.open('image.tif', 'r+') as src:
-                band_mapping = OrderedDict((
-                    (1, ColorInterp.blue),
-                    (2, ColorInterp.green),
-                    (3, ColorInterp.red)))
-                src.colorinterp = band_mapping.values()
+        
+        To set color interpretation, provide a sequence of
+        ``ColorInterp.<enum>``:
+            
+            import rasterio
+            from rasterio.enums import ColorInterp
+            
+            with rasterio.open('rgba.tif', 'r+') as src:
+                src.colorinterp = [
+                    ColorInterp.red,
+                    ColorInterp.green,
+                    ColorInterp.blue,
+                    ColorInterp.alpha]
 
         Returns
         -------
@@ -873,7 +867,7 @@ cdef class DatasetBase(object):
                 raise RasterioIOError(
                     "Can only set color interpretation when dataset is "
                     "opened in 'r+' or 'w' mode, not '{}'.".format(self.mode))
-            elif len(value) != len(self.indexes):
+            if len(value) != len(self.indexes):
                 raise ValueError(
                     "Must set color interpretation for all bands.  Found "
                     "{} bands: {}".format(len(self.indexes), value))
