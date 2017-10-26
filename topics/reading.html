@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reading Datasets &mdash; rasterio 1.0a9 documentation</title>
+  <title>Reading Datasets &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/> 
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -39,6 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -58,7 +64,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -79,11 +85,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -103,6 +112,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -126,8 +136,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -136,23 +148,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Reading Datasets</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Reading Datasets</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/reading.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/reading.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -180,7 +209,7 @@
 </ul>
 </div>
 <p>Dataset objects provide read, read-write, and write access to raster data files
-and are obtained by calling <code class="docutils literal"><span class="pre">rasterio.open()</span></code>. That function mimics Python&#8217;s
+and are obtained by calling <code class="docutils literal"><span class="pre">rasterio.open()</span></code>. That function mimics Python’s
 built-in <code class="docutils literal"><span class="pre">open()</span></code> and the dataset objects it returns mimic Python <code class="docutils literal"><span class="pre">file</span></code>
 objects.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
@@ -237,7 +266,7 @@ some software.</p>
 </pre></div>
 </div>
 <p>In order to read smaller chunks of the dataset, refer to <a class="reference internal" href="windowed-rw.html#windowrw"><span class="std std-ref">Windowed reading and writing</span></a>.</p>
-<p>The indexes, Numpy data types, and nodata values of all a dataset&#8217;s bands can
+<p>The indexes, Numpy data types, and nodata values of all a dataset’s bands can
 be had from its <code class="docutils literal"><span class="pre">indexes</span></code>, <code class="docutils literal"><span class="pre">dtypes</span></code>, and <code class="docutils literal"><span class="pre">nodatavals</span></code> attributes.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">nodataval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">indexes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">nodatavals</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">nodataval</span><span class="p">)</span>
@@ -253,14 +282,14 @@ be had from its <code class="docutils literal"><span class="pre">indexes</span><
 <span class="go">&lt;closed DatasetReader name=&#39;tests/data/RGB.byte.tif&#39; mode=&#39;r&#39;&gt;</span>
 </pre></div>
 </div>
-<p>After it&#8217;s closed, data can no longer be read.</p>
+<p>After it’s closed, data can no longer be read.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
  <span class="c">...</span>
 <span class="gr">ValueError</span>: <span class="n">can&#39;t read closed raster file</span>
 </pre></div>
 </div>
-<p>This is the same behavior as Python&#8217;s <code class="docutils literal"><span class="pre">file</span></code>.</p>
+<p>This is the same behavior as Python’s <code class="docutils literal"><span class="pre">file</span></code>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;README.rst&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -289,6 +318,9 @@ the the block.</p>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -320,16 +352,17 @@ the the block.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

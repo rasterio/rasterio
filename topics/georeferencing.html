@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Georeferencing &mdash; rasterio 1.0a9 documentation</title>
+  <title>Georeferencing &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="next" title="Options" href="image_options.html"/>
         <link rel="prev" title="Filling nodata areas" href="fillnodata.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -109,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -132,8 +142,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,23 +154,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Georeferencing</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Georeferencing</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/georeferencing.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/georeferencing.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -167,7 +196,7 @@
   <div class="section" id="georeferencing">
 <h1>Georeferencing<a class="headerlink" href="#georeferencing" title="Permalink to this headline">¶</a></h1>
 <p>There are two parts to the georeferencing of raster datasets: the definition
-of the local, regional, or global system in which a raster&#8217;s pixels are
+of the local, regional, or global system in which a raster’s pixels are
 located; and the parameters by which pixel coordinates are transformed into
 coordinates in that system.</p>
 <div class="section" id="coordinate-reference-system">
@@ -182,7 +211,7 @@ attribute.</p>
 </div>
 <p>Rasterio follows pyproj and uses PROJ.4 syntax in dict form as its native
 CRS syntax. If you want a WKT representation of the CRS, see the CRS
-class&#8217;s <code class="docutils literal"><span class="pre">wkt</span></code> attribute.</p>
+class’s <code class="docutils literal"><span class="pre">wkt</span></code> attribute.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">wkt</span>
 <span class="go">&#39;PROJCS[&quot;WGS 84 / UTM zone 18N&quot;,GEOGCS[&quot;WGS 84&quot;,DATUM[&quot;WGS_1984&quot;,SPHEROID[&quot;WGS 84&quot;,6378137,298.257223563,AUTHORITY[&quot;EPSG&quot;,&quot;7030&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;6326&quot;]],PRIMEM[&quot;Greenwich&quot;,0,AUTHORITY[&quot;EPSG&quot;,&quot;8901&quot;]],UNIT[&quot;degree&quot;,0.0174532925199433,AUTHORITY[&quot;EPSG&quot;,&quot;9122&quot;]],AUTHORITY[&quot;EPSG&quot;,&quot;4326&quot;]],PROJECTION[&quot;Transverse_Mercator&quot;],PARAMETER[&quot;latitude_of_origin&quot;,0],PARAMETER[&quot;central_meridian&quot;,-75],PARAMETER[&quot;scale_factor&quot;,0.9996],PARAMETER[&quot;false_easting&quot;,500000],PARAMETER[&quot;false_northing&quot;,0],UNIT[&quot;metre&quot;,1,AUTHORITY[&quot;EPSG&quot;,&quot;9001&quot;]],AXIS[&quot;Easting&quot;,EAST],AXIS[&quot;Northing&quot;,NORTH],AUTHORITY[&quot;EPSG&quot;,&quot;32618&quot;]]&#39;</span>
 </pre></div>
@@ -197,10 +226,10 @@ argument.</p>
 </div>
 <div class="section" id="coordinate-transformation">
 <h2>Coordinate Transformation<a class="headerlink" href="#coordinate-transformation" title="Permalink to this headline">¶</a></h2>
-<p>A dataset&#8217;s pixel coordinate system has its origin at the &#8220;upper left&#8221; (imagine
+<p>A dataset’s pixel coordinate system has its origin at the “upper left” (imagine
 it displayed on your screen). Column index increases to the right, and row
-index increases downward. The mapping of these coordinates to &#8220;world&#8221;
-coordinates in the dataset&#8217;s reference system is done with an affine
+index increases downward. The mapping of these coordinates to “world”
+coordinates in the dataset’s reference system is done with an affine
 transformation matrix.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">affine</span>
 <span class="go">Affine(300.0379266750948, 0.0, 101985.0,</span>
@@ -209,7 +238,7 @@ transformation matrix.</p>
 </div>
 <p>The <code class="docutils literal"><span class="pre">Affine</span></code> object is a named tuple with elements <code class="docutils literal"><span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c,</span> <span class="pre">d,</span> <span class="pre">e,</span> <span class="pre">f</span></code>
 corresponding to the elements in the matrix equation below, in which
-a pixel&#8217;s image coordinates are <code class="docutils literal"><span class="pre">x,</span> <span class="pre">y</span></code> and its world coordinates are
+a pixel’s image coordinates are <code class="docutils literal"><span class="pre">x,</span> <span class="pre">y</span></code> and its world coordinates are
 <code class="docutils literal"><span class="pre">x',</span> <span class="pre">y'</span></code>.:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">x</span><span class="s1">&#39; |   | a b c | | x |</span>
 <span class="o">|</span> <span class="n">y</span><span class="s1">&#39; | = | d e f | | y |</span>
@@ -223,15 +252,18 @@ described at <a class="reference external" href="https://github.com/sgillies/aff
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="image_options.html" class="btn btn-neutral float-right" title="Options" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="image_options.html" class="btn btn-neutral float-right" title="Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="fillnodata.html" class="btn btn-neutral" title="Filling nodata areas" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="fillnodata.html" class="btn btn-neutral" title="Filling nodata areas" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -262,16 +294,17 @@ described at <a class="reference external" href="https://github.com/sgillies/aff
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

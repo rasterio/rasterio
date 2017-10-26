@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Switching from GDAL’s Python bindings &mdash; rasterio 1.0a9 documentation</title>
+  <title>Switching from GDAL’s Python bindings &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/>
         <link rel="next" title="Color" href="topics/color.html"/>
         <link rel="prev" title="Quickstart" href="quickstart.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL&#8217;s Python bindings</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Switching from GDAL’s Python bindings</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#mutual-incompatibilities">Mutual Incompatibilities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-gdal-environment">The GDAL Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#format-drivers">Format Drivers</a></li>
@@ -119,6 +128,7 @@
 <li class="toctree-l1"><a class="reference internal" href="topics/reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -142,8 +152,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rasterio</a>
+        
       </nav>
 
 
@@ -152,42 +164,59 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Switching from GDAL&#8217;s Python bindings</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Switching from GDAL’s Python bindings</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/switch.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/switch.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
   <div class="section" id="switching-from-gdal-s-python-bindings">
-<h1>Switching from GDAL&#8217;s Python bindings<a class="headerlink" href="#switching-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
-<p>This document is written specifically for users of GDAL&#8217;s Python bindings
-(<code class="docutils literal"><span class="pre">osgeo.gdal</span></code>) who have read about Rasterio&#8217;s <a class="reference external" href="intro.html">philosophy</a> and
+<h1>Switching from GDAL’s Python bindings<a class="headerlink" href="#switching-from-gdal-s-python-bindings" title="Permalink to this headline">¶</a></h1>
+<p>This document is written specifically for users of GDAL’s Python bindings
+(<code class="docutils literal"><span class="pre">osgeo.gdal</span></code>) who have read about Rasterio’s <a class="reference external" href="intro.html">philosophy</a> and
 want to know what switching entails.  The good news is that switching may not
 be complicated. This document explains the key similarities and differences
 between these two Python packages and highlights the features of Rasterio that
 can help in switching.</p>
 <div class="section" id="mutual-incompatibilities">
 <h2>Mutual Incompatibilities<a class="headerlink" href="#mutual-incompatibilities" title="Permalink to this headline">¶</a></h2>
-<p>Rasterio and GDAL&#8217;s bindings can contend for global GDAL objects. Unless you
+<p>Rasterio and GDAL’s bindings can contend for global GDAL objects. Unless you
 have deep knowledge about both packages, choose exactly one of <code class="docutils literal"><span class="pre">import</span>
 <span class="pre">osgeo.gdal</span></code> or <code class="docutils literal"><span class="pre">import</span> <span class="pre">rasterio</span></code>.</p>
-<p>GDAL&#8217;s bindings (<code class="docutils literal"><span class="pre">gdal</span></code> for the rest of this document) and Rasterio are not
+<p>GDAL’s bindings (<code class="docutils literal"><span class="pre">gdal</span></code> for the rest of this document) and Rasterio are not
 entirely compatible and should not, without a great deal of care, be imported
 and used in a single Python program. The reason is that the dynamic library
 they each load (these are C extension modules, remember), <code class="docutils literal"><span class="pre">libgdal.so</span></code> on
@@ -197,25 +226,25 @@ modules take different approaches to managing these objects.</p>
 this contention, but in practice you will almost never see distributions of
 these modules that statically link the GDAL library.</p>
 <p>Beyond the issues above, the modules have different styles – <code class="docutils literal"><span class="pre">gdal</span></code> reads and
-writes like C while <code class="docutils literal"><span class="pre">rasterio</span></code> is more Pythonic – and don&#8217;t complement each
+writes like C while <code class="docutils literal"><span class="pre">rasterio</span></code> is more Pythonic – and don’t complement each
 other well.</p>
 </div>
 <div class="section" id="the-gdal-environment">
 <h2>The GDAL Environment<a class="headerlink" href="#the-gdal-environment" title="Permalink to this headline">¶</a></h2>
 <p>GDAL library functions are excuted in a context of format drivers, error
 handlers, and format-specific configuration options that this document will
-call the &#8220;GDAL Environment.&#8221; Rasterio has an abstraction for the GDAL
+call the “GDAL Environment.” Rasterio has an abstraction for the GDAL
 environment, <code class="docutils literal"><span class="pre">gdal</span></code> does not.</p>
 <p>With <code class="docutils literal"><span class="pre">gdal</span></code>, this context is initialized upon import of the module. This
 makes sense because <code class="docutils literal"><span class="pre">gdal</span></code> objects are thin wrappers around functions and
 classes in the GDAL dynamic library that generally require registration of
-drivers and error handlers.  The <code class="docutils literal"><span class="pre">gdal</span></code> module doesn&#8217;t have an abstraction
+drivers and error handlers.  The <code class="docutils literal"><span class="pre">gdal</span></code> module doesn’t have an abstraction
 for the environment, but it can be modified using functions like
 <code class="docutils literal"><span class="pre">gdal.SetErrorHandler()</span></code> and <code class="docutils literal"><span class="pre">gdal.UseExceptions()</span></code>.</p>
-<p>Rasterio has modules that don&#8217;t require complete initialization and
+<p>Rasterio has modules that don’t require complete initialization and
 configuration of GDAL (<code class="docutils literal"><span class="pre">rasterio.dtypes</span></code>, <code class="docutils literal"><span class="pre">rasterio.profiles</span></code>, and
 <code class="docutils literal"><span class="pre">rasterio.windows</span></code>, for example) and in the interest of reducing overhead
-doesn&#8217;t register format drivers and error handlers until they are needed. The
+doesn’t register format drivers and error handlers until they are needed. The
 functions that do need fully initialized GDAL environments will ensure that
 they exist. <code class="docutils literal"><span class="pre">rasterio.open()</span></code> is the foremost of this category of functions.
 Consider the example code below.</p>
@@ -298,14 +327,14 @@ functions like <code class="docutils literal"><span class="pre">rasterio.open()<
 <p>Rasterio uses URIs to identify datasets, with schemes for different protocols.
 The GDAL bindings have their own special syntax.</p>
 <p>Unix-style filenames such as <code class="docutils literal"><span class="pre">/var/data/example.tif</span></code> identify dataset files
-for both Rasterio and <code class="docutils literal"><span class="pre">gdal</span></code>. Rasterio also accepts &#8216;file&#8217; scheme URIs
+for both Rasterio and <code class="docutils literal"><span class="pre">gdal</span></code>. Rasterio also accepts ‘file’ scheme URIs
 like <code class="docutils literal"><span class="pre">file:///var/data/example.tif</span></code>.</p>
 <p>Rasterio identifies datasets within ZIP or tar archives using Apache VFS style
 identifiers like <code class="docutils literal"><span class="pre">zip:///var/data/example.zip!example.tif</span></code> or
 <code class="docutils literal"><span class="pre">tar:///var/data/example.tar!example.tif</span></code>.</p>
-<p>Datasets served via HTTPS are identified using &#8216;https&#8217; URIs like
+<p>Datasets served via HTTPS are identified using ‘https’ URIs like
 <code class="docutils literal"><span class="pre">https://landsat-pds.s3.amazonaws.com/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
-<p>Datasets on AWS S3 are identified using &#8216;s3&#8217; scheme identifiers like
+<p>Datasets on AWS S3 are identified using ‘s3’ scheme identifiers like
 <code class="docutils literal"><span class="pre">s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF</span></code>.</p>
 <p>With <code class="docutils literal"><span class="pre">gdal</span></code>, the equivalent identifiers are respectively
 <code class="docutils literal"><span class="pre">/vsizip//var/data/example.zip/example.tif</span></code>,
@@ -321,10 +350,10 @@ drivers and protocols.</p>
 <h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
 <p>Rasterio and <code class="docutils literal"><span class="pre">gdal</span></code> each have dataset objects. Not the same classes, of
 course, but not radically different ones. In each case, you generally get
-dataset objects through an &#8220;opener&#8221; function: <code class="docutils literal"><span class="pre">rasterio.open()</span></code> or
+dataset objects through an “opener” function: <code class="docutils literal"><span class="pre">rasterio.open()</span></code> or
 <code class="docutils literal"><span class="pre">gdal.Open()</span></code>.</p>
 <p>So that Python developers can spend less time reading docs, the dataset object
-returned by <code class="docutils literal"><span class="pre">rasterio.open()</span></code> is modeled on Python&#8217;s file object. It even has
+returned by <code class="docutils literal"><span class="pre">rasterio.open()</span></code> is modeled on Python’s file object. It even has
 the <code class="docutils literal"><span class="pre">close()</span></code> method that <code class="docutils literal"><span class="pre">gdal</span></code> lacks so that you can actively close
 dataset connections.</p>
 </div>
@@ -375,11 +404,11 @@ them by zipping these tuples together.</p>
 <div class="section" id="geotransforms">
 <h2>Geotransforms<a class="headerlink" href="#geotransforms" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal"><span class="pre">transform</span></code> attribute of a Rasterio dataset object is comparable to the
-<code class="docutils literal"><span class="pre">GeoTransform</span></code> attribute of a GDAL dataset, but Rasterio&#8217;s has more power.
-It&#8217;s not just an array of affine transformation matrix elements, it&#8217;s an
+<code class="docutils literal"><span class="pre">GeoTransform</span></code> attribute of a GDAL dataset, but Rasterio’s has more power.
+It’s not just an array of affine transformation matrix elements, it’s an
 instance of an <code class="docutils literal"><span class="pre">Afine</span></code> class and has many handy methods. For example, the
 spatial coordinates of the upper left corner of any raster element is the
-product of the dataset&#8217;s <code class="docutils literal"><span class="pre">transform</span></code> matrix and the <code class="docutils literal"><span class="pre">(column,</span> <span class="pre">row)</span></code> index
+product of the dataset’s <code class="docutils literal"><span class="pre">transform</span></code> matrix and the <code class="docutils literal"><span class="pre">(column,</span> <span class="pre">row)</span></code> index
 of the element.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">transform</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -403,7 +432,7 @@ converted to the sequences used by <code class="docutils literal"><span class="p
 </div>
 <div class="section" id="coordinate-reference-systems">
 <h2>Coordinate Reference Systems<a class="headerlink" href="#coordinate-reference-systems" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">crs</span></code> attribute of a Rasterio dataset object is an instance of Rasterio&#8217;s
+<p>The <code class="docutils literal"><span class="pre">crs</span></code> attribute of a Rasterio dataset object is an instance of Rasterio’s
 <code class="docutils literal"><span class="pre">CRS</span></code> class and works well with <code class="docutils literal"><span class="pre">pyproj</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyproj</span> <span class="kn">import</span> <span class="n">Proj</span><span class="p">,</span> <span class="n">transform</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
@@ -414,7 +443,7 @@ converted to the sequences used by <code class="docutils literal"><span class="p
 </div>
 <div class="section" id="tags">
 <h2>Tags<a class="headerlink" href="#tags" title="Permalink to this headline">¶</a></h2>
-<p>GDAL metadata items are called &#8220;tags&#8221; in Rasterio. The tag set for a given GDAL
+<p>GDAL metadata items are called “tags” in Rasterio. The tag set for a given GDAL
 metadata namespace is represented as a dict.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">()</span>
 <span class="go">{&#39;AREA_OR_POINT&#39;: &#39;Area&#39;}</span>
@@ -422,7 +451,7 @@ metadata namespace is represented as a dict.</p>
 <span class="go">{&#39;INTERLEAVE&#39;: &#39;PIXEL&#39;}</span>
 </pre></div>
 </div>
-<p>The semantics of the tags in GDAL&#8217;s default and <code class="docutils literal"><span class="pre">IMAGE_STRUCTURE</span></code> namespaces
+<p>The semantics of the tags in GDAL’s default and <code class="docutils literal"><span class="pre">IMAGE_STRUCTURE</span></code> namespaces
 are described in <a class="reference external" href="http://www.gdal.org/gdal_datamodel.html">http://www.gdal.org/gdal_datamodel.html</a>. Rasterio uses
 several namespaces of its own: <code class="docutils literal"><span class="pre">rio_creation_kwds</span></code> and <code class="docutils literal"><span class="pre">rio_overviews</span></code>,
 each with their own semantics.</p>
@@ -480,8 +509,8 @@ data.</p>
 <span class="go">        fill_value = 0)</span>
 </pre></div>
 </div>
-<p>Where the masked array&#8217;s <code class="docutils literal"><span class="pre">mask</span></code> is <code class="docutils literal"><span class="pre">True</span></code>, the data is invalid and has been
-masked &#8220;out&#8221; in the opposite sense of GDAL&#8217;s mask.</p>
+<p>Where the masked array’s <code class="docutils literal"><span class="pre">mask</span></code> is <code class="docutils literal"><span class="pre">True</span></code>, the data is invalid and has been
+masked “out” in the opposite sense of GDAL’s mask.</p>
 </div>
 <div class="section" id="errors-and-exceptions">
 <h2>Errors and Exceptions<a class="headerlink" href="#errors-and-exceptions" title="Permalink to this headline">¶</a></h2>
@@ -494,15 +523,18 @@ approach, although developers can turn on exceptions by calling
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="topics/color.html" class="btn btn-neutral float-right" title="Color" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="topics/color.html" class="btn btn-neutral float-right" title="Color" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="quickstart.html" class="btn btn-neutral" title="Quickstart" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -533,16 +565,17 @@ approach, although developers can turn on exceptions by calling
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

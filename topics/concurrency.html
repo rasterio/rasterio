@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Concurrent processing &mdash; rasterio 1.0a9 documentation</title>
+  <title>Concurrent processing &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="next" title="Error Handling" href="errors.html"/>
         <link rel="prev" title="Color" href="color.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -105,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -128,8 +138,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -138,23 +150,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Concurrent processing</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Concurrent processing</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/concurrency.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/concurrency.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -163,12 +192,12 @@
   <div class="section" id="concurrent-processing">
 <h1>Concurrent processing<a class="headerlink" href="#concurrent-processing" title="Permalink to this headline">¶</a></h1>
 <p>Rasterio affords concurrent processing of raster data. The Python GIL is
-released when calling GDAL&#8217;s <code class="docutils literal"><span class="pre">GDALRasterIO()</span></code> function, which means that
+released when calling GDAL’s <code class="docutils literal"><span class="pre">GDALRasterIO()</span></code> function, which means that
 datasets can read and write concurrently with other threads.</p>
 <p>The Numpy library also releases the GIL as much as it can, e.g., in applying
 universal functions to arrays, and this makes it possible to distribute
 processing of an array across cores of a processor. The Cython function below,
-included in Rasterio&#8217;s <code class="docutils literal"><span class="pre">_example</span></code> module, simulates such a GIL-releasing
+included in Rasterio’s <code class="docutils literal"><span class="pre">_example</span></code> module, simulates such a GIL-releasing
 raster processing function.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="n">cimport</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
@@ -259,7 +288,7 @@ raster processing function.</p>
                         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
 
 
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
 
     <span class="kn">import</span> <span class="nn">argparse</span>
 
@@ -285,10 +314,10 @@ raster processing function.</p>
 </pre></div>
 </div>
 <p>The code above simulates a fairly CPU-intensive process that runs faster when
-spread over multiple cores using the <code class="docutils literal"><span class="pre">ThreadPoolExecutor</span></code> from Python 3&#8217;s
+spread over multiple cores using the <code class="docutils literal"><span class="pre">ThreadPoolExecutor</span></code> from Python 3’s
 <code class="docutils literal"><span class="pre">concurrent.futures</span></code> module. Compared to the case of one concurrent job
 (<code class="docutils literal"><span class="pre">-j</span> <span class="pre">1</span></code>)</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 1
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j <span class="m">1</span>
 
 <span class="go">real    0m3.474s</span>
 <span class="go">user    0m3.426s</span>
@@ -296,7 +325,7 @@ spread over multiple cores using the <code class="docutils literal"><span class=
 </pre></div>
 </div>
 <p>we get an almost 3x speed up with four concurrent jobs.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j 4
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">time</span> python examples/concurrent-cpu-bound.py tests/data/RGB.byte.tif /tmp/threads.tif -j <span class="m">4</span>
 
 <span class="go">real    0m1.335s</span>
 <span class="go">user    0m3.400s</span>
@@ -307,15 +336,18 @@ spread over multiple cores using the <code class="docutils literal"><span class=
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="errors.html" class="btn btn-neutral float-right" title="Error Handling" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="errors.html" class="btn btn-neutral float-right" title="Error Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="color.html" class="btn btn-neutral" title="Color" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="color.html" class="btn btn-neutral" title="Color" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -346,16 +378,17 @@ spread over multiple cores using the <code class="docutils literal"><span class=
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

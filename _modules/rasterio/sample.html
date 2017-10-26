@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.sample &mdash; rasterio 1.0a9 documentation</title>
+  <title>rasterio.sample &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -40,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -59,7 +65,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -80,11 +86,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
@@ -128,8 +137,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,21 +153,38 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      
+        
           <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
-      
-    <li>rasterio.sample</li>
+        
+      <li>rasterio.sample</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -165,7 +193,11 @@
   <h1>Source code for rasterio.sample</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Workaround for issue #378. A pure Python generator.</span>
 
-<div class="viewcode-block" id="sample_gen"><a class="viewcode-back" href="../../api/rasterio.sample.html#rasterio.sample.sample_gen">[docs]</a><span class="k">def</span> <span class="nf">sample_gen</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="k">import</span> <span class="n">Window</span>
+
+
+<div class="viewcode-block" id="sample_gen"><a class="viewcode-back" href="../../rasterio.sample.html#rasterio.sample.sample_gen">[docs]</a><span class="k">def</span> <span class="nf">sample_gen</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generator for sampled pixels&quot;&quot;&quot;</span>
     <span class="n">index</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">index</span>
     <span class="n">read</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span>
 
@@ -173,12 +205,15 @@
         <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">indexes</span><span class="p">]</span>
 
     <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">xy</span><span class="p">:</span>
-        <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="n">window</span> <span class="o">=</span> <span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="n">row_off</span><span class="p">,</span> <span class="n">col_off</span> <span class="o">=</span> <span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="n">col_off</span><span class="p">,</span> <span class="n">row_off</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span></div>
 </pre></div>
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -210,16 +245,17 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

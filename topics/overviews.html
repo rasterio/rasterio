@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Overviews &mdash; rasterio 1.0a9 documentation</title>
+  <title>Overviews &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="next" title="Plotting" href="plotting.html"/>
         <link rel="prev" title="Migrating to Rasterio 1.0" href="migrating-to-v1.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -105,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -128,8 +138,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -138,23 +150,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Overviews</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Overviews</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/overviews.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/overviews.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -163,7 +192,7 @@
   <div class="section" id="overviews">
 <h1>Overviews<a class="headerlink" href="#overviews" title="Permalink to this headline">¶</a></h1>
 <p>Overviews are reduced resolution versions of your dataset that can speed up
-rendering when you don&#8217;t need full resolution. By precomputing the upsampled
+rendering when you don’t need full resolution. By precomputing the upsampled
 pixels, rendering can be significantly faster when zoomed out.</p>
 <p>Overviews can be stored internally or externally, depending on the file format.</p>
 <p>In some cases we may want to make a copy of the test data to avoid
@@ -177,8 +206,8 @@ these are exponents of 2</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>To control the visual quality of the overviews, the &#8216;nearest&#8217;, &#8216;cubic&#8217;,
-&#8216;average&#8217;, &#8216;mode&#8217;, and &#8216;gauss&#8217; resampling alogrithms are available. These are
+<p>To control the visual quality of the overviews, the ‘nearest’, ‘cubic’,
+‘average’, ‘mode’, and ‘gauss’ resampling alogrithms are available. These are
 available through the <code class="docutils literal"><span class="pre">Resampling</span></code> enum</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="kn">import</span> <span class="n">Resampling</span>
 </pre></div>
@@ -215,15 +244,18 @@ rather than compute them on-the-fly.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="plotting.html" class="btn btn-neutral float-right" title="Plotting" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="plotting.html" class="btn btn-neutral float-right" title="Plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="migrating-to-v1.html" class="btn btn-neutral" title="Migrating to Rasterio 1.0" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="migrating-to-v1.html" class="btn btn-neutral" title="Migrating to Rasterio 1.0" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -254,16 +286,17 @@ rather than compute them on-the-fly.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Interoperability &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+        <link rel="up" title="General Concepts" href="topics.html"/>
+        <link rel="next" title="Resampling" href="resampling.html"/>
+        <link rel="prev" title="Nodata" href="nodata.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="topics.html">General Concepts</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l3"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="masks.html">Masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nodata.html">Nodata</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Interoperability</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#image-processing-software">Image processing software</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a> &raquo;</li>
+      
+          <li><a href="topics.html">General Concepts</a> &raquo;</li>
+      
+    <li>Interoperability</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/image_processing.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="interoperability">
+<h1>Interoperability<a class="headerlink" href="#interoperability" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="image-processing-software">
+<h2>Image processing software<a class="headerlink" href="#image-processing-software" title="Permalink to this headline">¶</a></h2>
+<p>Some python image processing software packages
+organize arrays differently than rasterio. The interpretation of a
+3-dimension array read from <code class="docutils literal"><span class="pre">rasterio</span></code> is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>while image processing software like <code class="docutils literal"><span class="pre">scikit-image</span></code>, <code class="docutils literal"><span class="pre">pillow</span></code> and <code class="docutils literal"><span class="pre">matplotlib</span></code> are generally ordered:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">bands</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The number of rows defines the dataset&#8217;s height, the columns are the dataset&#8217;s width.</p>
+<p>Numpy provides a way to efficiently swap the axis order and you can use the
+following functions to convert between raster and image axis order:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reshape_as_image</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;raster order (bands, rows, cols) -&gt; image (rows, cols, bands)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">reshape_as_raster</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;image order (rows, cols, bands) -&gt; rasterio (bands, rows, cols)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="resampling.html" class="btn btn-neutral float-right" title="Resampling" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="nodata.html" class="btn btn-neutral" title="Nodata" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Masks &mdash; rasterio 0.35.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="rasterio 0.35.1 documentation" href="index.html"/>
+        <link rel="up" title="General Concepts" href="topics.html"/>
+        <link rel="next" title="Nodata" href="nodata.html"/>
+        <link rel="prev" title="Vector Features" href="features.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.35.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_model.html">Data Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reading.html">Reading Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="working_with_datasets.html">Working with Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="writing.html">Writing Datasets</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="topics.html">General Concepts</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="reproject.html">Reprojection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="errors.html">Error Handling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="color.html">Color</a></li>
+<li class="toctree-l3"><a class="reference internal" href="concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="image_options.html">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overviews.html">Overviews</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html">Vector Features</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Masks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reading-dataset-masks">Reading dataset masks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#writing-masks">Writing masks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#numpy-masked-arrays">Numpy masked arrays</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="nodata.html">Nodata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="image_processing.html">Interoperability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="resampling.html">Resampling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="developers.html">Developers guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Rasterio Cookbook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osgeo_gdal_migration.html">Migration Guide for osgeo.gdal users</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">rio</span></code> Command Line User&#8217;s Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_docs.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community.html">Community</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">rasterio</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="python_manual.html"><code class="docutils literal"><span class="pre">rasterio</span></code> Python User&#8217;s Manual</a> &raquo;</li>
+      
+          <li><a href="topics.html">General Concepts</a> &raquo;</li>
+      
+    <li>Masks</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/masks.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="masks">
+<h1>Masks<a class="headerlink" href="#masks" title="Permalink to this headline">¶</a></h1>
+<p>In using Rasterio, you&#8217;ll encounter two different kinds of masks. One is the
+the valid data mask from GDAL, an unsigned byte array with the same number of
+rows and columns as the dataset in which non-zero elements indicate that the
+corresponding data elements are valid. Other elements are invalid, or <em>nodata</em>
+elements. The other kind of mask is the mask in Numpy&#8217;s [masked
+arrays](<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html">http://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html</a>),
+which have the inverse sense: <cite>True</cite> values in a masked array&#8217;s mask indicate
+that the corresponding data elements are invalid. With care, you can safely
+navigate this divide.</p>
+<p>Consider Rasterio&#8217;s RGB.byte.tif test dataset. It has 718 rows and 791
+columns of pixels. Each pixel has 3 8-bit (uint8) channels or bands. It has a
+trapezoid of image data within a rectangular background of 0,0,0 value pixels.</p>
+<img alt="https://www.dropbox.com/s/sg7qejccih5m4ah/RGB.byte.jpg?dl=1" src="https://www.dropbox.com/s/sg7qejccih5m4ah/RGB.byte.jpg?dl=1" />
+<p>Metadata in the dataset declares that values of 0 will be interpreted as
+invalid data or <em>nodata</em> pixels. In, e.g., merging the image with adjacent
+scenes, we&#8217;d like to ignore the nodata pixels and have only valid image data in
+our final mosaic.</p>
+<p>Let&#8217;s look at the two kinds of masks and their
+inverse relationship in the context of RGB.byte.tif.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; import rasterio
+<span class="gp">&gt;</span>&gt;&gt; <span class="nv">src</span> <span class="o">=</span> rasterio.open<span class="o">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="o">)</span>
+<span class="gp">&gt;</span>&gt;&gt; src.shape
+<span class="go">(718, 791)</span>
+<span class="gp">&gt;</span>&gt;&gt; src.count
+<span class="go">3</span>
+<span class="gp">&gt;</span>&gt;&gt; src.dtypes
+<span class="go">[&#39;uint8&#39;, &#39;uint8&#39;, &#39;uint8&#39;]</span>
+<span class="gp">&gt;</span>&gt;&gt; src.nodatavals
+<span class="go">[0.0, 0.0, 0.0]</span>
+</pre></div>
+</div>
+<div class="section" id="reading-dataset-masks">
+<h2>Reading dataset masks<a class="headerlink" href="#reading-dataset-masks" title="Permalink to this headline">¶</a></h2>
+<p>For every band of a dataset there is a mask. These masks can be had as arrays
+using the dataset&#8217;s <cite>read_masks()`</cite> method. Below, <code class="docutils literal"><span class="pre">msk</span></code> is the valid data
+mask corresponding to the first dataset band.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(718, 791)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span>
+<span class="go">array([[0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       ...</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0],</span>
+<span class="go">       [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)</span>
+</pre></div>
+</div>
+<p>This 2D array is a valid data mask in the sense of <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask">GDAL RFC 15</a>. The <code class="docutils literal"><span class="pre">0</span></code> values in its
+corners represent <em>nodata</em> regions. Zooming in on the interior of the mask
+array shows the <code class="docutils literal"><span class="pre">255</span></code> values that indicate <em>valid data</em> regions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span><span class="p">[</span><span class="mi">200</span><span class="p">:</span><span class="mi">205</span><span class="p">,</span><span class="mi">200</span><span class="p">:</span><span class="mi">205</span><span class="p">]</span>
+<span class="go">array([[255, 255, 255, 255, 255],</span>
+<span class="go">       [255, 255, 255, 255, 255],</span>
+<span class="go">       [255, 255, 255, 255, 255],</span>
+<span class="go">       [255, 255, 255, 255, 255],</span>
+<span class="go">       [255, 255, 255, 255, 255]], dtype=uint8)</span>
+</pre></div>
+</div>
+<p>Displayed using Matplotlib&#8217;s <cite>imshow()</cite>, the mask looks like this:</p>
+<img alt="_images/mask_band.png" src="_images/mask_band.png" />
+<p>Wait, what are these 0 values in the mask interior? This is an example of
+a problem inherent in 8-bit raster data: lack of dynamic range. The dataset
+creator has said that 0 values represent missing data (see the
+<code class="docutils literal"><span class="pre">nodatavals</span></code> property in the first code block of this document), but some of
+the valid data have values so low they&#8217;ve been rounded during processing to
+zero.  This can happen in scaling 16-bit data to 8 bits.  There&#8217;s
+no magic nodata value bullet for this. Using 16 bits per band helps, but you
+really have to be careful with 8-bit per band datasets and their nodata values.</p>
+</div>
+<div class="section" id="writing-masks">
+<h2>Writing masks<a class="headerlink" href="#writing-masks" title="Permalink to this headline">¶</a></h2>
+<p>Writing a mask that applies to all dataset bands is just as straightforward:
+pass an ndarray with <code class="docutils literal"><span class="pre">True</span></code> (or values that evaluate to <code class="docutils literal"><span class="pre">True</span></code> to indicate
+valid data and <code class="docutils literal"><span class="pre">False</span></code> to indicate no data to <code class="docutils literal"><span class="pre">write_mask()</span></code>. Consider a
+copy of the test data opened in &#8220;r+&#8221; (update) mode.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">shutil</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r+&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To mark that all pixels of all bands are valid (i.e., to override nodata
+metadata values that can&#8217;t be unset), you&#8217;d do this.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">write_mask</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>No data have been altered, nor have the dataset&#8217;s nodata values been changed.
+A new band has been added to the dataset to store the valid data mask.  By
+default it is saved to a &#8220;sidecar&#8221; GeoTIFF alongside the dataset file. When
+such a .msk GeoTIFF exists, Rasterio will ignore the nodata metadata values and
+return mask arrays based on the .msk file.</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> ls -l copy.tif*
+<span class="go">-rw-r--r--@ 1 sean  staff  1713704 Mar 24 14:19 copy.tif</span>
+<span class="go">-rw-r--r--  1 sean  staff      916 Mar 24 14:25 copy.tif.msk</span>
+</pre></div>
+</div>
+<p>Can Rasterio help fix buggy nodata masks like the ones in RGB.byte.tif? It
+certainly can. Consider a fresh copy of that file.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;/tmp/RGB.byte.tif&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r+&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This time we&#8217;ll read all 3 band masks
+(based on the nodata values, not a .msk GeoTIFF) and show them
+as an RGB image (with the help of <cite>numpy.dstack()</cite>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">msk</span><span class="p">))</span>  
+</pre></div>
+</div>
+<img alt="_images/mask_bands_rgb.png" src="_images/mask_bands_rgb.png" />
+<p>Colored regions appear where valid data pixels don&#8217;t quite coincide. This is,
+again, an artifact of scaling data down to 8 bits per band. We&#8217;ll begin by
+constructing a new mask array from the logical conjunction of the three band
+masks we&#8217;ve read.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_msk</span> <span class="o">=</span> <span class="p">(</span><span class="n">msk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">msk</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">msk</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">new_msk</span><span class="p">)</span>  
+</pre></div>
+</div>
+<img alt="_images/mask_conj.png" src="_images/mask_conj.png" />
+<p>Now we&#8217;ll use <cite>sieve()</cite> to shake out the small buggy regions of the mask. I&#8217;ve
+found the right value for the <code class="docutils literal"><span class="pre">size</span></code> argument empirically.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.features</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieved_msk</span> <span class="o">=</span> <span class="n">sieve</span><span class="p">(</span><span class="n">new_msk</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">sieved_msk</span><span class="p">)</span>  
+</pre></div>
+</div>
+<img alt="_images/mask_sieved.png" src="_images/mask_sieved.png" />
+<p>Last thing to do is write that sieved mask back to the dataset.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">write_mask</span><span class="p">(</span><span class="n">sieved_msk</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The result is a properly masked dataset that allows some 0 value pixels to be
+considered valid.</p>
+</div>
+<div class="section" id="numpy-masked-arrays">
+<h2>Numpy masked arrays<a class="headerlink" href="#numpy-masked-arrays" title="Permalink to this headline">¶</a></h2>
+<p>If you want, you can read dataset bands as numpy masked arrays.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blue</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blue</span><span class="o">.</span><span class="n">mask</span>
+<span class="go">array([[ True,  True,  True, ...,  True,  True,  True],</span>
+<span class="go">       [ True,  True,  True, ...,  True,  True,  True],</span>
+<span class="go">       [ True,  True,  True, ...,  True,  True,  True],</span>
+<span class="go">       ...</span>
+<span class="go">       [ True,  True,  True, ...,  True,  True,  True],</span>
+<span class="go">       [ True,  True,  True, ...,  True,  True,  True],</span>
+<span class="go">       [ True,  True,  True, ...,  True,  True,  True]], dtype=bool)</span>
+</pre></div>
+</div>
+<p>As mentioned earlier, this mask is the inverse of the GDAL band mask. To get
+a mask conforming to GDAL RFC 15, do this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">msk</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">blue</span><span class="o">.</span><span class="n">mask</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can rely on this Rasterio identity for any integer value <code class="docutils literal"><span class="pre">N</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">~</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">mask</span> <span class="o">*</span> <span class="mi">255</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">read_masks</span><span class="p">(</span><span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="nodata.html" class="btn btn-neutral float-right" title="Nodata" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="features.html" class="btn btn-neutral" title="Vector Features" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.35.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

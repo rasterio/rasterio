@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.features module &mdash; rasterio 1.0a9 documentation</title>
+  <title>rasterio.features module &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="next" title="rasterio.fill module" href="rasterio.fill.html"/>
         <link rel="prev" title="rasterio.errors module" href="rasterio.errors.html"/> 
@@ -42,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -61,7 +67,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -82,11 +88,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
@@ -106,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -134,7 +144,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#module-rasterio">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -155,8 +165,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -165,25 +177,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="index.html">rasterio package</a> &raquo;</li>
-      
-    <li>rasterio.features module</li>
+        
+      <li>rasterio.features module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/api/rasterio.features.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/api/rasterio.features.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -194,8 +223,8 @@
 <p>Functions for working with features in a raster dataset.</p>
 <dl class="function">
 <dt id="rasterio.features.bounds">
-<code class="descclassname">rasterio.features.</code><code class="descname">bounds</code><span class="sig-paren">(</span><em>geometry</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a (minx, miny, maxx, maxy) bounding box.</p>
+<code class="descclassname">rasterio.features.</code><code class="descname">bounds</code><span class="sig-paren">(</span><em>geometry</em>, <em>north_up=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a (left, bottom, right, top) bounding box.</p>
 <p>From Fiona 1.4.8. Modified to return bbox from geometry if available.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -206,7 +235,7 @@
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
 <blockquote class="last">
-<div><p>Bounding box: (minx, miny, maxx, maxy)</p>
+<div><p>Bounding box: (left, bottom, right, top)</p>
 </div></blockquote>
 </td>
 </tr>
@@ -239,7 +268,7 @@ property of dataset objects.</p>
 <blockquote>
 <div><p>If True, all pixels touched by geometries will be burned in.  If
 false, only pixels whose center is within the polygon or that
-are selected by Bresenham&#8217;s line algorithm will be burned in.</p>
+are selected by Bresenham’s line algorithm will be burned in.</p>
 </div></blockquote>
 <p><strong>invert: boolean, optional</strong></p>
 <blockquote>
@@ -248,10 +277,58 @@ False by default.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> : numpy ndarray of type &#8216;bool&#8217;</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> : numpy ndarray of type ‘bool’</p>
 <blockquote class="last">
 <div><p>Result</p>
 </div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.features.geometry_window">
+<code class="descclassname">rasterio.features.</code><code class="descname">geometry_window</code><span class="sig-paren">(</span><em>raster</em>, <em>shapes</em>, <em>pad_x=0</em>, <em>pad_y=0</em>, <em>north_up=True</em>, <em>pixel_precision=3</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#geometry_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.geometry_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the window within the raster that fits the bounds of the 
+geometry plus optional padding.  The window is the outermost pixel indices
+that contain the geometry (floor of offsets, ceiling of width and height).</p>
+<p>If shapes do not overlap raster, a WindowError is raised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>raster: rasterio RasterReader object</strong></p>
+<blockquote>
+<div><p>Raster for which the mask will be created.</p>
+</div></blockquote>
+<p><strong>shapes: iterable over geometries.</strong></p>
+<blockquote>
+<div><p>A geometry is a GeoJSON-like object or implements the geo interface.
+Must be in same coordinate system as raster.</p>
+</div></blockquote>
+<p><strong>pad_x: float</strong></p>
+<blockquote>
+<div><p>Amount of padding (as fraction of raster’s x pixel size) to add to left 
+and right side of bounds.</p>
+</div></blockquote>
+<p><strong>pad_y: float</strong></p>
+<blockquote>
+<div><p>Amount of padding (as fraction of raster’s y pixel size) to add to top 
+and bottom of bounds.</p>
+</div></blockquote>
+<p><strong>north_up: bool</strong></p>
+<blockquote>
+<div><p>If True (default), the origin point of the raster’s transform is the 
+northernmost point and y pixel values are negative.</p>
+</div></blockquote>
+<p><strong>pixel_precision: int</strong></p>
+<blockquote>
+<div><p>Number of places of rounding precision for evaluating bounds of shapes.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">window: rasterio.windows.Window instance</p>
 </td>
 </tr>
 </tbody>
@@ -295,7 +372,7 @@ property of dataset objects.</p>
 <blockquote>
 <div><p>If True, all pixels touched by geometries will be burned in.  If
 false, only pixels whose center is within the polygon or that
-are selected by Bresenham&#8217;s line algorithm will be burned in.</p>
+are selected by Bresenham’s line algorithm will be burned in.</p>
 </div></blockquote>
 <p><strong>default_value</strong> : int or float, optional</p>
 <blockquote>
@@ -428,15 +505,18 @@ large amounts of memory.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rasterio.fill.html" class="btn btn-neutral float-right" title="rasterio.fill module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rasterio.fill.html" class="btn btn-neutral float-right" title="rasterio.fill module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rasterio.errors.html" class="btn btn-neutral" title="rasterio.errors module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rasterio.errors.html" class="btn btn-neutral" title="rasterio.errors module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -467,16 +547,17 @@ large amounts of memory.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

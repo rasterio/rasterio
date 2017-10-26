@@ -1,111 +1,47 @@
-==========================================
-Rasterio: access to geospatial raster data
-==========================================
+Rasterio Documentation
+======================
 
-Geographic information systems use GeoTIFF and other formats to organize and
-store gridded raster datasets such as satellite imagery and terrain models.
-Rasterio reads and writes these formats and provides a Python API based on
-Numpy N-dimensional arrays and GeoJSON.
+.. warning::
+    This is not the official documentation. Not yet.
+    This is a draft and everything here is subject to change.
 
-Here's an example program that extracts the GeoJSON shapes of a raster's valid
-data footprint.
+    For now, please refer to https://github.com/mapbox/rasterio
+    for documentation.
+
+Rasterio is for Python programmers and command line users
+who want to read, write and manipulate geospatial raster datasets.
+
+Rasterio employs GDAL_ under the hood for file I/O and raster formatting.
+Its functions typically accept and return Numpy ndarrays.
+Rasterio is designed to make working with geospatial raster data more productive and more fun.
+
+Install with pip (see the complete :doc:`installation docs </installation>` )
+
+.. code::
+
+    pip install rasterio
+
+And an example of use in python
 
 .. code:: python
 
     import rasterio
-    import rasterio.features
-    import rasterio.warp
 
-    with rasterio.open('example.tif') as dataset:
 
-        # Read the dataset's valid data mask as a ndarray.
-        mask = dataset.dataset_mask()
+    with rasterio.open('data.tif') as src:
+        array = src.read()
 
-        # Extract feature shapes and values from the array.
-        for geom, val in rasterio.features.shapes(
-                mask, transform=dataset.transform):
 
-            # Transform shapes from the dataset's own coordinate
-            # reference system to CRS84 (EPSG:4326).
-            geom = rasterio.warp.transform_geom(
-                dataset.crs, 'EPSG:4326', geom, precision=6)
-
-            # Print GeoJSON shapes to stdout.
-            print(geom)
-
-The output of the program:
-
-.. code:: python
-
-    {'type': 'Polygon', 'coordinates': [[(-77.730817, 25.282335), ...]]}
-
-Rasterio supports Python versions 2.7 and 3.3 or higher.
-
-User guide
-==========
-
-Start here with some background about the project and an introduction to 
-reading and writing raster datasets.
+Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   intro
-   installation
-   quickstart
-   switch
-
-Advanced topics
-===============
-
-.. toctree::
-   :maxdepth: 2
-
-   topics/color
-   topics/concurrency
-   topics/errors
-   topics/features
-   topics/fillnodata
-   topics/georeferencing
-   topics/image_options
-   topics/image_processing
-   topics/masking-by-shapefile
-   topics/masks
-   topics/memory-files
-   topics/migrating-to-v1
-   topics/nodata
-   topics/overviews
-   topics/plotting
-   topics/reproject
-   topics/resampling
-   topics/tags
-   topics/virtual-warping
-   topics/vsi
-   topics/windowed-rw
-
-API documentation
-=================
-
-.. toctree::
-   :maxdepth: 2
-
-   api/index
-
-CLI guide
-=========
-
-.. toctree::
-   :maxdepth: 2
-
+   python_manual
    cli
+   api_docs
+   community
 
-Contributor Guide
-=================
-
-.. toctree::
-   :maxdepth: 2
-
-   contributing
 
 Indices and tables
 ==================

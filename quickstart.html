@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quickstart &mdash; rasterio 1.0a9 documentation</title>
+  <title>Quickstart &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/>
         <link rel="next" title="Switching from GDAL’s Python bindings" href="switch.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
@@ -97,7 +106,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#saving-raster-data">Saving raster data</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
@@ -117,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="topics/reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -140,8 +150,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rasterio</a>
+        
       </nav>
 
 
@@ -150,23 +162,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Quickstart</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Quickstart</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/quickstart.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -174,16 +203,16 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>Reading and writing data files is a spatial data analyst&#8217;s bread and butter.
+<p>Reading and writing data files is a spatial data analyst’s bread and butter.
 This document explains how to use Rasterio to read existing files and to create
 new files. Some advanced topics are glossed over to be covered in more detail
-elsewhere in Rasterio&#8217;s documentation. Only the GeoTIFF format is used here,
+elsewhere in Rasterio’s documentation. Only the GeoTIFF format is used here,
 but the examples do apply to other raster data formats. It is presumed that
 Rasterio has been <a class="reference external" href="./installation">installed</a>.</p>
 <div class="section" id="opening-a-dataset-in-reading-mode">
 <h2>Opening a dataset in reading mode<a class="headerlink" href="#opening-a-dataset-in-reading-mode" title="Permalink to this headline">¶</a></h2>
-<p>Consider an &#8220;example.tif&#8221; file with 16-bit Landsat 8 imagery covering a part
-of the United States&#8217;s Colorado Plateau <a class="footnote-reference" href="#id2" id="id1">[1]</a>. Because the imagery is large (70
+<p>Consider an “example.tif” file with 16-bit Landsat 8 imagery covering a part
+of the United States’s Colorado Plateau <a class="footnote-reference" href="#id2" id="id1">[1]</a>. Because the imagery is large (70
 MB) and has a wide dynamic range it is difficult to display it in a browser.
 A rescaled and dynamically squashed version is shown below.</p>
 <img alt="_images/example.png" src="_images/example.png" />
@@ -195,7 +224,7 @@ A rescaled and dynamically squashed version is shown below.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Rasterio&#8217;s <code class="docutils literal"><span class="pre">rasterio.open()</span></code> takes a path and returns a dataset object. The
+<p>Rasterio’s <code class="docutils literal"><span class="pre">rasterio.open()</span></code> takes a path and returns a dataset object. The
 path may point to a file of any supported raster format. Rasterio will open it
 using the proper GDAL format driver. Dataset objects have some of the same
 attributes as Python file objects.</p>
@@ -210,7 +239,7 @@ attributes as Python file objects.</p>
 </div>
 <div class="section" id="dataset-attributes">
 <h2>Dataset attributes<a class="headerlink" href="#dataset-attributes" title="Permalink to this headline">¶</a></h2>
-<p>Properties of the raster data stored in &#8220;example.tif&#8221; can be accessed through
+<p>Properties of the raster data stored in “example.tif” can be accessed through
 attributes of the <code class="docutils literal"><span class="pre">dataset</span></code> object. Dataset objects have bands and this
 example has a band count of 1.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
@@ -220,7 +249,7 @@ example has a band count of 1.</p>
 <p>A dataset band is an array of values representing the partial distribution of
 a single variable in 2-dimensional (2D) space. All band arrays of a dataset
 have the same number of rows and columns. The variable represented by the
-example dataset&#8217;s sole band is Level-1 digital numbers (DN) for the Landsat
+example dataset’s sole band is Level-1 digital numbers (DN) for the Landsat
 8 Operational Land Imager (OLI) band 4 (wavelengths between 640-670
 nanometers). These values can be scaled to radiance or reflectance values. The
 array of DN values has 7731 columns (its <code class="docutils literal"><span class="pre">width</span></code>) and
@@ -233,19 +262,19 @@ array of DN values has 7731 columns (its <code class="docutils literal"><span cl
 </div>
 <p>Some dataset attributes expose the properties of all dataset bands via a tuple
 of values, one per band. To get a mapping of band indexes to variable data
-types, apply a dictionary comprehension to the <code class="docutils literal"><span class="pre">zip()</span></code> product of a dataset&#8217;s
+types, apply a dictionary comprehension to the <code class="docutils literal"><span class="pre">zip()</span></code> product of a dataset’s
 <code class="docutils literal"><span class="pre">indexes</span></code> and <code class="docutils literal"><span class="pre">dtypes</span></code> attributes.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">dtype</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">indexes</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)}</span>
 <span class="go">{1: &#39;uint16&#39;}</span>
 </pre></div>
 </div>
-<p>The &#8220;example.tif&#8221; file&#8217;s sole band contains unsigned 16-bit integer values. The
+<p>The “example.tif” file’s sole band contains unsigned 16-bit integer values. The
 GeoTIFF format also supports signed integers and floats of different size.</p>
 </div>
 <div class="section" id="dataset-georeferencing">
 <h2>Dataset georeferencing<a class="headerlink" href="#dataset-georeferencing" title="Permalink to this headline">¶</a></h2>
 <p>A GIS raster dataset is different from an ordinary image; its elements (or
-&#8220;pixels&#8221;) are mapped to regions on the earth&#8217;s surface. Every pixels of a
+“pixels”) are mapped to regions on the earth’s surface. Every pixels of a
 dataset is contained within a spatial bounding box.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span>
 <span class="go">BoundingBox(left=358485.0, bottom=4028985.0, right=590415.0, top=4265115.0)</span>
@@ -256,7 +285,7 @@ dataset is contained within a spatial bounding box.</p>
 meters to 4265115 meters bottom to top. It covers a region 231.93 kilometers
 wide by 236.13 kilometers high.</p>
 <p>The <code class="docutils literal"><span class="pre">bounds</span></code> attribute is derived from a more fundamental attribute: the
-dataset&#8217;s geospatial <code class="docutils literal"><span class="pre">transform</span></code>.</p>
+dataset’s geospatial <code class="docutils literal"><span class="pre">transform</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span>
 <span class="go">Affine(30.0, 0.0, 358485.0,</span>
 <span class="go">       0.0, -30.0, 4265115.0)</span>
@@ -276,16 +305,16 @@ corner of the dataset, is the spatial position of the upper left corner.</p>
 </pre></div>
 </div>
 <p>But what do these numbers mean? 4028985 meters from where? These coordinate
-values are relative to the origin of the dataset&#8217;s coordinate reference system
+values are relative to the origin of the dataset’s coordinate reference system
 (CRS).</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
 <span class="go">CRS({&#39;init&#39;: &#39;epsg:32612&#39;})</span>
 </pre></div>
 </div>
-<p>&#8220;epsg:32612&#8221; identifies a particular coordinate reference system: <a class="reference external" href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">UTM</a>
+<p>“epsg:32612” identifies a particular coordinate reference system: <a class="reference external" href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">UTM</a>
 zone 12N.  This system is used for mapping areas in the Northern Hemisphere
 between 108 and 114 degrees west. The upper left corner of the example dataset,
-<code class="docutils literal"><span class="pre">(358485.0,</span> <span class="pre">4265115.0)</span></code>, is 141.5 kilometers west of zone 12&#8217;s central
+<code class="docutils literal"><span class="pre">(358485.0,</span> <span class="pre">4265115.0)</span></code>, is 141.5 kilometers west of zone 12’s central
 meridian (111 degrees west) and 4265 kilometers north of the equator.</p>
 <p>Coordinate reference systems are an advanced topic. Suffice it to say that
 between the <code class="docutils literal"><span class="pre">crs</span></code> attribute and the <code class="docutils literal"><span class="pre">transform</span></code> attribute a raster dataset
@@ -293,7 +322,7 @@ is geo-referenced and can be compared to other GIS datasets.</p>
 <div class="section" id="reading-raster-data">
 <h3>Reading raster data<a class="headerlink" href="#reading-raster-data" title="Permalink to this headline">¶</a></h3>
 <p>The raster array for a raster band can be accessed by calling
-<code class="docutils literal"><span class="pre">dataset.read()</span></code> with the band&#8217;s index number. Following the GDAL convention,
+<code class="docutils literal"><span class="pre">dataset.read()</span></code> with the band’s index number. Following the GDAL convention,
 bands are indexed from 1.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">indexes</span>
 <span class="go">(1,)</span>
@@ -322,7 +351,7 @@ bands are indexed from 1.</p>
 <h2>Spatial indexing<a class="headerlink" href="#spatial-indexing" title="Permalink to this headline">¶</a></h2>
 <p>Datasets have a method of getting array indices for spatial points. To get the
 value for the pixel 100 kilometers east and 50 kilometers south of the
-dataset&#8217;s upper left corner, do the following.</p>
+dataset’s upper left corner, do the following.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">left</span> <span class="o">+</span> <span class="mi">100000</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="mi">50000</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">,</span> <span class="n">col</span>
@@ -331,7 +360,7 @@ dataset&#8217;s upper left corner, do the following.</p>
 <span class="go">7566</span>
 </pre></div>
 </div>
-<p>To get the spatial coordinates of a pixel, use the dataset&#8217;s <code class="docutils literal"><span class="pre">xy()</span></code> method.
+<p>To get the spatial coordinates of a pixel, use the dataset’s <code class="docutils literal"><span class="pre">xy()</span></code> method.
 The coordinates of the center of the image can be computed like this.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">height</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
 <span class="go">(476550.0, 4149150.0)</span>
@@ -376,12 +405,12 @@ file, call <code class="docutils literal"><span class="pre">rasterio.open()</spa
 <li><code class="docutils literal"><span class="pre">dtype</span></code>: the data type of the dataset</li>
 <li><code class="docutils literal"><span class="pre">crs</span></code>: a coordinate reference system identifier or description</li>
 <li><code class="docutils literal"><span class="pre">transform</span></code>: an affine transformation matrix, and</li>
-<li><code class="docutils literal"><span class="pre">nodata</span></code>: a &#8220;nodata&#8221; value</li>
+<li><code class="docutils literal"><span class="pre">nodata</span></code>: a “nodata” value</li>
 </ul>
 <p>The first 5 of these keyword arguments parametrize fixed, format-specific
 properties of the data file and are required when opening a file to
 write. The last 3 are optional.</p>
-<p>In this example the coordinate reference system will be &#8220;+proj=latlong&#8221;, which
+<p>In this example the coordinate reference system will be “+proj=latlong”, which
 describes an equirectangular coordinate reference system with units of decimal
 degrees. The right affine transformation matrix can be computed using
 a function in the <code class="docutils literal"><span class="pre">rasterio.transform</span></code> module.</p>
@@ -409,7 +438,7 @@ support the 64-bit float values in <code class="docutils literal"><span class="p
 </div>
 <div class="section" id="saving-raster-data">
 <h2>Saving raster data<a class="headerlink" href="#saving-raster-data" title="Permalink to this headline">¶</a></h2>
-<p>To save the grid, call the new dataset&#8217;s <code class="docutils literal"><span class="pre">write()</span></code> method with the grid and
+<p>To save the grid, call the new dataset’s <code class="docutils literal"><span class="pre">write()</span></code> method with the grid and
 target band number as arguments.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_dataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 </pre></div>
@@ -418,8 +447,8 @@ target band number as arguments.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Because Rasterio&#8217;s dataset objects mimic Python&#8217;s file objects and implement
-Python&#8217;s context manager protocol, it is possible to do the following instead.</p>
+<p>Because Rasterio’s dataset objects mimic Python’s file objects and implement
+Python’s context manager protocol, it is possible to do the following instead.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/new.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                    <span class="n">width</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">Z</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
                    <span class="n">crs</span><span class="o">=</span><span class="s1">&#39;+proj=latlong&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
@@ -431,7 +460,7 @@ and examples are contained in the <a class="reference external" href="topics">ad
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>&#8220;example.tif&#8221; is an alias for band 4 of Landsat scene
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>“example.tif” is an alias for band 4 of Landsat scene
 LC80370342016194LGN00.</td></tr>
 </tbody>
 </table>
@@ -440,15 +469,18 @@ LC80370342016194LGN00.</td></tr>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="switch.html" class="btn btn-neutral float-right" title="Switching from GDAL’s Python bindings" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="switch.html" class="btn btn-neutral float-right" title="Switching from GDAL’s Python bindings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -479,16 +511,17 @@ LC80370342016194LGN00.</td></tr>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

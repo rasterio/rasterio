@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.dtypes &mdash; rasterio 1.0a9 documentation</title>
+  <title>rasterio.dtypes &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -40,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -59,7 +65,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -80,11 +86,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
@@ -128,8 +137,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,21 +153,38 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      
+        
           <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
-      
-    <li>rasterio.dtypes</li>
+        
+      <li>rasterio.dtypes</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -167,7 +195,7 @@
 
 <span class="sd">Since 0.13 we are not importing numpy here and data types are strings.</span>
 <span class="sd">Happily strings can be used throughout Numpy and so existing code will</span>
-<span class="sd">break.</span>
+<span class="sd">not break.</span>
 
 <span class="sd">Within Rasterio, to test data types, we use Numpy&#39;s dtype() factory to</span>
 <span class="sd">do something like this:</span>
@@ -191,7 +219,7 @@
 <span class="c1">#  GDT_CInt16 = 8, GDT_CInt32 = 9, GDT_CFloat32 = 10, GDT_CFloat64 = 11</span>
 
 <span class="n">dtype_fwd</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="mi">0</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>            <span class="c1"># GDT_Unknown</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>            <span class="c1"># GDT_Unknown</span>
     <span class="mi">1</span><span class="p">:</span> <span class="n">ubyte</span><span class="p">,</span>           <span class="c1"># GDT_Byte</span>
     <span class="mi">2</span><span class="p">:</span> <span class="n">uint16</span><span class="p">,</span>          <span class="c1"># GDT_UInt16</span>
     <span class="mi">3</span><span class="p">:</span> <span class="n">int16</span><span class="p">,</span>           <span class="c1"># GDT_Int16</span>
@@ -240,17 +268,16 @@
         <span class="k">return</span> <span class="n">typename_fwd</span><span class="p">[</span><span class="n">dtype_rev</span><span class="p">[</span><span class="n">dt</span><span class="p">()</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="p">]]</span>
 
 
-<div class="viewcode-block" id="check_dtype"><a class="viewcode-back" href="../../api/rasterio.dtypes.html#rasterio.dtypes.check_dtype">[docs]</a><span class="k">def</span> <span class="nf">check_dtype</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+<div class="viewcode-block" id="check_dtype"><a class="viewcode-back" href="../../rasterio.dtypes.html#rasterio.dtypes.check_dtype">[docs]</a><span class="k">def</span> <span class="nf">check_dtype</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check if dtype is a known dtype.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">dt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dtype_rev</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">dt</span><span class="p">()</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">dtype_rev</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">False</span>
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">dtype_rev</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt</span><span class="p">()</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">in</span> <span class="n">dtype_rev</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="get_minimum_dtype"><a class="viewcode-back" href="../../api/rasterio.dtypes.html#rasterio.dtypes.get_minimum_dtype">[docs]</a><span class="k">def</span> <span class="nf">get_minimum_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+<div class="viewcode-block" id="get_minimum_dtype"><a class="viewcode-back" href="../../rasterio.dtypes.html#rasterio.dtypes.get_minimum_dtype">[docs]</a><span class="k">def</span> <span class="nf">get_minimum_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Determine minimum type to represent values.</span>
 
 <span class="sd">    Uses range checking to determine the minimum integer or floating point</span>
@@ -265,7 +292,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    rasterio dtype string</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ndarray</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
@@ -292,14 +319,14 @@
         <span class="k">return</span> <span class="n">float64</span></div>
 
 
-<div class="viewcode-block" id="is_ndarray"><a class="viewcode-back" href="../../api/rasterio.dtypes.html#rasterio.dtypes.is_ndarray">[docs]</a><span class="k">def</span> <span class="nf">is_ndarray</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+<div class="viewcode-block" id="is_ndarray"><a class="viewcode-back" href="../../rasterio.dtypes.html#rasterio.dtypes.is_ndarray">[docs]</a><span class="k">def</span> <span class="nf">is_ndarray</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check if array is a ndarray.&quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
     <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="s1">&#39;__array__&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="can_cast_dtype"><a class="viewcode-back" href="../../api/rasterio.dtypes.html#rasterio.dtypes.can_cast_dtype">[docs]</a><span class="k">def</span> <span class="nf">can_cast_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+<div class="viewcode-block" id="can_cast_dtype"><a class="viewcode-back" href="../../rasterio.dtypes.html#rasterio.dtypes.can_cast_dtype">[docs]</a><span class="k">def</span> <span class="nf">can_cast_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test if values can be cast to dtype without loss of information.</span>
 
 <span class="sd">    Parameters</span>
@@ -312,13 +339,13 @@
 <span class="sd">    boolean</span>
 <span class="sd">        True if values can be cast to data type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ndarray</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">elif</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
@@ -327,7 +354,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="validate_dtype"><a class="viewcode-back" href="../../api/rasterio.dtypes.html#rasterio.dtypes.validate_dtype">[docs]</a><span class="k">def</span> <span class="nf">validate_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">valid_dtypes</span><span class="p">):</span>
+<div class="viewcode-block" id="validate_dtype"><a class="viewcode-back" href="../../rasterio.dtypes.html#rasterio.dtypes.validate_dtype">[docs]</a><span class="k">def</span> <span class="nf">validate_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">valid_dtypes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test if dtype of values is one of valid_dtypes.</span>
 
 <span class="sd">    Parameters</span>
@@ -341,7 +368,7 @@
 <span class="sd">    boolean:</span>
 <span class="sd">        True if dtype of values is one of valid_dtypes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ndarray</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
@@ -350,6 +377,9 @@
             <span class="n">get_minimum_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="n">valid_dtypes</span><span class="p">)</span></div>
 </pre></div>
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -381,16 +411,17 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

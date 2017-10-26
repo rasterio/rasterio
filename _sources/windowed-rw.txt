@@ -1,13 +1,9 @@
-
-.. _windowrw:
-
 Windowed reading and writing
 ****************************
 
 Beginning in rasterio 0.3, you can read and write "windows" of raster files.
 This feature allows you to work on rasters that are larger than your
 computers RAM or process chunks of large rasters in parallel.
-
 
 Windows
 -------
@@ -56,9 +52,9 @@ and slice() produces a object that can be used in slicing expressions.
 
 .. code-block:: pycon
 
-    >>> list(range(10, 20))
+    >>> range(10, 20)
     [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    >>> list(range(10, 20)[slice(4, None)])
+    >>> range(10, 20)[slice(4, None)]
     [14, 15, 16, 17, 18, 19]
 
 Reading
@@ -86,13 +82,13 @@ and 50 pixels to the right of the upper left corner of the GeoTIFF.
 .. code-block:: python
 
     image = numpy.ones((150, 250), dtype=rasterio.ubyte) * 127
-
+    
     with rasterio.open(
             '/tmp/example.tif', 'w',
             driver='GTiff', width=500, height=300, count=1,
             dtype=image.dtype) as dst:
         dst.write(image, window=((30, 180), (50, 300)), indexes=1)
-
+    
 The result:
 
 .. image:: http://farm6.staticflickr.com/5503/11378078386_cbe2fde02e_o_d.png
@@ -109,9 +105,9 @@ Below, the window is scaled to one third of the source image.
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read(k) for k in (1, 2, 3))
-
+    
     write_window = (30, 269), (50, 313)
-
+    
     with rasterio.open(
             '/tmp/example.tif', 'w',
             driver='GTiff', width=500, height=300, count=3,
@@ -139,19 +135,19 @@ specifies a 4 x 4 rectangular subset with upper left at 4 rows to the left of
 and 4 columns above the lower right corner of the dataset and extending to the
 lower right corner of the dataset.
 
-Below is an example of reading a raster subset and then writing it into a
+Below is an example of reading a raster subset and then writing it into a 
 larger subset that is defined relative to the lower right corner of the
 destination dataset.
 
 .. code-block:: python
 
     read_window = (350, 410), (350, 450)
-
+    
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read(k, window=read_window) for k in (1, 2, 3))
-
+    
     write_window = (-240, None), (-400, None)
-
+    
     with rasterio.open(
             '/tmp/example2.tif', 'w',
             driver='GTiff', width=500, height=300, count=3,
@@ -181,6 +177,7 @@ a dataset:
         # window = ((3, 714), (13, 770))
 
         kwargs = src.meta.copy()
+        del kwargs['transform']
         kwargs.update({
             'height': window[0][1] - window[0][0],
             'width': window[1][1] - window[1][0],
@@ -222,7 +219,7 @@ of blocks for any band can be had from the block_shapes property.
 
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     for i, shape in enumerate(src.block_shapes, 1):
-    ...         print((i, shape))
+    ...         print(i, shape)
     ...
     (1, (3, 791))
     (2, (3, 791))
@@ -235,7 +232,7 @@ The block windows themselves can be had from the block_windows function.
 
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     for ji, window in src.block_windows(1):
-    ...         print((ji, window))
+    ...         print(ji, window)
     ...
     ((0, 0), ((0, 3), (0, 791)))
     ((1, 0), ((3, 6), (0, 791)))
@@ -267,7 +264,7 @@ it's a good idea to test this assumption in your code.
     ...     assert len(set(src.block_shapes)) == 1
     ...     for ji, window in src.block_windows(1):
     ...         b, g, r = (src.read(k, window=window) for k in (1, 2, 3))
-    ...         print((ji, r.shape, g.shape, b.shape))
+    ...         print(ji, r.shape, g.shape, b.shape)
     ...         break
     ...
     ((0, 0), (3, 791), (3, 791), (3, 791))

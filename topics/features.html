@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vector Features &mdash; rasterio 1.0a9 documentation</title>
+  <title>Vector Features &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="next" title="Filling nodata areas" href="fillnodata.html"/>
         <link rel="prev" title="Error Handling" href="errors.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -109,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -132,8 +142,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,23 +154,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Vector Features</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Vector Features</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/features.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/features.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -166,8 +195,8 @@
             
   <div class="section" id="vector-features">
 <h1>Vector Features<a class="headerlink" href="#vector-features" title="Permalink to this headline">¶</a></h1>
-<p>Rasterio&#8217;s <code class="docutils literal"><span class="pre">features</span></code> module provides functions to extract shapes of raster
-features and to create new features by &#8220;burning&#8221; shapes into rasters:
+<p>Rasterio’s <code class="docutils literal"><span class="pre">features</span></code> module provides functions to extract shapes of raster
+features and to create new features by “burning” shapes into rasters:
 <code class="docutils literal"><span class="pre">shapes()</span></code> and <code class="docutils literal"><span class="pre">rasterize()</span></code>. These functions expose GDAL functions in
 a general way, using iterators over GeoJSON-like Python objects instead of
 GIS layers.</p>
@@ -217,9 +246,9 @@ intersecting with geometries.</p>
 </pre></div>
 </div>
 <p>By default, only pixels whose center is within the polygon or that
-are selected by Bresenham&#8217;s line algorithm will be burned in.
+are selected by Bresenham’s line algorithm will be burned in.
 You can specify <code class="docutils literal"><span class="pre">all_touched=True</span></code> to burn in all pixels touched by the geometry.
-The geometries will be rasterized by the &#8220;painter&#8217;s algorithm&#8221; -
+The geometries will be rasterized by the “painter’s algorithm” -
 geometries are handled in order and later geometries will overwrite earlier values.</p>
 <p>Again, to burn in georeferenced shapes, pass an appropriate transform for the
 image to be created.</p>
@@ -250,15 +279,18 @@ written to disk like this,</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="fillnodata.html" class="btn btn-neutral float-right" title="Filling nodata areas" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="fillnodata.html" class="btn btn-neutral float-right" title="Filling nodata areas" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="errors.html" class="btn btn-neutral" title="Error Handling" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="errors.html" class="btn btn-neutral" title="Error Handling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -289,16 +321,17 @@ written to disk like this,</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

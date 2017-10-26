@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.enums &mdash; rasterio 1.0a9 documentation</title>
+  <title>rasterio.enums &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -40,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -59,7 +65,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -80,11 +86,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
@@ -128,8 +137,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,21 +153,38 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      
+        
           <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
-      
-    <li>rasterio.enums</li>
+        
+      <li>rasterio.enums</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -165,10 +193,10 @@
   <h1>Source code for rasterio.enums</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Enumerations.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">IntEnum</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">IntEnum</span>
 
 
-<div class="viewcode-block" id="ColorInterp"><a class="viewcode-back" href="../../api/rasterio.enums.html#rasterio.enums.ColorInterp">[docs]</a><span class="k">class</span> <span class="nc">ColorInterp</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<div class="viewcode-block" id="ColorInterp"><a class="viewcode-back" href="../../rasterio.enums.html#rasterio.enums.ColorInterp">[docs]</a><span class="k">class</span> <span class="nc">ColorInterp</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raster band color interpretation.&quot;&quot;&quot;</span>
     <span class="n">undefined</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">grey</span> <span class="o">=</span> <span class="mi">1</span>
@@ -190,7 +218,7 @@
     <span class="n">Cr</span> <span class="o">=</span> <span class="mi">16</span></div>
 
 
-<div class="viewcode-block" id="Resampling"><a class="viewcode-back" href="../../api/rasterio.enums.html#rasterio.enums.Resampling">[docs]</a><span class="k">class</span> <span class="nc">Resampling</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<div class="viewcode-block" id="Resampling"><a class="viewcode-back" href="../../rasterio.enums.html#rasterio.enums.Resampling">[docs]</a><span class="k">class</span> <span class="nc">Resampling</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Available warp resampling algorithms.</span>
 
 <span class="sd">    The subset of &#39;nearest&#39;, &#39;cubic&#39;, &#39;average&#39;, &#39;mode&#39;, and &#39;gauss&#39;</span>
@@ -213,7 +241,7 @@
     <span class="n">q3</span> <span class="o">=</span> <span class="mi">12</span></div>
 
 
-<div class="viewcode-block" id="Compression"><a class="viewcode-back" href="../../api/rasterio.enums.html#rasterio.enums.Compression">[docs]</a><span class="k">class</span> <span class="nc">Compression</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<div class="viewcode-block" id="Compression"><a class="viewcode-back" href="../../rasterio.enums.html#rasterio.enums.Compression">[docs]</a><span class="k">class</span> <span class="nc">Compression</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Available compression algorithms.&quot;&quot;&quot;</span>
     <span class="n">jpeg</span> <span class="o">=</span> <span class="s1">&#39;JPEG&#39;</span>
     <span class="n">lzw</span> <span class="o">=</span> <span class="s1">&#39;LZW&#39;</span>
@@ -226,20 +254,20 @@
     <span class="n">none</span> <span class="o">=</span> <span class="s1">&#39;NONE&#39;</span></div>
 
 
-<div class="viewcode-block" id="Interleaving"><a class="viewcode-back" href="../../api/rasterio.enums.html#rasterio.enums.Interleaving">[docs]</a><span class="k">class</span> <span class="nc">Interleaving</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<div class="viewcode-block" id="Interleaving"><a class="viewcode-back" href="../../rasterio.enums.html#rasterio.enums.Interleaving">[docs]</a><span class="k">class</span> <span class="nc">Interleaving</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">pixel</span> <span class="o">=</span> <span class="s1">&#39;PIXEL&#39;</span>
     <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;LINE&#39;</span>
     <span class="n">band</span> <span class="o">=</span> <span class="s1">&#39;BAND&#39;</span></div>
 
 
-<div class="viewcode-block" id="MaskFlags"><a class="viewcode-back" href="../../api/rasterio.enums.html#rasterio.enums.MaskFlags">[docs]</a><span class="k">class</span> <span class="nc">MaskFlags</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+<div class="viewcode-block" id="MaskFlags"><a class="viewcode-back" href="../../rasterio.enums.html#rasterio.enums.MaskFlags">[docs]</a><span class="k">class</span> <span class="nc">MaskFlags</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
     <span class="n">all_valid</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">per_dataset</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="mi">4</span>
     <span class="n">nodata</span> <span class="o">=</span> <span class="mi">8</span></div>
 
 
-<div class="viewcode-block" id="PhotometricInterp"><a class="viewcode-back" href="../../api/rasterio.enums.html#rasterio.enums.PhotometricInterp">[docs]</a><span class="k">class</span> <span class="nc">PhotometricInterp</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<div class="viewcode-block" id="PhotometricInterp"><a class="viewcode-back" href="../../rasterio.enums.html#rasterio.enums.PhotometricInterp">[docs]</a><span class="k">class</span> <span class="nc">PhotometricInterp</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">black</span> <span class="o">=</span> <span class="s1">&#39;MINISBLACK&#39;</span>
     <span class="n">white</span> <span class="o">=</span> <span class="s1">&#39;MINISWHITE&#39;</span>
     <span class="n">rgb</span> <span class="o">=</span> <span class="s1">&#39;RGB&#39;</span>
@@ -250,6 +278,9 @@
     <span class="n">itulab</span> <span class="o">=</span> <span class="s1">&#39;ITULAB&#39;</span></div>
 </pre></div>
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -281,16 +312,17 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

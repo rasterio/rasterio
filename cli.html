@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command Line Users Guide &mdash; rasterio 1.0a9 documentation</title>
+  <title>Command Line Users Guide &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/>
         <link rel="next" title="Contributing" href="contributing.html"/> 
 
   
@@ -40,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -59,7 +65,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -80,11 +86,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
@@ -151,8 +160,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rasterio</a>
+        
       </nav>
 
 
@@ -161,23 +172,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Command Line Users Guide</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Command Line Users Guide</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/cli.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/cli.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -185,7 +213,7 @@
             
   <div class="section" id="command-line-users-guide">
 <h1>Command Line Users Guide<a class="headerlink" href="#command-line-users-guide" title="Permalink to this headline">¶</a></h1>
-<p>Rasterio&#8217;s command line interface is a program named <code class="docutils literal"><span class="pre">rio</span></code>.</p>
+<p>Rasterio’s command line interface is a program named <code class="docutils literal"><span class="pre">rio</span></code>.</p>
 <p><code class="docutils literal"><span class="pre">rio</span></code> allows you to build workflows using shell commands, either
 interactively at the command prompt or with a script. Most common
 cases are covered by <code class="docutils literal"><span class="pre">rio</span></code> commands and it is often more convenient
@@ -245,7 +273,7 @@ add the following.</p>
 <p>Added in 0.10.</p>
 <p>The <code class="docutils literal"><span class="pre">bounds</span></code> command writes the bounding boxes of raster datasets to GeoJSON for
 use with, e.g., <a class="reference external" href="https://github.com/mapbox/geojsonio-cli">geojsonio-cli</a>.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio bounds tests/data/RGB.byte.tif --indent 2
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio bounds tests/data/RGB.byte.tif --indent <span class="m">2</span>
 <span class="go">{</span>
 <span class="go">  &quot;features&quot;: [</span>
 <span class="go">    {</span>
@@ -312,20 +340,18 @@ input dataset (3 bands) as a 3-D array.</p>
 </div>
 <p>The following produces a 3-band GeoTIFF in which the first band is copied from
 the first band of the input and the next two bands are scaled (down) by the
-ratio of the first band&#8217;s mean to their own means. The <code class="docutils literal"><span class="pre">--name</span></code> option is
+ratio of the first band’s mean to their own means. The <code class="docutils literal"><span class="pre">--name</span></code> option is
 used to bind datasets to a name within the expression. <code class="docutils literal"><span class="pre">(take</span> <span class="pre">a</span> <span class="pre">1)</span></code> gets the
 first band of the dataset named <code class="docutils literal"><span class="pre">a</span></code> as a 2-D array and <code class="docutils literal"><span class="pre">(asarray</span> <span class="pre">...)</span></code>
 collects a sequence of 2-D arrays into a 3-D array for output.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio calc <span class="s2">&quot;(asarray (take a 1) (* (take a 2) (/ (mean (take a 1)) (mean (take a 2)))) (* (take a 3) (/ (mean (take a 1)) (mean (take a 3)))))&quot;</span> <span class="se">\</span>
-<span class="gp">&gt;</span> --name <span class="nv">a</span><span class="o">=</span>tests/data/RGB.byte.tif /tmp/out.rgb.tif
+&gt; --name <span class="nv">a</span><span class="o">=</span>tests/data/RGB.byte.tif /tmp/out.rgb.tif
 </pre></div>
 </div>
 <p>The command above is also an example of a calculation that is far beyond the
 design of the calc command and something that could be done much more
 efficiently in Python.</p>
 <div class="toctree-wrapper compound">
-<ul class="simple">
-</ul>
 </div>
 </div>
 <div class="section" id="clip">
@@ -357,15 +383,15 @@ and <code class="docutils literal"><span class="pre">--scale-offset</span></code
 </div>
 <p>For example, to scale uint16 data with an actual range of 0-4095 to 0-255
 as uint8:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio convert in16.tif out8.tif --dtype uint8 --scale-ratio 0.0625
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio convert in16.tif out8.tif --dtype uint8 --scale-ratio <span class="m">0</span>.0625
 </pre></div>
 </div>
-<p>You can use <cite>&#8211;rgb</cite> as shorthand for <cite>&#8211;co photometric=rgb</cite>.</p>
+<p>You can use <cite>–rgb</cite> as shorthand for <cite>–co photometric=rgb</cite>.</p>
 </div>
 <div class="section" id="edit-info">
 <h2>edit-info<a class="headerlink" href="#edit-info" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.24</p>
-<p>The <code class="docutils literal"><span class="pre">edit-info</span></code> command allows you edit a raster dataset&#8217;s metadata, namely</p>
+<p>The <code class="docutils literal"><span class="pre">edit-info</span></code> command allows you edit a raster dataset’s metadata, namely</p>
 <ul class="simple">
 <li>coordinate reference system</li>
 <li>affine transformation matrix</li>
@@ -374,7 +400,7 @@ as uint8:</p>
 </ul>
 <p>A TIFF created by spatially-unaware image processing software like Photoshop
 or Imagemagick can be turned into a GeoTIFF by editing these metadata items.</p>
-<p>For example, you can set or change a dataset&#8217;s coordinate reference system to
+<p>For example, you can set or change a dataset’s coordinate reference system to
 Web Mercator (EPSG:3857),</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio edit-info --crs EPSG:3857 example.tif
 </pre></div>
@@ -414,7 +440,7 @@ keep pixels not covered by features.</p>
 <h2>info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h2>
 <p>Added in 0.13</p>
 <p>The <code class="docutils literal"><span class="pre">info</span></code> command prints structured information about a dataset.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio info tests/data/RGB.byte.tif --indent 2
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio info tests/data/RGB.byte.tif --indent <span class="m">2</span>
 <span class="go">{</span>
 <span class="go">  &quot;count&quot;: 3,</span>
 <span class="go">  &quot;crs&quot;: &quot;EPSG:32618&quot;,</span>
@@ -524,16 +550,16 @@ datasets.</p>
 improve performance in some applications.</p>
 <p>The decimation levels at which to build overviews can be specified as a
 comma separated list</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio overview --build 2,4,8,16
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio overview --build <span class="m">2</span>,4,8,16
 </pre></div>
 </div>
 <p>or a base and range of exponents.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio overview --build 2^1..4
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio overview --build <span class="m">2</span>^1..4
 </pre></div>
 </div>
 <p>Note that overviews can not currently be removed and are not automatically
-updated when the dataset&#8217;s primary bands are modified.</p>
-<p>Information about existing overviews can be printed using the &#8211;ls option.</p>
+updated when the dataset’s primary bands are modified.</p>
+<p>Information about existing overviews can be printed using the –ls option.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio overview --ls
 </pre></div>
 </div>
@@ -543,13 +569,13 @@ updated when the dataset&#8217;s primary bands are modified.</p>
 <p>New in 0.18.</p>
 <p>The <code class="docutils literal"><span class="pre">rasterize</span></code> command rasterizes GeoJSON features into a new or existing
 raster.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio rasterize test.tif --res 0.0167 &lt; input.geojson
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio rasterize test.tif --res <span class="m">0</span>.0167 &lt; input.geojson
 </pre></div>
 </div>
 <p>The resulting file will have an upper left coordinate determined by the bounds
 of the GeoJSON (in EPSG:4326, which is the default), with a
 pixel size of approximately 30 arc seconds.  Pixels whose center is within the
-polygon or that are selected by Bresenham&#8217;s line algorithm will be burned in
+polygon or that are selected by Bresenham’s line algorithm will be burned in
 with a default value of 1.</p>
 <p>It is possible to rasterize into an existing raster and use an alternative
 default value:</p>
@@ -564,7 +590,7 @@ output raster:</p>
 </div>
 <p>GeoJSON features may be provided using stdin or specified directly as first
 argument, and dimensions may be provided in place of pixel resolution:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio rasterize input.geojson test.tif --dimensions <span class="m">1024</span> 1024
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio rasterize input.geojson test.tif --dimensions <span class="m">1024</span> <span class="m">1024</span>
 </pre></div>
 </div>
 <p>Other options are available, see:</p>
@@ -594,7 +620,7 @@ out as GeoJSON.</p>
 </pre></div>
 </div>
 <p>The resulting file, uploaded to Mapbox, looks like this: <a class="reference external" href="https://a.tiles.mapbox.com/v4/sgillies.j1ho338j/page.html?access_token=pk.eyJ1Ijoic2dpbGxpZXMiLCJhIjoiWUE2VlZVcyJ9.OITHkb1GHNh9nvzIfUc9QQ#13/39.6079/-106.4822">sgillies.j1ho338j</a>.</p>
-<p>Using the <code class="docutils literal"><span class="pre">--mask</span></code> option you can write out the shapes of a dataset&#8217;s valid
+<p>Using the <code class="docutils literal"><span class="pre">--mask</span></code> option you can write out the shapes of a dataset’s valid
 data region.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio shapes --mask --precision <span class="m">6</span> tests/data/RGB.byte.tif <span class="p">|</span> geojsonio
 </pre></div>
@@ -619,12 +645,12 @@ following syntax:</p>
 </ul>
 <p>Examples using the Rasterio testing dataset that produce a copy of it.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio stack RGB.byte.tif stacked.tif
-<span class="gp">$</span> rio stack RGB.byte.tif --bidx 1,2,3 stacked.tif
-<span class="gp">$</span> rio stack RGB.byte.tif --bidx 1..3 stacked.tif
-<span class="gp">$</span> rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. stacked.tif
+<span class="gp">$</span> rio stack RGB.byte.tif --bidx <span class="m">1</span>,2,3 stacked.tif
+<span class="gp">$</span> rio stack RGB.byte.tif --bidx <span class="m">1</span>..3 stacked.tif
+<span class="gp">$</span> rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx <span class="m">3</span>.. stacked.tif
 </pre></div>
 </div>
-<p>You can use <cite>&#8211;rgb</cite> as shorthand for <cite>&#8211;co photometric=rgb</cite>.</p>
+<p>You can use <cite>–rgb</cite> as shorthand for <cite>–co photometric=rgb</cite>.</p>
 </div>
 <div class="section" id="transform">
 <h2>transform<a class="headerlink" href="#transform" title="Permalink to this headline">¶</a></h2>
@@ -634,13 +660,13 @@ writes another array of transformed coordinates to stdout.</p>
 <p>To transform a longitude, latitude point (EPSG:4326 is the default) to
 another coordinate system with 2 decimal places of output precision, do the
 following.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;[-78.0, 23.0]&quot;</span> <span class="p">|</span> rio transform - --dst-crs EPSG:32618 --precision 2
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;[-78.0, 23.0]&quot;</span> <span class="p">|</span> rio transform - --dst-crs EPSG:32618 --precision <span class="m">2</span>
 <span class="go">[192457.13, 2546667.68]</span>
 </pre></div>
 </div>
 <p>To transform a longitude, latitude bounding box to the coordinate system of
 a raster dataset, do the following.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;[-78.0, 23.0, -76.0, 25.0]&quot;</span> <span class="p">|</span> rio transform - --dst-crs tests/data/RGB.byte.tif --precision 2
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">echo</span> <span class="s2">&quot;[-78.0, 23.0, -76.0, 25.0]&quot;</span> <span class="p">|</span> rio transform - --dst-crs tests/data/RGB.byte.tif --precision <span class="m">2</span>
 <span class="go">[192457.13, 2546667.68, 399086.97, 2765319.94]</span>
 </pre></div>
 </div>
@@ -666,11 +692,11 @@ or a JSON text-encoded PROJ.4 object:</p>
 <p>You can also specify dimensions, which will automatically calculate appropriate
 resolution based on the relationship between the bounds in the target crs and
 these dimensions:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio warp input.tif output.tif --dst-crs EPSG:4326 --dimensions <span class="m">100</span> 200
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio warp input.tif output.tif --dst-crs EPSG:4326 --dimensions <span class="m">100</span> <span class="m">200</span>
 </pre></div>
 </div>
 <p>Or provide output bounds (in source crs) and resolution:</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 <span class="m">22</span> -76 <span class="m">24</span> --res 0.1
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 <span class="m">22</span> -76 <span class="m">24</span> --res <span class="m">0</span>.1
 </pre></div>
 </div>
 <p>Other options are available, see:</p>
@@ -704,12 +730,15 @@ for a list of available plugins.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -741,16 +770,17 @@ for a list of available plugins.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

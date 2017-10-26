@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Options &mdash; rasterio 1.0a9 documentation</title>
+  <title>Options &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="next" title="Interoperability" href="image_processing.html"/>
         <link rel="prev" title="Georeferencing" href="georeferencing.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -109,6 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -132,8 +142,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,23 +154,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Options</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Options</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/image_options.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/image_options.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -166,7 +195,7 @@
             
   <div class="section" id="options">
 <h1>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h1>
-<p>GDAL&#8217;s format drivers have many <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/ConfigOptions">configuration options</a>.
+<p>GDAL’s format drivers have many <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/ConfigOptions">configuration options</a>.
 These options come in two flavors:</p>
 <blockquote>
 <div><ul class="simple">
@@ -195,12 +224,12 @@ Options set on entering the context are deleted on exit.</p>
 </pre></div>
 </div>
 <p>Use native Python forms (<code class="docutils literal"><span class="pre">True</span></code> and <code class="docutils literal"><span class="pre">False</span></code>) for boolean options. Rasterio
-will convert them GDAL&#8217;s internal forms.</p>
+will convert them GDAL’s internal forms.</p>
 <p>See the <a class="reference external" href="https://trac.osgeo.org/gdal/wiki/ConfigOptions">configuration options</a> page for a complete list of available options.</p>
 </div>
 <div class="section" id="creation-options">
 <h2>Creation options<a class="headerlink" href="#creation-options" title="Permalink to this headline">¶</a></h2>
-<p>Each format has it&#8217;s own set of driver-specific creation options that can be used to
+<p>Each format has it’s own set of driver-specific creation options that can be used to
 fine tune the output rasters. For details on a particular driver, see the <a class="reference external" href="http://gdal.org/formats_list.html">formats list</a>.</p>
 <p>For the purposes of this document, we will focus on the <a class="reference external" href="http://gdal.org/frmt_gtiff.html">GeoTIFF creation options</a>.
 Some of the common GeoTIFF creation options include:</p>
@@ -208,7 +237,7 @@ Some of the common GeoTIFF creation options include:</p>
 <div><ul class="simple">
 <li><code class="docutils literal"><span class="pre">TILED</span></code>, <code class="docutils literal"><span class="pre">BLOCKXSIZE</span></code>, and <code class="docutils literal"><span class="pre">BLOCKYSIZE</span></code> to define the internal tiling</li>
 <li><code class="docutils literal"><span class="pre">COMPRESS</span></code> to define the compression method</li>
-<li><code class="docutils literal"><span class="pre">PHOTOMETRIC</span></code> to define the band&#8217;s color interpretation</li>
+<li><code class="docutils literal"><span class="pre">PHOTOMETRIC</span></code> to define the band’s color interpretation</li>
 </ul>
 </div></blockquote>
 <p>To specify these creation options in python code, you pass them as keyword arguments
@@ -229,15 +258,18 @@ to the <code class="docutils literal"><span class="pre">rasterio.open()</span></
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="image_processing.html" class="btn btn-neutral float-right" title="Interoperability" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="image_processing.html" class="btn btn-neutral float-right" title="Interoperability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="georeferencing.html" class="btn btn-neutral" title="Georeferencing" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="georeferencing.html" class="btn btn-neutral" title="Georeferencing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -268,16 +300,17 @@ to the <code class="docutils literal"><span class="pre">rasterio.open()</span></
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

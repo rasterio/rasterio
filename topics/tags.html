@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tagging datasets and bands &mdash; rasterio 1.0a9 documentation</title>
+  <title>Tagging datasets and bands &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,8 +32,11 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
-        <link rel="next" title="Virtual Files" href="vsi.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
+        <link rel="next" title="Virtual Warping" href="virtual-warping.html"/>
         <link rel="prev" title="Resampling" href="resampling.html"/> 
 
   
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -109,6 +118,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#writing-tags">Writing tags</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -132,8 +142,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,23 +154,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Tagging datasets and bands</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Tagging datasets and bands</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/tags.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/tags.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -166,20 +195,20 @@
             
   <div class="section" id="tagging-datasets-and-bands">
 <h1>Tagging datasets and bands<a class="headerlink" href="#tagging-datasets-and-bands" title="Permalink to this headline">¶</a></h1>
-<p>GDAL&#8217;s <a class="reference external" href="http://www.gdal.org/gdal_datamodel.html">data model</a> includes
+<p>GDAL’s <a class="reference external" href="http://www.gdal.org/gdal_datamodel.html">data model</a> includes
 collections of key, value pairs for major classes. In that model, these are
-&#8220;metadata&#8221;, but since they don&#8217;t have to be just for metadata, these key, value
-pairs are called &#8220;tags&#8221; in rasterio.</p>
+“metadata”, but since they don’t have to be just for metadata, these key, value
+pairs are called “tags” in rasterio.</p>
 <div class="section" id="reading-tags">
 <h2>Reading tags<a class="headerlink" href="#reading-tags" title="Permalink to this headline">¶</a></h2>
-<p>I&#8217;m going to use the rasterio interactive inspector in these examples below.</p>
+<p>I’m going to use the rasterio interactive inspector in these examples below.</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rasterio.insp tests/data/RGB.byte.tif
 <span class="go">Rasterio 0.6 Interactive Inspector (Python 2.7.5)</span>
 <span class="go">Type &quot;src.name&quot;, &quot;src.read(1)&quot;, or &quot;help(src)&quot; for more information.</span>
 <span class="gp">&gt;</span>&gt;&gt;
 </pre></div>
 </div>
-<p>Tags belong to namespaces. To get a copy of a dataset&#8217;s tags from the default
+<p>Tags belong to namespaces. To get a copy of a dataset’s tags from the default
 namespace, call <code class="docutils literal"><span class="pre">tags()</span></code> with no arguments.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;tests/data/RGB.byte.tif&quot;</span><span class="p">)</span>
@@ -187,17 +216,17 @@ namespace, call <code class="docutils literal"><span class="pre">tags()</span></
 <span class="go">{&#39;AREA_OR_POINT&#39;: &#39;Area&#39;}</span>
 </pre></div>
 </div>
-<p>A dataset&#8217;s bands may have tags, too. Here are the tags from the default namespace
+<p>A dataset’s bands may have tags, too. Here are the tags from the default namespace
 for the first band, accessed using the positional band index argument of <code class="docutils literal"><span class="pre">tags()</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="s1">&#39;STATISTICS_MEAN&#39;</span><span class="p">]</span>
 <span class="go">&#39;29.947726688477&#39;</span>
 </pre></div>
 </div>
-<p>These are the tags that came with the sample data I&#8217;m using to test rasterio. In
+<p>These are the tags that came with the sample data I’m using to test rasterio. In
 practice, maintaining stats in the tags can be unreliable as there is no automatic
-update of the tags when the band&#8217;s image data changes.</p>
-<p>The 3 standard, non-default GDAL tag namespaces are &#8216;SUBDATASETS&#8217;, &#8216;IMAGE_STRUCTURE&#8217;,
-and &#8216;RPC&#8217;. You can get the tags from these namespaces using the <cite>ns</cite> keyword of
+update of the tags when the band’s image data changes.</p>
+<p>The 3 standard, non-default GDAL tag namespaces are ‘SUBDATASETS’, ‘IMAGE_STRUCTURE’,
+and ‘RPC’. You can get the tags from these namespaces using the <cite>ns</cite> keyword of
 <code class="docutils literal"><span class="pre">tags()</span></code>.</p>
 <div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;IMAGE_STRUCTURE&#39;</span><span class="p">)</span>
 <span class="go">{&#39;INTERLEAVE&#39;: &#39;PIXEL&#39;}</span>
@@ -234,27 +263,30 @@ files.</p>
     <span class="c1"># True</span>
     <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="s1">&#39;3&#39;</span> <span class="p">}</span>
 
-    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rasterio_testing&#39;</span><span class="p">,</span> <span class="n">rus</span><span class="o">=</span><span class="s1">u&#39;другая строка&#39;</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rasterio_testing&#39;</span><span class="p">,</span> <span class="n">rus</span><span class="o">=</span><span class="sa">u</span><span class="s1">&#39;другая строка&#39;</span><span class="p">)</span>
     <span class="c1"># True</span>
-    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rasterio_testing&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;rus&#39;</span><span class="p">:</span> <span class="s1">u&#39;другая строка&#39;</span><span class="p">}</span>
+    <span class="k">assert</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rasterio_testing&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s1">&#39;rus&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;другая строка&#39;</span><span class="p">}</span>
 </pre></div>
 </div>
-<p>As with image data, tags aren&#8217;t written to the file on disk until the dataset
+<p>As with image data, tags aren’t written to the file on disk until the dataset
 is closed.</p>
 </div>
 </div>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="vsi.html" class="btn btn-neutral float-right" title="Virtual Files" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="virtual-warping.html" class="btn btn-neutral float-right" title="Virtual Warping" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="resampling.html" class="btn btn-neutral" title="Resampling" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="resampling.html" class="btn btn-neutral" title="Resampling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -285,16 +317,17 @@ is closed.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

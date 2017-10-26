@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating to Rasterio 1.0 &mdash; rasterio 1.0a9 documentation</title>
+  <title>Migrating to Rasterio 1.0 &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="next" title="Overviews" href="overviews.html"/>
         <link rel="prev" title="In-Memory Files" href="memory-files.html"/> 
 
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -60,7 +66,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -81,11 +87,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="color.html">Color</a></li>
@@ -132,6 +141,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#removed-rasterio-warp-resampling">Removed: <code class="docutils literal"><span class="pre">rasterio.warp.RESAMPLING</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#removed-dataset-s-ul-method">Removed: dataset’s <code class="docutils literal"><span class="pre">ul()</span></code> method</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#signature-changes">Signature Changes</a></li>
 </ul>
 </li>
@@ -140,6 +150,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -163,8 +174,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -173,23 +186,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>Migrating to Rasterio 1.0</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Migrating to Rasterio 1.0</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/topics/migrating-to-v1.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/topics/migrating-to-v1.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -212,7 +242,7 @@ deprecation of GDAL-style geotransforms in favor of the <a class="reference exte
 </div>
 <p>Fundamentally these two constructs provide the same information, but the
 <code class="docutils literal"><span class="pre">Affine()</span></code> object is much more useful.</p>
-<p>Here&#8217;s a history of this feature:</p>
+<p>Here’s a history of this feature:</p>
 <ol class="arabic simple">
 <li>Originally, functions with a <code class="docutils literal"><span class="pre">transform</span></code> argument expected a GDAL
 geotransform.</li>
@@ -264,7 +294,7 @@ migration and some further discussion.</li>
 </div>
 <div class="section" id="deprecated-rasterio-drivers">
 <h2>Deprecated: <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code><a class="headerlink" href="#deprecated-rasterio-drivers" title="Permalink to this headline">¶</a></h2>
-<p>Previously users could register GDAL&#8217;s drivers and open a datasource with:</p>
+<p>Previously users could register GDAL’s drivers and open a datasource with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">drivers</span><span class="p">():</span>
@@ -273,7 +303,7 @@ migration and some further discussion.</li>
         <span class="k">pass</span>
 </pre></div>
 </div>
-<p>but Rasterio 1.0 contains more interactions with GDAL&#8217;s environment, so
+<p>but Rasterio 1.0 contains more interactions with GDAL’s environment, so
 <code class="docutils literal"><span class="pre">rasterio.drivers()</span></code> has been replaced with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">import</span> <span class="nn">rasterio.env</span>
@@ -381,7 +411,11 @@ several different locations:</p>
 </div>
 <div class="section" id="removed-rasterio-warp-resampling">
 <h2>Removed: <code class="docutils literal"><span class="pre">rasterio.warp.RESAMPLING</span></code><a class="headerlink" href="#removed-rasterio-warp-resampling" title="Permalink to this headline">¶</a></h2>
-<p>Replaced with <code class="docutils literal"><span class="pre">rasterio.warp.Resampling</span></code></p>
+<p>This enum has been replaced by <code class="docutils literal"><span class="pre">rasterio.warp.Resampling</span></code>.</p>
+</div>
+<div class="section" id="removed-dataset-s-ul-method">
+<h2>Removed: dataset’s <code class="docutils literal"><span class="pre">ul()</span></code> method<a class="headerlink" href="#removed-dataset-s-ul-method" title="Permalink to this headline">¶</a></h2>
+<p>This method has been replaced by the <code class="docutils literal"><span class="pre">xy()</span></code> method.</p>
 </div>
 <div class="section" id="signature-changes">
 <h2>Signature Changes<a class="headerlink" href="#signature-changes" title="Permalink to this headline">¶</a></h2>
@@ -393,15 +427,18 @@ several different locations:</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="overviews.html" class="btn btn-neutral float-right" title="Overviews" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="overviews.html" class="btn btn-neutral float-right" title="Overviews" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="memory-files.html" class="btn btn-neutral" title="In-Memory Files" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="memory-files.html" class="btn btn-neutral" title="In-Memory Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -432,16 +469,17 @@ several different locations:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

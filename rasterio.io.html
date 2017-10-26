@@ -1,0 +1,1344 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.io module &mdash; rasterio 1.0a10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a10
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="switch.html">Switching from GDAL’s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rasterio</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>rasterio.io module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rasterio.io.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-rasterio.io">
+<span id="rasterio-io-module"></span><h1>rasterio.io module<a class="headerlink" href="#module-rasterio.io" title="Permalink to this headline">¶</a></h1>
+<p>Classes capable of reading and writing datasets</p>
+<p>Instances of these classes are called dataset objects.</p>
+<dl class="class">
+<dt id="rasterio.io.BufferedDatasetWriter">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">BufferedDatasetWriter</code><a class="reference internal" href="_modules/rasterio/io.html#BufferedDatasetWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.BufferedDatasetWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.BufferedDatasetWriterBase</span></code>, <a class="reference internal" href="#rasterio.io.WindowMethodsMixin" title="rasterio.io.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="#rasterio.io.TransformMethodsMixin" title="rasterio.io.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.TransformMethodsMixin</span></code></a></p>
+<p>Maintains data and metadata in a buffer, writing to disk or
+network only when <cite>close()</cite> is called.</p>
+<p>This allows incremental updates to datasets using formats that don’t
+otherwise support updates, such as JPEG.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">affine</span></code></td>
+<td>This property is deprecated.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_shapes</span></code></td>
+<td>Returns an ordered list of block shapes for all bands.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">bounds</span></code></td>
+<td>Returns the lower left and upper right bounds of the dataset in the units of its coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">closed</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">compression</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">crs</span></code></td>
+<td>A mapping of PROJ.4 coordinate reference system params.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">descriptions</span></code></td>
+<td>Text descriptions for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
+<td>Returns an ordered tuple of all band data types.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">files</span></code></td>
+<td>Returns a sequence of files associated with the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">gcps</span></code></td>
+<td>ground control points and their coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flag_enums</span></code></td>
+<td>Sets of flags describing the sources of band masks.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
+<td>Mask flags for each band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
+<td>The basic metadata of this dataset.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
+<td>The dataset’s single nodata value.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
+<td>A list by band of a dataset’s nodata values.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
+<td>Basic metadata and creation options of this dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
+<td>Returns the (width, height) of pixels in the units of its coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">subdatasets</span></code></td>
+<td>Sequence of subdatasets</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
+<td>An affine transformation that maps pixel row/column coordinates to coordinates in the specified crs.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">units</span></code></td>
+<td>Strings defining the units for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">width</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_size</span></code></td>
+<td>Returns the size in bytes of a particular block</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_window</span></code></td>
+<td>Returns the window for a particular block</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_windows</span></code></td>
+<td>Returns an iterator over a band’s blocks and their corresponding windows.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">build_overviews</span></code></td>
+<td>Build overviews at one or more decimation factors for all bands of the dataset.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">checksum</span></code></td>
+<td>Compute an integer checksum for the stored band</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">colorinterp</span></code></td>
+<td>Returns the color interpretation for a band or None.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">colormap</span></code></td>
+<td>Returns a dict containing the colormap for a band or None.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dataset_mask</span></code></td>
+<td>Calculate the dataset’s 2D mask.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<td>Returns a GDAL geotransform in its native form.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read raster bands as a multidimensional array</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<td>Return the GDAL dataset’s stored CRS</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset’s valid data mask.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<td>Read raster band masks as a multidimensional array</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<td>Return the stored GDAL GeoTransform</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<td>Get the values of a dataset at certain positions</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
+<td>Writes a coordinate reference system to the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
+<td>Sets the description of a dataset band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_gcps</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_units</span></code></td>
+<td>Sets the units of a dataset band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">stop</span></code></td>
+<td>Ends the dataset’s life cycle</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tags</span></code></td>
+<td>Returns a dict containing copies of the dataset or band’s tags.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">update_tags</span></code></td>
+<td>Updates the tags of a dataset or one of its bands.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window</span></code>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;precision])</td>
+<td>Get the window corresponding to the bounding coordinates.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code>(window)</td>
+<td>Get the bounds of a window</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code>(window)</td>
+<td>Get the affine transform for a dataset window.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></td>
+<td>Write the src array into indexed bands of the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write_band</span></code></td>
+<td>Write the src array into the <cite>bidx</cite> band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write_colormap</span></code></td>
+<td>Write a colormap for a band to the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write_mask</span></code></td>
+<td>Write the valid data mask src array into the dataset’s band mask.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write_transform</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code>(row,&nbsp;col[,&nbsp;offset])</td>
+<td>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.DatasetReader">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">DatasetReader</code><a class="reference internal" href="_modules/rasterio/io.html#DatasetReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.DatasetReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.DatasetReaderBase</span></code>, <a class="reference internal" href="#rasterio.io.WindowMethodsMixin" title="rasterio.io.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="#rasterio.io.TransformMethodsMixin" title="rasterio.io.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.TransformMethodsMixin</span></code></a></p>
+<p>An unbuffered data and metadata reader</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">affine</span></code></td>
+<td>This property is deprecated.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_shapes</span></code></td>
+<td>Returns an ordered list of block shapes for all bands.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">bounds</span></code></td>
+<td>Returns the lower left and upper right bounds of the dataset in the units of its coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">closed</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">compression</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">crs</span></code></td>
+<td>A mapping of PROJ.4 coordinate reference system params.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">descriptions</span></code></td>
+<td>Text descriptions for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
+<td>Returns an ordered tuple of all band data types.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">files</span></code></td>
+<td>Returns a sequence of files associated with the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">gcps</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flag_enums</span></code></td>
+<td>Sets of flags describing the sources of band masks.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
+<td>Mask flags for each band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
+<td>The basic metadata of this dataset.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
+<td>The dataset’s single nodata value.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
+<td>Nodata values for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
+<td>Basic metadata and creation options of this dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
+<td>Returns the (width, height) of pixels in the units of its coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">subdatasets</span></code></td>
+<td>Sequence of subdatasets</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
+<td>An instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code>, which is a <code class="docutils literal"><span class="pre">namedtuple</span></code> with coefficients in the order <code class="docutils literal"><span class="pre">(a,</span> <span class="pre">b,</span> <span class="pre">c,</span> <span class="pre">d,</span> <span class="pre">e,</span> <span class="pre">f)</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">units</span></code></td>
+<td>Strings defining the units for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">width</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_size</span></code></td>
+<td>Returns the size in bytes of a particular block</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_window</span></code></td>
+<td>Returns the window for a particular block</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_windows</span></code></td>
+<td>Returns an iterator over a band’s blocks and their corresponding windows.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">checksum</span></code></td>
+<td>Compute an integer checksum for the stored band</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">colorinterp</span></code></td>
+<td>Returns the color interpretation for a band or None.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">colormap</span></code></td>
+<td>Returns a dict containing the colormap for a band or None.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dataset_mask</span></code></td>
+<td>Calculate the dataset’s 2D mask.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<td>Returns a GDAL geotransform in its native form.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read raster bands as a multidimensional array</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<td>Return the GDAL dataset’s stored CRS</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset’s valid data mask.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<td>Read raster band masks as a multidimensional array</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<td>Return the stored GDAL GeoTransform</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<td>Get the values of a dataset at certain positions</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">stop</span></code></td>
+<td>Ends the dataset’s life cycle</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tags</span></code></td>
+<td>Returns a dict containing copies of the dataset or band’s tags.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window</span></code>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;precision])</td>
+<td>Get the window corresponding to the bounding coordinates.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code>(window)</td>
+<td>Get the bounds of a window</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code>(window)</td>
+<td>Get the affine transform for a dataset window.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code>(row,&nbsp;col[,&nbsp;offset])</td>
+<td>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.DatasetWriter">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">DatasetWriter</code><a class="reference internal" href="_modules/rasterio/io.html#DatasetWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.DatasetWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.DatasetWriterBase</span></code>, <a class="reference internal" href="#rasterio.io.WindowMethodsMixin" title="rasterio.io.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="#rasterio.io.TransformMethodsMixin" title="rasterio.io.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.TransformMethodsMixin</span></code></a></p>
+<p>An unbuffered data and metadata writer. Its methods write data
+directly to disk.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">affine</span></code></td>
+<td>This property is deprecated.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_shapes</span></code></td>
+<td>Returns an ordered list of block shapes for all bands.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">bounds</span></code></td>
+<td>Returns the lower left and upper right bounds of the dataset in the units of its coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">closed</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">compression</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">crs</span></code></td>
+<td>A mapping of PROJ.4 coordinate reference system params.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">descriptions</span></code></td>
+<td>Text descriptions for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">driver</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">dtypes</span></code></td>
+<td>Returns an ordered tuple of all band data types.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">files</span></code></td>
+<td>Returns a sequence of files associated with the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">gcps</span></code></td>
+<td>ground control points and their coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">height</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">indexes</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">interleaving</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_tiled</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">kwds</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flag_enums</span></code></td>
+<td>Sets of flags describing the sources of band masks.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_flags</span></code></td>
+<td>Mask flags for each band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">meta</span></code></td>
+<td>The basic metadata of this dataset.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mode</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">nodata</span></code></td>
+<td>The dataset’s single nodata value.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nodatavals</span></code></td>
+<td>A list by band of a dataset’s nodata values.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">photometric</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">profile</span></code></td>
+<td>Basic metadata and creation options of this dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">res</span></code></td>
+<td>Returns the (width, height) of pixels in the units of its coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">shape</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">subdatasets</span></code></td>
+<td>Sequence of subdatasets</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">transform</span></code></td>
+<td>An affine transformation that maps pixel row/column coordinates to coordinates in the specified crs.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">units</span></code></td>
+<td>Strings defining the units for each band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">width</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_size</span></code></td>
+<td>Returns the size in bytes of a particular block</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_window</span></code></td>
+<td>Returns the window for a particular block</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_windows</span></code></td>
+<td>Returns an iterator over a band’s blocks and their corresponding windows.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">build_overviews</span></code></td>
+<td>Build overviews at one or more decimation factors for all bands of the dataset.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">checksum</span></code></td>
+<td>Compute an integer checksum for the stored band</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">colorinterp</span></code></td>
+<td>Returns the color interpretation for a band or None.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">colormap</span></code></td>
+<td>Returns a dict containing the colormap for a band or None.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dataset_mask</span></code></td>
+<td>Calculate the dataset’s 2D mask.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<td>Returns a GDAL geotransform in its native form.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read raster bands as a multidimensional array</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<td>Return the GDAL dataset’s stored CRS</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset’s valid data mask.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<td>Read raster band masks as a multidimensional array</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<td>Return the stored GDAL GeoTransform</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<td>Get the values of a dataset at certain positions</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_crs</span></code></td>
+<td>Writes a coordinate reference system to the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_description</span></code></td>
+<td>Sets the description of a dataset band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_gcps</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_nodatavals</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_units</span></code></td>
+<td>Sets the units of a dataset band.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">stop</span></code></td>
+<td>Ends the dataset’s life cycle</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tags</span></code></td>
+<td>Returns a dict containing copies of the dataset or band’s tags.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">update_tags</span></code></td>
+<td>Updates the tags of a dataset or one of its bands.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window</span></code>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;precision])</td>
+<td>Get the window corresponding to the bounding coordinates.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code>(window)</td>
+<td>Get the bounds of a window</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code>(window)</td>
+<td>Get the affine transform for a dataset window.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></td>
+<td>Write the src array into indexed bands of the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write_band</span></code></td>
+<td>Write the src array into the <cite>bidx</cite> band.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write_colormap</span></code></td>
+<td>Write a colormap for a band to the dataset.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write_mask</span></code></td>
+<td>Write the valid data mask src array into the dataset’s band mask.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write_transform</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code>(row,&nbsp;col[,&nbsp;offset])</td>
+<td>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.MemoryFile">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">MemoryFile</code><span class="sig-paren">(</span><em>file_or_bytes=None</em>, <em>filename=None</em>, <em>ext=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#MemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.MemoryFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.MemoryFileBase</span></code></p>
+<p>A BytesIO-like object, backed by an in-memory file.</p>
+<p>This allows formatted files to be read and written without I/O.</p>
+<p>A MemoryFile created with initial bytes becomes immutable. A
+MemoryFile created without initial bytes may be written to using
+either file-like or dataset interfaces.</p>
+<p class="rubric">Examples</p>
+<p>A GeoTIFF can be loaded in memory and accessed using the GeoTIFF
+format driver</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">{&#39;count&#39;: 3,</span>
+<span class="go"> &#39;crs&#39;: CRS({&#39;init&#39;: &#39;epsg:32618&#39;}),</span>
+<span class="go"> &#39;driver&#39;: &#39;GTiff&#39;,</span>
+<span class="go"> &#39;dtype&#39;: &#39;uint8&#39;,</span>
+<span class="go"> &#39;height&#39;: 718,</span>
+<span class="go"> &#39;interleave&#39;: &#39;pixel&#39;,</span>
+<span class="go"> &#39;nodata&#39;: 0.0,</span>
+<span class="go"> &#39;tiled&#39;: False,</span>
+<span class="go"> &#39;transform&#39;: Affine(300.0379266750948, 0.0, 101985.0,</span>
+<span class="go">       0.0, -300.041782729805, 2826915.0),</span>
+<span class="go"> &#39;width&#39;: 791}</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td>Close MemoryFile and release allocated memory.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">exists</span></code></td>
+<td>Test if the in-memory file exists.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
+<td>Return a view on bytes of the file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.io.MemoryFile.open" title="rasterio.io.MemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>([driver,&nbsp;width,&nbsp;height,&nbsp;count,&nbsp;crs,&nbsp;…])</td>
+<td>Open the file and return a Rasterio dataset object.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read size bytes from MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">seek</span></code></td>
+<td>Seek to position in MemoryFile.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tell</span></code></td>
+<td>Tell current position in MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></td>
+<td>Write data bytes to MemoryFile</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.io.MemoryFile.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#MemoryFile.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.MemoryFile.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the file and return a Rasterio dataset object.</p>
+<p>If data has already been written, the file is opened in ‘r+’
+mode. Otherwise, the file is opened in ‘w’ mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Note well that there is no `path` parameter: a `MemoryFile`</strong></p>
+<p><strong>contains a single dataset and there is no need to specify a</strong></p>
+<p><strong>path.</strong></p>
+<p><strong>Other parameters are optional and have the same semantics as the</strong></p>
+<p class="last"><strong>parameters of `rasterio.open()`.</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.TransformMethodsMixin">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">TransformMethodsMixin</code><a class="reference internal" href="_modules/rasterio/io.html#TransformMethodsMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.TransformMethodsMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin providing methods for calculations related
+to transforming between rows and columns of the raster
+array and the coordinates.</p>
+<p>These methods are wrappers for the functionality in
+<cite>rasterio.transform</cite> module.</p>
+<p>A subclass with this mixin MUST provide a <cite>transform</cite>
+property.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.io.TransformMethodsMixin.index" title="rasterio.io.TransformMethodsMixin.index"><code class="xref py py-obj docutils literal"><span class="pre">index</span></code></a>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.io.TransformMethodsMixin.xy" title="rasterio.io.TransformMethodsMixin.xy"><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code></a>(row,&nbsp;col[,&nbsp;offset])</td>
+<td>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.io.TransformMethodsMixin.index">
+<code class="descname">index</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>op=&lt;built-in function floor&gt;</em>, <em>precision=6</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#TransformMethodsMixin.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.TransformMethodsMixin.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the (row, col) index of the pixel containing (x, y) given a
+coordinate reference system.</p>
+<p>Use an epsilon, magnitude determined by the precision parameter
+and sign determined by the op function:</p>
+<blockquote>
+<div>positive for floor, negative for ceil.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : float</p>
+<blockquote>
+<div><p>x value in coordinate reference system</p>
+</div></blockquote>
+<p><strong>y</strong> : float</p>
+<blockquote>
+<div><p>y value in coordinate reference system</p>
+</div></blockquote>
+<p><strong>op</strong> : function, optional (default: math.floor)</p>
+<blockquote>
+<div><p>Function to convert fractional pixels to whole numbers (floor,
+ceiling, round)</p>
+</div></blockquote>
+<p><strong>precision</strong> : int, optional (default: 6)</p>
+<blockquote>
+<div><p>Decimal places of precision in indexing, as in <cite>round()</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<blockquote class="last">
+<div><p>(row index, col index)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasterio.io.TransformMethodsMixin.xy">
+<code class="descname">xy</code><span class="sig-paren">(</span><em>row</em>, <em>col</em>, <em>offset='center'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#TransformMethodsMixin.xy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.TransformMethodsMixin.xy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.
+The pixel’s center is returned by default, but a corner can be returned
+by setting <cite>offset</cite> to one of <cite>ul, ur, ll, lr</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>row</strong> : int</p>
+<blockquote>
+<div><p>Pixel row.</p>
+</div></blockquote>
+<p><strong>col</strong> : int</p>
+<blockquote>
+<div><p>Pixel column.</p>
+</div></blockquote>
+<p><strong>offset</strong> : str, optional</p>
+<blockquote>
+<div><p>Determines if the returned coordinates are for the center of the
+pixel or for a corner.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<blockquote class="last">
+<div><p><code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.WindowMethodsMixin">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">WindowMethodsMixin</code><a class="reference internal" href="_modules/rasterio/io.html#WindowMethodsMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.WindowMethodsMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin providing methods for window-related calculations.
+These methods are wrappers for the functionality in
+<cite>rasterio.windows</cite> module.</p>
+<p>A subclass with this mixin MUST provide the following
+properties: <cite>transform</cite>, <cite>height</cite> and <cite>width</cite></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.io.WindowMethodsMixin.window" title="rasterio.io.WindowMethodsMixin.window"><code class="xref py py-obj docutils literal"><span class="pre">window</span></code></a>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;precision])</td>
+<td>Get the window corresponding to the bounding coordinates.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.io.WindowMethodsMixin.window_bounds" title="rasterio.io.WindowMethodsMixin.window_bounds"><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code></a>(window)</td>
+<td>Get the bounds of a window</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.io.WindowMethodsMixin.window_transform" title="rasterio.io.WindowMethodsMixin.window_transform"><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code></a>(window)</td>
+<td>Get the affine transform for a dataset window.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.io.WindowMethodsMixin.window">
+<code class="descname">window</code><span class="sig-paren">(</span><em>left</em>, <em>bottom</em>, <em>right</em>, <em>top</em>, <em>precision=6</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#WindowMethodsMixin.window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.WindowMethodsMixin.window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the window corresponding to the bounding coordinates.</p>
+<p>The resulting window is not cropped to the row and column
+limits of the dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left: float</strong></p>
+<blockquote>
+<div><p>Left (west) bounding coordinate</p>
+</div></blockquote>
+<p><strong>bottom: float</strong></p>
+<blockquote>
+<div><p>Bottom (south) bounding coordinate</p>
+</div></blockquote>
+<p><strong>right: float</strong></p>
+<blockquote>
+<div><p>Right (east) bounding coordinate</p>
+</div></blockquote>
+<p><strong>top: float</strong></p>
+<blockquote>
+<div><p>Top (north) bounding coordinate</p>
+</div></blockquote>
+<p><strong>precision: int, optional</strong></p>
+<blockquote>
+<div><p>Number of decimal points of precision when computing inverse
+transform.</p>
+</div></blockquote>
+<p><strong>kwargs: mapping</strong></p>
+<blockquote>
+<div><p>For backwards compatibility: absorbs deprecated keyword args.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">window: Window</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasterio.io.WindowMethodsMixin.window_bounds">
+<code class="descname">window_bounds</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#WindowMethodsMixin.window_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.WindowMethodsMixin.window_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the bounds of a window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window: rasterio.windows.Window</strong></p>
+<blockquote>
+<div><p>Dataset window</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounds</strong> : tuple</p>
+<blockquote class="last">
+<div><p>x_min, y_min, x_max, y_max for the given window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasterio.io.WindowMethodsMixin.window_transform">
+<code class="descname">window_transform</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#WindowMethodsMixin.window_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.WindowMethodsMixin.window_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the affine transform for a dataset window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window: rasterio.windows.Window</strong></p>
+<blockquote>
+<div><p>Dataset window</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">transform: Affine</p>
+<blockquote class="last">
+<div><p>The affine transform matrix for the given window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rasterio.io.ZipMemoryFile">
+<em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">ZipMemoryFile</code><span class="sig-paren">(</span><em>file_or_bytes=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#ZipMemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.ZipMemoryFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rasterio.io.MemoryFile" title="rasterio.io.MemoryFile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.MemoryFile</span></code></a></p>
+<p>A read-only BytesIO-like object backed by an in-memory zip file.</p>
+<p>This allows a zip file containing formatted files to be read
+without I/O.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></td>
+<td>Close MemoryFile and release allocated memory.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">exists</span></code></td>
+<td>Test if the in-memory file exists.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
+<td>Return a view on bytes of the file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.io.ZipMemoryFile.open" title="rasterio.io.ZipMemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>(path)</td>
+<td>Open a dataset within the zipped stream.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read size bytes from MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">seek</span></code></td>
+<td>Seek to position in MemoryFile.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tell</span></code></td>
+<td>Tell current position in MemoryFile.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code></td>
+<td>Write data bytes to MemoryFile</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.io.ZipMemoryFile.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#ZipMemoryFile.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.ZipMemoryFile.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a dataset within the zipped stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>path</strong> : str</p>
+<blockquote>
+<div><p>Path to a dataset in the zip file, relative to the root of the
+archive.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A Rasterio dataset object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.io.get_writer_for_driver">
+<code class="descclassname">rasterio.io.</code><code class="descname">get_writer_for_driver</code><span class="sig-paren">(</span><em>driver</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#get_writer_for_driver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.get_writer_for_driver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the writer class appropriate for the specified driver.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.io.get_writer_for_path">
+<code class="descclassname">rasterio.io.</code><code class="descname">get_writer_for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/io.html#get_writer_for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.get_writer_for_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the writer class appropriate for the existing dataset.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0a10',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

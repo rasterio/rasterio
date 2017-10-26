@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.transform module &mdash; rasterio 1.0a9 documentation</title>
+  <title>rasterio.transform module &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
         <link rel="next" title="rasterio.vfs module" href="rasterio.vfs.html"/>
         <link rel="prev" title="rasterio.sample module" href="rasterio.sample.html"/> 
@@ -42,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -61,7 +67,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -82,11 +88,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
@@ -106,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/reproject.html">Reprojection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -134,7 +144,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#module-rasterio">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -155,8 +165,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -165,25 +177,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="index.html">rasterio package</a> &raquo;</li>
-      
-    <li>rasterio.transform module</li>
+        
+      <li>rasterio.transform module</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/api/rasterio.transform.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/api/rasterio.transform.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -284,7 +313,7 @@ round)</p>
 <dt id="rasterio.transform.xy">
 <code class="descclassname">rasterio.transform.</code><code class="descname">xy</code><span class="sig-paren">(</span><em>transform</em>, <em>rows</em>, <em>cols</em>, <em>offset='center'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/transform.html#xy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.transform.xy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the x and y coordinates of pixels at <cite>rows</cite> and <cite>cols</cite>.
-The pixel&#8217;s center is returned by default, but a corner can be returned
+The pixel’s center is returned by default, but a corner can be returned
 by setting <cite>offset</cite> to one of <cite>ul, ur, ll, lr</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -327,15 +356,18 @@ pixel or for a corner.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rasterio.vfs.html" class="btn btn-neutral float-right" title="rasterio.vfs module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rasterio.vfs.html" class="btn btn-neutral float-right" title="rasterio.vfs module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rasterio.sample.html" class="btn btn-neutral" title="rasterio.sample module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rasterio.sample.html" class="btn btn-neutral" title="rasterio.sample module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -366,16 +398,17 @@ pixel or for a corner.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

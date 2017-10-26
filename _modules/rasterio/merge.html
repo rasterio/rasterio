@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.merge &mdash; rasterio 1.0a9 documentation</title>
+  <title>rasterio.merge &mdash; rasterio 1.0a10 documentation</title>
   
 
+  
+  
   
   
 
@@ -30,7 +32,10 @@
   
 
   
-    <link rel="top" title="rasterio 1.0a9 documentation" href="../../index.html"/>
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="rasterio 1.0a10 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -40,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -59,7 +65,7 @@
             
             
               <div class="version">
-                1.0a9
+                1.0a10
               </div>
             
           
@@ -80,11 +86,14 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL&#8217;s Python bindings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../switch.html">Switching from GDAL’s Python bindings</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/color.html">Color</a></li>
@@ -128,8 +137,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../../index.html">rasterio</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rasterio</a>
+        
       </nav>
 
 
@@ -142,21 +153,38 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-      
+        
           <li><a href="../rasterio.html">rasterio</a> &raquo;</li>
-      
-    <li>rasterio.merge</li>
+        
+      <li>rasterio.merge</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -170,16 +198,17 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">windows</span>
-<span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="kn">import</span> <span class="n">Affine</span>
-
-
-<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">rasterio</span> <span class="k">import</span> <span class="n">windows</span>
+<span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="k">import</span> <span class="n">Resampling</span>
+<span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="k">import</span> <span class="n">Affine</span>
 
 
-<div class="viewcode-block" id="merge"><a class="viewcode-back" href="../../api/rasterio.merge.html#rasterio.merge.merge">[docs]</a><span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="merge"><a class="viewcode-back" href="../../rasterio.merge.html#rasterio.merge.merge">[docs]</a><span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Copy valid pixels from input files to an output file.</span>
 
 <span class="sd">    All files must have the same number of bands, data type, and</span>
@@ -266,19 +295,22 @@
     <span class="c1"># create destination array</span>
     <span class="n">dest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">first</span><span class="o">.</span><span class="n">count</span><span class="p">,</span> <span class="n">output_height</span><span class="p">,</span> <span class="n">output_width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">nodataval</span> <span class="o">=</span> <span class="n">nodata</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Set nodataval: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">nodataval</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">nodataval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">nodataval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Only fill if the nodataval is within dtype&#39;s range.</span>
-        <span class="n">inrange</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">inrange</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">):</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
             <span class="n">inrange</span> <span class="o">=</span> <span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">min</span> <span class="o">&lt;=</span> <span class="n">nodataval</span> <span class="o">&lt;=</span> <span class="n">info</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
             <span class="n">info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="n">inrange</span> <span class="o">=</span> <span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">min</span> <span class="o">&lt;=</span> <span class="n">nodataval</span> <span class="o">&lt;=</span> <span class="n">info</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">nodataval</span><span class="p">):</span>
+                <span class="n">inrange</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">inrange</span> <span class="o">=</span> <span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">min</span> <span class="o">&lt;=</span> <span class="n">nodataval</span> <span class="o">&lt;=</span> <span class="n">info</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inrange</span><span class="p">:</span>
             <span class="n">dest</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">nodataval</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -292,8 +324,8 @@
 
     <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
         <span class="c1"># Real World (tm) use of boundless reads.</span>
-        <span class="c1"># This approach uses the maximum amount of memory to solve the problem.</span>
-        <span class="c1"># Making it more efficient is a TODO.</span>
+        <span class="c1"># This approach uses the maximum amount of memory to solve the</span>
+        <span class="c1"># problem. Making it more efficient is a TODO.</span>
 
         <span class="c1"># 1. Compute spatial intersection of destination and source.</span>
         <span class="n">src_w</span><span class="p">,</span> <span class="n">src_s</span><span class="p">,</span> <span class="n">src_e</span><span class="p">,</span> <span class="n">src_n</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">bounds</span>
@@ -305,39 +337,45 @@
 
         <span class="c1"># 2. Compute the source window.</span>
         <span class="n">src_window</span> <span class="o">=</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
-            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span>
-            <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
+            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Src </span><span class="si">%s</span><span class="s2"> window: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">src_window</span><span class="p">)</span>
+
+        <span class="n">src_window</span> <span class="o">=</span> <span class="n">src_window</span><span class="o">.</span><span class="n">round_shape</span><span class="p">()</span>
 
         <span class="c1"># 3. Compute the destination window.</span>
         <span class="n">dst_window</span> <span class="o">=</span> <span class="n">windows</span><span class="o">.</span><span class="n">from_bounds</span><span class="p">(</span>
-            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">,</span>
-            <span class="n">boundless</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dst window: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dst_window</span><span class="p">)</span>
+            <span class="n">int_w</span><span class="p">,</span> <span class="n">int_s</span><span class="p">,</span> <span class="n">int_e</span><span class="p">,</span> <span class="n">int_n</span><span class="p">,</span> <span class="n">output_transform</span><span class="p">)</span>
 
         <span class="c1"># 4. Initialize temp array.</span>
         <span class="n">tcount</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">count</span>
-        <span class="n">trows</span><span class="p">,</span> <span class="n">tcols</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">dst_window</span><span class="p">)</span>
+        <span class="n">trows</span><span class="p">,</span> <span class="n">tcols</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">dst_window</span><span class="o">.</span><span class="n">height</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">dst_window</span><span class="o">.</span><span class="n">width</span><span class="p">)))</span>
 
         <span class="n">temp_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">tcount</span><span class="p">,</span> <span class="n">trows</span><span class="p">,</span> <span class="n">tcols</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Temp shape: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">temp_shape</span><span class="p">)</span>
 
-        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">temp_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="n">temp</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">out</span><span class="o">=</span><span class="n">temp</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">src_window</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                        <span class="n">masked</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">out_shape</span><span class="o">=</span><span class="n">temp_shape</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">src_window</span><span class="p">,</span>
+                        <span class="n">boundless</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># 5. Copy elements of temp into dest.</span>
-        <span class="n">roff</span><span class="p">,</span> <span class="n">coff</span> <span class="o">=</span> <span class="n">dst_window</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">dst_window</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">roff</span><span class="p">,</span> <span class="n">coff</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">dst_window</span><span class="o">.</span><span class="n">row_off</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">dst_window</span><span class="o">.</span><span class="n">col_off</span><span class="p">)))</span>
 
         <span class="n">region</span> <span class="o">=</span> <span class="n">dest</span><span class="p">[:,</span> <span class="n">roff</span><span class="p">:</span><span class="n">roff</span> <span class="o">+</span> <span class="n">trows</span><span class="p">,</span> <span class="n">coff</span><span class="p">:</span><span class="n">coff</span> <span class="o">+</span> <span class="n">tcols</span><span class="p">]</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span>
-            <span class="n">region</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span>
-            <span class="n">where</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">region</span> <span class="o">==</span> <span class="n">nodataval</span><span class="p">,</span> <span class="n">temp</span><span class="o">.</span><span class="n">mask</span> <span class="o">==</span> <span class="bp">False</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">nodataval</span><span class="p">):</span>
+            <span class="n">region_nodata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+            <span class="n">temp_nodata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">region_nodata</span> <span class="o">=</span> <span class="n">region</span> <span class="o">==</span> <span class="n">nodataval</span>
+            <span class="n">temp_nodata</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">mask</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">region_nodata</span><span class="p">,</span> <span class="o">~</span><span class="n">temp_nodata</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">dest</span><span class="p">,</span> <span class="n">output_transform</span></div>
 </pre></div>
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -369,16 +407,17 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a9',
+            VERSION:'1.0a10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
