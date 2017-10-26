@@ -417,3 +417,11 @@ def test_colorinterp_bad_name():
     for ci in ColorInterp.__members__.keys():
         assert ci in result.output
     assert "'trash' is an unrecognized color interpretation" in result.output
+
+
+def test_colorinterp_duplicate_bands(runner):
+    """Use a band index more than once."""
+    result = runner.invoke(main_group, [
+        'edit-info', 'whatever', '--colorinterp', '1=red,1=red'])
+    assert result.exit_code != 0
+    assert "band 1 specified multiple times" in result.output

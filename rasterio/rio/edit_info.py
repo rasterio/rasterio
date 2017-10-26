@@ -79,8 +79,9 @@ def transform_handler(ctx, param, value):
 
 def colorinterp_handler(ctx, param, value):
 
-    """Translate a string like '1=red,2=green,3=blue,4=alpha' to a mapping
-    like:
+    """Translate a string like '1=red,2=green,3=blue,4=alpha' to a band
+    mapping.  The user may not have specified a new color interpretation for
+    each band, so order cannot be relied upon.
 
         {
             1: ColorInterp.red,
@@ -120,12 +121,19 @@ def colorinterp_handler(ctx, param, value):
             try:
                 bidx, ci = bidx_ci.split('=')
                 bidx = int(bidx)
-                ci = ColorInterp[ci]
+                if bidx in out:
+                    raise click.BadParameter(
+                        "band {} specified multiple times.".format(bidx))
+                try:
+                    ci = ColorInterp[ci]
+                except KeyError:
+                    raise click.BadParameter(
+                        "'{}' is an unrecognized color interpretation.  Must "
+                        "be one of: {}".format(
+                            ci, ColorInterp.__members__.keys()))
                 out[bidx] = ci
-            except KeyError:
-                raise click.BadParameter(
-                    "'{}' is an unrecognized color interpretation.  Must be "
-                    "one of: {}".format(ci, ColorInterp.__members__.keys()))
+            except click.BadParameter as e:
+                raise e
             except Exception:
                 raise click.BadParameter("could not parse: {}".format(value))
 
@@ -159,8 +167,7 @@ def colorinterp_handler(ctx, param, value):
          "'RGBA' as shorthand for '1=red,2=green,3=blue,4=alpha' and 'RGB' "
          "for the same sans alpha band.  This cannot be combined with "
          "individual band definitions.  Use 'like' to inherit color "
-         "interpretation from '--like'.  Results may be unexpected if the "
-         "input image and template image have a differing number of bands.")
+         "interpretation from '--like'.")
 @options.like_opt
 @click.pass_context
 def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
