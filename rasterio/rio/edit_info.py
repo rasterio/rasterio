@@ -265,6 +265,15 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             dst.set_description(bidx, description)
 
         if colorinterp:
+            if like and len(colorinterp) != dst.count:
+                raise click.ClickException(
+                    "When using '--like' for color interpretation the "
+                    "template and target images must have the same number "
+                    "of bands.  Found {template} color interpretations for "
+                    "template image and {target} bands in target "
+                    "image.".format(
+                        template=len(colorinterp),
+                        target=dst.count))
             # Construct a mapping of all color interpretations.  Use
             # may have only supplied some.
             ci_mapping = OrderedDict(zip(dst.indexes, dst.colorinterp))

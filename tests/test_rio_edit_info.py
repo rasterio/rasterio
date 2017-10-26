@@ -425,3 +425,16 @@ def test_colorinterp_duplicate_bands(runner):
         'edit-info', 'whatever', '--colorinterp', '1=red,1=red'])
     assert result.exit_code != 0
     assert "band 1 specified multiple times" in result.output
+
+
+def test_like_band_count_mismatch(runner, data):
+    """Ensure a mismatch in the number of bands for '--colorinterp like' and
+    the target image raises an exception.
+    """
+    # Isolate to avoid potential '.aux.xml' creation.
+    rgba = str(data.join('RGBA.byte.tif'))
+    rgb = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', rgb, '--colorinterp', 'like', '--like', rgba])
+    assert result.exit_code != 0
+    assert "When using '--like' for color interpretation" in result.output

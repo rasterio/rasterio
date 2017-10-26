@@ -25,7 +25,7 @@ if sys.version_info > (3,):
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
     'data/RGB.byte.tif', 'data/float.tif', 'data/float_nan.tif',
-    'data/shade.tif']]
+    'data/shade.tif', 'data/RGBA.byte.tif']]
 
 
 def pytest_cmdline_main(config):
