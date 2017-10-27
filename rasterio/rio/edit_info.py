@@ -213,6 +213,12 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
         rng = infos[kind](dtype)
         return rng.min <= value <= rng.max
 
+    # If '--all' is given before '--like' on the commandline then 'allmd'
+    # is the string 'like'.  This is caused by '--like' not having an
+    # opportunity to populate metadata before '--all' is evaluated.
+    if allmd == 'like':
+        allmd = ctx.obj['like']
+
     with ctx.obj['env'], rasterio.open(input, 'r+') as dst:
 
         if allmd:

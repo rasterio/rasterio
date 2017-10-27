@@ -295,8 +295,10 @@ def test_edit_all_like(data):
         assert src.nodata == 1.0
 
     templatefile = 'tests/data/RGB.byte.tif'
+    # Dropping '--all' right after 'edit-info' guards against a regression.
+    # Previously specifying '--all' before '--like' would raise an exception.
     result = runner.invoke(
-        main_group, ['edit-info', inputfile, '--like', templatefile, '--all'])
+        main_group, ['edit-info', '--all', inputfile, '--like', templatefile])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.crs == {'init': 'epsg:32618'}
