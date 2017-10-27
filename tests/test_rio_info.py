@@ -6,6 +6,7 @@ import pytest
 
 import rasterio
 from rasterio.rio.main import main_group
+from rasterio.rio.edit_info import transform_handler
 
 
 with rasterio.Env() as env:
@@ -214,81 +215,6 @@ def test_edit_units(data):
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.units[0] == 'DN'
-
-
-class MockContext:
-
-    def __init__(self):
-        self.obj = {}
-
-
-class MockOption:
-
-    def __init__(self, name):
-        self.name = name
-
-
-def test_all_callback_pass(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, None) is None
-
-
-def test_all_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, True) == {'transform': 'foo'}
-
-
-def test_all_callback_None(data):
-    ctx = MockContext()
-    assert all_handler(ctx, None, None) is None
-
-
-def test_transform_callback_pass(data):
-    """Always return None if the value is None"""
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert transform_handler(ctx, MockOption('transform'), None) is None
-
-
-def test_transform_callback_err(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    with pytest.raises(click.BadParameter):
-        transform_handler(ctx, MockOption('transform'), '?')
-
-
-def test_transform_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
-
-
-def test_crs_callback_pass(data):
-    """Always return None if the value is None."""
-    ctx = MockContext()
-    ctx.obj['like'] = {'crs': 'foo'}
-    assert crs_handler(ctx, MockOption('crs'), None) is None
-
-
-def test_crs_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'crs': 'foo'}
-    assert crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
-
-
-def test_tags_callback_err(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    with pytest.raises(click.BadParameter):
-        tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
-
-
-def test_tags_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
 
 
 def test_edit_crs_like(data):
