@@ -15,6 +15,7 @@ env:
     - GDALVERSION="2.0.3"
     - GDALVERSION="2.1.4"
     - GDALVERSION="2.2.1"
+    - GDALVERSION="2.2.2"
     - GDALVERSION="trunk"
 
 matrix:
