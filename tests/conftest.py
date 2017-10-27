@@ -408,29 +408,28 @@ def path_4band_no_colorinterp(tmpdir):
         'transform': affine.Affine(1, 0.0, 0,
                                    0.0, -1, 1),
         'driver': 'GTiff',
-        'photometric': 'rgb',
-        'alpha': 'unspecified'
+        'photometric': 'minisblack'
     }
-    # The first band's color interpretation is set to gray due to
-    # 'photometric=minisblack' and cannot be set to 'undefined' if all other
-    # bands are undefined as of GDAL 2.2.1
-    src_ci_map = OrderedDict((
-        (1, ColorInterp.undefined),
-        (2, ColorInterp.undefined),
-        (3, ColorInterp.undefined),
-        (4, ColorInterp.undefined)))
-    # Get GDAL's 4 band defaults and override
+    # For GDAL 2.2.2 the first band can be 'undefined', but on older
+    # versions it must be 'gray'.
+    undefined_ci = (
+        ColorInterp.gray,
+        ColorInterp.undefined,
+        ColorInterp.undefined,
+        ColorInterp.undefined)
+
     with rasterio.open(dst_path, 'w', **profile) as src:
-        src.colorinterp = src_ci_map.values()
+        src.colorinterp = undefined_ci
 
     # Ensure override occurred.  Setting color interpretation on an existing
-    # file is surrounded by holes.
-    with rasterio.open(dst_path, 'r+') as src:
-        ci_mapping = OrderedDict(zip(src.indexes, src.colorinterp))
-        for bidx, ci in src_ci_map.items():
-            assert ci == ci_mapping[bidx]
+    # file is surrounded by traps and forceful GDAL assumptions, especially
+    # on older versions.
+    with rasterio.open(dst_path) as src:
+        if src.colorinterp != undefined_ci:
+            raise ValueError(
+                "Didn't properly set color interpretation.  GDAL can "
+                "forcefully make assumptions.")
 
-    assert not os.path.exists(dst_path + '.aux.xml')
     return dst_path
 
 

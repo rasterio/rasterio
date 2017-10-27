@@ -94,7 +94,7 @@ def test_edit_nodata_err(data):
     assert result.exit_code == 2
 
 
-@pytest.mark.xfail(
+@pytest.mark.skipif(
     Version(rasterio.__gdal_version__) < Version('2.1'),
     reason='GDAL version >= 2.1 required')
 def test_delete_nodata(data):
@@ -443,6 +443,9 @@ def test_like_band_count_mismatch(runner, data):
     assert "When using '--like' for color interpretation" in result.output
 
 
+@pytest.mark.skipif(
+    Version(rasterio.__gdal_version__) < Version('2.1'),
+    reason='GDAL version >= 2.1 required')
 def test_colorinterp_like_all(
         runner, path_4band_no_colorinterp, path_rgba_byte_tif, tmpdir):
     """Test setting colorinterp via '--like template --all'."""

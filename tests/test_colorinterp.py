@@ -2,8 +2,8 @@
 
 
 from collections import OrderedDict
-import os
 
+from packaging.version import Version
 import pytest
 
 import rasterio
@@ -26,6 +26,9 @@ def test_cmyk_interp(tmpdir):
             ColorInterp.black)
 
 
+@pytest.mark.skipif(
+    Version(rasterio.__gdal_version__) < Version('2.2.2'),
+    reason="Some prior versions segfault on a Mac OSX Homebrew GDAL install.")
 def test_ycbcr_interp(tmpdir):
     """A YCbCr TIFF has red, green, blue bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
