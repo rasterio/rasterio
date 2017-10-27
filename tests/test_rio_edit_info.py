@@ -459,22 +459,6 @@ def test_colorinterp_like_all(
             ColorInterp.blue,
             ColorInterp.alpha)
 
-def test_all_callback_pass(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, None) is None
-
-
-def test_all_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, True) == {'transform': 'foo'}
-
-
-def test_all_callback_None(data):
-    ctx = MockContext()
-    assert all_handler(ctx, None, None) is None
-
 
 def test_transform_callback_pass(data):
     """Always return None if the value is None"""
