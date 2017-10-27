@@ -1,8 +1,6 @@
 """Tests for interacting with color interpretation."""
 
 
-from collections import OrderedDict
-
 from packaging.version import Version
 import pytest
 
@@ -63,30 +61,26 @@ def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
 
     # This is should be the default color interpretation of the copied
     # image.  GDAL defines these defaults, not Rasterio.
-    src_ci_map = OrderedDict((
-        (1, ColorInterp.gray),
-        (2, ColorInterp.undefined),
-        (3, ColorInterp.undefined),
-        (4, ColorInterp.undefined)))
+    src_ci = (
+        ColorInterp.gray,
+        ColorInterp.undefined,
+        ColorInterp.undefined,
+        ColorInterp.undefined)
 
-    dst_ci_map = OrderedDict((
-        (1, ColorInterp.alpha),
-        (2, ColorInterp.blue),
-        (3, ColorInterp.green),
-        (4, ColorInterp.red)))
+    dst_ci = (
+        ColorInterp.alpha,
+        ColorInterp.blue,
+        ColorInterp.green,
+        ColorInterp.red)
 
     with rasterio.open(no_ci_path, 'r+') as src:
-        ci_mapping = OrderedDict(zip(src.indexes, src.colorinterp))
-        for bidx, ci in src_ci_map.items():
-            assert ci_mapping[bidx] == ci
-        src.colorinterp = dst_ci_map.values()
+        assert src.colorinterp == src_ci
+        src.colorinterp = dst_ci
 
     # See note in 'test_set_colorinterp_undefined'.  Opening a second
     # time catches situations like that.
     with rasterio.open(no_ci_path) as src:
-        ci_mapping = OrderedDict(zip(src.indexes, src.colorinterp))
-        for bidx, ci in dst_ci_map.items():
-            assert ci_mapping[bidx] == ci
+        assert src.colorinterp == dst_ci
 
 
 @pytest.mark.parametrize("ci", ColorInterp.__members__.values())

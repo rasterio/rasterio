@@ -1,4 +1,6 @@
-from collections import OrderedDict
+"""``pytest`` fixtures."""
+
+
 import functools
 import operator
 import os
