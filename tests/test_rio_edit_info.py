@@ -14,6 +14,7 @@ from rasterio.rio.edit_info import (
     all_handler, crs_handler, tags_handler, transform_handler,
     colorinterp_handler)
 from rasterio.rio.main import main_group
+import rasterio.shutil
 
 
 PARAM_HANDLER = {
@@ -438,3 +439,20 @@ def test_like_band_count_mismatch(runner, data):
         'edit-info', rgb, '--colorinterp', 'like', '--like', rgba])
     assert result.exit_code != 0
     assert "When using '--like' for color interpretation" in result.output
+
+
+def test_colorinterp_like_all(
+        runner, path_4band_no_colorinterp, path_rgba_byte_tif, tmpdir):
+    """Test setting colorinterp via '--like template --all'."""
+    noci = str(tmpdir.join('test_colorinterp_like_all.tif'))
+    rasterio.shutil.copy(path_4band_no_colorinterp, noci)
+    rasterio.shutil.copy(path_4band_no_colorinterp, 'NOCI.tif')
+    result = runner.invoke(main_group, [
+        'edit-info', noci, '--like', path_rgba_byte_tif, '--all'])
+    assert result.exit_code == 0
+    with rasterio.open(noci) as src:
+        assert src.colorinterp == [
+            ColorInterp.red,
+            ColorInterp.green,
+            ColorInterp.blue,
+            ColorInterp.alpha]

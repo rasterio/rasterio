@@ -220,6 +220,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             crs = allmd['crs']
             transform = allmd['transform']
             tags = allmd['tags']
+            colorinterp = allmd['colorinterp']
 
         if unset_nodata and nodata is not options.IgnoreOption:
             raise click.BadParameter(
