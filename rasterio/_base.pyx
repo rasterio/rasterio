@@ -824,11 +824,11 @@ cdef class DatasetBase(object):
             from rasterio.enums import ColorInterp
             
             with rasterio.open('rgba.tif', 'r+') as src:
-                src.colorinterp = [
+                src.colorinterp = (
                     ColorInterp.red,
                     ColorInterp.green,
                     ColorInterp.blue,
-                    ColorInterp.alpha]
+                    ColorInterp.alpha)
 
         Returns
         -------
@@ -851,7 +851,7 @@ cdef class DatasetBase(object):
                 value = exc_wrap_int(
                     GDALGetRasterColorInterpretation(self.band(bidx)))
                 out.append(ColorInterp(value))
-            return out
+            return tuple(out)
 
         def __set__(self, value):
 

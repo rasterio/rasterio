@@ -363,16 +363,16 @@ def test_colorinterp_complex(path_4band_no_colorinterp):
         '--colorinterp', '4=alpha,3=red,2=blue,1=green'])
     assert result.exit_code == 0
     with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp == [
+        assert src.colorinterp == (
             ColorInterp.green,
             ColorInterp.blue,
             ColorInterp.red,
-            ColorInterp.alpha]
+            ColorInterp.alpha)
 
 
 @pytest.mark.parametrize("shorthand,expected", [
-    ('RGB', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined]),
-    ('RGBA', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha])
+    ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
+    ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha))
 ])
 def test_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
     """Set color interpretation from 'RGB' and 'RGBA' shorthand."""
@@ -404,11 +404,11 @@ def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
         '--colorinterp', 'like'])
     assert result.exit_code == 0
     with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp == [
+        assert src.colorinterp == (
             ColorInterp.red,
             ColorInterp.green,
             ColorInterp.blue,
-            ColorInterp.alpha]
+            ColorInterp.alpha)
 
 
 def test_colorinterp_bad_name():
@@ -453,13 +453,11 @@ def test_colorinterp_like_all(
         'edit-info', noci, '--like', path_rgba_byte_tif, '--all'])
     assert result.exit_code == 0
     with rasterio.open(noci) as src:
-        assert src.colorinterp == [
+        assert src.colorinterp == (
             ColorInterp.red,
             ColorInterp.green,
             ColorInterp.blue,
-            ColorInterp.alpha]
-
-
+            ColorInterp.alpha)
 
 def test_all_callback_pass(data):
     ctx = MockContext()

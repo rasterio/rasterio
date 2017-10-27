@@ -19,11 +19,11 @@ def test_cmyk_interp(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
         assert dst.profile['photometric'] == 'cmyk'
-        assert dst.colorinterp == [
+        assert dst.colorinterp == (
             ColorInterp.cyan,
             ColorInterp.magenta,
             ColorInterp.yellow,
-            ColorInterp.black]
+            ColorInterp.black)
 
 
 def test_ycbcr_interp(tmpdir):
@@ -35,8 +35,8 @@ def test_ycbcr_interp(tmpdir):
     meta['count'] = 3
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
-        assert dst.colorinterp == [
-            ColorInterp.red, ColorInterp.green, ColorInterp.blue]
+        assert dst.colorinterp == (
+            ColorInterp.red, ColorInterp.green, ColorInterp.blue)
 
 
 @pytest.mark.parametrize("dtype", [rasterio.ubyte, rasterio.int16])
@@ -92,7 +92,7 @@ def test_set_colorinterp_all(path_4band_no_colorinterp, ci):
     """Test setting with all color interpretations."""
 
     with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
-        all_ci = src.colorinterp
+        all_ci = list(src.colorinterp)
         all_ci[1] = ci
         src.colorinterp = all_ci
 
