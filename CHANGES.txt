@@ -1,6 +1,12 @@
 Changes
 =======
 
+Next
+----
+
+Bug fixes:
+
+- Pad boundless read VRTs so we don't overflow due to rounding (#1184).
 
 1.0a11 (2017-10-30)
 -------------------
