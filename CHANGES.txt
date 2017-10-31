@@ -2,8 +2,8 @@ Changes
 =======
 
 
-Next Release
-------------
+1.0a11 (2017-10-30)
+-------------------
 
 Breaking changes:
 
@@ -27,7 +27,6 @@ Bug fixes:
   (#1174, #1173).
 - Prevent a segmentation fault in ``rasterio.features.rasterize()`` by guarding
   against unsupported GeoJSON input (#1172, #1176).
-
 
 1.0a10 (2017-10-09)
 -------------------
