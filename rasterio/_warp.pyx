@@ -772,6 +772,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._nodatavals = [
             self.src_nodata for i in self.src_dataset.indexes]
 
+    def get_crs(self):
+        return self.dst_crs
+
     def start(self):
         """Starts the VRT's life cycle."""
         log.debug("Dataset %r is started.", self)
