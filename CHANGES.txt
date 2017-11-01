@@ -7,6 +7,8 @@ Next
 Bug fixes:
 
 - Pad boundless read VRTs so we don't overflow due to rounding (#1184).
+- Boundless reads of WarpedVRTs are enabled by setting an effective crs
+  (#1188).
 
 1.0a11 (2017-10-30)
 -------------------
