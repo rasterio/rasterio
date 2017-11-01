@@ -351,11 +351,11 @@ cdef class DatasetReaderBase(DatasetBase):
                     self,
                     dst_nodata=ndv,
                     dst_crs=self.crs,
-                    dst_width=max(self.width, window.num_cols) + 10,
-                    dst_height=max(self.height, window.num_rows) + 10,
+                    dst_width=max(self.width, window.width) + 10,
+                    dst_height=max(self.height, window.height) + 10,
                     dst_transform=self.window_transform(window),
                     resampling=resampling) as vrt:
-                out = vrt._read(indexes, out, Window(0, 0, window.num_cols, window.num_rows), None)
+                out = vrt._read(indexes, out, Window(0, 0, window.width, window.height), None)
 
                 if masked:
                     if all_valid:
@@ -363,7 +363,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     else:
                         mask = np.zeros(out.shape, 'uint8')
                         mask = ~vrt._read(
-                            indexes, mask, Window(0, 0, window.num_cols, window.num_rows), None, masks=True).astype('bool')
+                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
 
                     kwds = {'mask': mask}
                     # Set a fill value only if the read bands share a
@@ -495,11 +495,11 @@ cdef class DatasetReaderBase(DatasetBase):
             with WarpedVRT(
                     self,
                     dst_crs=self.crs,
-                    dst_width=max(self.width, window.num_cols) + 10,
-                    dst_height=max(self.height, window.num_rows) + 10,
+                    dst_width=max(self.width, window.width) + 10,
+                    dst_height=max(self.height, window.height) + 10,
                     dst_transform=self.window_transform(window),
                     resampling=resampling) as vrt:
-                out = vrt._read(indexes, out, Window(0, 0, window.num_cols, window.num_rows), None, masks=True)
+                out = vrt._read(indexes, out, Window(0, 0, window.width, window.height), None, masks=True)
 
         if return2d:
             out.shape = out.shape[1:]
