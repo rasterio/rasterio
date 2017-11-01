@@ -4,9 +4,9 @@ from click.testing import CliRunner
 from packaging.version import Version, parse
 import pytest
 
+import numpy as np
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.rio.edit_info import transform_handler
 
 
 with rasterio.Env() as env:
@@ -80,6 +80,8 @@ def test_delete_nodata(data):
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--unset-nodata'])
     assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.nodata is None
 
 
 def test_edit_nodata(data):
@@ -99,7 +101,7 @@ def test_edit_nodata_nan(data):
         main_group, ['edit-info', inputfile, '--nodata', 'NaN'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.nodata != src.nodata
+        assert np.isnan(src.nodata)
 
 
 def test_edit_crs_err(data):
@@ -177,7 +179,6 @@ def test_edit_transform_gdal(data):
         'edit-info', inputfile, '--transform', gdal_geotransform])
     assert result.exit_code != 0
     assert 'not recognized as an Affine array' in result.output
-    assert gdal_geotransform in result.output
 
 
 def test_edit_tags(data):
