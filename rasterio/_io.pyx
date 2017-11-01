@@ -350,6 +350,7 @@ cdef class DatasetReaderBase(DatasetBase):
             with WarpedVRT(
                     self,
                     dst_nodata=ndv,
+                    src_crs=self.crs,
                     dst_crs=self.crs,
                     dst_width=max(self.width, window.width) + 10,
                     dst_height=max(self.height, window.height) + 10,
