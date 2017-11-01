@@ -267,8 +267,6 @@ else:
         Extension(
             'rasterio._io', ['rasterio/_io.c'], **ext_options),
         Extension(
-            'rasterio._copy', ['rasterio/_copy.c'], **ext_options),
-        Extension(
             'rasterio._features', ['rasterio/_features.c'], **ext_options),
         Extension(
             'rasterio._env', ['rasterio/_env.c'], **ext_options),
@@ -281,7 +279,9 @@ else:
         Extension(
             'rasterio._example', ['rasterio/_example.c'], **ext_options),
         Extension(
-            'rasterio._crs', ['rasterio/_crs.c'], **ext_options)]
+            'rasterio._crs', ['rasterio/_crs.c'], **ext_options),
+        Extension(
+            'rasterio.shutil', ['rasterio/shutil.c'], **ext_options)]
 
     # Copy the GDAL version-specific shim module to _shim.pyx.
     if gdal_major_version == 2 and gdal_minor_version >= 1:
