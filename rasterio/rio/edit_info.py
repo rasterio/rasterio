@@ -124,14 +124,12 @@ def colorinterp_handler(ctx, param, value):
                 if bidx in out:
                     raise click.BadParameter(
                         "band {} specified multiple times.".format(bidx))
-                try:
-                    ci = ColorInterp[ci]
-                except KeyError:
+                if ci not in ColorInterp.__members__:
                     raise click.BadParameter(
                         "'{}' is an unrecognized color interpretation.  Must "
                         "be one of: {}".format(
                             ci, ColorInterp.__members__.keys()))
-                out[bidx] = ci
+                out[bidx] = ColorInterp[ci]
             except click.BadParameter as e:
                 raise e
             except Exception:
@@ -285,6 +283,14 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             # may have only supplied some.
             ci_mapping = OrderedDict(zip(dst.indexes, dst.colorinterp))
             ci_mapping.update(colorinterp.items())
+
+            for bidx in ci_mapping.keys():
+                if bidx not in dst.indexes:
+                    raise click.ClickException(
+                        "Attempting to set color interpretation but band "
+                        "index '{}' is not valid for target image: "
+                        "{}".format(bidx, dst.name))
+
             dst.colorinterp = ci_mapping.values()
 
     # Post check - ensure that crs was unset properly

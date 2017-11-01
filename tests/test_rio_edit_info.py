@@ -507,3 +507,12 @@ def test_tags_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'tags': {'foo': 'bar'}}
     assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
+
+
+def test_set_invalid_band(data, runner):
+    infile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(main_group, [
+        'edit-info', infile, '--colorinterp', '0=red'])
+    assert result.exit_code != 0
+    assert 'color interpretation' in result.output
+    assert "band index '0' is not valid" in result.output
