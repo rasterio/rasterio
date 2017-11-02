@@ -41,6 +41,8 @@ def parse_path(uri, vfs=None):
         parts = urlparse(path)
         scheme = parts.scheme
         path = parts.path
+        if parts.query:
+            path += "?" + parts.query
         if parts.netloc and parts.netloc != 'localhost':
             path = parts.netloc + path
         # There are certain URI schemes we favor over GDAL's names.
