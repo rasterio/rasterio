@@ -92,3 +92,9 @@ def test_update_vfs(tmpdir, mode):
     profile.update(count=1, width=1, height=1)
     with pytest.raises(TypeError):
         rasterio.open('zip://{0}'.format(tmpdir), mode, **profile)
+
+
+def test_parse_path_accept_get_params():
+    # See https://github.com/mapbox/rasterio/issues/1121
+    assert parse_path('http://example.com/index?a=1') == (
+        'example.com/index?a=1', None, 'http')
