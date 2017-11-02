@@ -873,7 +873,8 @@ cdef class DatasetBase(object):
             if len(value) != len(self.indexes):
                 raise ValueError(
                     "Must set color interpretation for all bands.  Found "
-                    "{} bands: {}".format(len(self.indexes), value))
+                    "{} bands but attempting to set color interpretation to: "
+                    "{}".format(len(self.indexes), value))
 
             for bidx, ci in zip(self.indexes, value):
                 exc_wrap_int(
