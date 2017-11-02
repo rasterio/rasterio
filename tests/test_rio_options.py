@@ -118,10 +118,8 @@ def test_like_dataset_callback(data):
     ctx = MockContext()
     assert like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
     assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
-    assert ctx.obj['like']['colorinterp'] == {
-        1: ColorInterp.red,
-        2: ColorInterp.green,
-        3: ColorInterp.blue}
+    assert ctx.obj['like']['colorinterp'] == (
+        ColorInterp.red, ColorInterp.green, ColorInterp.blue)
 
 
 def test_like_dataset_callback_obj_init(data):

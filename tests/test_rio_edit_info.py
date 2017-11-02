@@ -344,42 +344,47 @@ def test_all_callback_None(data):
     assert all_handler(ctx, None, None) is None
 
 
-def test_colorinterp_simple(path_4band_no_colorinterp):
-    """Set color interpretation for a single band."""
+@pytest.mark.parametrize("setci", (
+    'red,green,blue,alpha,undefined',
+    'red'
+))
+def test_colorinterp_wrong_band_count(runner, path_3band_no_colorinterp, setci):
+    """Provide the wrong band count."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
-        'edit-info', path_4band_no_colorinterp,
-        '--colorinterp', '4=alpha'])
-    assert result.exit_code == 0
-    with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp[3] == ColorInterp.alpha
+        'edit-info', path_3band_no_colorinterp,
+        '--colorinterp', setci])
+    assert result.exit_code != 0
+    assert "Must set color interpretation for all bands" in result.output
+    assert "Found 3 bands" in result.output
 
 
-def test_colorinterp_complex(path_4band_no_colorinterp):
-    """Set color interpretation for all bands."""
-    runner = CliRunner()
-    result = runner.invoke(main_group, [
-        'edit-info', path_4band_no_colorinterp,
-        '--colorinterp', '4=alpha,3=red,2=blue,1=green'])
-    assert result.exit_code == 0
-    with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp == (
-            ColorInterp.green,
-            ColorInterp.blue,
-            ColorInterp.red,
-            ColorInterp.alpha)
-
-
-@pytest.mark.parametrize("shorthand,expected", [
-    ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
-    ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha))
+@pytest.mark.parametrize("setci,expected", [
+    ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue)),
+    ('red,green,blue', (ColorInterp.red, ColorInterp.green, ColorInterp.blue)),
 ])
-def test_colorinterp_shorthand(shorthand, expected, path_4band_no_colorinterp):
-    """Set color interpretation from 'RGB' and 'RGBA' shorthand."""
+def test_colorinterp_rgb(setci, expected, path_3band_no_colorinterp):
+    """Set 3 band color interpretation."""
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'edit-info', path_3band_no_colorinterp,
+        '--colorinterp', setci])
+    assert result.exit_code == 0
+    with rasterio.open(path_3band_no_colorinterp) as src:
+        assert src.colorinterp == expected
+
+
+@pytest.mark.parametrize("setci,expected", [
+    ('red,green,blue,undefined', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
+    ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha)),
+    ('red,green,blue,alpha', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha)),
+])
+def test_colorinterp_4band(setci, expected, path_4band_no_colorinterp):
+    """Set 4 band color interpretation."""
     runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', path_4band_no_colorinterp,
-        '--colorinterp', shorthand])
+        '--colorinterp', setci])
     assert result.exit_code == 0
     with rasterio.open(path_4band_no_colorinterp) as src:
         assert src.colorinterp == expected
@@ -390,9 +395,9 @@ def test_colorinterp_bad_instructions():
     runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', 'path-to-something',
-        '--colorinterp', 'RGB,4=alpha'])
+        '--colorinterp', 'RGB,alpha'])
     assert result.exit_code != 0
-    assert 'could not parse: RGB,4=alpha' in result.output
+    assert "color interpretation 'RGB' is invalid"
 
 
 def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
@@ -409,25 +414,6 @@ def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
             ColorInterp.green,
             ColorInterp.blue,
             ColorInterp.alpha)
-
-
-def test_colorinterp_bad_name():
-    """Refernce an invalid ``ColorInterp``."""
-    runner = CliRunner()
-    result = runner.invoke(main_group, [
-        'edit-info', 'whatever', '--colorinterp', '1=trash'])
-    assert result.exit_code != 0
-    for ci in ColorInterp.__members__.keys():
-        assert ci in result.output
-    assert "'trash' is an unrecognized color interpretation" in result.output
-
-
-def test_colorinterp_duplicate_bands(runner):
-    """Use a band index more than once."""
-    result = runner.invoke(main_group, [
-        'edit-info', 'whatever', '--colorinterp', '1=red,1=red'])
-    assert result.exit_code != 0
-    assert "band 1 specified multiple times" in result.output
 
 
 def test_like_band_count_mismatch(runner, data):
@@ -507,12 +493,3 @@ def test_tags_callback(data):
     ctx = MockContext()
     ctx.obj['like'] = {'tags': {'foo': 'bar'}}
     assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
-
-
-def test_set_invalid_band(data, runner):
-    infile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group, [
-        'edit-info', infile, '--colorinterp', '0=red'])
-    assert result.exit_code != 0
-    assert 'color interpretation' in result.output
-    assert "band index '0' is not valid" in result.output

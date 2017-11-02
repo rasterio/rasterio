@@ -79,63 +79,28 @@ def transform_handler(ctx, param, value):
 
 def colorinterp_handler(ctx, param, value):
 
-    """Translate a string like '1=red,2=green,3=blue,4=alpha' to a band
-    mapping.  The user may not have specified a new color interpretation for
-    each band, so order cannot be relied upon.
-
-        {
-            1: ColorInterp.red,
-            2: ColorInterp.green,
-            3: ColorInterp.blue,
-            4: ColorInterp.alpha
-        }
-
-    The above can also be expressed as 'RGBA' instead.
+    """Validate a string like ``red,green,blue,alpha`` and convert to
+    a tuple.  Also handle ``RGB`` and ``RGBA``.
     """
-
-    # For handling '--set-colorinterp RGB|A'
-    shorthand = {
-        'r': ColorInterp.red,
-        'g': ColorInterp.green,
-        'b': ColorInterp.blue,
-        'a': ColorInterp.alpha
-    }
 
     if value is None:
         return value
-
     # Using '--like'
     elif value.lower() == 'like':
         return options.from_like_context(ctx, param, value)
-
-    # Using shorthand
-    elif value.lower() in ('rgb', 'rgba'):
-        return {
-            bidx: shorthand[channel]
-            for bidx, channel in enumerate(value.lower(), 1)}
-
-    # Something like the example in the docstring
+    elif value.lower() == 'rgb':
+        return ColorInterp.red, ColorInterp.green, ColorInterp.blue
+    elif value.lower() == 'rgba':
+        return ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha
     else:
-        out = {}
-        for bidx_ci in value.split(','):
-            try:
-                bidx, ci = bidx_ci.split('=')
-                bidx = int(bidx)
-                if bidx in out:
-                    raise click.BadParameter(
-                        "band {} specified multiple times.".format(bidx))
-                if ci not in ColorInterp.__members__:
-                    raise click.BadParameter(
-                        "'{}' is an unrecognized color interpretation.  Must "
-                        "be one of: {}".format(
-                            ci, ColorInterp.__members__.keys()))
-                out[bidx] = ColorInterp[ci]
-            except click.BadParameter as e:
-                raise e
-            except Exception:
-                raise click.BadParameter("could not parse: {}".format(value))
-
-        return out
+        colorinterp = tuple(value.split(','))
+        for ci in colorinterp:
+            if ci not in ColorInterp.__members__:
+                raise click.BadParameter(
+                    "color interpretation '{ci}' is invalid.  Must be one of: "
+                    "{valid}".format(
+                        ci=ci, valid=', '.join(ColorInterp.__members__)))
+        return tuple(ColorInterp[ci] for ci in colorinterp)
 
 
 @click.command('edit-info', short_help="Edit dataset metadata.")
@@ -160,11 +125,10 @@ def colorinterp_handler(ctx, param, value):
               help="Copy all metadata items from the template file.")
 @click.option(
     '--colorinterp', callback=colorinterp_handler,
-    metavar="bidx=ci[,bidx=ci,...]|RGB|RGBA|like",
-    help="Set color interpretation for one or more bands.  Can also use "
-         "'RGBA' as shorthand for '1=red,2=green,3=blue,4=alpha' and 'RGB' "
-         "for the same sans alpha band.  This cannot be combined with "
-         "individual band definitions.  Use 'like' to inherit color "
+    metavar="name[,name,...]|RGB|RGBA|like",
+    help="Set color interpretation for all bands like 'red,green,blue,alpha'. "
+         "Can also use 'RGBA' as shorthand for 'red,green,blue,alpha' and "
+         "'RGB' for the same sans alpha band.  Use 'like' to inherit color "
          "interpretation from '--like'.")
 @options.like_opt
 @click.pass_context
@@ -279,19 +243,10 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
                     "image.".format(
                         template=len(colorinterp),
                         target=dst.count))
-            # Construct a mapping of all color interpretations.  Use
-            # may have only supplied some.
-            ci_mapping = OrderedDict(zip(dst.indexes, dst.colorinterp))
-            ci_mapping.update(colorinterp.items())
-
-            for bidx in ci_mapping.keys():
-                if bidx not in dst.indexes:
-                    raise click.ClickException(
-                        "Attempting to set color interpretation but band "
-                        "index '{}' is not valid for target image: "
-                        "{}".format(bidx, dst.name))
-
-            dst.colorinterp = ci_mapping.values()
+            try:
+                dst.colorinterp = colorinterp
+            except ValueError as e:
+                raise click.ClickException(str(e))
 
     # Post check - ensure that crs was unset properly
     if unset_crs:
