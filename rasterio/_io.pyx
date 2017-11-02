@@ -567,7 +567,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         if masks:
             # Warn if nodata attribute is shadowing an alpha band.
-            if self.count == 4 and self.colorinterp(4) == ColorInterp.alpha:
+            if self.count == 4 and self.colorinterp[3] == ColorInterp.alpha:
                 for flags in self.mask_flag_enums:
                     if MaskFlags.nodata in flags:
                         warnings.warn(NodataShadowWarning())
@@ -625,7 +625,7 @@ cdef class DatasetReaderBase(DatasetBase):
             return self.read_masks(1, **kwargs)
 
         # use Alpha mask if available and looks like RGB, even if nodata is shadowing
-        elif self.count == 4 and self.colorinterp(1) == ColorInterp.red:
+        elif self.count == 4 and self.colorinterp[0] == ColorInterp.red:
             return self.read_masks(4, **kwargs)
 
         # Or use the binary OR intersection of all GDALGetMaskBands
@@ -1532,6 +1532,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __set__(self, values):
             self.set_gcps(values[0], values[1])
+
 
 
 cdef class InMemoryRaster:

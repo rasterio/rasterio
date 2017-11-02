@@ -1,3 +1,7 @@
+"""Tests for interacting with color interpretation."""
+
+
+from packaging.version import Version
 import pytest
 
 import rasterio
@@ -13,13 +17,16 @@ def test_cmyk_interp(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
         assert dst.profile['photometric'] == 'cmyk'
-        assert dst.colorinterp(1) == ColorInterp.cyan
-        assert dst.colorinterp(2) == ColorInterp.magenta
-        assert dst.colorinterp(3) == ColorInterp.yellow
-        assert dst.colorinterp(4) == ColorInterp.black
+        assert dst.colorinterp == (
+            ColorInterp.cyan,
+            ColorInterp.magenta,
+            ColorInterp.yellow,
+            ColorInterp.black)
 
 
-@pytest.mark.skip(reason="crashing on OS X with Homebrew's GDAL")
+@pytest.mark.skipif(
+    Version(rasterio.__gdal_version__) < Version('2.2.2'),
+    reason="Some prior versions segfault on a Mac OSX Homebrew GDAL install.")
 def test_ycbcr_interp(tmpdir):
     """A YCbCr TIFF has red, green, blue bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -29,6 +36,62 @@ def test_ycbcr_interp(tmpdir):
     meta['count'] = 3
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
-        assert dst.colorinterp(1) == ColorInterp.red
-        assert dst.colorinterp(2) == ColorInterp.green
-        assert dst.colorinterp(3) == ColorInterp.blue
+        assert dst.colorinterp == (
+            ColorInterp.red, ColorInterp.green, ColorInterp.blue)
+
+
+@pytest.mark.parametrize("dtype", [rasterio.ubyte, rasterio.int16])
+def test_set_colorinterp(path_rgba_byte_tif, tmpdir, dtype):
+
+    """Test setting color interpretation by creating an image without CI
+    and then setting to unusual values.  Also test with a non-uint8 image.
+    """
+
+    no_ci_path = str(tmpdir.join('no-ci.tif'))
+    with rasterio.open(path_rgba_byte_tif) as src:
+        meta = src.meta.copy()
+        meta.update(
+            height=10,
+            width=10,
+            dtype=dtype,
+            photometric='minisblack',
+            alpha='unspecified')
+    with rasterio.open(no_ci_path, 'w', **meta):
+        pass
+
+    # This is should be the default color interpretation of the copied
+    # image.  GDAL defines these defaults, not Rasterio.
+    src_ci = (
+        ColorInterp.gray,
+        ColorInterp.undefined,
+        ColorInterp.undefined,
+        ColorInterp.undefined)
+
+    dst_ci = (
+        ColorInterp.alpha,
+        ColorInterp.blue,
+        ColorInterp.green,
+        ColorInterp.red)
+
+    with rasterio.open(no_ci_path, 'r+') as src:
+        assert src.colorinterp == src_ci
+        src.colorinterp = dst_ci
+
+    # See note in 'test_set_colorinterp_undefined'.  Opening a second
+    # time catches situations like that.
+    with rasterio.open(no_ci_path) as src:
+        assert src.colorinterp == dst_ci
+
+
+@pytest.mark.parametrize("ci", ColorInterp.__members__.values())
+def test_set_colorinterp_all(path_4band_no_colorinterp, ci):
+
+    """Test setting with all color interpretations."""
+
+    with rasterio.open(path_4band_no_colorinterp, 'r+') as src:
+        all_ci = list(src.colorinterp)
+        all_ci[1] = ci
+        src.colorinterp = all_ci
+
+    with rasterio.open(path_4band_no_colorinterp) as src:
+        assert src.colorinterp[1] == ci

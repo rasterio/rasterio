@@ -201,4 +201,4 @@ def test_rgb(tmpdir):
         ['convert', 'tests/data/RGB.byte.tif', outputname, '--rgb'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
-        assert src.colorinterp(1) == rasterio.enums.ColorInterp.red
+        assert src.colorinterp[0] == rasterio.enums.ColorInterp.red

@@ -1,13 +1,11 @@
 import json
 
-import click
 from click.testing import CliRunner
 from packaging.version import Version, parse
 import pytest
 
+import numpy as np
 import rasterio
-from rasterio.rio.edit_info import (
-    all_handler, crs_handler, tags_handler, transform_handler)
 from rasterio.rio.main import main_group
 
 
@@ -82,6 +80,8 @@ def test_delete_nodata(data):
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--unset-nodata'])
     assert result.exit_code == 0
+    with rasterio.open(inputfile) as src:
+        assert src.nodata is None
 
 
 def test_edit_nodata(data):
@@ -101,7 +101,7 @@ def test_edit_nodata_nan(data):
         main_group, ['edit-info', inputfile, '--nodata', 'NaN'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.nodata != src.nodata
+        assert np.isnan(src.nodata)
 
 
 def test_edit_crs_err(data):
@@ -179,7 +179,6 @@ def test_edit_transform_gdal(data):
         'edit-info', inputfile, '--transform', gdal_geotransform])
     assert result.exit_code != 0
     assert 'not recognized as an Affine array' in result.output
-    assert gdal_geotransform in result.output
 
 
 def test_edit_tags(data):
@@ -217,81 +216,6 @@ def test_edit_units(data):
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
         assert src.units[0] == 'DN'
-
-
-class MockContext:
-
-    def __init__(self):
-        self.obj = {}
-
-
-class MockOption:
-
-    def __init__(self, name):
-        self.name = name
-
-
-def test_all_callback_pass(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, None) is None
-
-
-def test_all_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert all_handler(ctx, None, True) == {'transform': 'foo'}
-
-
-def test_all_callback_None(data):
-    ctx = MockContext()
-    assert all_handler(ctx, None, None) is None
-
-
-def test_transform_callback_pass(data):
-    """Always return None if the value is None"""
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert transform_handler(ctx, MockOption('transform'), None) is None
-
-
-def test_transform_callback_err(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    with pytest.raises(click.BadParameter):
-        transform_handler(ctx, MockOption('transform'), '?')
-
-
-def test_transform_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'transform': 'foo'}
-    assert transform_handler(ctx, MockOption('transform'), 'like') == 'foo'
-
-
-def test_crs_callback_pass(data):
-    """Always return None if the value is None."""
-    ctx = MockContext()
-    ctx.obj['like'] = {'crs': 'foo'}
-    assert crs_handler(ctx, MockOption('crs'), None) is None
-
-
-def test_crs_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'crs': 'foo'}
-    assert crs_handler(ctx, MockOption('crs'), 'like') == 'foo'
-
-
-def test_tags_callback_err(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    with pytest.raises(click.BadParameter):
-        tags_handler(ctx, MockOption('tags'), '?') == {'foo': 'bar'}
-
-
-def test_tags_callback(data):
-    ctx = MockContext()
-    ctx.obj['like'] = {'tags': {'foo': 'bar'}}
-    assert tags_handler(ctx, MockOption('tags'), 'like') == {'foo': 'bar'}
 
 
 def test_edit_crs_like(data):

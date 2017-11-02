@@ -1,6 +1,7 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 
+from collections import OrderedDict
 import json
 import warnings
 
@@ -9,12 +10,14 @@ import click
 import rasterio
 import rasterio.crs
 from rasterio.crs import CRS
+from rasterio.enums import ColorInterp
 from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.transform import guard_transform
 
 
 # Handlers for info module options.
+
 
 def all_handler(ctx, param, value):
     """Get tags from a template file or command line."""
@@ -74,6 +77,32 @@ def transform_handler(ctx, param, value):
     return retval
 
 
+def colorinterp_handler(ctx, param, value):
+
+    """Validate a string like ``red,green,blue,alpha`` and convert to
+    a tuple.  Also handle ``RGB`` and ``RGBA``.
+    """
+
+    if value is None:
+        return value
+    # Using '--like'
+    elif value.lower() == 'like':
+        return options.from_like_context(ctx, param, value)
+    elif value.lower() == 'rgb':
+        return ColorInterp.red, ColorInterp.green, ColorInterp.blue
+    elif value.lower() == 'rgba':
+        return ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha
+    else:
+        colorinterp = tuple(value.split(','))
+        for ci in colorinterp:
+            if ci not in ColorInterp.__members__:
+                raise click.BadParameter(
+                    "color interpretation '{ci}' is invalid.  Must be one of: "
+                    "{valid}".format(
+                        ci=ci, valid=', '.join(ColorInterp.__members__)))
+        return tuple(ColorInterp[ci] for ci in colorinterp)
+
+
 @click.command('edit-info', short_help="Edit dataset metadata.")
 @options.file_in_arg
 @options.bidx_opt
@@ -94,10 +123,17 @@ def transform_handler(ctx, param, value):
 @click.option('--all', 'allmd', callback=all_handler, flag_value='like',
               is_eager=True, default=False,
               help="Copy all metadata items from the template file.")
+@click.option(
+    '--colorinterp', callback=colorinterp_handler,
+    metavar="name[,name,...]|RGB|RGBA|like",
+    help="Set color interpretation for all bands like 'red,green,blue,alpha'. "
+         "Can also use 'RGBA' as shorthand for 'red,green,blue,alpha' and "
+         "'RGB' for the same sans alpha band.  Use 'like' to inherit color "
+         "interpretation from '--like'.")
 @options.like_opt
 @click.pass_context
 def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
-         units, description, tags, allmd, like):
+         units, description, tags, allmd, like, colorinterp):
     """Edit a dataset's metadata: coordinate reference system, affine
     transformation matrix, nodata value, and tags.
 
@@ -139,6 +175,12 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
         rng = infos[kind](dtype)
         return rng.min <= value <= rng.max
 
+    # If '--all' is given before '--like' on the commandline then 'allmd'
+    # is the string 'like'.  This is caused by '--like' not having an
+    # opportunity to populate metadata before '--all' is evaluated.
+    if allmd == 'like':
+        allmd = ctx.obj['like']
+
     with ctx.obj['env'], rasterio.open(input, 'r+') as dst:
 
         if allmd:
@@ -146,6 +188,7 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             crs = allmd['crs']
             transform = allmd['transform']
             tags = allmd['tags']
+            colorinterp = allmd['colorinterp']
 
         if unset_nodata and nodata is not options.IgnoreOption:
             raise click.BadParameter(
@@ -189,6 +232,21 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
 
         if description:
             dst.set_description(bidx, description)
+
+        if colorinterp:
+            if like and len(colorinterp) != dst.count:
+                raise click.ClickException(
+                    "When using '--like' for color interpretation the "
+                    "template and target images must have the same number "
+                    "of bands.  Found {template} color interpretations for "
+                    "template image and {target} bands in target "
+                    "image.".format(
+                        template=len(colorinterp),
+                        target=dst.count))
+            try:
+                dst.colorinterp = colorinterp
+            except ValueError as e:
+                raise click.ClickException(str(e))
 
     # Post check - ensure that crs was unset properly
     if unset_crs:

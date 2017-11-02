@@ -16,6 +16,8 @@ Bug fixes:
 Breaking changes:
 
 - ``rasterio.copy()`` moved to ``rasterio.shutil.copy() (#1173).
+- ``DatasetBase.colorinterp`` is now a setter/getter that operates on
+  a sequence of ``ColorInterp.<enum>`` in band order (#1134).
 
 New features:
 
@@ -25,6 +27,8 @@ New features:
   exists (#1173).
 - Addition of ``rasterio.shutil.copyfiles()`` to copy files associated
   with a datset from one location to another (#1173).
+- Allow setting band color interpretation in a ``set_colorinterp()`` method
+  and in ``$ rio edit-info --colorinterp`` (#1133).
 
 Bug fixes:
 
@@ -62,9 +66,10 @@ New features:
   Rasterio (#1074).
 - Use of old style range tuples as windows is deprecated and warned
   against (#1074).
-- Addition of dataset ``block`` method (#1077).
+- Addition of dataset ``block()`` method (#1077).
 - Added access to subdatasets, both in the API and CLI (see `rio info
   --subdatasets`) (#1127).
+
 
 Bug fixes:
 

@@ -61,10 +61,11 @@ def test_show_cmyk_interp(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
         assert dst.profile['photometric'] == 'cmyk'
-        assert dst.colorinterp(1) == ColorInterp.cyan
-        assert dst.colorinterp(2) == ColorInterp.magenta
-        assert dst.colorinterp(3) == ColorInterp.yellow
-        assert dst.colorinterp(4) == ColorInterp.black
+        assert dst.colorinterp == (
+            ColorInterp.cyan,
+            ColorInterp.magenta,
+            ColorInterp.yellow,
+            ColorInterp.black)
 
     with rasterio.open(tiffname) as src:
         try:

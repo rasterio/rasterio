@@ -236,6 +236,7 @@ The ``edit-info`` command allows you edit a raster dataset's metadata, namely
 - affine transformation matrix
 - nodata value
 - tags
+- color interpretation
 
 A TIFF created by spatially-unaware image processing software like Photoshop
 or Imagemagick can be turned into a GeoTIFF by editing these metadata items.
@@ -258,6 +259,21 @@ or set its nodata value to, e.g., `0`:
 .. code-block:: console
 
     $ rio edit-info --nodata 0 example.tif
+
+or set its color interpretation to red, green, blue, and alpha:
+
+.. code-block:: console
+
+    $ rio edit-info --colorinterp 1=red,2=green,3=blue,4=alpha example.tif
+
+which can also be expressed as:
+
+.. code-block:: console
+
+    $ rio edit-info --colorinterp RGBA example.tif
+
+See ``rasterio.enums.ColorInterp`` for a full list of supported color
+interpretations and the color docs for more information.
 
 
 mask
