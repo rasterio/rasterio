@@ -399,40 +399,63 @@ def path_rgba_byte_tif(data_dir):
 
 
 @pytest.fixture(scope='function')
-def path_4band_no_colorinterp(tmpdir):
+def _path_multiband_no_colorinterp(tmpdir):
+
+    """Produces a function for generating an image with ``count`` bands
+    and undefined color interpretation.  May trigger a PAM file depending on
+    the GDAL version.
+
+    Returns
+    -------
+    function
+    """
+
+    def _create_path_multiband_no_colorinterp(count):
+        # For GDAL 2.2.2 the first band can be 'undefined', but on older
+        # versions it must be 'gray'.
+        undefined_ci = [ColorInterp.gray]
+        if count > 1:
+            undefined_ci += [ColorInterp.undefined] * (count - 1)
+        dst_path = str(tmpdir.join('4band-byte-no-ci.tif'))
+        profile = {
+            'height': 10,
+            'width': 10,
+            'count': count,
+            'dtype': rasterio.ubyte,
+            'transform': affine.Affine(1, 0.0, 0,
+                                       0.0, -1, 1),
+            'driver': 'GTiff',
+            'photometric': 'minisblack'
+        }
+
+        undefined_ci = tuple(undefined_ci)
+        with rasterio.open(dst_path, 'w', **profile) as src:
+            src.colorinterp = undefined_ci
+
+        # Ensure override occurred.  Setting color interpretation on an
+        # existing file is surrounded by traps and forceful GDAL assumptions,
+        # especially on older versions.
+        with rasterio.open(dst_path) as src:
+            if src.colorinterp != undefined_ci:
+                raise ValueError(
+                    "Didn't properly set color interpretation.  GDAL can "
+                    "forcefully make assumptions.")
+
+        return dst_path
+
+    return _create_path_multiband_no_colorinterp
+
+
+@pytest.fixture(scope='function')
+def path_3band_no_colorinterp(_path_multiband_no_colorinterp):
+    """A 3 band image with undefined color interpretation."""
+    return _path_multiband_no_colorinterp(3)
+
+
+@pytest.fixture(scope='function')
+def path_4band_no_colorinterp(_path_multiband_no_colorinterp):
     """A 4 band image with undefined color interpretation."""
-    dst_path = str(tmpdir.join('4band-byte-no-ci.tif'))
-    profile = {
-        'height': 10,
-        'width': 10,
-        'count': 4,
-        'dtype': rasterio.ubyte,
-        'transform': affine.Affine(1, 0.0, 0,
-                                   0.0, -1, 1),
-        'driver': 'GTiff',
-        'photometric': 'minisblack'
-    }
-    # For GDAL 2.2.2 the first band can be 'undefined', but on older
-    # versions it must be 'gray'.
-    undefined_ci = (
-        ColorInterp.gray,
-        ColorInterp.undefined,
-        ColorInterp.undefined,
-        ColorInterp.undefined)
-
-    with rasterio.open(dst_path, 'w', **profile) as src:
-        src.colorinterp = undefined_ci
-
-    # Ensure override occurred.  Setting color interpretation on an existing
-    # file is surrounded by traps and forceful GDAL assumptions, especially
-    # on older versions.
-    with rasterio.open(dst_path) as src:
-        if src.colorinterp != undefined_ci:
-            raise ValueError(
-                "Didn't properly set color interpretation.  GDAL can "
-                "forcefully make assumptions.")
-
-    return dst_path
+    return _path_multiband_no_colorinterp(4)
 
 
 @pytest.fixture(scope='session')
