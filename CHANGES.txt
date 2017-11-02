@@ -4,6 +4,10 @@ Changes
 Next
 ----
 
+New features:
+
+- ``rasterio.open()`` now accepts URLs with GET parameters (#1121).
+
 Bug fixes:
 
 - Pad boundless read VRTs so we don't overflow due to rounding (#1184).
