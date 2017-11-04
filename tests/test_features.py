@@ -480,6 +480,11 @@ def test_rasterize_invalid_out_shape(basic_geometry):
         rasterize([basic_geometry], out_shape=(10,))
     assert 'Invalid out_shape' in str(ex.value)
 
+    for shape in [(0, 0), (1, 0), (0, 1)]:
+        with pytest.raises(ValueError) as ex:
+            rasterize([basic_geometry], out_shape=shape)
+        assert 'must be > 0' in str(ex.value)
+
 
 def test_rasterize_default_value(basic_geometry, basic_image_2x2):
     """All shapes should rasterize to the default value."""
