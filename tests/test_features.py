@@ -84,6 +84,45 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
         )
     )
 
+def test_geometry_invalid_geom():
+    """An invalid geometry should fail"""
+
+    invalid_geoms = [
+        {'type': 'Invalid'},  # wrong type
+        {'type': 'Point'},  # missing coordinates
+        {'type': 'Point', 'coordinates': []}  # empty coordinates
+    ]
+
+    for geom in invalid_geoms:
+        with pytest.raises(ValueError) as exc_info:
+            geometry_mask(
+                [geom],
+                out_shape=DEFAULT_SHAPE,
+                transform=Affine.identity())
+
+        assert 'Invalid geometry' in exc_info.value.args[0]
+
+
+def test_geometry_mask_invalid_shape(basic_geometry):
+    """A width==0 or height==0 should fail with ValueError"""
+
+    for shape in [(0, 0), (1, 0), (0, 1)]:
+        with pytest.raises(ValueError) as exc_info:
+            geometry_mask(
+                [basic_geometry],
+                out_shape=shape,
+                transform=Affine.identity())
+
+        assert 'must be > 0' in exc_info.value.args[0]
+
+
+def test_geometry_mask_no_transform(basic_geometry):
+    with pytest.raises(TypeError) as exc_info:
+        geometry_mask(
+            [basic_geometry],
+            out_shape=DEFAULT_SHAPE,
+            transform=None)
+
 
 def test_geometry_window(basic_image_file, basic_geometry):
     with rasterio.open(basic_image_file) as src:
@@ -160,8 +199,7 @@ def test_geometry_no_overlap(path_rgb_byte_tif, basic_geometry):
     
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(WindowError):
-            window = geometry_window(src, [basic_geometry], north_up=False)
-
+            geometry_window(src, [basic_geometry], north_up=False)
 
 
 def test_is_valid_geom_point(geojson_point):
