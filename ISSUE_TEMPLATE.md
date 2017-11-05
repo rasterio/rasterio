@@ -23,16 +23,16 @@ issues to one of the following trackers:
 
 ## Expected behavior and actual behavior.
 
-(For example: I expected to read a band from a file and an exception occurred.)
+For example: I expected to read a band from a file and an exception occurred.
 
 ## Steps to reproduce the problem.
 
-(For example: a brief script with required inputs)
+For example: a brief script with required inputs.
 
 ## Operating system
 
-(For example: Mac OS X 10.12.3)
+For example: Mac OS X 10.12.3.
 
 ## Rasterio version and provenance
 
-(For example: the 1.0a9 manylinux1 wheel installed from PyPI using pip)
+For example: the 1.0a11 manylinux1 wheel installed from PyPI using pip 9.0.1.
