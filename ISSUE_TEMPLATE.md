@@ -17,7 +17,7 @@ with packages downloaded from the Python Package Index. Conda users should take
 issues to one of the following trackers:
 
 - https://github.com/ContinuumIO/anaconda-issues/issues
-- https://github.com/conda-forge/fiona-feedstock
+- https://github.com/conda-forge/rasterio-feedstock
 
 -->
 
