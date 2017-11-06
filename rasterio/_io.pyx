@@ -1588,6 +1588,12 @@ cdef class InMemoryRaster:
                 height, width = image.shape
             dtype = image.dtype.name
 
+        if height is None or height == 0:
+            raise ValueError("height must be > 0")
+
+        if width is None or width == 0:
+            raise ValueError("width must be > 0")
+
         self.band_ids[0] = 1
 
         memdriver = exc_wrap_pointer(GDALGetDriverByName("MEM"))

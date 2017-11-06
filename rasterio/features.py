@@ -280,6 +280,9 @@ def rasterize(
     else:
         raise ValueError('Either an out_shape or image must be provided')
 
+    if min(out.shape) == 0:
+        raise ValueError("width and height must be > 0")
+
     transform = guard_transform(transform)
     _rasterize(valid_shapes, out, transform.to_gdal(), all_touched)
     return out
