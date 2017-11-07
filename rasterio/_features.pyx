@@ -250,7 +250,7 @@ def _sieve(image, size, out, mask, connectivity):
         mask_mem_ds.close()
 
 
-def _rasterize(shapes, image, transform, all_touched):
+def _rasterize(shapes, image, transform, all_touched, merge_alg_add):
     """
     Burns input geometries into `image`.
 
@@ -269,6 +269,9 @@ def _rasterize(shapes, image, transform, all_touched):
         If false, only pixels whose center is within the polygon or
         that are selected by Bresenham's line algorithm will be burned
         in.
+    merge_alg_add : boolean, optional
+        If True, the new value will be added to the existing raster. If
+        False, the new value will overwrite the existing value.
     """
     cdef int retval
     cdef size_t i
@@ -281,6 +284,8 @@ def _rasterize(shapes, image, transform, all_touched):
     try:
         if all_touched:
             options = CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
+        if merge_alg_add:
+            options = CSLSetNameValue(options, "MERGE_ALG", "ADD")
 
         # GDAL needs an array of geometries.
         # For now, we'll build a Python list on the way to building that

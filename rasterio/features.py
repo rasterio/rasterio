@@ -155,6 +155,7 @@ def rasterize(
         out=None,
         transform=IDENTITY,
         all_touched=False,
+        merge_alg_add=False,
         default_value=1,
         dtype=None):
     """Return an image array with input geometries burned in.
@@ -180,6 +181,9 @@ def rasterize(
         If True, all pixels touched by geometries will be burned in.  If
         false, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
+    merge_alg_add : boolean, optional
+        If True, the new value will be added to the existing raster. If
+        False, the new value will overwrite the existing value.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
@@ -284,7 +288,7 @@ def rasterize(
         raise ValueError("width and height must be > 0")
 
     transform = guard_transform(transform)
-    _rasterize(valid_shapes, out, transform.to_gdal(), all_touched)
+    _rasterize(valid_shapes, out, transform.to_gdal(), all_touched, merge_alg_add)
     return out
 
 
