@@ -547,6 +547,19 @@ def test_rasterize_all_touched(basic_geometry, basic_image):
         )
     )
 
+def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
+    """
+    Rasterizing two times the basic_geometry with the ADD merging
+    option should output the shape with the value 2
+    """
+    with rasterio.Env():
+        assert np.array_equal(
+            basic_image_2x2x2,
+            rasterize(
+                [basic_geometry, basic_geometry], merge_alg_add=True,
+                out_shape=DEFAULT_SHAPE)
+        )
+
 
 def test_rasterize_value(basic_geometry, basic_image_2x2):
     """

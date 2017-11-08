@@ -267,6 +267,26 @@ def basic_image_2x2():
 
 
 @pytest.fixture
+def basic_image_2x2x2():
+    """
+    A basic 10x10 array for testing sieve and shapes functions.
+    Contains a square feature 2x2 (size 4).
+    Equivalent to results of rasterizing two times the basic_geometry with
+    merge_alg_add=True.
+
+    Returns
+    -------
+
+    np ndarray
+    """
+
+    image = np.zeros(DEFAULT_SHAPE, dtype=np.uint8)
+    image[2:4, 2:4] = 2
+
+    return image
+
+
+@pytest.fixture
 def pixelated_image(basic_image):
     """
     A basic 10x10 array for testing sieve functions.  Contains a square feature
