@@ -993,12 +993,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         elif mode == 'r+':
 
+            # driver may be a string or list of strings. If the
+            # former, put it into a list.
+            if isinstance(driver, string_types):
+                driver = [driver]
+
+            # Construct a null terminated C list of driver names
+            # for GDALOpenEx.
             for name in (driver or []):
                 name_b = name.encode('utf-8')
                 name_c = name_b
                 allowed_drivers = CSLAddString(allowed_drivers, name_c)
 
-            # Read-only + Raster
+            # GDALOpenEx flags: Update + Raster + Errors
             flags = 0x01 | 0x02 | 0x40
 
             try:

@@ -7,6 +7,8 @@ Next
 New features:
 
 - ``rasterio.open()`` now accepts URLs with GET parameters (#1121).
+- Specific drivers and options can be used in ``rasterio.open()`` (#1000,
+  #1158, #1196).
 
 Bug fixes:
 
