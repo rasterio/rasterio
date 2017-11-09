@@ -36,6 +36,7 @@ cdef extern from "cpl_error.h" nogil:
 cdef extern from "cpl_string.h" nogil:
 
     int CSLCount(char **papszStrList)
+    char **CSLAddString(char **strlist, const char *string)
     char **CSLAddNameValue(char **papszStrList, const char *pszName,
                            const char *pszValue)
     char **CSLDuplicate(char **papszStrList)
@@ -170,6 +171,7 @@ cdef extern from "gdal.h" nogil:
     void GDALSetDescription(GDALMajorObjectH obj, const char *text)
     GDALDriverH GDALGetDriverByName(const char *name)
     GDALDatasetH GDALOpen(const char *filename, GDALAccess access) # except -1
+    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
     GDALDatasetH GDALOpenShared(const char *filename, GDALAccess access) # except -1
     void GDALFlushCache(GDALDatasetH hds)
     void GDALClose(GDALDatasetH hds)

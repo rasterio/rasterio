@@ -94,7 +94,7 @@ class MemoryFile(MemoryFileBase):
              transform=None, dtype=None, nodata=None, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
-        If data has already been written, the file is opened in 'r+'
+        If data has already been written, the file is opened in 'r'
         mode. Otherwise, the file is opened in 'w' mode.
 
         Parameters
@@ -111,7 +111,7 @@ class MemoryFile(MemoryFileBase):
         if self.closed:
             raise IOError("I/O operation on closed file.")
         if self.exists():
-            return DatasetReader(vsi_path, 'r+')
+            return DatasetReader(vsi_path, driver=driver, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
             return writer(vsi_path, 'w', driver=driver, width=width,
@@ -137,7 +137,7 @@ class ZipMemoryFile(MemoryFile):
         super(ZipMemoryFile, self).__init__(file_or_bytes, ext='zip')
 
     @ensure_env
-    def open(self, path):
+    def open(self, path, driver=None, **kwargs):
         """Open a dataset within the zipped stream.
 
         Parameters
@@ -154,7 +154,7 @@ class ZipMemoryFile(MemoryFile):
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        return DatasetReader(vsi_path, 'r')
+        return DatasetReader(vsi_path, driver=driver, **kwargs)
 
 
 def get_writer_for_driver(driver):

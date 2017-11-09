@@ -109,26 +109,51 @@ def driver_can_create_copy(drivername):
 cdef class DatasetBase(object):
     """Dataset base class."""
 
-    def __init__(self, path=None, options=None):
-        cdef GDALDriverH driver = NULL
+    def __init__(self, path=None, driver=None, **kwargs):
         cdef GDALDatasetH hds = NULL
         cdef const char *path_c = NULL
+        cdef const char *driver_c = NULL
+        cdef const char *key_c = NULL
+        cdef const char *val_c = NULL
+        cdef char **allowed_drivers = NULL
+        cdef char **options = NULL
+        cdef int flags = 0
 
         self._hds = NULL
 
         if path is not None:
             path_b = vsi_path(*parse_path(path)).encode('utf-8')
             path_c = path_b
+
+            for name in (driver or []):
+                name_b = name.encode('utf-8')
+                name_c = name_b
+                allowed_drivers = CSLAddString(allowed_drivers, name_c)
+
+            for key, val in kwargs.items():
+                key_b = key.encode('utf-8')
+                key_c = key_b
+                val_b = val.encode('utf-8')
+                val_c = val_b
+                options = CSLAddNameValue(options, key_c, val_c)
+
+            # Read-only + Raster + Sharing
+            flags = 0x00 | 0x02 | 0x20 | 0x40
+
             try:
                 with nogil:
-                    hds = GDALOpenShared(path_c, <GDALAccess>0)
+                    hds = GDALOpenEx(
+                        path_c, flags, allowed_drivers, options, NULL)
                 self._hds = exc_wrap_pointer(hds)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
+            finally:
+                CSLDestroy(allowed_drivers)
+                CSLDestroy(options)
 
         self.name = path
         self.mode = 'r'
-        self.options = options or {}
+        self.options = kwargs.copy()
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []

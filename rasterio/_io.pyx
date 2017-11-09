@@ -352,11 +352,13 @@ cdef class DatasetReaderBase(DatasetBase):
                     dst_nodata=ndv,
                     src_crs=self.crs,
                     dst_crs=self.crs,
-                    dst_width=max(self.width, window.width) + 10,
-                    dst_height=max(self.height, window.height) + 10,
+                    dst_width=max(self.width, window.width) + 1,
+                    dst_height=max(self.height, window.height) + 1,
                     dst_transform=self.window_transform(window),
                     resampling=resampling) as vrt:
-                out = vrt._read(indexes, out, Window(0, 0, window.width, window.height), None)
+                out = vrt._read(
+                    indexes, out, Window(0, 0, window.width, window.height),
+                    None)
 
                 if masked:
                     if all_valid:
@@ -496,11 +498,13 @@ cdef class DatasetReaderBase(DatasetBase):
             with WarpedVRT(
                     self,
                     dst_crs=self.crs,
-                    dst_width=max(self.width, window.width) + 10,
-                    dst_height=max(self.height, window.height) + 10,
+                    dst_width=max(self.width, window.width) + 1,
+                    dst_height=max(self.height, window.height) + 1,
                     dst_transform=self.window_transform(window),
                     resampling=resampling) as vrt:
-                out = vrt._read(indexes, out, Window(0, 0, window.width, window.height), None, masks=True)
+                out = vrt._read(
+                    indexes, out, Window(0, 0, window.width, window.height),
+                    None, masks=True)
 
         if return2d:
             out.shape = out.shape[1:]
@@ -869,6 +873,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                  gcps=None, **kwargs):
         """Initialize a DatasetWriterBase instance."""
 
+        cdef char **allowed_drivers = NULL
         cdef char **options = NULL
         cdef char *key_c = NULL
         cdef char *val_c = NULL
@@ -876,6 +881,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
         cdef const char *fname = NULL
+        cdef int flags = 0
 
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
@@ -914,6 +920,29 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         name_b = path.encode('utf-8')
         fname = name_b
 
+        # Process dataset opening options.
+        for k, v in kwargs.items():
+            # Skip items that are definitely *not* valid driver
+            # options.
+            if k.lower() in ['affine']:
+                continue
+
+            k, v = k.upper(), str(v).upper()
+
+            # Guard against block size that exceed image size.
+            if k == 'BLOCKXSIZE' and int(v) > width:
+                raise ValueError("blockxsize exceeds raster width.")
+            if k == 'BLOCKYSIZE' and int(v) > height:
+                raise ValueError("blockysize exceeds raster height.")
+
+            key_b = k.encode('utf-8')
+            val_b = v.encode('utf-8')
+            key_c = key_b
+            val_c = val_b
+            options = CSLSetNameValue(options, key_c, val_c)
+            log.debug(
+                "Option: %r", (k, CSLFetchNameValue(options, key_c)))
+
         if mode == 'w':
 
             _delete_dataset_if_exists(path)
@@ -937,27 +966,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             # Create a GDAL dataset handle.
             try:
-                for k, v in kwargs.items():
-                    # Skip items that are definitely *not* valid driver
-                    # options.
-                    if k.lower() in ['affine']:
-                        continue
-
-                    k, v = k.upper(), str(v).upper()
-
-                    # Guard against block size that exceed image size.
-                    if k == 'BLOCKXSIZE' and int(v) > width:
-                        raise ValueError("blockxsize exceeds raster width.")
-                    if k == 'BLOCKYSIZE' and int(v) > height:
-                        raise ValueError("blockysize exceeds raster height.")
-
-                    key_b = k.encode('utf-8')
-                    val_b = v.encode('utf-8')
-                    key_c = key_b
-                    val_c = val_b
-                    options = CSLSetNameValue(options, key_c, val_c)
-                    log.debug(
-                        "Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
                 self._hds = exc_wrap_pointer(
                     GDALCreate(drv, fname, width, height,
@@ -984,10 +992,25 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                         raise RasterioIOError(str(err))
 
         elif mode == 'r+':
+
+            for name in (driver or []):
+                name_b = name.encode('utf-8')
+                name_c = name_b
+                allowed_drivers = CSLAddString(allowed_drivers, name_c)
+
+            # Read-only + Raster
+            flags = 0x01 | 0x02 | 0x40
+
             try:
-                self._hds = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>1))
+                with nogil:
+                    hds = GDALOpenEx(
+                        fname, flags, allowed_drivers, options, NULL)
+                self._hds = exc_wrap_pointer(hds)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
+            finally:
+                CSLDestroy(allowed_drivers)
+                CSLDestroy(options)
 
         else:
             # Raise an exception if we have any other mode.
