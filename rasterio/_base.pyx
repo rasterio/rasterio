@@ -13,6 +13,7 @@ from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+from rasterio._shim cimport open_dataset
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
@@ -122,41 +123,20 @@ cdef class DatasetBase(object):
         self._hds = NULL
 
         if path is not None:
-            path_b = vsi_path(*parse_path(path)).encode('utf-8')
-            path_c = path_b
+            filename = vsi_path(*parse_path(path))
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
             if isinstance(driver, string_types):
                 driver = [driver]
 
-            # Construct a null terminated C list of driver
-            # names for GDALOpenEx.
-            for name in (driver or []):
-                name_b = name.encode('utf-8')
-                name_c = name_b
-                allowed_drivers = CSLAddString(allowed_drivers, name_c)
-
-            for key, val in kwargs.items():
-                key_b = key.encode('utf-8')
-                key_c = key_b
-                val_b = val.encode('utf-8')
-                val_c = val_b
-                options = CSLAddNameValue(options, key_c, val_c)
-
-            # GDALOpenEx flags: Read-only + Raster + Sharing + Errors
+            # Read-only + Rasters + Sharing + Errors
             flags = 0x00 | 0x02 | 0x20 | 0x40
 
             try:
-                with nogil:
-                    hds = GDALOpenEx(
-                        path_c, flags, allowed_drivers, options, NULL)
-                self._hds = exc_wrap_pointer(hds)
+                self._hds = open_dataset(filename, flags, driver, kwargs, None)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
-            finally:
-                CSLDestroy(allowed_drivers)
-                CSLDestroy(options)
 
         self.name = path
         self.mode = 'r'

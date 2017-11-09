@@ -36,7 +36,7 @@ from rasterio._base cimport (
     _osr_from_crs, _safe_osr_release, get_driver_name, DatasetBase)
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer, exc_wrap_vsilfile
 from rasterio._shim cimport (
-    delete_nodata_value, io_band, io_multi_band, io_multi_mask)
+    open_dataset, delete_nodata_value, io_band, io_multi_band, io_multi_mask)
 
 
 log = logging.getLogger(__name__)
@@ -998,26 +998,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if isinstance(driver, string_types):
                 driver = [driver]
 
-            # Construct a null terminated C list of driver names
-            # for GDALOpenEx.
-            for name in (driver or []):
-                name_b = name.encode('utf-8')
-                name_c = name_b
-                allowed_drivers = CSLAddString(allowed_drivers, name_c)
-
-            # GDALOpenEx flags: Update + Raster + Errors
+            # flags: Update + Raster + Errors
             flags = 0x01 | 0x02 | 0x40
 
             try:
-                with nogil:
-                    hds = GDALOpenEx(
-                        fname, flags, allowed_drivers, options, NULL)
-                self._hds = exc_wrap_pointer(hds)
+                self._hds = open_dataset(path, flags, driver, kwargs, None)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
-            finally:
-                CSLDestroy(allowed_drivers)
-                CSLDestroy(options)
 
         else:
             # Raise an exception if we have any other mode.

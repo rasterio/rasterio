@@ -1,3 +1,5 @@
+"""Rasterio shim for GDAL 1.x"""
+
 include "directives.pxi"
 
 # The baseline GDAL API.
@@ -8,6 +10,34 @@ from rasterio import dtypes
 from rasterio.enums import Resampling
 
 cimport numpy as np
+from rasterio._err cimport exc_wrap_pointer
+
+
+cdef GDALDatasetH open_dataset(
+        object filename, int flags, object allowed_drivers, object open_options,
+        object siblings) except NULL:
+    """Wrapper for GDALOpen and GDALOpenShared"""
+    cdef const char *fname = NULL
+    cdef const char **drivers = NULL
+    cdef const char **options = NULL
+    cdef const char *key = NULL
+    cdef const char *val = NULL
+    cdef const char *driver = NULL
+    cdef GDALDatasetH hds = NULL
+
+    filename = filename.encode('utf-8')
+    fname = filename
+
+    # Note well: driver choice, open options, and sibling files
+    # are not supported by GDAL versions < 2.0.
+    if flags & 0x20:
+        with nogil:
+            GDALOpenShared(fname, flags & 0x01)
+    else:
+        with nogil:
+            hds = GDALOpen(fname, flags & 0x01)
+
+    return exc_wrap_pointer(hds)
 
 
 cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
