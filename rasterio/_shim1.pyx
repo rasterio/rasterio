@@ -32,10 +32,10 @@ cdef GDALDatasetH open_dataset(
     # are not supported by GDAL versions < 2.0.
     if flags & 0x20:
         with nogil:
-            GDALOpenShared(fname, flags & 0x01)
+            GDALOpenShared(fname, <int>(flags & 0x01))
     else:
         with nogil:
-            hds = GDALOpen(fname, flags & 0x01)
+            hds = GDALOpen(fname, <int>(flags & 0x01))
 
     return exc_wrap_pointer(hds)
 
