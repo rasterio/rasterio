@@ -23,11 +23,8 @@ cdef GDALDatasetH open_dataset(
         object siblings) except NULL:
     """Wrapper for GDALOpen and GDALOpenShared"""
     cdef const char *fname = NULL
-    cdef const char **drivers = NULL
-    cdef const char **options = NULL
-    cdef const char *key = NULL
-    cdef const char *val = NULL
-    cdef const char *driver = NULL
+    cdef char **drivers = NULL
+    cdef char **options = NULL
     cdef GDALDatasetH hds = NULL
 
     filename = filename.encode('utf-8')
@@ -38,20 +35,21 @@ cdef GDALDatasetH open_dataset(
     if allowed_drivers:
         for name in allowed_drivers:
             name = name.encode('utf-8')
-            driver = name
-            drivers = CSLAddString(drivers, driver)
+            drivers = CSLAddString(drivers, <const char *>driver)
 
     for k, v in open_options.items():
         k = k.upper().encode('utf-8')
-        key = k
 
         # Normalize values consistent with code in _env module.
         if isinstance(v, bool):
             v = ('ON' if v else 'OFF').encode('utf-8')
         else:
             v = str(v).encode('utf-8')
-        val = v
-        options = CSLAddNameValue(options, key, val)
+
+        options = CSLAddNameValue(options, <const char *>k, <const char *>v)
+
+    # Ensure raster flag.
+    flags = flags | 0x02
 
     with nogil:
         hds = GDALOpenEx(fname, flags, drivers, options, NULL)
