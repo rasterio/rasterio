@@ -13,6 +13,7 @@ from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+from rasterio._shim cimport open_dataset
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
@@ -109,26 +110,31 @@ def driver_can_create_copy(drivername):
 cdef class DatasetBase(object):
     """Dataset base class."""
 
-    def __init__(self, path=None, options=None):
-        cdef GDALDriverH driver = NULL
+    def __init__(self, path=None, driver=None, **kwargs):
         cdef GDALDatasetH hds = NULL
-        cdef const char *path_c = NULL
+        cdef int flags = 0
 
         self._hds = NULL
 
         if path is not None:
-            path_b = vsi_path(*parse_path(path)).encode('utf-8')
-            path_c = path_b
+            filename = vsi_path(*parse_path(path))
+
+            # driver may be a string or list of strings. If the
+            # former, we put it into a list.
+            if isinstance(driver, string_types):
+                driver = [driver]
+
+            # Read-only + Rasters + Sharing + Errors
+            flags = 0x00 | 0x02 | 0x20 | 0x40
+
             try:
-                with nogil:
-                    hds = GDALOpenShared(path_c, <GDALAccess>0)
-                self._hds = exc_wrap_pointer(hds)
+                self._hds = open_dataset(filename, flags, driver, kwargs, None)
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
         self.name = path
         self.mode = 'r'
-        self.options = options or {}
+        self.options = kwargs.copy()
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []

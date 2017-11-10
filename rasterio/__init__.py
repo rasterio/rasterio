@@ -72,111 +72,87 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
          crs=None, transform=None, dtype=None, nodata=None, **kwargs):
     """Open a dataset for reading or writing.
 
-    The dataset may be located in a local file, in a resource located
-    by a URL, or contained within a stream of bytes.
+    The dataset may be located in a local file, in a resource located by
+    a URL, or contained within a stream of bytes.
 
-    To access a dataset within a zip file without unzipping the archive
-    use an Apache VFS style zip:// URL like
+    In read ('r') or read/write ('r+') mode, no keyword arguments are
+    required: these attributes are supplied by the opened dataset.
 
-      zip://path/to/archive.zip!path/to/example.tif
-
-    In read ('r') or read/write ('r+') mode, no other keyword arguments
-    are required: the attributes are supplied by the opened dataset.
-
-    In write mode, a driver name such as "GTiff" or "JPEG" (see GDAL
-    docs or ``gdal_translate --help`` on the command line), ``width``
-    (number of pixels per line) and ``height`` (number of lines), the
-    ``count`` number of bands in the new file must be specified.
-    Additionally, the data type for bands such as ``rasterio.ubyte`` for
-    8-bit bands or ``rasterio.uint16`` for 16-bit bands must be
-    specified using the ``dtype`` argument.
+    In write ('w') mode, the driver, width, height, count, and dtype
+    keywords are strictly required.
 
     Parameters
     ----------
-    fp: string or file
-        A filename or URL, or file object opened in binary mode.
-    mode: string
-        "r" (read), "r+" (read/write), or "w" (write)
-    driver: string
-        Driver code specifying the format name (e.g. "GTiff" or
-        "JPEG"). See GDAL docs at
-        http://www.gdal.org/formats_list.html (optional, required
-        for writing).
-    width: int
-        Number of pixels per line (optional, required for write).
-    height: int
-        Number of lines (optional, required for write).
-    count: int > 0
-        Count of bands (optional, required for write).
-    dtype: rasterio.dtype
-        the data type for bands such as ``rasterio.ubyte`` for
-        8-bit bands or ``rasterio.uint16`` for 16-bit bands
-        (optional, required for write)
-    crs: dict or string
-        Coordinate reference system (optional, recommended for write).
-    transform: Affine instance
+    fp : str or file object
+        A filename or URL, or file object opened in binary ('rb') mode
+    mode : str, optional
+        'r' (read, the default), 'r+' (read/write), or 'w' (write)
+    driver : str, optional
+        A short format driver name (e.g. "GTiff" or "JPEG") or a list of
+        such names (see GDAL docs at
+        http://www.gdal.org/formats_list.html). In 'w' mode a single
+        name is required. In 'r' or 'r+' mode the driver can usually be
+        omitted. Registered drivers will be tried sequentially until a
+        match is found. When multiple drivers are available for a format
+        such as JPEG2000, one of them can be selected by using this
+        keyword argument.
+    width, height : int, optional
+        The numbers of rows and columns of the raster dataset. Required
+        in 'w' mode, they are ignored in 'r' or 'r+' mode.
+    count : int, optional
+        The count of dataset bands. Required in 'w' mode, it is ignored
+        in 'r' or 'r+' mode.
+    dtype : str or numpy dtype
+        The data type for bands. For example: 'uint8' or
+        ``rasterio.uint16``. Required in 'w' mode, it is ignored in
+        'r' or 'r+' mode.
+    crs : str, dict, or CRS; optional
+        The coordinate reference system. Required in 'w' mode, it is
+        ignored in 'r' or 'r+' mode.
+    transform : Affine instance, optional
         Affine transformation mapping the pixel space to geographic
-        space (optional, recommended for writing).
-    nodata: number
-        Defines pixel value to be interpreted as null/nodata
-        (optional, recommended for write, will be broadcast to all
-        bands).
+        space. Required in 'w' mode, it is ignored in 'r' or 'r+' mode.
+    nodata : int, float, or nan; optional
+        Defines the pixel value to be interpreted as not valid data.
+        Required in 'w' mode, it is ignored in 'r' or 'r+' mode.
+    kwargs : optional
+        These are passed to format drivers as directives for creating
+        or interpreting datasets. For example: in 'w' a `tiled=True`
+        keyword argument will direct the GeoTIFF format driver to
+        create a tiled, rather than striped, TIFF.
 
     Returns
     -------
     A ``DatasetReader`` or ``DatasetUpdater`` object.
 
-    Notes
-    -----
-    In write mode, you must specify at least ``width``, ``height``,
-    ``count`` and ``dtype``.
+    Examples
+    --------
 
-    A coordinate reference system for raster datasets in write mode
-    can be defined by the ``crs`` argument. It takes Proj4 style
-    mappings like
+    To open a GeoTIFF for reading using standard driver discovery and
+    no directives:
 
-    .. code::
+    >>> import rasterio
+    >>> with rasterio.open('example.tif') as dataset:
+    ...     print(dataset.profile)
 
-      {'proj': 'longlat', 'ellps': 'WGS84', 'datum': 'WGS84',
-       'no_defs': True}
+    To open a JPEG2000 using only the JP2OpenJPEG driver:
 
-    An affine transformation that maps ``col,row`` pixel coordinates
-    to ``x,y`` coordinates in the coordinate reference system can be
-    specified using the ``transform`` argument. The value should be
-    an instance of ``affine.Affine``
+    >>> with rasterio.open(
+    ...         'example.jp2', driver='JP2OpenJPEG') as dataset:
+    ...     print(dataset.profile)
 
-    .. code:: python
+    To create a new 8-band, 16-bit unsigned, tiled, and LZW-compressed
+    GeoTIFF with a global extent and 0.5 degree resolution:
 
-        >>> from affine import Affine
-        >>> transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
-
-    These coefficients are shown in the figure below.
-
-    .. code::
-
-      | x |   | a  b  c | | c |
-      | y | = | d  e  f | | r |
-      | 1 |   | 0  0  1 | | 1 |
-
-      a: rate of change of X with respect to increasing column,
-         i.e. pixel width
-      b: rotation, 0 if the raster is oriented "north up"
-      c: X coordinate of the top left corner of the top left pixel
-      d: rotation, 0 if the raster is oriented "north up"
-      e: rate of change of Y with respect to increasing row,
-         usually a negative number (i.e. -1 * pixel height) if
-         north-up.
-      f: Y coordinate of the top left corner of the top left pixel
-
-    A 6-element sequence of the affine transformation matrix
-    coefficients in ``c, a, b, f, d, e`` order, (i.e. GDAL
-    geotransform order) will be accepted until 1.0 (deprecated).
-
-    A virtual filesystem can be specified. The ``vfs`` parameter may
-    be an Apache Commons VFS style string beginning with "zip://" or
-    "tar://"". In this case, the ``path`` must be an absolute path
-    within that container.
+    >>> from rasterio.transform import from_origin
+    >>> with rasterio.open(
+    ...         'example.tif', 'w', driver='GTiff', dtype='uint16',
+    ...         width=720, height=360, count=8, crs='EPSG:4326',
+    ...         transform=from_origin(-180.0, 90.0, 0.5, 0.5),
+    ...         nodata=0, tiled=True, compress='lzw') as dataset:
+    ...     dataset.write(...)
     """
+
     if not isinstance(fp, string_types):
         if not (hasattr(fp, 'read') or hasattr(fp, 'write')):
             raise TypeError("invalid path or file: {0!r}".format(fp))
@@ -261,13 +237,13 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             # be taken over by the dataset's context manager if it is not
             # None.
             if mode == 'r':
-                s = DatasetReader(fp)
+                s = DatasetReader(fp, driver=driver, **kwargs)
             elif mode == 'r-':
                 warnings.warn("'r-' mode is deprecated, use 'r'",
                               DeprecationWarning)
                 s = DatasetReader(fp)
             elif mode == 'r+':
-                s = get_writer_for_path(fp)(fp, mode)
+                s = get_writer_for_path(fp)(fp, mode, driver=driver, **kwargs)
             elif mode == 'w':
                 s = get_writer_for_driver(driver)(fp, mode, driver=driver,
                                                   width=width, height=height,

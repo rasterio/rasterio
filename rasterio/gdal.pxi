@@ -36,6 +36,7 @@ cdef extern from "cpl_error.h" nogil:
 cdef extern from "cpl_string.h" nogil:
 
     int CSLCount(char **papszStrList)
+    char **CSLAddString(char **strlist, const char *string)
     char **CSLAddNameValue(char **papszStrList, const char *pszName,
                            const char *pszValue)
     char **CSLDuplicate(char **papszStrList)

@@ -7,12 +7,16 @@ Next
 New features:
 
 - ``rasterio.open()`` now accepts URLs with GET parameters (#1121).
+- Specific drivers and options can be used in ``rasterio.open()`` (#1000,
+  #1158, #1196).
 
 Bug fixes:
 
 - Pad boundless read VRTs so we don't overflow due to rounding (#1184).
 - Boundless reads of WarpedVRTs are enabled by setting an effective crs
   (#1188).
+- Raise ValueError when invalid width/height are passed to the
+  ``InMemoryRaster`` constructor (#1144, #1194).
 
 1.0a11 (2017-10-30)
 -------------------
