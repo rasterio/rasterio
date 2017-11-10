@@ -12,10 +12,12 @@ from rasterio.enums import Resampling
 cimport numpy as np
 from rasterio._err cimport exc_wrap_pointer
 
+from rasterio.errors import GDALOptionNotImplementedError
+
 
 cdef GDALDatasetH open_dataset(
-        object filename, int flags, object allowed_drivers, object open_options,
-        object siblings) except NULL:
+        object filename, int flags, object allowed_drivers,
+        object open_options, object siblings) except NULL:
     """Wrapper for GDALOpen and GDALOpenShared"""
     cdef const char *fname = NULL
     cdef GDALDatasetH hds = NULL
@@ -25,6 +27,19 @@ cdef GDALDatasetH open_dataset(
 
     # Note well: driver choice, open options, and sibling files
     # are not supported by GDAL versions < 2.0.
+
+    if allowed_drivers:
+        raise GDALOptionNotImplementedError(
+            "Driver selection is not implemented in GDAL 1.x")
+
+    if open_options:
+        raise GDALOptionNotImplementedError(
+            "Dataset opening options are not implemented in GDAL 1.x")
+
+    if siblings:
+        raise GDALOptionNotImplementedError(
+            "Sibling files are not implemented in GDAL 1.x")
+
     if flags & 0x20:
         with nogil:
             hds = GDALOpenShared(fname, <GDALAccess>(flags & 0x01))

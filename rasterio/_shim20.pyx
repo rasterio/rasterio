@@ -17,10 +17,9 @@ cdef extern from "gdal.h" nogil:
 from rasterio._err cimport exc_wrap_pointer
 
 
-# Declarations and implementations specific for GDAL==2.0
 cdef GDALDatasetH open_dataset(
-        object filename, int flags, object allowed_drivers, object open_options,
-        object siblings) except NULL:
+        object filename, int flags, object allowed_drivers,
+        object open_options, object siblings) except NULL:
     """Wrapper for GDALOpen and GDALOpenShared"""
     cdef const char *fname = NULL
     cdef char **drivers = NULL
@@ -35,8 +34,9 @@ cdef GDALDatasetH open_dataset(
     if allowed_drivers:
         for name in allowed_drivers:
             name = name.encode('utf-8')
-            drivers = CSLAddString(drivers, <const char *>driver)
+            drivers = CSLAddString(drivers, <const char *>name)
 
+    # Construct a null terminated C list of opening/creation options.
     for k, v in open_options.items():
         k = k.upper().encode('utf-8')
 
@@ -47,6 +47,11 @@ cdef GDALDatasetH open_dataset(
             v = str(v).encode('utf-8')
 
         options = CSLAddNameValue(options, <const char *>k, <const char *>v)
+
+    # Support for sibling files is not yet implemented.
+    if siblings:
+        raise NotImplementedError(
+            "Sibling files are not implemented")
 
     # Ensure raster flag.
     flags = flags | 0x02

@@ -7,6 +7,22 @@ import rasterio
 from rasterio.transform import Affine
 
 
+@pytest.mark.skipif(parse(rasterio.__gdal_version__) >= parse('2.0'),
+                    reason="Only relevant for GDAL 1.x")
+def test_driver_option_not_implemented():
+    """Driver selection is not supported by GDAL 1.x"""
+    with pytest.raises(rasterio.errors.GDALOptionNotImplementedError):
+        rasterio.open('tests/data/RGB.byte.tif', driver='BMP')
+
+
+@pytest.mark.skipif(parse(rasterio.__gdal_version__) >= parse('2.0'),
+                    reason="Only relevant for GDAL 1.x")
+def test_open_options_not_implemented():
+    """Open options are not supported by GDAL 1.x"""
+    with pytest.raises(rasterio.errors.GDALOptionNotImplementedError):
+        rasterio.open('tests/data/RGB.byte.tif', NUM_THREADS=42)
+
+
 @pytest.mark.skipif(parse(rasterio.__gdal_version__) < parse('2.0'),
                     reason="Requires a GDAL 2.0 feature")
 def test_fail_with_missing_driver():
