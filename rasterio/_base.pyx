@@ -112,12 +112,6 @@ cdef class DatasetBase(object):
 
     def __init__(self, path=None, driver=None, **kwargs):
         cdef GDALDatasetH hds = NULL
-        cdef const char *path_c = NULL
-        cdef const char *driver_c = NULL
-        cdef const char *key_c = NULL
-        cdef const char *val_c = NULL
-        cdef char **allowed_drivers = NULL
-        cdef char **options = NULL
         cdef int flags = 0
 
         self._hds = NULL

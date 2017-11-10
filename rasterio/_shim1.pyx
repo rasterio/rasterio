@@ -18,11 +18,6 @@ cdef GDALDatasetH open_dataset(
         object siblings) except NULL:
     """Wrapper for GDALOpen and GDALOpenShared"""
     cdef const char *fname = NULL
-    cdef const char **drivers = NULL
-    cdef const char **options = NULL
-    cdef const char *key = NULL
-    cdef const char *val = NULL
-    cdef const char *driver = NULL
     cdef GDALDatasetH hds = NULL
 
     filename = filename.encode('utf-8')

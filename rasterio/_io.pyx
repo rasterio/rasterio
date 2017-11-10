@@ -872,8 +872,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
                  gcps=None, **kwargs):
         """Initialize a DatasetWriterBase instance."""
-
-        cdef char **allowed_drivers = NULL
         cdef char **options = NULL
         cdef char *key_c = NULL
         cdef char *val_c = NULL
