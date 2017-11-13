@@ -83,3 +83,8 @@ class PhotometricInterp(Enum):
     cielab = 'CIELAB'
     icclab = 'ICCLAB'
     itulab = 'ITULAB'
+
+class MergeAlg(Enum):
+    """Available rasterization algorithms"""
+    replace = 'REPLACE'
+    add = 'ADD'

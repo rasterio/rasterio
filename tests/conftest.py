@@ -272,7 +272,7 @@ def basic_image_2x2x2():
     A basic 10x10 array for testing sieve and shapes functions.
     Contains a square feature 2x2 (size 4).
     Equivalent to results of rasterizing two times the basic_geometry with
-    merge_alg_add=True.
+    merge_alg='add'.
 
     Returns
     -------
