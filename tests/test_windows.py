@@ -16,13 +16,13 @@ from rasterio.windows import (
 
 EPS = 1.0e-8
 
-#col_off, row_off
-FLOAT_OFFSETS = floats(min_value=-1.0e+7, max_value=1.0e+7)
-INT_OFFSETS = floats(min_value=-10000000, max_value=10000000)
+# hypothesis inputs: col_off, row_off
+F_OFF = floats(min_value=-1.0e+7, max_value=1.0e+7)
+I_OFF = floats(min_value=-10000000, max_value=10000000)
 
-# width, height
-FLOAT_LENGTHS = floats(min_value=0, max_value=1.0e+7)
-INT_LENGTHS = integers(min_value=0, max_value=1.0e+7)
+# hypothesis inputs: width, height
+F_LEN = floats(min_value=0, max_value=1.0e+7)
+I_LEN = integers(min_value=0, max_value=1.0e+7)
 
 
 
@@ -39,8 +39,7 @@ def test_window_repr():
                                        'height=2)')
 
 
-@given(col_off=FLOAT_OFFSETS, row_off=FLOAT_OFFSETS, width=FLOAT_LENGTHS,
-       height=FLOAT_LENGTHS)
+@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_class(col_off, row_off, width, height):
     """Floating point inputs should not be rounded, and 0 values should not 
     raise errors"""
@@ -53,8 +52,7 @@ def test_window_class(col_off, row_off, width, height):
     assert np.allclose(window.height, height)
 
 
-@given(col_off=FLOAT_OFFSETS, row_off=FLOAT_OFFSETS, width=FLOAT_LENGTHS,
-       height=FLOAT_LENGTHS)
+@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_flatten(col_off, row_off, width, height):
     """Flattened window should match inputs"""
 
@@ -63,8 +61,7 @@ def test_window_flatten(col_off, row_off, width, height):
         (col_off, row_off, width, height))
 
 
-@given(col_off=FLOAT_OFFSETS, row_off=FLOAT_OFFSETS, width=FLOAT_LENGTHS,
-       height=FLOAT_LENGTHS)
+@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_todict(col_off, row_off, width, height):
     """Dictionary of window should match inputs"""
 
@@ -75,11 +72,32 @@ def test_window_todict(col_off, row_off, width, height):
         (col_off, row_off, width, height))
 
 
+@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
+def test_window_toranges(col_off, row_off, width, height):
+    """window.toranges() should match inputs"""
+
+    assert np.allclose(
+        Window(col_off, row_off, width, height).toranges(),
+        ((row_off, row_off + height), (col_off, col_off + width)))
 
 
+@given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
+def test_window_toslices(col_off, row_off, width, height):
+    """window.toslices() should match inputs"""
 
-@given(col_off=FLOAT_OFFSETS, row_off=FLOAT_OFFSETS, num_cols=FLOAT_LENGTHS,
-       num_rows=FLOAT_LENGTHS, height=INT_LENGTHS, width=INT_LENGTHS)
+    expected_slices = (slice(row_off, row_off + height),
+                       slice(col_off, col_off + width))
+
+    slices = Window(col_off, row_off, width, height).toslices()
+
+    assert np.allclose(
+        [(s.start, s.stop) for s in slices],
+        [(s.start, s.stop) for s in expected_slices]
+    )
+
+
+@given(col_off=F_OFF, row_off=F_OFF, num_cols=F_LEN, num_rows=F_LEN,
+       height=I_LEN, width=I_LEN)
 def test_crop(col_off, row_off, num_cols, num_rows, height, width):
 
     window = Window(col_off, row_off, num_cols, num_rows)
