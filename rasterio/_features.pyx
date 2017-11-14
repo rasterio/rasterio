@@ -7,6 +7,7 @@ import logging
 import numpy as np
 
 from rasterio import dtypes
+from rasterio.enums import MergeAlg
 
 cimport numpy as np
 
@@ -250,7 +251,7 @@ def _sieve(image, size, out, mask, connectivity):
         mask_mem_ds.close()
 
 
-def _rasterize(shapes, image, transform, all_touched):
+def _rasterize(shapes, image, transform, all_touched, merge_alg):
     """
     Burns input geometries into `image`.
 
@@ -269,6 +270,8 @@ def _rasterize(shapes, image, transform, all_touched):
         If false, only pixels whose center is within the polygon or
         that are selected by Bresenham's line algorithm will be burned
         in.
+    merge_alg : str, required
+        'REPLACE' (the default) or 'ADD'
     """
     cdef int retval
     cdef size_t i
@@ -281,6 +284,8 @@ def _rasterize(shapes, image, transform, all_touched):
     try:
         if all_touched:
             options = CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
+        merge_algorithm = MergeAlg[merge_alg].value.encode('utf-8')
+        options = CSLSetNameValue(options, "MERGE_ALG", merge_algorithm)
 
         # GDAL needs an array of geometries.
         # For now, we'll build a Python list on the way to building that
