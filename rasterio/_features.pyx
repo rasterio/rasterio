@@ -284,8 +284,8 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     try:
         if all_touched:
             options = CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
-        options = CSLSetNameValue(
-            options, "MERGE_ALG", MergeAlg[merge_alg].value)
+        merge_algorithm = MergeAlg[merge_alg].value.encode('utf-8')
+        options = CSLSetNameValue(options, "MERGE_ALG", merge_algorithm)
 
         # GDAL needs an array of geometries.
         # For now, we'll build a Python list on the way to building that
