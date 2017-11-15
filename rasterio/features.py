@@ -369,7 +369,7 @@ def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
     window = window.round_shape(op='ceil', pixel_precision=pixel_precision)
 
     # Make sure that window overlaps raster
-    raster_window = Window(0, 0, raster.height, raster.width)
+    raster_window = Window(0, 0, raster.width, raster.height)
 
     # This will raise a WindowError if windows do not overlap
     window = window.intersection(raster_window)
