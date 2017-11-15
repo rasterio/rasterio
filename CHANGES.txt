@@ -17,6 +17,8 @@ Bug fixes:
   (#1188).
 - Raise ValueError when invalid width/height are passed to the
   ``InMemoryRaster`` constructor (#1144, #1194).
+- GDAL errors that are turned into Rasterio exceptions are no longer also sent
+  automatically to the logger. They may, of course, be logged by user code.
 
 1.0a11 (2017-10-30)
 -------------------

@@ -52,9 +52,12 @@ def _delete_dataset_if_exists(path):
     path : str
         Dataset path
     """
+    cdef GDALDatasetH h_dataset = NULL
+    cdef const char *c_path = NULL
 
-    b_path = path.encode('utf-8')
-    cdef char* c_path = b_path
+    path = path.encode('utf-8')
+    c_path = path
+
     with nogil:
         h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
     try:
@@ -64,7 +67,7 @@ def _delete_dataset_if_exists(path):
             with nogil:
                 GDALDeleteDataset(h_driver, c_path)
     except CPLE_OpenFailedError:
-        pass
+        log.info("Dataset doesn't exist, deletion skipped")
     finally:
         GDALClose(h_dataset)
 
@@ -1869,11 +1872,15 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         try:
             temp = exc_wrap_pointer(
                 GDALCreateCopy(drv, fname, self._hds, 1, options, NULL, NULL))
+            log.debug("Created copy from MEM file: %s", self.name)
         finally:
             if options != NULL:
                 CSLDestroy(options)
             if temp != NULL:
                 GDALClose(temp)
+            if self._hds != NULL:
+                GDALClose(self._hds)
+                self._hds = NULL
 
 
 def virtual_file_to_buffer(filename):
