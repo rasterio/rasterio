@@ -56,12 +56,11 @@ cdef bint is_64bit = sys.maxsize > 2 ** 32
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
     """Send CPL debug messages and warnings to Python's logger."""
     log = logging.getLogger('rasterio._gdal')
-    if err_no in code_map:
-        # 'rasterio._gdal' is the name in our logging hierarchy for
-        # messages coming direct from CPLError().
-        log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
-    else:
-        log.info("Unknown error number %r", err_no)
+    if err_class < 3:
+        if err_no in code_map:
+            log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)
+        else:
+            log.info("Unknown error number %r", err_no)
 
 
 # Definition of GDAL callback functions, one for Windows and one for
