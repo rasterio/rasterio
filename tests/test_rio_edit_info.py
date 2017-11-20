@@ -437,7 +437,6 @@ def test_colorinterp_like_all(
     """Test setting colorinterp via '--like template --all'."""
     noci = str(tmpdir.join('test_colorinterp_like_all.tif'))
     rasterio.shutil.copy(path_4band_no_colorinterp, noci)
-    rasterio.shutil.copy(path_4band_no_colorinterp, 'NOCI.tif')
     result = runner.invoke(main_group, [
         'edit-info', noci, '--like', path_rgba_byte_tif, '--all'])
     assert result.exit_code == 0
