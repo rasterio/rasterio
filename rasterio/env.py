@@ -1,8 +1,11 @@
 """Rasterio's GDAL/AWS environment"""
 
-from functools import wraps
+from functools import wraps, total_ordering
 import logging
 import threading
+import re
+import attr
+
 
 import rasterio
 from rasterio._env import (
@@ -304,3 +307,58 @@ def ensure_env(f):
             with Env():
                 return f(*args, **kwds)
         return wrapper
+
+
+@attr.s(slots=True)
+@total_ordering
+class GDALVersion(object):
+    """Convenience class for obtaining GDAL major and minor version components
+    and comparing between versions.  This is highly simplistic and assumes a
+    very normal numbering scheme for versions and ignores everything except
+    the major and minor components."""
+
+    major = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    minor = attr.ib(default=0, validator=attr.validators.instance_of(int))
+
+    def __eq__(self, other):
+        return (self.major, self.minor) == tuple(other.major, other.minor)
+
+    def __lt__(self, other):
+        return (self.major, self.minor) < tuple(other.major, other.minor)
+
+    def __repr__(self):
+        return "GDALVersion(major={major}, minor={})".format(self)
+
+    @classmethod
+    def _normalize(cls, input):
+        """Normalize input tuple or string to GDALVersion"""
+
+        if isinstance(input, tuple):
+            return cls(*input)
+        elif isinstance(input, string_types):
+            return cls.from_string(input)
+        elif not isinstance(input, cls):
+            raise TypeError("Can only compare GDALVersion to same class, "
+                             "tuple, or string")
+        return input
+
+    @classmethod
+    def from_string(cls, s):
+        """Extract major and minor version components.
+        alpha, beta, rc suffixes ignored"""
+        match = re.search('^\d+\.\d+', s)
+        if not match:
+            raise ValueError("value does not appear to be a valid GDAL version "
+                             "number: {}".format(s))
+        major, minor = (int(c) for c in match.group().split('.'))
+        return cls(major=major, minor=minor)
+
+    @classmethod
+    def runtime(cls):
+        """Return GDALVersion of current GDAL runtime"""
+        from rasterio._base import gdal_version  # to avoid circular import
+        return cls.from_string(gdal_version())
+
+    def at_least(self, other):
+        other = self.__class__._normalize(other)
+        return self >= other

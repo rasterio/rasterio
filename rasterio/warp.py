@@ -14,7 +14,7 @@ from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
-from rasterio.env import ensure_env
+from rasterio.env import ensure_env, GDALVersion
 from rasterio.errors import GDALBehaviorChangeException
 from rasterio.transform import guard_transform
 
@@ -88,11 +88,8 @@ def transform_geom(
         Transformed geometry in GeoJSON dict format
     """
 
-    loose_gdal_version = filter(
-        lambda x: x.isdigit(),
-        rasterio.__gdal_version__.split('.'))
-    loose_gdal_version = tuple(map(int, loose_gdal_version))
-    if loose_gdal_version[:2] >= (2, 2) and not antimeridian_cutting:
+    if (not antimeridian_cutting and
+            GDALVersion.runtime().at_least('2.2')):
         raise GDALBehaviorChangeException(
             "Antimeridian cutting is always enabled on GDAL 2.2.0 or "
             "newer, which could produce a different geometry than expected.")

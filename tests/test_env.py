@@ -12,7 +12,7 @@ import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio._err import CPLE_BaseError
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
-from rasterio.env import default_options
+from rasterio.env import default_options, GDALVersion
 from rasterio.errors import EnvError, RasterioIOError
 from rasterio.rio.main import main_group
 
@@ -399,3 +399,62 @@ def test_gdal_cachemax():
         set_gdal_config('GDAL_CACHEMAX', original_cachemax)
     except OverflowError:
         set_gdal_config('GDAL_CACHEMAX', int(original_cachemax / 1000000))
+
+
+def test_gdalversion_class_from_string():
+    v = GDALVersion.from_string('1.9.0')
+    assert v.major == 1 and v.minor == 9
+
+    v = GDALVersion.from_string('1.9')
+    assert v.major == 1 and v.minor == 9
+
+    v = GDALVersion.from_string('1.9a')
+    assert v.major == 1 and v.minor == 9
+
+
+def test_gdalversion_class_from_string_err():
+    invalids = ('foo', 'foo.bar', '1', '1.', '1.a', '.1')
+
+    for invalid in invalids:
+        with pytest.raises(ValueError):
+            GDALVersion.from_string(invalid)
+
+
+def test_gdalversion_class_runtime():
+    """Test the version of GDAL from this runtime"""
+    GDALVersion.runtime().major >= 1
+
+
+def test_gdalversion_class_cmp():
+    assert GDALVersion(1, 0) == GDALVersion(1, 0)
+    assert GDALVersion(2, 0) > GDALVersion(1, 0)
+    assert GDALVersion(1, 1) > GDALVersion(1, 0)
+    assert GDALVersion(1, 2) < GDALVersion(2, 2)
+
+    # Because we don't care about patch component
+    assert GDALVersion.from_string('1.0') == GDALVersion.from_string('1.0.10')
+
+    assert GDALVersion.from_string('1.9') < GDALVersion.from_string('2.2.0')
+    assert GDALVersion.from_string('2.0.0') > GDALVersion(1, 9)
+
+
+def test_gdalversion_class_repr():
+    assert str(GDALVersion(2, 1)) == 'GDALVersion(major=2, minor=1)'
+
+
+def test_gdalversion_class_at_least():
+    assert GDALVersion(2, 1).at_least(GDALVersion(1, 9))
+    assert GDALVersion(2, 1).at_least((1, 9))
+    assert GDALVersion(2, 1).at_least('1.9')
+
+    assert not GDALVersion(2, 1).at_least(GDALVersion(2, 2))
+    assert not GDALVersion(2, 1).at_least((2, 2))
+    assert not GDALVersion(2, 1).at_least('2.2')
+
+
+def test_gdalversion_class_at_least_invalid_type():
+    invalids_types = ({}, {'major': 1, 'minor': 1}, [1, 2])
+
+    for invalid in invalids_types:
+        with pytest.raises(TypeError):
+            GDALVersion(2, 1).at_least(invalid)
