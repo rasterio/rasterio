@@ -192,7 +192,6 @@ def geojson_geomcollection():
     }
 
 
-
 @pytest.fixture
 def basic_feature(basic_geometry):
     """
@@ -411,6 +410,11 @@ def data_dir():
 @pytest.fixture(scope='session')
 def path_rgb_byte_tif(data_dir):
     return os.path.join(data_dir, 'RGB.byte.tif')
+
+
+@pytest.fixture(scope='session')
+def path_rgb_byte_jsons(data_dir):
+    return os.path.join(data_dir, 'RGB.byte.foot.jsons')
 
 
 @pytest.fixture(scope='session')
