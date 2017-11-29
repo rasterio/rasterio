@@ -247,5 +247,4 @@ def test_rgb_footprint_mask(path_rgb_byte_tif, path_rgb_byte_jsons):
         shapes = [json.loads(line)['geometry'] for line in f]
     with rasterio.open(path_rgb_byte_tif) as src:
         masked, masked_transform = rasterio.mask.mask(src, shapes, invert=True)
-    import pdb; pdb.set_trace()
     assert masked.any()
