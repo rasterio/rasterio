@@ -1,19 +1,18 @@
 from functools import partial
-import logging
 import os.path
 import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 
 import numpy as np
-from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio import windows
 from rasterio.errors import RasterBlockError
+
+from .conftest import requires_gdal2
 
 
 class WindowTest(unittest.TestCase):
@@ -169,9 +168,7 @@ def test_block_windows_filtered_none(path_rgb_byte_tif):
             next(itr)
 
 
-@pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.0.0'),
-    reason="TIFF block size access requires GDAL 2.0")
+@requires_gdal2  # TIFF block size access requires GDAL 2.0
 def test_block_size_tiff(path_rgb_byte_tif):
     """Without compression a TIFF's blocks are all the same size"""
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -181,9 +178,7 @@ def test_block_size_tiff(path_rgb_byte_tif):
         assert sizes.count(7119) == len(block_windows) - 1
 
 
-@pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.0.0'),
-    reason="TIFF block size access requires GDAL 2.0")
+@requires_gdal2  # TIFF block size access requires GDAL 2.0
 def test_block_size_exception():
     """A JPEG has no TIFF metadata and no API for block size"""
     with pytest.raises(RasterBlockError):

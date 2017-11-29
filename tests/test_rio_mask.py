@@ -6,17 +6,17 @@ import os
 
 import affine
 import numpy as np
-from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio.crs import CRS
 from rasterio.rio.main import main_group
+from rasterio.env import GDALVersion
 
 
 # Custom markers.
 xfail_pixel_sensitive_gdal22 = pytest.mark.xfail(
-    parse(rasterio.__gdal_version__) < parse('2.2'),
+    not GDALVersion.runtime().at_least('2.2'),
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 
 

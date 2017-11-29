@@ -5,23 +5,19 @@ import logging
 import sys
 
 import boto3
-from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
-from rasterio._err import CPLE_BaseError
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
 from rasterio.env import default_options, GDALVersion
 from rasterio.errors import EnvError, RasterioIOError
 from rasterio.rio.main import main_group
 
+from .conftest import requires_gdal21
+
 
 # Custom markers.
-mingdalversion = pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.1.0dev'),
-    reason="S3 raster access requires GDAL 2.1")
-
 credentials = pytest.mark.skipif(
     not(boto3.Session()._session.get_credentials()),
     reason="S3 raster access requires credentials")
@@ -210,7 +206,7 @@ def test_skip_gtiff(gdalenv):
             rasterio.open('tests/data/RGB.byte.tif')
 
 
-@mingdalversion
+@requires_gdal21  # S3 access requires 2.1.x
 @credentials
 @pytest.mark.network
 def test_s3_open_with_env(gdalenv):
@@ -220,7 +216,7 @@ def test_s3_open_with_env(gdalenv):
             assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21
 @credentials
 @pytest.mark.network
 def test_s3_open_with_implicit_env(gdalenv):
@@ -229,7 +225,7 @@ def test_s3_open_with_implicit_env(gdalenv):
         assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21
 @credentials
 @pytest.mark.network
 def test_env_open_s3(gdalenv):
@@ -241,7 +237,7 @@ def test_env_open_s3(gdalenv):
             assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21
 @credentials
 @pytest.mark.network
 def test_env_open_s3_credentials(gdalenv):
@@ -252,7 +248,7 @@ def test_env_open_s3_credentials(gdalenv):
             assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21
 @credentials
 @pytest.mark.network
 def test_ensured_env_no_credentializing(gdalenv):
@@ -263,7 +259,7 @@ def test_ensured_env_no_credentializing(gdalenv):
             rasterio.open(L8TIFB2)
 
 
-@mingdalversion
+@requires_gdal21
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""
@@ -273,7 +269,7 @@ def test_open_https_vsicurl(gdalenv):
 
 # CLI tests.
 
-@mingdalversion
+@requires_gdal21
 @credentials
 @pytest.mark.network
 def test_s3_rio_info(runner):
@@ -283,7 +279,7 @@ def test_s3_rio_info(runner):
     assert '"crs": "EPSG:32645"' in result.output
 
 
-@mingdalversion
+@requires_gdal21
 @credentials
 @pytest.mark.network
 def test_https_rio_info(runner):
