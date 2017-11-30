@@ -17,6 +17,7 @@ import numpy as np
 import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp
+from rasterio.env import GDALVersion
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -494,3 +495,31 @@ def path_zip_file():
                              '389225main_sw_1965_1024.jpg']:
                 zip.write(os.path.join(data_dir(), filename), filename)
     return path
+
+
+# Define helpers to skip tests based on GDAL version
+gdal_version = GDALVersion.runtime()
+
+requires_only_gdal1 = pytest.mark.skipif(
+    gdal_version.major != 1,
+    reason="Only relevant for GDAL 1.x")
+
+requires_less_than_gdal110 = pytest.mark.skipif(
+    gdal_version.at_least('1.10'),
+    reason="Requires GDAL 1.9.x or earlier")
+
+requires_gdal110 = pytest.mark.skipif(
+    not gdal_version.at_least('1.10'),
+    reason="Requires GDAL 1.10.x")
+
+requires_gdal2 = pytest.mark.skipif(
+    not gdal_version.major >= 2,
+    reason="Requires GDAL 2.x")
+
+requires_gdal21 = pytest.mark.skipif(
+    not gdal_version.at_least('2.1'),
+    reason="Requires GDAL 2.1.x")
+
+requires_gdal22 = pytest.mark.skipif(
+    not gdal_version.at_least('2.2'),
+    reason="Requires GDAL 2.2.x")

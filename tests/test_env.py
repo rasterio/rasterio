@@ -5,23 +5,19 @@ import logging
 import sys
 
 import boto3
-from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
-from rasterio._err import CPLE_BaseError
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
-from rasterio.env import default_options
+from rasterio.env import default_options, GDALVersion
 from rasterio.errors import EnvError, RasterioIOError
 from rasterio.rio.main import main_group
 
+from .conftest import requires_gdal21
+
 
 # Custom markers.
-mingdalversion = pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.1.0dev'),
-    reason="S3 raster access requires GDAL 2.1")
-
 credentials = pytest.mark.skipif(
     not(boto3.Session()._session.get_credentials()),
     reason="S3 raster access requires credentials")
@@ -210,7 +206,7 @@ def test_skip_gtiff(gdalenv):
             rasterio.open('tests/data/RGB.byte.tif')
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_env(gdalenv):
@@ -220,7 +216,7 @@ def test_s3_open_with_env(gdalenv):
             assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_implicit_env(gdalenv):
@@ -229,7 +225,7 @@ def test_s3_open_with_implicit_env(gdalenv):
         assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_env_open_s3(gdalenv):
@@ -241,7 +237,7 @@ def test_env_open_s3(gdalenv):
             assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_env_open_s3_credentials(gdalenv):
@@ -252,7 +248,7 @@ def test_env_open_s3_credentials(gdalenv):
             assert dataset.count == 1
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_ensured_env_no_credentializing(gdalenv):
@@ -263,7 +259,7 @@ def test_ensured_env_no_credentializing(gdalenv):
             rasterio.open(L8TIFB2)
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""
@@ -273,7 +269,7 @@ def test_open_https_vsicurl(gdalenv):
 
 # CLI tests.
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_rio_info(runner):
@@ -283,7 +279,7 @@ def test_s3_rio_info(runner):
     assert '"crs": "EPSG:32645"' in result.output
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_https_rio_info(runner):
@@ -399,3 +395,62 @@ def test_gdal_cachemax():
         set_gdal_config('GDAL_CACHEMAX', original_cachemax)
     except OverflowError:
         set_gdal_config('GDAL_CACHEMAX', int(original_cachemax / 1000000))
+
+
+def test_gdalversion_class_from_string():
+    v = GDALVersion.from_string('1.9.0')
+    assert v.major == 1 and v.minor == 9
+
+    v = GDALVersion.from_string('1.9')
+    assert v.major == 1 and v.minor == 9
+
+    v = GDALVersion.from_string('1.9a')
+    assert v.major == 1 and v.minor == 9
+
+
+def test_gdalversion_class_from_string_err():
+    invalids = ('foo', 'foo.bar', '1', '1.', '1.a', '.1')
+
+    for invalid in invalids:
+        with pytest.raises(ValueError):
+            GDALVersion.from_string(invalid)
+
+
+def test_gdalversion_class_runtime():
+    """Test the version of GDAL from this runtime"""
+    GDALVersion.runtime().major >= 1
+
+
+def test_gdalversion_class_cmp():
+    assert GDALVersion(1, 0) == GDALVersion(1, 0)
+    assert GDALVersion(2, 0) > GDALVersion(1, 0)
+    assert GDALVersion(1, 1) > GDALVersion(1, 0)
+    assert GDALVersion(1, 2) < GDALVersion(2, 2)
+
+    # Because we don't care about patch component
+    assert GDALVersion.from_string('1.0') == GDALVersion.from_string('1.0.10')
+
+    assert GDALVersion.from_string('1.9') < GDALVersion.from_string('2.2.0')
+    assert GDALVersion.from_string('2.0.0') > GDALVersion(1, 9)
+
+
+def test_gdalversion_class_repr():
+    assert str(GDALVersion(2, 1)) == 'GDALVersion(major=2, minor=1)'
+
+
+def test_gdalversion_class_at_least():
+    assert GDALVersion(2, 1).at_least(GDALVersion(1, 9))
+    assert GDALVersion(2, 1).at_least((1, 9))
+    assert GDALVersion(2, 1).at_least('1.9')
+
+    assert not GDALVersion(2, 1).at_least(GDALVersion(2, 2))
+    assert not GDALVersion(2, 1).at_least((2, 2))
+    assert not GDALVersion(2, 1).at_least('2.2')
+
+
+def test_gdalversion_class_at_least_invalid_type():
+    invalids_types = ({}, {'major': 1, 'minor': 1}, [1, 2])
+
+    for invalid in invalids_types:
+        with pytest.raises(TypeError):
+            GDALVersion(2, 1).at_least(invalid)

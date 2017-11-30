@@ -5,19 +5,18 @@ import sys
 import pytest
 from affine import Affine
 import numpy as np
-from packaging.version import parse
 
 import rasterio
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
 from rasterio.enums import Resampling
+from rasterio.env import GDALVersion
 from rasterio.errors import GDALBehaviorChangeException, CRSError
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
     calculate_default_transform)
 from rasterio import windows
 
-
+gdal_version = GDALVersion.runtime()
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
@@ -43,10 +42,9 @@ def supported_resampling(method):
     gdal2plus_only = (
         Resampling.max, Resampling.min, Resampling.med,
         Resampling.q1, Resampling.q3)
-    version = parse(rasterio.__gdal_version__)
-    if version < parse('1.10'):
+    if not gdal_version.at_least('1.10'):
         return method not in gdal2plus_only and method not in gdal110plus_only
-    if version < parse('2.0'):
+    if not gdal_version.at_least('2.0'):
         return method not in gdal2plus_only
     return True
 
@@ -1050,7 +1048,7 @@ def test_reproject_gcps(rgb_byte_profile):
 
 
 @pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.2.0'),
+    not gdal_version.at_least('2.2'),
     reason="GDAL 2.2.0 and newer has different antimeridian cutting behavior.")
 def test_transform_geom_gdal22():
     """Enabling `antimeridian_cutting` has no effect on GDAL 2.2.0 or newer

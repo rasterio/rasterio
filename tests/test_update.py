@@ -1,13 +1,15 @@
-import shutil
 import subprocess
 import re
 
 import affine
 import numpy as np
-from packaging.version import Version
 import pytest
 
 import rasterio
+from rasterio.env import GDALVersion
+
+from .conftest import requires_gdal21
+
 
 def test_update_tags(data):
     tiffname = str(data.join('RGB.byte.tif'))
@@ -65,7 +67,7 @@ def test_update_nodatavals(data):
 
 
 @pytest.mark.skipif(
-    Version(rasterio.__gdal_version__) >= Version('2.1'),
+    GDALVersion.runtime().at_least('2.1'),
     reason='Tests behavior specific to GDAL versions < 2.1')
 def test_update_nodatavals_none_fails(data):
     """GDAL 2.0 doesn't support un-setting nodata values."""
@@ -75,9 +77,7 @@ def test_update_nodatavals_none_fails(data):
             f.nodata = None
 
 
-@pytest.mark.skipif(
-    Version(rasterio.__gdal_version__) < Version('2.1'),
-    reason='Tests behavior specific to GDAL versions >= 2.1')
+@requires_gdal21
 def test_update_nodatavals_none(data):
     """GDAL 2.1 does support un-setting nodata values."""
     tiffname = str(data.join('RGB.byte.tif'))

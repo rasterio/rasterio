@@ -1,19 +1,15 @@
 import boto3
-from packaging.version import parse
 import pytest
 
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
-from rasterio.windows import Window
+
+from .conftest import requires_gdal21
 
 
 # Custom markers.
-mingdalversion = pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.1.0dev'),
-    reason="S3 raster access requires GDAL 2.1")
-
 credentials = pytest.mark.skipif(
     not(boto3.Session()._session.get_credentials()),
     reason="S3 raster access requires credentials")
@@ -85,7 +81,7 @@ def test_warp_extras(path_rgb_byte_tif):
             assert (rgb[:, 0, 0] == 255).all()
 
 
-@mingdalversion
+@requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
 @credentials
 @pytest.mark.network
 def test_wrap_s3():

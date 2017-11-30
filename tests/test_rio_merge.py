@@ -8,7 +8,6 @@ import logging
 import affine
 from click.testing import CliRunner
 import numpy as np
-from packaging.version import parse
 from pytest import fixture
 import pytest
 
@@ -17,11 +16,13 @@ from rasterio.merge import merge
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
+from rasterio.env import GDALVersion
+
 
 # Custom markers.
 xfail_pixel_sensitive_gdal2 = pytest.mark.xfail(
-    parse(rasterio.__gdal_version__) < parse('2.0dev'),
-    reason="This test is sensitive to pixel values and requires GDAL 2.0+")
+    not GDALVersion.runtime().at_least('2.0'),
+    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 
 
 # Fixture to create test datasets within temporary directory

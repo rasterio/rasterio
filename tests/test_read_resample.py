@@ -1,11 +1,11 @@
 import numpy as np
 
-from packaging.version import parse
-import pytest
-
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.windows import Window
+
+from .conftest import requires_gdal2
+
 
 # Rasterio exposes GDAL's resampling/decimation on I/O. These are the tests
 # that it does this correctly.
@@ -50,9 +50,7 @@ def test_read_downsample_alpha():
             src.read(4, out=out, masked=False)
 
 
-@pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.0dev'),
-    reason="Extra resampling algorithms require GDAL>2.0")
+@requires_gdal2
 def test_resample_alg():
     """default (nearest) and cubic produce different results"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
@@ -62,9 +60,7 @@ def test_resample_alg():
         assert np.any(nearest != cubic)
 
 
-@pytest.mark.skipif(
-    parse(rasterio.__gdal_version__) < parse('2.0dev'),
-    reason="Floating point windows require GDAL>2.0")
+@requires_gdal2
 def test_float_window():
     """floating point windows work"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:

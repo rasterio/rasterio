@@ -5,16 +5,18 @@ import json
 
 import click
 from click.testing import CliRunner
-from packaging.version import Version, parse
 import pytest
 
 import rasterio
 from rasterio.enums import ColorInterp
+from rasterio.env import GDALVersion
 from rasterio.rio.edit_info import (
     all_handler, crs_handler, tags_handler, transform_handler,
     colorinterp_handler)
 from rasterio.rio.main import main_group
 import rasterio.shutil
+
+from .conftest import requires_gdal110, requires_less_than_gdal110, requires_gdal21
 
 
 PARAM_HANDLER = {
@@ -55,9 +57,7 @@ def test_delete_crs_exclusive_opts(data):
     assert result.exit_code == 2
 
 
-@pytest.mark.skip(
-    parse(rasterio.__gdal_version__) < parse('1.10'),
-    reason='GDAL version >= 1.10 required')
+@requires_gdal110
 def test_unset_crs(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
@@ -67,10 +67,7 @@ def test_unset_crs(data):
     with rasterio.open(inputfile) as src:
         assert src.crs is None
 
-
-@pytest.mark.skip(
-    parse(rasterio.__gdal_version__) >= parse('1.10'),
-    reason='Test applies to GDAL version < 1.10')
+@requires_less_than_gdal110
 def test_unset_crs_gdal19(data):
     """unsetting crs doesn't work for geotiff and gdal 1.9
     and should emit an warning"""
@@ -94,9 +91,7 @@ def test_edit_nodata_err(data):
     assert result.exit_code == 2
 
 
-@pytest.mark.skipif(
-    Version(rasterio.__gdal_version__) < Version('2.1'),
-    reason='GDAL version >= 2.1 required')
+@requires_gdal21
 def test_delete_nodata(data):
     """Delete a dataset's nodata value"""
     runner = CliRunner()
@@ -429,9 +424,7 @@ def test_like_band_count_mismatch(runner, data):
     assert "When using '--like' for color interpretation" in result.output
 
 
-@pytest.mark.skipif(
-    Version(rasterio.__gdal_version__) < Version('2.1'),
-    reason='GDAL version >= 2.1 required')
+@requires_gdal21
 def test_colorinterp_like_all(
         runner, path_4band_no_colorinterp, path_rgba_byte_tif, tmpdir):
     """Test setting colorinterp via '--like template --all'."""
