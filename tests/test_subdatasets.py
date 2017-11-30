@@ -8,7 +8,7 @@ with rasterio.Env() as env:
     HAVE_NETCDF = 'NetCDF' in env.drivers().keys()
 
 
-@requires_gdal21  # NetCDF requires 2.1.x
+@requires_gdal21(reason="NetCDF requires GDAL 2.1+")
 @pytest.mark.skipif(not HAVE_NETCDF,
                     reason="GDAL not compiled with NetCDF driver.")
 def test_subdatasets():

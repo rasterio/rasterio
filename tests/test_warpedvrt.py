@@ -81,7 +81,7 @@ def test_warp_extras(path_rgb_byte_tif):
             assert (rgb[:, 0, 0] == 255).all()
 
 
-@requires_gdal21  # S3 raster access requires GDAL 2.1
+@requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
 @credentials
 @pytest.mark.network
 def test_wrap_s3():

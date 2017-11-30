@@ -168,7 +168,7 @@ def test_block_windows_filtered_none(path_rgb_byte_tif):
             next(itr)
 
 
-@requires_gdal2  # TIFF block size access requires GDAL 2.0
+@requires_gdal2(reason="TIFF block size access requires GDAL 2.0")
 def test_block_size_tiff(path_rgb_byte_tif):
     """Without compression a TIFF's blocks are all the same size"""
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -178,7 +178,7 @@ def test_block_size_tiff(path_rgb_byte_tif):
         assert sizes.count(7119) == len(block_windows) - 1
 
 
-@requires_gdal2  # TIFF block size access requires GDAL 2.0
+@requires_gdal2(reason="TIFF block size access requires GDAL 2.0")
 def test_block_size_exception():
     """A JPEG has no TIFF metadata and no API for block size"""
     with pytest.raises(RasterBlockError):

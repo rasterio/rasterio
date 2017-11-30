@@ -242,7 +242,7 @@ def test_safe_osr_release(tmpdir):
     assert "Pointer 'hSRS' is NULL in 'OSRRelease'" not in log
 
 
-@requires_gdal21  # CRS equality is buggy pre-2.1
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
 def test_from_wkt():
     wgs84 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     from_wkt = CRS.from_wkt(wgs84.wkt)

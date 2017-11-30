@@ -24,7 +24,8 @@ def test_cmyk_interp(tmpdir):
             ColorInterp.black)
 
 
-@requires_gdal22  # Some versions prior to 2.2.2 segfault on a Mac OSX Homebrew GDAL
+@requires_gdal22(reason="Some versions prior to 2.2.2 segfault on a Mac OSX "
+                        "Homebrew GDAL")
 def test_ycbcr_interp(tmpdir):
     """A YCbCr TIFF has red, green, blue bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:

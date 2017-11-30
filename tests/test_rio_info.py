@@ -702,7 +702,7 @@ def test_info_checksums_only():
     assert result.output.strip() == '29131'
 
 
-@requires_gdal21  # netCDF requires GDAL 2.1+
+@requires_gdal21(reason="NetCDF requires GDAL 2.1+")
 @pytest.mark.skipif(not HAVE_NETCDF,
                     reason="GDAL not compiled with NetCDF driver.")
 def test_info_subdatasets():

@@ -206,7 +206,7 @@ def test_skip_gtiff(gdalenv):
             rasterio.open('tests/data/RGB.byte.tif')
 
 
-@requires_gdal21  # S3 access requires 2.1.x
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_env(gdalenv):
@@ -216,7 +216,7 @@ def test_s3_open_with_env(gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_open_with_implicit_env(gdalenv):
@@ -225,7 +225,7 @@ def test_s3_open_with_implicit_env(gdalenv):
         assert dataset.count == 1
 
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_env_open_s3(gdalenv):
@@ -237,7 +237,7 @@ def test_env_open_s3(gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_env_open_s3_credentials(gdalenv):
@@ -248,7 +248,7 @@ def test_env_open_s3_credentials(gdalenv):
             assert dataset.count == 1
 
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_ensured_env_no_credentializing(gdalenv):
@@ -259,7 +259,7 @@ def test_ensured_env_no_credentializing(gdalenv):
             rasterio.open(L8TIFB2)
 
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""
@@ -269,7 +269,7 @@ def test_open_https_vsicurl(gdalenv):
 
 # CLI tests.
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_s3_rio_info(runner):
@@ -279,7 +279,7 @@ def test_s3_rio_info(runner):
     assert '"crs": "EPSG:32645"' in result.output
 
 
-@requires_gdal21
+@requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
 def test_https_rio_info(runner):
