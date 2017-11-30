@@ -1048,7 +1048,7 @@ def test_reproject_gcps(rgb_byte_profile):
 
 
 @pytest.mark.skipif(
-    gdal_version.at_least('2.2'),
+    not gdal_version.at_least('2.2'),
     reason="GDAL 2.2.0 and newer has different antimeridian cutting behavior.")
 def test_transform_geom_gdal22():
     """Enabling `antimeridian_cutting` has no effect on GDAL 2.2.0 or newer
