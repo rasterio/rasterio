@@ -1,3 +1,7 @@
+"""Tests of the mask module"""
+
+import json
+
 import numpy as np
 import pytest
 from affine import Affine
@@ -236,3 +240,11 @@ def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
     assert np.array_equal(masked[0].mask, image.mask)
     assert np.array_equal(masked[0], image)
 
+
+def test_rgb_footprint_mask(path_rgb_byte_tif, path_rgb_byte_jsons):
+    """Mask out the RGB.byte.tif image using its footprint"""
+    with open(path_rgb_byte_jsons) as f:
+        shapes = [json.loads(line)['geometry'] for line in f]
+    with rasterio.open(path_rgb_byte_tif) as src:
+        masked, masked_transform = rasterio.mask.mask(src, shapes, invert=True)
+    assert masked.any()
