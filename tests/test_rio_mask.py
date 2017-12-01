@@ -11,13 +11,8 @@ import pytest
 import rasterio
 from rasterio.crs import CRS
 from rasterio.rio.main import main_group
-from rasterio.env import GDALVersion
 
-
-# Custom markers.
-xfail_pixel_sensitive_gdal22 = pytest.mark.xfail(
-    not GDALVersion.runtime().at_least('2.2'),
-    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
+from .conftest import requires_gdal22
 
 
 def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
@@ -166,7 +161,8 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
 
 
 
-@xfail_pixel_sensitive_gdal22
+@requires_gdal22(
+    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
     """
     In order to test --crop option, we need to use a transform more similar to
@@ -204,7 +200,8 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
             out.read(1, masked=True).filled(0))
 
 
-@xfail_pixel_sensitive_gdal22
+@requires_gdal22(
+    reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_mask_crop_inverted_y(runner, tmpdir, basic_feature, pixelated_image_file):
     """
     --crop option should also work if raster has a positive y pixel size

@@ -197,8 +197,6 @@ def test_test_file_object_write(tmpdir, rgb_data_and_profile):
         assert src.read().shape == (3, 718, 791)
 
 
-@pytest.mark.xfail(reason="in-memory files created within open() "
-                          "are not persistent")
 def test_nonpersistemt_memfile_fail_example(rgb_data_and_profile):
     """An example of writing to a file object"""
     data, profile = rgb_data_and_profile

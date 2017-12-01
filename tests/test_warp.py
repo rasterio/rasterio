@@ -915,7 +915,6 @@ def test_resample_default_invert_proj(method):
     assert out.mean() > 0
 
 
-@pytest.mark.xfail()
 @pytest.mark.parametrize("method", Resampling)
 def test_resample_no_invert_proj(method):
     """Nearest and bilinear should produce valid results with
@@ -923,6 +922,12 @@ def test_resample_no_invert_proj(method):
     """
     if not supported_resampling(method):
         pytest.skip()
+
+    if method in (Resampling.bilinear, Resampling.cubic,
+                  Resampling.cubic_spline, Resampling.lanczos):
+        pytest.xfail(
+            reason="Some resampling methods succeed but produce blank images. "
+                   "See https://github.com/mapbox/rasterio/issues/614")
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
         with rasterio.open('tests/data/world.rgb.tif') as src:
@@ -940,7 +945,7 @@ def test_resample_no_invert_proj(method):
 
         out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
 
-        # see #614, some resamplin methods succeed but produce blank images
+        # see #614, some resampling methods succeed but produce blank images
         out = np.empty(src.shape, dtype=np.uint8)
         reproject(
             source,
