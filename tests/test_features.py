@@ -130,7 +130,7 @@ def test_geometry_window(basic_image_file, basic_geometry):
         assert window.flatten() == (2, 2, 3, 3)
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="https://github.com/mapbox/rasterio/issues/1139")
 # This test is failing due to https://github.com/mapbox/rasterio/issues/1139
 def test_geometry_window_pixel_precision(basic_image_file):
     """Window offsets should be floor, width and height ceiling"""
