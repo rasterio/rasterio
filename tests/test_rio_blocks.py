@@ -20,7 +20,7 @@ def check_features_block_windows(features, src, bidx):
     ----------
     features : iter
         GeoJSON features.
-    src : RasterReader
+    src : DatasetReader
         Open input datasource.
 
     Returns
