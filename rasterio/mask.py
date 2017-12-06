@@ -12,39 +12,39 @@ from rasterio.features import geometry_mask, geometry_window
 logger = logging.getLogger(__name__)
 
 
-def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
+def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
                          crop=False, pad=False):
-    """Create a mask from shapes, transform, and optional window within original 
+    """Create a mask from shapes, transform, and optional window within original
     raster.
 
-    By default, mask is intended for use as a numpy mask, where pixels that 
+    By default, mask is intended for use as a numpy mask, where pixels that
     overlap shapes are False.
-    
-    If shapes do not overlap the raster and crop=True, a ValueError is 
+
+    If shapes do not overlap the raster and crop=True, a ValueError is
     raised.  Otherwise, a warning is raised, and a completely True mask
     is returned (if invert is False).
 
     Parameters
     ----------
-    raster: rasterio RasterReader object
+    dataset: rasterio DatasetReader object
         Raster for which the mask will be created.
     shapes: list of polygons
-        GeoJSON-like dict representation of polygons that will be used to 
+        GeoJSON-like dict representation of polygons that will be used to
         create the mask.
     all_touched: bool (opt)
-        Include a pixel in the mask if it touches any of the shapes. 
-        If False (default), include a pixel only if its center is within one of 
+        Include a pixel in the mask if it touches any of the shapes.
+        If False (default), include a pixel only if its center is within one of
         the shapes, or if it is selected by Bresenham's line algorithm.
     invert: bool (opt)
-        If False (default), mask will be `False` inside shapes and `True` 
-        outside.  If True, mask will be `True` inside shapes and `False` 
+        If False (default), mask will be `False` inside shapes and `True`
+        outside.  If True, mask will be `True` inside shapes and `False`
         outside.
     crop: bool (opt)
-        Whether to crop the raster to the extent of the shapes. Defaults to
+        Whether to crop the dataset to the extent of the shapes. Defaults to
         False.
     pad: bool (opt)
         If True, the features will be padded in each direction by
-        one half of a pixel prior to cropping raster. Defaults to False.
+        one half of a pixel prior to cropping dataset. Defaults to False.
 
     Returns
     -------
@@ -58,14 +58,14 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
             out_transform : affine.Affine()
                 Information for mapping pixel coordinates in `masked` to another
                 coordinate system.
-            
+
             window: rasterio.windows.Window instance
                 Window within original raster covered by shapes.  None if crop
                 is False.
     """
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
-    
+
     if crop and pad:
         pad_x = 0.5  # pad by 1/2 of pixel size
         pad_y = 0.5
@@ -73,10 +73,10 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
         pad_x = 0
         pad_y = 0
 
-    north_up = raster.transform.e <= 0
+    north_up = dataset.transform.e <= 0
 
     try:
-        window = geometry_window(raster, shapes, north_up=north_up, pad_x=pad_x,
+        window = geometry_window(dataset, shapes, north_up=north_up, pad_x=pad_x,
                                  pad_y=pad_y)
 
     except WindowError:
@@ -89,17 +89,17 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
                           'Are they in different coordinate reference systems?')
 
         # Return an entirely True mask (if invert is False)
-        mask = np.ones(shape=raster.shape[-2:], dtype='bool') * (not invert)
-        return mask, raster.transform, None
+        mask = np.ones(shape=dataset.shape[-2:], dtype='bool') * (not invert)
+        return mask, dataset.transform, None
 
     if crop:
-        transform = raster.window_transform(window)
+        transform = dataset.window_transform(window)
         out_shape = (int(window.height), int(window.width))
 
     else:
         window = None
-        transform = raster.transform
-        out_shape = (int(raster.height), int(raster.width))
+        transform = dataset.transform
+        out_shape = (int(dataset.height), int(dataset.width))
 
     mask = geometry_mask(shapes, transform=transform, invert=invert,
                          out_shape=out_shape, all_touched=all_touched)
@@ -107,36 +107,36 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
     return mask, transform, window
 
 
-def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
+def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
          filled=True, crop=False, pad=False):
-    """Creates a masked or filled array using input shapes.  
-    Pixels are masked or set to nodata outside the input shapes, unless 
+    """Creates a masked or filled array using input shapes.
+    Pixels are masked or set to nodata outside the input shapes, unless
     `invert` is `True`.
-    
-    If shapes do not overlap the raster and crop=True, a ValueError is 
+
+    If shapes do not overlap the raster and crop=True, a ValueError is
     raised.  Otherwise, a warning is raised.
 
     Parameters
     ----------
-    raster: rasterio RasterReader object
+    dataset: rasterio DatasetReader object
         Raster to which the mask will be applied.
     shapes: list of polygons
-        GeoJSON-like dict representation of polygons that will be used to 
+        GeoJSON-like dict representation of polygons that will be used to
         create the mask.
     all_touched: bool (opt)
-        Include a pixel in the mask if it touches any of the shapes. 
-        If False (default), include a pixel only if its center is within one of 
+        Include a pixel in the mask if it touches any of the shapes.
+        If False (default), include a pixel only if its center is within one of
         the shapes, or if it is selected by Bresenham's line algorithm.
     invert: bool (opt)
-        If False (default) pixels outside shapes will be masked.  If True, 
+        If False (default) pixels outside shapes will be masked.  If True,
         pixels inside shape will be masked.
     nodata: int or float (opt)
         Value representing nodata within each raster band. If not set,
         defaults to the nodata value for the input raster. If there is no
         set nodata value for the raster, it defaults to 0.
     filled: bool (opt)
-        If True, the pixels outside the features will be set to nodata.  
-        If False, the output array will contain the original pixel data, 
+        If True, the pixels outside the features will be set to nodata.
+        If False, the output array will contain the original pixel data,
         and only the mask will be based on shapes.  Defaults to True.
     crop: bool (opt)
         Whether to crop the raster to the extent of the shapes. Defaults to
@@ -152,13 +152,13 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
         Two elements:
 
             masked : numpy ndarray or numpy.ma.MaskedArray
-                Data contained in the raster after applying the mask. If 
-                `filled` is `True` and `invert` is `False`, the return will be 
-                an array where pixels outside shapes are set to the nodata value 
-                (or nodata inside shapes if `invert` is `True`). 
-                
-                If `filled` is `False`, the return will be a MaskedArray in 
-                which pixels outside shapes are `True` (or `False` if `invert` 
+                Data contained in the raster after applying the mask. If
+                `filled` is `True` and `invert` is `False`, the return will be
+                an array where pixels outside shapes are set to the nodata value
+                (or nodata inside shapes if `invert` is `True`).
+
+                If `filled` is `False`, the return will be a MaskedArray in
+                which pixels outside shapes are `True` (or `False` if `invert`
                 is `True`).
 
             out_transform : affine.Affine()
@@ -167,19 +167,19 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
     """
 
     if nodata is None:
-        if raster.nodata is not None:
-            nodata = raster.nodata
+        if dataset.nodata is not None:
+            nodata = dataset.nodata
         else:
             nodata = 0
 
     shape_mask, transform, window = raster_geometry_mask(
-        raster, shapes, all_touched=all_touched, invert=invert, crop=crop,
+        dataset, shapes, all_touched=all_touched, invert=invert, crop=crop,
         pad=pad)
 
     height, width = shape_mask.shape
-    out_shape = (raster.count, height, width)
+    out_shape = (dataset.count, height, width)
 
-    out_image = raster.read(window=window, out_shape=out_shape, masked=True)
+    out_image = dataset.read(window=window, out_shape=out_shape, masked=True)
     out_image.mask = out_image.mask | shape_mask
 
     if filled:
