@@ -32,7 +32,7 @@ def geometry_mask(
     out_shape : tuple or list
         Shape of output numpy ndarray.
     transform : Affine transformation object
-        Transformation from pixel coordinates of `image` to the
+        Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
         property of dataset objects.
     all_touched : boolean, optional
@@ -60,13 +60,12 @@ def geometry_mask(
 
 
 @ensure_env
-def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
+def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     """Yield (polygon, value for each set of adjacent pixels of the same value.
 
     Parameters
     ----------
-    image : numpy ndarray or rasterio Band object
-        (DatasetReader, bidx namedtuple).
+    source : array or DatasetReader or Band or tuple(DatasetReader, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
@@ -97,26 +96,25 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
     """
     transform = guard_transform(transform)
-    for s, v in _shapes(image, mask, connectivity, transform.to_gdal()):
+    for s, v in _shapes(source, mask, connectivity, transform.to_gdal()):
         yield s, v
 
 
 @ensure_env
-def sieve(image, size, out=None, mask=None, connectivity=4):
-    """Replace small polygons in `image` with value of their largest neighbor.
+def sieve(source, size, out=None, mask=None, connectivity=4):
+    """Replace small polygons in `source` with value of their largest neighbor.
 
     Polygons are found for each set of neighboring pixels of the same value.
 
     Parameters
     ----------
-    image : numpy ndarray or rasterio Band object
-        (DatasetReader, bidx namedtuple)
+    source : array or DatasetReader or Band or tuple(DatasetReader, bidx)
         Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
         rasterio.uint16, or rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
     out : numpy ndarray, optional
-        Array of same shape and data type as `image` in which to store results.
+        Array of same shape and data type as `source` in which to store results.
     mask : numpy ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -142,8 +140,8 @@ def sieve(image, size, out=None, mask=None, connectivity=4):
     """
 
     if out is None:
-        out = np.zeros(image.shape, image.dtype)
-    _sieve(image, size, out, mask, connectivity)
+        out = np.zeros(source.shape, source.dtype)
+    _sieve(source, size, out, mask, connectivity)
     return out
 
 
@@ -171,10 +169,10 @@ def rasterize(
         Used as fill value for all areas not covered by input
         geometries.
     out : numpy ndarray, optional
-        Array of same shape and data type as `image` in which to store
+        Array of same shape and data type as `source` in which to store
         results.
     transform : Affine transformation object, optional
-        Transformation from pixel coordinates of `image` to the
+        Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
         property of dataset objects.
     all_touched : boolean, optional
