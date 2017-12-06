@@ -36,12 +36,12 @@ Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 funcs = locals()
 
 
-def stats(source):
+def stats(dataset):
     """Return a tuple with raster min, max, and mean."""
-    if isinstance(source, tuple):
-        arr = source[0].read(source[1])
+    if isinstance(dataset, tuple):
+        arr = dataset[0].read(dataset[1])
     else:
-        arr = source
+        arr = dataset
     return Stats(np.min(arr), np.max(arr), np.mean(arr))
 
 
