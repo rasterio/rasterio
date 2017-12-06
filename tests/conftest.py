@@ -504,10 +504,6 @@ requires_only_gdal1 = pytest.mark.skipif(
     gdal_version.major != 1,
     reason="Only relevant for GDAL 1.x")
 
-requires_less_than_gdal110 = pytest.mark.skipif(
-    gdal_version.at_least('1.10'),
-    reason="Requires GDAL 1.9.x or earlier")
-
 requires_gdal110 = pytest.mark.skipif(
     not gdal_version.at_least('1.10'),
     reason="Requires GDAL 1.10.x")
