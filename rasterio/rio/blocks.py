@@ -21,14 +21,14 @@ class _Collection(object):
 
     """For use with `rasterio.rio.helpers.write_features()`."""
 
-    def __init__(self, src, bidx, precision=6, geographic=True):
+    def __init__(self, dataset, bidx, precision=6, geographic=True):
 
         """Export raster dataset windows to GeoJSON polygon features.
 
         Parameters
         ----------
-        src : RasterReader
-            An open datasource.
+        dataset : DatasetReader
+            An open dataset.
         bidx : int
             Extract windows from this band.
         precision : int, optional
@@ -42,7 +42,7 @@ class _Collection(object):
             GeoJSON polygon feature.
         """
 
-        self._src = src
+        self._src = dataset
         self._bidx = bidx
         self._precision = precision
         self._geographic = geographic
@@ -130,7 +130,7 @@ def blocks(
     coordinate reference system.
 
     For more information on exactly what blocks and windows represent, see
-    'src.block_windows()'.
+    'dataset.block_windows()'.
     """
 
     dump_kwds = {'sort_keys': True}
@@ -149,7 +149,7 @@ def blocks(
             raise click.BadParameter("Not a valid band index")
 
         collection = _Collection(
-            src=src,
+            dataset=src,
             bidx=bidx,
             precision=precision,
             geographic=projection != 'projected')
