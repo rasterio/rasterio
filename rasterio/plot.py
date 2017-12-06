@@ -40,11 +40,10 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
     Parameters
     ----------
-    source : array-like in raster axis order,
-        or (raster dataset, bidx) tuple,
-        or raster dataset,
-        If the tuple (raster dataset, bidx),
-        selects band `bidx` from raster.  If raster dataset display the rgb image
+    source : np.ndarray or DatasetReader or rasterio.Band or tuple(DatasetReader, bidx)
+        If tuple (DatasetReader, bidx),
+        selects band `bidx` from raster.
+        If raster dataset display the rgb image
         as defined in the colorinterp metadata, or default to first band.
     with_bounds : bool (opt)
         Whether to change the image extent to the spatial bounds of the image,
@@ -156,8 +155,15 @@ def plotting_extent(source, transform=None):
 
     Parameters
     ----------
-    source : raster dataset or array in image order (see reshape_as_image)
+    source : array-like in image order (see reshape_as_image),
+        or RasterReader
     transform: Affine, required if source is array
+        Defines the affine transform if source is an array
+
+    Returns
+    -------
+    tuple of float
+        left, right, bottom, top
     """
     if hasattr(source, 'bounds'):
         extent = (source.bounds.left, source.bounds.right,
@@ -184,7 +190,8 @@ def reshape_as_image(arr):
 
     Parameters
     ----------
-    source : array-like in a of format (bands, rows, columns)
+    arr : array-like of shape (bands, rows, columns)
+        image to reshape
     """
     # swap the axes order from (bands, rows, columns) to (rows, columns, bands)
     im = np.ma.transpose(arr, [1, 2, 0])
@@ -199,6 +206,7 @@ def reshape_as_raster(arr):
     Parameters
     ----------
     arr : array-like in the image form of (rows, columns, bands)
+        image to reshape
     """
     # swap the axes order from (rows, columns, bands) to (bands, rows, columns)
     im = np.transpose(arr, [2, 0, 1])
@@ -210,8 +218,9 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
 
     Parameters
     ----------
-    source : np.array or DatasetReader, rasterio.Band or tuple(dataset, bidx)
-        Input data to display.  The first three arrays in multi-dimensional
+    source : np.ndarray or DatasetReader or rasterio.Band or tuple(DatasetReader, bidx)
+        Input data to display.
+        The first three arrays in multi-dimensional
         arrays are plotted as red, green, and blue.
     bins : int, optional
         Compute histogram across N bins.
