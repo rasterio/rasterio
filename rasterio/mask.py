@@ -179,8 +179,11 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
         raster, shapes, all_touched=all_touched, invert=invert, crop=crop,
         pad=pad)
 
-    height, width = shape_mask.shape
-    out_shape = (raster.count, height, width)
+    if indexes is None:
+        count = raster.count
+    else:
+        count = 1 if isinstance(indexes, int) else len(indexes)
+    out_shape = (count, ) + shape_mask.shape
 
     out_image = raster.read(
         window=window, out_shape=out_shape, masked=True, indexes=indexes)
