@@ -5,7 +5,7 @@ Installation
 Dependencies
 ============
 
-Rasterio has one C library dependency: ``GDAL >=1.10``. GDAL itself depends on
+Rasterio has one C library dependency: ``GDAL >=1.11``. GDAL itself depends on
 many of other libraries provided by most major operating systems and also
 depends on the non standard GEOS and PROJ4 libraries.
 

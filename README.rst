@@ -161,7 +161,7 @@ tamper with your system's Python.
 Dependencies
 ------------
 
-Rasterio has a C library dependency: GDAL >=1.10. GDAL itself depends on some other libraries provided by most major operating systems and also
+Rasterio has a C library dependency: GDAL >=1.11. GDAL itself depends on some other libraries provided by most major operating systems and also
 depends on the non standard GEOS and PROJ4 libraries. How to meet these
 requirement will be explained below.
 

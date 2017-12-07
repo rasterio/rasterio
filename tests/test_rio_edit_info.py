@@ -16,7 +16,7 @@ from rasterio.rio.edit_info import (
 from rasterio.rio.main import main_group
 import rasterio.shutil
 
-from .conftest import requires_gdal110, requires_gdal21
+from .conftest import requires_gdal21
 
 
 PARAM_HANDLER = {
@@ -55,17 +55,6 @@ def test_delete_crs_exclusive_opts(data):
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--unset-crs', '--crs', 'epsg:4326'])
     assert result.exit_code == 2
-
-
-@requires_gdal110
-def test_unset_crs(data):
-    runner = CliRunner()
-    inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(main_group,
-                           ['edit-info', inputfile, '--unset-crs'])
-    assert result.exit_code == 0
-    with rasterio.open(inputfile) as src:
-        assert src.crs is None
 
 
 def test_edit_nodata_err(data):

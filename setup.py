@@ -142,8 +142,8 @@ gdal_version_parts = gdalversion.split('.')
 gdal_major_version = int(gdal_version_parts[0])
 gdal_minor_version = int(gdal_version_parts[1])
 
-if gdal_major_version == 1 and gdal_minor_version < 10:
-    log.fatal("GDAL >= 1.10 is required for rasterio.  Please upgrade GDAL.")
+if gdal_major_version == 1 and gdal_minor_version < 11:
+    log.fatal("GDAL >= 1.11 is required for rasterio.  Please upgrade GDAL.")
     sys.exit(1)
 
 # Conditionally copy the GDAL data. To be used in conjunction with
