@@ -20,7 +20,7 @@ from rasterio.enums import ColorInterp
 from rasterio.env import GDALVersion
 
 
-DEFAULT_SHAPE = (10, 10)
+DEFAULT_SHAPE = (10, 11)
 
 
 if sys.version_info > (3,):
@@ -232,7 +232,7 @@ def basic_featurecollection(basic_feature):
 @pytest.fixture
 def basic_image():
     """
-    A basic 10x10 array for testing sieve and shapes functions.
+    A basic 10x11 array for testing sieve and shapes functions.
     Contains a square feature 3x3 (size 9).
     Equivalent to results of rasterizing basic_geometry with all_touched=True.
 
@@ -251,7 +251,7 @@ def basic_image():
 @pytest.fixture
 def basic_image_2x2():
     """
-    A basic 10x10 array for testing sieve and shapes functions.
+    A basic 10x11 array for testing sieve and shapes functions.
     Contains a square feature 2x2 (size 4).
     Equivalent to results of rasterizing basic_geometry with all_touched=False.
 
@@ -270,7 +270,7 @@ def basic_image_2x2():
 @pytest.fixture
 def basic_image_2x2x2():
     """
-    A basic 10x10 array for testing sieve and shapes functions.
+    A basic 10x11 array for testing sieve and shapes functions.
     Contains a square feature 2x2 (size 4).
     Equivalent to results of rasterizing two times the basic_geometry with
     merge_alg='add'.
@@ -290,7 +290,7 @@ def basic_image_2x2x2():
 @pytest.fixture
 def pixelated_image(basic_image):
     """
-    A basic 10x10 array for testing sieve functions.  Contains a square feature
+    A basic 10x11 array for testing sieve functions.  Contains a square feature
     3x3 (size 9), with 2 isolated pixels.
 
     Returns
@@ -309,7 +309,7 @@ def pixelated_image(basic_image):
 @pytest.fixture
 def diagonal_image():
     """
-    A 10x10 array for testing sieve functions, with only one diagonal filled.
+    A 10x11 array for testing sieve functions, with only one diagonal filled.
 
     Returns
     -------
@@ -318,14 +318,14 @@ def diagonal_image():
     """
 
     image = np.zeros(DEFAULT_SHAPE, dtype=np.uint8)
-    np.fill_diagonal(image, 1)
+    np.fill_diagonal(image[:10, :10], 1)
     return image
 
 
 @pytest.fixture()
 def basic_image_file(tmpdir, basic_image):
     """
-    A basic raster file with a 10x10 array for testing sieve functions.
+    A basic raster file with a 10x11 array for testing sieve functions.
     Contains data from pixelated_image.
 
     Returns
@@ -360,7 +360,7 @@ def basic_image_file(tmpdir, basic_image):
 @pytest.fixture()
 def pixelated_image_file(tmpdir, pixelated_image):
     """
-    A basic raster file with a 10x10 array for testing sieve functions.
+    A basic raster file with a 10x11 array for testing sieve functions.
     Contains data from pixelated_image.
 
     Returns
