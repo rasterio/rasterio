@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio &mdash; rasterio 1.0a10 documentation</title>
+  <title>rasterio &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -205,13 +205,12 @@
             <span class="k">pass</span>
 
 <span class="kn">from</span> <span class="nn">rasterio._base</span> <span class="k">import</span> <span class="n">gdal_version</span>
-<span class="kn">from</span> <span class="nn">rasterio._copy</span> <span class="k">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">rasterio.drivers</span> <span class="k">import</span> <span class="n">is_blacklisted</span>
 <span class="kn">from</span> <span class="nn">rasterio.dtypes</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">bool_</span><span class="p">,</span> <span class="n">ubyte</span><span class="p">,</span> <span class="n">uint8</span><span class="p">,</span> <span class="n">uint16</span><span class="p">,</span> <span class="n">int16</span><span class="p">,</span> <span class="n">uint32</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">float64</span><span class="p">,</span>
     <span class="n">complex_</span><span class="p">,</span> <span class="n">check_dtype</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">rasterio.env</span> <span class="k">import</span> <span class="n">ensure_env</span><span class="p">,</span> <span class="n">Env</span>
-<span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="k">import</span> <span class="n">RasterioIOError</span>
+<span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="k">import</span> <span class="n">RasterioDeprecationWarning</span><span class="p">,</span> <span class="n">RasterioIOError</span>
 <span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="k">import</span> <span class="n">string_types</span>
 <span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">DatasetReader</span><span class="p">,</span> <span class="n">get_writer_for_path</span><span class="p">,</span> <span class="n">get_writer_for_driver</span><span class="p">,</span> <span class="n">MemoryFile</span><span class="p">)</span>
@@ -228,25 +227,27 @@
 <span class="c1"># TODO deprecate or remove in factor of rasterio.windows.___</span>
 <span class="k">def</span> <span class="nf">eval_window</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="k">import</span> <span class="n">evaluate</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="n">RasterioDeprecationWarning</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">window_shape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="k">import</span> <span class="n">shape</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="n">RasterioDeprecationWarning</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">shape</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">window_index</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">rasterio.windows</span> <span class="k">import</span> <span class="n">window_index</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;Deprecated; Use rasterio.windows instead&quot;</span><span class="p">,</span> <span class="n">RasterioDeprecationWarning</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">window_index</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;band&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;copy&#39;</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">]</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0a10&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;band&#39;</span><span class="p">,</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">]</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0a12&quot;</span>
 <span class="n">__gdal_version__</span> <span class="o">=</span> <span class="n">gdal_version</span><span class="p">()</span>
 
 <span class="c1"># Rasterio attaches NullHandler to the &#39;rasterio&#39; logger and its</span>
@@ -262,111 +263,87 @@
          <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Open a dataset for reading or writing.</span>
 
-<span class="sd">    The dataset may be located in a local file, in a resource located</span>
-<span class="sd">    by a URL, or contained within a stream of bytes.</span>
+<span class="sd">    The dataset may be located in a local file, in a resource located by</span>
+<span class="sd">    a URL, or contained within a stream of bytes.</span>
 
-<span class="sd">    To access a dataset within a zip file without unzipping the archive</span>
-<span class="sd">    use an Apache VFS style zip:// URL like</span>
+<span class="sd">    In read (&#39;r&#39;) or read/write (&#39;r+&#39;) mode, no keyword arguments are</span>
+<span class="sd">    required: these attributes are supplied by the opened dataset.</span>
 
-<span class="sd">      zip://path/to/archive.zip!path/to/example.tif</span>
-
-<span class="sd">    In read (&#39;r&#39;) or read/write (&#39;r+&#39;) mode, no other keyword arguments</span>
-<span class="sd">    are required: the attributes are supplied by the opened dataset.</span>
-
-<span class="sd">    In write mode, a driver name such as &quot;GTiff&quot; or &quot;JPEG&quot; (see GDAL</span>
-<span class="sd">    docs or ``gdal_translate --help`` on the command line), ``width``</span>
-<span class="sd">    (number of pixels per line) and ``height`` (number of lines), the</span>
-<span class="sd">    ``count`` number of bands in the new file must be specified.</span>
-<span class="sd">    Additionally, the data type for bands such as ``rasterio.ubyte`` for</span>
-<span class="sd">    8-bit bands or ``rasterio.uint16`` for 16-bit bands must be</span>
-<span class="sd">    specified using the ``dtype`` argument.</span>
+<span class="sd">    In write (&#39;w&#39;) mode, the driver, width, height, count, and dtype</span>
+<span class="sd">    keywords are strictly required.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    fp: string or file</span>
-<span class="sd">        A filename or URL, or file object opened in binary mode.</span>
-<span class="sd">    mode: string</span>
-<span class="sd">        &quot;r&quot; (read), &quot;r+&quot; (read/write), or &quot;w&quot; (write)</span>
-<span class="sd">    driver: string</span>
-<span class="sd">        Driver code specifying the format name (e.g. &quot;GTiff&quot; or</span>
-<span class="sd">        &quot;JPEG&quot;). See GDAL docs at</span>
-<span class="sd">        http://www.gdal.org/formats_list.html (optional, required</span>
-<span class="sd">        for writing).</span>
-<span class="sd">    width: int</span>
-<span class="sd">        Number of pixels per line (optional, required for write).</span>
-<span class="sd">    height: int</span>
-<span class="sd">        Number of lines (optional, required for write).</span>
-<span class="sd">    count: int &gt; 0</span>
-<span class="sd">        Count of bands (optional, required for write).</span>
-<span class="sd">    dtype: rasterio.dtype</span>
-<span class="sd">        the data type for bands such as ``rasterio.ubyte`` for</span>
-<span class="sd">        8-bit bands or ``rasterio.uint16`` for 16-bit bands</span>
-<span class="sd">        (optional, required for write)</span>
-<span class="sd">    crs: dict or string</span>
-<span class="sd">        Coordinate reference system (optional, recommended for write).</span>
-<span class="sd">    transform: Affine instance</span>
+<span class="sd">    fp : str or file object</span>
+<span class="sd">        A filename or URL, or file object opened in binary (&#39;rb&#39;) mode</span>
+<span class="sd">    mode : str, optional</span>
+<span class="sd">        &#39;r&#39; (read, the default), &#39;r+&#39; (read/write), or &#39;w&#39; (write)</span>
+<span class="sd">    driver : str, optional</span>
+<span class="sd">        A short format driver name (e.g. &quot;GTiff&quot; or &quot;JPEG&quot;) or a list of</span>
+<span class="sd">        such names (see GDAL docs at</span>
+<span class="sd">        http://www.gdal.org/formats_list.html). In &#39;w&#39; mode a single</span>
+<span class="sd">        name is required. In &#39;r&#39; or &#39;r+&#39; mode the driver can usually be</span>
+<span class="sd">        omitted. Registered drivers will be tried sequentially until a</span>
+<span class="sd">        match is found. When multiple drivers are available for a format</span>
+<span class="sd">        such as JPEG2000, one of them can be selected by using this</span>
+<span class="sd">        keyword argument.</span>
+<span class="sd">    width, height : int, optional</span>
+<span class="sd">        The numbers of rows and columns of the raster dataset. Required</span>
+<span class="sd">        in &#39;w&#39; mode, they are ignored in &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    count : int, optional</span>
+<span class="sd">        The count of dataset bands. Required in &#39;w&#39; mode, it is ignored</span>
+<span class="sd">        in &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    dtype : str or numpy dtype</span>
+<span class="sd">        The data type for bands. For example: &#39;uint8&#39; or</span>
+<span class="sd">        ``rasterio.uint16``. Required in &#39;w&#39; mode, it is ignored in</span>
+<span class="sd">        &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    crs : str, dict, or CRS; optional</span>
+<span class="sd">        The coordinate reference system. Required in &#39;w&#39; mode, it is</span>
+<span class="sd">        ignored in &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    transform : Affine instance, optional</span>
 <span class="sd">        Affine transformation mapping the pixel space to geographic</span>
-<span class="sd">        space (optional, recommended for writing).</span>
-<span class="sd">    nodata: number</span>
-<span class="sd">        Defines pixel value to be interpreted as null/nodata</span>
-<span class="sd">        (optional, recommended for write, will be broadcast to all</span>
-<span class="sd">        bands).</span>
+<span class="sd">        space. Required in &#39;w&#39; mode, it is ignored in &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    nodata : int, float, or nan; optional</span>
+<span class="sd">        Defines the pixel value to be interpreted as not valid data.</span>
+<span class="sd">        Required in &#39;w&#39; mode, it is ignored in &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    kwargs : optional</span>
+<span class="sd">        These are passed to format drivers as directives for creating</span>
+<span class="sd">        or interpreting datasets. For example: in &#39;w&#39; a `tiled=True`</span>
+<span class="sd">        keyword argument will direct the GeoTIFF format driver to</span>
+<span class="sd">        create a tiled, rather than striped, TIFF.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    A ``DatasetReader`` or ``DatasetUpdater`` object.</span>
 
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    In write mode, you must specify at least ``width``, ``height``,</span>
-<span class="sd">    ``count`` and ``dtype``.</span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
 
-<span class="sd">    A coordinate reference system for raster datasets in write mode</span>
-<span class="sd">    can be defined by the ``crs`` argument. It takes Proj4 style</span>
-<span class="sd">    mappings like</span>
+<span class="sd">    To open a GeoTIFF for reading using standard driver discovery and</span>
+<span class="sd">    no directives:</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    &gt;&gt;&gt; import rasterio</span>
+<span class="sd">    &gt;&gt;&gt; with rasterio.open(&#39;example.tif&#39;) as dataset:</span>
+<span class="sd">    ...     print(dataset.profile)</span>
 
-<span class="sd">      {&#39;proj&#39;: &#39;longlat&#39;, &#39;ellps&#39;: &#39;WGS84&#39;, &#39;datum&#39;: &#39;WGS84&#39;,</span>
-<span class="sd">       &#39;no_defs&#39;: True}</span>
+<span class="sd">    To open a JPEG2000 using only the JP2OpenJPEG driver:</span>
 
-<span class="sd">    An affine transformation that maps ``col,row`` pixel coordinates</span>
-<span class="sd">    to ``x,y`` coordinates in the coordinate reference system can be</span>
-<span class="sd">    specified using the ``transform`` argument. The value should be</span>
-<span class="sd">    an instance of ``affine.Affine``</span>
+<span class="sd">    &gt;&gt;&gt; with rasterio.open(</span>
+<span class="sd">    ...         &#39;example.jp2&#39;, driver=&#39;JP2OpenJPEG&#39;) as dataset:</span>
+<span class="sd">    ...     print(dataset.profile)</span>
 
-<span class="sd">    .. code:: python</span>
+<span class="sd">    To create a new 8-band, 16-bit unsigned, tiled, and LZW-compressed</span>
+<span class="sd">    GeoTIFF with a global extent and 0.5 degree resolution:</span>
 
-<span class="sd">        &gt;&gt;&gt; from affine import Affine</span>
-<span class="sd">        &gt;&gt;&gt; transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)</span>
-
-<span class="sd">    These coefficients are shown in the figure below.</span>
-
-<span class="sd">    .. code::</span>
-
-<span class="sd">      | x |   | a  b  c | | c |</span>
-<span class="sd">      | y | = | d  e  f | | r |</span>
-<span class="sd">      | 1 |   | 0  0  1 | | 1 |</span>
-
-<span class="sd">      a: rate of change of X with respect to increasing column,</span>
-<span class="sd">         i.e. pixel width</span>
-<span class="sd">      b: rotation, 0 if the raster is oriented &quot;north up&quot;</span>
-<span class="sd">      c: X coordinate of the top left corner of the top left pixel</span>
-<span class="sd">      d: rotation, 0 if the raster is oriented &quot;north up&quot;</span>
-<span class="sd">      e: rate of change of Y with respect to increasing row,</span>
-<span class="sd">         usually a negative number (i.e. -1 * pixel height) if</span>
-<span class="sd">         north-up.</span>
-<span class="sd">      f: Y coordinate of the top left corner of the top left pixel</span>
-
-<span class="sd">    A 6-element sequence of the affine transformation matrix</span>
-<span class="sd">    coefficients in ``c, a, b, f, d, e`` order, (i.e. GDAL</span>
-<span class="sd">    geotransform order) will be accepted until 1.0 (deprecated).</span>
-
-<span class="sd">    A virtual filesystem can be specified. The ``vfs`` parameter may</span>
-<span class="sd">    be an Apache Commons VFS style string beginning with &quot;zip://&quot; or</span>
-<span class="sd">    &quot;tar://&quot;&quot;. In this case, the ``path`` must be an absolute path</span>
-<span class="sd">    within that container.</span>
+<span class="sd">    &gt;&gt;&gt; from rasterio.transform import from_origin</span>
+<span class="sd">    &gt;&gt;&gt; with rasterio.open(</span>
+<span class="sd">    ...         &#39;example.tif&#39;, &#39;w&#39;, driver=&#39;GTiff&#39;, dtype=&#39;uint16&#39;,</span>
+<span class="sd">    ...         width=720, height=360, count=8, crs=&#39;EPSG:4326&#39;,</span>
+<span class="sd">    ...         transform=from_origin(-180.0, 90.0, 0.5, 0.5),</span>
+<span class="sd">    ...         nodata=0, tiled=True, compress=&#39;lzw&#39;) as dataset:</span>
+<span class="sd">    ...     dataset.write(...)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s1">&#39;write&#39;</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid path or file: </span><span class="si">{0!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
@@ -451,13 +428,13 @@
             <span class="c1"># be taken over by the dataset&#39;s context manager if it is not</span>
             <span class="c1"># None.</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r-&#39;</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&#39;r-&#39; mode is deprecated, use &#39;r&#39;&quot;</span><span class="p">,</span>
                               <span class="ne">DeprecationWarning</span><span class="p">)</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="n">DatasetReader</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;r+&#39;</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="n">get_writer_for_driver</span><span class="p">(</span><span class="n">driver</span><span class="p">)(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span>
                                                   <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
@@ -558,7 +535,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

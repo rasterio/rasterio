@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.windows module &mdash; rasterio 1.0a10 documentation</title>
+  <title>rasterio.windows module &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/> 
+    <link rel="top" title="rasterio 1.0a12 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -515,6 +515,127 @@ are not changed.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="rasterio.windows.WindowMethodsMixin">
+<em class="property">class </em><code class="descclassname">rasterio.windows.</code><code class="descname">WindowMethodsMixin</code><a class="reference internal" href="_modules/rasterio/windows.html#WindowMethodsMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.WindowMethodsMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Mixin providing methods for window-related calculations.
+These methods are wrappers for the functionality in
+<cite>rasterio.windows</cite> module.</p>
+<p>A subclass with this mixin MUST provide the following
+properties: <cite>transform</cite>, <cite>height</cite> and <cite>width</cite></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.windows.WindowMethodsMixin.window" title="rasterio.windows.WindowMethodsMixin.window"><code class="xref py py-obj docutils literal"><span class="pre">window</span></code></a>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;precision])</td>
+<td>Get the window corresponding to the bounding coordinates.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.windows.WindowMethodsMixin.window_bounds" title="rasterio.windows.WindowMethodsMixin.window_bounds"><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code></a>(window)</td>
+<td>Get the bounds of a window</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.windows.WindowMethodsMixin.window_transform" title="rasterio.windows.WindowMethodsMixin.window_transform"><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code></a>(window)</td>
+<td>Get the affine transform for a dataset window.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.windows.WindowMethodsMixin.window">
+<code class="descname">window</code><span class="sig-paren">(</span><em>left</em>, <em>bottom</em>, <em>right</em>, <em>top</em>, <em>precision=6</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#WindowMethodsMixin.window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.WindowMethodsMixin.window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the window corresponding to the bounding coordinates.</p>
+<p>The resulting window is not cropped to the row and column
+limits of the dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left: float</strong></p>
+<blockquote>
+<div><p>Left (west) bounding coordinate</p>
+</div></blockquote>
+<p><strong>bottom: float</strong></p>
+<blockquote>
+<div><p>Bottom (south) bounding coordinate</p>
+</div></blockquote>
+<p><strong>right: float</strong></p>
+<blockquote>
+<div><p>Right (east) bounding coordinate</p>
+</div></blockquote>
+<p><strong>top: float</strong></p>
+<blockquote>
+<div><p>Top (north) bounding coordinate</p>
+</div></blockquote>
+<p><strong>precision: int, optional</strong></p>
+<blockquote>
+<div><p>Number of decimal points of precision when computing inverse
+transform.</p>
+</div></blockquote>
+<p><strong>kwargs: mapping</strong></p>
+<blockquote>
+<div><p>For backwards compatibility: absorbs deprecated keyword args.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">window: Window</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasterio.windows.WindowMethodsMixin.window_bounds">
+<code class="descname">window_bounds</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#WindowMethodsMixin.window_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.WindowMethodsMixin.window_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the bounds of a window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window: rasterio.windows.Window</strong></p>
+<blockquote>
+<div><p>Dataset window</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bounds</strong> : tuple</p>
+<blockquote class="last">
+<div><p>x_min, y_min, x_max, y_max for the given window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rasterio.windows.WindowMethodsMixin.window_transform">
+<code class="descname">window_transform</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#WindowMethodsMixin.window_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.WindowMethodsMixin.window_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the affine transform for a dataset window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>window: rasterio.windows.Window</strong></p>
+<blockquote>
+<div><p>Dataset window</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">transform: Affine</p>
+<blockquote class="last">
+<div><p>The affine transform matrix for the given window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="rasterio.windows.bounds">
 <code class="descclassname">rasterio.windows.</code><code class="descname">bounds</code><span class="sig-paren">(</span><em>window</em>, <em>transform</em>, <em>height=0</em>, <em>width=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/windows.html#bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.windows.bounds" title="Permalink to this definition">¶</a></dt>
@@ -901,7 +1022,7 @@ targets.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

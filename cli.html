@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command Line Users Guide &mdash; rasterio 1.0a10 documentation</title>
+  <title>Command Line Users Guide &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="index.html"/>
         <link rel="next" title="Contributing" href="contributing.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -136,6 +136,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#merge">merge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rasterize">rasterize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rm">rm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sample">sample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shapes">shapes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#stack">stack</a></li>
@@ -222,30 +223,35 @@ as a python script.</p>
 <p><code class="docutils literal"><span class="pre">rio</span></code> is developed using the <a class="reference external" href="http://click.pocoo.org/">Click</a>  architecture.
 Its plugin system allows external modules to share a common namespace and
 handling of context variables.</p>
-<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio --help
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio --help                                                                                                                         ⏎
 <span class="go">Usage: rio [OPTIONS] COMMAND [ARGS]...</span>
 
 <span class="go">  Rasterio command line interface.</span>
 
 <span class="go">Options:</span>
-<span class="go">  -v, --verbose  Increase verbosity.</span>
-<span class="go">  -q, --quiet    Decrease verbosity.</span>
-<span class="go">  --version      Show the version and exit.</span>
-<span class="go">  --help         Show this message and exit.</span>
+<span class="go">  -v, --verbose       Increase verbosity.</span>
+<span class="go">  -q, --quiet         Decrease verbosity.</span>
+<span class="go">  --aws-profile TEXT  Selects a profile from your shared AWS credentials file</span>
+<span class="go">  --version           Show the version and exit.</span>
+<span class="go">  --gdal-version</span>
+<span class="go">  --help              Show this message and exit.</span>
 
 <span class="go">Commands:</span>
+<span class="go">  blocks     Write dataset blocks as GeoJSON features.</span>
 <span class="go">  bounds     Write bounding boxes to stdout as GeoJSON.</span>
 <span class="go">  calc       Raster data calculator.</span>
 <span class="go">  clip       Clip a raster to given bounds.</span>
 <span class="go">  convert    Copy and convert raster dataset.</span>
 <span class="go">  edit-info  Edit dataset metadata.</span>
-<span class="go">  env        Print information about the rio environment.</span>
+<span class="go">  env        Print information about the Rasterio environment.</span>
+<span class="go">  gcps       Print ground control points as GeoJSON.</span>
 <span class="go">  info       Print information about a data file.</span>
 <span class="go">  insp       Open a data file and start an interpreter.</span>
 <span class="go">  mask       Mask in raster using features.</span>
 <span class="go">  merge      Merge a stack of raster datasets.</span>
 <span class="go">  overview   Construct overviews in an existing dataset.</span>
 <span class="go">  rasterize  Rasterize features.</span>
+<span class="go">  rm         Delete a dataset.</span>
 <span class="go">  sample     Sample a dataset.</span>
 <span class="go">  shapes     Write shapes extracted from bands or masks.</span>
 <span class="go">  stack      Stack a number of bands into a multiband dataset.</span>
@@ -397,6 +403,7 @@ as uint8:</p>
 <li>affine transformation matrix</li>
 <li>nodata value</li>
 <li>tags</li>
+<li>color interpretation</li>
 </ul>
 <p>A TIFF created by spatially-unaware image processing software like Photoshop
 or Imagemagick can be turned into a GeoTIFF by editing these metadata items.</p>
@@ -413,6 +420,16 @@ Web Mercator (EPSG:3857),</p>
 <div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio edit-info --nodata <span class="m">0</span> example.tif
 </pre></div>
 </div>
+<p>or set its color interpretation to red, green, blue, and alpha:</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio edit-info --colorinterp <span class="nv">1</span><span class="o">=</span>red,2<span class="o">=</span>green,3<span class="o">=</span>blue,4<span class="o">=</span>alpha example.tif
+</pre></div>
+</div>
+<p>which can also be expressed as:</p>
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> rio edit-info --colorinterp RGBA example.tif
+</pre></div>
+</div>
+<p>See <code class="docutils literal"><span class="pre">rasterio.enums.ColorInterp</span></code> for a full list of supported color
+interpretations and the color docs for more information.</p>
 </div>
 <div class="section" id="mask">
 <h2>mask<a class="headerlink" href="#mask" title="Permalink to this headline">¶</a></h2>
@@ -598,6 +615,14 @@ argument, and dimensions may be provided in place of pixel resolution:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="rm">
+<h2>rm<a class="headerlink" href="#rm" title="Permalink to this headline">¶</a></h2>
+<p>New in 1.0</p>
+<p>Invoking the shell’s ‘$ rm &lt;path&gt;’ on a dataset can be used to
+delete a dataset referenced by a file path, but it won’t handle
+deleting side car files.  This command is aware of datasets and
+their sidecar files.</p>
+</div>
 <div class="section" id="sample">
 <h2>sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h2>
 <p>New in 0.18.</p>
@@ -770,7 +795,7 @@ for a list of available plugins.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

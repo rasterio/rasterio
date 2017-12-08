@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio package &mdash; rasterio 1.0a10 documentation</title>
+  <title>rasterio package &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="index.html"/> 
+    <link rel="top" title="rasterio 1.0a12 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -222,7 +222,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a><ul class="simple">
 </ul>
@@ -234,9 +236,9 @@
 </ul>
 </div>
 </div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-rasterio"></span><p>Rasterio</p>
+<div class="section" id="module-rasterio">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-rasterio" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio</p>
 <dl class="function">
 <dt id="rasterio.band">
 <code class="descclassname">rasterio.</code><code class="descname">band</code><span class="sig-paren">(</span><em>ds</em>, <em>bidx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio.html#band"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.band" title="Permalink to this definition">¶</a></dt>
@@ -266,72 +268,72 @@
 <dt id="rasterio.open">
 <code class="descclassname">rasterio.</code><code class="descname">open</code><span class="sig-paren">(</span><em>fp</em>, <em>mode='r'</em>, <em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio.html#open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a dataset for reading or writing.</p>
-<p>The dataset may be located in a local file, in a resource located
-by a URL, or contained within a stream of bytes.</p>
-<p>To access a dataset within a zip file without unzipping the archive
-use an Apache VFS style zip:// URL like</p>
-<blockquote>
-<div>zip://path/to/archive.zip!path/to/example.tif</div></blockquote>
-<p>In read (‘r’) or read/write (‘r+’) mode, no other keyword arguments
-are required: the attributes are supplied by the opened dataset.</p>
-<p>In write mode, a driver name such as “GTiff” or “JPEG” (see GDAL
-docs or <code class="docutils literal"><span class="pre">gdal_translate</span> <span class="pre">--help</span></code> on the command line), <code class="docutils literal"><span class="pre">width</span></code>
-(number of pixels per line) and <code class="docutils literal"><span class="pre">height</span></code> (number of lines), the
-<code class="docutils literal"><span class="pre">count</span></code> number of bands in the new file must be specified.
-Additionally, the data type for bands such as <code class="docutils literal"><span class="pre">rasterio.ubyte</span></code> for
-8-bit bands or <code class="docutils literal"><span class="pre">rasterio.uint16</span></code> for 16-bit bands must be
-specified using the <code class="docutils literal"><span class="pre">dtype</span></code> argument.</p>
+<p>The dataset may be located in a local file, in a resource located by
+a URL, or contained within a stream of bytes.</p>
+<p>In read (‘r’) or read/write (‘r+’) mode, no keyword arguments are
+required: these attributes are supplied by the opened dataset.</p>
+<p>In write (‘w’) mode, the driver, width, height, count, and dtype
+keywords are strictly required.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fp: string or file</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fp</strong> : str or file object</p>
 <blockquote>
-<div><p>A filename or URL, or file object opened in binary mode.</p>
+<div><p>A filename or URL, or file object opened in binary (‘rb’) mode</p>
 </div></blockquote>
-<p><strong>mode: string</strong></p>
+<p><strong>mode</strong> : str, optional</p>
 <blockquote>
-<div><p>“r” (read), “r+” (read/write), or “w” (write)</p>
+<div><p>‘r’ (read, the default), ‘r+’ (read/write), or ‘w’ (write)</p>
 </div></blockquote>
-<p><strong>driver: string</strong></p>
+<p><strong>driver</strong> : str, optional</p>
 <blockquote>
-<div><p>Driver code specifying the format name (e.g. “GTiff” or
-“JPEG”). See GDAL docs at
-<a class="reference external" href="http://www.gdal.org/formats_list.html">http://www.gdal.org/formats_list.html</a> (optional, required
-for writing).</p>
+<div><p>A short format driver name (e.g. “GTiff” or “JPEG”) or a list of
+such names (see GDAL docs at
+<a class="reference external" href="http://www.gdal.org/formats_list.html">http://www.gdal.org/formats_list.html</a>). In ‘w’ mode a single
+name is required. In ‘r’ or ‘r+’ mode the driver can usually be
+omitted. Registered drivers will be tried sequentially until a
+match is found. When multiple drivers are available for a format
+such as JPEG2000, one of them can be selected by using this
+keyword argument.</p>
 </div></blockquote>
-<p><strong>width: int</strong></p>
+<p><strong>width, height</strong> : int, optional</p>
 <blockquote>
-<div><p>Number of pixels per line (optional, required for write).</p>
+<div><p>The numbers of rows and columns of the raster dataset. Required
+in ‘w’ mode, they are ignored in ‘r’ or ‘r+’ mode.</p>
 </div></blockquote>
-<p><strong>height: int</strong></p>
+<p><strong>count</strong> : int, optional</p>
 <blockquote>
-<div><p>Number of lines (optional, required for write).</p>
+<div><p>The count of dataset bands. Required in ‘w’ mode, it is ignored
+in ‘r’ or ‘r+’ mode.</p>
 </div></blockquote>
-<p><strong>count: int &gt; 0</strong></p>
+<p><strong>dtype</strong> : str or numpy dtype</p>
 <blockquote>
-<div><p>Count of bands (optional, required for write).</p>
+<div><p>The data type for bands. For example: ‘uint8’ or
+<code class="docutils literal"><span class="pre">rasterio.uint16</span></code>. Required in ‘w’ mode, it is ignored in
+‘r’ or ‘r+’ mode.</p>
 </div></blockquote>
-<p><strong>dtype: rasterio.dtype</strong></p>
+<p><strong>crs</strong> : str, dict, or CRS; optional</p>
 <blockquote>
-<div><p>the data type for bands such as <code class="docutils literal"><span class="pre">rasterio.ubyte</span></code> for
-8-bit bands or <code class="docutils literal"><span class="pre">rasterio.uint16</span></code> for 16-bit bands
-(optional, required for write)</p>
+<div><p>The coordinate reference system. Required in ‘w’ mode, it is
+ignored in ‘r’ or ‘r+’ mode.</p>
 </div></blockquote>
-<p><strong>crs: dict or string</strong></p>
-<blockquote>
-<div><p>Coordinate reference system (optional, recommended for write).</p>
-</div></blockquote>
-<p><strong>transform: Affine instance</strong></p>
+<p><strong>transform</strong> : Affine instance, optional</p>
 <blockquote>
 <div><p>Affine transformation mapping the pixel space to geographic
-space (optional, recommended for writing).</p>
+space. Required in ‘w’ mode, it is ignored in ‘r’ or ‘r+’ mode.</p>
 </div></blockquote>
-<p><strong>nodata: number</strong></p>
+<p><strong>nodata</strong> : int, float, or nan; optional</p>
 <blockquote>
-<div><p>Defines pixel value to be interpreted as null/nodata
-(optional, recommended for write, will be broadcast to all
-bands).</p>
+<div><p>Defines the pixel value to be interpreted as not valid data.
+Required in ‘w’ mode, it is ignored in ‘r’ or ‘r+’ mode.</p>
+</div></blockquote>
+<p><strong>kwargs</strong> : optional</p>
+<blockquote>
+<div><p>These are passed to format drivers as directives for creating
+or interpreting datasets. For example: in ‘w’ a <cite>tiled=True</cite>
+keyword argument will direct the GeoTIFF format driver to
+create a tiled, rather than striped, TIFF.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -340,83 +342,31 @@ bands).</p>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Notes</p>
-<p>In write mode, you must specify at least <code class="docutils literal"><span class="pre">width</span></code>, <code class="docutils literal"><span class="pre">height</span></code>,
-<code class="docutils literal"><span class="pre">count</span></code> and <code class="docutils literal"><span class="pre">dtype</span></code>.</p>
-<p>A coordinate reference system for raster datasets in write mode
-can be defined by the <code class="docutils literal"><span class="pre">crs</span></code> argument. It takes Proj4 style
-mappings like</p>
-<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;proj&#39;</span><span class="p">:</span> <span class="s1">&#39;longlat&#39;</span><span class="p">,</span> <span class="s1">&#39;ellps&#39;</span><span class="p">:</span> <span class="s1">&#39;WGS84&#39;</span><span class="p">,</span> <span class="s1">&#39;datum&#39;</span><span class="p">:</span> <span class="s1">&#39;WGS84&#39;</span><span class="p">,</span>
- <span class="s1">&#39;no_defs&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<p class="rubric">Examples</p>
+<p>To open a GeoTIFF for reading using standard driver discovery and
+no directives:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;example.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>An affine transformation that maps <code class="docutils literal"><span class="pre">col,row</span></code> pixel coordinates
-to <code class="docutils literal"><span class="pre">x,y</span></code> coordinates in the coordinate reference system can be
-specified using the <code class="docutils literal"><span class="pre">transform</span></code> argument. The value should be
-an instance of <code class="docutils literal"><span class="pre">affine.Affine</span></code></p>
-<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">affine</span> <span class="k">import</span> <span class="n">Affine</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">transform</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">180.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">90.0</span><span class="p">)</span>
+<p>To open a JPEG2000 using only the JP2OpenJPEG driver:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="s1">&#39;example.jp2&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;JP2OpenJPEG&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>These coefficients are shown in the figure below.</p>
-<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">x</span> <span class="o">|</span>   <span class="o">|</span> <span class="n">a</span>  <span class="n">b</span>  <span class="n">c</span> <span class="o">|</span> <span class="o">|</span> <span class="n">c</span> <span class="o">|</span>
-<span class="o">|</span> <span class="n">y</span> <span class="o">|</span> <span class="o">=</span> <span class="o">|</span> <span class="n">d</span>  <span class="n">e</span>  <span class="n">f</span> <span class="o">|</span> <span class="o">|</span> <span class="n">r</span> <span class="o">|</span>
-<span class="o">|</span> <span class="mi">1</span> <span class="o">|</span>   <span class="o">|</span> <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span> <span class="o">|</span> <span class="o">|</span> <span class="mi">1</span> <span class="o">|</span>
-
-<span class="n">a</span><span class="p">:</span> <span class="n">rate</span> <span class="n">of</span> <span class="n">change</span> <span class="n">of</span> <span class="n">X</span> <span class="k">with</span> <span class="n">respect</span> <span class="n">to</span> <span class="n">increasing</span> <span class="n">column</span><span class="p">,</span>
-   <span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="n">pixel</span> <span class="n">width</span>
-<span class="n">b</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">the</span> <span class="n">raster</span> <span class="ow">is</span> <span class="n">oriented</span> <span class="s2">&quot;north up&quot;</span>
-<span class="n">c</span><span class="p">:</span> <span class="n">X</span> <span class="n">coordinate</span> <span class="n">of</span> <span class="n">the</span> <span class="n">top</span> <span class="n">left</span> <span class="n">corner</span> <span class="n">of</span> <span class="n">the</span> <span class="n">top</span> <span class="n">left</span> <span class="n">pixel</span>
-<span class="n">d</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">the</span> <span class="n">raster</span> <span class="ow">is</span> <span class="n">oriented</span> <span class="s2">&quot;north up&quot;</span>
-<span class="n">e</span><span class="p">:</span> <span class="n">rate</span> <span class="n">of</span> <span class="n">change</span> <span class="n">of</span> <span class="n">Y</span> <span class="k">with</span> <span class="n">respect</span> <span class="n">to</span> <span class="n">increasing</span> <span class="n">row</span><span class="p">,</span>
-   <span class="n">usually</span> <span class="n">a</span> <span class="n">negative</span> <span class="n">number</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">e</span><span class="o">.</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">pixel</span> <span class="n">height</span><span class="p">)</span> <span class="k">if</span>
-   <span class="n">north</span><span class="o">-</span><span class="n">up</span><span class="o">.</span>
-<span class="n">f</span><span class="p">:</span> <span class="n">Y</span> <span class="n">coordinate</span> <span class="n">of</span> <span class="n">the</span> <span class="n">top</span> <span class="n">left</span> <span class="n">corner</span> <span class="n">of</span> <span class="n">the</span> <span class="n">top</span> <span class="n">left</span> <span class="n">pixel</span>
+<p>To create a new 8-band, 16-bit unsigned, tiled, and LZW-compressed
+GeoTIFF with a global extent and 0.5 degree resolution:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="k">import</span> <span class="n">from_origin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="s1">&#39;example.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;uint16&#39;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">width</span><span class="o">=</span><span class="mi">720</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s1">&#39;EPSG:4326&#39;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">transform</span><span class="o">=</span><span class="n">from_origin</span><span class="p">(</span><span class="o">-</span><span class="mf">180.0</span><span class="p">,</span> <span class="mf">90.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">nodata</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tiled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="s1">&#39;lzw&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">dataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A 6-element sequence of the affine transformation matrix
-coefficients in <code class="docutils literal"><span class="pre">c,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">f,</span> <span class="pre">d,</span> <span class="pre">e</span></code> order, (i.e. GDAL
-geotransform order) will be accepted until 1.0 (deprecated).</p>
-<p>A virtual filesystem can be specified. The <code class="docutils literal"><span class="pre">vfs</span></code> parameter may
-be an Apache Commons VFS style string beginning with “zip://” or
-“tar://”“. In this case, the <code class="docutils literal"><span class="pre">path</span></code> must be an absolute path
-within that container.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="rasterio.copy">
-<code class="descclassname">rasterio.</code><code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rasterio.copy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy a raster from a path or open dataset handle to a new destination
-with driver specific creation options.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src</strong> : str or rasterio.io.DatasetReader</p>
-<blockquote>
-<div><p>Path to source dataset or open dataset handle.</p>
-</div></blockquote>
-<p><strong>dst</strong> : str</p>
-<blockquote>
-<div><p>Output dataset path.</p>
-</div></blockquote>
-<p><strong>driver</strong> : str, optional</p>
-<blockquote>
-<div><p>Output driver name.</p>
-</div></blockquote>
-<p><strong>strict</strong> : bool, optional.  Default: True</p>
-<blockquote>
-<div><p>Indicates if the output must be strictly equivalent or if the
-driver may adapt as necessary.</p>
-</div></blockquote>
-<p><strong>creation_options</strong> : <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs, optional</p>
-<blockquote class="last">
-<div><p>Creation options for output dataset.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
@@ -496,7 +446,7 @@ driver may adapt as necessary.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

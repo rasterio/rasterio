@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.features &mdash; rasterio 1.0a10 documentation</title>
+  <title>rasterio.features &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -348,6 +348,7 @@
         <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">transform</span><span class="o">=</span><span class="n">IDENTITY</span><span class="p">,</span>
         <span class="n">all_touched</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">merge_alg</span><span class="o">=</span><span class="s1">&#39;replace&#39;</span><span class="p">,</span>
         <span class="n">default_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return an image array with input geometries burned in.</span>
@@ -373,6 +374,9 @@
 <span class="sd">        If True, all pixels touched by geometries will be burned in.  If</span>
 <span class="sd">        false, only pixels whose center is within the polygon or that</span>
 <span class="sd">        are selected by Bresenham&#39;s line algorithm will be burned in.</span>
+<span class="sd">    merge_alg : str, optional</span>
+<span class="sd">        If `replace` (default), the new value will overwrite the existing value.</span>
+<span class="sd">        If `add`, the new value will be added to the existing raster.</span>
 <span class="sd">    default_value : int or float, optional</span>
 <span class="sd">        Used as value for all geometries, if not provided in `shapes`.</span>
 <span class="sd">    dtype : rasterio or numpy data type, optional</span>
@@ -432,15 +436,14 @@
             <span class="n">value</span> <span class="o">=</span> <span class="n">default_value</span>
         <span class="n">geom</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="s1">&#39;__geo_interface__&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">geom</span>
 
-        <span class="c1"># not isinstance(geom, dict) or</span>
-        <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">geom</span> <span class="ow">or</span> <span class="s1">&#39;coordinates&#39;</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">:</span>
-            <span class="n">valid_shapes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geom</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-            <span class="n">shape_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># geom must be a valid GeoJSON geometry type and non-empty</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_geom</span><span class="p">(</span><span class="n">geom</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;Invalid geometry object at index </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
             <span class="p">)</span>
+
+        <span class="n">valid_shapes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geom</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="n">shape_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_shapes</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No valid geometry objects found for rasterize&#39;</span><span class="p">)</span>
@@ -474,8 +477,11 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either an out_shape or image must be provided&#39;</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;width and height must be &gt; 0&quot;</span><span class="p">)</span>
+
     <span class="n">transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
-    <span class="n">_rasterize</span><span class="p">(</span><span class="n">valid_shapes</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">transform</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">(),</span> <span class="n">all_touched</span><span class="p">)</span>
+    <span class="n">_rasterize</span><span class="p">(</span><span class="n">valid_shapes</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">transform</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">(),</span> <span class="n">all_touched</span><span class="p">,</span> <span class="n">merge_alg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
@@ -556,12 +562,95 @@
     <span class="n">window</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">round_shape</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="s1">&#39;ceil&#39;</span><span class="p">,</span> <span class="n">pixel_precision</span><span class="o">=</span><span class="n">pixel_precision</span><span class="p">)</span>
 
     <span class="c1"># Make sure that window overlaps raster</span>
-    <span class="n">raster_window</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+    <span class="n">raster_window</span> <span class="o">=</span> <span class="n">Window</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
 
     <span class="c1"># This will raise a WindowError if windows do not overlap</span>
     <span class="n">window</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">raster_window</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">window</span></div>
+
+
+<div class="viewcode-block" id="is_valid_geom"><a class="viewcode-back" href="../../rasterio.features.html#rasterio.features.is_valid_geom">[docs]</a><span class="k">def</span> <span class="nf">is_valid_geom</span><span class="p">(</span><span class="n">geom</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks to see if geometry is a valid GeoJSON geometry type or</span>
+<span class="sd">    GeometryCollection.</span>
+
+<span class="sd">    Geometries must be non-empty, and have at least x, y coordinates.</span>
+
+<span class="sd">    Note: only the first coordinate is checked for validity.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geom: an object that implements the geo interface or GeoJSON-like object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool: True if object is a valid GeoJSON geometry type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">geom_types</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Point&#39;</span><span class="p">,</span> <span class="s1">&#39;MultiPoint&#39;</span><span class="p">,</span> <span class="s1">&#39;LineString&#39;</span><span class="p">,</span> <span class="s1">&#39;MultiLineString&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Polygon&#39;</span><span class="p">,</span> <span class="s1">&#39;MultiPolygon&#39;</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">geom_type</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geom_types</span><span class="o">.</span><span class="n">union</span><span class="p">({</span><span class="s1">&#39;GeometryCollection&#39;</span><span class="p">}):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">geom_type</span> <span class="ow">in</span> <span class="n">geom_types</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;coordinates&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s1">&#39;coordinates&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;Point&#39;</span><span class="p">:</span>
+            <span class="c1"># Points must have at least x, y</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;MultiPoint&#39;</span><span class="p">:</span>
+            <span class="c1"># Multi points must have at least one point with at least x, y</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;LineString&#39;</span><span class="p">:</span>
+            <span class="c1"># Lines must have at least 2 coordinates and at least x, y for</span>
+            <span class="c1"># a coordinate</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;MultiLineString&#39;</span><span class="p">:</span>
+            <span class="c1"># Multi lines must have at least one LineString</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;Polygon&#39;</span><span class="p">:</span>
+            <span class="c1"># Polygons must have at least 1 ring, with at least 4 coordinates,</span>
+            <span class="c1"># with at least x, y for a coordinate</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="ow">and</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;MultiPolygon&#39;</span><span class="p">:</span>
+            <span class="c1"># Muti polygons must have at least one Polygon</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s1">&#39;GeometryCollection&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;geometries&#39;</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s1">&#39;geometries&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># While technically valid according to GeoJSON spec, an empty</span>
+            <span class="c1"># GeometryCollection will cause issues if used in rasterio</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">geom</span><span class="p">[</span><span class="s1">&#39;geometries&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_geom</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># short-circuit and fail early</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
 </pre></div>
 
            </div>
@@ -598,7 +687,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

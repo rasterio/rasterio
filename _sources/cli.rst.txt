@@ -16,30 +16,35 @@ handling of context variables.
 
 .. code-block:: console
 
-    $ rio --help
+    $ rio --help                                                                                                                         ⏎
     Usage: rio [OPTIONS] COMMAND [ARGS]...
 
       Rasterio command line interface.
 
     Options:
-      -v, --verbose  Increase verbosity.
-      -q, --quiet    Decrease verbosity.
-      --version      Show the version and exit.
-      --help         Show this message and exit.
+      -v, --verbose       Increase verbosity.
+      -q, --quiet         Decrease verbosity.
+      --aws-profile TEXT  Selects a profile from your shared AWS credentials file
+      --version           Show the version and exit.
+      --gdal-version
+      --help              Show this message and exit.
 
     Commands:
+      blocks     Write dataset blocks as GeoJSON features.
       bounds     Write bounding boxes to stdout as GeoJSON.
       calc       Raster data calculator.
       clip       Clip a raster to given bounds.
       convert    Copy and convert raster dataset.
       edit-info  Edit dataset metadata.
-      env        Print information about the rio environment.
+      env        Print information about the Rasterio environment.
+      gcps       Print ground control points as GeoJSON.
       info       Print information about a data file.
       insp       Open a data file and start an interpreter.
       mask       Mask in raster using features.
       merge      Merge a stack of raster datasets.
       overview   Construct overviews in an existing dataset.
       rasterize  Rasterize features.
+      rm         Delete a dataset.
       sample     Sample a dataset.
       shapes     Write shapes extracted from bands or masks.
       stack      Stack a number of bands into a multiband dataset.
@@ -231,6 +236,7 @@ The ``edit-info`` command allows you edit a raster dataset's metadata, namely
 - affine transformation matrix
 - nodata value
 - tags
+- color interpretation
 
 A TIFF created by spatially-unaware image processing software like Photoshop
 or Imagemagick can be turned into a GeoTIFF by editing these metadata items.
@@ -253,6 +259,21 @@ or set its nodata value to, e.g., `0`:
 .. code-block:: console
 
     $ rio edit-info --nodata 0 example.tif
+
+or set its color interpretation to red, green, blue, and alpha:
+
+.. code-block:: console
+
+    $ rio edit-info --colorinterp 1=red,2=green,3=blue,4=alpha example.tif
+
+which can also be expressed as:
+
+.. code-block:: console
+
+    $ rio edit-info --colorinterp RGBA example.tif
+
+See ``rasterio.enums.ColorInterp`` for a full list of supported color
+interpretations and the color docs for more information.
 
 
 mask
@@ -482,6 +503,17 @@ Other options are available, see:
 .. code-block:: console
 
     $ rio rasterize --help
+
+
+rm
+--
+
+New in 1.0
+
+Invoking the shell's '$ rm <path>' on a dataset can be used to
+delete a dataset referenced by a file path, but it won't handle
+deleting side car files.  This command is aware of datasets and
+their sidecar files.
 
 
 sample

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Georeferencing &mdash; rasterio 1.0a10 documentation</title>
+  <title>Georeferencing &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="../index.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../index.html"/>
         <link rel="next" title="Options" href="image_options.html"/>
         <link rel="prev" title="Filling nodata areas" href="fillnodata.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -231,7 +231,7 @@ it displayed on your screen). Column index increases to the right, and row
 index increases downward. The mapping of these coordinates to “world”
 coordinates in the dataset’s reference system is done with an affine
 transformation matrix.</p>
-<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">affine</span>
+<div class="highlight-pycon"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span><span class="o">.</span><span class="n">transform</span>
 <span class="go">Affine(300.0379266750948, 0.0, 101985.0,</span>
 <span class="go">       0.0, -300.041782729805, 2826915.0)</span>
 </pre></div>
@@ -294,7 +294,7 @@ described at <a class="reference external" href="https://github.com/sgillies/aff
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

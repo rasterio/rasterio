@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rasterio.transform &mdash; rasterio 1.0a10 documentation</title>
+  <title>rasterio.transform &mdash; rasterio 1.0a12 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="rasterio 1.0a10 documentation" href="../../index.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../../index.html"/>
         <link rel="up" title="rasterio" href="../rasterio.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0a10
+                1.0a12
               </div>
             
           
@@ -203,6 +203,69 @@
 
 <span class="n">IDENTITY</span> <span class="o">=</span> <span class="n">Affine</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
 <span class="n">GDAL_IDENTITY</span> <span class="o">=</span> <span class="n">IDENTITY</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="TransformMethodsMixin"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.TransformMethodsMixin">[docs]</a><span class="k">class</span> <span class="nc">TransformMethodsMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin providing methods for calculations related</span>
+<span class="sd">    to transforming between rows and columns of the raster</span>
+<span class="sd">    array and the coordinates.</span>
+
+<span class="sd">    These methods are wrappers for the functionality in</span>
+<span class="sd">    `rasterio.transform` module.</span>
+
+<span class="sd">    A subclass with this mixin MUST provide a `transform`</span>
+<span class="sd">    property.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TransformMethodsMixin.xy"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.TransformMethodsMixin.xy">[docs]</a>    <span class="k">def</span> <span class="nf">xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the coordinates ``(x, y)`` of a pixel at `row` and `col`.</span>
+<span class="sd">        The pixel&#39;s center is returned by default, but a corner can be returned</span>
+<span class="sd">        by setting `offset` to one of `ul, ur, ll, lr`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        row : int</span>
+<span class="sd">            Pixel row.</span>
+<span class="sd">        col : int</span>
+<span class="sd">            Pixel column.</span>
+<span class="sd">        offset : str, optional</span>
+<span class="sd">            Determines if the returned coordinates are for the center of the</span>
+<span class="sd">            pixel or for a corner.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            ``(x, y)``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransformMethodsMixin.index"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.TransformMethodsMixin.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the (row, col) index of the pixel containing (x, y) given a</span>
+<span class="sd">        coordinate reference system.</span>
+
+<span class="sd">        Use an epsilon, magnitude determined by the precision parameter</span>
+<span class="sd">        and sign determined by the op function:</span>
+<span class="sd">            positive for floor, negative for ceil.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : float</span>
+<span class="sd">            x value in coordinate reference system</span>
+<span class="sd">        y : float</span>
+<span class="sd">            y value in coordinate reference system</span>
+<span class="sd">        op : function, optional (default: math.floor)</span>
+<span class="sd">            Function to convert fractional pixels to whole numbers (floor,</span>
+<span class="sd">            ceiling, round)</span>
+<span class="sd">        precision : int, optional (default: 6)</span>
+<span class="sd">            Decimal places of precision in indexing, as in `round()`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (row index, col index)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">rowcol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="tastes_like_gdal"><a class="viewcode-back" href="../../rasterio.transform.html#rasterio.transform.tastes_like_gdal">[docs]</a><span class="k">def</span> <span class="nf">tastes_like_gdal</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
@@ -410,7 +473,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'1.0a10',
+            VERSION:'1.0a12',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
