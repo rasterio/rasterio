@@ -84,8 +84,7 @@ try:
     import numpy as np
     include_dirs.append(np.get_include())
 except ImportError:
-    log.critical("Numpy and its headers are required to run setup(). Exiting.")
-    sys.exit(1)
+    sys.exit("ERROR: Numpy and its headers are required to run setup().")
 
 try:
     gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
@@ -133,18 +132,17 @@ if '--gdalversion' in sys.argv:
              gdalversion)
 
 if not gdalversion:
-    log.fatal("A GDAL API version must be specified. Provide a path "
+    sys.exit("ERROR: A GDAL API version must be specified. Provide a path "
               "to gdal-config using a GDAL_CONFIG environment variable "
               "or use a GDAL_VERSION environment variable.")
-    sys.exit(1)
 
 gdal_version_parts = gdalversion.split('.')
 gdal_major_version = int(gdal_version_parts[0])
 gdal_minor_version = int(gdal_version_parts[1])
 
 if gdal_major_version == 1 and gdal_minor_version < 11:
-    log.fatal("GDAL >= 1.11 is required for rasterio.  Please upgrade GDAL.")
-    sys.exit(1)
+    sys.exit("ERROR: GDAL >= 1.11 is required for rasterio.  "
+             "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
@@ -221,10 +219,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
     log.info("MANIFEST.in found, presume a repo, cythonizing...")
 
     if not cythonize:
-        log.critical(
-            "Cython.Build.cythonize not found. "
+        sys.exit(
+            "ERROR: Cython.Build.cythonize not found. "
             "Cython is required to build from a repo.")
-        sys.exit(1)
 
     # Copy the GDAL version-specific shim module to _shim.pyx.
     if gdal_major_version == 2 and gdal_minor_version >= 1:
