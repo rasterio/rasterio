@@ -180,10 +180,11 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
         pad=pad)
 
     if indexes is None:
-        count = raster.count
+        out_shape = (raster.count, ) + shape_mask.shape
+    elif isinstance(indexes, int):
+        out_shape = shape_mask.shape
     else:
-        count = 1 if isinstance(indexes, int) else len(indexes)
-    out_shape = (count, ) + shape_mask.shape
+        out_shape = (len(indexes), ) + shape_mask.shape
 
     out_image = raster.read(
         window=window, out_shape=out_shape, masked=True, indexes=indexes)
@@ -193,5 +194,4 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
         out_image = out_image.filled(nodata)
 
     return out_image, transform
-
 
