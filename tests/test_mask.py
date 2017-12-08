@@ -155,6 +155,7 @@ def test_mask_indexes(basic_image_2x2, basic_image_file, basic_geometry):
     with rasterio.open(basic_image_file) as src:
         masked, transform = mask(src, geometries, indexes=1)
 
+    assert np.ndim(masked) == 2
     assert np.array_equal(masked, basic_image_2x2)
     assert (type(masked) == np.ndarray)
 
