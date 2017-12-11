@@ -10,8 +10,8 @@ import pytest
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
-from rasterio.env import default_options, GDALVersion
-from rasterio.errors import EnvError, RasterioIOError
+from rasterio.env import default_options, GDALVersion, require_gdal_version
+from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
 
 from .conftest import requires_gdal21
@@ -397,23 +397,23 @@ def test_gdal_cachemax():
         set_gdal_config('GDAL_CACHEMAX', int(original_cachemax / 1000000))
 
 
-def test_gdalversion_class_from_string():
-    v = GDALVersion.from_string('1.9.0')
+def test_gdalversion_class_parse():
+    v = GDALVersion.parse('1.9.0')
     assert v.major == 1 and v.minor == 9
 
-    v = GDALVersion.from_string('1.9')
+    v = GDALVersion.parse('1.9')
     assert v.major == 1 and v.minor == 9
 
-    v = GDALVersion.from_string('1.9a')
+    v = GDALVersion.parse('1.9a')
     assert v.major == 1 and v.minor == 9
 
 
-def test_gdalversion_class_from_string_err():
+def test_gdalversion_class_parse_err():
     invalids = ('foo', 'foo.bar', '1', '1.', '1.a', '.1')
 
     for invalid in invalids:
         with pytest.raises(ValueError):
-            GDALVersion.from_string(invalid)
+            GDALVersion.parse(invalid)
 
 
 def test_gdalversion_class_runtime():
@@ -428,14 +428,18 @@ def test_gdalversion_class_cmp():
     assert GDALVersion(1, 2) < GDALVersion(2, 2)
 
     # Because we don't care about patch component
-    assert GDALVersion.from_string('1.0') == GDALVersion.from_string('1.0.10')
+    assert GDALVersion.parse('1.0') == GDALVersion.parse('1.0.10')
 
-    assert GDALVersion.from_string('1.9') < GDALVersion.from_string('2.2.0')
-    assert GDALVersion.from_string('2.0.0') > GDALVersion(1, 9)
+    assert GDALVersion.parse('1.9') < GDALVersion.parse('2.2.0')
+    assert GDALVersion.parse('2.0.0') > GDALVersion(1, 9)
 
 
 def test_gdalversion_class_repr():
-    assert str(GDALVersion(2, 1)) == 'GDALVersion(major=2, minor=1)'
+    assert (GDALVersion(2, 1)).__repr__() == 'GDALVersion(major=2, minor=1)'
+
+
+def test_gdalversion_class_str():
+    assert str(GDALVersion(2, 1)) == '2.1'
 
 
 def test_gdalversion_class_at_least():
@@ -454,3 +458,126 @@ def test_gdalversion_class_at_least_invalid_type():
     for invalid in invalids_types:
         with pytest.raises(TypeError):
             GDALVersion(2, 1).at_least(invalid)
+
+
+def test_require_gdal_version():
+    """Functions that meet the required version are allowed, those that
+    are too low raise a GDALVersionError"""
+    @require_gdal_version('1.0')
+    def a():
+        return 1
+
+    assert a() == 1
+
+
+    @require_gdal_version('1000000.0')
+    def b():
+        return 2
+
+    with pytest.raises(GDALVersionError):
+        b()
+
+
+def test_require_gdal_version_err():
+    """version is a required parameter and must be valid"""
+
+    for invalid_version in ['bogus', 'a.b', '1.a.b']:
+        with pytest.raises(ValueError):
+            @require_gdal_version(invalid_version)
+            def a():
+                return 1
+
+
+def test_require_gdal_version_param():
+    """Parameter is allowed for all versions >= 1.0"""
+    @require_gdal_version('1.0', param='foo')
+    def a(foo=None):
+        return foo
+
+    assert a() == None
+    assert a('bar') == 'bar'
+
+
+def test_require_gdal_version_param_version_too_low():
+    """Parameter is not allowed since runtime is too low a version"""
+    version = '10000000.0'
+    @require_gdal_version(version, param='foo')
+    def a(foo=None):
+        return foo
+
+    assert a() == None  # param can't be checked if not passed as a kwd
+
+    with pytest.raises(GDALVersionError) as exc_info:
+        a(foo='bar')
+
+    message = 'usage of parameter "foo" requires GDAL >= {0}'.format(version)
+    assert message in exc_info.value.args[0]
+
+
+def test_require_gdal_version_param_values():
+    """Parameter values are allowed for all versions >= 1.0"""
+
+    for values in [('bar',), ['bar'], {'bar'}]:
+        @require_gdal_version('1.0', param='foo', values=values)
+        def a(foo=None):
+            return foo
+
+        assert a() == None
+        assert a(foo='bar') == 'bar'
+
+
+def test_require_gdal_version_param_values_err():
+    """Parameter values must be tuple, list, or set, otherwise raises
+    ValueError"""
+
+    for invalid_values in ['bar', 1, 1.5, {'a': 'b'}]:
+        with pytest.raises(ValueError):
+            @require_gdal_version('1.0', param='foo', values=invalid_values)
+            def a(foo=None):
+                return foo
+
+        with pytest.raises(ValueError):
+            @require_gdal_version('1.0', values=invalid_values)
+            def a(foo=None):
+                return foo
+
+
+def test_require_gdal_version_param_values_version_too_low():
+    """Parameter values not allowed since runtime is too low a version"""
+    version = '10000000.0'
+    @require_gdal_version(version, param='foo', values=['bar'])
+    def a(foo=None):
+        return foo
+
+    assert a(foo='ok') == 'ok'  # param value allowed if not in values
+
+    with pytest.raises(GDALVersionError) as exc_info:
+        a(foo='bar')
+
+    message = 'parameter "foo=bar" requires GDAL >= {0}'.format(version)
+    assert message in exc_info.value.args[0]
+
+
+def test_require_gdal_version_chaining():
+    version = '10000000.0'
+    @require_gdal_version(version, param='foo', values=['bar'])
+    @require_gdal_version(version, param='something', values=['else'])
+    def a(foo=None, something=None):
+        return foo, something
+
+    # param values allowed if not in values
+    assert a(foo='ok', something='not else') == ('ok', 'not else')
+
+    # first decorator causes this to fail
+    with pytest.raises(GDALVersionError) as exc_info:
+        a(foo='bar', something='else')
+
+    message = 'parameter "foo=bar" requires GDAL >= {0}'.format(version)
+    assert message in exc_info.value.args[0]
+
+    # second decorator causes this to fail
+    with pytest.raises(GDALVersionError) as exc_info:
+        a(foo='ok', something='else')
+
+    message = 'parameter "something=else" requires GDAL >= {0}'.format(version)
+    assert message in exc_info.value.args[0]

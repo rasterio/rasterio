@@ -31,6 +31,11 @@ class Resampling(IntEnum):
     The subset of 'nearest', 'cubic', 'average', 'mode', and 'gauss'
     are available in making dataset overviews.
 
+    'max', 'min', 'med', 'q1', 'q3' are only supported in GDAL >= 2.0.0.
+
+    'nearest', 'bilinear', 'cubic', 'cubic_spline', 'lanczos', 'average', 'mode'
+    are always available (GDAL >= 1.10).
+
     Note: 'gauss' is not available to the functions in rio.warp.
     """
     nearest = 0

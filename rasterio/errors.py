@@ -71,6 +71,10 @@ class GDALOptionNotImplementedError(RasterioError):
     by GDAL 1.x.
     """
 
+class GDALVersionError(RasterioError):
+    """Raised if the runtime version of GDAL does not meet the required
+    version of GDAL."""
+
 
 class WindowEvaluationError(ValueError):
     """Raised when window evaluation fails"""
