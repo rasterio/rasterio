@@ -197,6 +197,20 @@ if not os.name == "nt":
     ext_options['extra_compile_args'] = ['-Wno-unused-parameter',
                                          '-Wno-unused-function']
 
+
+# GDAL 2.3 and newer requires C++11
+if (gdal_major_version, gdal_minor_version) >= (2, 3):
+    cpp11_flag = '-std=c++11'
+
+    # 'extra_compile_args' may not be defined
+    eca = ext_options.get('extra_compile_args', [])
+    eca.append(cpp11_flag)
+    ext_options['extra_compile_args'] = eca
+
+    # Link args are always defined
+    ext_options['extra_link_args'].append(cpp11_flag)
+
+
 cythonize_options = {}
 if os.environ.get('CYTHON_COVERAGE'):
     cythonize_options['compiler_directives'] = {'linetrace': True}
