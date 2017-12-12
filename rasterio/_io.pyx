@@ -67,7 +67,8 @@ def _delete_dataset_if_exists(path):
             with nogil:
                 GDALDeleteDataset(h_driver, c_path)
     except CPLE_OpenFailedError:
-        log.info("Dataset doesn't exist, deletion skipped")
+        log.debug(
+            "Skipped delete for overwrite.  Dataset does not exist: %s", path)
     finally:
         GDALClose(h_dataset)
 
