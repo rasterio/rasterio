@@ -14,7 +14,7 @@ from rasterio.errors import (
     GDALBehaviorChangeException, CRSError, GDALVersionError)
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
-    calculate_default_transform)
+    calculate_default_transform, SUPPORTED_RESAMPLING, GDAL2_RESAMPLING)
 from rasterio import windows
 
 gdal_version = GDALVersion.runtime()
@@ -33,16 +33,6 @@ def flatten_coords(coordinates):
         else:
             for x in flatten_coords(elem):
                 yield x
-
-
-# Gauss (7) is not supported for warp and is specifically tested below
-supported_resampling = [r for r in Resampling if r.value < 7]
-gdal2_resampling = [r for r in Resampling if r.value > 7 and r.value <= 12]
-not_yet_supported_resampling = []
-if gdal_version.at_least('2.0'):
-    supported_resampling.extend(gdal2_resampling)
-else:
-    not_yet_supported_resampling.extend(gdal2_resampling)
 
 
 reproj_expected = (
@@ -839,7 +829,7 @@ def test_transform_geom_multipolygon(polygon_3373):
     assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
 
 
-@pytest.mark.parametrize("method", supported_resampling)
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_reproject_resampling(path_rgb_byte_tif, method):
     # Expected count of nonzero pixels for each resampling method, based
     # on running rasterio with each of the following configurations
@@ -876,8 +866,8 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
 
 @pytest.mark.skipif(
     gdal_version.at_least('2.0'),
-    reason="Tests resampling methods only available in GDAL >= 2.0")
-@pytest.mark.parametrize("method", not_yet_supported_resampling)
+    reason="Tests only applicable to GDAL < 2.0")
+@pytest.mark.parametrize("method", GDAL2_RESAMPLING)
 def test_reproject_not_yet_supported_resampling(method):
     """Test resampling methods not yet supported by this version of GDAL"""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -894,7 +884,6 @@ def test_reproject_not_yet_supported_resampling(method):
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=method)
-
 
 
 def test_reproject_unsupported_resampling():
@@ -933,7 +922,7 @@ def test_reproject_unsupported_resampling_guass():
             resampling=Resampling.gauss)
 
 
-@pytest.mark.parametrize("method", supported_resampling)
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_resample_default_invert_proj(method):
     """Nearest and bilinear should produce valid results
     with the default Env
@@ -967,7 +956,7 @@ def test_resample_default_invert_proj(method):
     assert out.mean() > 0
 
 
-@pytest.mark.parametrize("method", supported_resampling)
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_resample_no_invert_proj(method):
     """Nearest and bilinear should produce valid results with
     CHECK_WITH_INVERT_PROJ = False

@@ -19,6 +19,13 @@ from rasterio.errors import GDALBehaviorChangeException
 from rasterio.transform import guard_transform
 
 
+# Gauss (7) is not supported for warp
+SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
+GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
+if GDALVersion.runtime().at_least('2.0'):
+    SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
+
+
 @ensure_env
 def transform(src_crs, dst_crs, xs, ys, zs=None):
 
@@ -169,7 +176,7 @@ def transform_bounds(
 
 
 @ensure_env
-@require_gdal_version('2.0', param='resampling', values=[8, 9, 10, 11, 12])
+@require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
 def reproject(source, destination, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, resampling=Resampling.nearest,
@@ -264,8 +271,8 @@ def reproject(source, destination, src_transform=None, gcps=None,
     except ValueError:
         raise ValueError(
             "resampling must be one of: {0}".format(", ".join(
-                ['Resampling.{0}'.format(k) for k in
-                 Resampling.__members__.keys() if k != 'gauss'])))
+                ['Resampling.{0}'.format(r.name) for r in
+                 SUPPORTED_RESAMPLING])))
 
     # If working with identity transform, assume it is crs-less data
     # and that translating the matrix very slightly will avoid #674

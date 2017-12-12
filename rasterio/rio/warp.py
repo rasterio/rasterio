@@ -15,7 +15,7 @@ from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 from rasterio.transform import Affine
 from rasterio.warp import (
-    reproject, Resampling, transform_bounds,
+    reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
     calculate_default_transform as calcdt)
 
 
@@ -24,14 +24,6 @@ from rasterio.warp import (
 # datasets and raise a usage error if the limits are exceeded.
 MAX_OUTPUT_WIDTH = 100000
 MAX_OUTPUT_HEIGHT = 100000
-
-
-# supported methods are based on GDAL version.
-# 7 (Gauss) is not allowed for warp.
-supported_resampling_methods = [r.name for r in Resampling if r.value < 7]
-if GDALVersion.runtime().at_least('2.0'):
-    supported_resampling_methods.extend(
-        [r.name for r in Resampling if r.value > 7 and r <= 12])
 
 
 @click.command(short_help='Warp a raster dataset.')
@@ -56,7 +48,7 @@ if GDALVersion.runtime().at_least('2.0'):
     help="Determine output extent from destination bounds: left bottom right top")
 @options.resolution_opt
 @click.option('--resampling',
-              type=click.Choice(supported_resampling_methods),
+              type=click.Choice([r.name for r in SUPPORTED_RESAMPLING]),
               default='nearest', help="Resampling method.",
               show_default=True)
 @click.option('--src-nodata', default=None, show_default=True,

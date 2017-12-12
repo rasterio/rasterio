@@ -11,10 +11,9 @@ import pytest
 
 import rasterio
 from rasterio.env import GDALVersion
+from rasterio.warp import SUPPORTED_RESAMPLING, GDAL2_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
-
-from .test_warp import supported_resampling, not_yet_supported_resampling
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -536,7 +535,7 @@ def test_warp_vrt_gcps(runner, tmpdir):
         assert not data[:, -1, 0].any()
 
 
-@pytest.mark.parametrize("method", supported_resampling)
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_warp_resampling(runner, path_rgb_byte_tif, tmpdir, method):
     """Resampling methods supported by this version of GDAL should run
     successfully"""
@@ -553,8 +552,8 @@ def test_warp_resampling(runner, path_rgb_byte_tif, tmpdir, method):
 
 @pytest.mark.skipif(
     GDALVersion.runtime().at_least('2.0'),
-    reason="Tests resampling methods only available in GDAL >= 2.0")
-@pytest.mark.parametrize("method", not_yet_supported_resampling)
+    reason="Test only applicable to GDAL < 2.0")
+@pytest.mark.parametrize("method", GDAL2_RESAMPLING)
 def test_warp_resampling_not_yet_supported(
         runner, path_rgb_byte_tif, tmpdir, method):
     """Resampling methods not yet supported should fail with error"""
