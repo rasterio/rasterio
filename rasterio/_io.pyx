@@ -44,14 +44,20 @@ log = logging.getLogger(__name__)
 
 def _delete_dataset_if_exists(path):
 
-    """Delete dataset if it already exists.  Not a substitute for
-    ``rasterio.shutil.exists()`` and ``rasterio.shutil.delete()``.
+    """Delete a dataset if it already exists.  This operates at a lower
+    level than a:
+
+        if rasterio.shutil.exists(path):
+            rasterio.shutil.delete(path)
+
+    and can take some shortcuts.
 
     Parameters
     ----------
     path : str
-        Dataset path
+        Dataset path.
     """
+
     cdef GDALDatasetH h_dataset = NULL
     cdef const char *c_path = NULL
 
