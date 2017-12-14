@@ -59,6 +59,10 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
 
 
 @ensure_env
+@require_gdal_version('2.1', param='antimeridian_cutting', values=[False],
+                      is_max_version=True,
+                      reason="Antimeridian cutting is always enabled on "
+                             "GDAL >= 2.2")
 def transform_geom(
         src_crs,
         dst_crs,
@@ -94,11 +98,6 @@ def transform_geom(
     out: GeoJSON like dict object
         Transformed geometry in GeoJSON dict format
     """
-
-    if (GDALVersion.runtime().at_least('2.2') and not antimeridian_cutting):
-        raise GDALBehaviorChangeException(
-            "Antimeridian cutting is always enabled on GDAL 2.2.0 or "
-            "newer, which could produce a different geometry than expected.")
 
     return _transform_geom(
         src_crs,

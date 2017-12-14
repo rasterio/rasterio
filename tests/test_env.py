@@ -461,8 +461,6 @@ def test_gdalversion_class_at_least_invalid_type():
 
 
 def test_require_gdal_version():
-    """Functions that meet the required version are allowed, those that
-    are too low raise a GDALVersionError"""
     @require_gdal_version('1.0')
     def a():
         return 1
@@ -470,12 +468,47 @@ def test_require_gdal_version():
     assert a() == 1
 
 
-    @require_gdal_version('1000000.0')
+def test_require_gdal_version_too_low():
+    """Functions that are too low raise a GDALVersionError"""
+    version = '10000000.0'
+    @require_gdal_version(version)
+    def b():
+        return 2
+
+    with pytest.raises(GDALVersionError) as exc_info:
+        b()
+
+    message = 'GDAL version must be >= {0}'.format(version)
+    assert message in exc_info.value.args[0]
+
+
+def test_require_gdal_version_is_max_version():
+    """Functions that are less than the required version are allowed, those that
+    are too high raise a GDALVersionError"""
+    @require_gdal_version('10000000.0', is_max_version=True)
+    def a():
+        return 1
+
+    assert a() == 1
+
+    @require_gdal_version('1.0', is_max_version=True)
     def b():
         return 2
 
     with pytest.raises(GDALVersionError):
         b()
+
+
+def test_require_gdal_version_reason():
+    reason = 'This totally awesome new feature is was introduced in GDAL 10000'
+    @require_gdal_version('10000.0', reason=reason)
+    def b():
+        return 2
+
+    with pytest.raises(GDALVersionError) as exc_info:
+        b()
+
+    assert reason in exc_info.value.args[0]
 
 
 def test_require_gdal_version_err():
@@ -500,6 +533,7 @@ def test_require_gdal_version_param():
 
 def test_require_gdal_version_param_version_too_low():
     """Parameter is not allowed since runtime is too low a version"""
+
     version = '10000000.0'
     @require_gdal_version(version, param='foo')
     def a(foo=None):
@@ -511,6 +545,23 @@ def test_require_gdal_version_param_version_too_low():
         a(foo='bar')
 
     message = 'usage of parameter "foo" requires GDAL >= {0}'.format(version)
+    assert message in exc_info.value.args[0]
+
+
+def test_require_gdal_version_param_version_too_high():
+    """Parameter is not allowed since runtime is too low a version"""
+
+    version = '1.0'
+    @require_gdal_version(version, param='foo', is_max_version=True)
+    def a(foo=None):
+        return foo
+
+    assert a() == None  # param can't be checked if not passed as a kwd
+
+    with pytest.raises(GDALVersionError) as exc_info:
+        a(foo='bar')
+
+    message = 'usage of parameter "foo" requires GDAL <= {0}'.format(version)
     assert message in exc_info.value.args[0]
 
 
@@ -555,6 +606,23 @@ def test_require_gdal_version_param_values_version_too_low():
         a(foo='bar')
 
     message = 'parameter "foo=bar" requires GDAL >= {0}'.format(version)
+    assert message in exc_info.value.args[0]
+
+
+def test_require_gdal_version_param_values_version_too_high():
+    """Parameter values not allowed since runtime is too low a version"""
+    version = '1.0'
+    @require_gdal_version(version, param='foo', values=['bar'],
+                          is_max_version=True)
+    def a(foo=None):
+        return foo
+
+    assert a(foo='ok') == 'ok'  # param value allowed if not in values
+
+    with pytest.raises(GDALVersionError) as exc_info:
+        a(foo='bar')
+
+    message = 'parameter "foo=bar" requires GDAL <= {0}'.format(version)
     assert message in exc_info.value.args[0]
 
 

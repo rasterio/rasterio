@@ -375,7 +375,8 @@ class GDALVersion(object):
         return self >= other
 
 
-def require_gdal_version(version, param=None, values=None):
+def require_gdal_version(version, param=None, values=None, is_max_version=False,
+                         reason=''):
     """A decorator that ensures the called function or parameters are supported
     by the runtime version of GDAL.  Raises GDALVersionError if conditions
     are not met.
@@ -413,6 +414,13 @@ def require_gdal_version(version, param=None, values=None):
     values: tuple, list, or set (optional, default: None)
         contains values that require at least GDAL `version`.  `param`
         is required for `values`.
+    is_max_version: bool (optional, default: False)
+        if `True` indicates that the version provided is the maximum version
+        allowed, instead of requiring at least that version.
+    reason: string (optional: default: '')
+        custom error message presented to user in addition to message about
+        GDAL version.  Use this to provide an explanation of what changed
+        if necessary context to the user.
 
     Returns
     ---------
@@ -430,25 +438,32 @@ def require_gdal_version(version, param=None, values=None):
 
     version = GDALVersion.parse(version)
     runtime = GDALVersion.runtime()
+    inequality = '>=' if runtime < version else '<='
+    reason = '\n{0}'.format(reason) if reason else reason
 
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwds):
-            if runtime < version:
+            if ((runtime < version and not is_max_version) or
+                    (is_max_version and runtime > version)):
+
                 if param is None:
                     raise GDALVersionError(
-                        "GDAL version must be >= {0}".format(str(version)))
+                        "GDAL version must be {0} {1}{2}".format(
+                            inequality, str(version), reason))
 
                 if param in kwds:
                     if values is None:
                         raise GDALVersionError(
                             'usage of parameter "{0}" requires '
-                            'GDAL >= {1}'.format(param, version))
+                            'GDAL {1} {2}{3}'.format(param, inequality,
+                                                     version, reason))
 
                     if kwds[param] in values:
                         raise GDALVersionError(
                             'parameter "{0}={1}" requires '
-                            'GDAL >= {2}'.format(param, kwds[param], version))
+                            'GDAL {2} {3}{4}'.format(param, kwds[param],
+                                                  inequality, version, reason))
 
             return f(*args, **kwds)
 

@@ -17,6 +17,9 @@ from rasterio.warp import (
     calculate_default_transform, SUPPORTED_RESAMPLING, GDAL2_RESAMPLING)
 from rasterio import windows
 
+from .conftest import requires_gdal22
+
+
 gdal_version = GDALVersion.runtime()
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -1091,8 +1094,7 @@ def test_reproject_gcps(rgb_byte_profile):
     assert not out[:, -1, 0].any()
 
 
-@pytest.mark.skipif(
-    not gdal_version.at_least('2.2'),
+@requires_gdal22(
     reason="GDAL 2.2.0 and newer has different antimeridian cutting behavior.")
 def test_transform_geom_gdal22():
     """Enabling `antimeridian_cutting` has no effect on GDAL 2.2.0 or newer
@@ -1103,7 +1105,7 @@ def test_transform_geom_gdal22():
         'type': 'Point',
         'coordinates': [0, 0]
     }
-    with pytest.raises(GDALBehaviorChangeException):
+    with pytest.raises(GDALVersionError):
         transform_geom(
             'EPSG:4326', 'EPSG:3857', geom, antimeridian_cutting=False)
 
