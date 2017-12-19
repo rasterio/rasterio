@@ -90,12 +90,12 @@ def test_data_dir_3(tmpdir):
     with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
         data = np.ones((2, 10, 10), dtype=rasterio.uint8)
         data[:, 0:6, 0:6] = 255
-        dst.write(data, indexes=1)
+        dst.write(data)
 
     with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
         data = np.ones((2, 10, 10), dtype=rasterio.uint8)
         data[:, 4:8, 4:8] = 254
-        dst.write(data, indexes=[1, 2])
+        dst.write(data)
 
     return tmpdir
 
