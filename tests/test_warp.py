@@ -10,11 +10,15 @@ import rasterio
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
-from rasterio.errors import GDALBehaviorChangeException, CRSError
+from rasterio.errors import (
+    GDALBehaviorChangeException, CRSError, GDALVersionError)
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
-    calculate_default_transform)
+    calculate_default_transform, SUPPORTED_RESAMPLING, GDAL2_RESAMPLING)
 from rasterio import windows
+
+from .conftest import requires_gdal22
+
 
 gdal_version = GDALVersion.runtime()
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -32,17 +36,6 @@ def flatten_coords(coordinates):
         else:
             for x in flatten_coords(elem):
                 yield x
-
-
-def supported_resampling(method):
-    if method == Resampling.gauss:
-        return False
-    gdal2plus_only = (
-        Resampling.max, Resampling.min, Resampling.med,
-        Resampling.q1, Resampling.q3)
-    if not gdal_version.at_least('2.0'):
-        return method not in gdal2plus_only
-    return True
 
 
 reproj_expected = (
@@ -839,6 +832,63 @@ def test_transform_geom_multipolygon(polygon_3373):
     assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
 
 
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
+def test_reproject_resampling(path_rgb_byte_tif, method):
+    # Expected count of nonzero pixels for each resampling method, based
+    # on running rasterio with each of the following configurations
+    expected = {
+        Resampling.nearest: 438113,
+        Resampling.bilinear: 553945,
+        Resampling.cubic: 553945,
+        Resampling.cubic_spline: 553945,
+        Resampling.lanczos: 553945,
+        Resampling.average: 556287,
+        Resampling.mode: 556287,
+        Resampling.max: 556287,
+        Resampling.min: 556287,
+        Resampling.med: 556287,
+        Resampling.q1: 556287,
+        Resampling.q3: 556287
+    }
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        source = src.read(1)
+
+    out = np.empty(src.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs={'init': 'EPSG:3857'},
+        resampling=method)
+
+    assert (out > 0).sum() == expected[method]
+
+
+@pytest.mark.skipif(
+    gdal_version.at_least('2.0'),
+    reason="Tests only applicable to GDAL < 2.0")
+@pytest.mark.parametrize("method", GDAL2_RESAMPLING)
+def test_reproject_not_yet_supported_resampling(method):
+    """Test resampling methods not yet supported by this version of GDAL"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
+
+    dst_crs = {'init': 'EPSG:32619'}
+    out = np.empty(src.shape, dtype=np.uint8)
+    with pytest.raises(GDALVersionError):
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=method)
+
+
 def test_reproject_unsupported_resampling():
     """Values not in enums. Resampling are not supported."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -875,13 +925,11 @@ def test_reproject_unsupported_resampling_guass():
             resampling=Resampling.gauss)
 
 
-@pytest.mark.parametrize("method", Resampling)
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_resample_default_invert_proj(method):
     """Nearest and bilinear should produce valid results
     with the default Env
     """
-    if not supported_resampling(method):
-        pytest.skip()
 
     with rasterio.open('tests/data/world.rgb.tif') as src:
         source = src.read(1)
@@ -911,13 +959,11 @@ def test_resample_default_invert_proj(method):
     assert out.mean() > 0
 
 
-@pytest.mark.parametrize("method", Resampling)
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_resample_no_invert_proj(method):
     """Nearest and bilinear should produce valid results with
     CHECK_WITH_INVERT_PROJ = False
     """
-    if not supported_resampling(method):
-        pytest.skip()
 
     if method in (Resampling.bilinear, Resampling.cubic,
                   Resampling.cubic_spline, Resampling.lanczos):
@@ -1048,8 +1094,7 @@ def test_reproject_gcps(rgb_byte_profile):
     assert not out[:, -1, 0].any()
 
 
-@pytest.mark.skipif(
-    not gdal_version.at_least('2.2'),
+@requires_gdal22(
     reason="GDAL 2.2.0 and newer has different antimeridian cutting behavior.")
 def test_transform_geom_gdal22():
     """Enabling `antimeridian_cutting` has no effect on GDAL 2.2.0 or newer
@@ -1060,7 +1105,7 @@ def test_transform_geom_gdal22():
         'type': 'Point',
         'coordinates': [0, 0]
     }
-    with pytest.raises(GDALBehaviorChangeException):
+    with pytest.raises(GDALVersionError):
         transform_geom(
             'EPSG:4326', 'EPSG:3857', geom, antimeridian_cutting=False)
 

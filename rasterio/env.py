@@ -10,9 +10,9 @@ import attr
 import rasterio
 from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
-from rasterio.compat import string_types
+from rasterio.compat import string_types, getargspec
 from rasterio.dtypes import check_dtype
-from rasterio.errors import EnvError
+from rasterio.errors import EnvError, GDALVersionError
 from rasterio.transform import guard_transform
 from rasterio.vfs import parse_path, vsi_path
 
@@ -327,38 +327,160 @@ class GDALVersion(object):
         return (self.major, self.minor) < tuple(other.major, other.minor)
 
     def __repr__(self):
-        return "GDALVersion(major={major}, minor={})".format(self)
+        return "GDALVersion(major={0}, minor={1})".format(self.major, self.minor)
+
+    def __str__(self):
+        return "{0}.{1}".format(self.major, self.minor)
 
     @classmethod
-    def _normalize(cls, input):
-        """Normalize input tuple or string to GDALVersion"""
+    def parse(cls, input):
+        """
+        Parses input tuple or string to GDALVersion. If input is a GDALVersion
+        instance, it is returned.
 
+        Parameters
+        ----------
+        input: tuple of (major, minor), string, or instance of GDALVersion
+
+        Returns
+        -------
+        GDALVersion instance
+        """
+
+        if isinstance(input, cls):
+            return input
         if isinstance(input, tuple):
             return cls(*input)
         elif isinstance(input, string_types):
-            return cls.from_string(input)
-        elif not isinstance(input, cls):
-            raise TypeError("Can only compare GDALVersion to same class, "
-                             "tuple, or string")
-        return input
+            # Extract major and minor version components.
+            # alpha, beta, rc suffixes ignored
+            match = re.search('^\d+\.\d+', input)
+            if not match:
+                raise ValueError(
+                    "value does not appear to be a valid GDAL version "
+                    "number: {}".format(input))
+            major, minor = (int(c) for c in match.group().split('.'))
+            return cls(major=major, minor=minor)
 
-    @classmethod
-    def from_string(cls, s):
-        """Extract major and minor version components.
-        alpha, beta, rc suffixes ignored"""
-        match = re.search('^\d+\.\d+', s)
-        if not match:
-            raise ValueError("value does not appear to be a valid GDAL version "
-                             "number: {}".format(s))
-        major, minor = (int(c) for c in match.group().split('.'))
-        return cls(major=major, minor=minor)
+        raise TypeError("GDALVersion can only be parsed from a string or tuple")
 
     @classmethod
     def runtime(cls):
         """Return GDALVersion of current GDAL runtime"""
         from rasterio._base import gdal_version  # to avoid circular import
-        return cls.from_string(gdal_version())
+        return cls.parse(gdal_version())
 
     def at_least(self, other):
-        other = self.__class__._normalize(other)
+        other = self.__class__.parse(other)
         return self >= other
+
+
+def require_gdal_version(version, param=None, values=None, is_max_version=False,
+                         reason=''):
+    """A decorator that ensures the called function or parameters are supported
+    by the runtime version of GDAL.  Raises GDALVersionError if conditions
+    are not met.
+
+    Examples:
+    \b
+        @require_gdal_version('2.2')
+        def some_func():
+
+    calling `some_func` with a runtime version of GDAL that is < 2.2 raises a
+    GDALVersionErorr.
+
+    \b
+        @require_gdal_version('2.2', param='foo')
+        def some_func(foo='bar'):
+
+    calling `some_func` with parameter `foo` of any value on GDAL < 2.2 raises
+    a GDALVersionError.
+
+    \b
+        @require_gdal_version('2.2', param='foo', values=('bar',))
+        def some_func(foo=None):
+
+    calling `some_func` with parameter `foo` and value `bar` on GDAL < 2.2
+    raises a GDALVersionError.
+
+
+    Parameters
+    ------------
+    version: tuple, string, or GDALVersion
+    param: string (optional, default: None)
+        If `values` are absent, then all use of this parameter with a value
+        other than default value requires at least GDAL `version`.
+    values: tuple, list, or set (optional, default: None)
+        contains values that require at least GDAL `version`.  `param`
+        is required for `values`.
+    is_max_version: bool (optional, default: False)
+        if `True` indicates that the version provided is the maximum version
+        allowed, instead of requiring at least that version.
+    reason: string (optional: default: '')
+        custom error message presented to user in addition to message about
+        GDAL version.  Use this to provide an explanation of what changed
+        if necessary context to the user.
+
+    Returns
+    ---------
+    wrapped function
+    """
+
+    if values is not None:
+        if param is None:
+            raise ValueError(
+                'require_gdal_version: param must be provided with values')
+
+        if not isinstance(values, (tuple, list, set)):
+            raise ValueError(
+                'require_gdal_version: values must be a tuple, list, or set')
+
+    version = GDALVersion.parse(version)
+    runtime = GDALVersion.runtime()
+    inequality = '>=' if runtime < version else '<='
+    reason = '\n{0}'.format(reason) if reason else reason
+
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwds):
+            if ((runtime < version and not is_max_version) or
+                    (is_max_version and runtime > version)):
+
+                if param is None:
+                    raise GDALVersionError(
+                        "GDAL version must be {0} {1}{2}".format(
+                            inequality, str(version), reason))
+
+                # normalize args and kwds to dict
+                argspec = getargspec(f)
+                full_kwds = kwds.copy()
+
+                if argspec.args:
+                    full_kwds.update(dict(zip(argspec.args[:len(args)], args)))
+
+                if argspec.defaults:
+                    defaults = dict(zip(
+                        reversed(argspec.args), reversed(argspec.defaults)))
+                else:
+                    defaults = {}
+
+                if param in full_kwds:
+                    if values is None:
+                        if param not in defaults or (
+                                full_kwds[param] != defaults[param]):
+                            raise GDALVersionError(
+                                'usage of parameter "{0}" requires '
+                                'GDAL {1} {2}{3}'.format(param, inequality,
+                                                         version, reason))
+
+                    elif full_kwds[param] in values:
+                        raise GDALVersionError(
+                            'parameter "{0}={1}" requires '
+                            'GDAL {2} {3}{4}'.format(param, full_kwds[param],
+                                                  inequality, version, reason))
+
+            return f(*args, **kwds)
+
+        return wrapper
+
+    return decorator

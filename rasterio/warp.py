@@ -14,9 +14,16 @@ from rasterio._base import _transform
 from rasterio._warp import (
     _transform_geom, _reproject, _calculate_default_transform)
 from rasterio.enums import Resampling
-from rasterio.env import ensure_env, GDALVersion
+from rasterio.env import ensure_env, GDALVersion, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException
 from rasterio.transform import guard_transform
+
+
+# Gauss (7) is not supported for warp
+SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
+GDAL2_RESAMPLING = [r for r in Resampling if r.value > 7 and r.value <= 12]
+if GDALVersion.runtime().at_least('2.0'):
+    SUPPORTED_RESAMPLING.extend(GDAL2_RESAMPLING)
 
 
 @ensure_env
@@ -52,6 +59,10 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
 
 
 @ensure_env
+@require_gdal_version('2.1', param='antimeridian_cutting', values=[False],
+                      is_max_version=True,
+                      reason="Antimeridian cutting is always enabled on "
+                             "GDAL >= 2.2")
 def transform_geom(
         src_crs,
         dst_crs,
@@ -87,11 +98,6 @@ def transform_geom(
     out: GeoJSON like dict object
         Transformed geometry in GeoJSON dict format
     """
-
-    if (GDALVersion.runtime().at_least('2.2') and not antimeridian_cutting):
-        raise GDALBehaviorChangeException(
-            "Antimeridian cutting is always enabled on GDAL 2.2.0 or "
-            "newer, which could produce a different geometry than expected.")
 
     return _transform_geom(
         src_crs,
@@ -169,6 +175,7 @@ def transform_bounds(
 
 
 @ensure_env
+@require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
 def reproject(source, destination, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, resampling=Resampling.nearest,
@@ -230,7 +237,14 @@ def reproject(source, destination, src_transform=None, gcps=None,
             Resampling.cubic_spline,
             Resampling.lanczos,
             Resampling.average,
-            Resampling.mode
+            Resampling.mode,
+            Resampling.max (GDAL >= 2.2),
+            Resampling.min (GDAL >= 2.2),
+            Resampling.med (GDAL >= 2.2),
+            Resampling.q1 (GDAL >= 2.2),
+            Resampling.q3 (GDAL >= 2.2)
+        An exception will be raised for a method not supported by the running
+        version of GDAL.
     init_dest_nodata: bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
@@ -248,14 +262,16 @@ def reproject(source, destination, src_transform=None, gcps=None,
 
     # Resampling guard.
     try:
-        Resampling(resampling)
-        if resampling == 7:
+        if resampling == 7:  # gauss resampling is not supported
             raise ValueError
+
+        Resampling(resampling)
+
     except ValueError:
         raise ValueError(
             "resampling must be one of: {0}".format(", ".join(
-                ['Resampling.{0}'.format(k) for k in
-                 Resampling.__members__.keys() if k != 'gauss'])))
+                ['Resampling.{0}'.format(r.name) for r in
+                 SUPPORTED_RESAMPLING])))
 
     # If working with identity transform, assume it is crs-less data
     # and that translating the matrix very slightly will avoid #674
