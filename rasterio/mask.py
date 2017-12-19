@@ -26,7 +26,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
 
     Parameters
     ----------
-    dataset: rasterio DatasetReader object
+    dataset: a dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes: list of polygons
         GeoJSON-like dict representation of polygons that will be used to
@@ -118,7 +118,7 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
 
     Parameters
     ----------
-    dataset: rasterio DatasetReader object
+    dataset: a dataset object opened in 'r' mode
         Raster to which the mask will be applied.
     shapes: list of polygons
         GeoJSON-like dict representation of polygons that will be used to
