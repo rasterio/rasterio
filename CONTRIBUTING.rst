@@ -61,8 +61,6 @@ or `DatasetWriter`. The canonical way to create a dataset object is by using the
 This is analogous to Python's use of 
 `file object <https://docs.python.org/3/glossary.html#term-file-object>`__.
 
-We encourage users to always create 
-
 Git Conventions
 ---------------
 
