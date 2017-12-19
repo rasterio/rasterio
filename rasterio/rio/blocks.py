@@ -27,19 +27,19 @@ class _Collection(object):
 
         Parameters
         ----------
-        dataset : DatasetReader
-            An open dataset.
+        dataset : a dataset object opened in 'r' mode
+            Source dataset
         bidx : int
-            Extract windows from this band.
+            Extract windows from this band
         precision : int, optional
-            Coordinate precision.
+            Coordinate precision
         geographic : bool, optional
-            Reproject geometries to ``EPSG:4326`` if ``True``.
+            Reproject geometries to ``EPSG:4326`` if ``True``
 
         Yields
         ------
         dict
-            GeoJSON polygon feature.
+            GeoJSON polygon feature
         """
 
         self._src = dataset
