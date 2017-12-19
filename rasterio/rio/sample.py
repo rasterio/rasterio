@@ -55,7 +55,7 @@ def sample(ctx, files, bidx):
     logger = logging.getLogger('rio')
 
     files = list(files)
-    source = files.pop(0)
+    source_path = files.pop(0)
     input = files.pop(0) if files else '-'
 
     # Handle the case of file, stream, or string input.
@@ -66,7 +66,7 @@ def sample(ctx, files, bidx):
 
     try:
         with ctx.obj['env']:
-            with rasterio.open(source) as src:
+            with rasterio.open(source_path) as src:
                 if bidx is None:
                     indexes = src.indexes
                 elif '..' in bidx:
