@@ -40,9 +40,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 
     Parameters
     ----------
-    source : array or DatasetReader or Band or tuple(DatasetReader, bidx)
-        If Band or tuple (DatasetReader, bidx),
-        display the selected band.
+    source : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
+        If Band or tuple (dataset, bidx), display the selected band.
         If raster dataset display the rgb image
         as defined in the colorinterp metadata, or default to first band.
     with_bounds : bool (opt)
@@ -155,7 +154,7 @@ def plotting_extent(source, transform=None):
 
     Parameters
     ----------
-    source : array or DatasetReader
+    source : array or dataset object opened in 'r' mode
         input data
     transform: Affine, required if source is array
         Defines the affine transform if source is an array
@@ -218,7 +217,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
 
     Parameters
     ----------
-    source : array or DatasetReader or Band or tuple(DatasetReader, bidx)
+    source : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
         Input data to display.
         The first three arrays in multi-dimensional
         arrays are plotted as red, green, and blue.
