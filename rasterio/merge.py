@@ -31,8 +31,8 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7):
 
     Parameters
     ----------
-    datasets: list of source datasets
-        Open rasterio DatasetReader objects to be merged.
+    datasets: list of dataset objects opened in 'r' mode
+        source datasets to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input rasters.
