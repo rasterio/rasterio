@@ -37,13 +37,9 @@ def flatten_coords(coordinates):
 def supported_resampling(method):
     if method == Resampling.gauss:
         return False
-    gdal110plus_only = (
-        Resampling.mode, Resampling.average)
     gdal2plus_only = (
         Resampling.max, Resampling.min, Resampling.med,
         Resampling.q1, Resampling.q3)
-    if not gdal_version.at_least('1.10'):
-        return method not in gdal2plus_only and method not in gdal110plus_only
     if not gdal_version.at_least('2.0'):
         return method not in gdal2plus_only
     return True

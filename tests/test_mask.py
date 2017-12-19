@@ -147,6 +147,19 @@ def test_mask(basic_image_2x2, basic_image_file, basic_geometry):
     assert (type(masked) == np.ndarray)
 
 
+def test_mask_indexes(basic_image_2x2, basic_image_file, basic_geometry):
+    """Pixels outside the geometry are masked to nodata (0)"""
+
+    geometries = [basic_geometry]
+
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, indexes=1)
+
+    assert np.ndim(masked) == 2
+    assert np.array_equal(masked, basic_image_2x2)
+    assert (type(masked) == np.ndarray)
+
+
 def test_mask_invert(basic_image, basic_image_file, basic_geometry):
     """Pixels inside the geometry are masked to nodata (0)"""
 

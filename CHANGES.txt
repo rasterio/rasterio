@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next
+----
+
+Bug fixes:
+
+- ``mask()`` now takes the ``indexes`` keyword parameter that is common 
+  elsewhere in the package (#1224, #1225).
+
 1.0a12 (2017-12-01)
 -------------------
 
