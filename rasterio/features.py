@@ -65,7 +65,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
     Parameters
     ----------
-    source : array or DatasetReader or Band or tuple(DatasetReader, bidx)
+    source : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
@@ -108,7 +108,7 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Parameters
     ----------
-    source : array or DatasetReader or Band or tuple(DatasetReader, bidx)
+    source : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
         Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
         rasterio.uint16, or rasterio.float32
     size : int
@@ -321,7 +321,7 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
 
     Parameters
     ----------
-    dataset: rasterio DatasetReader object
+    dataset: dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes: iterable over geometries.
         A geometry is a GeoJSON-like object or implements the geo interface.
