@@ -54,7 +54,8 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite
     with ctx.obj['env']:
         sources = [rasterio.open(f) for f in files]
         dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
-                                            nodata=nodata, precision=precision, indexes=bidx)
+                                            nodata=nodata, precision=precision,
+                                            indexes=(bidx or None))
 
         profile = sources[0].profile
         profile['transform'] = output_transform
