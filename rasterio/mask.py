@@ -108,7 +108,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
 
 
 def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
-         filled=True, crop=False, pad=False):
+         filled=True, crop=False, pad=False, indexes=None):
     """Creates a masked or filled array using input shapes.
     Pixels are masked or set to nodata outside the input shapes, unless
     `invert` is `True`.
@@ -144,6 +144,9 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
     pad: bool (opt)
         If True, the features will be padded in each direction by
         one half of a pixel prior to cropping raster. Defaults to False.
+    indexes : list of ints or a single int (opt)
+        If `indexes` is a list, the result is a 3D array, but is
+        a 2D array if it is a band index number.
 
     Returns
     -------
@@ -176,15 +179,20 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
         dataset, shapes, all_touched=all_touched, invert=invert, crop=crop,
         pad=pad)
 
-    height, width = shape_mask.shape
-    out_shape = (dataset.count, height, width)
+    if indexes is None:
+        out_shape = (dataset.count, ) + shape_mask.shape
+    elif isinstance(indexes, int):
+        out_shape = shape_mask.shape
+    else:
+        out_shape = (len(indexes), ) + shape_mask.shape
 
-    out_image = dataset.read(window=window, out_shape=out_shape, masked=True)
+    out_image = dataset.read(
+        window=window, out_shape=out_shape, masked=True, indexes=indexes)
+
     out_image.mask = out_image.mask | shape_mask
 
     if filled:
         out_image = out_image.filled(nodata)
 
     return out_image, transform
-
 

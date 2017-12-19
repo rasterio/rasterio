@@ -485,6 +485,11 @@ def path_float_tif(data_dir):
 
 
 @pytest.fixture(scope='session')
+def path_alpha_tif(data_dir):
+    return os.path.join(data_dir, 'alpha.tif')
+
+
+@pytest.fixture(scope='session')
 def path_zip_file():
     """Creates ``coutwildrnp.zip`` if it does not exist and returns
     the absolute file path."""
@@ -503,14 +508,6 @@ gdal_version = GDALVersion.runtime()
 requires_only_gdal1 = pytest.mark.skipif(
     gdal_version.major != 1,
     reason="Only relevant for GDAL 1.x")
-
-requires_less_than_gdal110 = pytest.mark.skipif(
-    gdal_version.at_least('1.10'),
-    reason="Requires GDAL 1.9.x or earlier")
-
-requires_gdal110 = pytest.mark.skipif(
-    not gdal_version.at_least('1.10'),
-    reason="Requires GDAL 1.10.x")
 
 requires_gdal2 = pytest.mark.skipif(
     not gdal_version.major >= 2,
