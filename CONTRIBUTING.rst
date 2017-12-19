@@ -50,6 +50,19 @@ Rasterio's API is different from GDAL's API and this is intentional.
   inputs. This is challenging in practice because GDAL embraces global
   variables.
 
+Dataset Objects
+---------------
+
+Our term for the kind of object that allows read and write access to raster data
+is *dataset object*. A dataset object might be an instance of `DatasetReader`
+or `DatasetWriter`. The canonical way to create a dataset object is by using the
+`rasterio.open()` function.
+
+This is analogous to Python's use of 
+`file object <https://docs.python.org/3/glossary.html#term-file-object>`__.
+
+We encourage users to always create 
+
 Git Conventions
 ---------------
 
