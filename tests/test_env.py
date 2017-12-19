@@ -539,10 +539,15 @@ def test_require_gdal_version_param_version_too_low():
     def a(foo=None):
         return foo
 
-    assert a() == None  # param can't be checked if not passed as a kwd
+    assert a() == None  # param is not used, OK
+    assert a(None) == None  # param is default, OK
+    assert a(foo=None) == None  # param is keyword with default, OK
+
+    with pytest.raises(GDALVersionError):
+        a("not None")  # parameter passed as a position argument and not default
 
     with pytest.raises(GDALVersionError) as exc_info:
-        a(foo='bar')
+        a(foo='bar')  # parameter passed as a keyword argument and not default
 
     message = 'usage of parameter "foo" requires GDAL >= {0}'.format(version)
     assert message in exc_info.value.args[0]
@@ -556,7 +561,12 @@ def test_require_gdal_version_param_version_too_high():
     def a(foo=None):
         return foo
 
-    assert a() == None  # param can't be checked if not passed as a kwd
+    assert a() == None  # param is not used, OK
+    assert a(None) == None  # param is default, OK
+    assert a(foo=None) == None  # param is keyword with default, OK
+
+    with pytest.raises(GDALVersionError):
+        a("not None")
 
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')
@@ -574,6 +584,7 @@ def test_require_gdal_version_param_values():
             return foo
 
         assert a() == None
+        assert a('bar') == 'bar'
         assert a(foo='bar') == 'bar'
 
 
@@ -600,7 +611,8 @@ def test_require_gdal_version_param_values_version_too_low():
     def a(foo=None):
         return foo
 
-    assert a(foo='ok') == 'ok'  # param value allowed if not in values
+    assert a('ok') == 'ok'  # param value allowed if not in values
+    assert a(foo='ok') == 'ok'
 
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')
@@ -618,6 +630,9 @@ def test_require_gdal_version_param_values_version_too_high():
         return foo
 
     assert a(foo='ok') == 'ok'  # param value allowed if not in values
+
+    with pytest.raises(GDALVersionError):
+        a('bar')
 
     with pytest.raises(GDALVersionError) as exc_info:
         a(foo='bar')

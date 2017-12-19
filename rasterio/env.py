@@ -10,7 +10,7 @@ import attr
 import rasterio
 from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
-from rasterio.compat import string_types
+from rasterio.compat import string_types, getargspec
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError, GDALVersionError
 from rasterio.transform import guard_transform
@@ -408,9 +408,8 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
     ------------
     version: tuple, string, or GDALVersion
     param: string (optional, default: None)
-        if present, it must always be passed as a keyword argument to the
-        decorated function.  If `values` are absent, then all use of this
-        parameter requires at least GDAL `version`
+        If `values` are absent, then all use of this parameter with a value
+        other than default value requires at least GDAL `version`.
     values: tuple, list, or set (optional, default: None)
         contains values that require at least GDAL `version`.  `param`
         is required for `values`.
@@ -452,17 +451,32 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
                         "GDAL version must be {0} {1}{2}".format(
                             inequality, str(version), reason))
 
-                if param in kwds:
-                    if values is None:
-                        raise GDALVersionError(
-                            'usage of parameter "{0}" requires '
-                            'GDAL {1} {2}{3}'.format(param, inequality,
-                                                     version, reason))
+                # normalize args and kwds to dict
+                argspec = getargspec(f)
+                full_kwds = kwds.copy()
 
-                    if kwds[param] in values:
+                if argspec.args:
+                    full_kwds.update(dict(zip(argspec.args[:len(args)], args)))
+
+                if argspec.defaults:
+                    defaults = dict(zip(
+                        reversed(argspec.args), reversed(argspec.defaults)))
+                else:
+                    defaults = {}
+
+                if param in full_kwds:
+                    if values is None:
+                        if param not in defaults or (
+                                full_kwds[param] != defaults[param]):
+                            raise GDALVersionError(
+                                'usage of parameter "{0}" requires '
+                                'GDAL {1} {2}{3}'.format(param, inequality,
+                                                         version, reason))
+
+                    elif full_kwds[param] in values:
                         raise GDALVersionError(
                             'parameter "{0}={1}" requires '
-                            'GDAL {2} {3}{4}'.format(param, kwds[param],
+                            'GDAL {2} {3}{4}'.format(param, full_kwds[param],
                                                   inequality, version, reason))
 
             return f(*args, **kwds)
