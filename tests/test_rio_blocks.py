@@ -19,14 +19,14 @@ def check_features_block_windows(features, src, bidx):
     Parameters
     ----------
     features : iter
-        GeoJSON features.
-    src : DatasetReader
-        Open input datasource.
+        GeoJSON features
+    src : a dataset object opened in 'r' mode
+        Open input datasource
 
     Returns
     -------
     bool
-        ``True`` if the two block/window streams match and ``False`` otherwise.
+        ``True`` if the two block/window streams match and ``False`` otherwise
     """
 
     out = []
