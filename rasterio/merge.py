@@ -15,7 +15,7 @@ from rasterio.transform import Affine
 logger = logging.getLogger(__name__)
 
 
-def merge(sources, bounds=None, res=None, nodata=None, precision=7):
+def merge(sources, bounds=None, res=None, nodata=None, precision=7, indexes=None):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -43,6 +43,8 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
         in the first input raster.
+    indexes : list of ints or a single int, optional
+        bands to read and merge
 
     Returns
     -------
@@ -51,7 +53,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         Two elements:
 
             dest: numpy ndarray
-                Contents of all input rasters in single array.
+                Contents of all input rasters in single array
 
             out_transform: affine.Affine()
                 Information for mapping pixel coordinates in `dest` to another
@@ -62,11 +64,19 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
     nodataval = first.nodatavals[0]
     dtype = first.dtypes[0]
 
-    # Extent from option or extent of all inputs.
+    # Determine output band count
+    if indexes is None:
+        output_count = first.count
+    elif isinstance(indexes, int):
+        output_count = 1
+    else:
+        output_count = len(indexes)
+
+    # Extent from option or extent of all inputs
     if bounds:
         dst_w, dst_s, dst_e, dst_n = bounds
     else:
-        # scan input files.
+        # scan input files
         xs = []
         ys = []
         for src in sources:
@@ -79,7 +89,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
     output_transform = Affine.translation(dst_w, dst_n)
     logger.debug("Output transform, before scaling: %r", output_transform)
 
-    # Resolution/pixel size.
+    # Resolution/pixel size
     if not res:
         res = first_res
     elif not np.iterable(res):
@@ -90,24 +100,24 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
     logger.debug("Output transform, after scaling: %r", output_transform)
 
     # Compute output array shape. We guarantee it will cover the output
-    # bounds completely.
+    # bounds completely
     output_width = int(math.ceil((dst_e - dst_w) / res[0]))
     output_height = int(math.ceil((dst_n - dst_s) / res[1]))
 
-    # Adjust bounds to fit.
+    # Adjust bounds to fit
     dst_e, dst_s = output_transform * (output_width, output_height)
     logger.debug("Output width: %d, height: %d", output_width, output_height)
     logger.debug("Adjusted bounds: %r", (dst_w, dst_s, dst_e, dst_n))
 
     # create destination array
-    dest = np.zeros((first.count, output_height, output_width), dtype=dtype)
+    dest = np.zeros((output_count, output_height, output_width), dtype=dtype)
 
     if nodata is not None:
         nodataval = nodata
         logger.debug("Set nodataval: %r", nodataval)
 
     if nodataval is not None:
-        # Only fill if the nodataval is within dtype's range.
+        # Only fill if the nodataval is within dtype's range
         inrange = False
         if np.dtype(dtype).kind in ('i', 'u'):
             info = np.iinfo(dtype)
@@ -134,7 +144,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         # This approach uses the maximum amount of memory to solve the
         # problem. Making it more efficient is a TODO.
 
-        # 1. Compute spatial intersection of destination and source.
+        # 1. Compute spatial intersection of destination and source
         src_w, src_s, src_e, src_n = src.bounds
 
         int_w = src_w if src_w > dst_w else dst_w
@@ -142,28 +152,25 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7):
         int_e = src_e if src_e < dst_e else dst_e
         int_n = src_n if src_n < dst_n else dst_n
 
-        # 2. Compute the source window.
+        # 2. Compute the source window
         src_window = windows.from_bounds(
             int_w, int_s, int_e, int_n, src.transform)
         logger.debug("Src %s window: %r", src.name, src_window)
 
         src_window = src_window.round_shape()
 
-        # 3. Compute the destination window.
+        # 3. Compute the destination window
         dst_window = windows.from_bounds(
             int_w, int_s, int_e, int_n, output_transform)
 
-        # 4. Initialize temp array.
-        tcount = first.count
+        # 4. Read data in source window into temp
         trows, tcols = (
             int(round(dst_window.height)), int(round(dst_window.width)))
-
-        temp_shape = (tcount, trows, tcols)
-
+        temp_shape = (output_count, trows, tcols)
         temp = src.read(out_shape=temp_shape, window=src_window,
-                        boundless=False, masked=True)
+                        boundless=False, masked=True, indexes=indexes)
 
-        # 5. Copy elements of temp into dest.
+        # 5. Copy elements of temp into dest
         roff, coff = (
             int(round(dst_window.row_off)), int(round(dst_window.col_off)))
 

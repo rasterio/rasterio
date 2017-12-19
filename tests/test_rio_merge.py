@@ -73,6 +73,33 @@ def test_data_dir_2(tmpdir):
     return tmpdir
 
 
+@fixture(scope='function')
+def test_data_dir_3(tmpdir):
+    kwargs = {
+        "crs": {'init': 'epsg:4326'},
+        "transform": affine.Affine(0.2, 0, -114,
+                                   0, -0.2, 46),
+        "count": 2,  # important: band count > 1
+        "dtype": rasterio.uint8,
+        "driver": "GTiff",
+        "width": 10,
+        "height": 10,
+        "nodata": 1
+    }
+
+    with rasterio.open(str(tmpdir.join('b.tif')), 'w', **kwargs) as dst:
+        data = np.ones((2, 10, 10), dtype=rasterio.uint8)
+        data[:, 0:6, 0:6] = 255
+        dst.write(data, indexes=1)
+
+    with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        data = np.ones((2, 10, 10), dtype=rasterio.uint8)
+        data[:, 4:8, 4:8] = 254
+        dst.write(data, indexes=[1, 2])
+
+    return tmpdir
+
+
 def test_merge_with_colormap(test_data_dir_1):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
@@ -123,6 +150,21 @@ def test_merge_warn(test_data_dir_1):
     assert result.exit_code == 0
     assert '--nodata option for better results' in warnings[0].message.args[0]
     assert os.path.exists(outputname)
+
+
+def test_merge_bidx(test_data_dir_3):
+    outputname = str(test_data_dir_3.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_3.listdir()]
+    inputs.sort()
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname] + ['--bidx', '1'])
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(inputs[0]) as src:
+        assert src.count > 1
+    with rasterio.open(outputname) as out:
+        assert out.count == 1
 
 
 @requires_gdal22(
