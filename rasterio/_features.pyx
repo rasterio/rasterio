@@ -25,7 +25,7 @@ def _shapes(image, mask, connectivity, transform):
 
     Parameters
     ----------
-    image : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
+    image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object
@@ -151,7 +151,7 @@ def _sieve(image, size, out, mask, connectivity):
 
     Parameters
     ----------
-    image : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
+    image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
         rasterio.uint16, or rasterio.float32.
     size : int

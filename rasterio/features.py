@@ -65,7 +65,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
     Parameters
     ----------
-    source : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
+    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
@@ -108,7 +108,7 @@ def sieve(source, size, out=None, mask=None, connectivity=4):
 
     Parameters
     ----------
-    source : array or dataset object in 'r' mode or Band or tuple(dataset, bidx)
+    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
         rasterio.uint16, or rasterio.float32
     size : int
