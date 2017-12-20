@@ -364,7 +364,8 @@ cdef class DatasetReaderBase(DatasetBase):
                     dst_crs=self.crs,
                     dst_width=max(self.width, window.width) + 1,
                     dst_height=max(self.height, window.height) + 1,
-                    dst_transform=self.window_transform(window)) as vrt:
+                    dst_transform=self.window_transform(window),
+                    resampling=resampling) as vrt:
                 out = vrt._read(
                     indexes,
                     out,
@@ -382,7 +383,8 @@ cdef class DatasetReaderBase(DatasetBase):
                             mask,
                             Window(0, 0, window.width, window.height),
                             None,
-                            masks=True).astype('bool')
+                            masks=True,
+                            resampling=resampling).astype('bool')
 
                     kwds = {'mask': mask}
                     # Set a fill value only if the read bands share a
