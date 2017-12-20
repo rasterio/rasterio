@@ -1,5 +1,6 @@
 import boto3
 import pytest
+import numpy as np
 
 import rasterio
 from rasterio.enums import Resampling
@@ -71,6 +72,49 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         assert vrt.height == size
         assert vrt.transform == dst_transform
         assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
+
+
+def test_warped_vrt_resampling(path_rgb_byte_tif):
+    """
+    Read from a WarpedVRT using different resampling methods.
+    """
+    # window in EPSG 3857 partly overlapping with example TIFF
+    window_bounds = (
+        -8766409.899970274, 2817774.610704731, -8609866.866042234,
+        2974317.6446327716)
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        # simple read using default nearest interpolation
+        with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:
+            nearest = vrt.read(window=vrt.window(*window_bounds))
+        # initialize VRT with bilinear interpolation
+        with WarpedVRT(
+            src, dst_crs='EPSG:3857', resampling=Resampling.bilinear
+        ) as vrt:
+            bilinear1 = vrt.read(window=vrt.window(*window_bounds))
+        # make sure interpolation was applied
+        assert not np.array_equal(nearest, bilinear1)
+
+        # again but with boundles=True
+        # simple read using default nearest interpolation
+        with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:
+            nearest = vrt.read(
+                window=vrt.window(*window_bounds), boundless=True)
+        # initialize VRT with bilinear interpolation
+        with WarpedVRT(
+            src, dst_crs='EPSG:3857', resampling=Resampling.bilinear
+        ) as vrt:
+            bilinear1 = vrt.read(
+                window=vrt.window(*window_bounds), boundless=True)
+        # make sure interpolation was applied
+        assert not np.array_equal(nearest, bilinear1)
+
+        # # initialize with default but read with bilinear interpolation
+        # with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:
+        #     bilinear2 = vrt.read(
+        #         window=vrt.window(*window_bounds), boundless=True,
+        #         resampling=Resampling.bilinear)
+        # assert np.array_equal(bilinear1, bilinear2)
 
 
 def test_warp_extras(path_rgb_byte_tif):
