@@ -1,15 +1,19 @@
 """Test of boundless reads"""
 
+from hypothesis import given
+import hypothesis.strategies as st
 import numpy
 
 import rasterio
 from rasterio.windows import Window
 
 
-def test_pixel_fidelity(path_rgb_byte_tif):
-    """Boundless read doesn't change pixels"""
+@given(st.integers(min_value=0, max_value=700))
+def test_outer_boundless_pixel_fidelity(size):
+    """An outer boundless read doesn't change pixels"""
+    path_rgb_byte_tif = 'tests/data/RGB.byte.tif'
     with rasterio.open(path_rgb_byte_tif) as dataset:
         rgb = dataset.read()
-        rgb_padded = dataset.read(window=Window(-100, -100, dataset.width + 200, dataset.height + 200), boundless=True)
-
-    assert numpy.all(rgb == rgb_padded[:, 100:-100, 100:-100])
+        rgb_padded = dataset.read(window=Window(-size, -size, dataset.width + 2 * size, dataset.height + 2 * size), boundless=True)
+        assert rgb_padded.shape == (3, dataset.height + 2 * size, dataset.width + 2 * size)
+    assert numpy.all(rgb == rgb_padded[:, size:(-size or None), size:(-size or None)])
