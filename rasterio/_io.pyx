@@ -358,10 +358,10 @@ cdef class DatasetReaderBase(DatasetBase):
                     dst_width=max(self.width, window.width) + 1,
                     dst_height=max(self.height, window.height) + 1,
                     dst_transform=self.window_transform(window),
-                    resampling=resampling) as vrt:
+                    resampling=Resampling.nearest) as vrt:
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
-                    None)
+                    None, resampling=resampling)
 
                 if masked:
                     if all_valid:
@@ -504,10 +504,10 @@ cdef class DatasetReaderBase(DatasetBase):
                     dst_width=max(self.width, window.width) + 1,
                     dst_height=max(self.height, window.height) + 1,
                     dst_transform=self.window_transform(window),
-                    resampling=resampling) as vrt:
+                    resampling=Resampling.nearest) as vrt:
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
-                    None, masks=True)
+                    None, resampling=resampling, masks=True)
 
         if return2d:
             out.shape = out.shape[1:]
