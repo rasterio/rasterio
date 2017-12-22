@@ -8,12 +8,20 @@ import rasterio
 from rasterio.windows import Window
 
 
-@given(st.integers(min_value=0, max_value=700))
-def test_outer_boundless_pixel_fidelity(size):
+@given(col_start=st.integers(min_value=-700, max_value=0),
+       row_start=st.integers(min_value=-700, max_value=0),
+       col_stop=st.integers(min_value=0, max_value=700),
+       row_stop=st.integers(min_value=0, max_value=700))
+def test_outer_boundless_pixel_fidelity(
+        path_rgb_byte_tif, col_start, row_start, col_stop, row_stop):
     """An outer boundless read doesn't change pixels"""
-    path_rgb_byte_tif = 'tests/data/RGB.byte.tif'
     with rasterio.open(path_rgb_byte_tif) as dataset:
+        width = dataset.width + col_stop - col_start
+        height = dataset.height + row_stop - row_start
+        window = Window(col_start, row_start, width, height)
+        rgb_padded = dataset.read(window=window, boundless=True)
+        assert rgb_padded.shape == (dataset.count, height, width)
         rgb = dataset.read()
-        rgb_padded = dataset.read(window=Window(-size, -size, dataset.width + 2 * size, dataset.height + 2 * size), boundless=True)
-        assert rgb_padded.shape == (3, dataset.height + 2 * size, dataset.width + 2 * size)
-    assert numpy.all(rgb == rgb_padded[:, size:(-size or None), size:(-size or None)])
+        assert numpy.all(
+            rgb == rgb_padded[:, -row_start:height - row_stop,
+                              -col_start:width - col_stop])
