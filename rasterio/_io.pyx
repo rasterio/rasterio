@@ -122,7 +122,10 @@ cdef class DatasetReaderBase(DatasetBase):
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
             fill_value=None):
-        """Read raster bands as a multidimensional array
+        """Read a dataset's raw pixels as an N-d array
+
+        This data is read from the dataset's band cache, which means
+        that repeated reads of the same windows may avoid I/O.
 
         Parameters
         ----------
@@ -169,6 +172,12 @@ cdef class DatasetReaderBase(DatasetBase):
             If `True`, windows that extend beyond the dataset's extent
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
+
+        resampling : Resampling
+            By default, pixel values are read raw or interpolated using
+            a nearest neighbor algorithm from the band cache. Other
+            resampling algorithms may be specified. Resampled pixels
+            are not cached.
 
         fill_value : scalar
             Fill value applied in the `boundless=True` case only.
@@ -389,6 +398,9 @@ cdef class DatasetReaderBase(DatasetBase):
                    boundless=False, resampling=Resampling.nearest):
         """Read raster band masks as a multidimensional array
 
+        This data is read from the dataset's band cache, which means
+        that repeated reads of the same windows may avoid I/O.
+
         Parameters
         ----------
         indexes : list of ints or a single int, optional
@@ -424,6 +436,12 @@ cdef class DatasetReaderBase(DatasetBase):
             If `True`, windows that extend beyond the dataset's extent
             are permitted and partially or completely filled arrays will
             be returned as appropriate.
+
+        resampling : Resampling
+            By default, pixel values are read raw or interpolated using
+            a nearest neighbor algorithm from the band cache. Other
+            resampling algorithms may be specified. Resampled pixels
+            are not cached.
 
         Returns
         -------
