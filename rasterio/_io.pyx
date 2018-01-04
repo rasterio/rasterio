@@ -1458,10 +1458,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         band = self.band(1)
 
+        if not all(MaskFlags.per_dataset in flags for flags in self.mask_flag_enums):
+            try:
+                exc_wrap_int(GDALCreateMaskBand(band, MaskFlags.per_dataset))
+                log.debug("Created mask band")
+            except:
+                raise RasterioIOError("Failed to create mask.")
+
         try:
-            exc_wrap_int(GDALCreateMaskBand(band, 0x02))
             mask = exc_wrap_pointer(GDALGetMaskBand(band))
-            log.debug("Created mask band")
         except:
             raise RasterioIOError("Failed to get mask.")
 
