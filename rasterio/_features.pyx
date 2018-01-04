@@ -337,7 +337,7 @@ def _explode(coords):
                 yield f
 
 
-def _bounds(geometry, north_up=True):
+def _bounds(geometry, north_up=True, transform=None):
     """Bounding box of a GeoJSON geometry.
 
     left, bottom, right, top
@@ -365,11 +365,17 @@ def _bounds(geometry, north_up=True):
             return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
 
     else:
-        xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
-        if north_up:
-            return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
-        else:
+        if transform is not None:
+            xyz = list(_explode(geometry['coordinates']))
+            xyz_px = [point * transform for point in xyz]
+            xyz = tuple(zip(*xyz_px))
             return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
+        else:
+            xyz = tuple(zip(*list(_explode(geometry['coordinates']))))
+            if north_up:
+                return min(xyz[0]), min(xyz[1]), max(xyz[0]), max(xyz[1])
+            else:
+                return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
 
 
 # Mapping of OGR integer geometry types to GeoJSON type names.

@@ -313,7 +313,7 @@ def rasterize(
     return out
 
 
-def bounds(geometry, north_up=True):
+def bounds(geometry, north_up=True, transform=None):
     """Return a (left, bottom, right, top) bounding box.
 
     From Fiona 1.4.8. Modified to return bbox from geometry if available.
@@ -335,11 +335,11 @@ def bounds(geometry, north_up=True):
         return tuple(geometry['bbox'])
 
     geom = geometry.get('geometry') or geometry
-    return _bounds(geom, north_up=north_up)
+    return _bounds(geom, north_up=north_up, transform=transform)
 
 
 def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
-                    pixel_precision=3):
+                    rotated=False, pixel_precision=3):
     """Calculate the window within the raster that fits the bounds of the
     geometry plus optional padding.  The window is the outermost pixel indices
     that contain the geometry (floor of offsets, ceiling of width and height).
@@ -362,6 +362,9 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
     north_up: bool
         If True (default), the origin point of the raster's transform is the
         northernmost point and y pixel values are negative.
+    rotated: bool
+        If true, some rotation terms exist in the dataset transform (this
+        requires special attention.)
     pixel_precision: int
         Number of places of rounding precision for evaluating bounds of shapes.
 
@@ -376,18 +379,36 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
     if pad_y:
         pad_y = abs(pad_y * dataset.res[1])
 
-    all_bounds = [bounds(shape, north_up=north_up) for shape in shapes]
-    lefts, bottoms, rights, tops = zip(*all_bounds)
+    if not rotated:
+        all_bounds = [bounds(shape, north_up=north_up) for shape in shapes]
+        lefts, bottoms, rights, tops = zip(*all_bounds)
 
-    left = min(lefts) - pad_x
-    right = max(rights) + pad_x
+        left = min(lefts) - pad_x
+        right = max(rights) + pad_x
 
-    if north_up:
-        bottom = min(bottoms) - pad_y
-        top = max(tops) + pad_y
+        if north_up:
+            bottom = min(bottoms) - pad_y
+            top = max(tops) + pad_y
+        else:
+            bottom = max(bottoms) + pad_y
+            top = min(tops) - pad_y
     else:
-        bottom = max(bottoms) + pad_y
-        top = min(tops) - pad_y
+        # get the bounds in the pixel domain by specifying a transform to the bounds function
+        all_bounds_px = [bounds(shape, transform=~dataset.transform) for shape in shapes]
+        # get left, right, top, and bottom as above
+        lefts, bottoms, rights, tops = zip(*all_bounds_px)
+        left = min(lefts) - pad_x
+        right = max(rights) + pad_x
+        top = min(tops)
+        bottom = max(bottoms)
+        # do some clamping if there are any values less than zero or greater than dataset shape
+        left = max(0, left)
+        top = max(0, top)
+        right = min(dataset.shape[1], right)
+        bottom = min(dataset.shape[0], bottom)
+        # convert the bounds back to the CRS domain
+        left, top = (left, top) * dataset.transform
+        right, bottom = (right, bottom) * dataset.transform
 
     window = dataset.window(left, bottom, right, top)
     window = window.round_offsets(op='floor', pixel_precision=pixel_precision)

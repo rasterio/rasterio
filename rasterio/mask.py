@@ -74,10 +74,11 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         pad_y = 0
 
     north_up = dataset.transform.e <= 0
+    rotated = dataset.transform.b != 0 or dataset.transform.d != 0 
 
     try:
-        window = geometry_window(dataset, shapes, north_up=north_up, pad_x=pad_x,
-                                 pad_y=pad_y)
+        window = geometry_window(dataset, shapes, north_up=north_up, rotated=rotated,
+                                 pad_x=pad_x, pad_y=pad_y)
 
     except WindowError:
         # If shapes do not overlap raster, raise Exception or UserWarning
