@@ -15,7 +15,7 @@ import numpy as np
 from rasterio._base import tastes_like_gdal
 from rasterio._env import driver_count, GDALEnv
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError)
+    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError)
 from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
@@ -1462,12 +1462,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             try:
                 exc_wrap_int(GDALCreateMaskBand(band, MaskFlags.per_dataset))
                 log.debug("Created mask band")
-            except:
+            except CPLE_BaseError:
                 raise RasterioIOError("Failed to create mask.")
 
         try:
             mask = exc_wrap_pointer(GDALGetMaskBand(band))
-        except:
+        except CPLE_BaseError:
             raise RasterioIOError("Failed to get mask.")
 
         if window:
