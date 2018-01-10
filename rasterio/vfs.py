@@ -5,9 +5,6 @@ import os
 from rasterio.compat import urlparse
 
 
-# NB: As not to propagate fallacies of distributed computing, Rasterio
-# does not support HTTP or FTP URLs via GDAL's vsicurl handler. Only
-# the following local filesystem schemes are supported.
 SCHEMES = {
     'gzip': 'gzip',
     'gzip+file': 'gzip',
