@@ -7,7 +7,8 @@ import pytest
 from affine import Affine
 
 import rasterio
-from rasterio.errors import WindowError
+from rasterio.enums import MergeAlg
+from rasterio.errors import WindowError, RasterioDeprecationWarning
 from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
@@ -547,7 +548,7 @@ def test_rasterize_all_touched(basic_geometry, basic_image):
         )
     )
 
-def test_rasterize_merge_alg(basic_geometry, basic_image_2x2x2):
+def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
     """
     Rasterizing two times the basic_geometry with the "add" merging
     option should output the shape with the value 2
@@ -556,9 +557,21 @@ def test_rasterize_merge_alg(basic_geometry, basic_image_2x2x2):
         assert np.array_equal(
             basic_image_2x2x2,
             rasterize(
-                [basic_geometry, basic_geometry], merge_alg='add',
+                [basic_geometry, basic_geometry], merge_alg=MergeAlg.add,
                 out_shape=DEFAULT_SHAPE)
         )
+
+
+def test_rasterize_merge_alg_deprecated(basic_geometry, basic_image_2x2x2):
+    """
+    Rasterizing two times the basic_geometry with the "add" merging
+    option should output the shape with the value 2
+    """
+    for alg in ('add', 'replace'):
+        with pytest.warns(RasterioDeprecationWarning):
+            with rasterio.Env():
+                rasterize([basic_geometry, basic_geometry], merge_alg=alg,
+                          out_shape=DEFAULT_SHAPE)
 
 
 def test_rasterize_value(basic_geometry, basic_image_2x2):
