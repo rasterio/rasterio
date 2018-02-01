@@ -27,7 +27,7 @@ with rasterio.Env():
 
     # Write out the sieved raster.
     kwargs = src.meta
-    kwargs['transform'] = kwargs.pop('affine')
+    kwargs['transform'] = rasterio.transform.guard_transform(kwargs['transform'])
     with rasterio.open('example-sieved.tif', 'w', **kwargs) as dst:
         dst.write(sieved, indexes=1)
 

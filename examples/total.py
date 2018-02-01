@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import rasterio
 import subprocess
@@ -15,7 +16,7 @@ with rasterio.Env(CPL_DEBUG=True):
     total = np.zeros(r.shape, dtype=rasterio.uint16)
     for band in (r, g, b):
         total += band
-    total /= 3
+    total = total / 3
 
     # Write the product as a raster band to a new 8-bit file. For keyword
     # arguments, we start with the meta attributes of the source file, but
