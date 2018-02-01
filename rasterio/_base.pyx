@@ -113,6 +113,7 @@ cdef class DatasetBase(object):
     def __init__(self, path=None, driver=None, **kwargs):
         cdef GDALDatasetH hds = NULL
         cdef int flags = 0
+        cdef int sharing_flag = (0x20 if kwargs.pop('sharing', True) else 0x0)
 
         self._hds = NULL
 
@@ -125,7 +126,7 @@ cdef class DatasetBase(object):
                 driver = [driver]
 
             # Read-only + Rasters + Sharing + Errors
-            flags = 0x00 | 0x02 | 0x20 | 0x40
+            flags = 0x00 | 0x02 | sharing_flag | 0x40
 
             try:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
