@@ -6,8 +6,10 @@ Next
 
 Bug fixes:
 
-- ``mask()`` now takes the ``indexes`` keyword parameter that is common 
+- ``mask()`` now takes the ``indexes`` keyword parameter that is common
   elsewhere in the package (#1224, #1225).
+- Sharing of dataset handles may be disabled for multithreaded applications
+  using the new `sharing` keyword argument of `rasterio.open` (#1260).
 
 1.0a12 (2017-12-01)
 -------------------
