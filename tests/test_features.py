@@ -400,6 +400,35 @@ def test_rasterize_geomcollection(geojson_geomcollection):
     )
 
 
+@pytest.mark.xfail(reason="rasterize creates a hole between overlapping "
+                          "polygons in a GeometryCollection")
+def test_rasterize_geomcollection_hole():
+    """
+    Reported in https://github.com/mapbox/rasterio/issues/1253
+
+    rasterize creates a hole when passed a GeometryCollection of overlapping
+    geometries, yet does not create a hole when passed the same underlying
+    polygons directly.
+
+    This appears to be a bug in GDAL.
+    """
+
+    geomcollection = {'type': 'GeometryCollection', 'geometries': [
+        {'type': 'Polygon',
+        'coordinates': (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)},
+        {'type': 'Polygon',
+        'coordinates': (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)}
+    ]}
+
+    # No hole when there are two overlapping polygon geometries
+    expected = rasterize(geomcollection['geometries'], out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(
+        rasterize([geomcollection], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
 def test_rasterize_invalid_geom():
     """Invalid GeoJSON should fail with exception"""
 
