@@ -502,6 +502,12 @@ def path_zip_file():
     return path
 
 
+class MockGeoInterface(object):
+    """Tiny wrapper for GeoJSON to present an object with __geo_interface__ for testing"""
+    def __init__(self, geojson):
+        self.__geo_interface__ = geojson
+
+
 # Define helpers to skip tests based on GDAL version
 gdal_version = GDALVersion.runtime()
 
