@@ -309,13 +309,17 @@ def bounds(geometry, north_up=True):
 
     Parameters
     ----------
-    geometry: GeoJSON-like feature, feature collection, or geometry.
+    geometry: GeoJSON-like feature (implements __geo_interface__),
+              feature collection, or geometry.
 
     Returns
     -------
     tuple
         Bounding box: (left, bottom, right, top)
     """
+
+    geometry = getattr(geometry, '__geo_interface__', None) or geometry
+
     if 'bbox' in geometry:
         return tuple(geometry['bbox'])
 
