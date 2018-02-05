@@ -6,6 +6,8 @@ Next
 
 Bug fixes:
 
+- Add missing support for Python geo protocol in features module (#1268,
+  (#1269).
 - ``mask()`` now takes the ``indexes`` keyword parameter that is common
   elsewhere in the package (#1224, #1225).
 - Sharing of dataset handles may be disabled for multithreaded applications
