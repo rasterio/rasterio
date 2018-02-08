@@ -898,7 +898,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, **kwargs):
+                 gcps=None, sharing=True, **kwargs):
         """Initialize a DatasetWriterBase instance."""
         cdef char **options = NULL
         cdef char *key_c = NULL
@@ -908,6 +908,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALRasterBandH band = NULL
         cdef const char *fname = NULL
         cdef int flags = 0
+        cdef int sharing_flag = (0x20 if sharing else 0x0)
 
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
@@ -1025,7 +1026,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 driver = [driver]
 
             # flags: Update + Raster + Errors
-            flags = 0x01 | 0x02 | 0x40
+            flags = 0x01 | sharing_flag | 0x40
 
             try:
                 self._hds = open_dataset(path, flags, driver, kwargs, None)

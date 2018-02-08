@@ -5,11 +5,27 @@ from affine import Affine
 import rasterio
 from rasterio.mask import raster_geometry_mask, mask
 
+from .conftest import MockGeoInterface
+
 
 def test_raster_geometrymask(basic_image_2x2, basic_image_file, basic_geometry):
     """Pixels inside the geometry are False in the mask"""
 
     geometries = [basic_geometry]
+
+    with rasterio.open(basic_image_file) as src:
+        geometrymask, transform, window = raster_geometry_mask(src, geometries)
+
+    assert np.array_equal(geometrymask, (basic_image_2x2 == 0))
+    assert transform == Affine.identity()
+    assert window is None
+
+
+def test_raster_geometrymask_geo_interface(basic_image_2x2, basic_image_file,
+                                           basic_geometry):
+    """Pixels inside the geometry are False in the mask"""
+
+    geometries = [MockGeoInterface(basic_geometry)]
 
     with rasterio.open(basic_image_file) as src:
         geometrymask, transform, window = raster_geometry_mask(src, geometries)
