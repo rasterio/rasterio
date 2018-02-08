@@ -6,6 +6,8 @@ Next
 
 Bug fixes:
 
+- Geometry collections are flattened in ``rasterize`` to work around
+  incidental holes created by GDAL (#1253, #1274).
 - Add missing support for Python geo protocol in features module (#1268,
   (#1269).
 - ``mask()`` now takes the ``indexes`` keyword parameter that is common
