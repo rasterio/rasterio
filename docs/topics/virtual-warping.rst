@@ -12,6 +12,7 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
 
 .. code-block:: python
 
+  from affine import Affine
   import mercantile
 
   import rasterio
@@ -25,7 +26,7 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
           # Determine the destination tile and its mercator bounds using
           # functions from the mercantile module.
           dst_tile = mercantile.tile(*vrt.lnglat(), 9)
-          left, top, right, bottom = mercantile.xy_bounds(*dst_tile)
+          left, bottom, right, top = mercantile.xy_bounds(*dst_tile)
 
           # Determine the window to use in reading from the dataset.
           dst_window = vrt.window(left, bottom, right, top)
@@ -51,5 +52,5 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
 
           # Write the image tile to disk.
           with rasterio.open('/tmp/test-tile.tif', 'w', **profile) as dst:
-              dst.write(rgb)
+              dst.write(data)
 
