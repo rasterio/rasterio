@@ -259,7 +259,18 @@ def rasterize(
                 'Invalid geometry object at index {0}'.format(index)
             )
 
-        valid_shapes.append((geom, value))
+        if geom['type'] == 'GeometryCollection':
+            # GeometryCollections need to be handled as individual parts to
+            # avoid holes in output:
+            # https://github.com/mapbox/rasterio/issues/1253.
+            # Only 1-level deep since GeoJSON spec discourages nested
+            # GeometryCollections
+            for part in geom['geometries']:
+                valid_shapes.append((part, value))
+
+        else:
+            valid_shapes.append((geom, value))
+
         shape_values.append(value)
 
     if not valid_shapes:
