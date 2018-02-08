@@ -420,6 +420,29 @@ def test_rasterize_geo_interface(geojson_polygon, basic_image_2x2):
     )
 
 
+def test_rasterize_geomcollection_no_hole():
+    """
+    Make sure that bug reported in
+    https://github.com/mapbox/rasterio/issues/1253
+    does not recur.  GeometryCollections are flattened to individual parts,
+    and should result in no holes where parts overlap.
+    """
+
+    geomcollection = {'type': 'GeometryCollection', 'geometries': [
+        {'type': 'Polygon',
+        'coordinates': (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)},
+        {'type': 'Polygon',
+        'coordinates': (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)}
+    ]}
+
+    expected = rasterize(geomcollection['geometries'], out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(
+        rasterize([geomcollection], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
 def test_rasterize_invalid_geom():
     """Invalid GeoJSON should fail with exception"""
 
