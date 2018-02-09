@@ -69,8 +69,7 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
     """
     # GDAL handles all the buffering indexing, so a typed memoryview,
     # as in previous versions, isn't needed.
-    # Get a copy of the array (user may have passed a view).
-    cdef void *buf = <void *>np.PyArray_DATA(data.copy())
+    cdef void *buf = <void *>np.PyArray_DATA(data)
     cdef int bufxsize = data.shape[1]
     cdef int bufysize = data.shape[0]
     cdef int buftype = dtypes.dtype_rev[data.dtype.name]
@@ -107,8 +106,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
     cdef int i = 0
     cdef int retval = 3
     cdef int *bandmap = NULL
-    # Get a copy of the array (user may have passed a view).
-    cdef void *buf = <void *>np.PyArray_DATA(data.copy())
+    cdef void *buf = <void *>np.PyArray_DATA(data)
     cdef int bufxsize = data.shape[2]
     cdef int bufysize = data.shape[1]
     cdef int buftype = dtypes.dtype_rev[data.dtype.name]
@@ -174,8 +172,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
         hmask = GDALGetMaskBand(band)
         if hmask == NULL:
             raise ValueError("Null mask band")
-        # Get a copy of the array (user may have passed a view).
-        buf = <void *>np.PyArray_DATA(data[i].copy())
+        buf = <void *>np.PyArray_DATA(data[i])
         if buf == NULL:
             raise ValueError("NULL data")
         with nogil:

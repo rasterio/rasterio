@@ -286,6 +286,9 @@ def _reproject(
     # We need a src_transform and src_dst in this case. These will
     # be copied to the MEM dataset.
     if dtypes.is_ndarray(source):
+        # Copy array if it is a view.
+        if not source.flags['OWNDATA']:
+            source = source.copy()
         # Convert 2D single-band arrays to 3D multi-band.
         if len(source.shape) == 2:
             source = source.reshape(1, *source.shape)
