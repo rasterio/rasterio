@@ -1057,6 +1057,111 @@ def test_reproject_identity():
         resampling=Resampling.nearest)
 
 
+def test_reproject_identity_like_with_negative_e():
+    """Reproject with an identity matrix."""
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(1.0, 0.0, 0.0, 0.0, -1.0, 0.0)  # Identity like
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 10, 10))
+    dstaff = Affine(0.5, 0.0, 0.0, 0.0, -0.5, 0.0)
+    dstcrs = {'init': 'epsg:3857'}
+
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
+
+    src = np.random.random(100).reshape((1, 10, 10))
+    srcaff = Affine(0.5, 0.0, 0.0, 0.0, -0.5, 0.0)
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 5, 5))
+    dstaff = Affine(1.0, 0.0, 0.0, 0.0, -1.0, 0.0)  # Identity like
+    dstcrs = {'init': 'epsg:3857'}
+
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
+
+
+def test_reproject_identity_like_with_negative_a():
+    """Reproject with an identity matrix."""
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity like
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 10, 10))
+    dstaff = Affine(-0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    dstcrs = {'init': 'epsg:3857'}
+
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
+
+    src = np.random.random(100).reshape((1, 10, 10))
+    srcaff = Affine(-0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 5, 5))
+    dstaff = Affine(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity like
+    dstcrs = {'init': 'epsg:3857'}
+
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
+
+
+def test_reproject_identity_like_with_negative_a_and_e():
+    """Reproject with an identity matrix."""
+    src = np.random.random(25).reshape((1, 5, 5))
+    srcaff = Affine(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0)  # Identity like
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 10, 10))
+    dstaff = Affine(-0.5, 0.0, 0.0, 0.0, -0.5, 0.0)
+    dstcrs = {'init': 'epsg:3857'}
+
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
+
+    src = np.random.random(100).reshape((1, 10, 10))
+    srcaff = Affine(-0.5, 0.0, 0.0, 0.0, -0.5, 0.0)
+    srccrs = {'init': 'epsg:3857'}
+
+    dst = np.empty(shape=(1, 5, 5))
+    dstaff = Affine(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0)  # Identity like
+    dstcrs = {'init': 'epsg:3857'}
+
+    reproject(
+        src, dst,
+        src_transform=srcaff,
+        src_crs=srccrs,
+        dst_transform=dstaff,
+        dst_crs=dstcrs,
+        resampling=Resampling.nearest)
+
+
 @pytest.fixture(scope='function')
 def rgb_byte_profile():
     with rasterio.open('tests/data/RGB.byte.tif') as src:

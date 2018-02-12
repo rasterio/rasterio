@@ -276,9 +276,9 @@ def reproject(source, destination, src_transform=None, gcps=None,
     # If working with identity transform, assume it is crs-less data
     # and that translating the matrix very slightly will avoid #674
     eps = 1e-100
-    if src_transform and guard_transform(src_transform).is_identity:
+    if src_transform and guard_transform(np.abs(src_transform)[:6]).is_identity:
         src_transform = src_transform.translation(eps, eps)
-    if dst_transform and guard_transform(dst_transform).is_identity:
+    if dst_transform and guard_transform(np.abs(dst_transform)[:6]).is_identity:
         dst_transform = dst_transform.translation(eps, eps)
 
     if src_transform:
