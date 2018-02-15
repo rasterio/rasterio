@@ -40,8 +40,6 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite
 
     Note: --res changed from 2 parameters in 0.25.
 
-    Note: --bidx advanced usage: please see rio stack --help
-
     \b
       --res 0.1 0.1  => --res 0.1 (square)
       --res 0.1 0.2  => --res 0.1 --res 0.2  (rectangular)

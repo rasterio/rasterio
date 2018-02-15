@@ -17,7 +17,7 @@ from rasterio.rio.helpers import resolve_inout
 @files_inout_arg
 @options.output_opt
 @format_opt
-@options.bidx_mult_opt
+@options.bidx_magic_opt
 @options.rgb_opt
 @options.force_overwrite_opt
 @options.creation_options
