@@ -462,5 +462,5 @@ def test_merge_rgb(tmpdir):
 def test_merge_tiny_intres(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
-    sources = [rasterio.open(x) for x in inputs]
-    merge(sources, res=2)
+    datasets = [rasterio.open(x) for x in inputs]
+    merge(datasets, res=2)

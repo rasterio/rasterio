@@ -24,7 +24,7 @@ def exists(path):
     Parameters
     ----------
     path : str
-        Path to dataset.
+        Path to dataset
     """
 
     cdef GDALDatasetH h_dataset = NULL
@@ -54,17 +54,17 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
     Parameters
     ----------
-    src : str or rasterio.io.DatasetReader
-        Path to source dataset or open dataset handle.
+    src : str or dataset object opened in 'r' mode
+        Source dataset
     dst : str
-        Output dataset path.
+        Output dataset path
     driver : str, optional
-        Output driver name.
+        Output driver name
     strict : bool, optional.  Default: True
         Indicates if the output must be strictly equivalent or if the
-        driver may adapt as necessary.
+        driver may adapt as necessary
     creation_options : **kwargs, optional
-        Creation options for output dataset.
+        Creation options for output dataset
     """
 
     cdef bint c_strictness
@@ -125,9 +125,9 @@ def copyfiles(src, dst):
     Parameters
     ----------
     src : str
-        Source dataset.
+        Source dataset
     dst : str
-        Target dataset.
+        Target dataset
     """
 
     cdef GDALDatasetH h_dataset = NULL
@@ -161,15 +161,15 @@ def copyfiles(src, dst):
 @ensure_env
 def delete(path, driver=None):
 
-    """Delete a GDAL dataset.
+    """Delete a GDAL dataset
 
     Parameters
     ----------
     path : path
-        Path to dataset to delete.
+        Path to dataset to delete
     driver : str or None, optional
         Name of driver to use for deleting.  Defaults to whatever GDAL
-        determines is the appropriate driver.
+        determines is the appropriate driver
     """
 
     cdef GDALDatasetH h_dataset = NULL

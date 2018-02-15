@@ -111,13 +111,12 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path, archive, scheme = parse_path(value)
-        path_to_check = archive or path
 
         # Validate existence of files.
         if scheme in FILE_SCHEMES and not \
-                rasterio.shutil.exists(path_to_check):
+                rasterio.shutil.exists(value):
             raise IOError(
-                "Input file {0} does not exist".format(path_to_check))
+                "Input file {0} does not exist".format(value))
 
         if archive and scheme:
             archive = abspath_forward_slashes(archive)

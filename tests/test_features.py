@@ -7,10 +7,13 @@ import pytest
 from affine import Affine
 
 import rasterio
-from rasterio.errors import WindowError
+from rasterio.enums import MergeAlg
+from rasterio.errors import WindowError, RasterioDeprecationWarning
 from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
+
+from .conftest import MockGeoInterface
 
 
 DEFAULT_SHAPE = (10, 10)
@@ -21,21 +24,25 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 def test_bounds_point():
     g = {'type': 'Point', 'coordinates': [10, 10]}
     assert bounds(g) == (10, 10, 10, 10)
+    assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
 
 def test_bounds_line():
     g = {'type': 'LineString', 'coordinates': [[0, 0], [10, 10]]}
     assert bounds(g) == (0, 0, 10, 10)
+    assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
 
 
 def test_bounds_polygon():
     g = {'type': 'Polygon', 'coordinates': [[[0, 0], [10, 10], [10, 0]]]}
     assert bounds(g) == (0, 0, 10, 10)
+    assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
 
 
 def test_bounds_z():
     g = {'type': 'Point', 'coordinates': [10, 10, 10]}
     assert bounds(g) == (10, 10, 10, 10)
+    assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
 
 def test_bounds_invalid_obj():
@@ -130,6 +137,13 @@ def test_geometry_window(basic_image_file, basic_geometry):
         assert window.flatten() == (2, 2, 3, 3)
 
 
+def test_geometry_window_geo_interface(basic_image_file, basic_geometry):
+    with rasterio.open(basic_image_file) as src:
+        window = geometry_window(src, [MockGeoInterface(basic_geometry)],
+                                 north_up=False)
+        assert window.flatten() == (2, 2, 3, 3)
+
+
 @pytest.mark.xfail(reason="https://github.com/mapbox/rasterio/issues/1139")
 # This test is failing due to https://github.com/mapbox/rasterio/issues/1139
 def test_geometry_window_pixel_precision(basic_image_file):
@@ -176,7 +190,7 @@ def test_geometry_window_pad(basic_image_file, basic_geometry):
     assert window.flatten() == (1, 1, 4, 4)
 
 
-def test_geometry_large_shapes(basic_image_file):
+def test_geometry_window_large_shapes(basic_image_file):
     geometry = {
         'type': 'Polygon',
         'coordinates': [[
@@ -194,7 +208,7 @@ def test_geometry_large_shapes(basic_image_file):
         assert window.flatten() == (0, 0, src.height, src.width)
 
 
-def test_geometry_no_overlap(path_rgb_byte_tif, basic_geometry):
+def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
     """Geometries that do not overlap raster raises WindowError"""
     
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -399,6 +413,36 @@ def test_rasterize_geomcollection(geojson_geomcollection):
     )
 
 
+def test_rasterize_geo_interface(geojson_polygon, basic_image_2x2):
+    assert np.array_equal(
+        rasterize([MockGeoInterface(geojson_polygon)], out_shape=DEFAULT_SHAPE),
+        basic_image_2x2
+    )
+
+
+def test_rasterize_geomcollection_no_hole():
+    """
+    Make sure that bug reported in
+    https://github.com/mapbox/rasterio/issues/1253
+    does not recur.  GeometryCollections are flattened to individual parts,
+    and should result in no holes where parts overlap.
+    """
+
+    geomcollection = {'type': 'GeometryCollection', 'geometries': [
+        {'type': 'Polygon',
+        'coordinates': (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)},
+        {'type': 'Polygon',
+        'coordinates': (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)}
+    ]}
+
+    expected = rasterize(geomcollection['geometries'], out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(
+        rasterize([geomcollection], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
 def test_rasterize_invalid_geom():
     """Invalid GeoJSON should fail with exception"""
 
@@ -547,7 +591,7 @@ def test_rasterize_all_touched(basic_geometry, basic_image):
         )
     )
 
-def test_rasterize_merge_alg(basic_geometry, basic_image_2x2x2):
+def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
     """
     Rasterizing two times the basic_geometry with the "add" merging
     option should output the shape with the value 2
@@ -556,9 +600,21 @@ def test_rasterize_merge_alg(basic_geometry, basic_image_2x2x2):
         assert np.array_equal(
             basic_image_2x2x2,
             rasterize(
-                [basic_geometry, basic_geometry], merge_alg='add',
+                [basic_geometry, basic_geometry], merge_alg=MergeAlg.add,
                 out_shape=DEFAULT_SHAPE)
         )
+
+
+def test_rasterize_merge_alg_deprecated(basic_geometry, basic_image_2x2x2):
+    """
+    Rasterizing two times the basic_geometry with the "add" merging
+    option should output the shape with the value 2
+    """
+    for alg in ('add', 'replace'):
+        with pytest.warns(RasterioDeprecationWarning):
+            with rasterio.Env():
+                rasterize([basic_geometry, basic_geometry], merge_alg=alg,
+                          out_shape=DEFAULT_SHAPE)
 
 
 def test_rasterize_value(basic_geometry, basic_image_2x2):

@@ -10,6 +10,8 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.env import GDALVersion
+from rasterio.warp import SUPPORTED_RESAMPLING, GDAL2_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
 
@@ -27,9 +29,6 @@ def test_dst_crs_error(runner, tmpdir):
     assert 'for dst_crs: crs appears to be JSON but is not' in result.output
 
 
-@pytest.mark.xfail(
-    os.environ.get('GDALVERSION', 'a.b.c').startswith('1.9'),
-    reason="GDAL 1.9 doesn't catch this error")
 def test_dst_crs_error_2(runner, tmpdir):
     """Invalid PROJ.4 is a bad parameter."""
     srcname = 'tests/data/RGB.byte.tif'
@@ -534,3 +533,36 @@ def test_warp_vrt_gcps(runner, tmpdir):
         assert not data[:, 0, -1].any()
         assert not data[:, -1, -1].any()
         assert not data[:, -1, 0].any()
+
+
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
+def test_warp_resampling(runner, path_rgb_byte_tif, tmpdir, method):
+    """Resampling methods supported by this version of GDAL should run
+    successfully"""
+
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', path_rgb_byte_tif, outputname,
+        '--dst-crs', 'epsg:3857',
+        '--resampling', method.name])
+
+    print(result.output)
+    assert result.exit_code == 0
+
+
+@pytest.mark.skipif(
+    GDALVersion.runtime().at_least('2.0'),
+    reason="Test only applicable to GDAL < 2.0")
+@pytest.mark.parametrize("method", GDAL2_RESAMPLING)
+def test_warp_resampling_not_yet_supported(
+        runner, path_rgb_byte_tif, tmpdir, method):
+    """Resampling methods not yet supported should fail with error"""
+
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(main_group, [
+        'warp', path_rgb_byte_tif, outputname,
+        '--dst-crs', 'epsg:3857',
+        '--resampling', method.name])
+
+    assert result.exit_code == 2
+    assert 'Invalid value for "--resampling"' in result.output

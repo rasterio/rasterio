@@ -25,8 +25,7 @@ def _shapes(image, mask, connectivity, transform):
 
     Parameters
     ----------
-    image : numpy ndarray or rasterio Band object
-        (RasterReader, bidx namedtuple).
+    image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object
@@ -152,8 +151,7 @@ def _sieve(image, size, out, mask, connectivity):
 
     Parameters
     ----------
-    image : numpy ndarray or rasterio Band object
-        (RasterReader, bidx namedtuple)
+    image : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
         rasterio.uint16, or rasterio.float32.
     size : int
@@ -271,7 +269,10 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
         that are selected by Bresenham's line algorithm will be burned
         in.
     merge_alg : str, required
-        'REPLACE' (the default) or 'ADD'
+        Merge algorithm to use.  One of:
+            MergeAlg.replace (default): the new value will overwrite the
+                existing value.
+            MergeAlg.add: the new value will be added to the existing raster.
     """
     cdef int retval
     cdef size_t i
@@ -284,7 +285,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     try:
         if all_touched:
             options = CSLSetNameValue(options, "ALL_TOUCHED", "TRUE")
-        merge_algorithm = MergeAlg[merge_alg].value.encode('utf-8')
+        merge_algorithm = merge_alg.value.encode('utf-8')
         options = CSLSetNameValue(options, "MERGE_ALG", merge_algorithm)
 
         # GDAL needs an array of geometries.

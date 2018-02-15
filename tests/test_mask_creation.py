@@ -2,7 +2,6 @@
 Tests of band mask creation, both .msk sidecar and internal.
 """
 
-import pytest
 import rasterio
 from rasterio.enums import MaskFlags
 
@@ -63,11 +62,8 @@ def test_create_mask_windowed_sidecar(data):
                 dst.write_mask(mask, window=window)
 
 
-@pytest.mark.xfail(reason="https://github.com/mapbox/rasterio/issues/781")
 def test_create_mask_windowed_internal(data):
     """Writing masks by window with internal mask
-    Currently fails with
-        rasterio.errors.RasterioIOError: Failed to get mask.
     """
     with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
         with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:

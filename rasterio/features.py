@@ -2,12 +2,14 @@
 
 
 import logging
-
+import warnings
 import numpy as np
 
 from rasterio._features import _shapes, _sieve, _rasterize, _bounds
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
+from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio.transform import IDENTITY, guard_transform
 from rasterio.windows import Window
 
@@ -32,7 +34,7 @@ def geometry_mask(
     out_shape : tuple or list
         Shape of output numpy ndarray.
     transform : Affine transformation object
-        Transformation from pixel coordinates of `image` to the
+        Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
         property of dataset objects.
     all_touched : boolean, optional
@@ -60,13 +62,12 @@ def geometry_mask(
 
 
 @ensure_env
-def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
+def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     """Yield (polygon, value for each set of adjacent pixels of the same value.
 
     Parameters
     ----------
-    image : numpy ndarray or rasterio Band object
-        (RasterReader, bidx namedtuple).
+    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
@@ -97,26 +98,25 @@ def shapes(image, mask=None, connectivity=4, transform=IDENTITY):
 
     """
     transform = guard_transform(transform)
-    for s, v in _shapes(image, mask, connectivity, transform.to_gdal()):
+    for s, v in _shapes(source, mask, connectivity, transform.to_gdal()):
         yield s, v
 
 
 @ensure_env
-def sieve(image, size, out=None, mask=None, connectivity=4):
-    """Replace small polygons in `image` with value of their largest neighbor.
+def sieve(source, size, out=None, mask=None, connectivity=4):
+    """Replace small polygons in `source` with value of their largest neighbor.
 
     Polygons are found for each set of neighboring pixels of the same value.
 
     Parameters
     ----------
-    image : numpy ndarray or rasterio Band object
-        (RasterReader, bidx namedtuple)
+    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
         Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
         rasterio.uint16, or rasterio.float32
     size : int
         minimum polygon size (number of pixels) to retain.
     out : numpy ndarray, optional
-        Array of same shape and data type as `image` in which to store results.
+        Array of same shape and data type as `source` in which to store results.
     mask : numpy ndarray or rasterio Band object, optional
         Values of False or 0 will be excluded from feature generation
         Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
@@ -142,8 +142,8 @@ def sieve(image, size, out=None, mask=None, connectivity=4):
     """
 
     if out is None:
-        out = np.zeros(image.shape, image.dtype)
-    _sieve(image, size, out, mask, connectivity)
+        out = np.zeros(source.shape, source.dtype)
+    _sieve(source, size, out, mask, connectivity)
     return out
 
 
@@ -155,7 +155,7 @@ def rasterize(
         out=None,
         transform=IDENTITY,
         all_touched=False,
-        merge_alg='replace',
+        merge_alg=MergeAlg.replace,
         default_value=1,
         dtype=None):
     """Return an image array with input geometries burned in.
@@ -171,10 +171,10 @@ def rasterize(
         Used as fill value for all areas not covered by input
         geometries.
     out : numpy ndarray, optional
-        Array of same shape and data type as `image` in which to store
+        Array of same shape and data type as `source` in which to store
         results.
     transform : Affine transformation object, optional
-        Transformation from pixel coordinates of `image` to the
+        Transformation from pixel coordinates of `source` to the
         coordinate system of the input `shapes`. See the `transform`
         property of dataset objects.
     all_touched : boolean, optional
@@ -182,8 +182,10 @@ def rasterize(
         false, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
     merge_alg : str, optional
-        If `replace` (default), the new value will overwrite the existing value.
-        If `add`, the new value will be added to the existing raster.
+        Merge algorithm to use.  One of:
+            MergeAlg.replace (default): the new value will overwrite the
+                existing value.
+            MergeAlg.add: the new value will be added to the existing raster.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
@@ -202,6 +204,14 @@ def rasterize(
     rasterio.float64.
 
     """
+
+    # merge_alg usage deprecation warning.  Can be removed in rasterio 1.0
+    if not isinstance(merge_alg, MergeAlg):
+        warnings.warn("merge_alg must be MergeAlg.add or MergeAlg.replace, "
+                      "not a 'replace' or 'add'.  This usage has been "
+                      "deprecated.", RasterioDeprecationWarning)
+        merge_alg = MergeAlg[merge_alg]
+
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
@@ -249,7 +259,18 @@ def rasterize(
                 'Invalid geometry object at index {0}'.format(index)
             )
 
-        valid_shapes.append((geom, value))
+        if geom['type'] == 'GeometryCollection':
+            # GeometryCollections need to be handled as individual parts to
+            # avoid holes in output:
+            # https://github.com/mapbox/rasterio/issues/1253.
+            # Only 1-level deep since GeoJSON spec discourages nested
+            # GeometryCollections
+            for part in geom['geometries']:
+                valid_shapes.append((part, value))
+
+        else:
+            valid_shapes.append((geom, value))
+
         shape_values.append(value)
 
     if not valid_shapes:
@@ -299,13 +320,17 @@ def bounds(geometry, north_up=True):
 
     Parameters
     ----------
-    geometry: GeoJSON-like feature, feature collection, or geometry.
+    geometry: GeoJSON-like feature (implements __geo_interface__),
+              feature collection, or geometry.
 
     Returns
     -------
     tuple
         Bounding box: (left, bottom, right, top)
     """
+
+    geometry = getattr(geometry, '__geo_interface__', None) or geometry
+
     if 'bbox' in geometry:
         return tuple(geometry['bbox'])
 
@@ -313,29 +338,29 @@ def bounds(geometry, north_up=True):
     return _bounds(geom, north_up=north_up)
 
 
-def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
+def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
                     pixel_precision=3):
-    """Calculate the window within the raster that fits the bounds of the 
+    """Calculate the window within the raster that fits the bounds of the
     geometry plus optional padding.  The window is the outermost pixel indices
     that contain the geometry (floor of offsets, ceiling of width and height).
-    
+
     If shapes do not overlap raster, a WindowError is raised.
 
     Parameters
     ----------
-    raster: rasterio RasterReader object
+    dataset: dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes: iterable over geometries.
         A geometry is a GeoJSON-like object or implements the geo interface.
-        Must be in same coordinate system as raster.
+        Must be in same coordinate system as dataset.
     pad_x: float
-        Amount of padding (as fraction of raster's x pixel size) to add to left 
+        Amount of padding (as fraction of raster's x pixel size) to add to left
         and right side of bounds.
     pad_y: float
-        Amount of padding (as fraction of raster's y pixel size) to add to top 
+        Amount of padding (as fraction of raster's y pixel size) to add to top
         and bottom of bounds.
     north_up: bool
-        If True (default), the origin point of the raster's transform is the 
+        If True (default), the origin point of the raster's transform is the
         northernmost point and y pixel values are negative.
     pixel_precision: int
         Number of places of rounding precision for evaluating bounds of shapes.
@@ -346,10 +371,10 @@ def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
     """
 
     if pad_x:
-        pad_x = abs(pad_x * raster.res[0])
+        pad_x = abs(pad_x * dataset.res[0])
 
     if pad_y:
-        pad_y = abs(pad_y * raster.res[1])
+        pad_y = abs(pad_y * dataset.res[1])
 
     all_bounds = [bounds(shape, north_up=north_up) for shape in shapes]
     lefts, bottoms, rights, tops = zip(*all_bounds)
@@ -364,12 +389,12 @@ def geometry_window(raster, shapes, pad_x=0, pad_y=0, north_up=True,
         bottom = max(bottoms) + pad_y
         top = min(tops) - pad_y
 
-    window = raster.window(left, bottom, right, top)
+    window = dataset.window(left, bottom, right, top)
     window = window.round_offsets(op='floor', pixel_precision=pixel_precision)
     window = window.round_shape(op='ceil', pixel_precision=pixel_precision)
 
     # Make sure that window overlaps raster
-    raster_window = Window(0, 0, raster.width, raster.height)
+    raster_window = Window(0, 0, dataset.width, dataset.height)
 
     # This will raise a WindowError if windows do not overlap
     window = window.intersection(raster_window)
@@ -385,7 +410,7 @@ def is_valid_geom(geom):
     Geometries must be non-empty, and have at least x, y coordinates.
 
     Note: only the first coordinate is checked for validity.
-    
+
     Parameters
     ----------
     geom: an object that implements the geo interface or GeoJSON-like object
@@ -394,7 +419,7 @@ def is_valid_geom(geom):
     -------
     bool: True if object is a valid GeoJSON geometry type
     """
-    
+
     geom_types = {'Point', 'MultiPoint', 'LineString', 'MultiLineString',
                   'Polygon', 'MultiPolygon'}
 

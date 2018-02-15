@@ -15,7 +15,7 @@ from rasterio.transform import Affine
 logger = logging.getLogger(__name__)
 
 
-def merge(sources, bounds=None, res=None, nodata=None, precision=7, indexes=None):
+def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=None):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -31,8 +31,8 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7, indexes=None
 
     Parameters
     ----------
-    sources: list of source datasets
-        Open rasterio RasterReader objects to be merged.
+    datasets: list of dataset objects opened in 'r' mode
+        source datasets to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
         If not set, bounds are determined from bounds of input rasters.
@@ -59,7 +59,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7, indexes=None
                 Information for mapping pixel coordinates in `dest` to another
                 coordinate system
     """
-    first = sources[0]
+    first = datasets[0]
     first_res = first.res
     nodataval = first.nodatavals[0]
     dtype = first.dtypes[0]
@@ -79,7 +79,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7, indexes=None
         # scan input files
         xs = []
         ys = []
-        for src in sources:
+        for src in datasets:
             left, bottom, right, top = src.bounds
             xs.extend([left, right])
             ys.extend([bottom, top])
@@ -139,7 +139,7 @@ def merge(sources, bounds=None, res=None, nodata=None, precision=7, indexes=None
     else:
         nodataval = 0
 
-    for src in sources:
+    for src in datasets:
         # Real World (tm) use of boundless reads.
         # This approach uses the maximum amount of memory to solve the
         # problem. Making it more efficient is a TODO.

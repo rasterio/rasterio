@@ -69,7 +69,8 @@ log.addHandler(NullHandler())
 
 
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
-         crs=None, transform=None, dtype=None, nodata=None, **kwargs):
+         crs=None, transform=None, dtype=None, nodata=None, sharing=True,
+         **kwargs):
     """Open a dataset for reading or writing.
 
     The dataset may be located in a local file, in a resource located by
@@ -115,6 +116,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     nodata : int, float, or nan; optional
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' mode, it is ignored in 'r' or 'r+' mode.
+    sharing : bool
+        A flag that allows sharing of dataset handles. Default is
+        `True`. Should be set to `False` in a multithreaded:w program.
     kwargs : optional
         These are passed to format drivers as directives for creating
         or interpreting datasets. For example: in 'w' a `tiled=True`

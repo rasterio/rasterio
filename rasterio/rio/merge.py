@@ -52,12 +52,12 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite
         files=files, output=output, force_overwrite=force_overwrite)
 
     with ctx.obj['env']:
-        sources = [rasterio.open(f) for f in files]
-        dest, output_transform = merge_tool(sources, bounds=bounds, res=res,
+        datasets = [rasterio.open(f) for f in files]
+        dest, output_transform = merge_tool(datasets, bounds=bounds, res=res,
                                             nodata=nodata, precision=precision,
                                             indexes=(bidx or None))
 
-        profile = sources[0].profile
+        profile = datasets[0].profile
         profile['transform'] = output_transform
         profile['height'] = dest.shape[1]
         profile['width'] = dest.shape[2]
@@ -70,7 +70,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite
 
             # uses the colormap in the first input raster.
             try:
-                colormap = sources[0].colormap(1)
+                colormap = datasets[0].colormap(1)
                 dst.write_colormap(1, colormap)
             except ValueError:
                 pass

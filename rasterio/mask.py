@@ -12,7 +12,7 @@ from rasterio.features import geometry_mask, geometry_window
 logger = logging.getLogger(__name__)
 
 
-def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
+def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
                          crop=False, pad=False):
     """Create a mask from shapes, transform, and optional window within original
     raster.
@@ -26,7 +26,7 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
 
     Parameters
     ----------
-    raster: rasterio RasterReader object
+    dataset: a dataset object opened in 'r' mode
         Raster for which the mask will be created.
     shapes: list of polygons
         GeoJSON-like dict representation of polygons that will be used to
@@ -40,11 +40,11 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
         outside.  If True, mask will be `True` inside shapes and `False`
         outside.
     crop: bool (opt)
-        Whether to crop the raster to the extent of the shapes. Defaults to
+        Whether to crop the dataset to the extent of the shapes. Defaults to
         False.
     pad: bool (opt)
         If True, the features will be padded in each direction by
-        one half of a pixel prior to cropping raster. Defaults to False.
+        one half of a pixel prior to cropping dataset. Defaults to False.
 
     Returns
     -------
@@ -73,10 +73,10 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
         pad_x = 0
         pad_y = 0
 
-    north_up = raster.transform.e <= 0
+    north_up = dataset.transform.e <= 0
 
     try:
-        window = geometry_window(raster, shapes, north_up=north_up, pad_x=pad_x,
+        window = geometry_window(dataset, shapes, north_up=north_up, pad_x=pad_x,
                                  pad_y=pad_y)
 
     except WindowError:
@@ -89,17 +89,17 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
                           'Are they in different coordinate reference systems?')
 
         # Return an entirely True mask (if invert is False)
-        mask = np.ones(shape=raster.shape[-2:], dtype='bool') * (not invert)
-        return mask, raster.transform, None
+        mask = np.ones(shape=dataset.shape[-2:], dtype='bool') * (not invert)
+        return mask, dataset.transform, None
 
     if crop:
-        transform = raster.window_transform(window)
+        transform = dataset.window_transform(window)
         out_shape = (int(window.height), int(window.width))
 
     else:
         window = None
-        transform = raster.transform
-        out_shape = (int(raster.height), int(raster.width))
+        transform = dataset.transform
+        out_shape = (int(dataset.height), int(dataset.width))
 
     mask = geometry_mask(shapes, transform=transform, invert=invert,
                          out_shape=out_shape, all_touched=all_touched)
@@ -107,7 +107,7 @@ def raster_geometry_mask(raster, shapes, all_touched=False, invert=False,
     return mask, transform, window
 
 
-def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
+def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
          filled=True, crop=False, pad=False, indexes=None):
     """Creates a masked or filled array using input shapes.
     Pixels are masked or set to nodata outside the input shapes, unless
@@ -118,7 +118,7 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
 
     Parameters
     ----------
-    raster: rasterio RasterReader object
+    dataset: a dataset object opened in 'r' mode
         Raster to which the mask will be applied.
     shapes: list of polygons
         GeoJSON-like dict representation of polygons that will be used to
@@ -170,24 +170,25 @@ def mask(raster, shapes, all_touched=False, invert=False, nodata=None,
     """
 
     if nodata is None:
-        if raster.nodata is not None:
-            nodata = raster.nodata
+        if dataset.nodata is not None:
+            nodata = dataset.nodata
         else:
             nodata = 0
 
     shape_mask, transform, window = raster_geometry_mask(
-        raster, shapes, all_touched=all_touched, invert=invert, crop=crop,
+        dataset, shapes, all_touched=all_touched, invert=invert, crop=crop,
         pad=pad)
 
     if indexes is None:
-        out_shape = (raster.count, ) + shape_mask.shape
+        out_shape = (dataset.count, ) + shape_mask.shape
     elif isinstance(indexes, int):
         out_shape = shape_mask.shape
     else:
         out_shape = (len(indexes), ) + shape_mask.shape
 
-    out_image = raster.read(
+    out_image = dataset.read(
         window=window, out_shape=out_shape, masked=True, indexes=indexes)
+
     out_image.mask = out_image.mask | shape_mask
 
     if filled:
