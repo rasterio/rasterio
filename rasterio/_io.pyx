@@ -209,7 +209,7 @@ cdef class DatasetReaderBase(DatasetBase):
         # Check each index before processing 3D array
         for bidx in indexes:
             if bidx not in self.indexes:
-                raise IndexError("band index out of range")
+                raise IndexError("band index {} out of range".format(bidx))
             idx = self.indexes.index(bidx)
 
             dtype = self.dtypes[idx]
@@ -1245,7 +1245,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Check each index before processing 3D array
         for bidx in indexes:
             if bidx not in self.indexes:
-                raise IndexError("band index out of range")
+                raise IndexError("band index {} out of range".format(bidx))
             idx = self.indexes.index(bidx)
             check_dtypes.add(self.dtypes[idx])
         if len(check_dtypes) > 1:
