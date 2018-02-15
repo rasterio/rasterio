@@ -60,6 +60,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite
         profile['height'] = dest.shape[1]
         profile['width'] = dest.shape[2]
         profile['driver'] = driver
+        profile['count'] = dest.shape[0]
 
         profile.update(**creation_options)
 
