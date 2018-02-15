@@ -399,8 +399,8 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
         lefts, bottoms, rights, tops = zip(*all_bounds_px)
         left = min(lefts) - pad_x
         right = max(rights) + pad_x
-        top = min(tops)
-        bottom = max(bottoms)
+        top = min(tops) - pad_y
+        bottom = max(bottoms) + pad_y
         # do some clamping if there are any values less than zero or greater than dataset shape
         left = max(0, left)
         top = max(0, top)
