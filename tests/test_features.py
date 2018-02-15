@@ -144,6 +144,12 @@ def test_geometry_window_geo_interface(basic_image_file, basic_geometry):
         assert window.flatten() == (2, 2, 3, 3)
 
 
+def test_geometry_window_rotation(rotated_image_file, rotation_geometry):
+    with rasterio.open(rotated_image_file) as src:
+        window = geometry_window(src, [rotation_geometry], rotated=True)
+        assert window.flatten() == (898, 439, 467, 399)
+
+
 @pytest.mark.xfail(reason="https://github.com/mapbox/rasterio/issues/1139")
 # This test is failing due to https://github.com/mapbox/rasterio/issues/1139
 def test_geometry_window_pixel_precision(basic_image_file):
