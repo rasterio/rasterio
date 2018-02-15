@@ -1258,7 +1258,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             src = np.array([src])
         if len(src.shape) != 3 or src.shape[0] != len(indexes):
             raise ValueError(
-                "Source shape is inconsistent with given indexes")
+                "Source shape {} is inconsistent with given indexes {}"
+                .format(src.shape, len(indexes)))
 
         check_dtypes = set()
         # Check each index before processing 3D array
