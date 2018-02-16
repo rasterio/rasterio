@@ -204,7 +204,7 @@ a dataset:
         kwargs.update({
             'height': window.height,
             'width': window.width,
-            'affine': src.window_transform(window)})
+            'affine': rasterio.windows.transform(window, src.transform)})
 
         with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
             dst.write(src.read(window=window))
