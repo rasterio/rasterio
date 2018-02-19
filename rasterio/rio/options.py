@@ -222,6 +222,12 @@ bidx_opt = click.option(
 
 bidx_mult_opt = click.option(
     '-b', '--bidx',
+    type=int,
+    multiple=True,
+    help="Indexes of input file bands.")
+
+bidx_magic_opt = click.option(
+    '-b', '--bidx',
     multiple=True,
     help="Indexes of input file bands.")
 
