@@ -172,6 +172,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
 
+    # Get a copy of the array (user may have passed a view).
     for i in range(count):
         j = indexes[i]
         band = GDALGetRasterBand(hds, j)
