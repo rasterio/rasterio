@@ -226,6 +226,9 @@ bidx_mult_opt = click.option(
     multiple=True,
     help="Indexes of input file bands.")
 
+# The 'magic' --bidx option is especially for rio-stack, which supports
+# selection of multiple bands from multiple files. It has 'str' type
+# instead of 'int' to support ranges in a syntax like `--bidx 1..3`.
 bidx_magic_opt = click.option(
     '-b', '--bidx',
     multiple=True,
