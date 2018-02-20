@@ -94,10 +94,6 @@ def shapes(
       $ rio shapes --as-mask --bidx 1 tests/data/RGB.byte.tif
     """
     # These import numpy, which we don't want to do unless it's needed.
-    import numpy as np
-    import rasterio.features
-    import rasterio.warp
-
     logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
@@ -110,134 +106,147 @@ def shapes(
 
     bidx = 1 if bandidx is None and band else bandidx
 
-    # This is the generator for (feature, bbox) pairs.
-    class Collection(object):
-
-        def __init__(self, env):
-            self._xs = []
-            self._ys = []
-            self.env = env
-
-        @property
-        def bbox(self):
-            return min(self._xs), min(self._ys), max(self._xs), max(self._ys)
-
-        def __call__(self):
-            with rasterio.open(input) as src:
-                if bidx is not None and bidx > src.count:
-                    raise ValueError('bidx is out of range for raster')
-
-                img = None
-                msk = None
-
-                # Adjust transforms.
-                transform = src.transform
-                if sampling > 1:
-                    # Determine the target shape (to decimate)
-                    shape = (int(math.ceil(src.height / sampling)),
-                             int(math.ceil(src.width / sampling)))
-
-                    # Calculate independent sampling factors
-                    x_sampling = src.width / shape[1]
-                    y_sampling = src.height / shape[0]
-
-                    # Decimation of the raster produces a georeferencing
-                    # shift that we correct with a translation.
-                    transform *= Affine.translation(
-                        src.width % x_sampling, src.height % y_sampling)
-
-                    # And follow by scaling.
-                    transform *= Affine.scale(x_sampling, y_sampling)
-
-                # Most of the time, we'll use the valid data mask.
-                # We skip reading it if we're extracting every possible
-                # feature (even invalid data features) from a band.
-                if not band or (band and not as_mask and not with_nodata):
-                    if sampling == 1:
-                        msk = src.read_masks(bidx)
-                    else:
-                        msk_shape = shape
-                        if bidx is None:
-                            msk = np.zeros(
-                                (src.count,) + msk_shape, 'uint8')
-                        else:
-                            msk = np.zeros(msk_shape, 'uint8')
-                        msk = src.read_masks(bidx, msk)
-
-                    if bidx is None:
-                        msk = np.logical_or.reduce(msk).astype('uint8')
-
-                    # Possibly overridden below.
-                    img = msk
-
-                # Read the band data unless the --mask option is given.
-                if band:
-                    if sampling == 1:
-                        img = src.read(bidx, masked=False)
-                    else:
-                        img = np.zeros(
-                            shape,
-                            dtype=src.dtypes[src.indexes.index(bidx)])
-                        img = src.read(bidx, img, masked=False)
-
-                # If --as-mask option was given, convert the image
-                # to a binary image. This reduces the number of shape
-                # categories to 2 and likely reduces the number of
-                # shapes.
-                if as_mask:
-                    tmp = np.ones_like(img, 'uint8') * 255
-                    tmp[img == 0] = 0
-                    img = tmp
-                    if not with_nodata:
-                        msk = tmp
-
-                # Transform the raster bounds.
-                bounds = src.bounds
-                xs = [bounds[0], bounds[2]]
-                ys = [bounds[1], bounds[3]]
-                if projection == 'geographic':
-                    xs, ys = rasterio.warp.transform(
-                        src.crs, CRS({'init': 'epsg:4326'}), xs, ys)
-                if precision >= 0:
-                    xs = [round(v, precision) for v in xs]
-                    ys = [round(v, precision) for v in ys]
-                self._xs = xs
-                self._ys = ys
-
-                # Prepare keyword arguments for shapes().
-                kwargs = {'transform': transform}
-                if not with_nodata:
-                    kwargs['mask'] = msk
-
-                src_basename = os.path.basename(src.name)
-
-                # Yield GeoJSON features.
-                for i, (g, val) in enumerate(
-                        rasterio.features.shapes(img, **kwargs)):
-                    if projection == 'geographic':
-                        g = rasterio.warp.transform_geom(
-                            src.crs, 'EPSG:4326', g,
-                            antimeridian_cutting=True, precision=precision)
-                    xs, ys = zip(*coords(g))
-                    yield {
-                        'type': 'Feature',
-                        'id': "{0}:{1}".format(src_basename, i),
-                        'properties': {
-                            'val': val, 'filename': src_basename
-                        },
-                        'bbox': [min(xs), min(ys), max(xs), max(ys)],
-                        'geometry': g
-                    }
-
     if not sequence:
         geojson_type = 'collection'
 
     try:
         with ctx.obj['env'] as env:
             write_features(
-                stdout, Collection(env), sequence=sequence,
+                stdout,
+                feature_gen(
+                    input, env, bidx, sampling,  band, as_mask, with_nodata, projection, precision),
+                sequence=sequence,
                 geojson_type=geojson_type, use_rs=use_rs,
                 **dump_kwds)
     except Exception:
         logger.exception("Exception caught during processing")
         raise click.Abort()
+
+
+def feature_gen(input, env, *args, **kwargs):
+    class Collection(object):
+
+        def __init__(self, env):
+            self.bboxes = []
+            self.env = env
+
+        @property
+        def bbox(self):
+            minxs, minys, maxxs, maxys = zip(*self.bboxes)
+            return min(minxs), min(minys), max(maxxs), max(maxys)
+
+        def __call__(self):
+            for f in features(input, *args, **kwargs):
+                self.bboxes.append(f['bbox'])
+                yield f
+
+    return Collection(env)
+
+
+def features(input, bidx, sampling, band, as_mask, with_nodata, projection, precision):
+    import rasterio
+    import numpy as np
+
+    with rasterio.open(input) as src:
+        if bidx is not None and bidx > src.count:
+            raise ValueError('bidx is out of range for raster')
+
+        img = None
+        msk = None
+
+        # Adjust transforms.
+        transform = src.transform
+        if sampling > 1:
+            # Determine the target shape (to decimate)
+            shape = (int(math.ceil(src.height / sampling)),
+                     int(math.ceil(src.width / sampling)))
+
+            # Calculate independent sampling factors
+            x_sampling = src.width / shape[1]
+            y_sampling = src.height / shape[0]
+
+            # Decimation of the raster produces a georeferencing
+            # shift that we correct with a translation.
+            transform *= Affine.translation(
+                src.width % x_sampling, src.height % y_sampling)
+
+            # And follow by scaling.
+            transform *= Affine.scale(x_sampling, y_sampling)
+
+        # Most of the time, we'll use the valid data mask.
+        # We skip reading it if we're extracting every possible
+        # feature (even invalid data features) from a band.
+        if not band or (band and not as_mask and not with_nodata):
+            if sampling == 1:
+                msk = src.read_masks(bidx)
+            else:
+                msk_shape = shape
+                if bidx is None:
+                    msk = np.zeros(
+                        (src.count,) + msk_shape, 'uint8')
+                else:
+                    msk = np.zeros(msk_shape, 'uint8')
+                msk = src.read_masks(bidx, msk)
+
+            if bidx is None:
+                msk = np.logical_or.reduce(msk).astype('uint8')
+
+            # Possibly overridden below.
+            img = msk
+
+        # Read the band data unless the --mask option is given.
+        if band:
+            if sampling == 1:
+                img = src.read(bidx, masked=False)
+            else:
+                img = np.zeros(
+                    shape,
+                    dtype=src.dtypes[src.indexes.index(bidx)])
+                img = src.read(bidx, img, masked=False)
+
+        # If --as-mask option was given, convert the image
+        # to a binary image. This reduces the number of shape
+        # categories to 2 and likely reduces the number of
+        # shapes.
+        if as_mask:
+            tmp = np.ones_like(img, 'uint8') * 255
+            tmp[img == 0] = 0
+            img = tmp
+            if not with_nodata:
+                msk = tmp
+
+        # Transform the raster bounds.
+        bounds = src.bounds
+        xs = [bounds[0], bounds[2]]
+        ys = [bounds[1], bounds[3]]
+        if projection == 'geographic':
+            xs, ys = rasterio.warp.transform(
+                src.crs, CRS({'init': 'epsg:4326'}), xs, ys)
+        if precision >= 0:
+            xs = [round(v, precision) for v in xs]
+            ys = [round(v, precision) for v in ys]
+
+        # Prepare keyword arguments for shapes().
+        kwargs = {'transform': transform}
+        if not with_nodata:
+            kwargs['mask'] = msk
+
+        src_basename = os.path.basename(src.name)
+
+        # Yield GeoJSON features.
+        for i, (g, val) in enumerate(
+                rasterio.features.shapes(img, **kwargs)):
+            if projection == 'geographic':
+                g = rasterio.warp.transform_geom(
+                    src.crs, 'EPSG:4326', g,
+                    antimeridian_cutting=True, precision=precision)
+            xs, ys = zip(*coords(g))
+            yield {
+                'type': 'Feature',
+                'id': "{0}:{1}".format(src_basename, i),
+                'properties': {
+                    'val': val, 'filename': src_basename
+                },
+                'bbox': [min(xs), min(ys), max(xs), max(ys)],
+                'geometry': g
+            }
