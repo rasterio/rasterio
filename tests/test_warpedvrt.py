@@ -1,10 +1,17 @@
+"""Tests for :py:class:`rasterio.warp.WarpedVRT`."""
+
+
+from __future__ import division
+
 import boto3
 import pytest
 
 import rasterio
 from rasterio.enums import Resampling
+from rasterio import shutil as rio_shutil
 from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform_bounds
 
 from .conftest import requires_gdal21
 
@@ -107,3 +114,48 @@ def test_warped_vrt_nodata_read(path_rgb_byte_tif):
             assert data.mask.any()
             mask = vrt.dataset_mask()
             assert not mask.all()
+
+
+@pytest.mark.parametrize("complex", (True, False))
+def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
+
+    """When ``dst_height``, ``dst_width``, and ``dst_transform`` are set
+    :py:class:`rasterio.warp.WarpedVRT` calls ``GDALCreateWarpedVRT()``,
+    which requires the caller to then set a projection with
+    ``GDALSetProjection()``.
+
+    Permalink to ``GDALCreateWarpedVRT()`` call:
+
+        https://github.com/mapbox/rasterio/blob/1f759e5f67628f163ea2550d8926b91545245712/rasterio/_warp.pyx#L753
+
+    """
+
+    vrt_path = str(tmpdir.join('test_crs_should_be_set.vrt'))
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+
+        dst_crs = 'EPSG:4326'
+        dst_height = dst_width = 10
+        dst_bounds = transform_bounds(src.crs, dst_crs, *src.bounds)
+
+        # Destination transform
+        left, bottom, right, top = dst_bounds
+        xres = (right - left) / dst_width
+        yres = (top - bottom) / dst_height
+        dst_transform = Affine(xres, 0.0, left,
+                               0.0, -yres, top)
+
+        # The 'complex' test case hits the affected code path
+        vrt_options = {'dst_crs': dst_crs}
+        if complex:
+            vrt_options.update(
+                dst_crs=dst_crs,
+                dst_height=dst_height,
+                dst_width=dst_width,
+                dst_transform=dst_transform,
+                resampling=Resampling.nearest)
+
+        with WarpedVRT(src, **vrt_options) as vrt:
+            rio_shutil.copy(vrt, vrt_path, driver='VRT')
+        with rasterio.open(vrt_path) as src:
+            assert src.crs
