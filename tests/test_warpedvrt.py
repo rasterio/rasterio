@@ -3,13 +3,13 @@
 
 from __future__ import division
 
+import affine
 import boto3
 import pytest
 
 import rasterio
 from rasterio.enums import Resampling
 from rasterio import shutil as rio_shutil
-from rasterio.transform import Affine
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 
@@ -65,7 +65,7 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         extent = (-20037508.34, 20037508.34)
         size = (2 ** 16) * 256
         resolution = (extent[1] - extent[0]) / size
-        dst_transform = Affine(resolution, 0.0, extent[0],
+        dst_transform = affine.Affine(resolution, 0.0, extent[0],
                                0.0, -resolution, extent[1])
         vrt = WarpedVRT(src, dst_crs='EPSG:3857',
                         dst_width=size, dst_height=size,
@@ -142,7 +142,7 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
         left, bottom, right, top = dst_bounds
         xres = (right - left) / dst_width
         yres = (top - bottom) / dst_height
-        dst_transform = Affine(xres, 0.0, left,
+        dst_transform = affine.Affine(xres, 0.0, left,
                                0.0, -yres, top)
 
         # The 'complex' test case hits the affected code path
