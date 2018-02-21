@@ -6,6 +6,7 @@ Next
 
 Bug fixes:
 
+- Rotated datasets are now masked properly (#1240, #1278).
 - Geometry collections are flattened in ``rasterize`` to work around
   incidental holes created by GDAL (#1253, #1274).
 - Add missing support for Python geo protocol in features module (#1268,
