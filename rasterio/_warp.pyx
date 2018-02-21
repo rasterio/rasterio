@@ -752,6 +752,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 with nogil:
                     hds_warped = GDALCreateWarpedVRT(
                         hds, c_width, c_height, dst_gt, psWOptions)
+                    GDALSetProjection(hds_warped, dst_crs_wkt)
                 self._hds = exc_wrap_pointer(hds_warped)
             else:
                 with nogil:
