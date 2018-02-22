@@ -1030,8 +1030,6 @@ def test_reproject_identity_src():
     src_affines = [
         Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),  # Identity both positive
         Affine(1.0, 0.0, 0.0, 0.0, -1.0, 0.0),  # Identity with negative e
-        Affine(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0),  # Identity with negative a
-        Affine(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0),  # Identity with negative e and a
     ]
 
     for srcaff in src_affines:
@@ -1055,8 +1053,6 @@ def test_reproject_identity_dst():
     dst_affines = [
         Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),  # Identity both positive
         Affine(1.0, 0.0, 0.0, 0.0, -1.0, 0.0),  # Identity with negative e
-        Affine(-1.0, 0.0, 0.0, 0.0, 1.0, 0.0),  # Identity with negative a
-        Affine(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0),  # Identity with negative e and a
     ]
 
     for dstaff in dst_affines:

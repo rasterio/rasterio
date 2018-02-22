@@ -7,6 +7,7 @@ from __future__ import division
 from math import ceil
 
 from affine import Affine
+from affine import identity
 import numpy as np
 
 import rasterio
@@ -276,10 +277,16 @@ def reproject(source, destination, src_transform=None, gcps=None,
     # If working with identity transform, assume it is crs-less data
     # and that translating the matrix very slightly will avoid #674
     eps = 1e-100
-    if src_transform and guard_transform(np.abs(src_transform)[:6]).is_identity and src_transform.a == 1:
-        src_transform = src_transform.translation(eps, eps)
-    if dst_transform and guard_transform(np.abs(dst_transform)[:6]).is_identity and dst_transform.a == 1:
-        dst_transform = dst_transform.translation(eps, eps)
+    if src_transform:
+        src_transform = guard_transform(src_transform)
+        # if src_transform is like `identity` with positive or negative `e`,
+        # translate matrix very slightly to avoid #674 and #1272.
+        if src_transform.almost_equals(identity) or src_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
+            src_transform = src_transform.translation(eps, eps)
+    if dst_transform:
+        dst_transform = guard_transform(dst_transform)
+        if dst_transform.almost_equals(identity) or dst_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
+            dst_transform = dst_transform.translation(eps, eps)
 
     if src_transform:
         src_transform = guard_transform(src_transform).to_gdal()
