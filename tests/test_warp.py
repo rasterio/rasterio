@@ -1020,41 +1020,50 @@ def test_reproject_crs_none():
             resampling=Resampling.nearest)
 
 
-def test_reproject_identity():
-    """Reproject with an identity matrix."""
-    # note the affines are both positive e, src is identity
+def test_reproject_identity_src():
+    """Reproject with an identity like source matrices."""
     src = np.random.random(25).reshape((1, 5, 5))
-    srcaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
-    srccrs = {'init': 'epsg:3857'}
-
     dst = np.empty(shape=(1, 10, 10))
     dstaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
-    dstcrs = {'init': 'epsg:3857'}
+    crs = {'init': 'epsg:3857'}
 
-    reproject(
-        src, dst,
-        src_transform=srcaff,
-        src_crs=srccrs,
-        dst_transform=dstaff,
-        dst_crs=dstcrs,
-        resampling=Resampling.nearest)
+    src_affines = [
+        Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),  # Identity both positive
+        Affine(1.0, 0.0, 0.0, 0.0, -1.0, 0.0),  # Identity with negative e
+    ]
 
-    # note the affines are both positive e, dst is identity
+    for srcaff in src_affines:
+        # reproject expected to not raise any error in any of the srcaff
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=crs,
+            dst_transform=dstaff,
+            dst_crs=crs,
+            resampling=Resampling.nearest)
+
+
+def test_reproject_identity_dst():
+    """Reproject with an identity like destination matrices."""
     src = np.random.random(100).reshape((1, 10, 10))
     srcaff = Affine(0.5, 0.0, 0.0, 0.0, 0.5, 0.0)
-    srccrs = {'init': 'epsg:3857'}
-
     dst = np.empty(shape=(1, 5, 5))
-    dstaff = Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)  # Identity
-    dstcrs = {'init': 'epsg:3857'}
+    crs = {'init': 'epsg:3857'}
 
-    reproject(
-        src, dst,
-        src_transform=srcaff,
-        src_crs=srccrs,
-        dst_transform=dstaff,
-        dst_crs=dstcrs,
-        resampling=Resampling.nearest)
+    dst_affines = [
+        Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0),  # Identity both positive
+        Affine(1.0, 0.0, 0.0, 0.0, -1.0, 0.0),  # Identity with negative e
+    ]
+
+    for dstaff in dst_affines:
+        # reproject expected to not raise any error in any of the dstaff
+        reproject(
+            src, dst,
+            src_transform=srcaff,
+            src_crs=crs,
+            dst_transform=dstaff,
+            dst_crs=crs,
+            resampling=Resampling.nearest)
 
 
 @pytest.fixture(scope='function')
