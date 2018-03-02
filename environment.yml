@@ -1,0 +1,7 @@
+name: _rasterio
+channels:
+- conda-forge/label/dev
+dependencies:
+- python>=3.5
+- cython
+- libgdal
