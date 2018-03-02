@@ -8,3 +8,4 @@ dependencies:
 - cython
 - libgdal
 - numpy
+- numpydoc
