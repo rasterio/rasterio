@@ -129,6 +129,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#rights">Rights</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#issue-conventions">Issue Conventions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#design-principles">Design Principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-objects">Dataset Objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#git-conventions">Git Conventions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#code-conventions">Code Conventions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#development-environment">Development Environment</a><ul>
@@ -251,6 +252,15 @@ the methods that perform I/O.</li>
 inputs. This is challenging in practice because GDAL embraces global
 variables.</li>
 </ul>
+</div>
+<div class="section" id="dataset-objects">
+<h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
+<p>Our term for the kind of object that allows read and write access to raster data
+is <em>dataset object</em>. A dataset object might be an instance of <cite>DatasetReader</cite>
+or <cite>DatasetWriter</cite>. The canonical way to create a dataset object is by using the
+<cite>rasterio.open()</cite> function.</p>
+<p>This is analogous to Python’s use of
+<a class="reference external" href="https://docs.python.org/3/glossary.html#term-file-object">file object</a>.</p>
 </div>
 <div class="section" id="git-conventions">
 <h2>Git Conventions<a class="headerlink" href="#git-conventions" title="Permalink to this headline">¶</a></h2>

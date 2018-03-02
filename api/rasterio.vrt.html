@@ -1,0 +1,443 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.vrt module &mdash; rasterio 1.0a12 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../index.html"/>
+        <link rel="up" title="rasterio package" href="index.html"/>
+        <link rel="prev" title="rasterio.vfs module" href="rasterio.vfs.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">rasterio package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rasterio.compat.html">rasterio.compat module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.coords.html">rasterio.coords module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.crs.html">rasterio.crs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.drivers.html">rasterio.drivers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.dtypes.html">rasterio.dtypes module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.enums.html">rasterio.enums module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.env.html">rasterio.env module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.errors.html">rasterio.errors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.features.html">rasterio.features module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.fill.html">rasterio.fill module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.io.html">rasterio.io module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.mask.html">rasterio.mask module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.merge.html">rasterio.merge module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.plot.html">rasterio.plot module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.profiles.html">rasterio.profiles module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rasterio.vrt module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#module-rasterio">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">rasterio package</a> &raquo;</li>
+        
+      <li>rasterio.vrt module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/rasterio.vrt.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-rasterio.vrt">
+<span id="rasterio-vrt-module"></span><h1>rasterio.vrt module<a class="headerlink" href="#module-rasterio.vrt" title="Permalink to this headline">¶</a></h1>
+<p>rasterio.vrt: a module concerned with GDAL VRTs</p>
+<dl class="class">
+<dt id="rasterio.vrt.WarpedVRT">
+<em class="property">class </em><code class="descclassname">rasterio.vrt.</code><code class="descname">WarpedVRT</code><a class="reference internal" href="../_modules/rasterio/vrt.html#WarpedVRT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.vrt.WarpedVRT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._warp.WarpedVRTReaderBase</span></code>, <a class="reference internal" href="../lib/rasterio.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../lib/rasterio.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
+<p>Creates a virtual warped dataset.</p>
+<p>Abstracts the details of raster warping and allows access to data
+that is reprojected when read.</p>
+<p>This class is backed by an in-memory GDAL VRTWarpedDataset VRT file.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>src_dataset</strong></td>
+<td>(dataset) The dataset object to be virtually warped.</td>
+</tr>
+<tr class="row-even"><td><strong>dst_crs</strong></td>
+<td>(CRS or str) The warp operation’s destination coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><strong>resampling</strong></td>
+<td>(int) One of the values from rasterio.enums.Resampling. The default is <cite>Resampling.nearest</cite>.</td>
+</tr>
+<tr class="row-even"><td><strong>tolerance</strong></td>
+<td>(float) The maximum error tolerance in input pixels when approximating the warp transformation. The default is 0.125.</td>
+</tr>
+<tr class="row-odd"><td><strong>src_nodata: int or float, optional</strong></td>
+<td>The source nodata value.  Pixels with this value will not be used for interpolation. If not set, it will be default to the nodata value of the source image, if available.</td>
+</tr>
+<tr class="row-even"><td><strong>dst_nodata: int or float, optional</strong></td>
+<td>The nodata value used to initialize the destination; it will remain in all areas not covered by the reprojected source. Defaults to the value of src_nodata, or 0 (gdal default).</td>
+</tr>
+<tr class="row-odd"><td><strong>dst_width</strong></td>
+<td>(int, optional) Target width in pixels. dst_height and dst_transform must also be provided.</td>
+</tr>
+<tr class="row-even"><td><strong>dst_height</strong></td>
+<td>(int, optional) Target height in pixels. dst_width and dst_transform must also be provided.</td>
+</tr>
+<tr class="row-odd"><td><strong>dst_transform: affine.Affine(), optional</strong></td>
+<td>Target affine transformation.  Required if width and height are provided.</td>
+</tr>
+<tr class="row-even"><td><strong>warp_extras</strong></td>
+<td>(dict) GDAL extra warp options. See <a class="reference external" href="http://www.gdal.org/structGDALWarpOptions.html">http://www.gdal.org/structGDALWarpOptions.html</a>.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_size</span></code></td>
+<td>Returns the size in bytes of a particular block</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">block_window</span></code></td>
+<td>Returns the window for a particular block</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">block_windows</span></code></td>
+<td>Returns an iterator over a band’s blocks and their corresponding windows.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">checksum</span></code></td>
+<td>Compute an integer checksum for the stored band</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.vrt.WarpedVRT.close" title="rasterio.vrt.WarpedVRT.close"><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></a>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">colormap</span></code></td>
+<td>Returns a dict containing the colormap for a band or None.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">dataset_mask</span></code></td>
+<td>Calculate the dataset’s 2D mask.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_crs</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_gcps</span></code></td>
+<td>Get GCPs and their associated CRS.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_nodatavals</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_transform</span></code></td>
+<td>Returns a GDAL geotransform in its native form.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>(x,&nbsp;y[,&nbsp;op,&nbsp;precision])</td>
+<td>Returns the (row, col) index of the pixel containing (x, y) given a coordinate reference system.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">lnglat</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">overviews</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
+<td>Read raster bands as a multidimensional array</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_crs</span></code></td>
+<td>Return the GDAL dataset’s stored CRS</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_mask</span></code></td>
+<td>Read the mask band into an <cite>out</cite> array if provided, otherwise return a new array containing the dataset’s valid data mask.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">read_masks</span></code></td>
+<td>Read raster band masks as a multidimensional array</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read_transform</span></code></td>
+<td>Return the stored GDAL GeoTransform</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">sample</span></code></td>
+<td>Get the values of a dataset at certain positions</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></td>
+<td>Starts the VRT’s life cycle.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">stop</span></code></td>
+<td>Ends the VRT’s life cycle</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tags</span></code></td>
+<td>Returns a dict containing copies of the dataset or band’s tags.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window</span></code>(left,&nbsp;bottom,&nbsp;right,&nbsp;top[,&nbsp;precision])</td>
+<td>Get the window corresponding to the bounding coordinates.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">window_bounds</span></code>(window)</td>
+<td>Get the bounds of a window</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">window_transform</span></code>(window)</td>
+<td>Get the affine transform for a dataset window.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">xy</span></code>(row,&nbsp;col[,&nbsp;offset])</td>
+<td>Returns the coordinates <code class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></code> of a pixel at <cite>row</cite> and <cite>col</cite>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rasterio.vrt.WarpedVRT.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/vrt.html#WarpedVRT.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.vrt.WarpedVRT.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="rasterio.vfs.html" class="btn btn-neutral" title="rasterio.vfs module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0a12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

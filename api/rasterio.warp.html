@@ -37,8 +37,7 @@
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="rasterio 1.0a12 documentation" href="../index.html"/>
         <link rel="up" title="rasterio package" href="index.html"/>
-        <link rel="next" title="rasterio.windows module" href="rasterio.windows.html"/>
-        <link rel="prev" title="rasterio.vfs module" href="rasterio.vfs.html"/> 
+        <link rel="next" title="rasterio.windows module" href="rasterio.windows.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -116,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -140,6 +140,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -368,9 +369,16 @@ Resampling.cubic,
 Resampling.cubic_spline,
 Resampling.lanczos,
 Resampling.average,
-Resampling.mode</p>
+Resampling.mode,
+Resampling.max (GDAL &gt;= 2.2),
+Resampling.min (GDAL &gt;= 2.2),
+Resampling.med (GDAL &gt;= 2.2),
+Resampling.q1 (GDAL &gt;= 2.2),
+Resampling.q3 (GDAL &gt;= 2.2)</p>
 </dd>
 </dl>
+<p>An exception will be raised for a method not supported by the running
+version of GDAL.</p>
 </div></blockquote>
 <p><strong>init_dest_nodata: bool</strong></p>
 <blockquote>
@@ -541,8 +549,6 @@ values will be preserved (default).</p>
       
         <a href="rasterio.windows.html" class="btn btn-neutral float-right" title="rasterio.windows module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="rasterio.vfs.html" class="btn btn-neutral" title="rasterio.vfs module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -233,11 +234,9 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : array-like in raster axis order,</span>
-<span class="sd">        or (raster dataset, bidx) tuple,</span>
-<span class="sd">        or raster dataset,</span>
-<span class="sd">        If the tuple (raster dataset, bidx),</span>
-<span class="sd">        selects band `bidx` from raster.  If raster dataset display the rgb image</span>
+<span class="sd">    source : array or dataset object opened in &#39;r&#39; mode or Band or tuple(dataset, bidx)</span>
+<span class="sd">        If Band or tuple (dataset, bidx), display the selected band.</span>
+<span class="sd">        If raster dataset display the rgb image</span>
 <span class="sd">        as defined in the colorinterp metadata, or default to first band.</span>
 <span class="sd">    with_bounds : bool (opt)</span>
 <span class="sd">        Whether to change the image extent to the spatial bounds of the image,</span>
@@ -349,8 +348,15 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : raster dataset or array in image order (see reshape_as_image)</span>
+<span class="sd">    source : array or dataset object opened in &#39;r&#39; mode</span>
+<span class="sd">        input data</span>
 <span class="sd">    transform: Affine, required if source is array</span>
+<span class="sd">        Defines the affine transform if source is an array</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of float</span>
+<span class="sd">        left, right, bottom, top</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">):</span>
         <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
@@ -377,7 +383,8 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : array-like in a of format (bands, rows, columns)</span>
+<span class="sd">    arr : array-like of shape (bands, rows, columns)</span>
+<span class="sd">        image to reshape</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># swap the axes order from (bands, rows, columns) to (rows, columns, bands)</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
@@ -392,6 +399,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    arr : array-like in the image form of (rows, columns, bands)</span>
+<span class="sd">        image to reshape</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># swap the axes order from (rows, columns, bands) to (bands, rows, columns)</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
@@ -403,8 +411,9 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    source : np.array or DatasetReader, rasterio.Band or tuple(dataset, bidx)</span>
-<span class="sd">        Input data to display.  The first three arrays in multi-dimensional</span>
+<span class="sd">    source : array or dataset object opened in &#39;r&#39; mode or Band or tuple(dataset, bidx)</span>
+<span class="sd">        Input data to display.</span>
+<span class="sd">        The first three arrays in multi-dimensional</span>
 <span class="sd">        arrays are plotted as red, green, and blue.</span>
 <span class="sd">    bins : int, optional</span>
 <span class="sd">        Compute histogram across N bins.</span>

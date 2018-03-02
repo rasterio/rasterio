@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -140,6 +141,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -223,14 +225,17 @@
 <p>Functions for working with features in a raster dataset.</p>
 <dl class="function">
 <dt id="rasterio.features.bounds">
-<code class="descclassname">rasterio.features.</code><code class="descname">bounds</code><span class="sig-paren">(</span><em>geometry</em>, <em>north_up=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.bounds" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.features.</code><code class="descname">bounds</code><span class="sig-paren">(</span><em>geometry</em>, <em>north_up=True</em>, <em>transform=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.bounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a (left, bottom, right, top) bounding box.</p>
 <p>From Fiona 1.4.8. Modified to return bbox from geometry if available.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>geometry: GeoJSON-like feature, feature collection, or geometry.</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>geometry: GeoJSON-like feature (implements __geo_interface__),</strong></p>
+<blockquote>
+<div><p>feature collection, or geometry.</p>
+</div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
@@ -260,7 +265,7 @@ numpy mask, where pixels that overlap shapes are False.</p>
 </div></blockquote>
 <p><strong>transform</strong> : Affine transformation object</p>
 <blockquote>
-<div><p>Transformation from pixel coordinates of <cite>image</cite> to the
+<div><p>Transformation from pixel coordinates of <cite>source</cite> to the
 coordinate system of the input <cite>shapes</cite>. See the <cite>transform</cite>
 property of dataset objects.</p>
 </div></blockquote>
@@ -289,8 +294,8 @@ False by default.</p>
 
 <dl class="function">
 <dt id="rasterio.features.geometry_window">
-<code class="descclassname">rasterio.features.</code><code class="descname">geometry_window</code><span class="sig-paren">(</span><em>raster</em>, <em>shapes</em>, <em>pad_x=0</em>, <em>pad_y=0</em>, <em>north_up=True</em>, <em>pixel_precision=3</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#geometry_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.geometry_window" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the window within the raster that fits the bounds of the 
+<code class="descclassname">rasterio.features.</code><code class="descname">geometry_window</code><span class="sig-paren">(</span><em>dataset</em>, <em>shapes</em>, <em>pad_x=0</em>, <em>pad_y=0</em>, <em>north_up=True</em>, <em>rotated=False</em>, <em>pixel_precision=3</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#geometry_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.geometry_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the window within the raster that fits the bounds of the
 geometry plus optional padding.  The window is the outermost pixel indices
 that contain the geometry (floor of offsets, ceiling of width and height).</p>
 <p>If shapes do not overlap raster, a WindowError is raised.</p>
@@ -298,29 +303,34 @@ that contain the geometry (floor of offsets, ceiling of width and height).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>raster: rasterio RasterReader object</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dataset: dataset object opened in ‘r’ mode</strong></p>
 <blockquote>
 <div><p>Raster for which the mask will be created.</p>
 </div></blockquote>
 <p><strong>shapes: iterable over geometries.</strong></p>
 <blockquote>
 <div><p>A geometry is a GeoJSON-like object or implements the geo interface.
-Must be in same coordinate system as raster.</p>
+Must be in same coordinate system as dataset.</p>
 </div></blockquote>
 <p><strong>pad_x: float</strong></p>
 <blockquote>
-<div><p>Amount of padding (as fraction of raster’s x pixel size) to add to left 
+<div><p>Amount of padding (as fraction of raster’s x pixel size) to add to left
 and right side of bounds.</p>
 </div></blockquote>
 <p><strong>pad_y: float</strong></p>
 <blockquote>
-<div><p>Amount of padding (as fraction of raster’s y pixel size) to add to top 
+<div><p>Amount of padding (as fraction of raster’s y pixel size) to add to top
 and bottom of bounds.</p>
 </div></blockquote>
 <p><strong>north_up: bool</strong></p>
 <blockquote>
-<div><p>If True (default), the origin point of the raster’s transform is the 
+<div><p>If True (default), the origin point of the raster’s transform is the
 northernmost point and y pixel values are negative.</p>
+</div></blockquote>
+<p><strong>rotated: bool</strong></p>
+<blockquote>
+<div><p>If true, some rotation terms exist in the dataset transform (this
+requires special attention.)</p>
 </div></blockquote>
 <p><strong>pixel_precision: int</strong></p>
 <blockquote>
@@ -356,7 +366,7 @@ GeometryCollection.</p>
 
 <dl class="function">
 <dt id="rasterio.features.rasterize">
-<code class="descclassname">rasterio.features.</code><code class="descname">rasterize</code><span class="sig-paren">(</span><em>shapes</em>, <em>out_shape=None</em>, <em>fill=0</em>, <em>out=None</em>, <em>transform=Affine(1.0</em>, <em>0.0</em>, <em>0.0</em>, <em>0.0</em>, <em>1.0</em>, <em>0.0)</em>, <em>all_touched=False</em>, <em>merge_alg='replace'</em>, <em>default_value=1</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#rasterize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.rasterize" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.features.</code><code class="descname">rasterize</code><span class="sig-paren">(</span><em>shapes</em>, <em>out_shape=None</em>, <em>fill=0</em>, <em>out=None</em>, <em>transform=Affine(1.0</em>, <em>0.0</em>, <em>0.0</em>, <em>0.0</em>, <em>1.0</em>, <em>0.0)</em>, <em>all_touched=False</em>, <em>merge_alg=&lt;MergeAlg.replace: 'REPLACE'&gt;</em>, <em>default_value=1</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#rasterize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.rasterize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an image array with input geometries burned in.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -378,12 +388,12 @@ geometries.</p>
 </div></blockquote>
 <p><strong>out</strong> : numpy ndarray, optional</p>
 <blockquote>
-<div><p>Array of same shape and data type as <cite>image</cite> in which to store
+<div><p>Array of same shape and data type as <cite>source</cite> in which to store
 results.</p>
 </div></blockquote>
 <p><strong>transform</strong> : Affine transformation object, optional</p>
 <blockquote>
-<div><p>Transformation from pixel coordinates of <cite>image</cite> to the
+<div><p>Transformation from pixel coordinates of <cite>source</cite> to the
 coordinate system of the input <cite>shapes</cite>. See the <cite>transform</cite>
 property of dataset objects.</p>
 </div></blockquote>
@@ -395,8 +405,16 @@ are selected by Bresenham’s line algorithm will be burned in.</p>
 </div></blockquote>
 <p><strong>merge_alg</strong> : str, optional</p>
 <blockquote>
-<div><p>If <cite>replace</cite> (default), the new value will overwrite the existing value.
-If <cite>add</cite>, the new value will be added to the existing raster.</p>
+<div><dl class="docutils">
+<dt>Merge algorithm to use.  One of:</dt>
+<dd><dl class="first docutils">
+<dt>MergeAlg.replace (default): the new value will overwrite the</dt>
+<dd><p class="first last">existing value.</p>
+</dd>
+</dl>
+<p class="last">MergeAlg.add: the new value will be added to the existing raster.</p>
+</dd>
+</dl>
 </div></blockquote>
 <p><strong>default_value</strong> : int or float, optional</p>
 <blockquote>
@@ -425,16 +443,15 @@ rasterio.float64.</p>
 
 <dl class="function">
 <dt id="rasterio.features.shapes">
-<code class="descclassname">rasterio.features.</code><code class="descname">shapes</code><span class="sig-paren">(</span><em>image</em>, <em>mask=None</em>, <em>connectivity=4</em>, <em>transform=Affine(1.0</em>, <em>0.0</em>, <em>0.0</em>, <em>0.0</em>, <em>1.0</em>, <em>0.0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#shapes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.shapes" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.features.</code><code class="descname">shapes</code><span class="sig-paren">(</span><em>source</em>, <em>mask=None</em>, <em>connectivity=4</em>, <em>transform=Affine(1.0</em>, <em>0.0</em>, <em>0.0</em>, <em>0.0</em>, <em>1.0</em>, <em>0.0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#shapes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.shapes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Yield (polygon, value for each set of adjacent pixels of the same value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>image</strong> : numpy ndarray or rasterio Band object</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : array or dataset object opened in ‘r’ mode or Band or tuple(dataset, bidx)</p>
 <blockquote>
-<div><p>(RasterReader, bidx namedtuple).
-Data type must be one of rasterio.int16, rasterio.int32,
+<div><p>Data type must be one of rasterio.int16, rasterio.int32,
 rasterio.uint8, rasterio.uint16, or rasterio.float32.</p>
 </div></blockquote>
 <p><strong>mask</strong> : numpy ndarray or rasterio Band object, optional</p>
@@ -475,17 +492,16 @@ memory.</p>
 
 <dl class="function">
 <dt id="rasterio.features.sieve">
-<code class="descclassname">rasterio.features.</code><code class="descname">sieve</code><span class="sig-paren">(</span><em>image</em>, <em>size</em>, <em>out=None</em>, <em>mask=None</em>, <em>connectivity=4</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#sieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.sieve" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replace small polygons in <cite>image</cite> with value of their largest neighbor.</p>
+<code class="descclassname">rasterio.features.</code><code class="descname">sieve</code><span class="sig-paren">(</span><em>source</em>, <em>size</em>, <em>out=None</em>, <em>mask=None</em>, <em>connectivity=4</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/features.html#sieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.features.sieve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace small polygons in <cite>source</cite> with value of their largest neighbor.</p>
 <p>Polygons are found for each set of neighboring pixels of the same value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>image</strong> : numpy ndarray or rasterio Band object</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : array or dataset object opened in ‘r’ mode or Band or tuple(dataset, bidx)</p>
 <blockquote>
-<div><p>(RasterReader, bidx namedtuple)
-Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
+<div><p>Must be of type rasterio.int16, rasterio.int32, rasterio.uint8,
 rasterio.uint16, or rasterio.float32</p>
 </div></blockquote>
 <p><strong>size</strong> : int</p>
@@ -494,7 +510,7 @@ rasterio.uint16, or rasterio.float32</p>
 </div></blockquote>
 <p><strong>out</strong> : numpy ndarray, optional</p>
 <blockquote>
-<div><p>Array of same shape and data type as <cite>image</cite> in which to store results.</p>
+<div><p>Array of same shape and data type as <cite>source</cite> in which to store results.</p>
 </div></blockquote>
 <p><strong>mask</strong> : numpy ndarray or rasterio Band object, optional</p>
 <blockquote>

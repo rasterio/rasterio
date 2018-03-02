@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -198,9 +199,6 @@
 <span class="kn">from</span> <span class="nn">rasterio.compat</span> <span class="k">import</span> <span class="n">urlparse</span>
 
 
-<span class="c1"># NB: As not to propagate fallacies of distributed computing, Rasterio</span>
-<span class="c1"># does not support HTTP or FTP URLs via GDAL&#39;s vsicurl handler. Only</span>
-<span class="c1"># the following local filesystem schemes are supported.</span>
 <span class="n">SCHEMES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;gzip&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span>
     <span class="s1">&#39;gzip+file&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span>

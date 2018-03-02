@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.rio.overview &mdash; rasterio 1.0a12 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../../../index.html"/>
+        <link rel="up" title="rasterio" href="../../rasterio.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../switch.html">Switching from GDAL’s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">rasterio</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../rasterio.html">rasterio</a> &raquo;</li>
+        
+      <li>rasterio.rio.overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.rio.overview</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Manage overviews of a dataset.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+
+<span class="kn">import</span> <span class="nn">click</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">options</span>
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="k">import</span> <span class="n">Resampling</span>
+
+
+<div class="viewcode-block" id="build_handler"><a class="viewcode-back" href="../../../lib/rasterio.rio.html#rasterio.rio.overview.build_handler">[docs]</a><span class="k">def</span> <span class="nf">build_handler</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;^&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">base</span><span class="p">,</span> <span class="n">exp_range</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;^&#39;</span><span class="p">)</span>
+                <span class="n">exp_min</span><span class="p">,</span> <span class="n">exp_max</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">exp_range</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">))</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="nb">pow</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">base</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">exp_min</span><span class="p">,</span> <span class="n">exp_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;must match &#39;n,n,n,…&#39; or &#39;n^n..n&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="s1">&#39;overview&#39;</span><span class="p">,</span> <span class="n">short_help</span><span class="o">=</span><span class="s2">&quot;Construct overviews in an existing dataset.&quot;</span><span class="p">)</span>
+<span class="nd">@options</span><span class="o">.</span><span class="n">file_in_arg</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--build&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">build_handler</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="sa">u</span><span class="s2">&quot;f1,f2,…|b^min..max&quot;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A sequence of decimation factors specied as &quot;</span>
+                   <span class="s2">&quot;comma-separated list of numbers or a base and range of &quot;</span>
+                   <span class="s2">&quot;exponents.&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--ls&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Print the overviews for each band.&quot;</span><span class="p">,</span>
+              <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--rebuild&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Reconstruct existing overviews.&quot;</span><span class="p">,</span>
+              <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--resampling&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Resampling algorithm.&quot;</span><span class="p">,</span>
+              <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">(</span>
+                  <span class="p">[</span><span class="n">it</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">Resampling</span> <span class="k">if</span> <span class="n">it</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]),</span>
+              <span class="n">default</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">show_default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">overview</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">build</span><span class="p">,</span> <span class="n">ls</span><span class="p">,</span> <span class="n">rebuild</span><span class="p">,</span> <span class="n">resampling</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct overviews in an existing dataset.</span>
+
+<span class="sd">    A pyramid of overviews computed once and stored in the dataset can</span>
+<span class="sd">    improve performance in some applications.</span>
+
+<span class="sd">    The decimation levels at which to build overviews can be specified as</span>
+<span class="sd">    a comma separated list</span>
+
+<span class="sd">      rio overview --build 2,4,8,16</span>
+
+<span class="sd">    or a base and range of exponents.</span>
+
+<span class="sd">      rio overview --build 2^1..4</span>
+
+<span class="sd">    Note that overviews can not currently be removed and are not</span>
+<span class="sd">    automatically updated when the dataset&#39;s primary bands are</span>
+<span class="sd">    modified.</span>
+
+<span class="sd">    Information about existing overviews can be printed using the --ls</span>
+<span class="sd">    option.</span>
+
+<span class="sd">      rio overview --ls</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;env&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">ls</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+                <span class="n">resampling_method</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span>
+                    <span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rio_overview&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;resampling&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;unknown&#39;</span>
+
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Overview factors:&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">dst</span><span class="o">.</span><span class="n">indexes</span><span class="p">:</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;  Band </span><span class="si">%d</span><span class="s2">: </span><span class="si">%s</span><span class="s2"> (method: &#39;</span><span class="si">%s</span><span class="s2">&#39;)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                        <span class="n">idx</span><span class="p">,</span> <span class="n">dst</span><span class="o">.</span><span class="n">overviews</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">rebuild</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+                <span class="c1"># Build the same overviews for all bands.</span>
+                <span class="n">factors</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span>
+                    <span class="n">operator</span><span class="o">.</span><span class="n">or_</span><span class="p">,</span>
+                    <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">overviews</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dst</span><span class="o">.</span><span class="n">indexes</span><span class="p">])</span>
+
+                <span class="c1"># Attempt to recover the resampling method from dataset tags.</span>
+                <span class="n">resampling_method</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tags</span><span class="p">(</span>
+                    <span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rio_overview&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;resampling&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">resampling</span>
+
+                <span class="n">dst</span><span class="o">.</span><span class="n">build_overviews</span><span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">factors</span><span class="p">),</span> <span class="n">Resampling</span><span class="p">[</span><span class="n">resampling_method</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">build</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+                <span class="n">dst</span><span class="o">.</span><span class="n">build_overviews</span><span class="p">(</span><span class="n">build</span><span class="p">,</span> <span class="n">Resampling</span><span class="p">[</span><span class="n">resampling</span><span class="p">])</span>
+
+                <span class="c1"># Save the resampling method to a tag.</span>
+                <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="n">ns</span><span class="o">=</span><span class="s1">&#39;rio_overview&#39;</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="n">resampling</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">UsageError</span><span class="p">(</span>
+                <span class="s2">&quot;Please specify --ls, --rebuild, or --build ...&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0a12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

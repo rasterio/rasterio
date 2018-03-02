@@ -115,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -139,6 +140,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -251,6 +253,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a><ul class="simple">
 </ul>
@@ -288,7 +293,7 @@
 
 <dl class="function">
 <dt id="rasterio.open">
-<code class="descclassname">rasterio.</code><code class="descname">open</code><span class="sig-paren">(</span><em>fp</em>, <em>mode='r'</em>, <em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio.html#open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.open" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.</code><code class="descname">open</code><span class="sig-paren">(</span><em>fp</em>, <em>mode='r'</em>, <em>driver=None</em>, <em>width=None</em>, <em>height=None</em>, <em>count=None</em>, <em>crs=None</em>, <em>transform=None</em>, <em>dtype=None</em>, <em>nodata=None</em>, <em>sharing=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio.html#open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a dataset for reading or writing.</p>
 <p>The dataset may be located in a local file, in a resource located by
 a URL, or contained within a stream of bytes.</p>
@@ -349,6 +354,11 @@ space. Required in ‘w’ mode, it is ignored in ‘r’ or ‘r+’ mode.</p>
 <blockquote>
 <div><p>Defines the pixel value to be interpreted as not valid data.
 Required in ‘w’ mode, it is ignored in ‘r’ or ‘r+’ mode.</p>
+</div></blockquote>
+<p><strong>sharing</strong> : bool</p>
+<blockquote>
+<div><p>A flag that allows sharing of dataset handles. Default is
+<cite>True</cite>. Should be set to <cite>False</cite> in a multithreaded:w program.</p>
 </div></blockquote>
 <p><strong>kwargs</strong> : optional</p>
 <blockquote>

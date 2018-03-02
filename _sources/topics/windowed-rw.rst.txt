@@ -98,7 +98,7 @@ Writing
 =======
 
 Writing works similarly. The following creates a blank 500 column x 300 row
-GeoTIFF and plops 37500 pixels with value 127 into a window 30 pixels down from
+GeoTIFF and plops 37,500 pixels with value 127 into a window 30 pixels down from
 and 50 pixels to the right of the upper left corner of the GeoTIFF.
 
 .. code-block:: python
@@ -127,8 +127,10 @@ Below, the window is scaled to one third of the source image.
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         b, g, r = (src.read(k) for k in (1, 2, 3))
+    # src.height = 718, src.width = 791
 
     write_window = Window.from_slices((30, 269), (50, 313))
+    # write_window.height = 239, write_window.width = 263
 
     with rasterio.open(
             '/tmp/example.tif', 'w',
@@ -202,7 +204,7 @@ a dataset:
         kwargs.update({
             'height': window.height,
             'width': window.width,
-            'affine': src.window_transform(window)})
+            'affine': rasterio.windows.transform(window, src.transform)})
 
         with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
             dst.write(src.read(window=window))

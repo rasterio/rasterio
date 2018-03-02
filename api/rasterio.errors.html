@@ -139,6 +139,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -238,7 +239,7 @@ to define a coordinate transformation.</p>
 <dl class="exception">
 <dt id="rasterio.errors.EnvError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">EnvError</code><a class="reference internal" href="../_modules/rasterio/errors.html#EnvError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.EnvError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../rasterio.errors.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
 <p>Raised when the state of GDAL/AWS environment cannot be created
 or modified.</p>
 </dd></dl>
@@ -269,11 +270,19 @@ rasterio.warp.transform_geometry(</p>
 <dl class="exception">
 <dt id="rasterio.errors.GDALOptionNotImplementedError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">GDALOptionNotImplementedError</code><a class="reference internal" href="../_modules/rasterio/errors.html#GDALOptionNotImplementedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.GDALOptionNotImplementedError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../rasterio.errors.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
 <p>A dataset opening or dataset creation option can’t be supported</p>
 <p>This will be raised from Rasterio’s shim modules. For example, when
 a user passes arguments to open_dataset() that can’t be evaluated
 by GDAL 1.x.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="rasterio.errors.GDALVersionError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">GDALVersionError</code><a class="reference internal" href="../_modules/rasterio/errors.html#GDALVersionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.GDALVersionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
+<p>Raised if the runtime version of GDAL does not meet the required
+version of GDAL.</p>
 </dd></dl>
 
 <dl class="exception">
@@ -293,7 +302,7 @@ by GDAL 1.x.</p>
 <dl class="exception">
 <dt id="rasterio.errors.RasterBlockError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">RasterBlockError</code><a class="reference internal" href="../_modules/rasterio/errors.html#RasterBlockError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.RasterBlockError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../rasterio.errors.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
 <p>Raised when raster block access fails</p>
 </dd></dl>
 
@@ -322,7 +331,7 @@ registered format drivers.</p>
 <dl class="exception">
 <dt id="rasterio.errors.WindowError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">WindowError</code><a class="reference internal" href="../_modules/rasterio/errors.html#WindowError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.WindowError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../rasterio.errors.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
 <p>Raised when errors occur during window operations</p>
 </dd></dl>
 

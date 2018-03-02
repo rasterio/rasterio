@@ -140,6 +140,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -490,6 +491,9 @@
 <p>Available warp resampling algorithms.</p>
 <p>The subset of ‘nearest’, ‘cubic’, ‘average’, ‘mode’, and ‘gauss’
 are available in making dataset overviews.</p>
+<p>‘max’, ‘min’, ‘med’, ‘q1’, ‘q3’ are only supported in GDAL &gt;= 2.0.0.</p>
+<p>‘nearest’, ‘bilinear’, ‘cubic’, ‘cubic_spline’, ‘lanczos’, ‘average’, ‘mode’
+are always available (GDAL &gt;= 1.10).</p>
 <p>Note: ‘gauss’ is not available to the functions in rio.warp.</p>
 <dl class="attribute">
 <dt id="rasterio.enums.Resampling.average">

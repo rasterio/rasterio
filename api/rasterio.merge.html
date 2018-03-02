@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -140,6 +141,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -223,7 +225,7 @@
 <p>Copy valid pixels from input files to an output file.</p>
 <dl class="function">
 <dt id="rasterio.merge.merge">
-<code class="descclassname">rasterio.merge.</code><code class="descname">merge</code><span class="sig-paren">(</span><em>sources</em>, <em>bounds=None</em>, <em>res=None</em>, <em>nodata=None</em>, <em>precision=7</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/merge.html#merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.merge.merge" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">rasterio.merge.</code><code class="descname">merge</code><span class="sig-paren">(</span><em>datasets</em>, <em>bounds=None</em>, <em>res=None</em>, <em>nodata=None</em>, <em>precision=7</em>, <em>indexes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/merge.html#merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.merge.merge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copy valid pixels from input files to an output file.</p>
 <p>All files must have the same number of bands, data type, and
 coordinate reference system.</p>
@@ -237,9 +239,9 @@ and are otherwise taken from the first input file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sources: list of source datasets</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>datasets: list of dataset objects opened in ‘r’ mode</strong></p>
 <blockquote>
-<div><p>Open rasterio RasterReader objects to be merged.</p>
+<div><p>source datasets to be merged.</p>
 </div></blockquote>
 <p><strong>bounds: tuple, optional</strong></p>
 <blockquote>
@@ -257,6 +259,10 @@ output pixels will be square.</p>
 <div><p>nodata value to use in output file. If not set, uses the nodata value
 in the first input raster.</p>
 </div></blockquote>
+<p><strong>indexes</strong> : list of ints or a single int, optional</p>
+<blockquote>
+<div><p>bands to read and merge</p>
+</div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
@@ -265,7 +271,7 @@ in the first input raster.</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>dest: numpy ndarray</dt>
-<dd><p class="first last">Contents of all input rasters in single array.</p>
+<dd><p class="first last">Contents of all input rasters in single array</p>
 </dd>
 <dt>out_transform: affine.Affine()</dt>
 <dd><p class="first last">Information for mapping pixel coordinates in <cite>dest</cite> to another

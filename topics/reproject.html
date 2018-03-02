@@ -209,7 +209,7 @@ transform.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">Affine</span> <span class="k">as</span> <span class="n">A</span>
-<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">RESAMPLING</span>
+<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">Resampling</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
 
@@ -237,7 +237,7 @@ transform.</p>
         <span class="n">src_crs</span><span class="o">=</span><span class="n">src_crs</span><span class="p">,</span>
         <span class="n">dst_transform</span><span class="o">=</span><span class="n">dst_transform</span><span class="p">,</span>
         <span class="n">dst_crs</span><span class="o">=</span><span class="n">dst_crs</span><span class="p">,</span>
-        <span class="n">resampling</span><span class="o">=</span><span class="n">RESAMPLING</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
+        <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
 
     <span class="c1"># Assert that the destination is only partly filled.</span>
     <span class="k">assert</span> <span class="n">destination</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
@@ -269,7 +269,7 @@ transforms bounds to target coordinate system, calculates resolution if not
 provided, and returns destination transform and dimensions.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">calculate_default_transform</span><span class="p">,</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">RESAMPLING</span>
+<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">calculate_default_transform</span><span class="p">,</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">Resampling</span>
 
 <span class="n">dst_crs</span> <span class="o">=</span> <span class="s1">&#39;EPSG:4326&#39;</span>
 
@@ -293,7 +293,7 @@ provided, and returns destination transform and dimensions.</p>
                 <span class="n">src_crs</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
                 <span class="n">dst_transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
                 <span class="n">dst_crs</span><span class="o">=</span><span class="n">dst_crs</span><span class="p">,</span>
-                <span class="n">resampling</span><span class="o">=</span><span class="n">RESAMPLING</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
+                <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See <code class="docutils literal"><span class="pre">rasterio/rio/warp.py</span></code> for more complex examples of reprojection based on
@@ -306,7 +306,7 @@ the output dataset’s transform matrix and, thereby, its spatial extent.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">rasterio</span> <span class="kn">import</span> <span class="n">Affine</span> <span class="k">as</span> <span class="n">A</span>
-<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">RESAMPLING</span>
+<span class="kn">from</span> <span class="nn">rasterio.warp</span> <span class="kn">import</span> <span class="n">reproject</span><span class="p">,</span> <span class="n">Resampling</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;rasterio/tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">src_transform</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span>
@@ -335,7 +335,7 @@ the output dataset’s transform matrix and, thereby, its spatial extent.</p>
                 <span class="n">src_crs</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
                 <span class="n">dst_transform</span><span class="o">=</span><span class="n">dst_transform</span><span class="p">,</span>
                 <span class="n">dst_crs</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
-                <span class="n">resampling</span><span class="o">=</span><span class="n">RESAMPLING</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
+                <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">)</span>
 
             <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
 </pre></div>

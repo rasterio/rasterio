@@ -140,6 +140,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -272,8 +273,20 @@ instead of rasterio’s bounds (left, bottom, top, right)</dd>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : raster dataset or array in image order (see reshape_as_image)</p>
-<p class="last"><strong>transform: Affine, required if source is array</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : array or dataset object opened in ‘r’ mode</p>
+<blockquote>
+<div><p>input data</p>
+</div></blockquote>
+<p><strong>transform: Affine, required if source is array</strong></p>
+<blockquote>
+<div><p>Defines the affine transform if source is an array</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple of float</p>
+<blockquote class="last">
+<div><p>left, right, bottom, top</p>
+</div></blockquote>
 </td>
 </tr>
 </tbody>
@@ -292,7 +305,11 @@ to (rows, columns, bands)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source</strong> : array-like in a of format (bands, rows, columns)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr</strong> : array-like of shape (bands, rows, columns)</p>
+<blockquote class="last">
+<div><p>image to reshape</p>
+</div></blockquote>
+</td>
 </tr>
 </tbody>
 </table>
@@ -308,7 +325,11 @@ to (bands, rows, columns)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arr</strong> : array-like in the image form of (rows, columns, bands)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr</strong> : array-like in the image form of (rows, columns, bands)</p>
+<blockquote class="last">
+<div><p>image to reshape</p>
+</div></blockquote>
+</td>
 </tr>
 </tbody>
 </table>
@@ -322,12 +343,10 @@ to (bands, rows, columns)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : array-like in raster axis order,</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : array or dataset object opened in ‘r’ mode or Band or tuple(dataset, bidx)</p>
 <blockquote>
-<div><p>or (raster dataset, bidx) tuple,
-or raster dataset,
-If the tuple (raster dataset, bidx),
-selects band <cite>bidx</cite> from raster.  If raster dataset display the rgb image
+<div><p>If Band or tuple (dataset, bidx), display the selected band.
+If raster dataset display the rgb image
 as defined in the colorinterp metadata, or default to first band.</p>
 </div></blockquote>
 <p><strong>with_bounds</strong> : bool (opt)</p>
@@ -393,9 +412,10 @@ or
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : np.array or DatasetReader, rasterio.Band or tuple(dataset, bidx)</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>source</strong> : array or dataset object opened in ‘r’ mode or Band or tuple(dataset, bidx)</p>
 <blockquote>
-<div><p>Input data to display.  The first three arrays in multi-dimensional
+<div><p>Input data to display.
+The first three arrays in multi-dimensional
 arrays are plotted as red, green, and blue.</p>
 </div></blockquote>
 <p><strong>bins</strong> : int, optional</p>

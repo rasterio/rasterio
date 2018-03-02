@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -572,7 +573,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    window: Window.</span>
+<span class="sd">    window: Window or tuple of (rows, cols).</span>
 <span class="sd">        The input window.</span>
 <span class="sd">    height, width: int</span>
 <span class="sd">        The number of rows or columns in the array that the window</span>
@@ -586,8 +587,9 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">Window</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">window</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">Window</span><span class="o">.</span><span class="n">from_slices</span><span class="p">(</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
-                                  <span class="n">boundless</span><span class="o">=</span><span class="n">boundless</span><span class="p">)</span></div>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">window</span>
+        <span class="k">return</span> <span class="n">Window</span><span class="o">.</span><span class="n">from_slices</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+                                  <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="n">boundless</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="shape"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.shape">[docs]</a><span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">height</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
@@ -776,71 +778,93 @@
 
 <div class="viewcode-block" id="Window.from_slices"><a class="viewcode-back" href="../../rasterio.windows.html#rasterio.windows.Window.from_slices">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_slices</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">height</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">boundless</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Construct a Window from row and column slices or tuples.</span>
+        <span class="sd">&quot;&quot;&quot;Construct a Window from row and column slices or tuples / lists of</span>
+<span class="sd">        start and stop indexes. Converts the rows and cols to offsets, height,</span>
+<span class="sd">        and width.</span>
+
+<span class="sd">        In general, indexes are defined relative to the upper left corner of</span>
+<span class="sd">        the dataset: rows=(0, 10), cols=(0, 4) defines a window that is 4</span>
+<span class="sd">        columns wide and 10 rows high starting from the upper left.</span>
+
+<span class="sd">        Start indexes may be `None` and will default to 0.</span>
+<span class="sd">        Stop indexes may be `None` and will default to width or height, which</span>
+<span class="sd">        must be provided in this case.</span>
+
+<span class="sd">        Negative start indexes are evaluated relative to the lower right of the</span>
+<span class="sd">        dataset: rows=(-2, None), cols=(-2, None) defines a window that is 2</span>
+<span class="sd">        rows high and 2 columns wide starting from the bottom right.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        rows, cols: slice or tuple</span>
-<span class="sd">            Slices or 2-tuples containing start, stop indexes.</span>
+<span class="sd">        rows, cols: slice, tuple, or list</span>
+<span class="sd">            Slices or 2 element tuples/lists containing start, stop indexes.</span>
 <span class="sd">        height, width: float</span>
-<span class="sd">            A shape to resolve relative values against.</span>
+<span class="sd">            A shape to resolve relative values against. Only used when a start</span>
+<span class="sd">            or stop index is negative or a stop index is None.</span>
 <span class="sd">        boundless: bool, optional</span>
-<span class="sd">            Whether the inputs are bounded or bot.</span>
+<span class="sd">            Whether the inputs are bounded (default) or not.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Window</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Convert the rows indexing obj to offset and height.</span>
+
         <span class="c1"># Normalize to slices</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;rows must be a tuple or slice&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">rows</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">rows</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">rows</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;rows must have a start and stop index&quot;</span><span class="p">)</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">rows</span><span class="p">)</span>
 
-        <span class="c1"># Resolve the window height.</span>
-        <span class="c1"># Fail if the stop value is relative or implicit and there</span>
-        <span class="c1"># is no height context.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rows</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-                <span class="n">rows</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">rows</span><span class="o">.</span><span class="n">stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">height</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span>
-                <span class="s2">&quot;A non-negative height is required&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;rows must be a slice, tuple, or list&quot;</span><span class="p">)</span>
 
-        <span class="n">row_off</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="mf">0.0</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span> <span class="ow">and</span> <span class="n">row_off</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">row_off</span> <span class="o">+=</span> <span class="n">height</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;cols must have a start and stop index&quot;</span><span class="p">)</span>
+            <span class="n">cols</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">cols</span><span class="p">)</span>
 
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;cols must be a slice, tuple, or list&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Height and width are required if stop indices are implicit</span>
+        <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">height</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;height is required if row stop index is None&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">width</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;width is required if col stop index is None&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Convert implicit indices to offsets, height, and width</span>
+        <span class="n">row_off</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">rows</span><span class="o">.</span><span class="n">start</span>
         <span class="n">row_stop</span> <span class="o">=</span> <span class="n">height</span> <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">rows</span><span class="o">.</span><span class="n">stop</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span> <span class="ow">and</span> <span class="n">row_stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">row_stop</span> <span class="o">+=</span> <span class="n">height</span>
 
-        <span class="n">num_rows</span> <span class="o">=</span> <span class="n">row_stop</span> <span class="o">-</span> <span class="n">row_off</span>
-
-        <span class="c1"># Number of rows is never less than 0.</span>
-        <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-
-        <span class="c1"># Do the same for the cols indexing object.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;cols must be a tuple or slice&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">cols</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">cols</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cols</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-                <span class="n">cols</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cols</span><span class="o">.</span><span class="n">stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">width</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;A non-negative width is required&quot;</span><span class="p">)</span>
-
-        <span class="n">col_off</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="mf">0.0</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span> <span class="ow">and</span> <span class="n">col_off</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">col_off</span> <span class="o">+=</span> <span class="n">width</span>
-
+        <span class="n">col_off</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">cols</span><span class="o">.</span><span class="n">start</span>
         <span class="n">col_stop</span> <span class="o">=</span> <span class="n">width</span> <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">cols</span><span class="o">.</span><span class="n">stop</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span> <span class="ow">and</span> <span class="n">col_stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">col_stop</span> <span class="o">+=</span> <span class="n">width</span>
 
-        <span class="n">num_cols</span> <span class="o">=</span> <span class="n">col_stop</span> <span class="o">-</span> <span class="n">col_off</span>
-        <span class="n">num_cols</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_cols</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">boundless</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">row_off</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">row_stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">height</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;height is required when providing &quot;</span>
+                                      <span class="s2">&quot;negative indexes&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">row_off</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">row_off</span> <span class="o">+=</span> <span class="n">height</span>
+
+                <span class="k">if</span> <span class="n">row_stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">row_stop</span> <span class="o">+=</span> <span class="n">height</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">col_off</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">col_stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">width</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">WindowError</span><span class="p">(</span><span class="s2">&quot;width is required when providing &quot;</span>
+                                      <span class="s2">&quot;negative indexes&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">col_off</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">col_off</span> <span class="o">+=</span> <span class="n">width</span>
+
+                <span class="k">if</span> <span class="n">col_stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">col_stop</span> <span class="o">+=</span> <span class="n">width</span>
+
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">col_stop</span> <span class="o">-</span> <span class="n">col_off</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">row_stop</span> <span class="o">-</span> <span class="n">row_off</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">col_off</span><span class="o">=</span><span class="n">col_off</span><span class="p">,</span> <span class="n">row_off</span><span class="o">=</span><span class="n">row_off</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">num_cols</span><span class="p">,</span>
                    <span class="n">height</span><span class="o">=</span><span class="n">num_rows</span><span class="p">)</span></div>

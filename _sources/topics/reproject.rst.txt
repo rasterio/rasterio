@@ -19,7 +19,7 @@ transform.
     import numpy as np
     import rasterio
     from rasterio import Affine as A
-    from rasterio.warp import reproject, RESAMPLING
+    from rasterio.warp import reproject, Resampling
 
     with rasterio.Env():
 
@@ -47,7 +47,7 @@ transform.
             src_crs=src_crs,
             dst_transform=dst_transform,
             dst_crs=dst_crs,
-            resampling=RESAMPLING.nearest)
+            resampling=Resampling.nearest)
 
         # Assert that the destination is only partly filled.
         assert destination.any()
@@ -89,7 +89,7 @@ provided, and returns destination transform and dimensions.
 
     import numpy as np
     import rasterio
-    from rasterio.warp import calculate_default_transform, reproject, RESAMPLING
+    from rasterio.warp import calculate_default_transform, reproject, Resampling
 
     dst_crs = 'EPSG:4326'
 
@@ -113,7 +113,7 @@ provided, and returns destination transform and dimensions.
                     src_crs=src.crs,
                     dst_transform=transform,
                     dst_crs=dst_crs,
-                    resampling=RESAMPLING.nearest)
+                    resampling=Resampling.nearest)
 
 
 See ``rasterio/rio/warp.py`` for more complex examples of reprojection based on
@@ -132,7 +132,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
     import numpy as np
     import rasterio
     from rasterio import Affine as A
-    from rasterio.warp import reproject, RESAMPLING
+    from rasterio.warp import reproject, Resampling
 
     with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
         src_transform = src.transform
@@ -161,7 +161,7 @@ the output dataset's transform matrix and, thereby, its spatial extent.
                     src_crs=src.crs,
                     dst_transform=dst_transform,
                     dst_crs=src.crs,
-                    resampling=RESAMPLING.nearest)
+                    resampling=Resampling.nearest)
 
                 dst.write(dest, indexes=i)
 

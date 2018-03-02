@@ -1,0 +1,517 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.rio.edit_info &mdash; rasterio 1.0a12 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../../../index.html"/>
+        <link rel="up" title="rasterio" href="../../rasterio.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../switch.html">Switching from GDAL’s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">rasterio</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../rasterio.html">rasterio</a> &raquo;</li>
+        
+      <li>rasterio.rio.edit_info</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rasterio.rio.edit_info</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Fetch and edit raster dataset metadata from the command line.&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">click</span>
+
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">import</span> <span class="nn">rasterio.crs</span>
+<span class="kn">from</span> <span class="nn">rasterio.crs</span> <span class="k">import</span> <span class="n">CRS</span>
+<span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="k">import</span> <span class="n">ColorInterp</span>
+<span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="k">import</span> <span class="n">CRSError</span>
+<span class="kn">from</span> <span class="nn">rasterio.rio</span> <span class="k">import</span> <span class="n">options</span>
+<span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="k">import</span> <span class="n">guard_transform</span>
+
+
+<span class="c1"># Handlers for info module options.</span>
+
+
+<div class="viewcode-block" id="all_handler"><a class="viewcode-back" href="../../../lib/rasterio.rio.html#rasterio.rio.edit_info.all_handler">[docs]</a><span class="k">def</span> <span class="nf">all_handler</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get tags from a template file or command line.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span> <span class="ow">and</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;like&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;all_like&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;like&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="crs_handler"><a class="viewcode-back" href="../../../lib/rasterio.rio.html#rasterio.rio.edit_info.crs_handler">[docs]</a><span class="k">def</span> <span class="nf">crs_handler</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get crs value from a template file or command line.&quot;&quot;&quot;</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">from_like_context</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">retval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">retval</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">CRS</span><span class="p">(</span><span class="n">retval</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">retval</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CRSError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; is not a recognized CRS.&quot;</span> <span class="o">%</span> <span class="n">retval</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="n">param</span><span class="p">,</span> <span class="n">param_hint</span><span class="o">=</span><span class="s1">&#39;crs&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="tags_handler"><a class="viewcode-back" href="../../../lib/rasterio.rio.html#rasterio.rio.edit_info.tags_handler">[docs]</a><span class="k">def</span> <span class="nf">tags_handler</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get tags from a template file or command line.&quot;&quot;&quot;</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">from_like_context</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">retval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; contains a malformed tag.&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="n">param</span><span class="p">,</span> <span class="n">param_hint</span><span class="o">=</span><span class="s1">&#39;transform&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="transform_handler"><a class="viewcode-back" href="../../../lib/rasterio.rio.html#rasterio.rio.edit_info.transform_handler">[docs]</a><span class="k">def</span> <span class="nf">transform_handler</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get transform value from a template file or command line.&quot;&quot;&quot;</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">from_like_context</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">retval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; is not recognized as an Affine array.&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="n">param</span><span class="p">,</span> <span class="n">param_hint</span><span class="o">=</span><span class="s1">&#39;transform&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="colorinterp_handler"><a class="viewcode-back" href="../../../lib/rasterio.rio.html#rasterio.rio.edit_info.colorinterp_handler">[docs]</a><span class="k">def</span> <span class="nf">colorinterp_handler</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Validate a string like ``red,green,blue,alpha`` and convert to</span>
+<span class="sd">    a tuple.  Also handle ``RGB`` and ``RGBA``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="c1"># Using &#39;--like&#39;</span>
+    <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;like&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">options</span><span class="o">.</span><span class="n">from_like_context</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;rgb&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">red</span><span class="p">,</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">green</span><span class="p">,</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">blue</span>
+    <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;rgba&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">red</span><span class="p">,</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">green</span><span class="p">,</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">blue</span><span class="p">,</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">alpha</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">colorinterp</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">colorinterp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ci</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ColorInterp</span><span class="o">.</span><span class="n">__members__</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                    <span class="s2">&quot;color interpretation &#39;</span><span class="si">{ci}</span><span class="s2">&#39; is invalid.  Must be one of: &quot;</span>
+                    <span class="s2">&quot;</span><span class="si">{valid}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">ci</span><span class="o">=</span><span class="n">ci</span><span class="p">,</span> <span class="n">valid</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ColorInterp</span><span class="o">.</span><span class="n">__members__</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ColorInterp</span><span class="p">[</span><span class="n">ci</span><span class="p">]</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">colorinterp</span><span class="p">)</span></div>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="s1">&#39;edit-info&#39;</span><span class="p">,</span> <span class="n">short_help</span><span class="o">=</span><span class="s2">&quot;Edit dataset metadata.&quot;</span><span class="p">)</span>
+<span class="nd">@options</span><span class="o">.</span><span class="n">file_in_arg</span>
+<span class="nd">@options</span><span class="o">.</span><span class="n">bidx_opt</span>
+<span class="nd">@options</span><span class="o">.</span><span class="n">edit_nodata_opt</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--unset-nodata&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Unset the dataset&#39;s nodata value.&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--crs&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">crs_handler</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;New coordinate reference system&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--unset-crs&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Unset the dataset&#39;s CRS value.&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--transform&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">transform_handler</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;New affine transform matrix&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--units&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Edit units of a band (requires --bidx)&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--description&#39;</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Edit description of a band (requires --bidx)&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--tag&#39;</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">tags_handler</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;KEY=VAL&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;New tag.&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--all&#39;</span><span class="p">,</span> <span class="s1">&#39;allmd&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">all_handler</span><span class="p">,</span> <span class="n">flag_value</span><span class="o">=</span><span class="s1">&#39;like&#39;</span><span class="p">,</span>
+              <span class="n">is_eager</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+              <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Copy all metadata items from the template file.&quot;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s1">&#39;--colorinterp&#39;</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">colorinterp_handler</span><span class="p">,</span>
+    <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;name[,name,...]|RGB|RGBA|like&quot;</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Set color interpretation for all bands like &#39;red,green,blue,alpha&#39;. &quot;</span>
+         <span class="s2">&quot;Can also use &#39;RGBA&#39; as shorthand for &#39;red,green,blue,alpha&#39; and &quot;</span>
+         <span class="s2">&quot;&#39;RGB&#39; for the same sans alpha band.  Use &#39;like&#39; to inherit color &quot;</span>
+         <span class="s2">&quot;interpretation from &#39;--like&#39;.&quot;</span><span class="p">)</span>
+<span class="nd">@options</span><span class="o">.</span><span class="n">like_opt</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">nodata</span><span class="p">,</span> <span class="n">unset_nodata</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">unset_crs</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span>
+         <span class="n">units</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">allmd</span><span class="p">,</span> <span class="n">like</span><span class="p">,</span> <span class="n">colorinterp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Edit a dataset&#39;s metadata: coordinate reference system, affine</span>
+<span class="sd">    transformation matrix, nodata value, and tags.</span>
+
+<span class="sd">    The coordinate reference system may be either a PROJ.4 or EPSG:nnnn</span>
+<span class="sd">    string,</span>
+
+<span class="sd">      --crs &#39;EPSG:4326&#39;</span>
+
+<span class="sd">    or a JSON text-encoded PROJ.4 object.</span>
+
+<span class="sd">      --crs &#39;{&quot;proj&quot;: &quot;utm&quot;, &quot;zone&quot;: 18, ...}&#39;</span>
+
+<span class="sd">    Transforms are JSON-encoded Affine objects like:</span>
+
+<span class="sd">      --transform &#39;[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]&#39;</span>
+
+<span class="sd">    Prior to Rasterio 1.0 GDAL geotransforms were supported for --transform,</span>
+<span class="sd">    but are no longer supported.</span>
+
+<span class="sd">    Metadata items may also be read from an existing dataset using a</span>
+<span class="sd">    combination of the --like option with at least one of --all,</span>
+<span class="sd">    `--crs like`, `--nodata like`, and `--transform like`.</span>
+
+<span class="sd">      rio edit-info example.tif --like template.tif --all</span>
+
+<span class="sd">    To get just the transform from the template:</span>
+
+<span class="sd">      rio edit-info example.tif --like template.tif --transform like</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">def</span> <span class="nf">in_dtype_range</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">infos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">,</span>
+                 <span class="s1">&#39;u&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">}</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">infos</span><span class="p">[</span><span class="n">kind</span><span class="p">](</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rng</span><span class="o">.</span><span class="n">min</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">rng</span><span class="o">.</span><span class="n">max</span>
+
+    <span class="c1"># If &#39;--all&#39; is given before &#39;--like&#39; on the commandline then &#39;allmd&#39;</span>
+    <span class="c1"># is the string &#39;like&#39;.  This is caused by &#39;--like&#39; not having an</span>
+    <span class="c1"># opportunity to populate metadata before &#39;--all&#39; is evaluated.</span>
+    <span class="k">if</span> <span class="n">allmd</span> <span class="o">==</span> <span class="s1">&#39;like&#39;</span><span class="p">:</span>
+        <span class="n">allmd</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;like&#39;</span><span class="p">]</span>
+
+    <span class="k">with</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;env&#39;</span><span class="p">],</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">allmd</span><span class="p">:</span>
+            <span class="n">nodata</span> <span class="o">=</span> <span class="n">allmd</span><span class="p">[</span><span class="s1">&#39;nodata&#39;</span><span class="p">]</span>
+            <span class="n">crs</span> <span class="o">=</span> <span class="n">allmd</span><span class="p">[</span><span class="s1">&#39;crs&#39;</span><span class="p">]</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">allmd</span><span class="p">[</span><span class="s1">&#39;transform&#39;</span><span class="p">]</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">allmd</span><span class="p">[</span><span class="s1">&#39;tags&#39;</span><span class="p">]</span>
+            <span class="n">colorinterp</span> <span class="o">=</span> <span class="n">allmd</span><span class="p">[</span><span class="s1">&#39;colorinterp&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">unset_nodata</span> <span class="ow">and</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">IgnoreOption</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                <span class="s2">&quot;--unset-nodata and --nodata cannot be used together.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">unset_crs</span> <span class="ow">and</span> <span class="n">crs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                <span class="s2">&quot;--unset-crs and --crs cannot be used together.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">unset_nodata</span><span class="p">:</span>
+            <span class="c1"># Setting nodata to None will raise NotImplementedError</span>
+            <span class="c1"># if GDALDeleteRasterNoDataValue() isn&#39;t present in the</span>
+            <span class="c1"># GDAL library.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dst</span><span class="o">.</span><span class="n">nodata</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">ClickException</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
+
+        <span class="k">elif</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">options</span><span class="o">.</span><span class="n">IgnoreOption</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">dtypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">in_dtype_range</span><span class="p">(</span><span class="n">nodata</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">BadParameter</span><span class="p">(</span>
+                    <span class="s2">&quot;outside the range of the file&#39;s &quot;</span>
+                    <span class="s2">&quot;data type (</span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">%</span> <span class="n">dtype</span><span class="p">,</span>
+                    <span class="n">param</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span> <span class="n">param_hint</span><span class="o">=</span><span class="s1">&#39;nodata&#39;</span><span class="p">)</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">nodata</span> <span class="o">=</span> <span class="n">nodata</span>
+
+        <span class="k">if</span> <span class="n">unset_crs</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># CRS()</span>
+        <span class="k">elif</span> <span class="n">crs</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="n">crs</span>
+
+        <span class="k">if</span> <span class="n">transform</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+
+        <span class="k">if</span> <span class="n">tags</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">update_tags</span><span class="p">(</span><span class="o">**</span><span class="n">tags</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">units</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="n">bidx</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="n">bidx</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">colorinterp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">like</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">colorinterp</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dst</span><span class="o">.</span><span class="n">count</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">ClickException</span><span class="p">(</span>
+                    <span class="s2">&quot;When using &#39;--like&#39; for color interpretation the &quot;</span>
+                    <span class="s2">&quot;template and target images must have the same number &quot;</span>
+                    <span class="s2">&quot;of bands.  Found </span><span class="si">{template}</span><span class="s2"> color interpretations for &quot;</span>
+                    <span class="s2">&quot;template image and </span><span class="si">{target}</span><span class="s2"> bands in target &quot;</span>
+                    <span class="s2">&quot;image.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">template</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">colorinterp</span><span class="p">),</span>
+                        <span class="n">target</span><span class="o">=</span><span class="n">dst</span><span class="o">.</span><span class="n">count</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dst</span><span class="o">.</span><span class="n">colorinterp</span> <span class="o">=</span> <span class="n">colorinterp</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">ClickException</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="c1"># Post check - ensure that crs was unset properly</span>
+    <span class="k">if</span> <span class="n">unset_crs</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">ctx</span><span class="o">.</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;env&#39;</span><span class="p">],</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s1">&#39;CRS was not unset. Availability of his functionality &#39;</span>
+                    <span class="s1">&#39;differs depending on GDAL version and driver&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0a12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

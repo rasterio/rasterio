@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -263,6 +264,10 @@
 <span class="sd">    a user passes arguments to open_dataset() that can&#39;t be evaluated</span>
 <span class="sd">    by GDAL 1.x.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="GDALVersionError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.GDALVersionError">[docs]</a><span class="k">class</span> <span class="nc">GDALVersionError</span><span class="p">(</span><span class="n">RasterioError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised if the runtime version of GDAL does not meet the required</span>
+<span class="sd">    version of GDAL.&quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="WindowEvaluationError"><a class="viewcode-back" href="../../rasterio.errors.html#rasterio.errors.WindowEvaluationError">[docs]</a><span class="k">class</span> <span class="nc">WindowEvaluationError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>

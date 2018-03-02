@@ -115,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsi.html">Virtual Files</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Windowed reading and writing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#windows">Windows</a></li>
@@ -271,7 +272,7 @@ test file.</p>
 <div class="section" id="writing">
 <h2>Writing<a class="headerlink" href="#writing" title="Permalink to this headline">¶</a></h2>
 <p>Writing works similarly. The following creates a blank 500 column x 300 row
-GeoTIFF and plops 37500 pixels with value 127 into a window 30 pixels down from
+GeoTIFF and plops 37,500 pixels with value 127 into a window 30 pixels down from
 and 50 pixels to the right of the upper left corner of the GeoTIFF.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">image</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">150</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">rasterio</span><span class="o">.</span><span class="n">ubyte</span><span class="p">)</span> <span class="o">*</span> <span class="mi">127</span>
 
@@ -291,8 +292,10 @@ and 50 pixels to the right of the upper left corner of the GeoTIFF.</p>
 Below, the window is scaled to one third of the source image.</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;tests/data/RGB.byte.tif&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">b</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="c1"># src.height = 718, src.width = 791</span>
 
 <span class="n">write_window</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">from_slices</span><span class="p">((</span><span class="mi">30</span><span class="p">,</span> <span class="mi">269</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">313</span><span class="p">))</span>
+<span class="c1"># write_window.height = 239, write_window.width = 263</span>
 
 <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
         <span class="s1">&#39;/tmp/example.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span>
@@ -350,7 +353,7 @@ a dataset:</p>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
         <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
         <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
-        <span class="s1">&#39;affine&#39;</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">window</span><span class="p">)})</span>
+        <span class="s1">&#39;affine&#39;</span><span class="p">:</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">windows</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">transform</span><span class="p">)})</span>
 
     <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/tmp/cropped.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">))</span>

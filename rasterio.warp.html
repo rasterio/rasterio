@@ -113,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -337,9 +338,16 @@ Resampling.cubic,
 Resampling.cubic_spline,
 Resampling.lanczos,
 Resampling.average,
-Resampling.mode</p>
+Resampling.mode,
+Resampling.max (GDAL &gt;= 2.2),
+Resampling.min (GDAL &gt;= 2.2),
+Resampling.med (GDAL &gt;= 2.2),
+Resampling.q1 (GDAL &gt;= 2.2),
+Resampling.q3 (GDAL &gt;= 2.2)</p>
 </dd>
 </dl>
+<p>An exception will be raised for a method not supported by the running
+version of GDAL.</p>
 </div></blockquote>
 <p><strong>init_dest_nodata: bool</strong></p>
 <blockquote>

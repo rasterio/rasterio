@@ -1,0 +1,198 @@
+rasterio\.rio package
+=====================
+
+Submodules
+----------
+
+rasterio\.rio\.blocks module
+----------------------------
+
+.. automodule:: rasterio.rio.blocks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.bounds module
+----------------------------
+
+.. automodule:: rasterio.rio.bounds
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.calc module
+--------------------------
+
+.. automodule:: rasterio.rio.calc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.clip module
+--------------------------
+
+.. automodule:: rasterio.rio.clip
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.convert module
+-----------------------------
+
+.. automodule:: rasterio.rio.convert
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.edit\_info module
+--------------------------------
+
+.. automodule:: rasterio.rio.edit_info
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.env module
+-------------------------
+
+.. automodule:: rasterio.rio.env
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.gcps module
+--------------------------
+
+.. automodule:: rasterio.rio.gcps
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.helpers module
+-----------------------------
+
+.. automodule:: rasterio.rio.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.info module
+--------------------------
+
+.. automodule:: rasterio.rio.info
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.insp module
+--------------------------
+
+.. automodule:: rasterio.rio.insp
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.main module
+--------------------------
+
+.. automodule:: rasterio.rio.main
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.mask module
+--------------------------
+
+.. automodule:: rasterio.rio.mask
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.merge module
+---------------------------
+
+.. automodule:: rasterio.rio.merge
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.options module
+-----------------------------
+
+.. automodule:: rasterio.rio.options
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.overview module
+------------------------------
+
+.. automodule:: rasterio.rio.overview
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.rasterize module
+-------------------------------
+
+.. automodule:: rasterio.rio.rasterize
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.rm module
+------------------------
+
+.. automodule:: rasterio.rio.rm
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.sample module
+----------------------------
+
+.. automodule:: rasterio.rio.sample
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.shapes module
+----------------------------
+
+.. automodule:: rasterio.rio.shapes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.stack module
+---------------------------
+
+.. automodule:: rasterio.rio.stack
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.transform module
+-------------------------------
+
+.. automodule:: rasterio.rio.transform
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rasterio\.rio\.warp module
+--------------------------
+
+.. automodule:: rasterio.rio.warp
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: rasterio.rio
+    :members:
+    :undoc-members:
+    :show-inheritance:

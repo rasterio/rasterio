@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio &mdash; rasterio 1.0a12 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>rasterio</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/lib/modules.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rasterio">
+<h1>rasterio<a class="headerlink" href="#rasterio" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rasterio.html">rasterio package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.rio.html">rasterio.rio package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.blocks">rasterio.rio.blocks module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.bounds">rasterio.rio.bounds module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.calc">rasterio.rio.calc module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.clip">rasterio.rio.clip module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.convert">rasterio.rio.convert module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.edit_info">rasterio.rio.edit_info module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.env">rasterio.rio.env module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.gcps">rasterio.rio.gcps module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.helpers">rasterio.rio.helpers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.info">rasterio.rio.info module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.insp">rasterio.rio.insp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.main">rasterio.rio.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.mask">rasterio.rio.mask module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.merge">rasterio.rio.merge module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.options">rasterio.rio.options module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.overview">rasterio.rio.overview module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.rasterize">rasterio.rio.rasterize module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.rm">rasterio.rio.rm module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.sample">rasterio.rio.sample module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.shapes">rasterio.rio.shapes module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.stack">rasterio.rio.stack module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.transform">rasterio.rio.transform module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio.warp">rasterio.rio.warp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="rasterio.rio.html#module-rasterio.rio">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.compat">rasterio.compat module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.control">rasterio.control module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.coords">rasterio.coords module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.crs">rasterio.crs module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.drivers">rasterio.drivers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.dtypes">rasterio.dtypes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.enums">rasterio.enums module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.env">rasterio.env module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.errors">rasterio.errors module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.features">rasterio.features module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.fill">rasterio.fill module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.io">rasterio.io module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.mask">rasterio.mask module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.merge">rasterio.merge module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.plot">rasterio.plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.profiles">rasterio.profiles module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.sample">rasterio.sample module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#rasterio-shutil-module">rasterio.shutil module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.transform">rasterio.transform module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.vfs">rasterio.vfs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.vrt">rasterio.vrt module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.warp">rasterio.warp module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio.windows">rasterio.windows module</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio.html#module-rasterio">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0a12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

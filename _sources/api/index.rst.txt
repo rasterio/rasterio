@@ -24,6 +24,7 @@ Submodules
    rasterio.sample
    rasterio.transform
    rasterio.vfs
+   rasterio.vrt
    rasterio.warp
    rasterio.windows
 

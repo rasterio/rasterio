@@ -113,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -193,7 +194,7 @@
 <dl class="exception">
 <dt id="rasterio.errors.CRSError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">CRSError</code><a class="reference internal" href="_modules/rasterio/errors.html#CRSError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.CRSError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
 <p>Raised when a CRS string or mapping is invalid or cannot serve
 to define a coordinate transformation.</p>
 </dd></dl>
@@ -201,7 +202,7 @@ to define a coordinate transformation.</p>
 <dl class="exception">
 <dt id="rasterio.errors.DriverRegistrationError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">DriverRegistrationError</code><a class="reference internal" href="_modules/rasterio/errors.html#DriverRegistrationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.DriverRegistrationError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
 <p>Raised when a format driver is requested but is not registered.</p>
 </dd></dl>
 
@@ -223,7 +224,7 @@ or modified.</p>
 <dl class="exception">
 <dt id="rasterio.errors.GDALBehaviorChangeException">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">GDALBehaviorChangeException</code><a class="reference internal" href="_modules/rasterio/errors.html#GDALBehaviorChangeException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.GDALBehaviorChangeException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
 <p>Raised when GDAL’s behavior differs from the given arguments.  For
 example, antimeridian cutting is always on as of GDAL 2.2.0.  Users
 expecting it to be off will be presented with a MultiPolygon when the
@@ -247,16 +248,24 @@ by GDAL 1.x.</p>
 </dd></dl>
 
 <dl class="exception">
+<dt id="rasterio.errors.GDALVersionError">
+<em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">GDALVersionError</code><a class="reference internal" href="_modules/rasterio/errors.html#GDALVersionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.GDALVersionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rasterio.errors.RasterioError" title="rasterio.errors.RasterioError"><code class="xref py py-class docutils literal"><span class="pre">rasterio.errors.RasterioError</span></code></a></p>
+<p>Raised if the runtime version of GDAL does not meet the required
+version of GDAL.</p>
+</dd></dl>
+
+<dl class="exception">
 <dt id="rasterio.errors.NodataShadowWarning">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">NodataShadowWarning</code><a class="reference internal" href="_modules/rasterio/errors.html#NodataShadowWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.NodataShadowWarning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">UserWarning</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#UserWarning" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">UserWarning</span></code></a></p>
 <p>Warn that a dataset’s nodata attribute is shadowing its alpha band.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="rasterio.errors.NotGeoreferencedWarning">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">NotGeoreferencedWarning</code><a class="reference internal" href="_modules/rasterio/errors.html#NotGeoreferencedWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.NotGeoreferencedWarning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">UserWarning</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#UserWarning" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">UserWarning</span></code></a></p>
 <p>Warn that a dataset isn’t georeferenced.</p>
 </dd></dl>
 
@@ -270,21 +279,21 @@ by GDAL 1.x.</p>
 <dl class="exception">
 <dt id="rasterio.errors.RasterioDeprecationWarning">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">RasterioDeprecationWarning</code><a class="reference internal" href="_modules/rasterio/errors.html#RasterioDeprecationWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.RasterioDeprecationWarning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">UserWarning</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#UserWarning" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">UserWarning</span></code></a></p>
 <p>Rasterio module deprecations</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="rasterio.errors.RasterioError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">RasterioError</code><a class="reference internal" href="_modules/rasterio/errors.html#RasterioError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.RasterioError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></a></p>
 <p>Root exception class</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="rasterio.errors.RasterioIOError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">RasterioIOError</code><a class="reference internal" href="_modules/rasterio/errors.html#RasterioIOError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.RasterioIOError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">OSError</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#OSError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">OSError</span></code></a></p>
 <p>Raised when a dataset cannot be opened using one of the
 registered format drivers.</p>
 </dd></dl>
@@ -299,7 +308,7 @@ registered format drivers.</p>
 <dl class="exception">
 <dt id="rasterio.errors.WindowEvaluationError">
 <em class="property">exception </em><code class="descclassname">rasterio.errors.</code><code class="descname">WindowEvaluationError</code><a class="reference internal" href="_modules/rasterio/errors.html#WindowEvaluationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.errors.WindowEvaluationError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
 <p>Raised when window evaluation fails</p>
 </dd></dl>
 

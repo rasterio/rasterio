@@ -140,6 +140,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -244,7 +245,7 @@ constructor. E.g.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="../rasterio.crs.html#rasterio.crs.CRS.is_epsg_code" title="rasterio.crs.CRS.is_epsg_code"><code class="xref py py-obj docutils literal"><span class="pre">is_epsg_code</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.crs.CRS.is_epsg_code" title="rasterio.crs.CRS.is_epsg_code"><code class="xref py py-obj docutils literal"><span class="pre">is_epsg_code</span></code></a></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_geographic</span></code></td>
@@ -253,7 +254,7 @@ constructor. E.g.</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_projected</span></code></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="../rasterio.crs.html#rasterio.crs.CRS.is_valid" title="rasterio.crs.CRS.is_valid"><code class="xref py py-obj docutils literal"><span class="pre">is_valid</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.crs.CRS.is_valid" title="rasterio.crs.CRS.is_valid"><code class="xref py py-obj docutils literal"><span class="pre">is_valid</span></code></a></td>
 <td>Check if valid geographic or projected coordinate reference system.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">wkt</span></code></td>
@@ -274,10 +275,10 @@ constructor. E.g.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code>()</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="../rasterio.crs.html#rasterio.crs.CRS.from_epsg" title="rasterio.crs.CRS.from_epsg"><code class="xref py py-obj docutils literal"><span class="pre">from_epsg</span></code></a>(code)</td>
+<tr class="row-odd"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.crs.CRS.from_epsg" title="rasterio.crs.CRS.from_epsg"><code class="xref py py-obj docutils literal"><span class="pre">from_epsg</span></code></a>(code)</td>
 <td>Given an integer code, returns an EPSG-like mapping.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="../rasterio.crs.html#rasterio.crs.CRS.from_string" title="rasterio.crs.CRS.from_string"><code class="xref py py-obj docutils literal"><span class="pre">from_string</span></code></a>(prjs)</td>
+<tr class="row-even"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.crs.CRS.from_string" title="rasterio.crs.CRS.from_string"><code class="xref py py-obj docutils literal"><span class="pre">from_string</span></code></a>(prjs)</td>
 <td>Turn a PROJ.4 string into a mapping of parameters.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">from_wkt</span></code>(wkt)</td>
@@ -304,10 +305,10 @@ constructor. E.g.</p>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">setdefault</span></code>((k[,d])&nbsp;-&gt;&nbsp;D.get(k,d),&nbsp;…)</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="../rasterio.crs.html#rasterio.crs.CRS.to_dict" title="rasterio.crs.CRS.to_dict"><code class="xref py py-obj docutils literal"><span class="pre">to_dict</span></code></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.crs.CRS.to_dict" title="rasterio.crs.CRS.to_dict"><code class="xref py py-obj docutils literal"><span class="pre">to_dict</span></code></a>()</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="../rasterio.crs.html#rasterio.crs.CRS.to_string" title="rasterio.crs.CRS.to_string"><code class="xref py py-obj docutils literal"><span class="pre">to_string</span></code></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.crs.CRS.to_string" title="rasterio.crs.CRS.to_string"><code class="xref py py-obj docutils literal"><span class="pre">to_string</span></code></a>()</td>
 <td>Turn a parameter mapping into a more conventional PROJ.4 string.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">update</span></code>(([E,&nbsp;…)</td>

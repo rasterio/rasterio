@@ -23,6 +23,7 @@ Submodules
    rasterio.plot
    rasterio.profiles
    rasterio.sample
+   rasterio.shutil
    rasterio.transform
    rasterio.vfs
    rasterio.vrt

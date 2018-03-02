@@ -141,6 +141,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -226,7 +227,7 @@
 <dl class="class">
 <dt id="rasterio.io.BufferedDatasetWriter">
 <em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">BufferedDatasetWriter</code><a class="reference internal" href="../_modules/rasterio/io.html#BufferedDatasetWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.BufferedDatasetWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.BufferedDatasetWriterBase</span></code>, <a class="reference internal" href="../rasterio.windows.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../rasterio.transform.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.BufferedDatasetWriterBase</span></code>, <a class="reference internal" href="../lib/rasterio.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../lib/rasterio.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
 <p>Maintains data and metadata in a buffer, writing to disk or
 network only when <cite>close()</cite> is called.</p>
 <p>This allows incremental updates to datasets using formats that don’t
@@ -473,7 +474,7 @@ otherwise support updates, such as JPEG.</p>
 <dl class="class">
 <dt id="rasterio.io.DatasetReader">
 <em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">DatasetReader</code><a class="reference internal" href="../_modules/rasterio/io.html#DatasetReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.DatasetReader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.DatasetReaderBase</span></code>, <a class="reference internal" href="../rasterio.windows.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../rasterio.transform.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.DatasetReaderBase</span></code>, <a class="reference internal" href="../lib/rasterio.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../lib/rasterio.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
 <p>An unbuffered data and metadata reader</p>
 <p class="rubric">Attributes</p>
 <table border="1" class="longtable docutils">
@@ -678,7 +679,7 @@ otherwise support updates, such as JPEG.</p>
 <dl class="class">
 <dt id="rasterio.io.DatasetWriter">
 <em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">DatasetWriter</code><a class="reference internal" href="../_modules/rasterio/io.html#DatasetWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.DatasetWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.DatasetWriterBase</span></code>, <a class="reference internal" href="../rasterio.windows.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../rasterio.transform.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">rasterio._io.DatasetWriterBase</span></code>, <a class="reference internal" href="../lib/rasterio.html#rasterio.windows.WindowMethodsMixin" title="rasterio.windows.WindowMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.windows.WindowMethodsMixin</span></code></a>, <a class="reference internal" href="../lib/rasterio.html#rasterio.transform.TransformMethodsMixin" title="rasterio.transform.TransformMethodsMixin"><code class="xref py py-class docutils literal"><span class="pre">rasterio.transform.TransformMethodsMixin</span></code></a></p>
 <p>An unbuffered data and metadata writer. Its methods write data
 directly to disk.</p>
 <p class="rubric">Attributes</p>
@@ -965,7 +966,7 @@ format driver</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
 <td>Return a view on bytes of the file.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="../rasterio.io.html#rasterio.io.MemoryFile.open" title="rasterio.io.MemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>([driver,&nbsp;width,&nbsp;height,&nbsp;count,&nbsp;crs,&nbsp;…])</td>
+<tr class="row-even"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.io.MemoryFile.open" title="rasterio.io.MemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>([driver,&nbsp;width,&nbsp;height,&nbsp;count,&nbsp;crs,&nbsp;…])</td>
 <td>Open the file and return a Rasterio dataset object.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>
@@ -1008,7 +1009,7 @@ mode. Otherwise, the file is opened in ‘w’ mode.</p>
 <dl class="class">
 <dt id="rasterio.io.ZipMemoryFile">
 <em class="property">class </em><code class="descclassname">rasterio.io.</code><code class="descname">ZipMemoryFile</code><span class="sig-paren">(</span><em>file_or_bytes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/io.html#ZipMemoryFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.io.ZipMemoryFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../rasterio.io.html#rasterio.io.MemoryFile" title="rasterio.io.MemoryFile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.MemoryFile</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.io.MemoryFile" title="rasterio.io.MemoryFile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.io.MemoryFile</span></code></a></p>
 <p>A read-only BytesIO-like object backed by an in-memory zip file.</p>
 <p>This allows a zip file containing formatted files to be read
 without I/O.</p>
@@ -1028,7 +1029,7 @@ without I/O.</p>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getbuffer</span></code></td>
 <td>Return a view on bytes of the file.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="../rasterio.io.html#rasterio.io.ZipMemoryFile.open" title="rasterio.io.ZipMemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>(path[,&nbsp;driver])</td>
+<tr class="row-even"><td><a class="reference internal" href="../lib/rasterio.html#rasterio.io.ZipMemoryFile.open" title="rasterio.io.ZipMemoryFile.open"><code class="xref py py-obj docutils literal"><span class="pre">open</span></code></a>(path[,&nbsp;driver])</td>
 <td>Open a dataset within the zipped stream.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code></td>

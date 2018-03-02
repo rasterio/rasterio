@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -200,6 +201,7 @@
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">ceil</span>
 
 <span class="kn">from</span> <span class="nn">affine</span> <span class="k">import</span> <span class="n">Affine</span>
+<span class="kn">from</span> <span class="nn">affine</span> <span class="k">import</span> <span class="n">identity</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">import</span> <span class="nn">rasterio</span>
@@ -207,9 +209,16 @@
 <span class="kn">from</span> <span class="nn">rasterio._warp</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">_transform_geom</span><span class="p">,</span> <span class="n">_reproject</span><span class="p">,</span> <span class="n">_calculate_default_transform</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">rasterio.enums</span> <span class="k">import</span> <span class="n">Resampling</span>
-<span class="kn">from</span> <span class="nn">rasterio.env</span> <span class="k">import</span> <span class="n">ensure_env</span><span class="p">,</span> <span class="n">GDALVersion</span>
+<span class="kn">from</span> <span class="nn">rasterio.env</span> <span class="k">import</span> <span class="n">ensure_env</span><span class="p">,</span> <span class="n">GDALVersion</span><span class="p">,</span> <span class="n">require_gdal_version</span>
 <span class="kn">from</span> <span class="nn">rasterio.errors</span> <span class="k">import</span> <span class="n">GDALBehaviorChangeException</span>
 <span class="kn">from</span> <span class="nn">rasterio.transform</span> <span class="k">import</span> <span class="n">guard_transform</span>
+
+
+<span class="c1"># Gauss (7) is not supported for warp</span>
+<span class="n">SUPPORTED_RESAMPLING</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">Resampling</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">]</span>
+<span class="n">GDAL2_RESAMPLING</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">Resampling</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mi">7</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">12</span><span class="p">]</span>
+<span class="k">if</span> <span class="n">GDALVersion</span><span class="o">.</span><span class="n">runtime</span><span class="p">()</span><span class="o">.</span><span class="n">at_least</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">):</span>
+    <span class="n">SUPPORTED_RESAMPLING</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">GDAL2_RESAMPLING</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../rasterio.warp.html#rasterio.warp.transform">[docs]</a><span class="nd">@ensure_env</span>
@@ -245,6 +254,10 @@
 
 
 <div class="viewcode-block" id="transform_geom"><a class="viewcode-back" href="../../rasterio.warp.html#rasterio.warp.transform_geom">[docs]</a><span class="nd">@ensure_env</span>
+<span class="nd">@require_gdal_version</span><span class="p">(</span><span class="s1">&#39;2.1&#39;</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;antimeridian_cutting&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+                      <span class="n">is_max_version</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Antimeridian cutting is always enabled on &quot;</span>
+                             <span class="s2">&quot;GDAL &gt;= 2.2&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">transform_geom</span><span class="p">(</span>
         <span class="n">src_crs</span><span class="p">,</span>
         <span class="n">dst_crs</span><span class="p">,</span>
@@ -280,11 +293,6 @@
 <span class="sd">    out: GeoJSON like dict object</span>
 <span class="sd">        Transformed geometry in GeoJSON dict format</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="n">GDALVersion</span><span class="o">.</span><span class="n">runtime</span><span class="p">()</span><span class="o">.</span><span class="n">at_least</span><span class="p">(</span><span class="s1">&#39;2.2&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">antimeridian_cutting</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">GDALBehaviorChangeException</span><span class="p">(</span>
-            <span class="s2">&quot;Antimeridian cutting is always enabled on GDAL 2.2.0 or &quot;</span>
-            <span class="s2">&quot;newer, which could produce a different geometry than expected.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">_transform_geom</span><span class="p">(</span>
         <span class="n">src_crs</span><span class="p">,</span>
@@ -362,6 +370,7 @@
 
 
 <div class="viewcode-block" id="reproject"><a class="viewcode-back" href="../../rasterio.warp.html#rasterio.warp.reproject">[docs]</a><span class="nd">@ensure_env</span>
+<span class="nd">@require_gdal_version</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;resampling&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">GDAL2_RESAMPLING</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">reproject</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">src_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gcps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">src_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">dst_nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span>
@@ -423,7 +432,14 @@
 <span class="sd">            Resampling.cubic_spline,</span>
 <span class="sd">            Resampling.lanczos,</span>
 <span class="sd">            Resampling.average,</span>
-<span class="sd">            Resampling.mode</span>
+<span class="sd">            Resampling.mode,</span>
+<span class="sd">            Resampling.max (GDAL &gt;= 2.2),</span>
+<span class="sd">            Resampling.min (GDAL &gt;= 2.2),</span>
+<span class="sd">            Resampling.med (GDAL &gt;= 2.2),</span>
+<span class="sd">            Resampling.q1 (GDAL &gt;= 2.2),</span>
+<span class="sd">            Resampling.q3 (GDAL &gt;= 2.2)</span>
+<span class="sd">        An exception will be raised for a method not supported by the running</span>
+<span class="sd">        version of GDAL.</span>
 <span class="sd">    init_dest_nodata: bool</span>
 <span class="sd">        Flag to specify initialization of nodata in destination;</span>
 <span class="sd">        prevents overwrite of previous warps. Defaults to True.</span>
@@ -441,22 +457,30 @@
 
     <span class="c1"># Resampling guard.</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">Resampling</span><span class="p">(</span><span class="n">resampling</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">resampling</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">resampling</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>  <span class="c1"># gauss resampling is not supported</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="n">Resampling</span><span class="p">(</span><span class="n">resampling</span><span class="p">)</span>
+
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;resampling must be one of: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="s1">&#39;Resampling.</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span>
-                 <span class="n">Resampling</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;gauss&#39;</span><span class="p">])))</span>
+                <span class="p">[</span><span class="s1">&#39;Resampling.</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span>
+                 <span class="n">SUPPORTED_RESAMPLING</span><span class="p">])))</span>
 
     <span class="c1"># If working with identity transform, assume it is crs-less data</span>
     <span class="c1"># and that translating the matrix very slightly will avoid #674</span>
     <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-100</span>
-    <span class="k">if</span> <span class="n">src_transform</span> <span class="ow">and</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">src_transform</span><span class="p">)</span><span class="o">.</span><span class="n">is_identity</span><span class="p">:</span>
-        <span class="n">src_transform</span> <span class="o">=</span> <span class="n">src_transform</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">dst_transform</span> <span class="ow">and</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">dst_transform</span><span class="p">)</span><span class="o">.</span><span class="n">is_identity</span><span class="p">:</span>
-        <span class="n">dst_transform</span> <span class="o">=</span> <span class="n">dst_transform</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">src_transform</span><span class="p">:</span>
+        <span class="n">src_transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">src_transform</span><span class="p">)</span>
+        <span class="c1"># if src_transform is like `identity` with positive or negative `e`,</span>
+        <span class="c1"># translate matrix very slightly to avoid #674 and #1272.</span>
+        <span class="k">if</span> <span class="n">src_transform</span><span class="o">.</span><span class="n">almost_equals</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span> <span class="ow">or</span> <span class="n">src_transform</span><span class="o">.</span><span class="n">almost_equals</span><span class="p">(</span><span class="n">Affine</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">src_transform</span> <span class="o">=</span> <span class="n">src_transform</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dst_transform</span><span class="p">:</span>
+        <span class="n">dst_transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">dst_transform</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dst_transform</span><span class="o">.</span><span class="n">almost_equals</span><span class="p">(</span><span class="n">identity</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dst_transform</span><span class="o">.</span><span class="n">almost_equals</span><span class="p">(</span><span class="n">Affine</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">dst_transform</span> <span class="o">=</span> <span class="n">dst_transform</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">src_transform</span><span class="p">:</span>
         <span class="n">src_transform</span> <span class="o">=</span> <span class="n">guard_transform</span><span class="p">(</span><span class="n">src_transform</span><span class="p">)</span><span class="o">.</span><span class="n">to_gdal</span><span class="p">()</span>

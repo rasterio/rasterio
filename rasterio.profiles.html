@@ -113,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -242,7 +243,7 @@
 </table>
 <dl class="attribute">
 <dt id="rasterio.profiles.DefaultGTiffProfile.defaults">
-<code class="descname">defaults</code><em class="property"> = {'driver': 'GTiff', 'interleave': 'band', 'tiled': True, 'blockxsize': 256, 'blockysize': 256, 'compress': 'lzw', 'nodata': 0, 'dtype': 'uint8'}</em><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile.defaults" title="Permalink to this definition">¶</a></dt>
+<code class="descname">defaults</code><em class="property"> = {'interleave': 'band', 'tiled': True, 'dtype': 'uint8', 'blockxsize': 256, 'driver': 'GTiff', 'nodata': 0, 'compress': 'lzw', 'blockysize': 256}</em><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile.defaults" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -250,7 +251,7 @@
 <dl class="class">
 <dt id="rasterio.profiles.Profile">
 <em class="property">class </em><code class="descclassname">rasterio.profiles.</code><code class="descname">Profile</code><span class="sig-paren">(</span><em>data={}</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rasterio/profiles.html#Profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.profiles.Profile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">collections.UserDict</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/collections.html#collections.UserDict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">collections.UserDict</span></code></a></p>
 <p>Base class for Rasterio dataset profiles.</p>
 <p>Subclasses will declare driver-specific creation options.</p>
 <p class="rubric">Methods</p>

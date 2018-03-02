@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -223,6 +224,11 @@
 
 <span class="sd">    The subset of &#39;nearest&#39;, &#39;cubic&#39;, &#39;average&#39;, &#39;mode&#39;, and &#39;gauss&#39;</span>
 <span class="sd">    are available in making dataset overviews.</span>
+
+<span class="sd">    &#39;max&#39;, &#39;min&#39;, &#39;med&#39;, &#39;q1&#39;, &#39;q3&#39; are only supported in GDAL &gt;= 2.0.0.</span>
+
+<span class="sd">    &#39;nearest&#39;, &#39;bilinear&#39;, &#39;cubic&#39;, &#39;cubic_spline&#39;, &#39;lanczos&#39;, &#39;average&#39;, &#39;mode&#39;</span>
+<span class="sd">    are always available (GDAL &gt;= 1.10).</span>
 
 <span class="sd">    Note: &#39;gauss&#39; is not available to the functions in rio.warp.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

@@ -1,0 +1,659 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rasterio.rio package &mdash; rasterio 1.0a12 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="rasterio 1.0a12 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> rasterio
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0a12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../switch.html">Switching from GDAL’s Python bindings</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../topics/color.html">Color</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/concurrency.html">Concurrent processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/errors.html">Error Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/features.html">Vector Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/fillnodata.html">Filling nodata areas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/georeferencing.html">Georeferencing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/image_options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/image_processing.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/masking-by-shapefile.html">Masking a raster using a shapefile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/masks.html">Nodata Masks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/memory-files.html">In-Memory Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/migrating-to-v1.html">Migrating to Rasterio 1.0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/overviews.html">Overviews</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/reproject.html">Reprojection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">rasterio package</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Users Guide</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rasterio</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>rasterio.rio package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/lib/rasterio.rio.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rasterio-rio-package">
+<h1>rasterio.rio package<a class="headerlink" href="#rasterio-rio-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-rasterio.rio.blocks">
+<span id="rasterio-rio-blocks-module"></span><h2>rasterio.rio.blocks module<a class="headerlink" href="#module-rasterio.rio.blocks" title="Permalink to this headline">¶</a></h2>
+<p>$ rio blocks</p>
+</div>
+<div class="section" id="module-rasterio.rio.bounds">
+<span id="rasterio-rio-bounds-module"></span><h2>rasterio.rio.bounds module<a class="headerlink" href="#module-rasterio.rio.bounds" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-rasterio.rio.calc">
+<span id="rasterio-rio-calc-module"></span><h2>rasterio.rio.calc module<a class="headerlink" href="#module-rasterio.rio.calc" title="Permalink to this headline">¶</a></h2>
+<p>$ rio calc</p>
+<dl class="function">
+<dt id="rasterio.rio.calc.get_bands">
+<code class="descclassname">rasterio.rio.calc.</code><code class="descname">get_bands</code><span class="sig-paren">(</span><em>inputs</em>, <em>d</em>, <em>i=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/calc.html#get_bands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.calc.get_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a rasterio.Band object from calc’s inputs</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.calc.read_array">
+<code class="descclassname">rasterio.rio.calc.</code><code class="descname">read_array</code><span class="sig-paren">(</span><em>ix</em>, <em>subix=None</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/calc.html#read_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.calc.read_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the type of a read array</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.clip">
+<span id="rasterio-rio-clip-module"></span><h2>rasterio.rio.clip module<a class="headerlink" href="#module-rasterio.rio.clip" title="Permalink to this headline">¶</a></h2>
+<p>File translation command</p>
+</div>
+<div class="section" id="module-rasterio.rio.convert">
+<span id="rasterio-rio-convert-module"></span><h2>rasterio.rio.convert module<a class="headerlink" href="#module-rasterio.rio.convert" title="Permalink to this headline">¶</a></h2>
+<p>File translation command</p>
+</div>
+<div class="section" id="module-rasterio.rio.edit_info">
+<span id="rasterio-rio-edit-info-module"></span><h2>rasterio.rio.edit_info module<a class="headerlink" href="#module-rasterio.rio.edit_info" title="Permalink to this headline">¶</a></h2>
+<p>Fetch and edit raster dataset metadata from the command line.</p>
+<dl class="function">
+<dt id="rasterio.rio.edit_info.all_handler">
+<code class="descclassname">rasterio.rio.edit_info.</code><code class="descname">all_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/edit_info.html#all_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.edit_info.all_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get tags from a template file or command line.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.edit_info.colorinterp_handler">
+<code class="descclassname">rasterio.rio.edit_info.</code><code class="descname">colorinterp_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/edit_info.html#colorinterp_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.edit_info.colorinterp_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate a string like <code class="docutils literal"><span class="pre">red,green,blue,alpha</span></code> and convert to
+a tuple.  Also handle <code class="docutils literal"><span class="pre">RGB</span></code> and <code class="docutils literal"><span class="pre">RGBA</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.edit_info.crs_handler">
+<code class="descclassname">rasterio.rio.edit_info.</code><code class="descname">crs_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/edit_info.html#crs_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.edit_info.crs_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get crs value from a template file or command line.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.edit_info.tags_handler">
+<code class="descclassname">rasterio.rio.edit_info.</code><code class="descname">tags_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/edit_info.html#tags_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.edit_info.tags_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get tags from a template file or command line.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.edit_info.transform_handler">
+<code class="descclassname">rasterio.rio.edit_info.</code><code class="descname">transform_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/edit_info.html#transform_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.edit_info.transform_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transform value from a template file or command line.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.env">
+<span id="rasterio-rio-env-module"></span><h2>rasterio.rio.env module<a class="headerlink" href="#module-rasterio.rio.env" title="Permalink to this headline">¶</a></h2>
+<p>Fetch and edit raster dataset metadata from the command line.</p>
+</div>
+<div class="section" id="module-rasterio.rio.gcps">
+<span id="rasterio-rio-gcps-module"></span><h2>rasterio.rio.gcps module<a class="headerlink" href="#module-rasterio.rio.gcps" title="Permalink to this headline">¶</a></h2>
+<p>Command access to dataset metadata, stats, and more.</p>
+</div>
+<div class="section" id="module-rasterio.rio.helpers">
+<span id="rasterio-rio-helpers-module"></span><h2>rasterio.rio.helpers module<a class="headerlink" href="#module-rasterio.rio.helpers" title="Permalink to this headline">¶</a></h2>
+<p>Helper objects used by multiple CLI commands.</p>
+<dl class="function">
+<dt id="rasterio.rio.helpers.coords">
+<code class="descclassname">rasterio.rio.helpers.</code><code class="descname">coords</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/helpers.html#coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.helpers.coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all coordinate coordinate tuples from a geometry or feature.
+From python-geojson package.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.helpers.resolve_inout">
+<code class="descclassname">rasterio.rio.helpers.</code><code class="descname">resolve_inout</code><span class="sig-paren">(</span><em>input=None</em>, <em>output=None</em>, <em>files=None</em>, <em>force_overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/helpers.html#resolve_inout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.helpers.resolve_inout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves inputs and outputs from standard args and options.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input</strong> – a single input filename, optional.</li>
+<li><strong>output</strong> – a single output filename, optional.</li>
+<li><strong>files</strong> – a sequence of filenames in which the last is the
+output filename.</li>
+<li><strong>force_overwrite</strong> – whether to force overwriting the output
+file, bool.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the resolved output filename and input filenames as a
+tuple of length 2.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If provided, the <a href="#id1"><span class="problematic" id="id2">:param:`output`</span></a> file may be overwritten. An output
+file extracted from <a href="#id3"><span class="problematic" id="id4">:param:`files`</span></a> will not be overwritten unless
+<a href="#id5"><span class="problematic" id="id6">:param:`force_overwrite`</span></a> is <cite>True</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.helpers.to_lower">
+<code class="descclassname">rasterio.rio.helpers.</code><code class="descname">to_lower</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/helpers.html#to_lower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.helpers.to_lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Click callback, converts values to lowercase.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.helpers.write_features">
+<code class="descclassname">rasterio.rio.helpers.</code><code class="descname">write_features</code><span class="sig-paren">(</span><em>fobj</em>, <em>collection</em>, <em>sequence=False</em>, <em>geojson_type='feature'</em>, <em>use_rs=False</em>, <em>**dump_kwds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/helpers.html#write_features"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.helpers.write_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read an iterator of (feat, bbox) pairs and write to file using
+the selected modes.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.info">
+<span id="rasterio-rio-info-module"></span><h2>rasterio.rio.info module<a class="headerlink" href="#module-rasterio.rio.info" title="Permalink to this headline">¶</a></h2>
+<p>Command access to dataset metadata, stats, and more.</p>
+</div>
+<div class="section" id="module-rasterio.rio.insp">
+<span id="rasterio-rio-insp-module"></span><h2>rasterio.rio.insp module<a class="headerlink" href="#module-rasterio.rio.insp" title="Permalink to this headline">¶</a></h2>
+<p>Fetch and edit raster dataset metadata from the command line.</p>
+<dl class="class">
+<dt id="rasterio.rio.insp.Stats">
+<em class="property">class </em><code class="descclassname">rasterio.rio.insp.</code><code class="descname">Stats</code><span class="sig-paren">(</span><em>min</em>, <em>max</em>, <em>mean</em><span class="sig-paren">)</span><a class="headerlink" href="#rasterio.rio.insp.Stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></a></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.rio.insp.Stats.max" title="rasterio.rio.insp.Stats.max"><code class="xref py py-obj docutils literal"><span class="pre">max</span></code></a></td>
+<td>Alias for field number 1</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#rasterio.rio.insp.Stats.mean" title="rasterio.rio.insp.Stats.mean"><code class="xref py py-obj docutils literal"><span class="pre">mean</span></code></a></td>
+<td>Alias for field number 2</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#rasterio.rio.insp.Stats.min" title="rasterio.rio.insp.Stats.min"><code class="xref py py-obj docutils literal"><span class="pre">min</span></code></a></td>
+<td>Alias for field number 0</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(…)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;…)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="rasterio.rio.insp.Stats.max">
+<code class="descname">max</code><a class="headerlink" href="#rasterio.rio.insp.Stats.max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rasterio.rio.insp.Stats.mean">
+<code class="descname">mean</code><a class="headerlink" href="#rasterio.rio.insp.Stats.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rasterio.rio.insp.Stats.min">
+<code class="descname">min</code><a class="headerlink" href="#rasterio.rio.insp.Stats.min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.insp.main">
+<code class="descclassname">rasterio.rio.insp.</code><code class="descname">main</code><span class="sig-paren">(</span><em>banner</em>, <em>dataset</em>, <em>alt_interpreter=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/insp.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.insp.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main entry point for use with python interpreter.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.insp.stats">
+<code class="descclassname">rasterio.rio.insp.</code><code class="descname">stats</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/insp.html#stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.insp.stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tuple with raster min, max, and mean.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.main">
+<span id="rasterio-rio-main-module"></span><h2>rasterio.rio.main module<a class="headerlink" href="#module-rasterio.rio.main" title="Permalink to this headline">¶</a></h2>
+<p>Main command group for Rasterio’s CLI.</p>
+<p>Subcommands developed as a part of the Rasterio package have their own
+modules under <code class="docutils literal"><span class="pre">rasterio.rio</span></code> (like <code class="docutils literal"><span class="pre">rasterio/rio/info.py</span></code>) and are
+registered in the ‘rasterio.rio_commands’ entry point group in
+Rasterio’s <code class="docutils literal"><span class="pre">setup.py</span></code>:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>entry_points=’‘’</dt>
+<dd><p class="first">[console_scripts]
+rio=rasterio.rio.main:main_group</p>
+<p class="last">[rasterio.rio_commands]
+bounds=rasterio.rio.bounds:bounds
+calc=rasterio.rio.calc:calc
+…</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Users may create their own <code class="docutils literal"><span class="pre">rio</span></code> subcommands by writing modules that
+register entry points in Rasterio’s ‘rasterio.rio_plugins’ group. See
+for example <a class="reference external" href="https://github.com/sgillies/rio-plugin-example">https://github.com/sgillies/rio-plugin-example</a>, which has
+been published to PyPI as <code class="docutils literal"><span class="pre">rio-metasay</span></code>.</p>
+<p>There’s no advantage to making a <code class="docutils literal"><span class="pre">rio</span></code> subcommand which doesn’t
+import rasterio. But if you are using rasterio, you may profit from
+Rasterio’s CLI infrastructure and the network of existing commands.
+Please add yours to the registry</p>
+<blockquote>
+<div><a class="reference external" href="https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry">https://github.com/mapbox/rasterio/wiki/Rio-plugin-registry</a></div></blockquote>
+<p>so that other <code class="docutils literal"><span class="pre">rio</span></code> users may find it.</p>
+<dl class="function">
+<dt id="rasterio.rio.main.configure_logging">
+<code class="descclassname">rasterio.rio.main.</code><code class="descname">configure_logging</code><span class="sig-paren">(</span><em>verbosity</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/main.html#configure_logging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.main.configure_logging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.main.gdal_version_cb">
+<code class="descclassname">rasterio.rio.main.</code><code class="descname">gdal_version_cb</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/main.html#gdal_version_cb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.main.gdal_version_cb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.mask">
+<span id="rasterio-rio-mask-module"></span><h2>rasterio.rio.mask module<a class="headerlink" href="#module-rasterio.rio.mask" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-rasterio.rio.merge">
+<span id="rasterio-rio-merge-module"></span><h2>rasterio.rio.merge module<a class="headerlink" href="#module-rasterio.rio.merge" title="Permalink to this headline">¶</a></h2>
+<p>$ rio merge</p>
+</div>
+<div class="section" id="module-rasterio.rio.options">
+<span id="rasterio-rio-options-module"></span><h2>rasterio.rio.options module<a class="headerlink" href="#module-rasterio.rio.options" title="Permalink to this headline">¶</a></h2>
+<p>Registry of common rio CLI options.  See cligj for more options.</p>
+<p>-a, –all: Use all pixels touched by features.  In rio-mask, rio-rasterize
+–as-mask/–not-as-mask: interpret band as mask or not.  In rio-shapes
+–band/–mask: use band or mask.  In rio-shapes
+–bbox:
+-b, –bidx: band index(es) (singular or multiple value versions).</p>
+<blockquote>
+<div>In rio-info, rio-sample, rio-shapes, rio-stack (different usages)</div></blockquote>
+<dl class="docutils">
+<dt>–bounds: bounds in world coordinates.</dt>
+<dd>In rio-info, rio-rasterize (different usages)</dd>
+</dl>
+<p>–count: count of bands.  In rio-info
+–crop: Crop raster to extent of features.  In rio-mask
+–crs: CRS of input raster.  In rio-info
+–default-value: default for rasterized pixels.  In rio-rasterize
+–dimensions: Output width, height.  In rio-rasterize
+–dst-crs: destination CRS.  In rio-transform
+–fill: fill value for pixels not covered by features.  In rio-rasterize
+–formats: list available formats.  In rio-info
+–height: height of raster.  In rio-info
+-i, –invert: Invert mask created from features: In rio-mask
+-j, –geojson-mask: GeoJSON for masking raster.  In rio-mask
+–lnglat: geograhpic coordinates of center of raster.  In rio-info
+–masked/–not-masked: read masked data from source file.</p>
+<blockquote>
+<div>In rio-calc, rio-info</div></blockquote>
+<p>-m, –mode: output file mode (r, r+).  In rio-insp
+–name: input file name alias.  In rio-calc
+–nodata: nodata value.  In rio-info, rio-merge (different usages)
+–photometric: photometric interpretation.  In rio-stack
+–property: GeoJSON property to use as values for rasterize.  In rio-rasterize
+-r, –res: output resolution.</p>
+<blockquote>
+<div>In rio-info, rio-rasterize (different usages.  TODO: try to combine
+usages, prefer rio-rasterize version)</div></blockquote>
+<p>–sampling: Inverse of sampling fraction.  In rio-shapes
+–shape: shape (width, height) of band.  In rio-info
+–src-crs: source CRS.</p>
+<blockquote>
+<div>In rio-insp, rio-rasterize (different usages.  TODO: consolidate usages)</div></blockquote>
+<p>–stats: print raster stats.  In rio-inf
+-t, –dtype: data type.  In rio-calc, rio-info (different usages)
+–width: width of raster.  In rio-info
+–with-nodata/–without-nodata: include nodata regions or not.  In rio-shapes.
+-v, –tell-me-more, –verbose
+–vfs: virtual file system.</p>
+<dl class="class">
+<dt id="rasterio.rio.options.IgnoreOptionMarker">
+<em class="property">class </em><code class="descclassname">rasterio.rio.options.</code><code class="descname">IgnoreOptionMarker</code><a class="reference internal" href="../_modules/rasterio/rio/options.html#IgnoreOptionMarker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.IgnoreOptionMarker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>A marker for an option that is to be ignored.</p>
+<p>For use in the case where <cite>None</cite> is a meaningful option value,
+such as for nodata where <cite>None</cite> means “unset the nodata value.”</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.abspath_forward_slashes">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">abspath_forward_slashes</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#abspath_forward_slashes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.abspath_forward_slashes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return forward-slashed version of os.path.abspath</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.bounds_handler">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">bounds_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#bounds_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.bounds_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle different forms of bounds.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.edit_nodata_handler">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">edit_nodata_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#edit_nodata_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.edit_nodata_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get nodata value from a template file or command line.</p>
+<p>Expected values are ‘like’, ‘null’, a numeric value, ‘nan’, or
+IgnoreOption. Anything else should raise BadParameter.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.file_in_handler">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">file_in_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#file_in_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.file_in_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize ordinary filesystem and VFS paths</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.from_like_context">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">from_like_context</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#from_like_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.from_like_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value for an option from the context if the option
+or <cite>–all</cite> is given, else return None.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.like_handler">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">like_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#like_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.like_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy a dataset’s meta property to the command context for access
+from other callbacks.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rasterio.rio.options.nodata_handler">
+<code class="descclassname">rasterio.rio.options.</code><code class="descname">nodata_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/options.html#nodata_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.options.nodata_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a float or None</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.overview">
+<span id="rasterio-rio-overview-module"></span><h2>rasterio.rio.overview module<a class="headerlink" href="#module-rasterio.rio.overview" title="Permalink to this headline">¶</a></h2>
+<p>Manage overviews of a dataset.</p>
+<dl class="function">
+<dt id="rasterio.rio.overview.build_handler">
+<code class="descclassname">rasterio.rio.overview.</code><code class="descname">build_handler</code><span class="sig-paren">(</span><em>ctx</em>, <em>param</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/rio/overview.html#build_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.rio.overview.build_handler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-rasterio.rio.rasterize">
+<span id="rasterio-rio-rasterize-module"></span><h2>rasterio.rio.rasterize module<a class="headerlink" href="#module-rasterio.rio.rasterize" title="Permalink to this headline">¶</a></h2>
+<p>$ rio rasterize</p>
+</div>
+<div class="section" id="module-rasterio.rio.rm">
+<span id="rasterio-rio-rm-module"></span><h2>rasterio.rio.rm module<a class="headerlink" href="#module-rasterio.rio.rm" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">$</span> <span class="pre">rio</span> <span class="pre">rm</span></code></p>
+</div>
+<div class="section" id="module-rasterio.rio.sample">
+<span id="rasterio-rio-sample-module"></span><h2>rasterio.rio.sample module<a class="headerlink" href="#module-rasterio.rio.sample" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-rasterio.rio.shapes">
+<span id="rasterio-rio-shapes-module"></span><h2>rasterio.rio.shapes module<a class="headerlink" href="#module-rasterio.rio.shapes" title="Permalink to this headline">¶</a></h2>
+<p>$ rio shapes</p>
+</div>
+<div class="section" id="module-rasterio.rio.stack">
+<span id="rasterio-rio-stack-module"></span><h2>rasterio.rio.stack module<a class="headerlink" href="#module-rasterio.rio.stack" title="Permalink to this headline">¶</a></h2>
+<p>$ rio stack</p>
+</div>
+<div class="section" id="module-rasterio.rio.transform">
+<span id="rasterio-rio-transform-module"></span><h2>rasterio.rio.transform module<a class="headerlink" href="#module-rasterio.rio.transform" title="Permalink to this headline">¶</a></h2>
+<p>Fetch and edit raster dataset metadata from the command line.</p>
+</div>
+<div class="section" id="module-rasterio.rio.warp">
+<span id="rasterio-rio-warp-module"></span><h2>rasterio.rio.warp module<a class="headerlink" href="#module-rasterio.rio.warp" title="Permalink to this headline">¶</a></h2>
+<p>$ rio warp</p>
+</div>
+<div class="section" id="module-rasterio.rio">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-rasterio.rio" title="Permalink to this headline">¶</a></h2>
+<p>Rasterio commandline interface components</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Mapbox.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0a12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

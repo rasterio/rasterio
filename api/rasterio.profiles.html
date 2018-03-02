@@ -141,6 +141,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rasterio.sample.html">rasterio.sample module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.transform.html">rasterio.transform module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.vfs.html">rasterio.vfs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rasterio.vrt.html">rasterio.vrt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.warp.html">rasterio.warp module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rasterio.windows.html">rasterio.windows module</a></li>
 </ul>
@@ -225,7 +226,7 @@
 <dl class="class">
 <dt id="rasterio.profiles.DefaultGTiffProfile">
 <em class="property">class </em><code class="descclassname">rasterio.profiles.</code><code class="descname">DefaultGTiffProfile</code><span class="sig-paren">(</span><em>data={}</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rasterio/profiles.html#DefaultGTiffProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="../rasterio.profiles.html#rasterio.profiles.Profile" title="rasterio.profiles.Profile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.profiles.Profile</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="../lib/rasterio.html#rasterio.profiles.Profile" title="rasterio.profiles.Profile"><code class="xref py py-class docutils literal"><span class="pre">rasterio.profiles.Profile</span></code></a></p>
 <p>Tiled, band-interleaved, LZW-compressed, 8-bit GTiff.</p>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
@@ -274,7 +275,7 @@
 </table>
 <dl class="attribute">
 <dt id="rasterio.profiles.DefaultGTiffProfile.defaults">
-<code class="descname">defaults</code><em class="property"> = {'driver': 'GTiff', 'interleave': 'band', 'tiled': True, 'blockxsize': 256, 'blockysize': 256, 'compress': 'lzw', 'nodata': 0, 'dtype': 'uint8'}</em><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile.defaults" title="Permalink to this definition">¶</a></dt>
+<code class="descname">defaults</code><em class="property"> = {'nodata': 0, 'blockysize': 256, 'tiled': True, 'compress': 'lzw', 'dtype': 'uint8', 'driver': 'GTiff', 'interleave': 'band', 'blockxsize': 256}</em><a class="headerlink" href="#rasterio.profiles.DefaultGTiffProfile.defaults" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

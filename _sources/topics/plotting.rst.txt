@@ -23,7 +23,7 @@ displaying multi-band images as RGB and labeling the axes with proper geo-refere
 
 The first argument to ``show`` represent the data source to be plotted. This can be one of
 
-   * A ``RasterReader`` source instance
+   * A dataset object opened in 'r' mode
    * A single band of a source, represented by a ``(src, band_index)`` tuple
    * A numpy ndarray, 2D or 3D. If the array is 3D, ensure that it is in rasterio band order.
 

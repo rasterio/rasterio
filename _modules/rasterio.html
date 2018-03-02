@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../topics/resampling.html">Resampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/tags.html">Tagging datasets and bands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html">Virtual Warping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../topics/virtual-warping.html#normalizing-data-to-a-consistent-grid">Normalizing Data to a Consistent Grid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/vsi.html">Virtual Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../topics/windowed-rw.html">Windowed reading and writing</a></li>
 </ul>
@@ -260,7 +261,8 @@
 
 
 <div class="viewcode-block" id="open"><a class="viewcode-back" href="../rasterio.html#rasterio.open">[docs]</a><span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-         <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+         <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sharing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+         <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Open a dataset for reading or writing.</span>
 
 <span class="sd">    The dataset may be located in a local file, in a resource located by</span>
@@ -306,6 +308,9 @@
 <span class="sd">    nodata : int, float, or nan; optional</span>
 <span class="sd">        Defines the pixel value to be interpreted as not valid data.</span>
 <span class="sd">        Required in &#39;w&#39; mode, it is ignored in &#39;r&#39; or &#39;r+&#39; mode.</span>
+<span class="sd">    sharing : bool</span>
+<span class="sd">        A flag that allows sharing of dataset handles. Default is</span>
+<span class="sd">        `True`. Should be set to `False` in a multithreaded:w program.</span>
 <span class="sd">    kwargs : optional</span>
 <span class="sd">        These are passed to format drivers as directives for creating</span>
 <span class="sd">        or interpreting datasets. For example: in &#39;w&#39; a `tiled=True`</span>
