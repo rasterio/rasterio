@@ -109,8 +109,8 @@ def shapes(
     geographic = True if projection == 'geographic' else False
 
     try:
-        with rasterio.open(input) as src:
-            with ctx.obj['env'] as env:
+        with ctx.obj['env'] as env:
+            with rasterio.open(input) as src:
                 write_features(
                     stdout,
                     feature_gen(
