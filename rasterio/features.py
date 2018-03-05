@@ -602,17 +602,6 @@ def dataset_features(
         if not with_nodata:
             msk = tmp
 
-    # Transform the raster bounds.
-    bounds = src.bounds
-    xs = [bounds[0], bounds[2]]
-    ys = [bounds[1], bounds[3]]
-    if geographic:
-        xs, ys = warp.transform(
-            src.crs, CRS({'init': 'epsg:4326'}), xs, ys)
-    if precision >= 0:
-        xs = [round(v, precision) for v in xs]
-        ys = [round(v, precision) for v in ys]
-
     # Prepare keyword arguments for shapes().
     kwargs = {'transform': transform}
     if not with_nodata:
@@ -632,7 +621,8 @@ def dataset_features(
             'type': 'Feature',
             'id': "{0}:{1}".format(src_basename, i),
             'properties': {
-                'val': val, 'filename': src_basename
+                'val': val,
+                'filename': src_basename
             },
             'bbox': [min(xs), min(ys), max(xs), max(ys)],
             'geometry': g
