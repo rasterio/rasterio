@@ -19,6 +19,7 @@ from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
 from rasterio.windows import Window
+from rasterio import warp
 
 log = logging.getLogger(__name__)
 
@@ -534,7 +535,6 @@ def dataset_features(
     ------
     GeoJSON-like Feature dictionaries for shapes found in the given band
     """
-
     if bidx is not None and bidx > src.count:
         raise ValueError('bidx is out of range for raster')
 
@@ -591,7 +591,7 @@ def dataset_features(
                 dtype=src.dtypes[src.indexes.index(bidx)])
             img = src.read(bidx, img, masked=False)
 
-    # If --as-mask option was given, convert the image
+    # If as_mask option was given, convert the image
     # to a binary image. This reduces the number of shape
     # categories to 2 and likely reduces the number of
     # shapes.
@@ -607,7 +607,7 @@ def dataset_features(
     xs = [bounds[0], bounds[2]]
     ys = [bounds[1], bounds[3]]
     if geographic:
-        xs, ys = rasterio.warp.transform(
+        xs, ys = warp.transform(
             src.crs, CRS({'init': 'epsg:4326'}), xs, ys)
     if precision >= 0:
         xs = [round(v, precision) for v in xs]
@@ -624,7 +624,7 @@ def dataset_features(
     for i, (g, val) in enumerate(
             rasterio.features.shapes(img, **kwargs)):
         if geographic:
-            g = rasterio.warp.transform_geom(
+            g = warp.transform_geom(
                 src.crs, 'EPSG:4326', g,
                 antimeridian_cutting=True, precision=precision)
         xs, ys = zip(*coords(g))
