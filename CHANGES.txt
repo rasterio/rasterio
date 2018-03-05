@@ -4,6 +4,11 @@ Changes
 Next
 ----
 
+New features:
+
+- ``rasterio.features.dataset_features()`` has been extracted from
+  rio-shapes (#1282, #1286).
+
 Bug fixes:
 
 - Rotated datasets are now masked properly (#1240, #1278).
