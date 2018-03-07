@@ -16,7 +16,7 @@ provides a Python API based on N-D arrays.
 
 Rasterio supports Python 2.7 and 3.3-3.6 on Linux and Mac OS X.
 
-Read the documentation for more details: https://mapbox.github.io/rasterio/.
+Read the documentation for more details: https://rasterio.readthedocs.io/en/latest/.
 
 Example
 =======
