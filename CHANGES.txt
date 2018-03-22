@@ -4,6 +4,12 @@ Changes
 Next
 ----
 
+Breaking changes:
+
+- Whether to print GeoJSON feature sequences or a GeoJSON feature collection
+  from rio-shapes is now controlled by a ``--sequence/--collection`` option.
+  A sequence is now the default (#927).
+
 New features:
 
 - ``rasterio.features.dataset_features()`` has been extracted from
