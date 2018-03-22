@@ -13,7 +13,7 @@ from rasterio.rio import options
 from rasterio.features import dataset_features
 from rasterio.rio.helpers import write_features
 
-logger = logging.getLogger('rio')
+logger = logging.getLogger(__name__)
 
 
 # Common options used below
@@ -42,7 +42,7 @@ all_touched_opt = click.option(
 @cligj.compact_opt
 @cligj.projection_geographic_opt
 @cligj.projection_projected_opt
-@cligj.sequence_opt
+@options.sequence_opt
 @cligj.use_rs_opt
 @cligj.geojson_type_feature_opt(True)
 @cligj.geojson_type_bbox_opt(False)

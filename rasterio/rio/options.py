@@ -170,7 +170,7 @@ def nodata_handler(ctx, param, value):
     else:
         try:
             return float(value)
-        except:
+        except (TypeError, ValueError):
             raise click.BadParameter(
                 "{!r} is not a number".format(value),
                 param=param, param_hint='nodata')
@@ -198,7 +198,7 @@ def bounds_handler(ctx, param, value):
             retval = tuple(float(x) for x in re.split(r'[,\s]+', value))
             assert len(retval) == 4
             return retval
-        except:
+        except Exception:
             raise click.BadParameter(
                 "{0!r} is not a valid bounding box representation".format(
                     value))
@@ -322,3 +322,11 @@ all_touched_opt = click.option(
     help='Use all pixels touched by features, otherwise (default) use only '
          'pixels whose center is within the polygon or that are selected by '
          'Bresenhams line algorithm')
+
+# Feature collection or feature sequence switch.
+sequence_opt = click.option(
+    '--sequence/--collection',
+    default=True,
+    help="Write a LF-delimited sequence of texts containing individual "
+         "objects (the default) or write a single JSON text containing a "
+         "feature collection object.")
