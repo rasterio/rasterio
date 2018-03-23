@@ -6,6 +6,13 @@ from collections import namedtuple
 from contextlib import contextmanager
 import logging
 import warnings
+
+try:
+    from pathlib import Path
+except ImportError:  # pragma: no cover
+    class Path:
+        pass
+
 try:
     from logging import NullHandler
 except ImportError:  # pragma: no cover
@@ -84,7 +91,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
     Parameters
     ----------
-    fp : str or file object
+    fp : str, file object or pathlib.Path object
         A filename or URL, or file object opened in binary ('rb') mode
     mode : str, optional
         'r' (read, the default), 'r+' (read/write), or 'w' (write)
@@ -158,7 +165,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     """
 
     if not isinstance(fp, string_types):
-        if not (hasattr(fp, 'read') or hasattr(fp, 'write')):
+        if not (hasattr(fp, 'read') or hasattr(fp, 'write')
+                or isinstance(fp, Path)):
             raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, string_types):
         raise TypeError("invalid mode: {0!r}".format(mode))
@@ -230,6 +238,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         return fp_writer(fp)
 
     else:
+        # If a pathlib.Path instance is given, convert it to a string path.
+        if isinstance(fp, Path):
+            fp = str(fp)
+
         # The 'normal' filename or URL path.
         _, _, scheme = parse_path(fp)
 

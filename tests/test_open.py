@@ -20,3 +20,13 @@ def test_open_bad_mode_2():
 def test_open_bad_driver():
     with pytest.raises(TypeError):
         rasterio.open("tests/data/RGB.byte.tif", mode="r", driver=3.14)
+
+
+def test_open_pathlib_path():
+    try:
+        from pathlib import Path
+    except ImportError:
+        return
+    tif = Path.cwd() / 'tests' / 'data' / 'RGB.byte.tif'
+    with rasterio.open(tif) as src:
+        assert src.count == 3
