@@ -57,7 +57,7 @@ fi
 
 ls -l $GDALINST
 
-if [ "$GDALVERSION" = "trunk" ]; then
+if [ "$GDALVERSION" = "master" ]; then
   cd $GDALBUILD
   git clone --depth 1 https://github.com/OSGeo/gdal gdal-$GDALVERSION
   cd gdal-$GDALVERSION/gdal
@@ -78,7 +78,7 @@ if [ "$GDALVERSION" = "trunk" ]; then
   fi
 fi
 
-if [ "$GDALVERSION" != "trunk" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   cd $GDALBUILD
   wget http://download.osgeo.org/gdal/$GDALVERSION/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
