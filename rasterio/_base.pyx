@@ -853,7 +853,7 @@ cdef class DatasetBase(object):
 
         band = self.band(bidx)
         if ovr:
-            obj = GDALGetOverview(obj, ovr)
+            obj = GDALGetOverview(band, ovr)
         else:
             obj = band
 
