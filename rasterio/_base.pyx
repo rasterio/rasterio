@@ -819,17 +819,62 @@ cdef class DatasetBase(object):
         num_items = CSLCount(metadata)
         return dict(metadata[i].split('=', 1) for i in range(num_items))
 
+
+    def get_metadata_item(self, bidx, ns, dm=None, ovr=None):
+        """Returns metadata item
+
+        Parameters
+        ----------
+        bidx: int
+            Band index, starting with 1.
+        name: str
+            The key for the metadata item to fetch.
+        domain: str
+            The domain to fetch for.
+        ovr: int
+            Overview level
+
+        Returns
+        -------
+        str
+        """
+        cdef GDALMajorObjectH band = NULL
+        cdef GDALMajorObjectH obj = NULL
+        cdef char *value = NULL
+        cdef const char *name = NULL
+        cdef const char *domain = NULL
+
+        ns = ns.encode('utf-8')
+        name = ns
+
+        if dm:
+            dm = dm.encode('utf-8')
+            domain = dm
+
+        band = self.band(bidx)
+        if ovr:
+            obj = GDALGetOverview(obj, ovr)
+        else:
+            obj = band
+
+        value = GDALGetMetadataItem(obj, name, domain)
+        if value == NULL:
+            return None
+        else:
+            return value
+
+
     property colorinterp:
 
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
-        
+
         To set color interpretation, provide a sequence of
         ``ColorInterp.<enum>``:
-            
+
             import rasterio
             from rasterio.enums import ColorInterp
-            
+
             with rasterio.open('rgba.tif', 'r+') as src:
                 src.colorinterp = (
                     ColorInterp.red,
