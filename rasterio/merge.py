@@ -154,14 +154,14 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
 
         # 2. Compute the source window
         src_window = windows.from_bounds(
-            int_w, int_s, int_e, int_n, src.transform)
+            int_w, int_s, int_e, int_n, src.transform, precision=precision)
         logger.debug("Src %s window: %r", src.name, src_window)
 
         src_window = src_window.round_shape()
 
         # 3. Compute the destination window
         dst_window = windows.from_bounds(
-            int_w, int_s, int_e, int_n, output_transform)
+            int_w, int_s, int_e, int_n, output_transform, precision=precision)
 
         # 4. Read data in source window into temp
         trows, tcols = (
