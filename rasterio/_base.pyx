@@ -820,17 +820,17 @@ cdef class DatasetBase(object):
         return dict(metadata[i].split('=', 1) for i in range(num_items))
 
 
-    def get_metadata_item(self, bidx, ns, dm=None, ovr=None):
-        """Returns metadata item
+    def get_tag_item(self, ns, dm=None, bidx=0, ovr=None):
+        """Returns tag item value
 
         Parameters
         ----------
+        ns: str
+            The key for the metadata item to fetch.
+        dm: str
+            The domain to fetch for.
         bidx: int
             Band index, starting with 1.
-        name: str
-            The key for the metadata item to fetch.
-        domain: str
-            The domain to fetch for.
         ovr: int
             Overview level
 
@@ -851,7 +851,14 @@ cdef class DatasetBase(object):
             dm = dm.encode('utf-8')
             domain = dm
 
-        band = self.band(bidx)
+        if not bidx > 0 and ovr:
+            raise Exception("Band index (bidx) option needed for overview level")
+
+        if bidx > 0:
+            band = self.band(bidx)
+        else:
+            band = self._hds
+
         if ovr:
             obj = GDALGetOverview(band, ovr)
         else:
