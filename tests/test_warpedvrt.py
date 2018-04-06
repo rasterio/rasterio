@@ -67,6 +67,20 @@ def test_warped_vrt_set_src_crs(path_rgb_byte_tif, tmpdir):
             assert vrt.src_crs == original_crs
 
 
+def test_warped_vrt_set_src_transform(path_rgb_byte_tif, tmpdir):
+    """A VirtualVRT without CRS works only with src_crs"""
+    path_transform_unset = str(tmpdir.join('rgb_byte_transform_unset.tif'))
+    _copy_update_profile(path_rgb_byte_tif, path_transform_unset, transform=None)
+    with rasterio.open(path_rgb_byte_tif) as src:
+        original_transform = src.transform
+    with rasterio.open(path_transform_unset) as src:
+        with pytest.raises(Exception):
+            with WarpedVRT(src, dst_crs=DST_CRS) as vrt:
+                pass
+        with WarpedVRT(src, src_transform=original_transform, dst_crs=DST_CRS) as vrt:
+            assert vrt.src_crs == original_transform
+
+
 def test_wrap_file(path_rgb_byte_tif):
     """A VirtualVRT has the expected dataset properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
