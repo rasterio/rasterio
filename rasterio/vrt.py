@@ -31,6 +31,10 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The source nodata value.  Pixels with this value will not be
         used for interpolation. If not set, it will be default to the
         nodata value of the source image, if available.
+    src_crs : CRS or str, optional
+        Source image CRS to set or overwrite
+    src_transform : affine.Affine(), optional
+        Source image affine transform to set or overwrite
     dst_nodata: int or float, optional
         The nodata value used to initialize the destination; it will
         remain in all areas not covered by the reprojected source.
