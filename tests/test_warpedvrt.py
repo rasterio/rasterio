@@ -28,7 +28,7 @@ def _copy_update_profile(path_in, path_out, **kwargs):
     """Create a copy of path_in in path_out updating profile with **kwargs"""
     with rasterio.open(str(path_in)) as src:
         profile = src.profile.copy()
-        profile.upate(kwargs)
+        profile.update(kwargs)
         with rasterio.open(str(path_out), 'w', **profile) as dst:
             dst.write(src.read())
     return str(path_out)
