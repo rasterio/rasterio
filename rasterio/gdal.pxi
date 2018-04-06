@@ -224,6 +224,7 @@ cdef extern from "gdal.h" nogil:
     int GDALGetRasterColorInterpretation(GDALRasterBandH band)
     int GDALSetRasterColorInterpretation(GDALRasterBandH band, int)
     int GDALGetMaskFlags(GDALRasterBandH band)
+    int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)
     void *GDALGetMaskBand(GDALRasterBandH band)
     int GDALCreateMaskBand(GDALDatasetH hds, int flags)
     int GDALGetOverviewCount(GDALRasterBandH band)

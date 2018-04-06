@@ -13,7 +13,7 @@ from rasterio._err import (
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
-from rasterio.enums import Resampling
+from rasterio.enums import Resampling, MaskFlags
 from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError
 from rasterio.transform import Affine, from_bounds, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -671,6 +671,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef double src_gt[6]
         cdef double dst_gt[6]
         cdef void *hTransformArg = NULL
+        cdef GDALRasterBandH hband = NULL
+        cdef GDALRasterBandH hmask = NULL
+        cdef int mask_block_xsize = 0
+        cdef int mask_block_ysize = 0
 
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
@@ -707,6 +711,18 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 _safe_osr_release(osr)
 
         log.debug("Exported CRS to WKT.")
+
+        # Flag if the source dataset has a dataset mask, and 
+        # get the block size. This code is adapted from GDAL's
+        # VRT builder.
+        if MaskFlags.per_dataset in src_dataset.mask_flag_enums:
+            has_dataset_mask = True
+        else:
+            has_dataset_mask = False
+
+        band = GDALGetRasterBand(hds, 1)
+        hmask = GDALGetMaskBand(hband)
+        GDALGetBlockSize(hmask, &mask_block_xsize, &mask_block_ysize)
 
         log.debug("Warp_extras: %r", self.warp_extras)
 
@@ -760,6 +776,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                         hds, NULL, dst_crs_wkt, c_resampling,
                         c_tolerance, psWOptions)
                 self._hds = exc_wrap_pointer(hds_warped)
+
+            # Add the mask band if appropriate.
+            if has_dataset_mask:
+                GDALCreateDatasetMaskBand(hds_warped, MaskFlags.per_dataset.value)
+                hmask = GDALGetMaskBand(GDALGetRasterBand(hds_warped, 1))
+
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
         finally:
