@@ -970,7 +970,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             log.debug(
                 "Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
-        if mode == 'w':
+        if mode.startswith('w'):
 
             _delete_dataset_if_exists(path)
 
