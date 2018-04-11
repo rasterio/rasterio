@@ -205,7 +205,10 @@ cdef class DatasetReaderBase(DatasetBase):
         # Reading from a dataset opened in "w" will be deprecated.
         if self.mode == "w":
             warnings.warn(
-                "Reading from datasets opened in 'w' mode will not be allowed in the next version. Use 'w+' mode instead.", RasterioDeprecationWarning)
+                "Reading from datasets opened in 'w' mode will not be allowed "
+                "in the next version. Use 'w+' mode instead.",
+                RasterioDeprecationWarning
+            )
 
         return2d = False
         if indexes is None:
@@ -977,7 +980,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             log.debug(
                 "Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
-        if mode.startswith('w'):
+        if mode in ('w', 'w+'):
 
             _delete_dataset_if_exists(path)
 

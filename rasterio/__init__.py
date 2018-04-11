@@ -222,7 +222,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         return fp_reader(fp)
 
-    elif mode.startswith("w") and hasattr(fp, 'write'):
+    elif mode in ('w', 'w+') and hasattr(fp, 'write'):
 
         @contextmanager
         def fp_writer(fp):
