@@ -39,13 +39,6 @@ from rasterio.vfs import parse_path
 from rasterio import _err, coords, enums, vfs
 
 
-def window_shape(*args, **kwargs):
-    from rasterio.windows import shape
-    warnings.warn(
-        "Deprecated; Use rasterio.windows instead", RasterioDeprecationWarning)
-    return shape(*args, **kwargs)
-
-
 def window_index(*args, **kwargs):
     from rasterio.windows import window_index
     warnings.warn(

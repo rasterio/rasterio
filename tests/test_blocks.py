@@ -19,28 +19,28 @@ class WindowTest(unittest.TestCase):
 
     def test_window_shape_None_start(self):
         self.assertEqual(
-            rasterio.window_shape(((None, 4), (None, 102))),
+            rasterio.windows.shape(((None, 4), (None, 102))),
             (4, 102))
 
     def test_window_shape_None_stop(self):
         self.assertEqual(
-            rasterio.window_shape(((10, None), (10, None)), 100, 90),
+            rasterio.windows.shape(((10, None), (10, None)), 100, 90),
             (90, 80))
 
     def test_window_shape_positive(self):
         self.assertEqual(
-            rasterio.window_shape(((0, 4), (1, 102))),
+            rasterio.windows.shape(((0, 4), (1, 102))),
             (4, 101))
 
     def test_window_shape_negative(self):
         self.assertEqual(
-            rasterio.window_shape(((-10, None), (-10, None)), 100, 90),
+            rasterio.windows.shape(((-10, None), (-10, None)), 100, 90),
             (10, 10))
         self.assertEqual(
-            rasterio.window_shape(((~0, None), (~0, None)), 100, 90),
+            rasterio.windows.shape(((~0, None), (~0, None)), 100, 90),
             (1, 1))
         self.assertEqual(
-            rasterio.window_shape(((None, ~0), (None, ~0)), 100, 90),
+            rasterio.windows.shape(((None, ~0), (None, ~0)), 100, 90),
             (99, 89))
 
     def test_eval(self):
@@ -102,7 +102,7 @@ class WindowReadTest(unittest.TestCase):
             self.assertEqual(first_block.dtype, rasterio.ubyte)
             self.assertEqual(
                 first_block.shape,
-                rasterio.window_shape(first_window))
+                rasterio.windows.shape(first_window))
 
 
 class WindowWriteTest(unittest.TestCase):
