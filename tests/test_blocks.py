@@ -52,7 +52,7 @@ class WindowTest(unittest.TestCase):
             windows.Window.from_ranges((0, 90), (0, 80)))
 
 def test_window_index():
-    idx = rasterio.window_index(((0, 4), (1, 12)))
+    idx = rasterio.windows.window_index(((0, 4), (1, 12)))
     assert len(idx) == 2
     r, c = idx
     assert r.start == 0

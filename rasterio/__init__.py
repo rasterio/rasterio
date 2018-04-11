@@ -39,13 +39,6 @@ from rasterio.vfs import parse_path
 from rasterio import _err, coords, enums, vfs
 
 
-def window_index(*args, **kwargs):
-    from rasterio.windows import window_index
-    warnings.warn(
-        "Deprecated; Use rasterio.windows instead", RasterioDeprecationWarning)
-    return window_index(*args, **kwargs)
-
-
 __all__ = ['band', 'open', 'pad']
 __version__ = "1.0a12"
 __gdal_version__ = gdal_version()
