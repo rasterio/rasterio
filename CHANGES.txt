@@ -19,6 +19,7 @@ New features:
 
 Bug fixes:
 
+- Added the missing w+ mode (#1309).
 - Rotated datasets are now masked properly (#1240, #1278).
 - Geometry collections are flattened in ``rasterize`` to work around
   incidental holes created by GDAL (#1253, #1274).

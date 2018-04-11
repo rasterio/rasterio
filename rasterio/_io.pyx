@@ -20,9 +20,11 @@ from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
-from rasterio.errors import CRSError, DriverRegistrationError
-from rasterio.errors import RasterioIOError, NotGeoreferencedWarning
-from rasterio.errors import NodataShadowWarning, WindowError
+from rasterio.errors import (
+    CRSError, DriverRegistrationError, RasterioIOError,
+    NotGeoreferencedWarning, NodataShadowWarning, WindowError,
+    RasterioDeprecationWarning
+)
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.vfs import parse_path, vsi_path
@@ -199,6 +201,14 @@ cdef class DatasetReaderBase(DatasetBase):
         """
 
         cdef GDALRasterBandH band = NULL
+
+        # Reading from a dataset opened in "w" will be deprecated.
+        if self.mode == "w":
+            warnings.warn(
+                "Reading from datasets opened in 'w' mode will not be allowed "
+                "in the next version. Use 'w+' mode instead.",
+                RasterioDeprecationWarning
+            )
 
         return2d = False
         if indexes is None:
@@ -970,7 +980,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             log.debug(
                 "Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
-        if mode == 'w':
+        if mode in ('w', 'w+'):
 
             _delete_dataset_if_exists(path)
 
