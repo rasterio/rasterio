@@ -45,10 +45,10 @@ class WindowTest(unittest.TestCase):
 
     def test_eval(self):
         self.assertEqual(
-            rasterio.eval_window(((-10, None), (-10, None)), 100, 90),
+            rasterio.windows.evaluate(((-10, None), (-10, None)), 100, 90),
             windows.Window.from_ranges((90, 100), (80, 90)))
         self.assertEqual(
-            rasterio.eval_window(((None, -10), (None, -10)), 100, 90),
+            rasterio.windows.evaluate(((None, -10), (None, -10)), 100, 90),
             windows.Window.from_ranges((0, 90), (0, 80)))
 
 def test_window_index():

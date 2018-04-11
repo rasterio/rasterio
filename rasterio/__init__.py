@@ -33,19 +33,10 @@ from rasterio.io import (
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
-from rasterio import windows
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
 from rasterio import _err, coords, enums, vfs
-
-
-# TODO deprecate or remove in factor of rasterio.windows.___
-def eval_window(*args, **kwargs):
-    from rasterio.windows import evaluate
-    warnings.warn(
-        "Deprecated; Use rasterio.windows instead", RasterioDeprecationWarning)
-    return evaluate(*args, **kwargs)
 
 
 def window_shape(*args, **kwargs):
