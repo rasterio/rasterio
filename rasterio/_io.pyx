@@ -469,6 +469,14 @@ cdef class DatasetReaderBase(DatasetBase):
         preferentially used by callers.
         """
 
+        # Reading from a dataset opened in "w" will be deprecated.
+        if self.mode == "w":
+            warnings.warn(
+                "Reading from datasets opened in 'w' mode will not be allowed "
+                "in the next version. Use 'w+' mode instead.",
+                RasterioDeprecationWarning
+            )
+
         return2d = False
         if indexes is None:
             indexes = self.indexes
