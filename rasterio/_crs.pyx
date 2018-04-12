@@ -4,6 +4,7 @@
 include "gdal.pxi"
 
 import logging
+import warnings
 
 from rasterio.compat import UserDict
 from rasterio.compat import string_types
@@ -49,9 +50,19 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            # return False immediately if either value is undefined
-            if not (self and other):
+          if not self and not other:
+              warnings.warn("Comparing empty CRS Objects. Will return True")
+
+          # use dictionary equality rules first
+          if UserDict(self.data) == UserDict(other):
+              return True
+          else:
+            if not self and not other:
+                return True
+
+            if not self or not other:
                 return False
+
             osr_crs1 = osr_from_crs(self)
             osr_crs2 = osr_from_crs(other)
             retval = OSRIsSame(osr_crs1, osr_crs2)
