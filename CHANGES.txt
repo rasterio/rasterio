@@ -13,6 +13,11 @@ Breaking changes:
   replacements are in rasterio.windows (#1115).
 - The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
 
+Upcoming deprecation:
+
+- Reading array data or masks from datasets opened in "w" mode will be
+  prohibited in Rasterio 1.0. We are warning about this now (#1309).
+
 New features:
 
 - ``rasterio.features.dataset_features()`` has been extracted from
