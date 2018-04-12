@@ -234,11 +234,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             # None.
             if mode == 'r':
                 s = DatasetReader(fp, driver=driver, **kwargs)
-            elif mode == 'r-':
-                warnings.warn(
-                    "'r-' mode is deprecated and will be removed in 1.0, use 'r'",
-                    DeprecationWarning)
-                s = DatasetReader(fp)
             elif mode == 'r+':
                 s = get_writer_for_path(fp)(fp, mode, driver=driver, **kwargs)
             elif mode.startswith("w"):
