@@ -50,23 +50,22 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-          if not self and not other:
-              warnings.warn("Comparing empty CRS Objects. Will return True")
-
-          # use dictionary equality rules first
-          if UserDict(self.data) == UserDict(other):
-              return True
-          else:
             if not self and not other:
                 return True
 
-            if not self or not other:
+            # use dictionary equality rules first
+            elif UserDict(self.data) == UserDict(other):
+                return True
+
+            elif not self or not other:
                 return False
 
-            osr_crs1 = osr_from_crs(self)
-            osr_crs2 = osr_from_crs(other)
-            retval = OSRIsSame(osr_crs1, osr_crs2)
-            return bool(retval == 1)
+            else:
+                osr_crs1 = osr_from_crs(self)
+                osr_crs2 = osr_from_crs(other)
+                retval = OSRIsSame(osr_crs1, osr_crs2)
+                return bool(retval == 1)
+
         finally:
             _safe_osr_release(osr_crs1)
             _safe_osr_release(osr_crs2)
