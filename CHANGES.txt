@@ -10,6 +10,14 @@ Breaking changes:
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).
 - Comparing empty ``CRS`` objects returns ``True`` (#1034).
+- Deprecated window functions have been removed from the rasterio module. Their
+  replacements are in rasterio.windows (#1115).
+- The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
+
+Upcoming deprecation:
+
+- Reading array data or masks from datasets opened in "w" mode will be
+  prohibited in Rasterio 1.0. We are warning about this now (#1309).
 
 New features:
 
@@ -18,6 +26,7 @@ New features:
 
 Bug fixes:
 
+- Added the missing w+ mode (#1309).
 - Rotated datasets are now masked properly (#1240, #1278).
 - Geometry collections are flattened in ``rasterize`` to work around
   incidental holes created by GDAL (#1253, #1274).
