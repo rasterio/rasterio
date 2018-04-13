@@ -3,7 +3,6 @@ import warnings
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioDeprecationWarning
 from rasterio.profiles import Profile, DefaultGTiffProfile
 from rasterio.profiles import default_gtiff_profile
 
@@ -14,12 +13,6 @@ def test_base_profile():
 
 def test_base_profile_kwarg():
     assert Profile(foo='bar')['foo'] == 'bar'
-
-
-def test_gtiff_profile_format():
-    assert DefaultGTiffProfile()['driver'] == 'GTiff'
-    with pytest.warns(RasterioDeprecationWarning):
-        assert DefaultGTiffProfile()()['driver'] == 'GTiff'
 
 
 def test_gtiff_profile_interleave():
@@ -60,8 +53,9 @@ def test_gtiff_profile_dtype_override():
 
 def test_open_with_profile(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
-    with rasterio.open(tiffname, 'w', **default_gtiff_profile(
-            count=1, width=256, height=256)) as dst:
+    profile = default_gtiff_profile.copy()
+    profile.update(count=1, width=256, height=256)
+    with rasterio.open(tiffname, 'w', **profile) as dst:
         assert not dst.closed
 
 
@@ -69,22 +63,24 @@ def test_blockxsize_guard(tmpdir):
     """blockxsize can't be greater than image width."""
     tiffname = str(tmpdir.join('foo.tif'))
     with pytest.raises(ValueError):
-        rasterio.open(tiffname, 'w', **default_gtiff_profile(
-            count=1, width=128, height=256))
+        profile = default_gtiff_profile.copy()
+        profile.update(count=1, height=256, width=128)
+        rasterio.open(tiffname, 'w', **profile)
 
 
 def test_blockysize_guard(tmpdir):
     """blockysize can't be greater than image height."""
     tiffname = str(tmpdir.join('foo.tif'))
     with pytest.raises(ValueError):
-        rasterio.open(tiffname, 'w', **default_gtiff_profile(
-            count=1, width=256, height=128))
+        profile = default_gtiff_profile.copy()
+        profile.update(count=1, width=256, height=128)
+        rasterio.open(tiffname, 'w', **profile)
 
 
 def test_profile_overlay():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         kwds = src.profile
-    kwds.update(**default_gtiff_profile())
+    kwds.update(**default_gtiff_profile)
     assert kwds['tiled']
     assert kwds['compress'] == 'lzw'
     assert kwds['count'] == 3
@@ -113,29 +109,6 @@ def test_dataset_profile_creation_kwds(data):
         src.update_tags(ns='rio_creation_kwds', foo='bar')
         assert src.profile['tiled'] is False
         assert src.profile['foo'] == 'bar'
-
-
-def test_profile_affine_stashing():
-    """Passing affine sets transform, with a warning"""
-    with pytest.warns(RasterioDeprecationWarning):
-        profile = Profile(affine='foo')
-        assert 'affine' not in profile
-        assert profile['transform'] == 'foo'
-
-
-def test_profile_mixed_error():
-    """Warn if both affine and transform are passed"""
-    with pytest.warns(RasterioDeprecationWarning):
-        profile = Profile(affine='foo', transform='bar')
-        assert 'affine' not in profile
-        assert profile['transform'] == 'bar'
-
-
-def test_profile_affine_alias():
-    """affine is an alias for transform, with a warning"""
-    profile = Profile(transform='foo')
-    with pytest.warns(RasterioDeprecationWarning):
-        assert profile['affine'] == 'foo'
 
 
 def test_profile_affine_set():

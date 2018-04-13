@@ -677,18 +677,6 @@ cdef class DatasetReaderBase(DatasetBase):
                 mask = mask | self.read_masks(i, **kwargs)
             return mask
 
-    def read_mask(self, indexes=None, out=None, window=None, boundless=False):
-        """Read the mask band into an `out` array if provided,
-        otherwise return a new array containing the dataset's
-        valid data mask.
-        """
-        warnings.warn(
-            "read_mask() is deprecated and will be removed by Rasterio 1.0. "
-            "Please use read_masks() instead.",
-            DeprecationWarning,
-            stacklevel=2)
-        return self.read_masks(1, out=out, window=window, boundless=boundless)
-
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
 

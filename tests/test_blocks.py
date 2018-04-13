@@ -46,10 +46,10 @@ class WindowTest(unittest.TestCase):
     def test_eval(self):
         self.assertEqual(
             rasterio.windows.evaluate(((-10, None), (-10, None)), 100, 90),
-            windows.Window.from_ranges((90, 100), (80, 90)))
+            windows.Window.from_slices((90, 100), (80, 90)))
         self.assertEqual(
             rasterio.windows.evaluate(((None, -10), (None, -10)), 100, 90),
-            windows.Window.from_ranges((0, 90), (0, 80)))
+            windows.Window.from_slices((0, 90), (0, 80)))
 
 def test_window_index():
     idx = rasterio.windows.window_index(((0, 4), (1, 12)))
@@ -72,25 +72,24 @@ class RasterBlocksTest(unittest.TestCase):
             itr = s.block_windows(1)
             (j, i), first = next(itr)
             self.assertEqual((j, i), (0, 0))
-            self.assertEqual(first, windows.Window.from_ranges((0, 3), (0, 791)))
+            self.assertEqual(first, windows.Window.from_slices((0, 3), (0, 791)))
             itr = s.block_windows()
             (j, i), first = next(itr)
             self.assertEqual((j, i), (0, 0))
-            self.assertEqual(first, windows.Window.from_ranges((0, 3), (0, 791)))
+            self.assertEqual(first, windows.Window.from_slices((0, 3), (0, 791)))
             (j, i), second = next(itr)
             self.assertEqual((j, i), (1, 0))
-            self.assertEqual(second, windows.Window.from_ranges((3, 6), (0, 791)))
+            self.assertEqual(second, windows.Window.from_slices((3, 6), (0, 791)))
             (j, i), last = list(itr)[~0]
             self.assertEqual((j, i), (239, 0))
             self.assertEqual(
-                last, windows.Window.from_ranges((717, 718), (0, 791)))
+                last, windows.Window.from_slices((717, 718), (0, 791)))
 
     def test_block_coverage(self):
         with rasterio.open('tests/data/RGB.byte.tif') as s:
             self.assertEqual(
                 s.width * s.height,
-                sum((w[0][1] - w[0][0]) * (w[1][1] - w[1][0])
-                    for ji, w in s.block_windows(1)))
+                sum(w.width * w.height for ji, w in s.block_windows(1)))
 
 
 class WindowReadTest(unittest.TestCase):
@@ -152,7 +151,7 @@ def test_block_windows_filtered_one(path_rgb_byte_tif):
         focus_window = src.window(w, n - 1.0, w + 1.0, n)
         filter_func = partial(windows.intersect, focus_window)
         itr = ((ij, win) for ij, win in src.block_windows() if filter_func(win))
-        assert next(itr) == ((0, 0), windows.Window.from_ranges((0, 3), (0, 791)))
+        assert next(itr) == ((0, 0), windows.Window.from_slices((0, 3), (0, 791)))
         with pytest.raises(StopIteration):
             next(itr)
 

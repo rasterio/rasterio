@@ -41,13 +41,6 @@ def tiffs(tmpdir):
     return tmpdir
 
 
-def test_mask_flags_deprecation():
-    """mask_flags is deprecated"""
-    with pytest.warns(RasterioDeprecationWarning):
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            src.mask_flags
-
-
 def test_mask_flags():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         for flags in src.mask_flag_enums:
