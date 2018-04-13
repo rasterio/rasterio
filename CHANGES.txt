@@ -9,6 +9,7 @@ Breaking changes:
 - Whether to print GeoJSON feature sequences or a GeoJSON feature collection
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).
+- Comparing empty ``CRS`` objects returns ``True`` (#1034).
 - Deprecated window functions have been removed from the rasterio module. Their
   replacements are in rasterio.windows (#1115).
 - The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
