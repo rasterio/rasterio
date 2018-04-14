@@ -14,10 +14,8 @@ DATA_WINDOW = ((3, 5), (2, 6))
 
 
 def assert_window_almost_equals(a, b, precision=3):
-    assert round(a.row_off, precision) == round(b.row_off, precision)
-    assert round(a.col_off, precision) == round(b.col_off, precision)
-    assert round(a.width, precision) == round(b.width, precision)
-    assert round(a.height, precision) == round(b.height, precision)
+    for attr in ('row_off', 'col_off', 'width', 'height'):
+        assert round(getattr(a, attr), precision) == round(getattr(b, attr), precision)
 
 
 def test_index():

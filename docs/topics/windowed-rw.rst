@@ -14,23 +14,32 @@ Windows
 =======
 
 A window is a view onto a rectangular subset of a raster dataset and is
-described in rasterio by a pair of offsets and a pair of lengths.
+described in rasterio by column and row offsets and width and height
+in pixels. These may be ints or floats.
 
 .. code-block:: python
 
    Window(col_off, row_off, width, height)
 
-The ``Window`` class has a number of useful methods and is the generally
-preferred way of describing subsets. It's also the one way to describe subsets
-with float precision offsets and lengths, a feature of GDAL version 2.
-
-Pairs of ``(row_start, row_stop)``, ``(col_start, col_stop)`` indexes can be
-converted to instances of ``Window`` using the ``Window.from_slices`` class
-method.
+Windows may also be constructed from numpy array index tuples or slice objects.
+Only int values are permitted in these cases.
 
 .. code-block:: python
 
-    window = Window.from_slices((0, 10), (0, 10))
+   Window.from_slices((row_start, row_stop), (col_start, col_stop))
+   Window.from_slices(slice(row_start, row_stop), slice(col_start, col_stop))
+
+If height and width keyword arguments are passed to ``from_slices``, relative
+and open-ended slices may be used.
+
+.. code-block:: python
+
+   Window.from_slices(slice(None), slice(None), height=100, width=100)
+   # Window(col_off=0.0, row_off=0.0, width=100.0, height=100.0)
+
+   Window.from_slices(slice(10, -10), slice(10, -10), height=100, width=100)
+   # Window(col_off=10, row_off=10, width=80, height=80)
+
 
 Reading
 =======

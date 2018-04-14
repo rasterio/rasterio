@@ -22,7 +22,7 @@ and a GDAL geotransform looks like:
     (c, a, b, f, d, e)
 
 Fundamentally these two constructs provide the same information, but the
-``Affine()`` object is much more useful.
+``Affine()`` object is more useful.
 
 Here's a history of this feature:
 
@@ -60,18 +60,20 @@ Before 1.0b1:
 * All other Rasterio functions with a ``transform`` argument now raise an
   exception if they receive a GDAL geotransform.
 
-Beginning in 1.0b1:
-
-* In ``rasterio.open()`` 'affine' will no longer be an alias for the
-  'transform' keyword argument.
-* Dataset objects will no longer have an ``affine`` property.
-
 Tickets
 ```````
 * `#86 <https://github.com/mapbox/rasterio/issues/86>`__ - Announcing the
   plan to switch from GDAL geotransforms to ``Affine()``.
 * `#763 <https://github.com/mapbox/rasterio/pull/763>`__ - Implementation of the
   migration and some further discussion.
+
+  Beginning in 1.0b1:
+
+* In ``rasterio.open`` "affine" will no longer be an alias for the
+  transform keyword argument.
+* Dataset objects will no longer have an affine property.
+* The transform keyword argument and property is always an instance of the
+  ``Affine`` class.
 
 
 I/O Operations
