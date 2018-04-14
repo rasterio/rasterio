@@ -149,7 +149,10 @@ def test_is_same_crs():
 
 
 def test_null_crs_equality():
-    assert (CRS() == CRS()) is False
+    assert CRS() == CRS()
+    a = CRS()
+    assert a == a
+    assert not a != a
 
 
 def test_null_and_valid_crs_equality():

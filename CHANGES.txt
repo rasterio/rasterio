@@ -9,6 +9,7 @@ Breaking changes:
 - Whether to print GeoJSON feature sequences or a GeoJSON feature collection
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).
+- Comparing empty ``CRS`` objects returns ``True`` (#1034).
 - Deprecated window functions have been removed from the rasterio module. Their
   replacements are in rasterio.windows (#1115).
 - The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
@@ -33,6 +34,11 @@ A number of deprecated features have been removed (#1319).
 - In the windows.Window class: we have removed the num_cols and num_rows
   properties, the __getitem__ method, and the from_offlen and from_ranges class
   methods.
+
+Upcoming deprecation:
+
+- Reading array data or masks from datasets opened in "w" mode will be
+  prohibited in Rasterio 1.0. We are warning about this now (#1309).
 
 New features:
 
