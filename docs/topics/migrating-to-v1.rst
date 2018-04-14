@@ -48,7 +48,7 @@ since ``Affine()`` and GDAL geotransforms are both 6 element tuples users may
 experience unexplained errors and outputs, so an exception is raised instead to
 better highlight the error.
 
-Moving forward:
+Before 1.0b1:
 
 * ``rasterio.open()`` will still accept ``affine`` and ``transform``, but the
   former now issues a deprecation warning and the latter raises an exception if
@@ -60,8 +60,11 @@ Moving forward:
 * All other Rasterio functions with a ``transform`` argument now raise an
   exception if they receive a GDAL geotransform.
 
-The features mentioned above that issue a deprecation warning will eventually
-be removed, but a timeline has not yet been developed.
+Beginning in 1.0b1:
+
+* In ``rasterio.open()`` 'affine' will no longer be an alias for the
+  'transform' keyword argument.
+* Dataset objects will no longer have an ``affine`` property.
 
 Tickets
 ```````
@@ -75,6 +78,14 @@ I/O Operations
 ~~~~~~~~~~~~~~
 
 Methods related to reading band data and dataset masks have changed in 1.0.
+
+Beginning with version 1.0b1, there is no longer a ``read_mask`` method, only
+``read_masks``. Datasets may be opened in read-write "w+" mode when their
+formats allow and a warning will be raised when band data or masks are read
+from datasets opened in "w" mode.
+
+Beginning with 1.0.0, the "w" mode will become write-only and reading data or
+masks from datasets opened in "w" will be prohibited.
 
 
 Deprecated: ``rasterio.drivers()``

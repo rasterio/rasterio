@@ -24,56 +24,9 @@ The ``Window`` class has a number of useful methods and is the generally
 preferred way of describing subsets. It's also the one way to describe subsets
 with float precision offsets and lengths, a feature of GDAL version 2.
 
-Windows can also be described by a pair of tuples or slices.
-
-.. code-block:: python
-
-    ((row_start, row_stop), (col_start, col_stop))
-    (slice(row_start, row_stop), slice(col_start, col_stop))
-
-The first pair contains the indexes of the raster rows at which the window
-starts and stops. The second contains the indexes of the raster columns at
-which the window starts and stops. For example,
-
-.. code-block:: python
-
-    ((0, 4), (0, 4))
-
-Specifies a 4 x 4 window at the upper left corner of a raster dataset and
-
-.. code-block:: python
-
-    ((10, 20), (10, 20))
-
-specifies a 10 x 10 window with origin at row 10 and column 10. Use of `None`
-for a range value indicates either 0 (in the start position) or the full raster
-height or width (in the stop position). The window tuple
-
-.. code-block:: python
-
-    ((None, 4), (None, 4))
-
-also specifies a 4 x 4 window at the upper left corner of the raster and
-
-.. code-block:: python
-
-    ((4, None), (4, None))
-
-specifies a rectangular subset with upper left at row 4, column 4 and
-extending to the lower right corner of the raster dataset.
-
-Using window tuples should feel like using Python's range() and slice()
-functions. Range() selects a range of numbers from the sequence of all integers
-and slice() produces a object that can be used in slicing expressions.
-
-.. code-block:: pycon
-
-    >>> list(range(10, 20))
-    [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    >>> list(range(10, 20)[slice(4, None)])
-    [14, 15, 16, 17, 18, 19]
-
-Such pairs can be converted to instances of ``Window``.
+Pairs of ``(row_start, row_stop)``, ``(col_start, col_stop)`` indexes can be
+converted to instances of ``Window`` using the ``Window.from_slices`` class
+method.
 
 .. code-block:: python
 
@@ -145,47 +98,6 @@ And the result:
    :width: 500
    :height: 300
 
-Advanced windows
-================
-
-Since windows are like slices, you can also use negative numbers in rasterio
-windows.
-
-.. code-block:: python
-
-    ((-4, None), (-4, None))
-
-specifies a 4 x 4 rectangular subset with upper left at 4 rows to the left of
-and 4 columns above the lower right corner of the dataset and extending to the
-lower right corner of the dataset.
-
-Below is an example of reading a raster subset and then writing it into a
-larger subset that is defined relative to the lower right corner of the
-destination dataset.
-
-.. code-block:: python
-
-    read_window = (350, 410), (350, 450)
-
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
-        b, g, r = (src.read(k, window=read_window) for k in (1, 2, 3))
-
-    write_window = (-240, None), (-400, None)
-
-    with rasterio.open(
-            '/tmp/example2.tif', 'w',
-            driver='GTiff', width=500, height=300, count=3,
-            dtype=r.dtype) as dst:
-        for k, arr in [(1, b), (2, g), (3, r)]:
-            dst.write(arr, window=write_window, indexes=k)
-
-This example also demonstrates decimation.
-
-.. image:: http://farm3.staticflickr.com/2827/11378772013_c8ab540f21_o_d.png
-   :width: 500
-   :height: 300
-
-
 Data windows
 ============
 
@@ -204,7 +116,7 @@ a dataset:
         kwargs.update({
             'height': window.height,
             'width': window.width,
-            'affine': rasterio.windows.transform(window, src.transform)})
+            'transform': rasterio.windows.transform(window, src.transform)})
 
         with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
             dst.write(src.read(window=window))
@@ -213,9 +125,9 @@ a dataset:
 Window utilities
 ================
 
-Basic union and intersection operations are available for windows, to streamline
-operations across dynamically created windows for a series of bands or datasets
-with the same full extent.
+Basic union and intersection operations are available for windows, to
+streamline operations across dynamically created windows for a series of bands
+or datasets with the same full extent.
 
 .. code-block:: python
 
