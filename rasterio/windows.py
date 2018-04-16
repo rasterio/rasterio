@@ -27,7 +27,7 @@ import attr
 from affine import Affine
 import numpy as np
 
-from rasterio.errors import RasterioDeprecationWarning, WindowError
+from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
 
 
@@ -43,7 +43,7 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, precision=6, **kwargs):
+    def window(self, left, bottom, right, top, precision=6):
         """Get the window corresponding to the bounding coordinates.
 
         The resulting window is not cropped to the row and column
@@ -62,17 +62,11 @@ class WindowMethodsMixin(object):
         precision: int, optional
             Number of decimal points of precision when computing inverse
             transform.
-        kwargs: mapping
-            For backwards compatibility: absorbs deprecated keyword args.
 
         Returns
         -------
         window: Window
         """
-        if 'boundless' in kwargs:  # pragma: no branch
-            warnings.warn("boundless keyword arg should not be used",
-                          RasterioDeprecationWarning)
-
         transform = guard_transform(self.transform)
 
         return from_bounds(
@@ -258,7 +252,7 @@ def intersect(*windows):
 
 
 def from_bounds(left, bottom, right, top, transform=None,
-                height=None, width=None, precision=6, **kwargs):
+                height=None, width=None, precision=6):
     """Get the window corresponding to the bounding coordinates.
 
     Parameters
@@ -273,18 +267,12 @@ def from_bounds(left, bottom, right, top, transform=None,
     precision: int, optional
         Number of decimal points of precision when computing inverse
         transform.
-    kwargs: mapping
-        Absorbs deprecated keyword args
 
     Returns
     -------
     Window
         A new Window
     """
-    if 'boundless' in kwargs:
-        warnings.warn("boundless keyword should not be used",
-                      RasterioDeprecationWarning)
-
     row_start, col_start = rowcol(
         transform, left, top, op=float, precision=precision)
 
@@ -557,31 +545,6 @@ class Window(object):
         """
         return tuple(slice(*rng) for rng in self.toranges())
 
-    @property
-    def num_cols(self):
-        warnings.warn("use 'width' attribute instead",
-                      RasterioDeprecationWarning)
-        return self.width
-
-    @property
-    def num_rows(self):
-        warnings.warn("use 'height' attribute instead",
-                      RasterioDeprecationWarning, stacklevel=2)
-        return self.height
-
-    def __getitem__(self, index):
-        """Provides backwards compatibility for clients using tuples"""
-        warnings.warn("This usage is deprecated", RasterioDeprecationWarning)
-        return self.toranges()[index]
-
-    @classmethod
-    def from_offlen(cls, col_off, row_off, num_cols, num_rows):
-        """For backwards compatibility only"""
-        warnings.warn("Use the class constructor instead of this method",
-                      RasterioDeprecationWarning)
-        return cls(col_off=col_off, row_off=row_off, width=num_cols,
-                   height=num_rows)
-
     @classmethod
     def from_slices(cls, rows, cols, height=-1, width=-1, boundless=False):
         """Construct a Window from row and column slices or tuples / lists of
@@ -674,13 +637,6 @@ class Window(object):
 
         return cls(col_off=col_off, row_off=row_off, width=num_cols,
                    height=num_rows)
-
-    @classmethod
-    def from_ranges(cls, rows, cols):
-        """For backwards compatibility only"""
-        warnings.warn("Use the from_slices class method instead",
-                      RasterioDeprecationWarning)
-        return cls.from_slices(rows, cols)
 
     def round_lengths(self, op='floor', pixel_precision=3):
         """Return a copy with width and height rounded.

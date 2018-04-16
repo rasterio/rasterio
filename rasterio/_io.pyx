@@ -685,18 +685,6 @@ cdef class DatasetReaderBase(DatasetBase):
                 mask = mask | self.read_masks(i, **kwargs)
             return mask
 
-    def read_mask(self, indexes=None, out=None, window=None, boundless=False):
-        """Read the mask band into an `out` array if provided,
-        otherwise return a new array containing the dataset's
-        valid data mask.
-        """
-        warnings.warn(
-            "read_mask() is deprecated and will be removed by Rasterio 1.0. "
-            "Please use read_masks() instead.",
-            DeprecationWarning,
-            stacklevel=2)
-        return self.read_masks(1, out=out, window=window, boundless=boundless)
-
     def sample(self, xy, indexes=None):
         """Get the values of a dataset at certain positions
 
@@ -732,7 +720,7 @@ cdef class MemoryFileBase(object):
         Parameters
         ----------
         file_or_bytes : file or bytes
-            A file opened in binary mode or bytes or a bytearray
+            A file opened in binary mode or bytes
         filename : str
             A filename for the in-memory file under /vsimem
         ext : str
@@ -744,12 +732,12 @@ cdef class MemoryFileBase(object):
         if file_or_bytes:
             if hasattr(file_or_bytes, 'read'):
                 initial_bytes = file_or_bytes.read()
-            else:
+            elif isinstance(file_or_bytes, bytes):
                 initial_bytes = file_or_bytes
-            if not isinstance(initial_bytes, (bytearray, bytes)):
+            else:
                 raise TypeError(
                     "Constructor argument must be a file opened in binary "
-                    "mode or bytes/bytearray.")
+                    "mode or bytes.")
         else:
             initial_bytes = b''
 

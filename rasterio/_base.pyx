@@ -26,7 +26,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError,
-    NotGeoreferencedWarning, RasterioDeprecationWarning, RasterBlockError)
+    NotGeoreferencedWarning, RasterBlockError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -428,15 +428,6 @@ cdef class DatasetBase(object):
                 [flag for flag in MaskFlags if x & flag.value]
                 for x in self._mask_flags)
 
-    property mask_flags:
-        """Mask flags for each band."""
-        def __get__(self):
-            warnings.warn(
-                "'mask_flags' is deprecated. Switch to 'mask_flag_enums'",
-                RasterioDeprecationWarning,
-                stacklevel=2)
-            return self._mask_flags
-
     property descriptions:
         """Text descriptions for each band."""
         def __get__(self):
@@ -746,34 +737,6 @@ cdef class DatasetBase(object):
         def __get__(self):
             return Affine.from_gdal(*self.get_transform())
 
-    property affine:
-        """This property is deprecated.
-
-        An instance of ``affine.Affine``. This property is a
-        transitional feature: see the docstring of ``transform``
-        (above) for more details.
-
-        This property was added in ``0.9`` as a transitional feature to aid the
-        transition of the `transform` parameter.  Rasterio ``1.0`` completes
-        this transition by converting `transform` to an instance of
-        ``affine.Affine()``.
-
-        See the `transform`'s docstring for more information.
-
-        See https://github.com/mapbox/rasterio/issues/86 for more details.
-        """
-
-        def __get__(self):
-            with warnings.catch_warnings():
-                warnings.simplefilter('always')
-                warnings.warn(
-                "'src.affine' is deprecated.  Please switch to "
-                "'src.transform'. See "
-                "https://github.com/mapbox/rasterio/issues/86 for details.",
-                RasterioDeprecationWarning,
-                stacklevel=2)
-            return Affine.from_gdal(*self.get_transform())
-
     property subdatasets:
         """Sequence of subdatasets"""
 
@@ -957,10 +920,10 @@ cdef class DatasetBase(object):
         else:
             window = windows.evaluate(window, self.height, self.width)
             window = windows.crop(window, self.height, self.width)
-            xoff = window[1][0]
-            width = window[1][1] - xoff
-            yoff = window[0][0]
-            height = window[0][1] - yoff
+            xoff = window.col_off
+            width = window.width
+            yoff = window.row_off
+            height = window.height
 
         return GDALChecksumImage(band, xoff, yoff, width, height)
 

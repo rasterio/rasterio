@@ -611,18 +611,6 @@ def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
         )
 
 
-def test_rasterize_merge_alg_deprecated(basic_geometry, basic_image_2x2x2):
-    """
-    Rasterizing two times the basic_geometry with the "add" merging
-    option should output the shape with the value 2
-    """
-    for alg in ('add', 'replace'):
-        with pytest.warns(RasterioDeprecationWarning):
-            with rasterio.Env():
-                rasterize([basic_geometry, basic_geometry], merge_alg=alg,
-                          out_shape=DEFAULT_SHAPE)
-
-
 def test_rasterize_value(basic_geometry, basic_image_2x2):
     """
     All shapes should rasterize to the value passed in a tuple alongside

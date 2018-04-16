@@ -26,7 +26,7 @@ from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
-from rasterio.errors import RasterioDeprecationWarning, RasterioIOError
+from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
@@ -156,25 +156,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         raise TypeError("invalid dtype: {0!r}".format(dtype))
     if nodata is not None:
         nodata = float(nodata)
-    if 'affine' in kwargs:
-        # DeprecationWarning's are ignored by default
-        with warnings.catch_warnings():
-            warnings.warn(
-                "The 'affine' kwarg in rasterio.open() is deprecated at 1.0 "
-                "and only remains to ease the transition.  Please switch to "
-                "the 'transform' kwarg.  See "
-                "https://github.com/mapbox/rasterio/issues/86 for details.",
-                DeprecationWarning,
-                stacklevel=2)
-
-            if transform:
-                warnings.warn(
-                    "Found both 'affine' and 'transform' in rasterio.open() - "
-                    "choosing 'transform'")
-                transform = transform
-            else:
-                transform = kwargs.pop('affine')
-
     if transform:
         transform = guard_transform(transform)
 
