@@ -112,17 +112,6 @@ def test_non_initial_bytes_in_two(rgb_file_bytes):
             assert src.read().shape == (3, 718, 791)
 
 
-def test_non_initial_bytearray(rgb_file_bytes):
-    """MemoryFile contents can be read from bytearray and opened."""
-    with MemoryFile() as memfile:
-        assert memfile.write(bytearray(rgb_file_bytes)) == len(rgb_file_bytes)
-        with memfile.open() as src:
-            assert src.driver == 'GTiff'
-            assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
-            assert src.read().shape == (3, 718, 791)
-
-
 def test_no_initial_bytes(rgb_data_and_profile):
     """An empty MemoryFile can be opened and written into."""
     data, profile = rgb_data_and_profile
@@ -134,7 +123,8 @@ def test_no_initial_bytes(rgb_data_and_profile):
         # Exact size of the in-memory GeoTIFF varies with GDAL
         # version and configuration.
         assert view.size > 1000000
-        data = bytearray(view)
+        # NB: bytes(view) doesn't return what you'd expect with python 2.7.
+        data = bytes(bytearray(view))
 
     with MemoryFile(data) as memfile:
         with memfile.open() as src:

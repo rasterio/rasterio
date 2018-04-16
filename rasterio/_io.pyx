@@ -720,7 +720,7 @@ cdef class MemoryFileBase(object):
         Parameters
         ----------
         file_or_bytes : file or bytes
-            A file opened in binary mode or bytes or a bytearray
+            A file opened in binary mode or bytes
         filename : str
             A filename for the in-memory file under /vsimem
         ext : str
@@ -732,12 +732,12 @@ cdef class MemoryFileBase(object):
         if file_or_bytes:
             if hasattr(file_or_bytes, 'read'):
                 initial_bytes = file_or_bytes.read()
-            else:
+            elif isinstance(file_or_bytes, bytes):
                 initial_bytes = file_or_bytes
-            if not isinstance(initial_bytes, (bytearray, bytes)):
+            else:
                 raise TypeError(
                     "Constructor argument must be a file opened in binary "
-                    "mode or bytes/bytearray.")
+                    "mode or bytes.")
         else:
             initial_bytes = b''
 
