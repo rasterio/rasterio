@@ -25,8 +25,8 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env
 from rasterio.errors import (
-    RasterioIOError, CRSError, DriverRegistrationError,
-    NotGeoreferencedWarning, RasterioDeprecationWarning, RasterBlockError)
+    RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
+    RasterioDeprecationWarning, RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -862,7 +862,8 @@ cdef class DatasetBase(object):
         if ovr:
             obj = GDALGetOverview(band, ovr)
             if obj == NULL:
-              return None
+              raise BandOverviewError(
+                  "Failed to retrieve overview {}".format(ovr))
         else:
             obj = band
 

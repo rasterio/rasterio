@@ -4,6 +4,7 @@ import sys
 
 import pytest
 import rasterio
+from rasterio.errors import BandOverviewError
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -20,4 +21,5 @@ def test_get_tag_item():
 
 def test_get_tag_item_noOverview():
     with rasterio.open('tests/data/rgb3.tif') as src:
-        assert not src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1, ovr=1)
+        with pytest.raises(BandOverviewError):
+            src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1, ovr=1)
