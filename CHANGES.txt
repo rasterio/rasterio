@@ -13,6 +13,8 @@ Breaking changes:
 - Deprecated window functions have been removed from the rasterio module. Their
   replacements are in rasterio.windows (#1115).
 - The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
+- A bytearray is no longer allowed as input to the ``MemoryFile`` constructor.
+  Users must convert byte arrays to ``bytes before calling ``MemoryFile()``.
 
 Upcoming deprecation:
 
