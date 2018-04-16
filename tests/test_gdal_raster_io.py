@@ -29,7 +29,7 @@ dtypes = ['uint8', 'uint16', 'int16', 'uint32', 'int32', 'float32', 'float64']
 def test_read_array(tempfile, dtype, height, width):
     """_io functions read and write arrays correctly"""
     in_img = image(height, width, dtype)
-    with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
+    with rasterio.open(tempfile, 'w+', driver='GTiff', dtype=dtype,
                        height=height, width=width, count=1) as dataset:
         dataset.write(in_img, 1)
         out_img = dataset.read(1)
@@ -41,7 +41,7 @@ def test_read_array(tempfile, dtype, height, width):
 def test_read_view_no_offset(tempfile, dtype, height, width):
     """_io functions read views with no offset correctly"""
     in_img = image(height, width, dtype)
-    with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
+    with rasterio.open(tempfile, 'w+', driver='GTiff', dtype=dtype,
                        height=10, width=15, count=1) as dataset:
         dataset.write(in_img[:10, :15], 1)
         out_img = dataset.read(1)
@@ -53,7 +53,7 @@ def test_read_view_no_offset(tempfile, dtype, height, width):
 def test_read_view_offset(tempfile, dtype, height, width):
     """_io functions read views with offsets correctly"""
     in_img = image(height, width, dtype)
-    with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
+    with rasterio.open(tempfile, 'w+', driver='GTiff', dtype=dtype,
                        height=10, width=15, count=1) as dataset:
         dataset.write(in_img[5:15, 5:20], 1)
         out_img = dataset.read(1)
@@ -66,7 +66,7 @@ def test_write_view_no_offset(tempfile, dtype, height, width):
     """_io functions read views without offsets correctly"""
     out_img = image(height, width, dtype)
     in_img = np.zeros((10, 10), dtype=dtype)
-    with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
+    with rasterio.open(tempfile, 'w+', driver='GTiff', dtype=dtype,
                        height=10, width=10, count=1) as dataset:
         dataset.write(in_img, 1)
     with rasterio.open(tempfile) as dataset:
@@ -82,7 +82,7 @@ def test_write_view_offset(tempfile, dtype, height, width):
     """_io functions read views with offsets correctly"""
     out_img = np.ones((height, width), dtype=dtype)
     in_img = np.zeros((10, 10), dtype=dtype)
-    with rasterio.open(tempfile, 'w', driver='GTiff', dtype=dtype,
+    with rasterio.open(tempfile, 'w+', driver='GTiff', dtype=dtype,
                        height=10, width=10, count=1) as dataset:
         dataset.write(in_img, 1)
     with rasterio.open(tempfile) as dataset:

@@ -14,7 +14,6 @@ from rasterio.crs import CRS
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env
-from rasterio.errors import RasterioDeprecationWarning
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
@@ -212,14 +211,6 @@ def rasterize(
     rasterio.float64.
 
     """
-
-    # merge_alg usage deprecation warning.  Can be removed in rasterio 1.0
-    if not isinstance(merge_alg, MergeAlg):
-        warnings.warn("merge_alg must be MergeAlg.add or MergeAlg.replace, "
-                      "not a 'replace' or 'add'.  This usage has been "
-                      "deprecated.", RasterioDeprecationWarning)
-        merge_alg = MergeAlg[merge_alg]
-
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )

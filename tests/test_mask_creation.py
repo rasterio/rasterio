@@ -21,10 +21,10 @@ def test_create_internal_mask(data):
     # Check that the mask was saved correctly.
     with rasterio.open(str(data.join('RGB.byte.tif'))) as src:
         assert (mask == src.read_masks()).all()
-        for flags in src.mask_flags:
-            assert flags & MaskFlags.per_dataset
-            assert not flags & MaskFlags.alpha
-            assert not flags & MaskFlags.nodata
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.per_dataset in flags
+            assert MaskFlags.alpha not in flags
+            assert MaskFlags.nodata not in flags
 
 
 def test_create_sidecar_mask(data):
@@ -41,10 +41,10 @@ def test_create_sidecar_mask(data):
     # Check that the mask was saved correctly.
     with rasterio.open(str(data.join('RGB.byte.tif'))) as src:
         assert (mask == src.read_masks()).all()
-        for flags in src.mask_flags:
-            assert flags & MaskFlags.per_dataset
-            assert not flags & MaskFlags.alpha
-            assert not flags & MaskFlags.nodata
+        for flags in src.mask_flag_enums:
+            assert MaskFlags.per_dataset in flags
+            assert MaskFlags.alpha not in flags
+            assert MaskFlags.nodata not in flags
 
     # Check the .msk file, too.
     with rasterio.open(str(data.join('RGB.byte.tif.msk'))) as msk:

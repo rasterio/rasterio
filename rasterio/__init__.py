@@ -26,40 +26,17 @@ from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env, Env
-from rasterio.errors import RasterioDeprecationWarning, RasterioIOError
+from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
 from rasterio.vfs import parse_path
-from rasterio import windows
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
 from rasterio import _err, coords, enums, vfs
-
-
-# TODO deprecate or remove in factor of rasterio.windows.___
-def eval_window(*args, **kwargs):
-    from rasterio.windows import evaluate
-    warnings.warn(
-        "Deprecated; Use rasterio.windows instead", RasterioDeprecationWarning)
-    return evaluate(*args, **kwargs)
-
-
-def window_shape(*args, **kwargs):
-    from rasterio.windows import shape
-    warnings.warn(
-        "Deprecated; Use rasterio.windows instead", RasterioDeprecationWarning)
-    return shape(*args, **kwargs)
-
-
-def window_index(*args, **kwargs):
-    from rasterio.windows import window_index
-    warnings.warn(
-        "Deprecated; Use rasterio.windows instead", RasterioDeprecationWarning)
-    return window_index(*args, **kwargs)
 
 
 __all__ = ['band', 'open', 'pad']
@@ -86,51 +63,55 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     In read ('r') or read/write ('r+') mode, no keyword arguments are
     required: these attributes are supplied by the opened dataset.
 
-    In write ('w') mode, the driver, width, height, count, and dtype
+    In write ('w' or 'w+') mode, the driver, width, height, count, and dtype
     keywords are strictly required.
 
     Parameters
     ----------
     fp : str, file object or pathlib.Path object
-        A filename or URL, or file object opened in binary ('rb') mode
+        A filename or URL, a file object opened in binary ('rb') mode,
+        or a Path object.
     mode : str, optional
-        'r' (read, the default), 'r+' (read/write), or 'w' (write)
+        'r' (read, the default), 'r+' (read/write), 'w' (write), or
+        'w+' (write/read).
     driver : str, optional
         A short format driver name (e.g. "GTiff" or "JPEG") or a list of
         such names (see GDAL docs at
-        http://www.gdal.org/formats_list.html). In 'w' mode a single
-        name is required. In 'r' or 'r+' mode the driver can usually be
-        omitted. Registered drivers will be tried sequentially until a
-        match is found. When multiple drivers are available for a format
-        such as JPEG2000, one of them can be selected by using this
-        keyword argument.
+        http://www.gdal.org/formats_list.html). In 'w' or 'w+' modes
+        a single name is required. In 'r' or 'r+' modes the driver can
+        usually be omitted. Registered drivers will be tried
+        sequentially until a match is found. When multiple drivers are
+        available for a format such as JPEG2000, one of them can be
+        selected by using this keyword argument.
     width, height : int, optional
         The numbers of rows and columns of the raster dataset. Required
-        in 'w' mode, they are ignored in 'r' or 'r+' mode.
+        in 'w' or 'w+' modes, they are ignored in 'r' or 'r+' modes.
     count : int, optional
-        The count of dataset bands. Required in 'w' mode, it is ignored
-        in 'r' or 'r+' mode.
+        The count of dataset bands. Required in 'w' or 'w+' modes, it is
+        ignored in 'r' or 'r+' modes.
     dtype : str or numpy dtype
         The data type for bands. For example: 'uint8' or
-        ``rasterio.uint16``. Required in 'w' mode, it is ignored in
-        'r' or 'r+' mode.
+        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+        ignored in 'r' or 'r+' modes.
     crs : str, dict, or CRS; optional
-        The coordinate reference system. Required in 'w' mode, it is
-        ignored in 'r' or 'r+' mode.
+        The coordinate reference system. Required in 'w' or 'w+' modes,
+        it is ignored in 'r' or 'r+' modes.
     transform : Affine instance, optional
         Affine transformation mapping the pixel space to geographic
-        space. Required in 'w' mode, it is ignored in 'r' or 'r+' mode.
+        space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
+        'r+' modes.
     nodata : int, float, or nan; optional
         Defines the pixel value to be interpreted as not valid data.
-        Required in 'w' mode, it is ignored in 'r' or 'r+' mode.
+        Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
+        modes.
     sharing : bool
         A flag that allows sharing of dataset handles. Default is
         `True`. Should be set to `False` in a multithreaded:w program.
     kwargs : optional
-        These are passed to format drivers as directives for creating
-        or interpreting datasets. For example: in 'w' a `tiled=True`
-        keyword argument will direct the GeoTIFF format driver to
-        create a tiled, rather than striped, TIFF.
+        These are passed to format drivers as directives for creating or
+        interpreting datasets. For example: in 'w' or 'w+' modes
+        a `tiled=True` keyword argument will direct the GeoTIFF format
+        driver to create a tiled, rather than striped, TIFF.
 
     Returns
     -------
@@ -165,8 +146,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     """
 
     if not isinstance(fp, string_types):
-        if not (hasattr(fp, 'read') or hasattr(fp, 'write')
-                or isinstance(fp, Path)):
+        if not (hasattr(fp, 'read') or hasattr(fp, 'write') or isinstance(fp, Path)):
             raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, string_types):
         raise TypeError("invalid mode: {0!r}".format(mode))
@@ -176,25 +156,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         raise TypeError("invalid dtype: {0!r}".format(dtype))
     if nodata is not None:
         nodata = float(nodata)
-    if 'affine' in kwargs:
-        # DeprecationWarning's are ignored by default
-        with warnings.catch_warnings():
-            warnings.warn(
-                "The 'affine' kwarg in rasterio.open() is deprecated at 1.0 "
-                "and only remains to ease the transition.  Please switch to "
-                "the 'transform' kwarg.  See "
-                "https://github.com/mapbox/rasterio/issues/86 for details.",
-                DeprecationWarning,
-                stacklevel=2)
-
-            if transform:
-                warnings.warn(
-                    "Found both 'affine' and 'transform' in rasterio.open() - "
-                    "choosing 'transform'")
-                transform = transform
-            else:
-                transform = kwargs.pop('affine')
-
     if transform:
         transform = guard_transform(transform)
 
@@ -219,7 +180,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         return fp_reader(fp)
 
-    elif mode == 'w' and hasattr(fp, 'write'):
+    elif mode in ('w', 'w+') and hasattr(fp, 'write'):
 
         @contextmanager
         def fp_writer(fp):
@@ -254,13 +215,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             # None.
             if mode == 'r':
                 s = DatasetReader(fp, driver=driver, **kwargs)
-            elif mode == 'r-':
-                warnings.warn("'r-' mode is deprecated, use 'r'",
-                              DeprecationWarning)
-                s = DatasetReader(fp)
             elif mode == 'r+':
                 s = get_writer_for_path(fp)(fp, mode, driver=driver, **kwargs)
-            elif mode == 'w':
+            elif mode.startswith("w"):
                 s = get_writer_for_driver(driver)(fp, mode, driver=driver,
                                                   width=width, height=height,
                                                   count=count, crs=crs,

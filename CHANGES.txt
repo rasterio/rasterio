@@ -9,6 +9,38 @@ Breaking changes:
 - Whether to print GeoJSON feature sequences or a GeoJSON feature collection
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).
+- Comparing empty ``CRS`` objects returns ``True`` (#1034).
+- Deprecated window functions have been removed from the rasterio module. Their
+  replacements are in rasterio.windows (#1115).
+- The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
+- A bytearray is no longer allowed as input to the ``MemoryFile`` constructor.
+  Users must convert byte arrays to ``bytes before calling ``MemoryFile()``.
+
+A number of deprecated features have been removed (#1319).
+
+- In the rasterio.open function: we have removed 'affine' as an alias for
+  'transform'.
+- In the _base.DatasetBase class, and thereby all dataset objects: we have
+  removed the mask_flags and affine properties. Instead, users must use the
+  mask_flag_enums and transform properties.
+- In the _io.DatasetReaderBase class, and thereby all dataset objects: we have
+  removed the read_mask method. Users must use the read_masks method.
+- In the features.rasterize function: we have removed 'replace' and 'add' as
+  aliases for ``MergeAlg.replace`` and ``MergeAlg.add``.
+- In the profiles.Profile class: we have removed 'affine' as alias for
+  'transform' and have removed the `__call__` method. The class is no longer
+  callable. Users must use the mapping protocol to copy and update profiles.
+- In the windows.WindowMethodsMixin class, and thereby all dataset objects: we
+  have removed the 'boundless' keyword arg from the window and from_bounds
+  methods.
+- In the windows.Window class: we have removed the num_cols and num_rows
+  properties, the __getitem__ method, and the from_offlen and from_ranges class
+  methods.
+
+Upcoming deprecation:
+
+- Reading array data or masks from datasets opened in "w" mode will be
+  prohibited in Rasterio 1.0. We are warning about this now (#1309).
 
 New features:
 
@@ -17,6 +49,7 @@ New features:
 
 Bug fixes:
 
+- Added the missing w+ mode (#1309).
 - Rotated datasets are now masked properly (#1240, #1278).
 - Geometry collections are flattened in ``rasterize`` to work around
   incidental holes created by GDAL (#1253, #1274).

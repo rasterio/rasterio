@@ -1,4 +1,5 @@
 import rasterio
+from rasterio.windows import Window
 
 
 def test_checksum_band():
@@ -9,7 +10,7 @@ def test_checksum_band():
 
 def test_checksum_band_window():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        window = ((0, src.height), (0, src.width))
+        window = Window(0, 0, src.width, src.height)
         checksums = [src.checksum(i, window=window) for i in src.indexes]
         assert checksums == [25420, 29131, 37860]
 

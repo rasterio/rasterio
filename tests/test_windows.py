@@ -443,12 +443,6 @@ def test_window_from_slices():
     assert Window.from_slices((0, 1), (2, 3)) == Window.from_slices((0, 1), (2, 3))
 
 
-def test_window_from_offlen():
-    """from_offlen classmethod works."""
-    with pytest.warns(RasterioDeprecationWarning):
-        assert Window.from_offlen(2, 0, 1, 1) == Window.from_slices((0, 1), (2, 3))
-
-
 def test_read_with_window_class(path_rgb_byte_tif):
     """Reading subset with Window class works"""
     with rasterio.open(path_rgb_byte_tif) as src:
