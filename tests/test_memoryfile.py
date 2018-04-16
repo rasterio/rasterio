@@ -123,7 +123,8 @@ def test_no_initial_bytes(rgb_data_and_profile):
         # Exact size of the in-memory GeoTIFF varies with GDAL
         # version and configuration.
         assert view.size > 1000000
-        data = bytes(view)
+        # NB: bytes(view) doesn't return what you'd expect with python 2.7.
+        data = bytes(bytearray(view))
 
     with MemoryFile(data) as memfile:
         with memfile.open() as src:
