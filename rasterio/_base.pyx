@@ -861,6 +861,8 @@ cdef class DatasetBase(object):
 
         if ovr:
             obj = GDALGetOverview(band, ovr)
+            if obj == NULL:
+              return None
         else:
             obj = band
 
