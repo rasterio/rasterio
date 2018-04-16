@@ -16,3 +16,8 @@ def test_get_tag_item():
         assert not src.get_tag_item('IF', 'TIFF', bidx=1)
         with pytest.raises(Exception):
             src.get_tag_item('IFD_OFFSET', 'TIFF', ovr=1)
+
+
+def test_get_tag_item_noOverview():
+    with rasterio.open('tests/data/rgb3.tif') as src:
+        assert not src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1, ovr=1)
