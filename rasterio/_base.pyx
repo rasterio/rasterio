@@ -25,8 +25,8 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env
 from rasterio.errors import (
-    RasterioIOError, CRSError, DriverRegistrationError,
-    NotGeoreferencedWarning, RasterBlockError)
+    RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
+    RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -782,17 +782,72 @@ cdef class DatasetBase(object):
         num_items = CSLCount(metadata)
         return dict(metadata[i].split('=', 1) for i in range(num_items))
 
+
+    def get_tag_item(self, ns, dm=None, bidx=0, ovr=None):
+        """Returns tag item value
+
+        Parameters
+        ----------
+        ns: str
+            The key for the metadata item to fetch.
+        dm: str
+            The domain to fetch for.
+        bidx: int
+            Band index, starting with 1.
+        ovr: int
+            Overview level
+
+        Returns
+        -------
+        str
+        """
+        cdef GDALMajorObjectH band = NULL
+        cdef GDALMajorObjectH obj = NULL
+        cdef char *value = NULL
+        cdef const char *name = NULL
+        cdef const char *domain = NULL
+
+        ns = ns.encode('utf-8')
+        name = ns
+
+        if dm:
+            dm = dm.encode('utf-8')
+            domain = dm
+
+        if not bidx > 0 and ovr:
+            raise Exception("Band index (bidx) option needed for overview level")
+
+        if bidx > 0:
+            band = self.band(bidx)
+        else:
+            band = self._hds
+
+        if ovr:
+            obj = GDALGetOverview(band, ovr)
+            if obj == NULL:
+              raise BandOverviewError(
+                  "Failed to retrieve overview {}".format(ovr))
+        else:
+            obj = band
+
+        value = GDALGetMetadataItem(obj, name, domain)
+        if value == NULL:
+            return None
+        else:
+            return value
+
+
     property colorinterp:
 
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
-        
+
         To set color interpretation, provide a sequence of
         ``ColorInterp.<enum>``:
-            
+
             import rasterio
             from rasterio.enums import ColorInterp
-            
+
             with rasterio.open('rgba.tif', 'r+') as src:
                 src.colorinterp = (
                     ColorInterp.red,
