@@ -10,4 +10,4 @@ def test_dataset_features(tmpdir):
 
     tool("tests/data/RGB.byte.tif", str(tmpdir.join("footprint.jsons")))
 
-    assert tmpdir.join("footprint.jsons").read().find("Feature") == 10
+    assert tmpdir.join("footprint.jsons").read().count("Feature") == 9
