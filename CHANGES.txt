@@ -44,6 +44,8 @@ Upcoming deprecation:
 
 New features:
 
+- A tools module has been added to collect file-based functions and supporting
+  classes (#1300).
 - ``rasterio.features.dataset_features()`` has been extracted from
   rio-shapes (#1282, #1286).
 

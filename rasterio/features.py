@@ -507,7 +507,7 @@ def is_valid_geom(geom):
 
 def dataset_features(
         src,
-        bidx,
+        bidx=None,
         sampling=1,
         band=True,
         as_mask=False,
