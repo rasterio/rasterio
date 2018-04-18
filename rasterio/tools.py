@@ -25,23 +25,27 @@ class JSONSequenceTool(object):
         """
         self.func = func
 
-    def __call__(self, src, dst, src_opts=None, dst_opts=None, config=None):
-        """Execute the tool's primary function
+    def __call__(self, src_path, dst_path, src_kwargs=None, dst_kwargs=None, func_args=None, func_kwargs=None, config=None):
+        """Execute the tool's primary function and perform file I/O
 
         Parameters
         ----------
-        src : str or PathLike object
+        src_path : str or PathLike object
             A dataset path or URL. Will be opened in "r" mode using
             src_opts.
-        dst : str or Path-like object
+        dst_path : str or Path-like object
             A path or or PathLike object. Will be opened in "w" mode.
-        src_opts : mapping
+        src_kwargs : dict
             Options that will be passed to rasterio.open when opening
             src.
-        dst_opts : mapping
+        dst_kwargs : dict
             Options that will be passed to json.dumps when serializing
             output.
-        config : mapping
+        func_args : sequence
+            Extra positional arguments for the tool's primary function.
+        func_kwargs : dict
+            Extra keyword arguments for the tool's primary function.
+        config : dict
             Rasterio Env options.
 
         Returns
@@ -52,11 +56,17 @@ class JSONSequenceTool(object):
         ------------
         Writes sequences of JSON texts to the named output file.
         """
-        src_opts = src_opts or {}
-        dst_opts = dst_opts or {}
+
+        src_kwargs = src_kwargs or {}
+        dst_kwargs = dst_kwargs or {}
+        func_args = func_args or []
+        func_kwargs = func_kwargs or {}
         config = config or {}
 
         with rasterio.Env(**config):
-            with open(dst, 'w') as fdst, rasterio.open(src, **src_opts) as dsrc:
-                for obj in self.func(dsrc):
-                    fdst.write(json.dumps(obj, **dst_opts))
+            with open(dst_path, 'w') as fdst, rasterio.open(src_path, **src_kwargs) as dsrc:
+                for obj in self.func(dsrc, *func_args, **func_kwargs):
+                    fdst.write(json.dumps(obj, **dst_kwargs))
+
+
+dataset_features_tool = JSONSequenceTool(dataset_features)
