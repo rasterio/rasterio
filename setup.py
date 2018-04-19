@@ -9,10 +9,12 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 
+import copy
 from distutils.command.sdist import sdist
 import itertools
 import logging
 import os
+import platform
 import pprint
 import shutil
 import subprocess
@@ -198,7 +200,7 @@ if not os.name == "nt":
                                          '-Wno-unused-function']
 
 # Copy extension options for cpp extension modules.
-cpp_ext_options = ext_options.copy()
+cpp_ext_options = copy.deepcopy(ext_options)
 
 # GDAL 2.3 and newer requires C++11
 if (gdal_major_version, gdal_minor_version) >= (2, 3):
@@ -206,11 +208,16 @@ if (gdal_major_version, gdal_minor_version) >= (2, 3):
 
     # 'extra_compile_args' may not be defined
     eca = cpp_ext_options.get('extra_compile_args', [])
-    eca.append(cpp11_flag)
+
+    if platform.system() == 'Darwin':
+        eca += [cpp11_flag, '-mmacosx-version-min=10.9', '-stdlib=libc++']
+    elif cpp11_flag not in eca:
+        eca.append(cpp11_flag)
+
     cpp_ext_options['extra_compile_args'] = eca
 
-    # Link args are always defined
-    cpp_ext_options['extra_link_args'].append(cpp11_flag)
+    # if cpp11_flag not in cpp_ext_options['extra_link_args']:
+    #    cpp_ext_options['extra_link_args'].append(cpp11_flag)
 
 
 cythonize_options = {}
@@ -229,6 +236,14 @@ if gdal_major_version >= 2:
 else:
     cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
     sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
+
+# Remove -std=c++11 from C extension options.
+try:
+    ext_options['extra_link_args'].remove('-std=c++11')
+    ext_options['extra_compile_args'].remove('-std=c++11')
+except Exception:
+    pass
+
 
 # When building from a repo, Cython is required.
 if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
