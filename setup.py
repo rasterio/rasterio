@@ -198,7 +198,7 @@ if not os.name == "nt":
                                          '-Wno-unused-function']
 
 # Copy extension options for cpp extension modules.
-cpp_ext_options = ext_options[:]
+cpp_ext_options = ext_options.copy()
 
 # GDAL 2.3 and newer requires C++11
 if (gdal_major_version, gdal_minor_version) >= (2, 3):
