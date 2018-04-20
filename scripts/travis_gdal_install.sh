@@ -73,7 +73,7 @@ if [ "$GDALVERSION" = "master" ]; then
     mkdir -p $GDALINST/gdal-$GDALVERSION
     cp newrev.txt $GDALINST/gdal-$GDALVERSION/rev.txt
     ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
-    make -s
+    make
     make install
   fi
 fi
@@ -84,7 +84,7 @@ if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   tar -xzf gdal-$GDALVERSION.tar.gz
   cd gdal-$GDALVERSION
   ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
-  make -s
+  make
   make install
 fi
 
