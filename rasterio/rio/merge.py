@@ -17,13 +17,13 @@ from rasterio.rio.helpers import resolve_inout
 @options.resolution_opt
 @options.nodata_opt
 @options.bidx_mult_opt
-@options.force_overwrite_opt
+@options.overwrite_opt
 @click.option('--precision', type=int, default=7,
               help="Number of decimal places of precision in alignment of "
                    "pixels")
 @options.creation_options
 @click.pass_context
-def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite,
+def merge(ctx, files, output, driver, bounds, res, nodata, bidx, overwrite,
           precision, creation_options):
     """Copy valid pixels from input files to an output file.
 
@@ -47,7 +47,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, force_overwrite
     from rasterio.merge import merge as merge_tool
 
     output, files = resolve_inout(
-        files=files, output=output, force_overwrite=force_overwrite)
+        files=files, output=output, overwrite=overwrite)
 
     with ctx.obj['env']:
         datasets = [rasterio.open(f) for f in files]

@@ -53,7 +53,7 @@ files_inout_arg = click.argument(
 @click.option('--property', 'prop', type=str, default=None, help='Property in '
               'GeoJSON features to use for rasterized values.  Any features '
               'that lack this property will be given --default_value instead.')
-@options.force_overwrite_opt
+@options.overwrite_opt
 @options.creation_options
 @click.pass_context
 def rasterize(
@@ -70,7 +70,7 @@ def rasterize(
         default_value,
         fill,
         prop,
-        force_overwrite,
+        overwrite,
         creation_options):
     """Rasterize GeoJSON into a new or existing raster.
 
@@ -116,7 +116,7 @@ def rasterize(
     from rasterio.features import bounds as calculate_bounds
 
     output, files = resolve_inout(
-        files=files, output=output, force_overwrite=force_overwrite)
+        files=files, output=output, overwrite=overwrite)
 
     bad_param = click.BadParameter('invalid CRS.  Must be an EPSG code.',
                                    ctx, param=src_crs, param_hint='--src_crs')

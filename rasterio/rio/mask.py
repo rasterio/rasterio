@@ -31,7 +31,7 @@ logger = logging.getLogger('rio')
               help='Inverts the mask, so that areas covered by features are'
                    'masked out and areas not covered are retained.  Ignored '
                    'if using --crop')
-@options.force_overwrite_opt
+@options.overwrite_opt
 @options.creation_options
 @click.pass_context
 def mask(
@@ -43,7 +43,7 @@ def mask(
         all_touched,
         crop,
         invert,
-        force_overwrite,
+        overwrite,
         creation_options):
     """Masks in raster using GeoJSON features (masks out all areas not covered
     by features), and optionally crops the output raster to the extent of the
@@ -68,7 +68,7 @@ def mask(
     """
 
     output, files = resolve_inout(
-        files=files, output=output, force_overwrite=force_overwrite)
+        files=files, output=output, overwrite=overwrite)
     input = files[0]
 
     if geojson_mask is None:
