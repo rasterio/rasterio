@@ -200,7 +200,7 @@ def test_merge_output_exists(tmpdir):
 
 
 def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
-    """Fails without --force-overwrite"""
+    """Fails without --overwrite"""
     runner = CliRunner()
     result = runner.invoke(
         main_group, [
@@ -210,11 +210,11 @@ def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
 
 
 def test_merge_output_exists_without_nodata(test_data_dir_2):
-    """Succeeds with --force-overwrite"""
+    """Succeeds with --overwrite"""
     runner = CliRunner()
     result = runner.invoke(
         main_group, [
-            'merge', '--force-overwrite', str(test_data_dir_2.join('a.tif')),
+            'merge', '--overwrite', str(test_data_dir_2.join('a.tif')),
             str(test_data_dir_2.join('b.tif'))])
     assert result.exit_code == 0
 

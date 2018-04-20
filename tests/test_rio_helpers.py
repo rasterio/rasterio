@@ -29,12 +29,12 @@ def test_fail_overwrite(tmpdir):
         helpers.resolve_inout(files=[str(x) for x in tmpdir.listdir()])
         assert "file exists and won't be overwritten without use of the " in str(excinfo.value)
 
-def test_force_overwrite(tmpdir):
+def test_overwrite(tmpdir):
     """Forced overwrite of existing file succeeds."""
     foo_tif = tmpdir.join('foo.tif')
     foo_tif.write("content")
     output, inputs = helpers.resolve_inout(
-        files=[str(x) for x in tmpdir.listdir()], force_overwrite=True)
+        files=[str(x) for x in tmpdir.listdir()], overwrite=True)
     assert output == str(foo_tif)
 
 

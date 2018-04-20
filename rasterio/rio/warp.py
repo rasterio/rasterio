@@ -61,12 +61,12 @@ MAX_OUTPUT_HEIGHT = 100000
               help='Constrain output to valid coordinate region in dst-crs')
 @click.option('--target-aligned-pixels/--no-target-aligned-pixels', default=False,
               help='align the output bounds based on the resolution')
-@options.force_overwrite_opt
+@options.overwrite_opt
 @options.creation_options
 @click.pass_context
 def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
          dst_bounds, res, resampling, src_nodata, dst_nodata, threads,
-         check_invert_proj, force_overwrite, creation_options,
+         check_invert_proj, overwrite, creation_options,
          target_aligned_pixels):
     """
     Warp a raster dataset.
@@ -111,7 +111,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
     """
     output, files = resolve_inout(
-        files=files, output=output, force_overwrite=force_overwrite)
+        files=files, output=output, overwrite=overwrite)
 
     resampling = Resampling[resampling]  # get integer code for method
 

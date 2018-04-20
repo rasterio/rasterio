@@ -294,8 +294,8 @@ rgb_opt = click.option(
     default=False,
     help="Set RGB photometric interpretation.")
 
-force_overwrite_opt = click.option(
-    '--force-overwrite', 'force_overwrite',
+overwrite_opt = click.option(
+    '--overwrite', 'overwrite',
     is_flag=True, type=bool, default=False,
     help="Always overwrite an existing output file.")
 

@@ -157,7 +157,7 @@ def test_rasterize_existing_output(tmpdir, runner, basic_feature):
 
     result = runner.invoke(
         main_group, [
-            'rasterize', '--force-overwrite', '-o', output, '--dimensions', DEFAULT_SHAPE[0],
+            'rasterize', '--overwrite', '-o', output, '--dimensions', DEFAULT_SHAPE[0],
             DEFAULT_SHAPE[1]],
         input=json.dumps(basic_feature))
 
@@ -234,7 +234,7 @@ def test_rasterize_src_crs_mismatch(tmpdir, runner, basic_feature,
 
     result = runner.invoke(
         main_group, [
-            'rasterize', output, '--force-overwrite', '--src-crs', 'EPSG:3857'],
+            'rasterize', output, '--overwrite', '--src-crs', 'EPSG:3857'],
         input=json.dumps(basic_feature))
     assert result.exit_code == 2
     assert 'GeoJSON does not match crs of existing output raster' in result.output
