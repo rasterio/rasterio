@@ -202,6 +202,13 @@ if not os.name == "nt":
 # Copy extension options for cpp extension modules.
 cpp_ext_options = copy.deepcopy(ext_options)
 
+# Remove -std=c++11 from C extension options.
+try:
+    ext_options['extra_link_args'].remove('-std=c++11')
+    ext_options['extra_compile_args'].remove('-std=c++11')
+except Exception:
+    pass
+
 # GDAL 2.3 and newer requires C++11
 if (gdal_major_version, gdal_minor_version) >= (2, 3):
     cpp11_flag = '-std=c++11'
@@ -210,16 +217,20 @@ if (gdal_major_version, gdal_minor_version) >= (2, 3):
     eca = cpp_ext_options.get('extra_compile_args', [])
 
     if platform.system() == 'Darwin':
+
+        if cpp11_flag not in eca:
+            eca.append(cpp11_flag)
+
         eca += [cpp11_flag, '-mmacosx-version-min=10.9', '-stdlib=libc++']
+
+    # TODO: Windows
+
     elif cpp11_flag not in eca:
         eca.append(cpp11_flag)
 
     cpp_ext_options['extra_compile_args'] = eca
 
-    # if cpp11_flag not in cpp_ext_options['extra_link_args']:
-    #    cpp_ext_options['extra_link_args'].append(cpp11_flag)
-
-
+# Configure optional Cython coverage.
 cythonize_options = {}
 if os.environ.get('CYTHON_COVERAGE'):
     cythonize_options['compiler_directives'] = {'linetrace': True}
@@ -236,13 +247,6 @@ if gdal_major_version >= 2:
 else:
     cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
     sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
-
-# Remove -std=c++11 from C extension options.
-try:
-    ext_options['extra_link_args'].remove('-std=c++11')
-    ext_options['extra_compile_args'].remove('-std=c++11')
-except Exception:
-    pass
 
 
 # When building from a repo, Cython is required.
