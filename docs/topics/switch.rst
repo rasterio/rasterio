@@ -327,7 +327,7 @@ data.
 
 .. code-block:: pycon
 
-   >>> src - rasterio.open('example.tif')
+   >>> src = rasterio.open('example.tif')
    >>> src.dataset_mask()
    array([[0, 0, 0, ..., 0, 0, 0],
           [0, 0, 0, ..., 0, 0, 0],
@@ -341,8 +341,8 @@ Arrays for dataset bands can also be had as a Numpy ``masked_array``.
 
 .. code-block:: pycon
 
-    >>> src.read(1, masked-True)
-    masked_array(data -
+    >>> src.read(1, masked=True)
+    masked_array(data =
      [[-- -- -- ..., -- -- --]
       [-- -- -- ..., -- -- --]
       [-- -- -- ..., -- -- --]
@@ -350,7 +350,7 @@ Arrays for dataset bands can also be had as a Numpy ``masked_array``.
       [-- -- -- ..., -- -- --]
       [-- -- -- ..., -- -- --]
       [-- -- -- ..., -- -- --]],
-                 mask -
+                 mask =
      [[ True  True  True ...,  True  True  True]
       [ True  True  True ...,  True  True  True]
       [ True  True  True ...,  True  True  True]
@@ -358,7 +358,7 @@ Arrays for dataset bands can also be had as a Numpy ``masked_array``.
       [ True  True  True ...,  True  True  True]
       [ True  True  True ...,  True  True  True]
       [ True  True  True ...,  True  True  True]],
-            fill_value - 0)
+            fill_value = 0)
 
 Where the masked array's ``mask`` is ``True``, the data is invalid and has been
 masked "out" in the opposite sense of GDAL's mask.

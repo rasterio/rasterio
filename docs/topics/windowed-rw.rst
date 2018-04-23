@@ -116,16 +116,16 @@ a dataset:
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         window - get_data_window(src.read(1, masked-True))
-        # window - Window(col_off-13, row_off-3, width-757, height-711)
+        # window = Window(col_off=13, row_off=3, width=757, height=711)
 
-        kwargs - src.meta.copy()
+        kwargs = src.meta.copy()
         kwargs.update({
             'height': window.height,
             'width': window.width,
             'transform': rasterio.windows.transform(window, src.transform)})
 
         with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
-            dst.write(src.read(window-window))
+            dst.write(src.read(window=window))
 
 
 Window utilities
