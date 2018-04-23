@@ -1,5 +1,5 @@
 Tagging datasets and bands
-**************************
+==========================
 
 GDAL's `data model <http://www.gdal.org/gdal_datamodel.html>`__ includes
 collections of key, value pairs for major classes. In that model, these are

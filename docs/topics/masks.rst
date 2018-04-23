@@ -1,5 +1,5 @@
 Nodata Masks
-************
+============
 
 Nodata masks allow you to identify regions of valid data values. In using Rasterio,
 you'll encounter two different kinds of masks.

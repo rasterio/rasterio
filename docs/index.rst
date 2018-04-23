@@ -41,73 +41,18 @@ The output of the program:
 
 Rasterio supports Python versions 2.7 and 3.3 or higher.
 
-User guide
-==========
-
-Start here with some background about the project and an introduction to 
-reading and writing raster datasets.
-
 .. toctree::
    :maxdepth: 2
 
    intro
    installation
    quickstart
-   switch
-
-Advanced topics
-===============
-
-.. toctree::
-   :maxdepth: 2
-
-   topics/color
-   topics/concurrency
-   topics/errors
-   topics/features
-   topics/fillnodata
-   topics/georeferencing
-   topics/image_options
-   topics/image_processing
-   topics/masking-by-shapefile
-   topics/masks
-   topics/memory-files
-   topics/migrating-to-v1
-   topics/nodata
-   topics/overviews
-   topics/plotting
-   topics/reproject
-   topics/resampling
-   topics/tags
-   topics/virtual-warping
-   topics/vsi
-   topics/windowed-rw
-
-API documentation
-=================
-
-.. toctree::
-   :maxdepth: 2
-
-   api/index
-
-CLI guide
-=========
-
-.. toctree::
-   :maxdepth: 2
-
    cli
-
-Contributor Guide
-=================
-
-.. toctree::
-   :maxdepth: 2
-
+   topics/index
+   api/index
    contributing
 
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`

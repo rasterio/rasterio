@@ -1,8 +1,8 @@
-General Concepts
-================
+Advanced Topics
+===============
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     color
     concurrency

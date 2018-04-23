@@ -1,11 +1,10 @@
 Color
-*****
+=====
 
 Color interpretation
-^^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 Color interpretation of raster bands can be read from the dataset
-
 
 .. code-block:: python
 
@@ -45,10 +44,6 @@ And the resulting raster will be interpretted as RGB.
     >>> with rasterio.open("/tmp/rgb.tif") as src2:
     ...     src2.colorinterp[1]
     <ColorInterp.green: 4>
-
-
-Colormaps
-^^^^^^^^^
 
 Writing colormaps
 -----------------
@@ -93,4 +88,3 @@ Reading colormaps
 As shown above, the ``colormap()`` returns a dict holding the colormap for the 
 given band index. For TIFF format files, the colormap will have 256 items, and
 all but two of those would map to (0, 0, 0, 0) in the example above.
-
