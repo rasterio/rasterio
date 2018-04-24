@@ -1,5 +1,5 @@
 Overviews
-*********
+=========
 
 Overviews are reduced resolution versions of your dataset that can speed up
 rendering when you don't need full resolution. By precomputing the upsampled

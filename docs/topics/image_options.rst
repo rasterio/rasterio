@@ -1,5 +1,5 @@
 Options
-*******
+=======
 
 GDAL's format drivers have many `configuration options`_.
 These options come in two flavors:

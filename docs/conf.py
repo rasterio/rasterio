@@ -57,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'rasterio'
-copyright = u'2016, Mapbox'
+copyright = u'2018, Mapbox'
 author = u'Sean Gillies'
 
 # The version info for the project you're documenting, acts as replacement for

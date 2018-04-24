@@ -1,4 +1,3 @@
-=====================================
 Switching from GDAL's Python bindings
 =====================================
 
@@ -10,7 +9,7 @@ between these two Python packages and highlights the features of Rasterio that
 can help in switching.
 
 Mutual Incompatibilities
-========================
+------------------------
 
 Rasterio and GDAL's bindings can contend for global GDAL objects. Unless you
 have deep knowledge about both packages, choose exactly one of ``import
@@ -32,7 +31,7 @@ writes like C while ``rasterio`` is more Pythonic – and don't complement each
 other well.
 
 The GDAL Environment
-====================
+--------------------
 
 GDAL library functions are excuted in a context of format drivers, error
 handlers, and format-specific configuration options that this document will
@@ -127,7 +126,7 @@ Rasterio achieves this with a single Python statement.
 
 
 Format Drivers
-==============
+--------------
 
 ``gdal`` provides objects for each of the GDAL format drivers. With Rasterio,
 format drivers are represented by strings and are used only as arguments to
@@ -140,7 +139,7 @@ functions like ``rasterio.open()``.
 Rasterio uses the same format driver names as GDAL does.
 
 Dataset Identifiers
-===================
+-------------------
 
 Rasterio uses URIs to identify datasets, with schemes for different protocols.
 The GDAL bindings have their own special syntax.
@@ -171,7 +170,7 @@ format-specific connection strings, too, and dispatch them to the proper format
 drivers and protocols.
 
 Dataset Objects
-===============
+---------------
 
 Rasterio and ``gdal`` each have dataset objects. Not the same classes, of 
 course, but not radically different ones. In each case, you generally get
@@ -184,7 +183,7 @@ the ``close()`` method that ``gdal`` lacks so that you can actively close
 dataset connections.
 
 Bands
-=====
+-----
 
 ``gdal`` has band objects. Rasterio does not and thus never has objects with
 dangling dataset pointers. With Rasterio, bands are represented by a numerical
@@ -236,7 +235,7 @@ Namedtuples are like lightweight classes.
    3
 
 Geotransforms
-=============
+-------------
 
 The ``transform`` attribute of a Rasterio dataset object is comparable to the
 ``GeoTransform`` attribute of a GDAL dataset, but Rasterio's has more power.
@@ -271,7 +270,7 @@ converted to the sequences used by ``gdal``.
     (101985.0, 300.0379266750948, 0.0, 2826915.0, 0.0, -300.041782729805)
 
 Coordinate Reference Systems
-============================
+----------------------------
 
 The ``crs`` attribute of a Rasterio dataset object is an instance of Rasterio's
 ``CRS`` class and works well with ``pyproj``.
@@ -284,7 +283,7 @@ The ``crs`` attribute of a Rasterio dataset object is an instance of Rasterio's
    (-8789636.707871985, 2938035.238323653)
 
 Tags
-====
+----
 
 GDAL metadata items are called "tags" in Rasterio. The tag set for a given GDAL
 metadata namespace is represented as a dict.
@@ -302,7 +301,7 @@ several namespaces of its own: ``rio_creation_kwds`` and ``rio_overviews``,
 each with their own semantics.
 
 Offsets and Windows
-===================
+-------------------
 
 Rasterio adds an abstraction for subsets or windows of a raster array that
 GDAL does not have. A window is a pair of tuples, the first of the pair being
@@ -320,7 +319,7 @@ four subset parameters used with ``gdal`` to the class constructor.
    subset = src.read(1, window=Window(xoff, yoff, xsize, ysize))
 
 Valid Data Masks
-================
+----------------
 
 Rasterio provides an array for every dataset representing its valid data mask
 using the same indicators as GDAL: ``0`` for invalid data and ``255`` for valid
@@ -336,7 +335,7 @@ data.
           ...,
           [0, 0, 0, ..., 0, 0, 0],
           [0, 0, 0, ..., 0, 0, 0],
-          [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)
+          [0, 0, 0, ..., 0, 0, 0]], dtype-uint8)
 
 Arrays for dataset bands can also be had as a Numpy ``masked_array``.
 
@@ -365,7 +364,7 @@ Where the masked array's ``mask`` is ``True``, the data is invalid and has been
 masked "out" in the opposite sense of GDAL's mask.
 
 Errors and Exceptions
-=====================
+---------------------
 
 Rasterio always raises Python exceptions when an error occurs and never returns
 an error code or ``None`` to indicate an error. ``gdal`` takes the opposite

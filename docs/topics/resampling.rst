@@ -1,11 +1,11 @@
 Resampling
-**********
+==========
 
- For details on changing coordinate reference systems, see `Reprojection`.
-
+For details on changing coordinate reference systems, see `Reprojection`.
 
 Up and Downsampling
 -------------------
+
 *Resampling* refers to changing the cell values due to changes in the raster cell grid. This can occur during reprojection. Even if the crs is not changing, we may want to change the effective cell size of an existing dataset.
 
 *Upsampling* refers to cases where we are converting to higher resolution/smaller cells.
@@ -14,7 +14,8 @@ Up and Downsampling
 There are three potential ways to perform up/downsampling.
 
 Use reproject
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+~
 If you use ``reproject`` but keep the same CRS, you can utilize the underlying GDAL algorithms
 to resample your data.
 
@@ -44,7 +45,7 @@ by ``x``, you need to *divide* the affine parameters defining the cell size by `
 
 
 Use scipy
-~~~~~~~~~~~~~
+~~~~~~~~~
 
 You can also use `scipy.ndimage.interpolation.zoom`_ to "zoom" with a configurable spline interpolation
 that differs from the resampling methods available in GDAL. This may not be appropriate for all data so check the results carefully. You must adjust the affine transform just as we did above.

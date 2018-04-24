@@ -1,7 +1,5 @@
-
 .. _windowrw:
 
-============================
 Windowed reading and writing
 ============================
 
@@ -9,9 +7,8 @@ Beginning in rasterio 0.3, you can read and write "windows" of raster files.
 This feature allows you to work on rasters that are larger than your
 computers RAM or process chunks of large rasters in parallel.
 
-
 Windows
-=======
+-------
 
 A window is a view onto a rectangular subset of a raster dataset and is
 described in rasterio by column and row offsets and width and height
@@ -42,7 +39,7 @@ and open-ended slices may be used.
 
 
 Reading
-=======
+-------
 
 Here is an example of reading a 256 row x 512 column subset of the rasterio
 test file.
@@ -57,7 +54,7 @@ test file.
     (256, 512)
 
 Writing
-=======
+-------
 
 Writing works similarly. The following creates a blank 500 column x 300 row
 GeoTIFF and plops 37,500 pixels with value 127 into a window 30 pixels down from
@@ -80,7 +77,7 @@ The result:
    :height: 300
 
 Decimation
-==========
+----------
 
 If the write window is smaller than the data, the data will be decimated.
 Below, the window is scaled to one third of the source image.
@@ -108,7 +105,7 @@ And the result:
    :height: 300
 
 Data windows
-============
+------------
 
 Sometimes it is desirable to crop off an outer boundary of NODATA values around
 a dataset:
@@ -118,7 +115,7 @@ a dataset:
     from rasterio.windows import get_data_window
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        window = get_data_window(src.read(1, masked=True))
+        window - get_data_window(src.read(1, masked-True))
         # window = Window(col_off=13, row_off=3, width=757, height=711)
 
         kwargs = src.meta.copy()
@@ -132,7 +129,7 @@ a dataset:
 
 
 Window utilities
-================
+----------------
 
 Basic union and intersection operations are available for windows, to
 streamline operations across dynamically created windows for a series of bands
@@ -151,7 +148,7 @@ or datasets with the same full extent.
 
 
 Blocks
-======
+------
 
 Raster datasets are generally composed of multiple blocks of data and
 windowed reads and writes are most efficient when the windows match the

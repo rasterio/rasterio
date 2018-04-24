@@ -1,5 +1,5 @@
 Reprojection
-************
+============
 
 Rasterio can map the pixels of a destination raster with an associated
 coordinate reference system and transform to the pixels of a source image with

@@ -1,9 +1,8 @@
-============
 Installation
 ============
 
 Dependencies
-============
+------------
 
 Rasterio has one C library dependency: ``GDAL >=1.11``. GDAL itself depends on
 many of other libraries provided by most major operating systems and also
@@ -15,10 +14,10 @@ click, enum34, numpy``.
 Development also requires (see requirements-dev.txt) Cython and other packages.
 
 Installing from binaries
-========================
+------------------------
 
 OS X
-----
+****
 
 Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
 for OS X versions 10.7+ starting with Rasterio version 0.17. To install, 
@@ -34,7 +33,7 @@ Binary wheels for other operating systems will be available in a future
 release.
 
 Windows
--------
+*******
 
 Binary wheels for rasterio and GDAL are created by Christoph Gohlke and are
 available from his website.
@@ -52,7 +51,7 @@ this from the downloads folder:
 
 
 Installing with Anaconda
-=========================
+-------------------------
 
 To install rasterio on the Anaconda Python distribution, please visit the
 `rasterio conda-forge`_ page for install instructions. This build is maintained
@@ -60,7 +59,7 @@ separately from the rasterio distribution on PyPi and packaging issues should
 be addressed on the `rasterio conda-forge`_ issue tracker. 
 
 Installing from the source distribution
-=======================================
+---------------------------------------
 
 Rasterio is a Python C extension and to build you'll need a working compiler
 (XCode on OS X etc). You'll also need Numpy preinstalled; the Numpy headers are
@@ -71,7 +70,7 @@ Travis `configuration
 guidance.
 
 Linux
------
+*****
 
 The following commands are adapted from Rasterio's Travis-CI configuration.
 
@@ -85,7 +84,7 @@ The following commands are adapted from Rasterio's Travis-CI configuration.
 Adapt them as necessary for your Linux system.
 
 OS X
-----
+****
 
 For a Homebrew based Python environment, do the following.
 
@@ -95,7 +94,7 @@ For a Homebrew based Python environment, do the following.
     $ pip install rasterio
 
 Windows
--------
+*******
 
 You can download a binary distribution of GDAL from `here
 <http://www.gisinternals.com/release.php>`__.  You will also need to download
