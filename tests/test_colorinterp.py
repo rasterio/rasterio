@@ -26,8 +26,8 @@ def test_cmyk_interp(tmpdir):
         # dst.write(np.ones((profile['count'], profile['height'], profile['width']), profile['dtype']))
 
     with rasterio.open(tiffname) as dst:
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         assert dst.profile['photometric'] == 'cmyk'
         assert dst.colorinterp == (
             ColorInterp.cyan,
