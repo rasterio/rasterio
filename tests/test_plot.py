@@ -56,7 +56,7 @@ def test_show_cmyk_interp(tmpdir):
     matplotlib = pytest.importorskip('matplotlib')
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         meta = src.meta
-    meta['photometric'] = 'CMYK'
+    meta['photometric'] = 'cmyk'
     meta['count'] = 4
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
