@@ -264,9 +264,11 @@ def test_write_lzw(tmpdir):
             width=100, height=100, count=1,
             dtype=a.dtype,
             compress='LZW') as s:
+        assert ('compress', 'LZW') in s.kwds.items()
         s.write(a, indexes=1)
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert "LZW" in info
+
 
 def test_write_noncontiguous(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))

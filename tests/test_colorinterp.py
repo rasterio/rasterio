@@ -1,15 +1,11 @@
 """Tests for interacting with color interpretation."""
 
-import logging
-import numpy as np
 import pytest
 
 import rasterio
 from rasterio.enums import ColorInterp
 
 from .conftest import requires_gdal22
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def test_cmyk_interp(tmpdir):

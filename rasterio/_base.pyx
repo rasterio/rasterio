@@ -623,7 +623,6 @@ cdef class DatasetBase(object):
             dtype = 'float_'
         else:
             dtype = self.dtypes[0]
-
         m = {
             'driver': self.driver,
             'dtype': dtype,
@@ -634,9 +633,7 @@ cdef class DatasetBase(object):
             'crs': self.crs,
             'transform': self.transform,
         }
-
         self._read = True
-
         return m
 
     @property
@@ -660,7 +657,6 @@ cdef class DatasetBase(object):
     @property
     def photometric(self):
         val = self.tags(ns='IMAGE_STRUCTURE').get('SOURCE_COLOR_SPACE')
-        log.debug("IMAGE_STRUCTURE tags: %r", self.tags(ns='IMAGE_STRUCTURE'))
         if val:
             return PhotometricInterp(val)
         else:
