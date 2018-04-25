@@ -17,18 +17,13 @@ def test_cmyk_interp(tmpdir):
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         profile = src.profile
 
-    profile['photometric'] = 'CMYK'
+    profile['photometric'] = 'cmyk'
     profile['count'] = 4
 
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **profile) as dst:
-        pass
-        # dst.write(np.ones((profile['count'], profile['height'], profile['width']), profile['dtype']))
-
-    with rasterio.open(tiffname) as dst:
-        # import pdb
-        # pdb.set_trace()
-        assert dst.profile['photometric'] == 'cmyk'
+        assert dst.profile['count'] == 4
+        assert dst.kwds['photometric'] == 'cmyk'
         assert dst.colorinterp == (
             ColorInterp.cyan,
             ColorInterp.magenta,

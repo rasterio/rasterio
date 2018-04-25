@@ -102,15 +102,6 @@ def test_dataset_profile_property_untiled(data):
         assert src.profile['tiled'] is False
 
 
-def test_dataset_profile_creation_kwds(data):
-    """Updated creation keyword tags appear in profile"""
-    tiffile = str(data.join('RGB.byte.tif'))
-    with rasterio.open(tiffile, 'r+') as src:
-        src.update_tags(ns='rio_creation_kwds', foo='bar')
-        assert src.profile['tiled'] is False
-        assert src.profile['foo'] == 'bar'
-
-
 def test_profile_affine_set():
     """TypeError is raised on set of affine item"""
     profile = Profile()

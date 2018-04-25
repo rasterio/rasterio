@@ -19,7 +19,7 @@ from rasterio._err import (
 from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
-from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, PhotometricInterp, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
@@ -1085,7 +1085,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # touch self.meta
         _ = self.meta
-
+        self.update_tags(ns='rio_creation_kwds', **kwargs)
         self._closed = False
 
     def __repr__(self):
@@ -1865,7 +1865,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # touch self.meta
         _ = self.meta
-
+        self.update_tags(ns='rio_creation_kwds', **kwargs)
         self._closed = False
 
     def close(self):

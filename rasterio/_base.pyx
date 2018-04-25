@@ -26,7 +26,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError, RasterioDeprecationWarning)
+    RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -623,6 +623,7 @@ cdef class DatasetBase(object):
             dtype = 'float_'
         else:
             dtype = self.dtypes[0]
+
         m = {
             'driver': self.driver,
             'dtype': dtype,
@@ -633,6 +634,7 @@ cdef class DatasetBase(object):
             'crs': self.crs,
             'transform': self.transform,
         }
+
         self._read = True
 
         return m
@@ -658,6 +660,7 @@ cdef class DatasetBase(object):
     @property
     def photometric(self):
         val = self.tags(ns='IMAGE_STRUCTURE').get('SOURCE_COLOR_SPACE')
+        log.debug("IMAGE_STRUCTURE tags: %r", self.tags(ns='IMAGE_STRUCTURE'))
         if val:
             return PhotometricInterp(val)
         else:
@@ -690,7 +693,6 @@ cdef class DatasetBase(object):
                 m['interleave'] = self.interleaving.name
             if self.photometric:
                 m['photometric'] = self.photometric.name
-
             return m
 
     def lnglat(self):
@@ -930,8 +932,7 @@ cdef class DatasetBase(object):
 
     @property
     def kwds(self):
-        warnings.warn("Dataset creation options will no longer be stored as tags in 1.0.", RasterioDeprecationWarning)
-        return {}
+        return self.tags(ns='rio_creation_kwds')
 
     # Overviews.
     def overviews(self, bidx):
