@@ -26,7 +26,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError)
+    RasterBlockError, BandOverviewError, RasterioDeprecationWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -677,8 +677,6 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             m = Profile(**self.meta)
-            m.update((k, v.lower()) for k, v in self.tags(
-                ns='rio_creation_kwds').items())
             if self.is_tiled:
                 m.update(
                     blockxsize=self.block_shapes[0][1],
@@ -932,7 +930,8 @@ cdef class DatasetBase(object):
 
     @property
     def kwds(self):
-        return self.tags(ns='rio_creation_kwds')
+        warnings.warn("Dataset creation options will no longer be stored as tags in 1.0.", RasterioDeprecationWarning)
+        return {}
 
     # Overviews.
     def overviews(self, bidx):

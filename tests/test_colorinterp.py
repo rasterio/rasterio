@@ -1,5 +1,7 @@
 """Tests for interacting with color interpretation."""
 
+import logging
+import numpy as np
 import pytest
 
 import rasterio
@@ -7,15 +9,25 @@ from rasterio.enums import ColorInterp
 
 from .conftest import requires_gdal22
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 def test_cmyk_interp(tmpdir):
     """A CMYK TIFF has cyan, magenta, yellow, black bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        meta = src.meta
-    meta['photometric'] = 'CMYK'
-    meta['count'] = 4
+        profile = src.profile
+
+    profile['photometric'] = 'CMYK'
+    profile['count'] = 4
+
     tiffname = str(tmpdir.join('foo.tif'))
-    with rasterio.open(tiffname, 'w', **meta) as dst:
+    with rasterio.open(tiffname, 'w', **profile) as dst:
+        pass
+        # dst.write(np.ones((profile['count'], profile['height'], profile['width']), profile['dtype']))
+
+    with rasterio.open(tiffname) as dst:
+        import pdb
+        pdb.set_trace()
         assert dst.profile['photometric'] == 'cmyk'
         assert dst.colorinterp == (
             ColorInterp.cyan,
