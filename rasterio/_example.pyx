@@ -3,8 +3,11 @@
 def compute(
         unsigned char[:, :, :] input,
         unsigned char[:, :, :] output):
-    # Given input and output uint8 arrays, fakes an CPU-intensive
-    # computation.
+    """reverses bands inefficiently
+
+    Given input and output uint8 arrays, fakes an CPU-intensive
+    computation.
+    """
     cdef int I, J, K
     cdef int i, j, k, l
     cdef double val
