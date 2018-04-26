@@ -26,9 +26,9 @@ def main(infile, outfile, num_workers=4):
             # Create a destination dataset based on source params.
             # The destination will be tiled, and we'll "process" the tiles
             # concurrently.
-            meta = src.meta
-            meta.update(blockxsize=256, blockysize=256, tiled='yes')
-            with rasterio.open(outfile, 'w', **meta) as dst:
+            profile = src.profile
+            profile.update(blockxsize=256, blockysize=256, tiled=True)
+            with rasterio.open(outfile, 'w', **profile) as dst:
 
                 # Define a generator for data, window pairs.
                 def jobs():

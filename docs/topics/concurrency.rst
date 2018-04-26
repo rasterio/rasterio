@@ -13,11 +13,10 @@ raster processing function.
 
 .. code-block:: python
 
-    import numpy as np
-    cimport numpy as np
+    # cython: boundscheck=False
 
     def compute(
-            unsigned char[:, :, :] input, 
+            unsigned char[:, :, :] input,
             unsigned char[:, :, :] output):
         # Given input and output uint8 arrays, fakes an CPU-intensive
         # computation.
@@ -37,7 +36,6 @@ raster processing function.
                         val -= 2000.0
                         output[~i, j, k] = <unsigned char>val
 
-
 Here is the program in examples/concurrent-cpu-bound.py.
 
 .. code-block:: python
@@ -53,11 +51,11 @@ Here is the program in examples/concurrent-cpu-bound.py.
 
     import concurrent.futures
     import multiprocessing
-    import time
 
     import numpy as np
     import rasterio
     from rasterio._example import compute
+
 
     def main(infile, outfile, num_workers=4):
 
@@ -69,9 +67,9 @@ Here is the program in examples/concurrent-cpu-bound.py.
                 # Create a destination dataset based on source params.
                 # The destination will be tiled, and we'll "process" the tiles
                 # concurrently.
-                meta = src.meta
-                meta.update(blockxsize=256, blockysize=256, tiled='yes')
-                with rasterio.open(outfile, 'w', **meta) as dst:
+                profile = src.profile
+                profile.update(blockxsize=256, blockysize=256, tiled=True)
+                with rasterio.open(outfile, 'w', **profile) as dst:
 
                     # Define a generator for data, window pairs.
                     def jobs():
@@ -102,32 +100,7 @@ Here is the program in examples/concurrent-cpu-bound.py.
 
                             result, window = future_to_window[future]
 
-                            dst.write(arr, window=window)
-
-
-    if __name__ == '__main__':
-
-        import argparse
-
-        parser = argparse.ArgumentParser(
-            description="Concurrent raster processing demo")
-        parser.add_argument(
-            'input',
-            metavar='INPUT',
-            help="Input file name")
-        parser.add_argument(
-            'output',
-            metavar='OUTPUT',
-            help="Output file name")
-        parser.add_argument(
-            '-j',
-            metavar='NUM_JOBS',
-            type=int,
-            default=multiprocessing.cpu_count(),
-            help="Number of concurrent jobs")
-        args = parser.parse_args()
-
-        main(args.input, args.output, args.j)
+                            dst.write(result, window=window)
 
 The code above simulates a fairly CPU-intensive process that runs faster when
 spread over multiple cores using the ``ThreadPoolExecutor`` from Python 3's
@@ -151,4 +124,3 @@ we get an almost 3x speed up with four concurrent jobs.
     real    0m1.335s
     user    0m3.400s
     sys     0m0.043s
-
