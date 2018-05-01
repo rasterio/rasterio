@@ -44,7 +44,7 @@ def main(infile, outfile, num_workers=4):
                 # pairs.
                 data_gen = (src.read(window=window) for window in windows)
 
-                with concurrent.futures.ThreadPoolExecutor(
+                with concurrent.futures.ProcessPoolExecutor(
                     max_workers=num_workers
                 ) as executor:
 
@@ -53,7 +53,7 @@ def main(infile, outfile, num_workers=4):
                     # the windows list, and as pairs come back we
                     # write data to the destination dataset.
                     for window, result in zip(
-                        windows, executor.map(compute, data_gen)
+                        windows, executor.map(compute, data_gen, chunksize=4)
                     ):
                         dst.write(result, window=window)
 

@@ -127,3 +127,9 @@ we get an almost 3x speed up with four concurrent jobs.
    real    0m1.247s
    user    0m3.505s
    sys     0m0.088s
+
+.. note::
+
+   If the function that you'd like to map over raster windows doesn't release
+   the GIL, you can replace ``ThreadPoolExecutor`` with ``ProcessPoolExecutor``
+   and get the same results with similar performance.
