@@ -48,17 +48,12 @@ def main(infile, outfile, num_workers=4):
                     max_workers=num_workers
                 ) as executor:
 
-                    # Performance of map() can be improved with a chunk
-                    # size > 1. We divide the number of windows by the
-                    # number of workers to arrive at a chunk size.
-                    chunksize = max(len(windows) // num_workers, 1)
-
                     # We map the compute() function over the raster
                     # data generator, zip the resulting iterator with
                     # the windows list, and as pairs come back we
                     # write data to the destination dataset.
                     for window, result in zip(
-                        windows, executor.map(compute, data_gen, chunksize=chunksize)
+                        windows, executor.map(compute, data_gen)
                     ):
                         dst.write(result, window=window)
 
