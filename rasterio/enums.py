@@ -64,6 +64,7 @@ class Compression(Enum):
     ccittfax4 = 'CCITTFAX4'
     lzma = 'LZMA'
     none = 'NONE'
+    zstd = 'ZSTD'
 
 
 class Interleaving(Enum):
