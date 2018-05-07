@@ -83,8 +83,11 @@ def test_env_accessors(gdalenv):
     setenv(foo='1', bar='2')
     expected = default_options.copy()
     expected.update({'foo': '1', 'bar': '2'})
-    assert getenv() == rasterio.env.local._env.options
-    assert getenv() == expected
+    items = getenv()
+    assert items == rasterio.env.local._env.options
+    # Comparison below requires removal of GDAL_DATA.
+    items.pop('GDAL_DATA', None)
+    assert items == expected
     assert get_gdal_config('foo') == 1
     assert get_gdal_config('bar') == 2
     delenv()
@@ -165,7 +168,10 @@ def test_with_aws_session_credentials(gdalenv):
         expected.update({
             'AWS_ACCESS_KEY_ID': 'id', 'AWS_REGION': 'null-island-1',
             'AWS_SECRET_ACCESS_KEY': 'key', 'AWS_SESSION_TOKEN': 'token'})
-        assert getenv() == expected
+        items = getenv()
+        # Comparison below requires removal of GDAL_DATA.
+        items.pop('GDAL_DATA', None)
+        assert items == expected
 
 
 def test_session_env_lazy(monkeypatch, gdalenv):
@@ -471,6 +477,7 @@ def test_require_gdal_version():
 def test_require_gdal_version_too_low():
     """Functions that are too low raise a GDALVersionError"""
     version = '10000000.0'
+
     @require_gdal_version(version)
     def b():
         return 2
@@ -501,6 +508,7 @@ def test_require_gdal_version_is_max_version():
 
 def test_require_gdal_version_reason():
     reason = 'This totally awesome new feature is was introduced in GDAL 10000'
+
     @require_gdal_version('10000.0', reason=reason)
     def b():
         return 2
@@ -527,7 +535,7 @@ def test_require_gdal_version_param():
     def a(foo=None):
         return foo
 
-    assert a() == None
+    assert a() is None
     assert a('bar') == 'bar'
 
 
@@ -535,13 +543,14 @@ def test_require_gdal_version_param_version_too_low():
     """Parameter is not allowed since runtime is too low a version"""
 
     version = '10000000.0'
+
     @require_gdal_version(version, param='foo')
     def a(foo=None):
         return foo
 
-    assert a() == None  # param is not used, OK
-    assert a(None) == None  # param is default, OK
-    assert a(foo=None) == None  # param is keyword with default, OK
+    assert a() is None  # param is not used, OK
+    assert a(None) is None  # param is default, OK
+    assert a(foo=None) is None  # param is keyword with default, OK
 
     with pytest.raises(GDALVersionError):
         a("not None")  # parameter passed as a position argument and not default
@@ -557,13 +566,14 @@ def test_require_gdal_version_param_version_too_high():
     """Parameter is not allowed since runtime is too low a version"""
 
     version = '1.0'
+
     @require_gdal_version(version, param='foo', is_max_version=True)
     def a(foo=None):
         return foo
 
-    assert a() == None  # param is not used, OK
-    assert a(None) == None  # param is default, OK
-    assert a(foo=None) == None  # param is keyword with default, OK
+    assert a() is None  # param is not used, OK
+    assert a(None) is None  # param is default, OK
+    assert a(foo=None) is None  # param is keyword with default, OK
 
     with pytest.raises(GDALVersionError):
         a("not None")
@@ -583,7 +593,7 @@ def test_require_gdal_version_param_values():
         def a(foo=None):
             return foo
 
-        assert a() == None
+        assert a() is None
         assert a('bar') == 'bar'
         assert a(foo='bar') == 'bar'
 
@@ -595,18 +605,19 @@ def test_require_gdal_version_param_values_err():
     for invalid_values in ['bar', 1, 1.5, {'a': 'b'}]:
         with pytest.raises(ValueError):
             @require_gdal_version('1.0', param='foo', values=invalid_values)
-            def a(foo=None):
+            def func_a(foo=None):
                 return foo
 
         with pytest.raises(ValueError):
             @require_gdal_version('1.0', values=invalid_values)
-            def a(foo=None):
+            def func_b(foo=None):
                 return foo
 
 
 def test_require_gdal_version_param_values_version_too_low():
     """Parameter values not allowed since runtime is too low a version"""
     version = '10000000.0'
+
     @require_gdal_version(version, param='foo', values=['bar'])
     def a(foo=None):
         return foo
@@ -624,6 +635,7 @@ def test_require_gdal_version_param_values_version_too_low():
 def test_require_gdal_version_param_values_version_too_high():
     """Parameter values not allowed since runtime is too low a version"""
     version = '1.0'
+
     @require_gdal_version(version, param='foo', values=['bar'],
                           is_max_version=True)
     def a(foo=None):
@@ -643,6 +655,7 @@ def test_require_gdal_version_param_values_version_too_high():
 
 def test_require_gdal_version_chaining():
     version = '10000000.0'
+
     @require_gdal_version(version, param='foo', values=['bar'])
     @require_gdal_version(version, param='something', values=['else'])
     def a(foo=None, something=None):

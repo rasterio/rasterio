@@ -210,20 +210,39 @@ cdef class GDALEnv(ConfigEnv):
                     log.debug("All drivers registered.")
 
                     if 'GDAL_DATA' not in os.environ:
+
+                        # We will try a few well-known paths, starting with the
+                        # official wheel path.
                         whl_datadir = os.path.abspath(
-                            os.path.join(os.path.dirname(__file__), 'gdal_data'))
-                        share_datadir = os.path.join(sys.prefix, 'share/gdal')
+                            os.path.join(os.path.dirname(__file__), "gdal_data"))
+                        fhs_share_datadir = os.path.join(sys.prefix, 'share/gdal')
+
+                        # Debian supports multiple GDAL installs.
+                        gdal_release_name = GDALVersionInfo("RELEASE_NAME")
+                        deb_share_datadir = os.path.join(
+                            fhs_share_datadir,
+                            "{}.{}".format(*gdal_release_name.split('.')[:2]))
+
+                        # If we find GDAL data at the well-known paths, we will
+                        # add a GDAL_DATA key to the config options dict.
                         if os.path.exists(os.path.join(whl_datadir, 'pcs.csv')):
-                            os.environ['GDAL_DATA'] = whl_datadir
-                        elif os.path.exists(os.path.join(share_datadir, 'pcs.csv')):
-                            os.environ['GDAL_DATA'] = share_datadir
+                            self.update_config_options(GDAL_DATA=whl_datadir)
+
+                        elif os.path.exists(os.path.join(deb_share_datadir, 'pcs.csv')):
+                            self.update_config_options(GDAL_DATA=deb_share_datadir)
+
+                        elif os.path.exists(os.path.join(fhs_share_datadir, 'pcs.csv')):
+                            self.update_config_options(GDAL_DATA=fhs_share_datadir)
 
                     if 'PROJ_LIB' not in os.environ:
+
                         whl_datadir = os.path.abspath(
                             os.path.join(os.path.dirname(__file__), 'proj_data'))
                         share_datadir = os.path.join(sys.prefix, 'share/proj')
+
                         if os.path.exists(whl_datadir):
                             os.environ['PROJ_LIB'] = whl_datadir
+
                         elif os.path.exists(share_datadir):
                             os.environ['PROJ_LIB'] = share_datadir
 
