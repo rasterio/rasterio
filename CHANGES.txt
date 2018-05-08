@@ -51,6 +51,7 @@ New features:
 
 Bug fixes:
 
+- Add Debian data directory to set of well-known paths to search (#1337).
 - Pass precision parameter from ``merge`` to ``from_bounds`` (#1307).
 - Added the missing w+ mode (#1309).
 - Rotated datasets are now masked properly (#1240, #1278).
