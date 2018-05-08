@@ -87,3 +87,10 @@ tests/data/white-gemini-iv.zip
 
 # Random local dev files
 ignore/
+.env
+.DS_Store
+*.pybkup
+*.c
+MANIFEST
+.ipynb_checkpoints
+.pytest_cache
