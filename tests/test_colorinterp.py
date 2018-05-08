@@ -11,12 +11,15 @@ from .conftest import requires_gdal22
 def test_cmyk_interp(tmpdir):
     """A CMYK TIFF has cyan, magenta, yellow, black bands."""
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        meta = src.meta
-    meta['photometric'] = 'CMYK'
-    meta['count'] = 4
+        profile = src.profile
+
+    profile['photometric'] = 'cmyk'
+    profile['count'] = 4
+
     tiffname = str(tmpdir.join('foo.tif'))
-    with rasterio.open(tiffname, 'w', **meta) as dst:
-        assert dst.profile['photometric'] == 'cmyk'
+    with rasterio.open(tiffname, 'w', **profile) as dst:
+        assert dst.profile['count'] == 4
+        assert dst.kwds['photometric'] == 'cmyk'
         assert dst.colorinterp == (
             ColorInterp.cyan,
             ColorInterp.magenta,

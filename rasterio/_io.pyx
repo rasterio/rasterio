@@ -1085,7 +1085,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # touch self.meta
         _ = self.meta
-
         self.update_tags(ns='rio_creation_kwds', **kwargs)
         self._closed = False
 
@@ -1866,7 +1865,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # touch self.meta
         _ = self.meta
-
         self.update_tags(ns='rio_creation_kwds', **kwargs)
         self._closed = False
 

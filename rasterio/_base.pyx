@@ -634,7 +634,6 @@ cdef class DatasetBase(object):
             'transform': self.transform,
         }
         self._read = True
-
         return m
 
     @property
@@ -677,8 +676,6 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             m = Profile(**self.meta)
-            m.update((k, v.lower()) for k, v in self.tags(
-                ns='rio_creation_kwds').items())
             if self.is_tiled:
                 m.update(
                     blockxsize=self.block_shapes[0][1],
@@ -692,7 +689,6 @@ cdef class DatasetBase(object):
                 m['interleave'] = self.interleaving.name
             if self.photometric:
                 m['photometric'] = self.photometric.name
-
             return m
 
     def lnglat(self):
