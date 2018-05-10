@@ -1624,7 +1624,7 @@ cdef class InMemoryRaster:
 
         :param image: 2D numpy array.  Must be of supported data type
         (see rasterio.dtypes.dtype_rev)
-        :param transform: GDAL compatible transform array
+        :param transform: Affine transform object
         """
 
         self._image = image
@@ -1658,9 +1658,11 @@ cdef class InMemoryRaster:
                        count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
 
         if transform is not None:
+            self.transform = transform
+            transform = transform.to_gdal()
             for i in range(6):
-                self.transform[i] = transform[i]
-            err = GDALSetGeoTransform(self._hds, self.transform)
+                self.gdal_transform[i] = transform[i]
+            err = GDALSetGeoTransform(self._hds, self.gdal_transform)
             if err:
                 raise ValueError("transform not set: %s" % transform)
 

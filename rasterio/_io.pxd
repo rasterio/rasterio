@@ -28,10 +28,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
 cdef class InMemoryRaster:
     cdef GDALDatasetH _hds
-    cdef double transform[6]
+    cdef double gdal_transform[6]
     cdef int band_ids[1]
     cdef np.ndarray _image
     cdef object crs
+    cdef object transform
 
     cdef GDALDatasetH handle(self) except NULL
     cdef GDALRasterBandH band(self, int) except NULL

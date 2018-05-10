@@ -105,7 +105,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
     """
     transform = guard_transform(transform)
-    for s, v in _shapes(source, mask, connectivity, transform.to_gdal()):
+    for s, v in _shapes(source, mask, connectivity, transform):
         yield s, v
 
 
@@ -308,7 +308,7 @@ def rasterize(
         raise ValueError("width and height must be > 0")
 
     transform = guard_transform(transform)
-    _rasterize(valid_shapes, out, transform.to_gdal(), all_touched, merge_alg)
+    _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
     return out
 
 
@@ -476,21 +476,21 @@ def is_valid_geom(geom):
         if geom_type == 'MultiLineString':
             # Multi lines must have at least one LineString
             return (len(coords) > 0 and len(coords[0]) >= 2 and
-                    len(coords[0][0]) >=2)
+                    len(coords[0][0]) >= 2)
 
         if geom_type == 'Polygon':
             # Polygons must have at least 1 ring, with at least 4 coordinates,
             # with at least x, y for a coordinate
             return (len(coords) > 0 and len(coords[0]) >= 4 and
-                    len(coords[0][0]) >=2)
+                    len(coords[0][0]) >= 2)
 
         if geom_type == 'MultiPolygon':
             # Muti polygons must have at least one Polygon
             return (len(coords) > 0 and len(coords[0]) > 0 and
-                    len(coords[0][0]) >= 4 and len(coords[0][0][0]) >=2)
+                    len(coords[0][0]) >= 4 and len(coords[0][0][0]) >= 2)
 
     if geom_type == 'GeometryCollection':
-        if not 'geometries' in geom:
+        if 'geometries' not in geom:
             return False
 
         if not len(geom['geometries']) > 0:
