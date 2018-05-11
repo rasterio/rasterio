@@ -18,6 +18,8 @@ Breaking changes:
 - Signatures of private functions and classes in _features, _warp, _io have
   been changed to always take instances of Affine instead of GDAL geotransform
   arrays (#796).
+- Calling `rasterio.Env()` no longer sets hidden default config options
+  CHECK_WITH_INVERT_PROJ=True and GTIFF_IMPLICIT_JPEG_OVR=False (#1011).
 
 A number of deprecated features have been removed (#1319).
 
@@ -54,6 +56,11 @@ New features:
 
 Bug fixes:
 
+- Rasterio functions and methods, even the private ones, now always take
+  instances of Affine as transform parameters (#796).
+- Importing the features, fill, io, and warp modules would set the
+  CHECK_WITH_INVERT_PROJ=True and GTIFF_IMPLICIT_JPEG_OVR=False config options
+  in a hidden way. This has been fixed in #1340.
 - Add Debian data directory to set of well-known paths to search (#1337).
 - Pass precision parameter from ``merge`` to ``from_bounds`` (#1307).
 - Added the missing w+ mode (#1309).
