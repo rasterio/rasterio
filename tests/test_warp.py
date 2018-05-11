@@ -21,7 +21,7 @@ from .conftest import requires_gdal22
 
 
 gdal_version = GDALVersion.runtime()
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708,

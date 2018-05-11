@@ -9,8 +9,8 @@ import pytest
 
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
-from rasterio.env import defenv, delenv, getenv, setenv, ensure_env
-from rasterio.env import default_options, GDALVersion, require_gdal_version
+from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env
+from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
 
@@ -81,8 +81,7 @@ def test_env_accessors(gdalenv):
     """High level GDAL env access."""
     defenv()
     setenv(foo='1', bar='2')
-    expected = default_options.copy()
-    expected.update({'foo': '1', 'bar': '2'})
+    expected = {'foo': '1', 'bar': '2'}
     items = getenv()
     assert items == rasterio.env.local._env.options
     # Comparison below requires removal of GDAL_DATA.
@@ -122,9 +121,20 @@ def test_no_aws_gdal_config(gdalenv):
         rasterio.Env(AWS_SECRET_ACCESS_KEY='y')
 
 
+def test_env_empty(gdalenv):
+    """Empty env has no defaults"""
+    env = rasterio.Env(foo='x')
+    assert env.options['foo'] == 'x'
+    assert not env.context_options
+    with env:
+        assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is None
+        assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is None
+        assert get_gdal_config("RASTERIO_ENV") is None
+
+
 def test_env_defaults(gdalenv):
     """Test env defaults."""
-    env = rasterio.Env(foo='x')
+    env = rasterio.Env.from_defaults(foo='x')
     assert env.options['foo'] == 'x'
     assert not env.context_options
     with env:
@@ -163,11 +173,10 @@ def test_with_aws_session_credentials(gdalenv):
     env = rasterio.Env(
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
-    expected = default_options.copy()
     with env:
-        expected.update({
+        expected = {
             'AWS_ACCESS_KEY_ID': 'id', 'AWS_REGION': 'null-island-1',
-            'AWS_SECRET_ACCESS_KEY': 'key', 'AWS_SESSION_TOKEN': 'token'})
+            'AWS_SECRET_ACCESS_KEY': 'key', 'AWS_SESSION_TOKEN': 'token'}
         items = getenv()
         # Comparison below requires removal of GDAL_DATA.
         items.pop('GDAL_DATA', None)
@@ -323,7 +332,7 @@ def test_ensure_defaults_teardown(gdalenv):
     """
 
     def _check_defaults():
-        for key in default_options.keys():
+        for key in Env.default_options().keys():
             assert get_gdal_config(key) is None
 
     _check_defaults()
