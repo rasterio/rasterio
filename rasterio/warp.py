@@ -176,7 +176,7 @@ def transform_bounds(
 
 
 @ensure_env
-#@require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
+@require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
 def reproject(source, destination, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, resampling=Resampling.nearest,
