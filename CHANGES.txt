@@ -15,6 +15,9 @@ Breaking changes:
 - The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
 - A bytearray is no longer allowed as input to the ``MemoryFile`` constructor.
   Users must convert byte arrays to ``bytes before calling ``MemoryFile()``.
+- Signatures of private functions and classes in _features, _warp, _io have
+  been changed to always take instances of Affine instead of GDAL geotransform
+  arrays (#796).
 
 A number of deprecated features have been removed (#1319).
 
