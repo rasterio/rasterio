@@ -32,7 +32,7 @@ cdef class InMemoryRaster:
     cdef int band_ids[1]
     cdef np.ndarray _image
     cdef object crs
-    cdef object transform
+    cdef object transform  # this is an Affine object.
 
     cdef GDALDatasetH handle(self) except NULL
     cdef GDALRasterBandH band(self, int) except NULL

@@ -1659,9 +1659,9 @@ cdef class InMemoryRaster:
 
         if transform is not None:
             self.transform = transform
-            transform = transform.to_gdal()
+            gdal_transform = transform.to_gdal()
             for i in range(6):
-                self.gdal_transform[i] = transform[i]
+                self.gdal_transform[i] = gdal_transform[i]
             err = GDALSetGeoTransform(self._hds, self.gdal_transform)
             if err:
                 raise ValueError("transform not set: %s" % transform)

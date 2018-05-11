@@ -275,22 +275,22 @@ def _reproject(
     # If working with identity transform, assume it is crs-less data
     # and that translating the matrix very slightly will avoid #674
     eps = 1e-100
+
     if src_transform:
+
         src_transform = guard_transform(src_transform)
         # if src_transform is like `identity` with positive or negative `e`,
         # translate matrix very slightly to avoid #674 and #1272.
         if src_transform.almost_equals(identity) or src_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
             src_transform = src_transform.translation(eps, eps)
+        src_transform = src_transform.to_gdal()
+
     if dst_transform:
+
         dst_transform = guard_transform(dst_transform)
         if dst_transform.almost_equals(identity) or dst_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
             dst_transform = dst_transform.translation(eps, eps)
-
-    # Convert transforms to GDAL format.
-    if src_transform:
-        src_transform = guard_transform(src_transform).to_gdal()
-    if dst_transform:
-        dst_transform = guard_transform(dst_transform).to_gdal()
+        dst_transform = dst_transform.to_gdal()
 
     # Validate nodata values immediately.
     if src_nodata is not None:
