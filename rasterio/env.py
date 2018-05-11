@@ -247,7 +247,6 @@ class Env(object):
             local._discovered_options = {}
             # Don't want to reinstate the "RASTERIO_ENV" option.
             probe_env = {k for k in self.options.keys() if k != "RASTERIO_ENV"}
-            # probe_env |= set(self.options.keys())
             for key in probe_env:
                 val = get_gdal_config(key, normalize=False)
                 if val is not None:
@@ -293,11 +292,6 @@ def defenv(**options):
     else:
         log.debug("No GDAL environment exists")
         local._env = GDALEnv()
-        # first set default options, then add user options
-        # set_options = {}
-        # for d in (default_options, options):
-        #     for (k, v) in d.items():
-        #         set_options[k] = v
         local._env.update_config_options(**options)
         log.debug(
             "New GDAL environment %r created", local._env)

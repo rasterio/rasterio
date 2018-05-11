@@ -10,7 +10,6 @@ import pytest
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env
-# from rasterio.env import default_options, GDALVersion, require_gdal_version
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
