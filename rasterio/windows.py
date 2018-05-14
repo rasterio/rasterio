@@ -43,7 +43,7 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, precision=6):
+    def window(self, left, bottom, right, top, precision=None):
         """Get the window corresponding to the bounding coordinates.
 
         The resulting window is not cropped to the row and column
@@ -252,7 +252,7 @@ def intersect(*windows):
 
 
 def from_bounds(left, bottom, right, top, transform=None,
-                height=None, width=None, precision=6):
+                height=None, width=None, precision=None):
     """Get the window corresponding to the bounding coordinates.
 
     Parameters
