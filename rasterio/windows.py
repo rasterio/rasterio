@@ -638,7 +638,7 @@ class Window(object):
         return cls(col_off=col_off, row_off=row_off, width=num_cols,
                    height=num_rows)
 
-    def round_lengths(self, op='floor', pixel_precision=3):
+    def round_lengths(self, op='floor', pixel_precision=None):
         """Return a copy with width and height rounded.
 
         Lengths are rounded to the nearest whole number. The offsets
@@ -648,7 +648,7 @@ class Window(object):
         ----------
         op: str
             'ceil' or 'floor'
-        pixel_precision: int
+        pixel_precision: int, option (default: None)
             Number of places of rounding precision.
 
         Returns
@@ -659,13 +659,16 @@ class Window(object):
         if not operator:
             raise WindowError("operator must be 'ceil' or 'floor'")
         else:
-            return Window(self.col_off, self.row_off,
-                          operator(round(self.width, pixel_precision)),
-                          operator(round(self.height, pixel_precision)))
+            return Window(
+                self.col_off, self.row_off,
+                operator(round(self.width, pixel_precision) if
+                         pixel_precision is not None else self.width),
+                operator(round(self.height, pixel_precision) if
+                         pixel_precision is not None else self.height))
 
     round_shape = round_lengths
 
-    def round_offsets(self, op='floor', pixel_precision=3):
+    def round_offsets(self, op='floor', pixel_precision=None):
         """Return a copy with column and row offsets rounded.
 
         Offsets are rounded to the nearest whole number. The lengths
@@ -673,9 +676,9 @@ class Window(object):
 
         Parameters
         ----------
-        op: str
+        op : str
             'ceil' or 'floor'
-        pixel_precision: int
+        pixel_precision : int, optional (default: None)
             Number of places of rounding precision.
 
         Returns
@@ -686,9 +689,12 @@ class Window(object):
         if not operator:
             raise WindowError("operator must be 'ceil' or 'floor'")
         else:
-            return Window(operator(round(self.col_off, pixel_precision)),
-                          operator(round(self.row_off, pixel_precision)),
-                          self.width, self.height)
+            return Window(
+                operator(round(self.col_off, pixel_precision) if
+                         pixel_precision is not None else self.col_off),
+                operator(round(self.row_off, pixel_precision) if
+                         pixel_precision is not None else self.row_off),
+                self.width, self.height)
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""
