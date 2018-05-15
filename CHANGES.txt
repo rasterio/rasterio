@@ -57,7 +57,7 @@ New features:
 Bug fixes:
 
 - The precision keyword arguments for methods in the windows and transform
-  modules now default to ``None``, which means no rounding of valuesi by
+  modules now default to ``None``, which means no rounding of values by
   default (#1139).
 - Rasterio functions and methods, even the private ones, now always take
   instances of Affine as transform parameters (#796).

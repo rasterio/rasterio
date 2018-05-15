@@ -64,7 +64,7 @@ class TransformMethodsMixin(object):
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
-        precision : int, optional
+        precision : int, optional (default: None)
             Decimal places of precision in indexing, as in `round()`.
 
         Returns
