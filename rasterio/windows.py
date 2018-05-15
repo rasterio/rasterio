@@ -648,7 +648,7 @@ class Window(object):
         ----------
         op: str
             'ceil' or 'floor'
-        pixel_precision: int, option (default: None)
+        pixel_precision: int, optional (default: None)
             Number of places of rounding precision.
 
         Returns
