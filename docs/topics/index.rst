@@ -6,6 +6,7 @@ Advanced Topics
 
     color
     concurrency
+    datasets
     errors
     features
     fillnodata
