@@ -1,4 +1,5 @@
 """Rasterio input/output."""
+# cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 from __future__ import absolute_import
 
@@ -1172,6 +1173,18 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         def __set__(self, value):
             self.set_crs(value)
 
+    property descriptions:
+        """Text descriptions for each band."""
+        def __get__(self):
+            if not self._descriptions:
+                descr = [GDALGetDescription(self.band(j)).decode('utf-8') for j in self.indexes]
+                self._descriptions = tuple((d or None) for d in descr)
+            return self._descriptions
+
+        def __set__(self, value):
+            for i, val in enumerate(value):
+                self.set_description(self.indexes[i], val)
+
     def write_transform(self, transform):
         if self._hds == NULL:
             raise ValueError("Can't read closed raster file")
@@ -1210,6 +1223,22 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         def __set__(self, value):
             self.write_transform(value.to_gdal())
 
+    property units:
+        """Strings defining the units for each band.
+
+        Possible values include 'meters' or 'degC'. See the Pint
+        project for a suggested list of units.¬
+        """
+        def __get__(self):
+            if not self._units:
+                self._units = tuple(
+                    GDALGetRasterUnitType(self.band(j)).decode('utf-8') for j in self.indexes)
+            return self._units
+
+        def __set__(self, value):
+            for i, val in enumerate(value):
+                self.set_units(self.indexes[i], val)
+
     def set_nodatavals(self, vals):
         cdef GDALRasterBandH band = NULL
         cdef double nodataval
@@ -1232,6 +1261,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __get__(self):
             return self.get_nodatavals()
+
+        def __set__(self, value):
+            self.set_nodatavals(value)
 
     property nodata:
         """The dataset's single nodata value."""

@@ -9,6 +9,5 @@ def test_set_units(tmpdir):
             tmptiff, 'w', count=2, height=256, width=256,
             **default_gtiff_profile) as dst:
         assert dst.units == ('', '')
-        dst.set_units(1, 'meters')
-        dst.set_units(2, 'degC')
+        dst.units = ['meters', 'degC']
         assert dst.units == ('meters', 'degC')
