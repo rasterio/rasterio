@@ -77,3 +77,21 @@ def vsi_path(path, archive=None, scheme=None):
     else:
         result = path
     return result
+
+
+class GDALFilename(object):
+    """A GDAL filename object
+
+    All legacy GDAL filenames must be wrapped using this class.
+
+    Attributes
+    ----------
+    filename : str
+        A GDAL filename such as "/vsicurl/https://example.com/data.tif".
+    """
+
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __repr__(self):
+        return "<GDALFilename filename={}>".format(self.filename)

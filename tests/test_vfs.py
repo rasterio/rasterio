@@ -5,7 +5,7 @@ import pytest
 
 import rasterio
 from rasterio.profiles import default_gtiff_profile
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.vfs import parse_path, vsi_path, GDALFilename
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -98,3 +98,12 @@ def test_parse_path_accept_get_params():
     # See https://github.com/mapbox/rasterio/issues/1121
     assert parse_path('http://example.com/index?a=1') == (
         'example.com/index?a=1', None, 'http')
+
+
+def test_gdal_filename():
+    assert GDALFilename("foo.tif").filename == "foo.tif"
+
+
+def test_gdal_filename_open():
+    with rasterio.open(GDALFilename("tests/data/RGB.byte.tif")) as src:
+        assert src.count == 3
