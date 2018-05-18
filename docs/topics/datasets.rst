@@ -47,3 +47,26 @@ Datasets on AWS S3 may be identified using "s3" scheme identifiers.
 ``'s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'``
 
 Resources in other cloud storage systems will be similarly supported.
+
+Legacy GDAL filenames
+---------------------
+
+Legacy GDAL filenames like
+
+* ``'/vsis3/landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'``
+* ``'PG:"host=localhost port:80 dbname=foo user=bar password=xxxxxx"'``
+
+may be used by wrapping them in an instance of ``GDALFilename``.
+
+.. code-block:: python
+
+    import rasterio
+
+    filename = rasterio.GDALFilename(
+        'PG:host=localhost port:80 dbname=foo user=bar password=xxx')
+
+    with rasterio.open(filename) as src:
+        print(src.profile)
+
+Without ``GDALFilename`` Rasterio cannot guarantee that the legacy filenames
+are handled as you would expect.

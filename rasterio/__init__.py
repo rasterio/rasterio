@@ -32,7 +32,7 @@ from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
-from rasterio.vfs import parse_path
+from rasterio.vfs import parse_path, GDALFilename
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
@@ -146,7 +146,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     """
 
     if not isinstance(fp, string_types):
-        if not (hasattr(fp, 'read') or hasattr(fp, 'write') or isinstance(fp, Path)):
+        if not (hasattr(fp, 'read') or hasattr(fp, 'write') or
+                isinstance(fp, Path) or isinstance(fp, GDALFilename)):
             raise TypeError("invalid path or file: {0!r}".format(fp))
     if mode and not isinstance(mode, string_types):
         raise TypeError("invalid mode: {0!r}".format(mode))
@@ -199,12 +200,20 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         return fp_writer(fp)
 
     else:
+
+        scheme = None
+
         # If a pathlib.Path instance is given, convert it to a string path.
         if isinstance(fp, Path):
             fp = str(fp)
 
+        # If a GDALFilename, do not parse it.
+        elif isinstance(fp, GDALFilename):
+            pass
+
         # The 'normal' filename or URL path.
-        _, _, scheme = parse_path(fp)
+        else:
+            _, _, scheme = parse_path(fp)
 
         with Env() as env:
             if scheme == 's3':

@@ -27,7 +27,7 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.vfs import parse_path, vsi_path, GDALFilename
 from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window, intersection
 
@@ -940,10 +940,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Make and store a GDAL dataset handle.
 
-        # Parse the path to determine if there is scheme-specific
-        # configuration to be done.
-        path, archive, scheme = parse_path(path)
-        path = vsi_path(path, archive, scheme)
+        if isinstance(path, GDALFilename):
+            path = path.filename
+            archive = scheme = None
+
+        else:
+            # Parse the path to determine if there is scheme-specific
+            # configuration to be done.
+            path, archive, scheme = parse_path(path)
+            path = vsi_path(path, archive, scheme)
 
         if scheme and scheme != 'file':
             raise TypeError(
@@ -1802,11 +1807,15 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Make and store a GDAL dataset handle.
 
-        # Parse the path to determine if there is scheme-specific
-        # configuration to be done.
-        path = vsi_path(*parse_path(path))
-        name_b = path.encode('utf-8')
+        if isinstance(path, GDALFilename):
+            path = path.filename
 
+        else:
+            # Parse the path to determine if there is scheme-specific
+            # configuration to be done.
+            path = vsi_path(*parse_path(path))
+
+        name_b = path.encode('utf-8')
         memdrv = GDALGetDriverByName("MEM")
 
         if self.mode == 'w':
