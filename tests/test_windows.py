@@ -26,13 +26,11 @@ F_LEN = floats(min_value=0, max_value=1.0e+7)
 I_LEN = integers(min_value=0, max_value=1.0e+7)
 
 
-
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def assert_window_almost_equals(a, b):
     assert np.allclose(a.flatten(), b.flatten(), rtol=1e-3, atol=1e-4)
-
 
 
 def test_window_repr():
@@ -42,7 +40,7 @@ def test_window_repr():
 
 @given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_class(col_off, row_off, width, height):
-    """Floating point inputs should not be rounded, and 0 values should not 
+    """Floating point inputs should not be rounded, and 0 values should not
     raise errors"""
 
     window = Window(col_off, row_off, width, height)
@@ -119,7 +117,6 @@ def test_window_fromslices(col_off, row_off, col_stop, row_stop):
     rows = (row_off, row_stop)
     cols = (col_off, col_stop)
     expected = (col_off, row_off, col_stop - col_off, row_stop - row_off)
-
 
     assert np.allclose(
         Window.from_slices(rows=slice(*rows), cols=slice(*cols)).flatten(),
@@ -555,3 +552,13 @@ def test_round_window_boundless(path_alpha_tif):
         assert rounded_window.height % height_shape == 0
         assert rounded_window.col_off % width_shape == 0
         assert rounded_window.width % width_shape == 0
+
+
+def test_round_lengths_no_op_error():
+    with pytest.raises(WindowError):
+        Window(0, 0, 1, 1).round_lengths(op='lolwut')
+
+
+def test_round_offsets_no_op_error():
+    with pytest.raises(WindowError):
+        Window(0, 0, 1, 1).round_offsets(op='lolwut')

@@ -46,7 +46,7 @@ class TransformMethodsMixin(object):
         """
         return xy(self.transform, row, col, offset=offset)
 
-    def index(self, x, y, op=math.floor, precision=6):
+    def index(self, x, y, op=math.floor, precision=None):
         """
         Returns the (row, col) index of the pixel containing (x, y) given a
         coordinate reference system.
@@ -64,7 +64,7 @@ class TransformMethodsMixin(object):
         op : function, optional (default: math.floor)
             Function to convert fractional pixels to whole numbers (floor,
             ceiling, round)
-        precision : int, optional (default: 6)
+        precision : int, optional (default: None)
             Decimal places of precision in indexing, as in `round()`.
 
         Returns
@@ -188,7 +188,7 @@ def xy(transform, rows, cols, offset='center'):
     return xs, ys
 
 
-def rowcol(transform, xs, ys, op=math.floor, precision=6):
+def rowcol(transform, xs, ys, op=math.floor, precision=None):
     """
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
@@ -208,7 +208,7 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
-    precision : int
+    precision : int, optional
         Decimal places of precision in indexing, as in `round()`.
 
     Returns
@@ -228,7 +228,11 @@ def rowcol(transform, xs, ys, op=math.floor, precision=6):
         ys = [ys]
         single_y = True
 
-    eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+    if precision is None:
+        eps = 0.0
+    else:
+        eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
+
     invtransform = ~transform
 
     rows = []
