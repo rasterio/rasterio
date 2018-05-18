@@ -56,6 +56,8 @@ New features:
 
 Bug fixes:
 
+- The ``--nodata`` option of rio-merge is now passed to the output file
+  (#1345).
 - The precision keyword arguments for methods in the windows and transform
   modules now default to None, which means no rounding of values by
   default (#1139).
