@@ -46,6 +46,9 @@ Upcoming deprecation:
 
 - Reading array data or masks from datasets opened in "w" mode will be
   prohibited in Rasterio 1.0. We are warning about this now (#1309).
+- All set_* methods of datasets will be deprecated in 1.0. The appropriate
+  properties should be used instead. For example,
+  ``dataset.crs = "EPSG:4326"`` instead of ``dataset.set_crs("EPSG:4326")``.
 
 New features:
 
