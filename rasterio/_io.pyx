@@ -1068,9 +1068,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
-                self.set_crs(self._crs)
+                self._set_crs(self._crs)
             if self._init_gcps:
-                self.set_gcps(self._init_gcps, self.crs)
+                self._set_gcps(self._init_gcps, self.crs)
 
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)
@@ -1107,7 +1107,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._closed = True
         log.debug("Dataset %r has been stopped.", self)
 
-    def set_crs(self, crs):
+    def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
         cdef char *proj_c = NULL
         cdef char *wkt = NULL
@@ -1163,6 +1163,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._crs = crs
         log.debug("Self CRS: %r", self._crs)
 
+    def set_crs(self, crs):
+        warnings.warn(
+            "This method will be deprecated in version 1.0",
+            RasterioDeprecationWarning
+        )
+        self._set_crs(crs)
+
     property crs:
         """A mapping of PROJ.4 coordinate reference system params.
         """
@@ -1171,7 +1178,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             return self.get_crs()
 
         def __set__(self, value):
-            self.set_crs(value)
+            self._set_crs(value)
 
     property descriptions:
         """Text descriptions for each band."""
@@ -1183,7 +1190,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __set__(self, value):
             for i, val in enumerate(value):
-                self.set_description(self.indexes[i], val)
+                self._set_description(self.indexes[i], val)
 
     def write_transform(self, transform):
         if self._hds == NULL:
@@ -1237,9 +1244,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         def __set__(self, value):
             for i, val in enumerate(value):
-                self.set_units(self.indexes[i], val)
+                self._set_units(self.indexes[i], val)
 
-    def set_nodatavals(self, vals):
+    def _set_nodatavals(self, vals):
         cdef GDALRasterBandH band = NULL
         cdef double nodataval
         cdef int success
@@ -1255,15 +1262,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
 
+    def set_nodatavals(self, vals):
+        warnings.warn(
+            "This method will be deprecated in version 1.0",
+            RasterioDeprecationWarning
+        )
+        self._set_nodatavals(vals)
+
     property nodatavals:
         """A list by band of a dataset's nodata values.
         """
 
         def __get__(self):
             return self.get_nodatavals()
-
-        def __set__(self, value):
-            self.set_nodatavals(value)
 
     property nodata:
         """The dataset's single nodata value."""
@@ -1272,7 +1283,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             return self.nodatavals[0]
 
         def __set__(self, value):
-            self.set_nodatavals([value for old_val in self.nodatavals])
+            self._set_nodatavals([value for old_val in self.nodatavals])
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.
@@ -1403,7 +1414,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
 
-    def set_description(self, bidx, value):
+    def _set_description(self, bidx, value):
         """Sets the description of a dataset band.
 
         Parameters
@@ -1425,7 +1436,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Invalidate cached descriptions.
         self._descriptions = ()
 
-    def set_units(self, bidx, value):
+    def set_description(self, bidx, val):
+        warnings.warn(
+            "This method will be deprecated in version 1.0",
+            RasterioDeprecationWarning
+        )
+        self._set_description(bidx, val)
+
+    def _set_units(self, bidx, value):
         """Sets the units of a dataset band.
 
         Parameters
@@ -1447,6 +1465,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         GDALSetRasterUnitType(hband, value.encode('utf-8'))
         # Invalidate cached units.
         self._units = ()
+
+    def set_units(self, bidx, val):
+        warnings.warn(
+            "This method will be deprecated in version 1.0",
+            RasterioDeprecationWarning
+        )
+        self._set_units(bidx, val)
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
@@ -1572,7 +1597,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 if factors_c != NULL:
                     CPLFree(factors_c)
 
-    def set_gcps(self, gcps, crs=None):
+    def _set_gcps(self, gcps, crs=None):
         cdef char *srcwkt = NULL
         cdef GDAL_GCP *gcplist = <GDAL_GCP *>CPLMalloc(len(gcps) * sizeof(GDAL_GCP))
 
@@ -1602,6 +1627,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Invalidate cached value.
         self._gcps = None
 
+    def set_gcps(self, gcps, crs=None):
+        warnings.warn(
+            "This method will be deprecated in version 1.0",
+            RasterioDeprecationWarning
+        )
+        self._set_gcps(gcps, crs=crs)
+
     property gcps:
         """ground control points and their coordinate reference system.
 
@@ -1618,8 +1650,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             return self._gcps
 
         def __set__(self, values):
-            self.set_gcps(values[0], values[1])
-
+            self._set_gcps(values[0], values[1])
 
 
 cdef class InMemoryRaster:
@@ -1867,9 +1898,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
-                self.set_crs(self._crs)
+                self._set_crs(self._crs)
             if self._gcps:
-                self.set_gcps(self._gcps, self._crs)
+                self._set_gcps(self._gcps, self._crs)
 
         elif self.mode == 'r+':
             try:
