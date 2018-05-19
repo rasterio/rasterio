@@ -54,7 +54,7 @@ import click
 
 import rasterio
 import rasterio.shutil
-from rasterio.vfs import FILE_SCHEMES, parse_path
+from rasterio.vfs import FILE_SCHEMES, parse_path, GDALFilename
 
 
 class IgnoreOptionMarker(object):
@@ -109,29 +109,32 @@ def abspath_forward_slashes(path):
 
 def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
-    try:
-        path, archive, scheme = parse_path(value)
+    if ctx.obj.get('use_legacy_filenames'):
+        return GDALFilename(value)
+    else:
+        try:
+            path, archive, scheme = parse_path(value)
 
-        # Validate existence of files.
-        if scheme in FILE_SCHEMES and not \
-                rasterio.shutil.exists(value):
-            raise IOError(
-                "Input file {0} does not exist".format(value))
+            # Validate existence of files.
+            if scheme in FILE_SCHEMES and not \
+                    rasterio.shutil.exists(value):
+                raise IOError(
+                    "Input file {0} does not exist".format(value))
 
-        if archive and scheme:
-            archive = abspath_forward_slashes(archive)
-            path = "{0}://{1}!{2}".format(scheme, archive, path)
-        elif scheme and scheme.startswith('http'):
-            path = "{0}://{1}".format(scheme, path)
-        elif scheme == 's3':
-            path = "{0}://{1}".format(scheme, path)
-        elif scheme in FILE_SCHEMES:
-            path = abspath_forward_slashes(path)
-        else:
-            path = path
-        return path
-    except Exception:
-        raise click.BadParameter("{} is not a valid input file".format(value))
+            if archive and scheme:
+                archive = abspath_forward_slashes(archive)
+                path = "{0}://{1}!{2}".format(scheme, archive, path)
+            elif scheme and scheme.startswith('http'):
+                path = "{0}://{1}".format(scheme, path)
+            elif scheme == 's3':
+                path = "{0}://{1}".format(scheme, path)
+            elif scheme in FILE_SCHEMES:
+                path = abspath_forward_slashes(path)
+            else:
+                path = path
+            return path
+        except Exception:
+            raise click.BadParameter("{} is not a valid input file".format(value))
 
 
 def from_like_context(ctx, param, value):
@@ -315,13 +318,19 @@ like_opt = click.option(
     help="Raster dataset to use as a template for obtaining affine "
          "transform (bounds and resolution), crs, and nodata values.")
 
+use_legacy_filenames_opt = click.option(
+    '-G', '--use-legacy-filenames', 'use_legacy_filenames',
+    is_eager=True,
+    is_flag=True,
+    help="Flag use of legacy GDAL filenames like /vsistdin/ and /vsistdout/.")
+
 all_touched_opt = click.option(
     '-a', '--all', '--all_touched', 'all_touched',
     is_flag=True,
     default=False,
     help='Use all pixels touched by features, otherwise (default) use only '
          'pixels whose center is within the polygon or that are selected by '
-         'Bresenhams line algorithm')
+         'Bresenhams line algorithm.')
 
 # Feature collection or feature sequence switch.
 sequence_opt = click.option(

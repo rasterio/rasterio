@@ -290,8 +290,11 @@ def test_info():
     assert info['dtype'] == 'uint8'
     assert info['crs'] == 'EPSG:32618'
 
+
+def test_info_legacy_filename():
+    runner = CliRunner()
     result = runner.invoke(
-        main_group, ['info', 'tests/data/float.tif'])
+        main_group, ['-G', 'info', 'tests/data/float.tif'])
     assert result.exit_code == 0
     info = json.loads(result.output)
     assert info['count'] == 1

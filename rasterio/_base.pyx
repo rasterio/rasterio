@@ -125,9 +125,11 @@ cdef class DatasetBase(object):
 
             if isinstance(path, GDALFilename):
                 filename = path.filename
+                self.name = filename
 
             else:
                 filename = vsi_path(*parse_path(path))
+                self.name = path
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
@@ -142,7 +144,6 @@ cdef class DatasetBase(object):
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
-        self.name = path
         self.mode = 'r'
         self.options = kwargs.copy()
         self._dtypes = []

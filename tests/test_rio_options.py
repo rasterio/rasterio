@@ -114,6 +114,14 @@ def test_file_in_handler_s3():
     assert retval == 's3://example.com/RGB.byte.tif'
 
 
+def test_file_in_handler_legacy():
+    """Legacy filenames are handled"""
+    ctx = MockContext()
+    ctx.obj['use_legacy_filenames'] = True
+    retval = file_in_handler(ctx, 'INPUT', '/vsis3/example/RGB.byte.tif')
+    assert retval.filename == '/vsis3/example/RGB.byte.tif'
+
+
 def test_like_dataset_callback(data):
     ctx = MockContext()
     assert like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
