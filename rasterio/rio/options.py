@@ -72,11 +72,12 @@ IgnoreOption = IgnoreOptionMarker()
 
 
 def _cb_key_val(ctx, param, value):
+    """Key/value callback
 
-    """
-    click callback to validate `--opt KEY1=VAL1 --opt KEY2=VAL2` and collect
-    in a dictionary like the one below, which is what the CLI function receives.
-    If no value or `None` is received then an empty dictionary is returned.
+    click callback to validate `--opt KEY1=VAL1 --opt KEY2=VAL2` and
+    collect in a dictionary like the one below, which is what the CLI
+    function receives.  If no value or `None` is received then an empty
+    dictionary is returned.
 
         {
             'KEY1': 'VAL1',
@@ -98,7 +99,7 @@ def _cb_key_val(ctx, param, value):
                 k, v = pair.split('=', 1)
                 k = k.lower()
                 v = v.lower()
-                out[k] = None if v.lower() in ['none', 'null', 'nil', 'nada'] else v
+                out[k] = None if v.lower() in ['none', 'null', 'nil'] else v
         return out
 
 
@@ -107,19 +108,21 @@ def abspath_forward_slashes(path):
     return '/'.join(os.path.abspath(path).split(os.path.sep))
 
 
-def file_in_handler(ctx, param, value):
+def file_handler(ctx, param, value, validate=False):
     """Normalize ordinary filesystem and VFS paths"""
+
+    # If in legacy GDAL filenames mode, do not parse filenames and do
+    # not validate existence of files.
     if ctx.obj.get('use_legacy_filenames'):
         return GDALFilename(value)
+
     else:
         try:
             path, archive, scheme = parse_path(value)
 
-            # Validate existence of files.
-            if scheme in FILE_SCHEMES and not \
-                    rasterio.shutil.exists(value):
-                raise IOError(
-                    "Input file {0} does not exist".format(value))
+            if (validate and scheme in FILE_SCHEMES and
+                    not rasterio.shutil.exists(value)):
+                raise IOError("Input file {0} does not exist".format(value))
 
             if archive and scheme:
                 archive = abspath_forward_slashes(archive)
@@ -132,9 +135,20 @@ def file_in_handler(ctx, param, value):
                 path = abspath_forward_slashes(path)
             else:
                 path = path
+
             return path
+
         except Exception:
-            raise click.BadParameter("{} is not a valid input file".format(value))
+            raise click.BadParameter(
+                "{} is not a valid input file".format(value))
+
+
+def file_out_handler(ctx, param, value):
+    return file_handler(ctx, param, value)
+
+
+def file_in_handler(ctx, param, value):
+    return file_handler(ctx, param, value, validate=True)
 
 
 def from_like_context(ctx, param, value):
@@ -215,6 +229,7 @@ file_in_arg = click.argument('INPUT', callback=file_in_handler)
 # Singular output file
 file_out_arg = click.argument(
     'OUTPUT',
+    callback=file_out_handler,
     type=click.Path(resolve_path=True))
 
 bidx_opt = click.option(
