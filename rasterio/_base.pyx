@@ -29,7 +29,7 @@ from rasterio.errors import (
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.path import parse_path, vsi_path
 from rasterio import windows
 
 include "gdal.pxi"
@@ -54,12 +54,21 @@ cdef const char *get_driver_name(GDALDriverH driver):
 
 
 def get_dataset_driver(path):
-    """Return the name of the driver that would be used to open the
-    dataset at the given path."""
+    """Return the name of the driver that opens a dataset
+
+    Parameters
+    ----------
+    path : object
+        A ParsedPath or UnparsedPath object
+
+    Returns
+    -------
+    str
+    """
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
 
-    path = vsi_path(*parse_path(path))
+    path = vsi_path(path)
     path = path.encode('utf-8')
 
     try:
@@ -118,7 +127,7 @@ cdef class DatasetBase(object):
         self._hds = NULL
 
         if path is not None:
-            filename = vsi_path(*parse_path(path))
+            filename = vsi_path(path)
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
@@ -133,7 +142,7 @@ cdef class DatasetBase(object):
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
-        self.name = path
+        self.name = path.name
         self.mode = 'r'
         self.options = kwargs.copy()
         self._dtypes = []

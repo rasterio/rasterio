@@ -27,7 +27,7 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.path import parse_path, vsi_path
 from rasterio.vrt import WarpedVRT
 from rasterio.windows import Window, intersection
 
@@ -942,13 +942,16 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path, archive, scheme = parse_path(path)
-        path = vsi_path(path, archive, scheme)
+        # path, archive, scheme = parse_path(path)
+        # scheme = path.scheme
 
-        if scheme and scheme != 'file':
-            raise TypeError(
-                "VFS '{0}' datasets can not be created or updated.".format(
-                    scheme))
+        filename = path.name
+        path = vsi_path(path)  # , archive, scheme)
+
+        #if scheme and scheme != 'file':
+        #    raise TypeError(
+        #        "VFS '{0}' datasets can not be created or updated.".format(
+        #            scheme))
 
         name_b = path.encode('utf-8')
         fname = name_b
@@ -1043,7 +1046,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # Raise an exception if we have any other mode.
             raise ValueError("Invalid mode: '%s'", mode)
 
-        self.name = path
+        self.name = filename
         self.mode = mode
         self.driver = driver
         self.width = width
@@ -1780,7 +1783,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         self._init_dtype = np.dtype(dtype).name
 
-        self.name = path
+        self.name = path.name
         self.mode = mode
         self.driver = driver
         self.width = width
@@ -1804,7 +1807,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = vsi_path(*parse_path(path))
+        path = vsi_path(path)
         name_b = path.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")

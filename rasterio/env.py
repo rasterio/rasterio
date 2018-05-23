@@ -14,7 +14,6 @@ from rasterio.compat import string_types, getargspec
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError, GDALVersionError
 from rasterio.transform import guard_transform
-from rasterio.vfs import parse_path, vsi_path
 
 
 class ThreadEnv(threading.local):

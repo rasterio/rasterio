@@ -6,6 +6,9 @@ Next
 
 Breaking changes:
 
+- The signatures of all cdef class initializers in rasterio._base and 
+  rasterio._io have changed: these method now take instance of ParsedPath or
+  UnparsedPath from rasterio.path and do not take strings.
 - Whether to print GeoJSON feature sequences or a GeoJSON feature collection
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).
@@ -44,11 +47,18 @@ A number of deprecated features have been removed (#1319).
 
 Upcoming deprecation:
 
+- The rasterio.vfs module and its functions are being replaced by new functions
+  in rasterio.path.
 - Reading array data or masks from datasets opened in "w" mode will be
   prohibited in Rasterio 1.0. We are warning about this now (#1309).
 
 New features:
 
+- New ParsedPath and UnparsedPath classes have been added to improve input
+  file handling and validation. The existing parse_path and vsi_path functions
+  have been rewritten to use these new classes and have been moved to the new
+  rasterio.path module. The signature of rasterio.open has not been changed
+  and users of Rasterio will be unaffected.
 - A tools module has been added to collect file-based functions and supporting
   classes (#1300).
 - ``rasterio.features.dataset_features()`` has been extracted from

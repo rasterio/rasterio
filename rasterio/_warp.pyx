@@ -17,7 +17,6 @@ from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
-from rasterio.vfs import parse_path, vsi_path
 
 cimport numpy as np
 
