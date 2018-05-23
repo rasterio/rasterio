@@ -26,7 +26,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError)
+    RasterBlockError, BandOverviewError, RasterioDeprecationWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -108,7 +108,46 @@ def driver_can_create_copy(drivername):
 
 
 cdef class DatasetBase(object):
-    """Dataset base class."""
+    """Dataset base class
+
+    Attributes
+    ----------
+    block_shapes
+    bounds
+    closed
+    colorinterp
+    count
+    crs
+    descriptions
+    files
+    gcps
+    indexes
+    mask_flag_enums
+    meta
+    nodata
+    nodatavals
+    profile
+    res
+    subdatasets
+    transform
+    units
+    compression : str
+        Compression algorithm's short name
+    driver : str
+        Format driver used to open the dataset
+    interleaving : str
+        'pixel' or 'band'
+    kwds : dict
+        Stored creation option tags
+    mode : str
+        Access mode
+    name : str
+        Remote or local dataset name
+    options : dict
+        Copy of opening options
+    photometric : str
+        Photometric interpretation's short name
+    """
 
     def __init__(self, path=None, driver=None, sharing=True, **kwargs):
         cdef GDALDatasetH hds = NULL
@@ -299,10 +338,22 @@ cdef class DatasetBase(object):
 
     @property
     def closed(self):
+        """Test if the dataset is closed
+
+        Returns
+        -------
+        bool
+        """
         return self._closed
 
     @property
     def count(self):
+        """The number of raster bands in the dataset
+
+        Returns
+        -------
+        int
+        """
         if not self._count:
             if self._hds == NULL:
                 raise ValueError("Can't read closed raster file")
@@ -311,11 +362,24 @@ cdef class DatasetBase(object):
 
     @property
     def indexes(self):
+        """The 1-based indexes of each band in the dataset
+
+        For a 3-band dataset, this property will be ``[1, 2, 3]``.
+
+        Returns
+        -------
+        list of int
+        """
         return tuple(range(1, self.count+1))
 
     @property
     def dtypes(self):
-        """Returns an ordered tuple of all band data types."""
+        """The data types of each band in index order
+
+        Returns
+        -------
+        list of str
+        """
         cdef GDALRasterBandH band = NULL
 
         if not self._dtypes:
@@ -328,10 +392,14 @@ cdef class DatasetBase(object):
 
     @property
     def block_shapes(self):
-        """Returns an ordered list of block shapes for all bands.
+        """An ordered list of block shapes for each bands
 
         Shapes are tuples and have the same ordering as the dataset's
         shape: (count of image rows, count of image columns).
+
+        Returns
+        -------
+        list
         """
         cdef GDALRasterBandH band = NULL
         cdef int xsize
@@ -376,22 +444,46 @@ cdef class DatasetBase(object):
         return tuple(self._nodatavals)
 
     property nodatavals:
-        """Nodata values for each band."""
+        """Nodata values for each band
+
+        Note
+        ----
+        This may not be set.
+
+        Returns
+        -------
+        list of float
+        """
         def __get__(self):
             return self.get_nodatavals()
 
+    def _set_nodatavals(self, value):
+        raise NotImplementedError
+
     property nodata:
-        """The dataset's single nodata value."""
+        """The dataset's single nodata value
+
+        Note
+        ----
+        May be set.
+
+        Returns
+        -------
+        float
+        """
+
         def __get__(self):
             if self.count == 0:
                 return None
             return self.nodatavals[0]
 
-    property _mask_flags:
+        def __set__(self, value):
+            self._set_nodatavals([value for old_val in self.nodatavals])
+
+    def _mask_flags(self):
         """Mask flags for each band."""
-        def __get__(self):
-            cdef GDALRasterBandH band = NULL
-            return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+        cdef GDALRasterBandH band = NULL
+        return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
 
     property mask_flag_enums:
         """Sets of flags describing the sources of band masks.
@@ -426,28 +518,92 @@ cdef class DatasetBase(object):
         def __get__(self):
             return tuple(
                 [flag for flag in MaskFlags if x & flag.value]
-                for x in self._mask_flags)
+                for x in self._mask_flags())
+
+    def _set_crs(self, value):
+        raise NotImplementedError
+
+    property crs:
+        """The dataset's coordinate reference system
+
+        In setting this property, the value may be a CRS object or an
+        EPSG:nnnn or WKT string.
+
+        Returns
+        -------
+        CRS
+        """
+
+        def __get__(self):
+            return self._get_crs()
+
+        def __set__(self, value):
+            self._set_crs(value)
+
+    def _set_all_descriptions(self, value):
+        raise NotImplementedError
+
+    def _set_all_units(self, value):
+        raise NotImplementedError
 
     property descriptions:
-        """Text descriptions for each band."""
+        """Descriptions for each dataset band
+
+        To set descriptions, one for each band is required.
+
+        Returns
+        -------
+        list of str
+        """
         def __get__(self):
             if not self._descriptions:
                 descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
                 self._descriptions = tuple((d or None) for d in descr)
             return self._descriptions
 
+        def __set__(self, value):
+            self._set_all_descriptions(value)
+
+    def write_transform(self, value):
+        raise NotImplementedError
+
+    property transform:
+        """The dataset's georeferencing transformation matrix
+
+        This transform maps pixel row/column coordinates to coordinates
+        in the dataset's coordinate reference system.
+
+        Returns
+        -------
+        Affine
+        """
+
+        def __get__(self):
+            return Affine.from_gdal(*self.get_transform())
+
+        def __set__(self, value):
+            self.write_transform(value.to_gdal())
+
     property units:
-        """Strings defining the units for each band.
+        """A list of str: one units string for each dataset band
 
         Possible values include 'meters' or 'degC'. See the Pint
-        project for a suggested list of units.¬
+        project for a suggested list of units.
+
+        To set units, one for each band is required.
+
+        Returns
+        -------
+        list of str
         """
         def __get__(self):
             if not self._units:
-                self._units = tuple(
-                    GDALGetRasterUnitType(self.band(j)) for j in self.indexes)
+                units = [GDALGetRasterUnitType(self.band(j)) for j in self.indexes]
+                self._units = tuple((u or None) for u in units)
             return self._units
 
+        def __set__(self, value):
+            self._set_all_units(value)
 
     def block_window(self, bidx, i, j):
         """Returns the window for a particular block
@@ -699,39 +855,22 @@ cdef class DatasetBase(object):
                 self.crs, {'init': 'epsg:4326'}, [cx], [cy], None)
         return lng.pop(), lat.pop()
 
-    def get_crs(self):
+    def _get_crs(self):
         # _read tells us that the CRS was read before and really is
         # None.
         if not self._read and self._crs is None:
             self._crs = self.read_crs()
         return self._crs
 
-    property crs:
-        """A mapping of PROJ.4 coordinate reference system params.
-        """
-        def __get__(self):
-            return self.get_crs()
+    def get_crs(self):
+        """DEPRECATED"""
+        warnings.warn("get_crs will be removed in 1.0", RasterioDeprecationWarning)
 
     def get_transform(self):
         """Returns a GDAL geotransform in its native form."""
         if not self._read and self._transform is None:
             self._transform = self.read_transform()
         return self._transform
-
-    property transform:
-        """An instance of ``affine.Affine``, which is a ``namedtuple`` with
-        coefficients in the order ``(a, b, c, d, e, f)``.
-
-        Coefficients of the affine transformation that maps ``col,row``
-        pixel coordinates to ``x,y`` coordinates in the specified crs. The
-        coefficients of the augmented matrix are:
-
-          | x |   | a  b  c | | r |
-          | y | = | d  e  f | | c |
-          | 1 |   | 0  0  1 | | 1 |
-        """
-        def __get__(self):
-            return Affine.from_gdal(*self.get_transform())
 
     property subdatasets:
         """Sequence of subdatasets"""
@@ -999,11 +1138,27 @@ cdef class DatasetBase(object):
                                          info=gcplist[i].pszInfo)
                                          for i in range(num_gcps)], crs)
 
+    def _set_gcps(self, values):
+        raise NotImplementedError
+
     property gcps:
+        """ground control points and their coordinate reference system.
+
+        This property is a 2-tuple, or pair: (gcps, crs).
+
+        gcps : list of GroundControlPoint
+            Zero or more ground control points.
+        crs: CRS
+            The coordinate reference system of the ground control points.
+        """
         def __get__(self):
-            if self._gcps is None:
+            if not self._gcps:
                 self._gcps = self.get_gcps()
             return self._gcps
+
+        def __set__(self, value):
+            gcps, crs = value
+            self._set_gcps(gcps, crs)
 
     property files:
 

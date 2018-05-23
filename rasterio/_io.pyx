@@ -1165,32 +1165,28 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def set_crs(self, crs):
         warnings.warn(
-            "This method will be deprecated in version 1.0",
+            "This method will be removed in version 1.0",
             RasterioDeprecationWarning
         )
         self._set_crs(crs)
 
-    property crs:
-        """A mapping of PROJ.4 coordinate reference system params.
-        """
+    def _set_all_descriptions(self, value):
+        """Supports the descriptions property setter"""
+        # require that we have a description for every band.
+        if len(value) == self.count:
+            for i, val in zip(self.indexes, value):
+                self._set_description(i, val)
+        else:
+            raise ValueError("One description for each band is required")
 
-        def __get__(self):
-            return self.get_crs()
-
-        def __set__(self, value):
-            self._set_crs(value)
-
-    property descriptions:
-        """Text descriptions for each band."""
-        def __get__(self):
-            if not self._descriptions:
-                descr = [GDALGetDescription(self.band(j)).decode('utf-8') for j in self.indexes]
-                self._descriptions = tuple((d or None) for d in descr)
-            return self._descriptions
-
-        def __set__(self, value):
-            for i, val in enumerate(value):
-                self._set_description(self.indexes[i], val)
+    def _set_all_units(self, value):
+        """Supports the units property setter"""
+        # require that we have a unit for every band.
+        if len(value) == self.count:
+            for i, val in zip(self.indexes, value):
+                self._set_unit(i, val)
+        else:
+            raise ValueError("One unit for each band is required")
 
     def write_transform(self, transform):
         if self._hds == NULL:
@@ -1210,41 +1206,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if err:
             raise ValueError("transform not set: %s" % transform)
         self._transform = transform
-
-    property transform:
-        """An affine transformation that maps pixel row/column
-        coordinates to coordinates in the specified crs. The affine
-        transformation is represented by a six-element sequence.
-        Reference system coordinates can be calculated by the
-        following formula
-
-        X = Item 0 + Column * Item 1 + Row * Item 2
-        Y = Item 3 + Column * Item 4 + Row * Item 5
-
-        See also this class's ul() method.
-        """
-
-        def __get__(self):
-            return Affine.from_gdal(*self.get_transform())
-
-        def __set__(self, value):
-            self.write_transform(value.to_gdal())
-
-    property units:
-        """Strings defining the units for each band.
-
-        Possible values include 'meters' or 'degC'. See the Pint
-        project for a suggested list of units.¬
-        """
-        def __get__(self):
-            if not self._units:
-                self._units = tuple(
-                    GDALGetRasterUnitType(self.band(j)).decode('utf-8') for j in self.indexes)
-            return self._units
-
-        def __set__(self, value):
-            for i, val in enumerate(value):
-                self._set_units(self.indexes[i], val)
 
     def _set_nodatavals(self, vals):
         cdef GDALRasterBandH band = NULL
@@ -1268,22 +1229,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             RasterioDeprecationWarning
         )
         self._set_nodatavals(vals)
-
-    property nodatavals:
-        """A list by band of a dataset's nodata values.
-        """
-
-        def __get__(self):
-            return self.get_nodatavals()
-
-    property nodata:
-        """The dataset's single nodata value."""
-
-        def __get__(self):
-            return self.nodatavals[0]
-
-        def __set__(self, value):
-            self._set_nodatavals([value for old_val in self.nodatavals])
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.
@@ -1443,7 +1388,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         )
         self._set_description(bidx, val)
 
-    def _set_units(self, bidx, value):
+    def _set_unit(self, bidx, value):
         """Sets the units of a dataset band.
 
         Parameters
@@ -1468,10 +1413,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def set_units(self, bidx, val):
         warnings.warn(
-            "This method will be deprecated in version 1.0",
+            "This method will be removed in version 1.0",
             RasterioDeprecationWarning
         )
-        self._set_units(bidx, val)
+        self._set_unit(bidx, val)
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
@@ -1633,24 +1578,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             RasterioDeprecationWarning
         )
         self._set_gcps(gcps, crs=crs)
-
-    property gcps:
-        """ground control points and their coordinate reference system.
-
-        The value of this property is a 2-tuple, or pair: (gcps, crs).
-
-        gcps: a sequence of GroundControlPoints
-            Zero or more ground control points.
-        crs: a CRS
-            The coordinate reference system for ground control points.
-        """
-        def __get__(self):
-            if not self._gcps:
-                self._gcps = self.get_gcps()
-            return self._gcps
-
-        def __set__(self, values):
-            self._set_gcps(values[0], values[1])
 
 
 cdef class InMemoryRaster:
