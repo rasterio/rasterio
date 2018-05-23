@@ -865,6 +865,7 @@ cdef class DatasetBase(object):
     def get_crs(self):
         """DEPRECATED"""
         warnings.warn("get_crs will be removed in 1.0", RasterioDeprecationWarning)
+        return self.crs
 
     def get_transform(self):
         """Returns a GDAL geotransform in its native form."""
