@@ -29,8 +29,12 @@ CURLSCHEMES = set([k for k, v in SCHEMES.items() if v == 'curl'])
 REMOTESCHEMES = set([k for k, v in SCHEMES.items() if v in ('curl', 's3')])
 
 
+class Path(object):
+    """Base class for dataset paths"""
+
+
 @attr.s(slots=True)
-class ParsedPath(object):
+class ParsedPath(Path):
     """Result of parsing a dataset URI/Path
 
     Attributes
@@ -57,12 +61,7 @@ class ParsedPath(object):
             path += "?" + parts.query
 
         if parts.scheme and parts.netloc:
-
-            if False:  # parts.scheme.split("+")[-1] in CURLSCHEMES:
-                # We need to deal with cases such as zip+https://server.com/data.zip
-                path = "{}://{}{}".format(parts.scheme.split("+")[-1], parts.netloc, path)
-            else:
-                path = parts.netloc + path
+            path = parts.netloc + path
 
         parts = path.split('!')
         path = parts.pop() if parts else None
@@ -91,7 +90,7 @@ class ParsedPath(object):
 
 
 @attr.s(slots=True)
-class UnparsedPath(object):
+class UnparsedPath(Path):
     """Encapsulates legacy GDAL filenames
 
     Attributes
@@ -149,7 +148,7 @@ def vsi_path(path):
 
     Parameters
     ----------
-    path : object
+    path : Path
         A ParsedPath or UnparsedPath object.
 
     Returns

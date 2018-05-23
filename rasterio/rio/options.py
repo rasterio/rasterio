@@ -54,7 +54,7 @@ import click
 
 import rasterio
 import rasterio.shutil
-from rasterio.path import REMOTESCHEMES, parse_path, ParsedPath, UnparsedPath
+from rasterio.path import parse_path, ParsedPath, UnparsedPath
 
 
 class IgnoreOptionMarker(object):

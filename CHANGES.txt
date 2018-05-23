@@ -6,9 +6,11 @@ Next
 
 Breaking changes:
 
-- The signatures of all cdef class initializers in rasterio._base and 
-  rasterio._io have changed: these method now take instance of ParsedPath or
-  UnparsedPath from rasterio.path and do not take strings.
+- The signatures of all Dataset constructors have changed: these method now
+  take instance of ParsedPath or UnparsedPath from rasterio.path and do not
+  take strings.
+- The signatures of get_writer_for_path and get_writer_for_driver have 
+  changed in the same way.
 - Whether to print GeoJSON feature sequences or a GeoJSON feature collection
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).

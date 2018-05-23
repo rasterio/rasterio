@@ -900,12 +900,63 @@ cdef class MemoryFileBase(object):
 
 
 cdef class DatasetWriterBase(DatasetReaderBase):
-    # Read-write access to raster data and metadata.
+    """Read-write access to raster data and metadata
+    """
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
                  gcps=None, sharing=True, **kwargs):
-        """Initialize a DatasetWriterBase instance."""
+        """Create a new dataset writer or updater
+
+        Parameters
+        ----------
+        path : rasterio.path.Path
+            A remote or local dataset path.
+        mode : str
+            'r+' (read/write), 'w' (write), or 'w+' (write/read).
+        driver : str, optional
+            A short format driver name (e.g. "GTiff" or "JPEG") or a list of
+            such names (see GDAL docs at
+            http://www.gdal.org/formats_list.html). In 'w' or 'w+' modes
+            a single name is required. In 'r' or 'r+' modes the driver can
+            usually be omitted. Registered drivers will be tried
+            sequentially until a match is found. When multiple drivers are
+            available for a format such as JPEG2000, one of them can be
+            selected by using this keyword argument.
+        width, height : int, optional
+            The numbers of rows and columns of the raster dataset. Required
+            in 'w' or 'w+' modes, they are ignored in 'r' or 'r+' modes.
+        count : int, optional
+            The count of dataset bands. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
+        dtype : str or numpy dtype
+            The data type for bands. For example: 'uint8' or
+            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
+        crs : str, dict, or CRS; optional
+            The coordinate reference system. Required in 'w' or 'w+' modes,
+            it is ignored in 'r' or 'r+' modes.
+        transform : Affine instance, optional
+            Affine transformation mapping the pixel space to geographic
+            space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
+            'r+' modes.
+        nodata : int, float, or nan; optional
+            Defines the pixel value to be interpreted as not valid data.
+            Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
+            modes.
+        sharing : bool
+            A flag that allows sharing of dataset handles. Default is
+            `True`. Should be set to `False` in a multithreaded:w program.
+        kwargs : optional
+            These are passed to format drivers as directives for creating or
+            interpreting datasets. For example: in 'w' or 'w+' modes
+            a `tiled=True` keyword argument will direct the GeoTIFF format
+            driver to create a tiled, rather than striped, TIFF.
+
+        Returns
+        -------
+        dataset
+        """
         cdef char **options = NULL
         cdef char *key_c = NULL
         cdef char *val_c = NULL
@@ -939,20 +990,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._init_dtype = np.dtype(dtype).name
 
         # Make and store a GDAL dataset handle.
-
-        # Parse the path to determine if there is scheme-specific
-        # configuration to be done.
-        # path, archive, scheme = parse_path(path)
-        # scheme = path.scheme
-
         filename = path.name
-        path = vsi_path(path)  # , archive, scheme)
-
-        #if scheme and scheme != 'file':
-        #    raise TypeError(
-        #        "VFS '{0}' datasets can not be created or updated.".format(
-        #            scheme))
-
+        path = vsi_path(path)
         name_b = path.encode('utf-8')
         fname = name_b
 
@@ -1745,10 +1784,64 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             self.name,
             self.mode)
 
-    def __init__(self, path, mode, driver=None, width=None, height=None,
+    def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
                  gcps=None, **kwargs):
+        """Construct a new dataset
 
+        Parameters
+        ----------
+        path : rasterio.path.Path
+            A remote or local dataset path.
+        mode : str, optional
+            'r' (read, the default), 'r+' (read/write), 'w' (write), or
+            'w+' (write/read).
+        driver : str, optional
+            A short format driver name (e.g. "GTiff" or "JPEG") or a list of
+            such names (see GDAL docs at
+            http://www.gdal.org/formats_list.html). In 'w' or 'w+' modes
+            a single name is required. In 'r' or 'r+' modes the driver can
+            usually be omitted. Registered drivers will be tried
+            sequentially until a match is found. When multiple drivers are
+            available for a format such as JPEG2000, one of them can be
+            selected by using this keyword argument.
+        width, height : int, optional
+            The numbers of rows and columns of the raster dataset. Required
+            in 'w' or 'w+' modes, they are ignored in 'r' or 'r+' modes.
+        count : int, optional
+            The count of dataset bands. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
+        dtype : str or numpy dtype
+            The data type for bands. For example: 'uint8' or
+            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
+        crs : str, dict, or CRS; optional
+            The coordinate reference system. Required in 'w' or 'w+' modes,
+            it is ignored in 'r' or 'r+' modes.
+        transform : Affine instance, optional
+            Affine transformation mapping the pixel space to geographic
+            space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
+            'r+' modes.
+        nodata : int, float, or nan; optional
+            Defines the pixel value to be interpreted as not valid data.
+            Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
+            modes.
+        sharing : bool
+            A flag that allows sharing of dataset handles. Default is
+            `True`. Should be set to `False` in a multithreaded:w program.
+        kwargs : optional
+            These are passed to format drivers as directives for creating or
+            interpreting datasets. For example: in 'w' or 'w+' modes
+            a `tiled=True` keyword argument will direct the GeoTIFF format
+            driver to create a tiled, rather than striped, TIFF.
+            driver : str or list of str, optional
+            A single driver name or a list of names to be considered when
+            opening the dataset. Required to create a new dataset.
+
+        Returns
+        -------
+        dataset
+        """
         cdef char **options = NULL
         cdef char *key_c = NULL
         cdef char *val_c = NULL

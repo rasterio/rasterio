@@ -58,8 +58,8 @@ def get_dataset_driver(path):
 
     Parameters
     ----------
-    path : object
-        A ParsedPath or UnparsedPath object
+    path : rasterio.path.Path
+        A remote or local dataset path.
 
     Returns
     -------
@@ -120,6 +120,24 @@ cdef class DatasetBase(object):
     """Dataset base class."""
 
     def __init__(self, path=None, driver=None, sharing=True, **kwargs):
+        """Construct a new dataset
+
+        Parameters
+        ----------
+        path : rasterio.path.Path
+            Path of the local or remote dataset.
+        driver : str or list of str
+            A single driver name or a list of driver names to consider when
+            opening the dataset.
+        sharing : bool, optional
+            Whether to share underlying GDAL dataset handles (default: True).
+        kwargs : dict
+            GDAL dataset opening options.
+
+        Returns
+        -------
+        dataset
+        """
         cdef GDALDatasetH hds = NULL
         cdef int flags = 0
         cdef int sharing_flag = (0x20 if sharing else 0x0)
