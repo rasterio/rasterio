@@ -98,7 +98,8 @@ def test_file_in_handler_with_vfs():
     uri = 'zip://tests/data/files.zip!/RGB.byte.tif'
     ctx = MockContext()
     retval = file_in_handler(ctx, 'INPUT', uri)
-    assert retval == 'zip:///Users/sean/code/rasterio/tests/data/files.zip!/RGB.byte.tif'
+    assert retval.startswith('zip:///')
+    assert 'tests/data/files.zip!/RGB.byte.tif' in retval
 
 
 def test_file_in_handler_with_vfs_file():
