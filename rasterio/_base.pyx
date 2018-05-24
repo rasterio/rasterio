@@ -678,7 +678,7 @@ cdef class DatasetBase(object):
         def __get__(self):
             m = Profile(**self.meta)
 
-            if not os.environ.get('RIO_IGNORE_CREATION_KWDS', 'FALSE') == 'TRUE':
+            if os.environ.get('RIO_IGNORE_CREATION_KWDS', 'FALSE') != 'TRUE':
                 warnings.warn(
                     "Creation keywords stored on datasets by Rasterio versions < 1.0b1 will always be ignored in version 1.0. "
                     "You may opt in to ignoring them now by setting RIO_IGNORE_CREATION_KWDS=TRUE in your environment.",
