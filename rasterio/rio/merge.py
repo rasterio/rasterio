@@ -62,6 +62,9 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, overwrite,
         profile['driver'] = driver
         profile['count'] = dest.shape[0]
 
+        if nodata is not None:
+            profile['nodata'] = nodata
+
         profile.update(**creation_options)
 
         with rasterio.open(output, 'w', **profile) as dst:

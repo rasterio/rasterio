@@ -20,6 +20,8 @@ Breaking changes:
   arrays (#796).
 - Calling `rasterio.Env()` no longer sets hidden default config options
   CHECK_WITH_INVERT_PROJ=True and GTIFF_IMPLICIT_JPEG_OVR=False (#1011).
+- Rasterio no longer saves creation options in metadata on created datasets
+  (#1332).
 
 A number of deprecated features have been removed (#1319).
 
@@ -49,6 +51,9 @@ Upcoming deprecation:
 - Property set_* methods of datasets will be deprecated in 1.0. The appropriate
   properties should be used instead. For example,
   ``dataset.crs = "EPSG:4326"`` instead of ``dataset.set_crs("EPSG:4326")``.
+- Rasterio 1.0 will ignore creation options saved in the metadata of datasets
+  by Rasterio versions < 1.0b1. Users can opt in to this behavior now by
+  setting RIO_IGNORE_CREATION_KWDS=TRUE in their environments.
 
 New features:
 
@@ -61,6 +66,13 @@ New features:
 
 Bug fixes:
 
+- The ``--nodata`` option of rio-merge is now passed to the output file
+  (#1345).
+- The precision keyword arguments for methods in the windows and transform
+  modules now default to None, which means no rounding of values by
+  default (#1139).
+- The pixel_precision keyword arguments for methods in the windows module now
+  default to None (#1143).
 - Rasterio functions and methods, even the private ones, now always take
   instances of Affine as transform parameters (#796).
 - Importing the features, fill, io, and warp modules would set the
