@@ -46,12 +46,14 @@ Upcoming deprecation:
 
 - Reading array data or masks from datasets opened in "w" mode will be
   prohibited in Rasterio 1.0. We are warning about this now (#1309).
-- All set_* methods of datasets will be deprecated in 1.0. The appropriate
+- Property set_* methods of datasets will be deprecated in 1.0. The appropriate
   properties should be used instead. For example,
   ``dataset.crs = "EPSG:4326"`` instead of ``dataset.set_crs("EPSG:4326")``.
 
 New features:
 
+- set_band_unit and set_band_description methods have been added to
+  dataset writers/updaters to support rio-edit-info (#1344).
 - A tools module has been added to collect file-based functions and supporting
   classes (#1300).
 - ``rasterio.features.dataset_features()`` has been extracted from

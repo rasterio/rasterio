@@ -1175,7 +1175,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # require that we have a description for every band.
         if len(value) == self.count:
             for i, val in zip(self.indexes, value):
-                self._set_description(i, val)
+                self.set_band_description(i, val)
         else:
             raise ValueError("One description for each band is required")
 
@@ -1184,7 +1184,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # require that we have a unit for every band.
         if len(value) == self.count:
             for i, val in zip(self.indexes, value):
-                self._set_unit(i, val)
+                self.set_band_unit(i, val)
         else:
             raise ValueError("One unit for each band is required")
 
@@ -1359,7 +1359,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
 
-    def _set_description(self, bidx, value):
+    def set_band_description(self, bidx, value):
         """Sets the description of a dataset band.
 
         Parameters
@@ -1377,19 +1377,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALRasterBandH hband = NULL
 
         hband = self.band(bidx)
-        GDALSetDescription(hband, value.encode('utf-8'))
+        GDALSetDescription(hband, (value or '').encode('utf-8'))
         # Invalidate cached descriptions.
         self._descriptions = ()
 
     def set_description(self, bidx, val):
         warnings.warn(
-            "This method will be deprecated in version 1.0",
+            "This method will be removed in version 1.0",
             RasterioDeprecationWarning
         )
-        self._set_description(bidx, val)
+        self.set_band_description(bidx, val)
 
-    def _set_unit(self, bidx, value):
-        """Sets the units of a dataset band.
+    def set_band_unit(self, bidx, value):
+        """Sets the unit of measure of a dataset band.
 
         Parameters
         ----------
@@ -1397,8 +1397,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Index of the band (starting with 1).
 
         value: string
-            A label for the band's units such as 'meters' or 'degC'.
-            See the Pint project for a suggested list of units.
+            A label for the band's unit of measure such as 'meters' or
+            'degC'.  See the Pint project for a suggested list of units.
 
         Returns
         -------
@@ -1407,7 +1407,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         cdef GDALRasterBandH hband = NULL
 
         hband = self.band(bidx)
-        GDALSetRasterUnitType(hband, value.encode('utf-8'))
+        GDALSetRasterUnitType(hband, (value or '').encode('utf-8'))
         # Invalidate cached units.
         self._units = ()
 
@@ -1416,7 +1416,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             "This method will be removed in version 1.0",
             RasterioDeprecationWarning
         )
-        self._set_unit(bidx, val)
+        self.set_band_unit(bidx, val)
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
