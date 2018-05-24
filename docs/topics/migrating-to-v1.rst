@@ -246,3 +246,10 @@ Signature Changes
 For both ``rasterio.features.sieve()`` and ``rasterio.features.rasterize()`` the
 ``output`` argument has been replaced with ``out``.  Previously the use of
 ``output`` issued a deprecation warning.
+
+Creation Options
+----------------
+
+Rasterio no longer saves dataset creation options to the metadata of created
+datasets and will ignore such metadata starting in version 1.0. Users may opt
+in to this by setting RIO_IGNORE_CREATION_KWDS=TRUE in their environments.

@@ -19,7 +19,6 @@ def test_cmyk_interp(tmpdir):
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **profile) as dst:
         assert dst.profile['count'] == 4
-        assert dst.kwds['photometric'] == 'cmyk'
         assert dst.colorinterp == (
             ColorInterp.cyan,
             ColorInterp.magenta,

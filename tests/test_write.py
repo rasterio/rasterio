@@ -255,21 +255,6 @@ def test_guard_nodata(tmpdir):
             dtype=a.dtype, nodata=-1)
 
 
-def test_write_lzw(tmpdir):
-    name = str(tmpdir.join("test_write_lzw.tif"))
-    a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
-    with rasterio.open(
-            name, 'w',
-            driver='GTiff',
-            width=100, height=100, count=1,
-            dtype=a.dtype,
-            compress='LZW') as s:
-        assert ('compress', 'LZW') in s.kwds.items()
-        s.write(a, indexes=1)
-    info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert "LZW" in info
-
-
 def test_write_noncontiguous(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))
     ROWS = 4

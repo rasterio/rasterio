@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from collections import defaultdict
 import logging
 import math
+import os
 import warnings
 
 from rasterio._err import (
@@ -26,7 +27,7 @@ from rasterio.enums import (
 from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
-    RasterBlockError, BandOverviewError)
+    RasterBlockError, BandOverviewError, RasterioDeprecationWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
@@ -676,6 +677,16 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             m = Profile(**self.meta)
+
+            if not os.environ.get('RIO_IGNORE_CREATION_KWDS', 'FALSE') == 'TRUE':
+                warnings.warn(
+                    "Creation keywords stored on datasets by Rasterio versions < 1.0b1 will always be ignored in version 1.0. "
+                    "You may opt in to ignoring them now by setting RIO_IGNORE_CREATION_KWDS=TRUE in your environment.",
+                    RasterioDeprecationWarning
+                )
+                creation_kwds = self.tags(ns='rio_creation_kwds')
+                m.update((k, v.lower()) for k, v in creation_kwds.items())
+
             if self.is_tiled:
                 m.update(
                     blockxsize=self.block_shapes[0][1],
@@ -928,6 +939,11 @@ cdef class DatasetBase(object):
 
     @property
     def kwds(self):
+        warnings.warn(
+            "Creation keywords stored on datasets by Rasterio versions < 1.0b1 will be ignored in version 1.0. "
+            "This method will be removed.",
+            RasterioDeprecationWarning
+        )
         return self.tags(ns='rio_creation_kwds')
 
     # Overviews.
