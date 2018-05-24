@@ -268,8 +268,8 @@ cdef class DatasetBase(object):
         err = GDALGetGeoTransform(self._hds, gt)
         if err == GDALError.failure:
             warnings.warn(
-                "Dataset has no geotransform set. Default transform "
-                "will be applied (Affine.identity())", NotGeoreferencedWarning)
+                "Dataset has no geotransform set. The identity matrix may be returned.",
+                NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
 

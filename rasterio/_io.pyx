@@ -1178,8 +1178,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         if [abs(v) for v in transform] == [0, 1, 0, 0, 0, 1]:
             warnings.warn(
-                "Dataset uses default geotransform (Affine.identity). "
-                "No transform will be written to the output by GDAL.",
+                "The given matrix is equal to Affine.identity or its flipped counterpart. "
+                "GDAL may ignore this matrix and save no geotransform without raising an error. "
+                "This behavior is somewhat driver-specific.",
                 NotGeoreferencedWarning
             )
 
