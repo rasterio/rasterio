@@ -127,7 +127,7 @@ def test_dtype(tmpdir):
         ['convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16'])
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
-        assert src.dtypes == tuple(['uint16'] * 3)
+        assert src.dtypes == list(['uint16'] * 3)
 
 
 def test_dtype_rescaling_uint8_full(tmpdir):

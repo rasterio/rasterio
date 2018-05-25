@@ -6,6 +6,8 @@ Next
 
 Breaking changes:
 
+- Properties block_shapes, dtypes, indexes, nodatavals, colorinterp, files,
+  descriptions, units, mask_flag_enums have been changed from tuples to lists.
 - Whether to print GeoJSON feature sequences or a GeoJSON feature collection
   from rio-shapes is now controlled by a ``--sequence/--collection`` option.
   A sequence is now the default (#927).

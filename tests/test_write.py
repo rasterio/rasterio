@@ -73,7 +73,7 @@ def test_context(tmpdir):
         assert s.width == 100
         assert s.height == 100
         assert s.shape == (100, 100)
-        assert s.indexes == (1,)
+        assert s.indexes == [1]
         assert repr(s) == "<open DatasetWriter name='%s' mode='w'>" % name
     assert s.closed
     assert s.count == 1
@@ -142,7 +142,7 @@ def test_write_float(tmpdir):
             name, 'w',
             driver='GTiff', width=100, height=100, count=2,
             dtype=rasterio.float32) as s:
-        assert s.dtypes == (rasterio.float32, rasterio.float32)
+        assert s.dtypes == [rasterio.float32, rasterio.float32]
         s.write(a, indexes=1)
         s.write(a, indexes=2)
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')

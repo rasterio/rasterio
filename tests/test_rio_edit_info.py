@@ -330,8 +330,8 @@ def test_colorinterp_wrong_band_count(runner, path_3band_no_colorinterp, setci):
 
 
 @pytest.mark.parametrize("setci,expected", [
-    ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue)),
-    ('red,green,blue', (ColorInterp.red, ColorInterp.green, ColorInterp.blue)),
+    ('RGB', [ColorInterp.red, ColorInterp.green, ColorInterp.blue]),
+    ('red,green,blue', [ColorInterp.red, ColorInterp.green, ColorInterp.blue]),
 ])
 def test_colorinterp_rgb(setci, expected, path_3band_no_colorinterp):
     """Set 3 band color interpretation."""
@@ -345,9 +345,9 @@ def test_colorinterp_rgb(setci, expected, path_3band_no_colorinterp):
 
 
 @pytest.mark.parametrize("setci,expected", [
-    ('red,green,blue,undefined', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined)),
-    ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha)),
-    ('red,green,blue,alpha', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha)),
+    ('red,green,blue,undefined', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.undefined]),
+    ('RGBA', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha]),
+    ('red,green,blue,alpha', [ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha]),
 ])
 def test_colorinterp_4band(setci, expected, path_4band_no_colorinterp):
     """Set 4 band color interpretation."""
@@ -379,11 +379,11 @@ def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
         '--colorinterp', 'like'])
     assert result.exit_code == 0
     with rasterio.open(path_4band_no_colorinterp) as src:
-        assert src.colorinterp == (
+        assert src.colorinterp == [
             ColorInterp.red,
             ColorInterp.green,
             ColorInterp.blue,
-            ColorInterp.alpha)
+            ColorInterp.alpha]
 
 
 def test_like_band_count_mismatch(runner, data):
@@ -409,11 +409,11 @@ def test_colorinterp_like_all(
         'edit-info', noci, '--like', path_rgba_byte_tif, '--all'])
     assert result.exit_code == 0
     with rasterio.open(noci) as src:
-        assert src.colorinterp == (
+        assert src.colorinterp == [
             ColorInterp.red,
             ColorInterp.green,
             ColorInterp.blue,
-            ColorInterp.alpha)
+            ColorInterp.alpha]
 
 
 def test_transform_callback_pass(data):

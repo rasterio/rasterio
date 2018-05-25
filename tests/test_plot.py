@@ -60,11 +60,11 @@ def test_show_cmyk_interp(tmpdir):
     meta['count'] = 4
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
-        assert dst.colorinterp == (
+        assert dst.colorinterp == [
             ColorInterp.cyan,
             ColorInterp.magenta,
             ColorInterp.yellow,
-            ColorInterp.black)
+            ColorInterp.black]
 
     with rasterio.open(tiffname) as src:
         try:
