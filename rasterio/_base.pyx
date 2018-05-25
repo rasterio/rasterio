@@ -996,7 +996,7 @@ cdef class DatasetBase(object):
             from rasterio.enums import ColorInterp
 
             with rasterio.open('rgba.tif', 'r+') as src:
-                src.coolorinterp = [
+                src.colorinterp = [
                     ColorInterp.red,
                     ColorInterp.green,
                     ColorInterp.blue,
