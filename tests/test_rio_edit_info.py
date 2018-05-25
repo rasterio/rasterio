@@ -174,6 +174,7 @@ def test_edit_tags(data):
         assert src.tags()['wut'] == '2'
 
 
+@requires_gdal21(reason="decription setting requires GDAL 2.1+")
 def test_edit_band_description(data):
     """Edit band descriptions"""
     runner = CliRunner()
