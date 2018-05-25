@@ -53,7 +53,7 @@ def tags_handler(ctx, param, value):
     if retval is None and value:
         try:
             retval = dict(p.split('=') for p in value)
-        except:
+        except Exception:
             raise click.BadParameter(
                 "'%s' contains a malformed tag." % value,
                 param=param, param_hint='transform')
@@ -70,7 +70,7 @@ def transform_handler(ctx, param, value):
             pass
         try:
             retval = guard_transform(value)
-        except:
+        except Exception:
             raise click.BadParameter(
                 "'%s' is not recognized as an Affine array." % value,
                 param=param, param_hint='transform')
@@ -228,10 +228,10 @@ def edit(ctx, input, bidx, nodata, unset_nodata, crs, unset_crs, transform,
             dst.update_tags(**tags)
 
         if units:
-            dst.set_units(bidx, units)
+            dst.set_band_unit(bidx, units)
 
         if description:
-            dst.set_description(bidx, description)
+            dst.set_band_description(bidx, description)
 
         if colorinterp:
             if like and len(colorinterp) != dst.count:

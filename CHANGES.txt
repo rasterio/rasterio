@@ -25,6 +25,8 @@ Breaking changes:
   arrays (#796).
 - Calling `rasterio.Env()` no longer sets hidden default config options
   CHECK_WITH_INVERT_PROJ=True and GTIFF_IMPLICIT_JPEG_OVR=False (#1011).
+- Rasterio no longer saves creation options in metadata on created datasets
+  (#1332).
 
 A number of deprecated features have been removed (#1319).
 
@@ -53,6 +55,12 @@ Upcoming deprecation:
   in rasterio.path.
 - Reading array data or masks from datasets opened in "w" mode will be
   prohibited in Rasterio 1.0. We are warning about this now (#1309).
+- Property set_* methods of datasets will be deprecated in 1.0. The appropriate
+  properties should be used instead. For example,
+  ``dataset.crs = "EPSG:4326"`` instead of ``dataset.set_crs("EPSG:4326")``.
+- Rasterio 1.0 will ignore creation options saved in the metadata of datasets
+  by Rasterio versions < 1.0b1. Users can opt in to this behavior now by
+  setting RIO_IGNORE_CREATION_KWDS=TRUE in their environments.
 
 New features:
 
@@ -61,6 +69,8 @@ New features:
   have been rewritten to use these new classes and have been moved to the new
   rasterio.path module. The signature of rasterio.open has not been changed
   and users of Rasterio will be unaffected.
+- set_band_unit and set_band_description methods have been added to
+  dataset writers/updaters to support rio-edit-info (#1344).
 - A tools module has been added to collect file-based functions and supporting
   classes (#1300).
 - ``rasterio.features.dataset_features()`` has been extracted from
