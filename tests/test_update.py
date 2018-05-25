@@ -58,7 +58,7 @@ def test_update_spatial_epsg(data):
         assert f.crs == {'init': 'epsg:4326'}
 
 
-def test_update_nodatavals(data):
+def test_update_nodata(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
         f.nodata = 255

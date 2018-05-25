@@ -247,6 +247,17 @@ For both ``rasterio.features.sieve()`` and ``rasterio.features.rasterize()`` the
 ``output`` argument has been replaced with ``out``.  Previously the use of
 ``output`` issued a deprecation warning.
 
+Deprecation of dataset property set_* and get_* methods
+-------------------------------------------------------
+
+Methods get_crs, set_crs, set_nodatavals, set_descriptions, set_units, and
+set_gcps are deprecated and will be removed in version 1.0. They have been
+replaced by fully settable dataset properties `crs`, `nodatavals`,
+`descriptions`, `units`, and `gcps`.
+
+In the cases of units and descriptions, set_band_unit and set_band_description
+methods remain to support the rio-edit-info command.
+
 Creation Options
 ----------------
 

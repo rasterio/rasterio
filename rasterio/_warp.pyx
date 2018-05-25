@@ -5,6 +5,7 @@ include "gdal.pxi"
 
 import logging
 import uuid
+import warnings
 
 from affine import identity
 import numpy as np
@@ -15,7 +16,7 @@ from rasterio._err import (
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling
-from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError
+from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError, RasterioDeprecationWarning
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 from rasterio.vfs import parse_path, vsi_path
 
@@ -794,6 +795,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             self.src_nodata for i in self.src_dataset.indexes]
 
     def get_crs(self):
+        warnings.warn("get_crs() will be removed in 1.0", RasterioDeprecationWarning)
+        return self.crs
+
+    @property
+    def crs(self):
+        """The dataset's coordinate reference system"""
         return self.dst_crs
 
     def start(self):
