@@ -66,6 +66,8 @@ New features:
 
 Bug fixes:
 
+- The block_shapes and files properties of datasets now return lists instead
+  of tuples.
 - The ``--nodata`` option of rio-merge is now passed to the output file
   (#1345).
 - The precision keyword arguments for methods in the windows and transform

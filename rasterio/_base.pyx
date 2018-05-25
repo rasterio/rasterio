@@ -414,7 +414,7 @@ cdef class DatasetBase(object):
                 GDALGetBlockSize(band, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
 
-        return tuple(self._block_shapes)
+        return list(self._block_shapes)
 
     def get_nodatavals(self):
         cdef GDALRasterBandH band = NULL
@@ -1193,7 +1193,7 @@ cdef class DatasetBase(object):
                 file_list = GDALGetFileList(h_dataset)
             num_items = CSLCount(file_list)
             try:
-                return tuple([file_list[i] for i in range(num_items)])
+                return list([file_list[i] for i in range(num_items)])
             finally:
                 CSLDestroy(file_list)
 
