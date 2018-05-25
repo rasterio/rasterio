@@ -57,7 +57,7 @@ def test_initial_bytes(rgb_file_bytes):
         with memfile.open() as src:
             assert src.driver == 'GTiff'
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ['uint8', 'uint8', 'uint8']
             assert src.read().shape == (3, 718, 791)
 
 
@@ -67,7 +67,7 @@ def test_initial_lzw_bytes(rgb_lzw_file_bytes):
         with memfile.open() as src:
             assert src.driver == 'GTiff'
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ['uint8', 'uint8', 'uint8']
             assert src.read().shape == (3, 718, 791)
 
 
@@ -77,7 +77,7 @@ def test_initial_file_object(rgb_file_object):
         with memfile.open() as src:
             assert src.driver == 'GTiff'
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ['uint8', 'uint8', 'uint8']
             assert src.read().shape == (3, 718, 791)
 
 
@@ -96,7 +96,7 @@ def test_non_initial_bytes(rgb_file_bytes):
         with memfile.open() as src:
             assert src.driver == 'GTiff'
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ['uint8', 'uint8', 'uint8']
             assert src.read().shape == (3, 718, 791)
 
 
@@ -108,7 +108,7 @@ def test_non_initial_bytes_in_two(rgb_file_bytes):
         with memfile.open() as src:
             assert src.driver == 'GTiff'
             assert src.count == 3
-            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.dtypes == ['uint8', 'uint8', 'uint8']
             assert src.read().shape == (3, 718, 791)
 
 
@@ -151,7 +151,7 @@ def test_file_object_read(rgb_file_object):
     with rasterio.open(rgb_file_object) as src:
         assert src.driver == 'GTiff'
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ['uint8', 'uint8', 'uint8']
         assert src.read().shape == (3, 718, 791)
 
 
@@ -160,7 +160,7 @@ def test_file_object_read_variant(rgb_file_bytes):
     with rasterio.open(MemoryFile(rgb_file_bytes)) as src:
         assert src.driver == 'GTiff'
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ['uint8', 'uint8', 'uint8']
         assert src.read().shape == (3, 718, 791)
 
 
@@ -169,7 +169,7 @@ def test_file_object_read_variant2(rgb_file_bytes):
     with rasterio.open(BytesIO(rgb_file_bytes)) as src:
         assert src.driver == 'GTiff'
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ['uint8', 'uint8', 'uint8']
         assert src.read().shape == (3, 718, 791)
 
 
@@ -183,7 +183,7 @@ def test_test_file_object_write(tmpdir, rgb_data_and_profile):
     with rasterio.open(str(tmpdir.join('test.tif'))) as src:
         assert src.driver == 'GTiff'
         assert src.count == 3
-        assert src.dtypes == ('uint8', 'uint8', 'uint8')
+        assert src.dtypes == ['uint8', 'uint8', 'uint8']
         assert src.read().shape == (3, 718, 791)
 
 
@@ -214,5 +214,5 @@ def test_zip_file_object_read(path_zip_file):
             with zipmemfile.open('white-gemini-iv.vrt') as src:
                 assert src.driver == 'VRT'
                 assert src.count == 3
-                assert src.dtypes == ('uint8', 'uint8', 'uint8')
+                assert src.dtypes == ['uint8', 'uint8', 'uint8']
                 assert src.read().shape == (3, 768, 1024)

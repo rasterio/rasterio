@@ -211,7 +211,6 @@ def geojson_geomcollection():
     }
 
 
-
 @pytest.fixture
 def basic_feature(basic_geometry):
     """
@@ -429,7 +428,7 @@ def rotated_image_file(tmpdir, pixelated_image):
     image = 128 * np.ones((1000, 2000), dtype=np.uint8)
 
     rotated_transform = Affine(-0.05, 0.07, 481060,
-                                0.07, 0.05, 4481030)
+                               0.07, 0.05, 4481030)
 
     outfilename = str(tmpdir.join('rotated_image.tif'))
     kwargs = {
@@ -506,7 +505,6 @@ def _path_multiband_no_colorinterp(tmpdir):
             'photometric': 'minisblack'
         }
 
-        undefined_ci = tuple(undefined_ci)
         with rasterio.open(dst_path, 'w', **profile) as src:
             src.colorinterp = undefined_ci
 

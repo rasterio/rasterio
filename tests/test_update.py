@@ -63,7 +63,7 @@ def test_update_nodata(data):
     with rasterio.open(tiffname, 'r+') as f:
         f.nodata = 255
     with rasterio.open(tiffname) as f:
-        assert f.nodatavals == (255, 255, 255)
+        assert f.nodatavals == [255, 255, 255]
 
 
 @pytest.mark.skipif(
@@ -84,7 +84,7 @@ def test_update_nodatavals_none(data):
     with rasterio.open(tiffname, 'r+') as f:
         f.nodata = None
     with rasterio.open(tiffname) as f:
-        assert f.nodatavals == (None, None, None)
+        assert f.nodatavals == [None, None, None]
 
 
 def test_update_mask_true(data):

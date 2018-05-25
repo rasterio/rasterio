@@ -179,8 +179,8 @@ cdef class DatasetBase(object):
         self._dtypes = []
         self._block_shapes = None
         self._nodatavals = []
-        self._units = ()
-        self._descriptions = ()
+        self._units = []
+        self._descriptions = []
         self._gcps = None
         self._read = False
 
@@ -371,7 +371,7 @@ cdef class DatasetBase(object):
         -------
         list of int
         """
-        return tuple(range(1, self.count+1))
+        return list(range(1, self.count+1))
 
     @property
     def dtypes(self):
@@ -389,7 +389,7 @@ cdef class DatasetBase(object):
                 self._dtypes.append(
                     dtypes.dtype_fwd[GDALGetRasterDataType(band)])
 
-        return tuple(self._dtypes)
+        return list(self._dtypes)
 
     @property
     def block_shapes(self):
@@ -414,7 +414,7 @@ cdef class DatasetBase(object):
                 GDALGetBlockSize(band, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
 
-        return tuple(self._block_shapes)
+        return list(self._block_shapes)
 
     def get_nodatavals(self):
         cdef GDALRasterBandH band = NULL
@@ -442,7 +442,7 @@ cdef class DatasetBase(object):
                     "Nodata success: %d, Nodata value: %f", success, nodataval)
                 self._nodatavals.append(val)
 
-        return tuple(self._nodatavals)
+        return list(self._nodatavals)
 
     property nodatavals:
         """Nodata values for each band
@@ -484,7 +484,7 @@ cdef class DatasetBase(object):
     def _mask_flags(self):
         """Mask flags for each band."""
         cdef GDALRasterBandH band = NULL
-        return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+        return list(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
 
     property mask_flag_enums:
         """Sets of flags describing the sources of band masks.
@@ -517,7 +517,7 @@ cdef class DatasetBase(object):
         False
         """
         def __get__(self):
-            return tuple(
+            return list(
                 [flag for flag in MaskFlags if x & flag.value]
                 for x in self._mask_flags())
 
@@ -559,7 +559,7 @@ cdef class DatasetBase(object):
         def __get__(self):
             if not self._descriptions:
                 descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
-                self._descriptions = tuple((d or None) for d in descr)
+                self._descriptions = list((d or None) for d in descr)
             return self._descriptions
 
         def __set__(self, value):
@@ -600,7 +600,7 @@ cdef class DatasetBase(object):
         def __get__(self):
             if not self._units:
                 units = [GDALGetRasterUnitType(self.band(j)) for j in self.indexes]
-                self._units = tuple((u or None) for u in units)
+                self._units = list((u or None) for u in units)
             return self._units
 
         def __set__(self, value):
@@ -996,15 +996,15 @@ cdef class DatasetBase(object):
             from rasterio.enums import ColorInterp
 
             with rasterio.open('rgba.tif', 'r+') as src:
-                src.colorinterp = (
+                src.coolorinterp = [
                     ColorInterp.red,
                     ColorInterp.green,
                     ColorInterp.blue,
-                    ColorInterp.alpha)
+                    ColorInterp.alpha]
 
         Returns
         -------
-        tuple
+        list
         """
 
         def __get__(self):
@@ -1013,7 +1013,7 @@ cdef class DatasetBase(object):
 
             Returns
             -------
-            tuple
+            list
             """
 
             cdef GDALRasterBandH band = NULL
@@ -1023,7 +1023,7 @@ cdef class DatasetBase(object):
                 value = exc_wrap_int(
                     GDALGetRasterColorInterpretation(self.band(bidx)))
                 out.append(ColorInterp(value))
-            return tuple(out)
+            return list(out)
 
         def __set__(self, value):
 
@@ -1035,22 +1035,7 @@ cdef class DatasetBase(object):
             value : iter
                 A sequence of ``ColorInterp.<enum>``.
             """
-
-            value = tuple(value)
-
-            if self.mode == 'r':
-                raise RasterioIOError(
-                    "Can only set color interpretation when dataset is "
-                    "opened in 'r+' or 'w' mode, not '{}'.".format(self.mode))
-            if len(value) != len(self.indexes):
-                raise ValueError(
-                    "Must set color interpretation for all bands.  Found "
-                    "{} bands but attempting to set color interpretation to: "
-                    "{}".format(len(self.indexes), value))
-
-            for bidx, ci in zip(self.indexes, value):
-                exc_wrap_int(
-                    GDALSetRasterColorInterpretation(self.band(bidx), ci.value))
+            self._set_colorinterp(value)
 
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""
@@ -1183,7 +1168,7 @@ cdef class DatasetBase(object):
 
         Returns
         -------
-        tuple
+        list
         """
 
         def __get__(self):
@@ -1193,7 +1178,7 @@ cdef class DatasetBase(object):
                 file_list = GDALGetFileList(h_dataset)
             num_items = CSLCount(file_list)
             try:
-                return tuple([file_list[i] for i in range(num_items)])
+                return list([file_list[i] for i in range(num_items)])
             finally:
                 CSLDestroy(file_list)
 

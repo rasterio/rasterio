@@ -1106,6 +1106,17 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._closed = True
         log.debug("Dataset %r has been stopped.", self)
 
+    def _set_colorinterp(self, value):
+        if len(value) != len(self.indexes):
+            raise ValueError(
+                "Must set color interpretation for all bands.  Found "
+                "{} bands but attempting to set color interpretation to: "
+                "{}".format(len(self.indexes), value))
+
+        for bidx, ci in zip(self.indexes, value):
+            exc_wrap_int(
+                GDALSetRasterColorInterpretation(self.band(bidx), ci.value))
+
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
         cdef char *proj_c = NULL
