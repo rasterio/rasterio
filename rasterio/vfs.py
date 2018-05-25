@@ -1,79 +1,81 @@
-"""Implementation of Apache VFS schemes and URLs."""
+"""Implementation of Apache VFS schemes and URLs
 
-import os
+**DEPRECATED**
+
+This module is replaced by rasterio.path.
+"""
+
+import warnings
 
 from rasterio.compat import urlparse
+from rasterio.errors import RasterioDeprecationWarning
+from rasterio.path import ParsedPath, UnparsedPath
+from rasterio.path import parse_path as future_parse_path
+from rasterio.path import vsi_path as future_vsi_path
 
 
-SCHEMES = {
-    'gzip': 'gzip',
-    'gzip+file': 'gzip',
-    'zip': 'zip',
-    'zip+file': 'zip',
-    'tar': 'tar',
-    'tar+file': 'tar',
-    'https': 'curl',
-    'http': 'curl',
-    's3': 's3'}
+def parse_path(path, vfs=None):
+    """Parse a dataset's path into its parts
 
-FILE_SCHEMES = [
-    '', 'file', 'gzip', 'gzip+file', 'zip', 'zip+file', 'tar', 'tar+file']
+    **DEPRECATED**
 
+    Parameters
+    ----------
+    path : str
+        The path or filename to be parsed.
+    vfs : str, optional **DEPRECATED**
+        A virtual file system path.
 
-def parse_path(uri, vfs=None):
-    """Parse a URI or Apache VFS URL into its parts
-
-    Returns: tuple
-        (path, archive, scheme)
+    Returns
+    -------
+    path, archive, scheme : str
+        Parts of the parsed path.
     """
-    archive = scheme = None
-    path = uri
+    warnings.warn(
+        "This function will be removed in version 1.0",
+        RasterioDeprecationWarning
+    )
+
     if vfs:
         parts = urlparse(vfs)
         scheme = parts.scheme
         archive = parts.path
         if parts.netloc and parts.netloc != 'localhost':  # pragma: no cover
             archive = parts.netloc + archive
+        parsed = ParsedPath(path, archive, scheme)
+        return parsed.path, parsed.archive, parsed.scheme
+
     else:
-        parts = urlparse(path)
-        scheme = parts.scheme
-        path = parts.path
-        if parts.query:
-            path += "?" + parts.query
-        if parts.netloc and parts.netloc != 'localhost':
-            path = parts.netloc + path
-        # There are certain URI schemes we favor over GDAL's names.
-        if scheme in SCHEMES:
-            parts = path.split('!')
-            path = parts.pop() if parts else None
-            archive = parts.pop() if parts else None
-        # For filesystem paths.
-        elif scheme.lower() in FILE_SCHEMES:
-            pass
-        # We permit GDAL's idiosyncratic URI-like dataset paths such as
-        # 'netcdf':... to fall right through with no parsed archive
-        # or scheme.
+        parsed = future_parse_path(path)
+        if isinstance(parsed, ParsedPath):
+            return parsed.path, parsed.archive, parsed.scheme
         else:
-            archive = scheme = None
-            path = uri
-
-    return path, archive, scheme
+            return parsed.path, None, None
 
 
-def vsi_path(path, archive=None, scheme=None):
-    """Convert a parsed path to a GDAL VSI path."""
-    # If a VSF and archive file are specified, we convert the path to
-    # a GDAL VSI path (see cpl_vsi.h).
-    if scheme and scheme.startswith('http'):
-        result = "/vsicurl/{0}://{1}".format(scheme, path)
-    elif scheme and scheme == 's3':
-        result = "/vsis3/{0}".format(path)
-    elif scheme and scheme != 'file':
-        if archive:
-            result = '/vsi{0}/{1}/{2}'.format(
-                scheme, archive, path.lstrip('/'))
-        else:
-            result = '/vsi{0}/{1}'.format(scheme, path.lstrip('/'))
+def vsi_path(path, archive, scheme):
+    """Convert a parsed path to a GDAL VSI path
+
+    **DEPRECATED**
+
+    Parameters
+    ----------
+    path : str
+        The path part of a parsed path.
+    archive : str
+        The archive part of a parsed path.
+    scheme : str
+        The scheme part of a parsed path.
+
+    Returns
+    -------
+    str
+    """
+    warnings.warn(
+        "This function will be removed in version 1.0",
+        RasterioDeprecationWarning
+    )
+    if archive or scheme:
+        return future_vsi_path(ParsedPath(path, archive, scheme))
     else:
-        result = path
-    return result
+        return future_vsi_path(UnparsedPath(path))

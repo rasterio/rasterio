@@ -30,7 +30,7 @@ from rasterio.errors import (
     RasterBlockError, BandOverviewError, RasterioDeprecationWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.path import parse_path, vsi_path
 from rasterio import windows
 
 include "gdal.pxi"
@@ -55,12 +55,21 @@ cdef const char *get_driver_name(GDALDriverH driver):
 
 
 def get_dataset_driver(path):
-    """Return the name of the driver that would be used to open the
-    dataset at the given path."""
+    """Return the name of the driver that opens a dataset
+
+    Parameters
+    ----------
+    path : rasterio.path.Path
+        A remote or local dataset path.
+
+    Returns
+    -------
+    str
+    """
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
 
-    path = vsi_path(*parse_path(path))
+    path = vsi_path(path)
     path = path.encode('utf-8')
 
     try:
@@ -151,6 +160,24 @@ cdef class DatasetBase(object):
     """
 
     def __init__(self, path=None, driver=None, sharing=True, **kwargs):
+        """Construct a new dataset
+
+        Parameters
+        ----------
+        path : rasterio.path.Path
+            Path of the local or remote dataset.
+        driver : str or list of str
+            A single driver name or a list of driver names to consider when
+            opening the dataset.
+        sharing : bool, optional
+            Whether to share underlying GDAL dataset handles (default: True).
+        kwargs : dict
+            GDAL dataset opening options.
+
+        Returns
+        -------
+        dataset
+        """
         cdef GDALDatasetH hds = NULL
         cdef int flags = 0
         cdef int sharing_flag = (0x20 if sharing else 0x0)
@@ -158,7 +185,7 @@ cdef class DatasetBase(object):
         self._hds = NULL
 
         if path is not None:
-            filename = vsi_path(*parse_path(path))
+            filename = vsi_path(path)
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
@@ -173,7 +200,7 @@ cdef class DatasetBase(object):
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
-        self.name = path
+        self.name = path.name
         self.mode = 'r'
         self.options = kwargs.copy()
         self._dtypes = []

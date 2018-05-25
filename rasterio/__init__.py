@@ -32,11 +32,14 @@ from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
 from rasterio.profiles import default_gtiff_profile
 from rasterio.transform import Affine, guard_transform
-from rasterio.vfs import parse_path
+from rasterio.path import parse_path
 
 # These modules are imported from the Cython extensions, but are also import
 # here to help tools like cx_Freeze find them automatically
-from rasterio import _err, coords, enums, vfs
+import rasterio._err
+import rasterio.coords
+import rasterio.enums
+import rasterio.path
 
 
 __all__ = ['band', 'open', 'pad']
@@ -204,7 +207,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             fp = str(fp)
 
         # The 'normal' filename or URL path.
-        _, _, scheme = parse_path(fp)
+        path = parse_path(fp)
+        scheme = getattr(path, 'scheme', None)
 
         with Env() as env:
             if scheme == 's3':
@@ -214,11 +218,11 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             # be taken over by the dataset's context manager if it is not
             # None.
             if mode == 'r':
-                s = DatasetReader(fp, driver=driver, **kwargs)
+                s = DatasetReader(path, driver=driver, **kwargs)
             elif mode == 'r+':
-                s = get_writer_for_path(fp)(fp, mode, driver=driver, **kwargs)
+                s = get_writer_for_path(path)(path, mode, driver=driver, **kwargs)
             elif mode.startswith("w"):
-                s = get_writer_for_driver(driver)(fp, mode, driver=driver,
+                s = get_writer_for_driver(driver)(path, mode, driver=driver,
                                                   width=width, height=height,
                                                   count=count, crs=crs,
                                                   transform=transform,
