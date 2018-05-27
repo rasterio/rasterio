@@ -1,6 +1,13 @@
 Changes
 =======
 
+Next
+----
+
+Bug fixes:
+
+- A Windows-crashing bug in the _warp module has been fixed (#1356).
+
 1.0b1 (2018-05-25)
 ------------------
 
