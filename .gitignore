@@ -55,6 +55,8 @@ rasterio/*.html
 docs/_build/
 docs/rasterio.*.rst
 docs/rasterio.rst
+docs/_static
+docs/_templates
 
 # PyBuilder
 target/

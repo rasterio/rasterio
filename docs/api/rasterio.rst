@@ -6,7 +6,7 @@ Subpackages
 
 .. toctree::
 
-    rasterio.rio
+   rasterio.rio
 
 Submodules
 ----------
@@ -20,12 +20,7 @@ Submodules
    rasterio._example
    rasterio._features
    rasterio._fill
-   rasterio._gdal1
    rasterio._io
-   rasterio._shim
-   rasterio._shim1
-   rasterio._shim20
-   rasterio._shim21
    rasterio._warp
    rasterio.compat
    rasterio.control
@@ -41,6 +36,7 @@ Submodules
    rasterio.io
    rasterio.mask
    rasterio.merge
+   rasterio.path
    rasterio.plot
    rasterio.profiles
    rasterio.sample
@@ -56,6 +52,6 @@ Module contents
 ---------------
 
 .. automodule:: rasterio
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

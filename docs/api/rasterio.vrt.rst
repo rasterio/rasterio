@@ -2,6 +2,7 @@ rasterio.vrt module
 ===================
 
 .. automodule:: rasterio.vrt
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :inherited-members:
+   :members:
+   :undoc-members:
+   :show-inheritance:

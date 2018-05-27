@@ -474,8 +474,8 @@ cdef class DatasetBase(object):
     property nodatavals:
         """Nodata values for each band
 
-        Note
-        ----
+        Notes
+        -----
         This may not be set.
 
         Returns
@@ -491,8 +491,8 @@ cdef class DatasetBase(object):
     property nodata:
         """The dataset's single nodata value
 
-        Note
-        ----
+        Notes
+        -----
         May be set.
 
         Returns
@@ -690,10 +690,11 @@ cdef class DatasetBase(object):
             return int(value)
 
     def block_windows(self, bidx=0):
-        """Returns an iterator over a band's blocks and their corresponding
-        windows.  Produces tuples like ``(block, window)``.  The primary use
-        of this method is to obtain windows to pass to `read()` for highly
-        efficient access to raster block data.
+        """Iterator over a band's blocks and their windows
+
+
+        The primary use of this method is to obtain windows to pass to
+        `read()` for highly efficient access to raster block data.
 
         The positional parameter `bidx` takes the index (starting at 1) of the
         desired band.  This iterator yields blocks "left to right" and "top to
@@ -717,7 +718,7 @@ cdef class DatasetBase(object):
         and at most 4 blocks, or at least 512 pixels and at most 2048.
 
         Given an image that is ``512 x 512`` with blocks that are
-        ``256 x 256``, its blocks and windows would look like:
+        ``256 x 256``, its blocks and windows would look like::
 
             Blocks:
 
@@ -743,15 +744,14 @@ cdef class DatasetBase(object):
 
         Parameters
         ----------
-        bidx : int
+        bidx : int, optional
             The band index (using 1-based indexing) from which to extract
             windows. A value less than 1 uses the first band if all bands have
             homogeneous windows and raises an exception otherwise.
 
         Yields
         ------
-        tuple
-            ``(block, window)``
+        block, window
         """
         cdef int i, j
 

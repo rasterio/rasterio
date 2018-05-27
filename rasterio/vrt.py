@@ -52,8 +52,8 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         GDAL extra warp options. See
         http://www.gdal.org/structGDALWarpOptions.html.
 
-    Example
-    -------
+    Examples
+    --------
 
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
     ...     with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:

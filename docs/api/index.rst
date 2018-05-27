@@ -3,4 +3,4 @@ Python API Reference
 
 .. toctree::
 
-    rasterio
+   rasterio

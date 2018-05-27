@@ -1,14 +1,11 @@
 """Dataset paths, identifiers, and filenames"""
 
-import os
 import re
 import sys
-import warnings
 
 import attr
 
 from rasterio.compat import urlparse
-from rasterio.errors import RasterioDeprecationWarning
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
 # TODO: extend for other cloud plaforms.
@@ -118,8 +115,8 @@ def parse_path(path):
     -------
     ParsedPath or UnparsedPath
 
-    Note
-    ----
+    Notes
+    -----
     When legacy GDAL filenames are encountered, they will be returned
     in a UnparsedPath.
     """
