@@ -262,7 +262,7 @@ def _reproject(
     cdef double gt[6]
     cdef char *srcwkt = NULL
     cdef char *dstwkt= NULL
-    cdef OGRSpatialReferenceH osr = NULL
+    cdef OGRSpatialReferenceH src_osr = NULL
     cdef char **warp_extras = NULL
     cdef const char* pszWarpThread = NULL
     cdef int i
