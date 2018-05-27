@@ -1,6 +1,5 @@
 name: _rasterio
 channels:
-- defaults
 - conda-forge
 - conda-forge/label/dev
 dependencies:
@@ -8,4 +7,3 @@ dependencies:
 - cython
 - libgdal
 - numpy
-- numpydoc
