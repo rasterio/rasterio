@@ -1,4 +1,12 @@
-"""Coordinate Reference Systems"""
+"""Coordinate Reference Systems
+
+Notes
+-----
+
+In Rasterio 1.0, coordinate reference system support is limited to the
+CRS that can be described by PROJ parameters.
+
+"""
 
 from rasterio._crs import _CRS, all_proj_keys
 from rasterio.compat import string_types
