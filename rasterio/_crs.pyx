@@ -25,6 +25,12 @@ class _CRS(UserDict):
 
     @property
     def is_geographic(self):
+        """Test if the CRS is a geographic coordinate reference system
+
+        Returns
+        -------
+        bool
+        """
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
@@ -37,6 +43,12 @@ class _CRS(UserDict):
 
     @property
     def is_projected(self):
+        """Test if the CRS is a projected coordinate reference system
+
+        Returns
+        -------
+        bool
+        """
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
@@ -82,8 +94,11 @@ class _CRS(UserDict):
 
     @property
     def wkt(self):
-        """An OGC WKT string representation of the coordinate reference
-        system.
+        """An OGC WKT representation of the CRS
+
+        Returns
+        -------
+        str
         """
         cdef char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
@@ -98,9 +113,20 @@ class _CRS(UserDict):
 
     @classmethod
     def from_epsg(cls, code):
-        """Given an integer code, returns an EPSG-like mapping.
+        """Make a CRS from an EPSG code
 
-        Note: the input code is not validated against an EPSG database.
+        Parameters
+        ----------
+        code : int or str
+            An EPSG code. Strings will be converted to integers.
+
+        Notes
+        -----
+        The input code is not validated against an EPSG database.
+
+        Returns
+        -------
+        CRS
         """
         if int(code) <= 0:
             raise ValueError("EPSG codes are positive integers")
@@ -177,13 +203,12 @@ class _CRS(UserDict):
         Parameters
         ----------
         s : str
-            An EPSG, PROJ, or WKT string.
+            A WKT string.
 
         Returns
         -------
         CRS
         """
-
         cdef char *prj = NULL
         cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 
