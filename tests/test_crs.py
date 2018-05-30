@@ -212,6 +212,10 @@ def test_repr():
     assert repr(CRS({'init': 'EPSG:4326'})).startswith("CRS({'init'")
 
 
+def test_dunder_str():
+    assert str(CRS({'init': 'EPSG:4326'})) == CRS({'init': 'EPSG:4326'}).to_string()
+
+
 def test_epsg_code():
     assert CRS({'init': 'EPSG:4326'}).is_epsg_code
     assert not CRS({'proj': 'latlon'}).is_epsg_code

@@ -83,9 +83,10 @@ class CRS(_CRS):
         return " ".join(items)
 
     def __repr__(self):
-        # Should use super() here, but what's the best way to be compatible
-        # between Python 2 and 3?
         return "CRS({})".format(dict.__repr__(self.data))
+
+    def __str__(self):
+        return self.to_string()
 
     def to_dict(self):
         """Turn CRS object into a dict
