@@ -4,8 +4,17 @@ Changes
 Next
 ----
 
+Upcoming deprecations:
+
+- Comparison of CRS objects to str or dict is deprecated.
+
+New features:
+
+- CRS.from_string can now take WKT strings as input.
+
 Bug fixes:
 
+- WarpedVRT.crs now returns a CRS, not a str.
 - A Windows-crashing bug in the _warp module has been fixed (#1356).
 
 1.0b1 (2018-05-25)
