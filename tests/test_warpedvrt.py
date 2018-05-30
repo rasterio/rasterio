@@ -8,6 +8,7 @@ import boto3
 import pytest
 
 import rasterio
+from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
@@ -38,7 +39,7 @@ def test_warped_vrt(path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
         vrt = WarpedVRT(src, dst_crs=DST_CRS)
-        assert vrt.dst_crs == DST_CRS
+        assert vrt.dst_crs == CRS.from_string(DST_CRS)
         assert vrt.src_nodata == 0.0
         assert vrt.dst_nodata == 0.0
         assert vrt.tolerance == 0.125
@@ -71,7 +72,7 @@ def test_wrap_file(path_rgb_byte_tif):
     """A VirtualVRT has the expected dataset properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
         vrt = WarpedVRT(src, dst_crs=DST_CRS)
-        assert vrt.crs == DST_CRS
+        assert vrt.crs == CRS.from_string(DST_CRS)
         assert tuple(round(x, 1) for x in vrt.bounds) == (
             -8789636.7, 2700460.0, -8524406.4, 2943560.2)
         assert vrt.name.startswith('WarpedVRT(')
@@ -97,7 +98,7 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         vrt = WarpedVRT(src, dst_crs=DST_CRS,
                         dst_width=size, dst_height=size,
                         dst_transform=dst_transform)
-        assert vrt.dst_crs == DST_CRS
+        assert vrt.dst_crs == CRS.from_string(DST_CRS)
         assert vrt.src_nodata == 0.0
         assert vrt.dst_nodata == 0.0
         assert vrt.resampling == Resampling.nearest

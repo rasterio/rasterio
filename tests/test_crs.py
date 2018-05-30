@@ -255,3 +255,7 @@ def test_from_wkt():
 def test_from_wkt_invalid():
     with pytest.raises(CRSError):
         CRS.from_wkt('trash')
+
+
+def test_from_user_input_epsg():
+    assert 'init' in CRS.from_user_input('EPSG:4326')

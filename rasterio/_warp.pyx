@@ -15,6 +15,7 @@ from rasterio._err import (
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError, RasterioDeprecationWarning
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
@@ -663,7 +664,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.src_crs = src_crs
         self.src_transform = src_transform
         self.name = "WarpedVRT({})".format(src_dataset.name)
-        self.dst_crs = dst_crs
+        self.dst_crs = CRS.from_user_input(dst_crs)
         self.resampling = resampling
         self.tolerance = tolerance
 
