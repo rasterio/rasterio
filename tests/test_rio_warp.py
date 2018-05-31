@@ -26,7 +26,7 @@ def test_dst_crs_error(runner, tmpdir):
     result = runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', '{foo: bar}'])
     assert result.exit_code == 2
-    assert 'for dst_crs: crs appears to be JSON but is not' in result.output
+    assert 'for dst_crs: CRS appears to be JSON but is not' in result.output
 
 
 def test_dst_crs_error_2(runner, tmpdir):

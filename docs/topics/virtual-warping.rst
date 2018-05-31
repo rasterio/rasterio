@@ -56,7 +56,7 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
 
 
 Normalizing Data to a Consistent Grid
-=====================================
+-------------------------------------
 
 A ``WarpedVRT`` can be used to normalize a stack of images with differing
 projections, bounds, cell sizes, or dimensions against a regular grid

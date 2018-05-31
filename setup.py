@@ -9,10 +9,12 @@
 # source or binary distribution. This is essential when creating self-contained
 # binary wheels.
 
+import copy
 from distutils.command.sdist import sdist
 import itertools
 import logging
 import os
+import platform
 import pprint
 import shutil
 import subprocess
@@ -133,15 +135,15 @@ if '--gdalversion' in sys.argv:
 
 if not gdalversion:
     sys.exit("ERROR: A GDAL API version must be specified. Provide a path "
-              "to gdal-config using a GDAL_CONFIG environment variable "
-              "or use a GDAL_VERSION environment variable.")
+             "to gdal-config using a GDAL_CONFIG environment variable "
+             "or use a GDAL_VERSION environment variable.")
 
 gdal_version_parts = gdalversion.split('.')
 gdal_major_version = int(gdal_version_parts[0])
 gdal_minor_version = int(gdal_version_parts[1])
 
 if gdal_major_version == 1 and gdal_minor_version < 11:
-    sys.exit("ERROR: GDAL >= 1.11 is required for rasterio.  "
+    sys.exit("ERROR: GDAL >= 1.11 is required for rasterio. "
              "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
@@ -197,20 +199,38 @@ if not os.name == "nt":
     ext_options['extra_compile_args'] = ['-Wno-unused-parameter',
                                          '-Wno-unused-function']
 
+# Copy extension options for cpp extension modules.
+cpp_ext_options = copy.deepcopy(ext_options)
+
+# Remove -std=c++11 from C extension options.
+try:
+    ext_options['extra_link_args'].remove('-std=c++11')
+    ext_options['extra_compile_args'].remove('-std=c++11')
+except Exception:
+    pass
 
 # GDAL 2.3 and newer requires C++11
 if (gdal_major_version, gdal_minor_version) >= (2, 3):
     cpp11_flag = '-std=c++11'
 
     # 'extra_compile_args' may not be defined
-    eca = ext_options.get('extra_compile_args', [])
-    eca.append(cpp11_flag)
-    ext_options['extra_compile_args'] = eca
+    eca = cpp_ext_options.get('extra_compile_args', [])
 
-    # Link args are always defined
-    ext_options['extra_link_args'].append(cpp11_flag)
+    if platform.system() == 'Darwin':
 
+        if cpp11_flag not in eca:
+            eca.append(cpp11_flag)
 
+        eca += [cpp11_flag, '-mmacosx-version-min=10.9', '-stdlib=libc++']
+
+    # TODO: Windows
+
+    elif cpp11_flag not in eca:
+        eca.append(cpp11_flag)
+
+    cpp_ext_options['extra_compile_args'] = eca
+
+# Configure optional Cython coverage.
 cythonize_options = {}
 if os.environ.get('CYTHON_COVERAGE'):
     cythonize_options['compiler_directives'] = {'linetrace': True}
@@ -227,6 +247,7 @@ if gdal_major_version >= 2:
 else:
     cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
     sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
+
 
 # When building from a repo, Cython is required.
 if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
@@ -255,9 +276,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._env', ['rasterio/_env.pyx'], **ext_options),
         Extension(
-            'rasterio._warp', ['rasterio/_warp.pyx'], **ext_options),
+            'rasterio._warp', ['rasterio/_warp.pyx'], **cpp_ext_options),
         Extension(
-            'rasterio._fill', cython_fill, **ext_options),
+            'rasterio._fill', cython_fill, **cpp_ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.pyx'], **ext_options),
         Extension(
@@ -283,9 +304,9 @@ else:
         Extension(
             'rasterio._env', ['rasterio/_env.c'], **ext_options),
         Extension(
-            'rasterio._warp', ['rasterio/_warp.cpp'], **ext_options),
+            'rasterio._warp', ['rasterio/_warp.cpp'], **cpp_ext_options),
         Extension(
-            'rasterio._fill', sdist_fill, **ext_options),
+            'rasterio._fill', sdist_fill, **cpp_ext_options),
         Extension(
             'rasterio._err', ['rasterio/_err.c'], **ext_options),
         Extension(

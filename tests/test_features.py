@@ -124,7 +124,7 @@ def test_geometry_mask_invalid_shape(basic_geometry):
 
 
 def test_geometry_mask_no_transform(basic_geometry):
-    with pytest.raises(TypeError) as exc_info:
+    with pytest.raises(TypeError):
         geometry_mask(
             [basic_geometry],
             out_shape=DEFAULT_SHAPE,
@@ -150,8 +150,6 @@ def test_geometry_window_rotation(rotated_image_file, rotation_geometry):
         assert window.flatten() == (898, 439, 467, 399)
 
 
-@pytest.mark.xfail(reason="https://github.com/mapbox/rasterio/issues/1139")
-# This test is failing due to https://github.com/mapbox/rasterio/issues/1139
 def test_geometry_window_pixel_precision(basic_image_file):
     """Window offsets should be floor, width and height ceiling"""
 
@@ -216,7 +214,7 @@ def test_geometry_window_large_shapes(basic_image_file):
 
 def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
     """Geometries that do not overlap raster raises WindowError"""
-    
+
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(WindowError):
             geometry_window(src, [basic_geometry], north_up=False)
@@ -436,9 +434,9 @@ def test_rasterize_geomcollection_no_hole():
 
     geomcollection = {'type': 'GeometryCollection', 'geometries': [
         {'type': 'Polygon',
-        'coordinates': (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)},
+            'coordinates': (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)},
         {'type': 'Polygon',
-        'coordinates': (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)}
+            'coordinates': (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)}
     ]}
 
     expected = rasterize(geomcollection['geometries'], out_shape=DEFAULT_SHAPE)
@@ -611,18 +609,6 @@ def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
         )
 
 
-def test_rasterize_merge_alg_deprecated(basic_geometry, basic_image_2x2x2):
-    """
-    Rasterizing two times the basic_geometry with the "add" merging
-    option should output the shape with the value 2
-    """
-    for alg in ('add', 'replace'):
-        with pytest.warns(RasterioDeprecationWarning):
-            with rasterio.Env():
-                rasterize([basic_geometry, basic_geometry], merge_alg=alg,
-                          out_shape=DEFAULT_SHAPE)
-
-
 def test_rasterize_value(basic_geometry, basic_image_2x2):
     """
     All shapes should rasterize to the value passed in a tuple alongside
@@ -743,7 +729,7 @@ def test_rasterize_internal_driver_manager(basic_geometry):
     assert rasterize([basic_geometry], out_shape=DEFAULT_SHAPE).sum() == 4
 
 
-def test_rasterize_geo_interface(geojson_polygon):
+def test_rasterize_geo_interface_2(geojson_polygon):
     """Objects that implement the geo interface should rasterize properly"""
 
     class GeoObj:
@@ -752,7 +738,6 @@ def test_rasterize_geo_interface(geojson_polygon):
             return geojson_polygon
 
     assert rasterize([GeoObj()], out_shape=DEFAULT_SHAPE).sum() == 4
-
 
 
 def test_shapes(basic_image):

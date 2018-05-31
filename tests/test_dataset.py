@@ -15,7 +15,7 @@ def test_files(data):
     with open(aux, 'w'):
         pass
     with rasterio.open(tif) as src:
-        assert src.files == (tif, aux)
+        assert src.files == [tif, aux]
 
 
 def test_handle_closed(path_rgb_byte_tif):

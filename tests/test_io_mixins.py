@@ -10,9 +10,10 @@ EPS = 1.0e-8
 
 
 def assert_window_almost_equals(a, b, precision=3):
-    for pair_outer in zip(a, b):
-        for x, y in zip(*pair_outer):
-            assert round(x, precision) == round(y, precision)
+    assert round(a.col_off, precision) == round(b.col_off, precision)
+    assert round(a.row_off, precision) == round(b.row_off, precision)
+    assert round(a.width, precision) == round(b.width, precision)
+    assert round(a.height, precision) == round(b.height, precision)
 
 
 class MockDatasetBase(object):
@@ -35,7 +36,8 @@ def test_windows_mixin():
 
     assert_window_almost_equals(
         src.window(*src.bounds),
-        ((0, src.height), (0, src.width)))
+        Window(0, 0, src.width, src.height)
+    )
 
     assert src.window_bounds(Window(0, 0, src.width, src.height)) == src.bounds
 
@@ -79,19 +81,22 @@ def test_window_method():
 
         assert_window_almost_equals(
             src.window(left + EPS, bottom + EPS, right - EPS, top - EPS),
-            ((0, src.height), (0, src.width)))
+            Window(0, 0, src.width, src.height)
+            )
 
         assert_window_almost_equals(
             src.window(left, top - 400, left + 400, top),
-            ((0, 400 / src.res[1]), (0, 400 / src.res[0])))
+                       Window(0, 0, 400 / src.res[0], 400 / src.res[1])
+            )
 
         assert_window_almost_equals(
             src.window(left, top - 2 * dy - EPS, left + 2 * dx - EPS, top),
-            ((0, 2), (0, 2)))
+            Window(0, 0, 2, 2))
 
         assert_window_almost_equals(
             src.window(left - 2 * dx, top - 2 * dy, left + 2 * dx, top + 2 * dy),
-            ((-2, 2), (-2, 2)))
+            Window(-2, -2, 4, 4)
+        )
 
 
 def test_window_bounds_function():
@@ -99,9 +104,3 @@ def test_window_bounds_function():
         rows = src.height
         cols = src.width
         assert src.window_bounds(((0, rows), (0, cols))) == src.bounds
-
-
-def test_boundless_deprecation():
-    with pytest.warns(RasterioDeprecationWarning):
-        with rasterio.open('tests/data/RGB.byte.tif') as src:
-            src.window(*src.bounds, boundless=True)

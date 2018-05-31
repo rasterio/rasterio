@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from collections import defaultdict
 import logging
 import math
+import os
 import warnings
 
 from rasterio._err import (
@@ -25,11 +26,11 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env
 from rasterio.errors import (
-    RasterioIOError, CRSError, DriverRegistrationError,
-    NotGeoreferencedWarning, RasterioDeprecationWarning, RasterBlockError)
+    RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
+    RasterBlockError, BandOverviewError, RasterioDeprecationWarning)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.path import parse_path, vsi_path
 from rasterio import windows
 
 include "gdal.pxi"
@@ -54,12 +55,21 @@ cdef const char *get_driver_name(GDALDriverH driver):
 
 
 def get_dataset_driver(path):
-    """Return the name of the driver that would be used to open the
-    dataset at the given path."""
+    """Return the name of the driver that opens a dataset
+
+    Parameters
+    ----------
+    path : rasterio.path.Path
+        A remote or local dataset path.
+
+    Returns
+    -------
+    str
+    """
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
 
-    path = vsi_path(*parse_path(path))
+    path = vsi_path(path)
     path = path.encode('utf-8')
 
     try:
@@ -108,9 +118,66 @@ def driver_can_create_copy(drivername):
 
 
 cdef class DatasetBase(object):
-    """Dataset base class."""
+    """Dataset base class
+
+    Attributes
+    ----------
+    block_shapes
+    bounds
+    closed
+    colorinterp
+    count
+    crs
+    descriptions
+    files
+    gcps
+    indexes
+    mask_flag_enums
+    meta
+    nodata
+    nodatavals
+    profile
+    res
+    subdatasets
+    transform
+    units
+    compression : str
+        Compression algorithm's short name
+    driver : str
+        Format driver used to open the dataset
+    interleaving : str
+        'pixel' or 'band'
+    kwds : dict
+        Stored creation option tags
+    mode : str
+        Access mode
+    name : str
+        Remote or local dataset name
+    options : dict
+        Copy of opening options
+    photometric : str
+        Photometric interpretation's short name
+    """
 
     def __init__(self, path=None, driver=None, sharing=True, **kwargs):
+        """Construct a new dataset
+
+        Parameters
+        ----------
+        path : rasterio.path.Path
+            Path of the local or remote dataset.
+        driver : str or list of str
+            A single driver name or a list of driver names to consider when
+            opening the dataset.
+        sharing : bool, optional
+            Whether to share underlying GDAL dataset handles (default: True).
+        kwargs : dict
+            GDAL dataset opening options.
+
+        Returns
+        -------
+        dataset
+        """
         cdef GDALDatasetH hds = NULL
         cdef int flags = 0
         cdef int sharing_flag = (0x20 if sharing else 0x0)
@@ -118,7 +185,7 @@ cdef class DatasetBase(object):
         self._hds = NULL
 
         if path is not None:
-            filename = vsi_path(*parse_path(path))
+            filename = vsi_path(path)
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
@@ -133,7 +200,7 @@ cdef class DatasetBase(object):
             except CPLE_OpenFailedError as err:
                 raise RasterioIOError(str(err))
 
-        self.name = path
+        self.name = path.name
         self.mode = 'r'
         self.options = kwargs.copy()
         self._dtypes = []
@@ -268,8 +335,8 @@ cdef class DatasetBase(object):
         err = GDALGetGeoTransform(self._hds, gt)
         if err == GDALError.failure:
             warnings.warn(
-                "Dataset has no geotransform set. Default transform "
-                "will be applied (Affine.identity())", NotGeoreferencedWarning)
+                "Dataset has no geotransform set. The identity matrix may be returned.",
+                NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
 
@@ -299,10 +366,22 @@ cdef class DatasetBase(object):
 
     @property
     def closed(self):
+        """Test if the dataset is closed
+
+        Returns
+        -------
+        bool
+        """
         return self._closed
 
     @property
     def count(self):
+        """The number of raster bands in the dataset
+
+        Returns
+        -------
+        int
+        """
         if not self._count:
             if self._hds == NULL:
                 raise ValueError("Can't read closed raster file")
@@ -311,11 +390,24 @@ cdef class DatasetBase(object):
 
     @property
     def indexes(self):
+        """The 1-based indexes of each band in the dataset
+
+        For a 3-band dataset, this property will be ``[1, 2, 3]``.
+
+        Returns
+        -------
+        list of int
+        """
         return tuple(range(1, self.count+1))
 
     @property
     def dtypes(self):
-        """Returns an ordered tuple of all band data types."""
+        """The data types of each band in index order
+
+        Returns
+        -------
+        list of str
+        """
         cdef GDALRasterBandH band = NULL
 
         if not self._dtypes:
@@ -328,10 +420,14 @@ cdef class DatasetBase(object):
 
     @property
     def block_shapes(self):
-        """Returns an ordered list of block shapes for all bands.
+        """An ordered list of block shapes for each bands
 
         Shapes are tuples and have the same ordering as the dataset's
         shape: (count of image rows, count of image columns).
+
+        Returns
+        -------
+        list
         """
         cdef GDALRasterBandH band = NULL
         cdef int xsize
@@ -345,7 +441,7 @@ cdef class DatasetBase(object):
                 GDALGetBlockSize(band, &xsize, &ysize)
                 self._block_shapes.append((ysize, xsize))
 
-        return tuple(self._block_shapes)
+        return list(self._block_shapes)
 
     def get_nodatavals(self):
         cdef GDALRasterBandH band = NULL
@@ -376,22 +472,46 @@ cdef class DatasetBase(object):
         return tuple(self._nodatavals)
 
     property nodatavals:
-        """Nodata values for each band."""
+        """Nodata values for each band
+
+        Notes
+        -----
+        This may not be set.
+
+        Returns
+        -------
+        list of float
+        """
         def __get__(self):
             return self.get_nodatavals()
 
+    def _set_nodatavals(self, value):
+        raise NotImplementedError
+
     property nodata:
-        """The dataset's single nodata value."""
+        """The dataset's single nodata value
+
+        Notes
+        -----
+        May be set.
+
+        Returns
+        -------
+        float
+        """
+
         def __get__(self):
             if self.count == 0:
                 return None
             return self.nodatavals[0]
 
-    property _mask_flags:
+        def __set__(self, value):
+            self._set_nodatavals([value for old_val in self.nodatavals])
+
+    def _mask_flags(self):
         """Mask flags for each band."""
-        def __get__(self):
-            cdef GDALRasterBandH band = NULL
-            return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
+        cdef GDALRasterBandH band = NULL
+        return tuple(GDALGetMaskFlags(self.band(j)) for j in self.indexes)
 
     property mask_flag_enums:
         """Sets of flags describing the sources of band masks.
@@ -426,37 +546,92 @@ cdef class DatasetBase(object):
         def __get__(self):
             return tuple(
                 [flag for flag in MaskFlags if x & flag.value]
-                for x in self._mask_flags)
+                for x in self._mask_flags())
 
-    property mask_flags:
-        """Mask flags for each band."""
+    def _set_crs(self, value):
+        raise NotImplementedError
+
+    property crs:
+        """The dataset's coordinate reference system
+
+        In setting this property, the value may be a CRS object or an
+        EPSG:nnnn or WKT string.
+
+        Returns
+        -------
+        CRS
+        """
+
         def __get__(self):
-            warnings.warn(
-                "'mask_flags' is deprecated. Switch to 'mask_flag_enums'",
-                RasterioDeprecationWarning,
-                stacklevel=2)
-            return self._mask_flags
+            return self._get_crs()
+
+        def __set__(self, value):
+            self._set_crs(value)
+
+    def _set_all_descriptions(self, value):
+        raise NotImplementedError
+
+    def _set_all_units(self, value):
+        raise NotImplementedError
 
     property descriptions:
-        """Text descriptions for each band."""
+        """Descriptions for each dataset band
+
+        To set descriptions, one for each band is required.
+
+        Returns
+        -------
+        list of str
+        """
         def __get__(self):
             if not self._descriptions:
                 descr = [GDALGetDescription(self.band(j)) for j in self.indexes]
                 self._descriptions = tuple((d or None) for d in descr)
             return self._descriptions
 
+        def __set__(self, value):
+            self._set_all_descriptions(value)
+
+    def write_transform(self, value):
+        raise NotImplementedError
+
+    property transform:
+        """The dataset's georeferencing transformation matrix
+
+        This transform maps pixel row/column coordinates to coordinates
+        in the dataset's coordinate reference system.
+
+        Returns
+        -------
+        Affine
+        """
+
+        def __get__(self):
+            return Affine.from_gdal(*self.get_transform())
+
+        def __set__(self, value):
+            self.write_transform(value.to_gdal())
+
     property units:
-        """Strings defining the units for each band.
+        """A list of str: one units string for each dataset band
 
         Possible values include 'meters' or 'degC'. See the Pint
-        project for a suggested list of units.¬
+        project for a suggested list of units.
+
+        To set units, one for each band is required.
+
+        Returns
+        -------
+        list of str
         """
         def __get__(self):
             if not self._units:
-                self._units = tuple(
-                    GDALGetRasterUnitType(self.band(j)) for j in self.indexes)
+                units = [GDALGetRasterUnitType(self.band(j)) for j in self.indexes]
+                self._units = tuple((u or None) for u in units)
             return self._units
 
+        def __set__(self, value):
+            self._set_all_units(value)
 
     def block_window(self, bidx, i, j):
         """Returns the window for a particular block
@@ -515,10 +690,11 @@ cdef class DatasetBase(object):
             return int(value)
 
     def block_windows(self, bidx=0):
-        """Returns an iterator over a band's blocks and their corresponding
-        windows.  Produces tuples like ``(block, window)``.  The primary use
-        of this method is to obtain windows to pass to `read()` for highly
-        efficient access to raster block data.
+        """Iterator over a band's blocks and their windows
+
+
+        The primary use of this method is to obtain windows to pass to
+        `read()` for highly efficient access to raster block data.
 
         The positional parameter `bidx` takes the index (starting at 1) of the
         desired band.  This iterator yields blocks "left to right" and "top to
@@ -542,7 +718,7 @@ cdef class DatasetBase(object):
         and at most 4 blocks, or at least 512 pixels and at most 2048.
 
         Given an image that is ``512 x 512`` with blocks that are
-        ``256 x 256``, its blocks and windows would look like:
+        ``256 x 256``, its blocks and windows would look like::
 
             Blocks:
 
@@ -568,15 +744,14 @@ cdef class DatasetBase(object):
 
         Parameters
         ----------
-        bidx : int
+        bidx : int, optional
             The band index (using 1-based indexing) from which to extract
             windows. A value less than 1 uses the first band if all bands have
             homogeneous windows and raises an exception otherwise.
 
         Yields
         ------
-        tuple
-            ``(block, window)``
+        block, window
         """
         cdef int i, j
 
@@ -643,7 +818,6 @@ cdef class DatasetBase(object):
             'transform': self.transform,
         }
         self._read = True
-
         return m
 
     @property
@@ -686,8 +860,16 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             m = Profile(**self.meta)
-            m.update((k, v.lower()) for k, v in self.tags(
-                ns='rio_creation_kwds').items())
+
+            if os.environ.get('RIO_IGNORE_CREATION_KWDS', 'FALSE') != 'TRUE':
+                warnings.warn(
+                    "Creation keywords stored on datasets by Rasterio versions < 1.0b1 will always be ignored in version 1.0. "
+                    "You may opt in to ignoring them now by setting RIO_IGNORE_CREATION_KWDS=TRUE in your environment.",
+                    RasterioDeprecationWarning
+                )
+                creation_kwds = self.tags(ns='rio_creation_kwds')
+                m.update((k, v.lower()) for k, v in creation_kwds.items())
+
             if self.is_tiled:
                 m.update(
                     blockxsize=self.block_shapes[0][1],
@@ -701,7 +883,6 @@ cdef class DatasetBase(object):
                 m['interleave'] = self.interleaving.name
             if self.photometric:
                 m['photometric'] = self.photometric.name
-
             return m
 
     def lnglat(self):
@@ -712,67 +893,23 @@ cdef class DatasetBase(object):
                 self.crs, {'init': 'epsg:4326'}, [cx], [cy], None)
         return lng.pop(), lat.pop()
 
-    def get_crs(self):
+    def _get_crs(self):
         # _read tells us that the CRS was read before and really is
         # None.
         if not self._read and self._crs is None:
             self._crs = self.read_crs()
         return self._crs
 
-    property crs:
-        """A mapping of PROJ.4 coordinate reference system params.
-        """
-        def __get__(self):
-            return self.get_crs()
+    def get_crs(self):
+        """DEPRECATED"""
+        warnings.warn("get_crs will be removed in 1.0", RasterioDeprecationWarning)
+        return self.crs
 
     def get_transform(self):
         """Returns a GDAL geotransform in its native form."""
         if not self._read and self._transform is None:
             self._transform = self.read_transform()
         return self._transform
-
-    property transform:
-        """An instance of ``affine.Affine``, which is a ``namedtuple`` with
-        coefficients in the order ``(a, b, c, d, e, f)``.
-
-        Coefficients of the affine transformation that maps ``col,row``
-        pixel coordinates to ``x,y`` coordinates in the specified crs. The
-        coefficients of the augmented matrix are:
-
-          | x |   | a  b  c | | r |
-          | y | = | d  e  f | | c |
-          | 1 |   | 0  0  1 | | 1 |
-        """
-        def __get__(self):
-            return Affine.from_gdal(*self.get_transform())
-
-    property affine:
-        """This property is deprecated.
-
-        An instance of ``affine.Affine``. This property is a
-        transitional feature: see the docstring of ``transform``
-        (above) for more details.
-
-        This property was added in ``0.9`` as a transitional feature to aid the
-        transition of the `transform` parameter.  Rasterio ``1.0`` completes
-        this transition by converting `transform` to an instance of
-        ``affine.Affine()``.
-
-        See the `transform`'s docstring for more information.
-
-        See https://github.com/mapbox/rasterio/issues/86 for more details.
-        """
-
-        def __get__(self):
-            with warnings.catch_warnings():
-                warnings.simplefilter('always')
-                warnings.warn(
-                "'src.affine' is deprecated.  Please switch to "
-                "'src.transform'. See "
-                "https://github.com/mapbox/rasterio/issues/86 for details.",
-                RasterioDeprecationWarning,
-                stacklevel=2)
-            return Affine.from_gdal(*self.get_transform())
 
     property subdatasets:
         """Sequence of subdatasets"""
@@ -819,17 +956,72 @@ cdef class DatasetBase(object):
         num_items = CSLCount(metadata)
         return dict(metadata[i].split('=', 1) for i in range(num_items))
 
+
+    def get_tag_item(self, ns, dm=None, bidx=0, ovr=None):
+        """Returns tag item value
+
+        Parameters
+        ----------
+        ns: str
+            The key for the metadata item to fetch.
+        dm: str
+            The domain to fetch for.
+        bidx: int
+            Band index, starting with 1.
+        ovr: int
+            Overview level
+
+        Returns
+        -------
+        str
+        """
+        cdef GDALMajorObjectH band = NULL
+        cdef GDALMajorObjectH obj = NULL
+        cdef char *value = NULL
+        cdef const char *name = NULL
+        cdef const char *domain = NULL
+
+        ns = ns.encode('utf-8')
+        name = ns
+
+        if dm:
+            dm = dm.encode('utf-8')
+            domain = dm
+
+        if not bidx > 0 and ovr:
+            raise Exception("Band index (bidx) option needed for overview level")
+
+        if bidx > 0:
+            band = self.band(bidx)
+        else:
+            band = self._hds
+
+        if ovr:
+            obj = GDALGetOverview(band, ovr)
+            if obj == NULL:
+              raise BandOverviewError(
+                  "Failed to retrieve overview {}".format(ovr))
+        else:
+            obj = band
+
+        value = GDALGetMetadataItem(obj, name, domain)
+        if value == NULL:
+            return None
+        else:
+            return value
+
+
     property colorinterp:
 
         """Returns a sequence of ``ColorInterp.<enum>`` representing
         color interpretation in band order.
-        
+
         To set color interpretation, provide a sequence of
         ``ColorInterp.<enum>``:
-            
+
             import rasterio
             from rasterio.enums import ColorInterp
-            
+
             with rasterio.open('rgba.tif', 'r+') as src:
                 src.colorinterp = (
                     ColorInterp.red,
@@ -914,6 +1106,11 @@ cdef class DatasetBase(object):
 
     @property
     def kwds(self):
+        warnings.warn(
+            "Creation keywords stored on datasets by Rasterio versions < 1.0b1 will be ignored in version 1.0. "
+            "This method will be removed.",
+            RasterioDeprecationWarning
+        )
         return self.tags(ns='rio_creation_kwds')
 
     # Overviews.
@@ -957,10 +1154,10 @@ cdef class DatasetBase(object):
         else:
             window = windows.evaluate(window, self.height, self.width)
             window = windows.crop(window, self.height, self.width)
-            xoff = window[1][0]
-            width = window[1][1] - xoff
-            yoff = window[0][0]
-            height = window[0][1] - yoff
+            xoff = window.col_off
+            width = window.width
+            yoff = window.row_off
+            height = window.height
 
         return GDALChecksumImage(band, xoff, yoff, width, height)
 
@@ -985,11 +1182,27 @@ cdef class DatasetBase(object):
                                          info=gcplist[i].pszInfo)
                                          for i in range(num_gcps)], crs)
 
+    def _set_gcps(self, values):
+        raise NotImplementedError
+
     property gcps:
+        """ground control points and their coordinate reference system.
+
+        This property is a 2-tuple, or pair: (gcps, crs).
+
+        gcps : list of GroundControlPoint
+            Zero or more ground control points.
+        crs: CRS
+            The coordinate reference system of the ground control points.
+        """
         def __get__(self):
-            if self._gcps is None:
+            if not self._gcps:
                 self._gcps = self.get_gcps()
             return self._gcps
+
+        def __set__(self, value):
+            gcps, crs = value
+            self._set_gcps(gcps, crs)
 
     property files:
 
@@ -1007,7 +1220,7 @@ cdef class DatasetBase(object):
                 file_list = GDALGetFileList(h_dataset)
             num_items = CSLCount(file_list)
             try:
-                return tuple([file_list[i] for i in range(num_items)])
+                return list([file_list[i] for i in range(num_items)])
             finally:
                 CSLDestroy(file_list)
 

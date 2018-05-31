@@ -54,7 +54,7 @@ import click
 
 import rasterio
 import rasterio.shutil
-from rasterio.vfs import FILE_SCHEMES, parse_path
+from rasterio.path import parse_path, ParsedPath, UnparsedPath
 
 
 class IgnoreOptionMarker(object):
@@ -110,26 +110,29 @@ def abspath_forward_slashes(path):
 def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
-        path, archive, scheme = parse_path(value)
+        path = parse_path(value)
 
-        # Validate existence of files.
-        if scheme in FILE_SCHEMES and not \
-                rasterio.shutil.exists(value):
-            raise IOError(
-                "Input file {0} does not exist".format(value))
+        if isinstance(path, UnparsedPath):
+            return path.name
 
-        if archive and scheme:
-            archive = abspath_forward_slashes(archive)
-            path = "{0}://{1}!{2}".format(scheme, archive, path)
-        elif scheme and scheme.startswith('http'):
-            path = "{0}://{1}".format(scheme, path)
-        elif scheme == 's3':
-            path = "{0}://{1}".format(scheme, path)
-        elif scheme in FILE_SCHEMES:
-            path = abspath_forward_slashes(path)
+        elif path.scheme and path.is_remote:
+            return path.name
+
+        elif path.archive:
+            if os.path.exists(path.archive) and rasterio.shutil.exists(value):
+                archive = abspath_forward_slashes(path.archive)
+                return "{}://{}!{}".format(path.scheme, archive, path.path)
+            else:
+                raise IOError(
+                    "Input archive {} does not exist".format(path.archive))
+
         else:
-            path = path
-        return path
+            if os.path.exists(path.path) and rasterio.shutil.exists(value):
+                return abspath_forward_slashes(path.path)
+            else:
+                raise IOError(
+                    "Input file {} does not exist".format(path.path))
+
     except Exception:
         raise click.BadParameter("{} is not a valid input file".format(value))
 
@@ -294,8 +297,8 @@ rgb_opt = click.option(
     default=False,
     help="Set RGB photometric interpretation.")
 
-force_overwrite_opt = click.option(
-    '--force-overwrite', 'force_overwrite',
+overwrite_opt = click.option(
+    '--overwrite', 'overwrite',
     is_flag=True, type=bool, default=False,
     help="Always overwrite an existing output file.")
 

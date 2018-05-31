@@ -84,13 +84,22 @@ def test_file_in_handler_with_vfs_nonexistent():
                 uuid.uuid4()))
 
 
-def test_file_in_handler_with_vfs():
+def test_file_in_handler_with_vfs_error():
     """vfs file path is expanded"""
     uri = 'zip://tests/data/files.zip!/inputs/RGB.byte.tif'
     ctx = MockContext()
     with pytest.raises(click.BadParameter) as e:
         file_in_handler(ctx, 'INPUT', uri)
         assert uri in str(e) and 'is not valid' in str(e)
+
+
+def test_file_in_handler_with_vfs():
+    """vfs file path is expanded"""
+    uri = 'zip://tests/data/files.zip!/RGB.byte.tif'
+    ctx = MockContext()
+    retval = file_in_handler(ctx, 'INPUT', uri)
+    assert retval.startswith('zip:///')
+    assert 'tests/data/files.zip!/RGB.byte.tif' in retval
 
 
 def test_file_in_handler_with_vfs_file():
@@ -112,6 +121,13 @@ def test_file_in_handler_s3():
     ctx = MockContext()
     retval = file_in_handler(ctx, 'INPUT', 's3://example.com/RGB.byte.tif')
     assert retval == 's3://example.com/RGB.byte.tif'
+
+
+def test_file_in_handler_vsi():
+    """Legacy GDAL filenames are handled"""
+    ctx = MockContext()
+    retval = file_in_handler(ctx, 'INPUT', '/vsifoo/bar.tif')
+    assert retval == '/vsifoo/bar.tif'
 
 
 def test_like_dataset_callback(data):
@@ -154,6 +170,12 @@ def test_nodata_callback_neg1(data):
 def test_nodata_callback_nan(data):
     ctx = MockContext()
     assert math.isnan(nodata_handler(ctx, MockOption('nodata'), 'nan'))
+
+
+@pytest.mark.parametrize('value', ['null', 'nil', 'none', 'nada', 'NULL', 'None'])
+def test_nodata_callback_none(data, value):
+    ctx = MockContext()
+    assert nodata_handler(ctx, MockOption('nodata'), value) is None
 
 
 def test_edit_nodata_callback_like(data):

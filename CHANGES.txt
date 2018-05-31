@@ -4,19 +4,113 @@ Changes
 Next
 ----
 
-Breaking changes:
+Upcoming deprecations:
 
-- Whether to print GeoJSON feature sequences or a GeoJSON feature collection
-  from rio-shapes is now controlled by a ``--sequence/--collection`` option.
-  A sequence is now the default (#927).
+- Comparison of CRS objects to str or dict is deprecated.
 
 New features:
 
+- CRS.from_string can now take WKT strings as input.
+
+Bug fixes:
+
+- WarpedVRT.crs now returns a CRS, not a str.
+- A Windows-crashing bug in the _warp module has been fixed (#1356).
+
+1.0b1 (2018-05-25)
+------------------
+
+Breaking changes:
+
+- The signatures of all Dataset constructors have changed: these method now
+  take instance of ParsedPath or UnparsedPath from rasterio.path and do not
+  take strings.
+- The signatures of get_writer_for_path and get_writer_for_driver have 
+  changed in the same way.
+- Whether to print GeoJSON feature sequences or a GeoJSON feature collection
+  from rio-shapes is now controlled by a ``--sequence/--collection`` option.
+  A sequence is now the default (#927).
+- Comparing empty ``CRS`` objects returns ``True`` (#1034).
+- Deprecated window functions have been removed from the rasterio module. Their
+  replacements are in rasterio.windows (#1115).
+- The deprecated r- mode has been removed from ``rasterio.open()`` (#1116).
+- A bytearray is no longer allowed as input to the ``MemoryFile`` constructor.
+  Users must convert byte arrays to ``bytes before calling ``MemoryFile()``.
+- Signatures of private functions and classes in _features, _warp, _io have
+  been changed to always take instances of Affine instead of GDAL geotransform
+  arrays (#796).
+- Calling `rasterio.Env()` no longer sets hidden default config options
+  CHECK_WITH_INVERT_PROJ=True and GTIFF_IMPLICIT_JPEG_OVR=False (#1011).
+- Rasterio no longer saves creation options in metadata on created datasets
+  (#1332).
+
+A number of deprecated features have been removed (#1319).
+
+- In the rasterio.open function: we have removed 'affine' as an alias for
+  'transform'.
+- In the _base.DatasetBase class, and thereby all dataset objects: we have
+  removed the mask_flags and affine properties. Instead, users must use the
+  mask_flag_enums and transform properties.
+- In the _io.DatasetReaderBase class, and thereby all dataset objects: we have
+  removed the read_mask method. Users must use the read_masks method.
+- In the features.rasterize function: we have removed 'replace' and 'add' as
+  aliases for ``MergeAlg.replace`` and ``MergeAlg.add``.
+- In the profiles.Profile class: we have removed 'affine' as alias for
+  'transform' and have removed the `__call__` method. The class is no longer
+  callable. Users must use the mapping protocol to copy and update profiles.
+- In the windows.WindowMethodsMixin class, and thereby all dataset objects: we
+  have removed the 'boundless' keyword arg from the window and from_bounds
+  methods.
+- In the windows.Window class: we have removed the num_cols and num_rows
+  properties, the __getitem__ method, and the from_offlen and from_ranges class
+  methods.
+
+Upcoming deprecation:
+
+- The rasterio.vfs module and its functions are being replaced by new functions
+  in rasterio.path.
+- Reading array data or masks from datasets opened in "w" mode will be
+  prohibited in Rasterio 1.0. We are warning about this now (#1309).
+- Property set_* methods of datasets will be deprecated in 1.0. The appropriate
+  properties should be used instead. For example,
+  ``dataset.crs = "EPSG:4326"`` instead of ``dataset.set_crs("EPSG:4326")``.
+- Rasterio 1.0 will ignore creation options saved in the metadata of datasets
+  by Rasterio versions < 1.0b1. Users can opt in to this behavior now by
+  setting RIO_IGNORE_CREATION_KWDS=TRUE in their environments.
+
+New features:
+
+- New ParsedPath and UnparsedPath classes have been added to improve input
+  file handling and validation. The existing parse_path and vsi_path functions
+  have been rewritten to use these new classes and have been moved to the new
+  rasterio.path module. The signature of rasterio.open has not been changed
+  and users of Rasterio will be unaffected.
+- set_band_unit and set_band_description methods have been added to
+  dataset writers/updaters to support rio-edit-info (#1344).
+- A tools module has been added to collect file-based functions and supporting
+  classes (#1300).
 - ``rasterio.features.dataset_features()`` has been extracted from
   rio-shapes (#1282, #1286).
 
 Bug fixes:
 
+- The block_shapes and files properties of datasets now return lists instead
+  of tuples.
+- The ``--nodata`` option of rio-merge is now passed to the output file
+  (#1345).
+- The precision keyword arguments for methods in the windows and transform
+  modules now default to None, which means no rounding of values by
+  default (#1139).
+- The pixel_precision keyword arguments for methods in the windows module now
+  default to None (#1143).
+- Rasterio functions and methods, even the private ones, now always take
+  instances of Affine as transform parameters (#796).
+- Importing the features, fill, io, and warp modules would set the
+  CHECK_WITH_INVERT_PROJ=True and GTIFF_IMPLICIT_JPEG_OVR=False config options
+  in a hidden way. This has been fixed in #1340.
+- Add Debian data directory to set of well-known paths to search (#1337).
+- Pass precision parameter from ``merge`` to ``from_bounds`` (#1307).
+- Added the missing w+ mode (#1309).
 - Rotated datasets are now masked properly (#1240, #1278).
 - Geometry collections are flattened in ``rasterize`` to work around
   incidental holes created by GDAL (#1253, #1274).

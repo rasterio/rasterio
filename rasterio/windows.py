@@ -27,7 +27,7 @@ import attr
 from affine import Affine
 import numpy as np
 
-from rasterio.errors import RasterioDeprecationWarning, WindowError
+from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
 
 
@@ -43,7 +43,7 @@ class WindowMethodsMixin(object):
     properties: `transform`, `height` and `width`
     """
 
-    def window(self, left, bottom, right, top, precision=6, **kwargs):
+    def window(self, left, bottom, right, top, precision=None):
         """Get the window corresponding to the bounding coordinates.
 
         The resulting window is not cropped to the row and column
@@ -62,17 +62,11 @@ class WindowMethodsMixin(object):
         precision: int, optional
             Number of decimal points of precision when computing inverse
             transform.
-        kwargs: mapping
-            For backwards compatibility: absorbs deprecated keyword args.
 
         Returns
         -------
         window: Window
         """
-        if 'boundless' in kwargs:  # pragma: no branch
-            warnings.warn("boundless keyword arg should not be used",
-                          RasterioDeprecationWarning)
-
         transform = guard_transform(self.transform)
 
         return from_bounds(
@@ -258,7 +252,7 @@ def intersect(*windows):
 
 
 def from_bounds(left, bottom, right, top, transform=None,
-                height=None, width=None, precision=6, **kwargs):
+                height=None, width=None, precision=None):
     """Get the window corresponding to the bounding coordinates.
 
     Parameters
@@ -273,18 +267,12 @@ def from_bounds(left, bottom, right, top, transform=None,
     precision: int, optional
         Number of decimal points of precision when computing inverse
         transform.
-    kwargs: mapping
-        Absorbs deprecated keyword args
 
     Returns
     -------
     Window
         A new Window
     """
-    if 'boundless' in kwargs:
-        warnings.warn("boundless keyword should not be used",
-                      RasterioDeprecationWarning)
-
     row_start, col_start = rowcol(
         transform, left, top, op=float, precision=precision)
 
@@ -487,9 +475,6 @@ def validate_length_value(instance, attribute, value):
         raise ValueError("Number of columns or rows must be non-negative")
 
 
-_default = attr.Factory(lambda x: 0.0 if x is None else float(x))
-
-
 @attr.s(slots=True)
 class Window(object):
     """Windows are rectangular subsets of rasters.
@@ -508,10 +493,10 @@ class Window(object):
     this is a bit confusing in the new float precision world and the
     attributes have been changed. The originals are deprecated.
     """
-    col_off = attr.ib(default=_default)
-    row_off = attr.ib(default=_default)
-    width = attr.ib(default=_default, validator=validate_length_value)
-    height = attr.ib(default=_default, validator=validate_length_value)
+    col_off = attr.ib()
+    row_off = attr.ib()
+    width = attr.ib(validator=validate_length_value)
+    height = attr.ib(validator=validate_length_value)
 
     def __repr__(self):
         """Return a nicely formatted representation string"""
@@ -556,31 +541,6 @@ class Window(object):
             A pair of slices in row, column order
         """
         return tuple(slice(*rng) for rng in self.toranges())
-
-    @property
-    def num_cols(self):
-        warnings.warn("use 'width' attribute instead",
-                      RasterioDeprecationWarning)
-        return self.width
-
-    @property
-    def num_rows(self):
-        warnings.warn("use 'height' attribute instead",
-                      RasterioDeprecationWarning, stacklevel=2)
-        return self.height
-
-    def __getitem__(self, index):
-        """Provides backwards compatibility for clients using tuples"""
-        warnings.warn("This usage is deprecated", RasterioDeprecationWarning)
-        return self.toranges()[index]
-
-    @classmethod
-    def from_offlen(cls, col_off, row_off, num_cols, num_rows):
-        """For backwards compatibility only"""
-        warnings.warn("Use the class constructor instead of this method",
-                      RasterioDeprecationWarning)
-        return cls(col_off=col_off, row_off=row_off, width=num_cols,
-                   height=num_rows)
 
     @classmethod
     def from_slices(cls, rows, cols, height=-1, width=-1, boundless=False):
@@ -675,14 +635,7 @@ class Window(object):
         return cls(col_off=col_off, row_off=row_off, width=num_cols,
                    height=num_rows)
 
-    @classmethod
-    def from_ranges(cls, rows, cols):
-        """For backwards compatibility only"""
-        warnings.warn("Use the from_slices class method instead",
-                      RasterioDeprecationWarning)
-        return cls.from_slices(rows, cols)
-
-    def round_lengths(self, op='floor', pixel_precision=3):
+    def round_lengths(self, op='floor', pixel_precision=None):
         """Return a copy with width and height rounded.
 
         Lengths are rounded to the nearest whole number. The offsets
@@ -692,7 +645,7 @@ class Window(object):
         ----------
         op: str
             'ceil' or 'floor'
-        pixel_precision: int
+        pixel_precision: int, optional (default: None)
             Number of places of rounding precision.
 
         Returns
@@ -703,13 +656,16 @@ class Window(object):
         if not operator:
             raise WindowError("operator must be 'ceil' or 'floor'")
         else:
-            return Window(self.col_off, self.row_off,
-                          operator(round(self.width, pixel_precision)),
-                          operator(round(self.height, pixel_precision)))
+            return Window(
+                self.col_off, self.row_off,
+                operator(round(self.width, pixel_precision) if
+                         pixel_precision is not None else self.width),
+                operator(round(self.height, pixel_precision) if
+                         pixel_precision is not None else self.height))
 
     round_shape = round_lengths
 
-    def round_offsets(self, op='floor', pixel_precision=3):
+    def round_offsets(self, op='floor', pixel_precision=None):
         """Return a copy with column and row offsets rounded.
 
         Offsets are rounded to the nearest whole number. The lengths
@@ -717,9 +673,9 @@ class Window(object):
 
         Parameters
         ----------
-        op: str
+        op : str
             'ceil' or 'floor'
-        pixel_precision: int
+        pixel_precision : int, optional (default: None)
             Number of places of rounding precision.
 
         Returns
@@ -730,9 +686,12 @@ class Window(object):
         if not operator:
             raise WindowError("operator must be 'ceil' or 'floor'")
         else:
-            return Window(operator(round(self.col_off, pixel_precision)),
-                          operator(round(self.row_off, pixel_precision)),
-                          self.width, self.height)
+            return Window(
+                operator(round(self.col_off, pixel_precision) if
+                         pixel_precision is not None else self.col_off),
+                operator(round(self.row_off, pixel_precision) if
+                         pixel_precision is not None else self.row_off),
+                self.width, self.height)
 
     def crop(self, height, width):
         """Return a copy cropped to height and width"""

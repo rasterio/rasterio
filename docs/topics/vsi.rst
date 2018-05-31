@@ -1,5 +1,5 @@
 Virtual Files
-*************
+=============
 
 .. todo::
 
@@ -7,7 +7,7 @@ Virtual Files
     Relationship to GDAL vsicurl, vsis3 et al.
 
 AWS S3
-======
+------
 
 .. note::
     Requires GDAL 2.1.0

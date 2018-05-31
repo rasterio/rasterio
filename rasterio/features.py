@@ -14,7 +14,6 @@ from rasterio.crs import CRS
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env
-from rasterio.errors import RasterioDeprecationWarning
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
@@ -106,7 +105,7 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
 
     """
     transform = guard_transform(transform)
-    for s, v in _shapes(source, mask, connectivity, transform.to_gdal()):
+    for s, v in _shapes(source, mask, connectivity, transform):
         yield s, v
 
 
@@ -212,14 +211,6 @@ def rasterize(
     rasterio.float64.
 
     """
-
-    # merge_alg usage deprecation warning.  Can be removed in rasterio 1.0
-    if not isinstance(merge_alg, MergeAlg):
-        warnings.warn("merge_alg must be MergeAlg.add or MergeAlg.replace, "
-                      "not a 'replace' or 'add'.  This usage has been "
-                      "deprecated.", RasterioDeprecationWarning)
-        merge_alg = MergeAlg[merge_alg]
-
     valid_dtypes = (
         'int16', 'int32', 'uint8', 'uint16', 'uint32', 'float32', 'float64'
     )
@@ -317,7 +308,7 @@ def rasterize(
         raise ValueError("width and height must be > 0")
 
     transform = guard_transform(transform)
-    _rasterize(valid_shapes, out, transform.to_gdal(), all_touched, merge_alg)
+    _rasterize(valid_shapes, out, transform, all_touched, merge_alg)
     return out
 
 
@@ -485,21 +476,21 @@ def is_valid_geom(geom):
         if geom_type == 'MultiLineString':
             # Multi lines must have at least one LineString
             return (len(coords) > 0 and len(coords[0]) >= 2 and
-                    len(coords[0][0]) >=2)
+                    len(coords[0][0]) >= 2)
 
         if geom_type == 'Polygon':
             # Polygons must have at least 1 ring, with at least 4 coordinates,
             # with at least x, y for a coordinate
             return (len(coords) > 0 and len(coords[0]) >= 4 and
-                    len(coords[0][0]) >=2)
+                    len(coords[0][0]) >= 2)
 
         if geom_type == 'MultiPolygon':
             # Muti polygons must have at least one Polygon
             return (len(coords) > 0 and len(coords[0]) > 0 and
-                    len(coords[0][0]) >= 4 and len(coords[0][0][0]) >=2)
+                    len(coords[0][0]) >= 4 and len(coords[0][0][0]) >= 2)
 
     if geom_type == 'GeometryCollection':
-        if not 'geometries' in geom:
+        if 'geometries' not in geom:
             return False
 
         if not len(geom['geometries']) > 0:
@@ -516,7 +507,7 @@ def is_valid_geom(geom):
 
 def dataset_features(
         src,
-        bidx,
+        bidx=None,
         sampling=1,
         band=True,
         as_mask=False,

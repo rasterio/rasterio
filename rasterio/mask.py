@@ -26,23 +26,23 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
 
     Parameters
     ----------
-    dataset: a dataset object opened in 'r' mode
+    dataset : a dataset object opened in 'r' mode
         Raster for which the mask will be created.
-    shapes: list of polygons
-        GeoJSON-like dict representation of polygons that will be used to
-        create the mask.
-    all_touched: bool (opt)
+    shapes : iterable object
+        The values must be a GeoJSON-like dict or an object that implements
+        the Python geo interface protocol (such as a Shapely Polygon).
+    all_touched : bool (opt)
         Include a pixel in the mask if it touches any of the shapes.
         If False (default), include a pixel only if its center is within one of
         the shapes, or if it is selected by Bresenham's line algorithm.
-    invert: bool (opt)
+    invert : bool (opt)
         If False (default), mask will be `False` inside shapes and `True`
         outside.  If True, mask will be `True` inside shapes and `False`
         outside.
-    crop: bool (opt)
+    crop : bool (opt)
         Whether to crop the dataset to the extent of the shapes. Defaults to
         False.
-    pad: bool (opt)
+    pad : bool (opt)
         If True, the features will be padded in each direction by
         one half of a pixel prior to cropping dataset. Defaults to False.
 
@@ -119,30 +119,30 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
 
     Parameters
     ----------
-    dataset: a dataset object opened in 'r' mode
+    dataset : a dataset object opened in 'r' mode
         Raster to which the mask will be applied.
-    shapes: list of polygons
-        GeoJSON-like dict representation of polygons that will be used to
-        create the mask.
-    all_touched: bool (opt)
+    shapes : iterable object
+        The values must be a GeoJSON-like dict or an object that implements
+        the Python geo interface protocol (such as a Shapely Polygon).
+    all_touched : bool (opt)
         Include a pixel in the mask if it touches any of the shapes.
         If False (default), include a pixel only if its center is within one of
         the shapes, or if it is selected by Bresenham's line algorithm.
-    invert: bool (opt)
+    invert : bool (opt)
         If False (default) pixels outside shapes will be masked.  If True,
         pixels inside shape will be masked.
-    nodata: int or float (opt)
+    nodata : int or float (opt)
         Value representing nodata within each raster band. If not set,
         defaults to the nodata value for the input raster. If there is no
         set nodata value for the raster, it defaults to 0.
-    filled: bool (opt)
+    filled : bool (opt)
         If True, the pixels outside the features will be set to nodata.
         If False, the output array will contain the original pixel data,
         and only the mask will be based on shapes.  Defaults to True.
-    crop: bool (opt)
+    crop : bool (opt)
         Whether to crop the raster to the extent of the shapes. Defaults to
         False.
-    pad: bool (opt)
+    pad : bool (opt)
         If True, the features will be padded in each direction by
         one half of a pixel prior to cropping raster. Defaults to False.
     indexes : list of ints or a single int (opt)

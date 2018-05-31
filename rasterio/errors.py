@@ -86,3 +86,7 @@ class RasterioDeprecationWarning(UserWarning):
 
 class RasterBlockError(RasterioError):
     """Raised when raster block access fails"""
+
+
+class BandOverviewError(UserWarning):
+    """Raised when a band overview access fails."""

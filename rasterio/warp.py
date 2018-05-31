@@ -7,7 +7,6 @@ from __future__ import division
 from math import ceil
 
 from affine import Affine
-from affine import identity
 import numpy as np
 
 import rasterio
@@ -17,7 +16,6 @@ from rasterio._warp import (
 from rasterio.enums import Resampling
 from rasterio.env import ensure_env, GDALVersion, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException
-from rasterio.transform import guard_transform
 
 
 # Gauss (7) is not supported for warp
@@ -257,14 +255,16 @@ def reproject(source, destination, src_transform=None, gcps=None,
     out: None
         Output is written to destination.
     """
+
+    # Only one type of georeferencing is permitted.
     if src_transform and gcps:
         raise ValueError("src_transform and gcps parameters may not"
                          "be used together.")
 
-    # Resampling guard.
+    # Guard against invalid or unsupported resampling algorithms.
     try:
-        if resampling == 7:  # gauss resampling is not supported
-            raise ValueError
+        if resampling == 7:
+            raise ValueError("Gauss resampling is not supported")
 
         Resampling(resampling)
 
@@ -274,40 +274,16 @@ def reproject(source, destination, src_transform=None, gcps=None,
                 ['Resampling.{0}'.format(r.name) for r in
                  SUPPORTED_RESAMPLING])))
 
-    # If working with identity transform, assume it is crs-less data
-    # and that translating the matrix very slightly will avoid #674
-    eps = 1e-100
-    if src_transform:
-        src_transform = guard_transform(src_transform)
-        # if src_transform is like `identity` with positive or negative `e`,
-        # translate matrix very slightly to avoid #674 and #1272.
-        if src_transform.almost_equals(identity) or src_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
-            src_transform = src_transform.translation(eps, eps)
-    if dst_transform:
-        dst_transform = guard_transform(dst_transform)
-        if dst_transform.almost_equals(identity) or dst_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
-            dst_transform = dst_transform.translation(eps, eps)
-
-    if src_transform:
-        src_transform = guard_transform(src_transform).to_gdal()
-    if dst_transform:
-        dst_transform = guard_transform(dst_transform).to_gdal()
-
-    # Passing None can cause segfault, use empty dict
-    if src_crs is None:
-        src_crs = {}
-    if dst_crs is None:
-        dst_crs = {}
-
+    # Call the function in our extension module.
     _reproject(source, destination, src_transform, gcps, src_crs, src_nodata,
                dst_transform, dst_crs, dst_nodata, resampling,
                init_dest_nodata, **kwargs)
 
 
 @ensure_env
-def calculate_default_transform(src_crs, dst_crs, width, height,
-                                left=None, bottom=None, right=None, top=None,
-                                gcps=None, resolution=None):
+def calculate_default_transform(
+        src_crs, dst_crs, width, height, left=None, bottom=None, right=None,
+        top=None, gcps=None, resolution=None):
     """Output dimensions and transform for a reprojection.
 
     Source and destination coordinate reference systems and output

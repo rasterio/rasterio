@@ -1,18 +1,17 @@
-========================
-Command Line Users Guide
-========================
+Command Line User Guide
+=======================
 
-Rasterio's command line interface is a program named ``rio``.
+Rasterio's command line interface (CLI) is a program named "rio" [#]_.
 
-``rio`` allows you to build workflows using shell commands, either
-interactively at the command prompt or with a script. Most common
-cases are covered by ``rio`` commands and it is often more convenient
+The CLI allows you to build workflows using shell commands, either
+interactively at the command prompt or with a script. Many common
+cases are covered by CLI sub-commands and it is often more convenient
 to use a ready-made command as opposed to implementing similar functionality
 as a python script.
 
-``rio`` is developed using the `Click <http://click.pocoo.org/>`__  architecture.
-Its plugin system allows external modules to share a common namespace and
-handling of context variables.
+The rio program is developed using the `Click <http://click.pocoo.org/>`__
+framwork.  Its plugin system allows external modules to share a common
+namespace and handling of context variables.
 
 .. code-block:: console
 
@@ -170,10 +169,6 @@ collects a sequence of 2-D arrays into a 3-D array for output.
 The command above is also an example of a calculation that is far beyond the
 design of the calc command and something that could be done much more
 efficiently in Python.
-
-.. toctree::
-
-    calc
 
 clip
 ----
@@ -689,3 +684,7 @@ Other commands?
 ---------------
 
 Suggestions for other commands are welcome!
+
+.. [#] In some Linux distributions "rio" may instead refer to the command line
+   Diamond Rio MP3 player controller. This conflict can be avoided by
+   installing Rasterio in an isolated Python environment.

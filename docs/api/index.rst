@@ -1,37 +1,6 @@
-rasterio package
-================
-
-Submodules
-----------
+Python API Reference
+====================
 
 .. toctree::
 
-   rasterio.compat
-   rasterio.coords
-   rasterio.crs
-   rasterio.drivers
-   rasterio.dtypes
-   rasterio.enums
-   rasterio.env
-   rasterio.errors
-   rasterio.features
-   rasterio.fill
-   rasterio.io
-   rasterio.mask
-   rasterio.merge
-   rasterio.plot
-   rasterio.profiles
-   rasterio.sample
-   rasterio.transform
-   rasterio.vfs
-   rasterio.vrt
-   rasterio.warp
-   rasterio.windows
-
-Module contents
----------------
-
-.. automodule:: rasterio
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   rasterio

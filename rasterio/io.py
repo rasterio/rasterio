@@ -14,6 +14,7 @@ from rasterio._io import (
 from rasterio.windows import WindowMethodsMixin
 from rasterio.env import ensure_env
 from rasterio.transform import TransformMethodsMixin
+from rasterio.path import UnparsedPath
 
 
 log = logging.getLogger(__name__)
@@ -86,6 +87,21 @@ class MemoryFile(MemoryFileBase):
 
     """
     def __init__(self, file_or_bytes=None, filename=None, ext=''):
+        """Create a new file in memory
+
+        Parameters
+        ----------
+        file_or_bytes : file-like object or bytes, optional
+            File or bytes holding initial data.
+        filename : str, optional
+            An optional filename. A unique one will otherwise be generated.
+        ext : str, optional
+            An optional extension.
+
+        Returns
+        -------
+        MemoryFile
+        """
         super(MemoryFile, self).__init__(
             file_or_bytes=file_or_bytes, filename=filename, ext=ext)
 
@@ -106,7 +122,7 @@ class MemoryFile(MemoryFileBase):
         Other parameters are optional and have the same semantics as the
         parameters of `rasterio.open()`.
         """
-        vsi_path = self.name
+        vsi_path = UnparsedPath(self.name)
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
@@ -150,7 +166,7 @@ class ZipMemoryFile(MemoryFile):
         -------
         A Rasterio dataset object
         """
-        vsi_path = '/vsizip{0}/{1}'.format(self.name, path.lstrip('/'))
+        vsi_path = UnparsedPath('/vsizip{0}/{1}'.format(self.name, path.lstrip('/')))
 
         if self.closed:
             raise IOError("I/O operation on closed file.")

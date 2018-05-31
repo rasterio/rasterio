@@ -19,10 +19,10 @@ from rasterio.rio.helpers import resolve_inout
 @format_opt
 @options.bidx_magic_opt
 @options.rgb_opt
-@options.force_overwrite_opt
+@options.overwrite_opt
 @options.creation_options
 @click.pass_context
-def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
+def stack(ctx, files, output, driver, bidx, photometric, overwrite,
           creation_options):
     """Stack a number of bands from one or more input files into a
     multiband dataset.
@@ -59,7 +59,7 @@ def stack(ctx, files, output, driver, bidx, photometric, force_overwrite,
     try:
         with ctx.obj['env']:
             output, files = resolve_inout(files=files, output=output,
-                                          force_overwrite=force_overwrite)
+                                          overwrite=overwrite)
             output_count = 0
             indexes = []
             for path, item in zip_longest(files, bidx, fillvalue=None):

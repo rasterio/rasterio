@@ -4,7 +4,6 @@ import warnings
 
 from rasterio.compat import UserDict
 from rasterio.dtypes import uint8
-from rasterio.errors import RasterioDeprecationWarning
 
 
 class Profile(UserDict):
@@ -22,24 +21,10 @@ class Profile(UserDict):
         initdata = self.defaults.copy()
         initdata.update(data)
         initdata.update(**kwds)
-
-        if 'affine' in initdata and 'transform' in initdata:
-            warnings.warn("affine item is deprecated, use transform only",
-                          RasterioDeprecationWarning)
-            del initdata['affine']
-        elif 'affine' in initdata:
-            warnings.warn("affine item is deprecated, use transform instead",
-                          RasterioDeprecationWarning)
-            initdata['transform'] = initdata.pop('affine')
-
         self.data.update(initdata)
 
     def __getitem__(self, key):
         """Like normal item access but with affine alias."""
-        if key == 'affine':
-            key = 'transform'
-            warnings.warn("affine item is deprecated, use transform instead",
-                          RasterioDeprecationWarning)
         return self.data[key]
 
     def __setitem__(self, key, val):
@@ -47,17 +32,6 @@ class Profile(UserDict):
         if key == 'affine':
             raise TypeError("affine key is prohibited")
         self.data[key] = val
-
-    def __call__(self, **kwds):
-        """Return a mapping of keyword args.
-
-        DEPRECATED.
-        """
-        warnings.warn("__call__() is deprecated, use mapping methods instead",
-                      RasterioDeprecationWarning)
-        profile = self.data.copy()
-        profile.update(**kwds)
-        return profile
 
 
 class DefaultGTiffProfile(Profile):

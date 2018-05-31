@@ -5,7 +5,9 @@ include "gdal.pxi"
 
 import logging
 import uuid
+import warnings
 
+from affine import identity
 import numpy as np
 
 from rasterio._err import (
@@ -14,9 +16,9 @@ from rasterio._err import (
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags
-from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError
-from rasterio.transform import Affine, from_bounds, tastes_like_gdal
-from rasterio.vfs import parse_path, vsi_path
+from rasterio.crs import CRS
+from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError, RasterioDeprecationWarning
+from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
 
@@ -261,7 +263,8 @@ def _reproject(
     cdef double gt[6]
     cdef char *srcwkt = NULL
     cdef char *dstwkt= NULL
-    cdef OGRSpatialReferenceH osr = NULL
+    cdef OGRSpatialReferenceH src_osr = NULL
+    cdef OGRSpatialReferenceH dst_osr = NULL
     cdef char **warp_extras = NULL
     cdef const char* pszWarpThread = NULL
     cdef int i
@@ -270,6 +273,26 @@ def _reproject(
     cdef void *hTransformArg = NULL
     cdef GDALTransformerFunc pfnTransformer = NULL
     cdef GDALWarpOptions *psWOptions = NULL
+
+    # If working with identity transform, assume it is crs-less data
+    # and that translating the matrix very slightly will avoid #674
+    eps = 1e-100
+
+    if src_transform:
+
+        src_transform = guard_transform(src_transform)
+        # if src_transform is like `identity` with positive or negative `e`,
+        # translate matrix very slightly to avoid #674 and #1272.
+        if src_transform.almost_equals(identity) or src_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
+            src_transform = src_transform.translation(eps, eps)
+        src_transform = src_transform.to_gdal()
+
+    if dst_transform:
+
+        dst_transform = guard_transform(dst_transform)
+        if dst_transform.almost_equals(identity) or dst_transform.almost_equals(Affine(1, 0, 0, 0, -1, 0)):
+            dst_transform = dst_transform.translation(eps, eps)
+        dst_transform = dst_transform.to_gdal()
 
     # Validate nodata values immediately.
     if src_nodata is not None:
@@ -566,7 +589,6 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
     if all(x is not None for x in (left, bottom, right, top)):
         transform = from_bounds(left, bottom, right, top, width, height)
-        transform = transform.to_gdal()
     elif any(x is not None for x in (left, bottom, right, top)):
         raise ValueError(
             "Some, but not all, bounding box parameters were provided.")
@@ -642,7 +664,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.src_crs = src_crs
         self.src_transform = src_transform
         self.name = "WarpedVRT({})".format(src_dataset.name)
-        self.dst_crs = dst_crs
+        self.dst_crs = CRS.from_user_input(dst_crs)
         self.resampling = resampling
         self.tolerance = tolerance
 
@@ -679,10 +701,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
 
-        if self.dst_transform:
-            if not self.src_transform:
-                self.src_transform = self.src_dataset.transform
+        if not self.src_transform:
+            self.src_transform = self.src_dataset.transform
 
+        if self.dst_transform:
             t = self.src_transform.to_gdal()
             for i in range(6):
                 src_gt[i] = t[i]
@@ -796,6 +818,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             self.src_nodata for i in self.src_dataset.indexes]
 
     def get_crs(self):
+        warnings.warn("get_crs() will be removed in 1.0", RasterioDeprecationWarning)
+        return self.crs
+
+    @property
+    def crs(self):
+        """The dataset's coordinate reference system"""
         return self.dst_crs
 
     def start(self):
