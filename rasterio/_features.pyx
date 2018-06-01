@@ -268,7 +268,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
         If false, only pixels whose center is within the polygon or
         that are selected by Bresenham's line algorithm will be burned
         in.
-    merge_alg : str, required
+    merge_alg : MergeAlg, required
         Merge algorithm to use.  One of:
             MergeAlg.replace (default): the new value will overwrite the
                 existing value.

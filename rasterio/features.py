@@ -188,7 +188,7 @@ def rasterize(
         If True, all pixels touched by geometries will be burned in.  If
         false, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
-    merge_alg : str, optional
+    merge_alg : MergeAlg, optional
         Merge algorithm to use.  One of:
             MergeAlg.replace (default): the new value will overwrite the
                 existing value.
