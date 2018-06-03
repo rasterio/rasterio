@@ -690,10 +690,19 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             nodata value and is required to be true to warp the source
             dataset's dataset mask.
         init_dest_nodata : bool, optional
-            Whether or not to initialize output to `nodata`. Default: True.
+            Whether or not to initialize output to `nodata`. Default:
+            True.
         warp_extras : dict
             GDAL extra warp options. See
             http://www.gdal.org/structGDALWarpOptions.html.
+
+        Notes
+        -----
+        The warped product of source dataset masks stored as internal
+        bitmasks or sidecar .msk files can be accessed only if the
+        `add_alpha` parameter is set to True. Otherwise, the
+        `read_masks` method of a `WarpedVRT` will return an array
+        derived only from the source's nodata value.
 
         Returns
         -------
