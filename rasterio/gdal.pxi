@@ -146,6 +146,23 @@ cdef extern from "gdal.h" nogil:
         GRIORA_Mode
         GRIORA_Gauss
 
+    ctypedef enum GDALColorInterp:
+        GCI_Undefined
+        GCI_GrayIndex
+        GCI_PaletteIndex
+        GCI_RedBand
+        GCI_GreenBand
+        GCI_BlueBand
+        GCI_AlphaBand
+        GCI_HueBand
+        GCI_SaturationBand
+        GCI_LightnessBand
+        GCI_CyanBand
+        GCI_YCbCr_YBand
+        GCI_YCbCr_CbBand
+        GCI_YCbCr_CrBand
+        GCI_Max
+
     ctypedef struct GDALColorEntry:
         short c1
         short c2
@@ -222,7 +239,7 @@ cdef extern from "gdal.h" nogil:
     void GDALDestroyColorTable(GDALColorTableH table)
     int GDALGetColorEntryCount(GDALColorTableH table)
     int GDALGetRasterColorInterpretation(GDALRasterBandH band)
-    int GDALSetRasterColorInterpretation(GDALRasterBandH band, int)
+    int GDALSetRasterColorInterpretation(GDALRasterBandH band, GDALColorInterp)
     int GDALGetMaskFlags(GDALRasterBandH band)
     int GDALCreateDatasetMaskBand(GDALDatasetH hds, int flags)
     void *GDALGetMaskBand(GDALRasterBandH band)

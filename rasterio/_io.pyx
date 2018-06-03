@@ -1490,7 +1490,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             GDALSetColorEntry(hTable, i, &color)
 
         # TODO: other color interpretations?
-        GDALSetRasterColorInterpretation(hBand, 1)
+        GDALSetRasterColorInterpretation(hBand, <GDALColorInterp>1)
         GDALSetRasterColorTable(hBand, hTable)
         GDALDestroyColorTable(hTable)
 

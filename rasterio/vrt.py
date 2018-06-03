@@ -7,7 +7,7 @@ from rasterio.transform import TransformMethodsMixin
 
 class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
                 TransformMethodsMixin):
-    """Creates a virtual warped dataset.
+    """A virtual warped dataset.
 
     Abstracts the details of raster warping and allows access to data
     that is reprojected when read.
@@ -16,11 +16,8 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
 
     Attributes
     ----------
-
     src_dataset : dataset
         The dataset object to be virtually warped.
-    dst_crs : CRS or str
-        The warp operation's destination coordinate reference system.
     resampling : int
         One of the values from rasterio.enums.Resampling. The default is
         `Resampling.nearest`.
@@ -31,23 +28,10 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The source nodata value.  Pixels with this value will not be
         used for interpolation. If not set, it will be default to the
         nodata value of the source image, if available.
-    src_crs : CRS or str, optional
-        Source image CRS to set or overwrite
-    src_transform : affine.Affine(), optional
-        Source image affine transform to set or overwrite
     dst_nodata: int or float, optional
         The nodata value used to initialize the destination; it will
         remain in all areas not covered by the reprojected source.
         Defaults to the value of src_nodata, or 0 (gdal default).
-    dst_width : int, optional
-        Target width in pixels. dst_height and dst_transform must also be
-        provided.
-    dst_height : int, optional
-        Target height in pixels. dst_width and dst_transform must also be
-        provided.
-    dst_transform: affine.Affine(), optional
-        Target affine transformation.  Required if width and height are
-        provided.
     warp_extras : dict
         GDAL extra warp options. See
         http://www.gdal.org/structGDALWarpOptions.html.
@@ -56,7 +40,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
     --------
 
     >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
-    ...     with WarpedVRT(src, dst_crs='EPSG:3857') as vrt:
+    ...     with WarpedVRT(src, crs='EPSG:3857') as vrt:
     ...         data = vrt.read()
 
     """

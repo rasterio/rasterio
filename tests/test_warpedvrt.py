@@ -9,7 +9,7 @@ import pytest
 
 import rasterio
 from rasterio.crs import CRS
-from rasterio.enums import Resampling
+from rasterio.enums import Resampling, MaskFlags
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -38,19 +38,34 @@ def _copy_update_profile(path_in, path_out, **kwargs):
 def test_warped_vrt(path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        vrt = WarpedVRT(src, dst_crs=DST_CRS)
+        vrt = WarpedVRT(src, crs=DST_CRS)
         assert vrt.dst_crs == CRS.from_string(DST_CRS)
         assert vrt.src_nodata == 0.0
         assert vrt.dst_nodata == 0.0
         assert vrt.tolerance == 0.125
         assert vrt.resampling == Resampling.nearest
         assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
+        assert vrt.mask_flag_enums == ([MaskFlags.nodata], ) * 3
+
+
+def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
+    """A VirtualVRT has the expected VRT properties."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
+        assert vrt.dst_crs == CRS.from_string(DST_CRS)
+        assert vrt.src_nodata == 0.0
+        assert vrt.dst_nodata is None
+        assert vrt.tolerance == 0.125
+        assert vrt.resampling == Resampling.nearest
+        assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
+        assert vrt.count == 4
+        assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha], ) * 3 + ([MaskFlags.all_valid], )
 
 
 def test_warped_vrt_source(path_rgb_byte_tif):
     """A VirtualVRT has the expected source dataset."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        vrt = WarpedVRT(src, dst_crs=DST_CRS)
+        vrt = WarpedVRT(src, crs=DST_CRS)
         assert vrt.src_dataset == src
 
 
@@ -62,16 +77,16 @@ def test_warped_vrt_set_src_crs(path_rgb_byte_tif, tmpdir):
         original_crs = src.crs
     with rasterio.open(path_crs_unset) as src:
         with pytest.raises(Exception):
-            with WarpedVRT(src, dst_crs=DST_CRS) as vrt:
+            with WarpedVRT(src, crs=DST_CRS) as vrt:
                 pass
-        with WarpedVRT(src, src_crs=original_crs, dst_crs=DST_CRS) as vrt:
+        with WarpedVRT(src, src_crs=original_crs, crs=DST_CRS) as vrt:
             assert vrt.src_crs == original_crs
 
 
 def test_wrap_file(path_rgb_byte_tif):
     """A VirtualVRT has the expected dataset properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        vrt = WarpedVRT(src, dst_crs=DST_CRS)
+        vrt = WarpedVRT(src, crs=DST_CRS)
         assert vrt.crs == CRS.from_string(DST_CRS)
         assert tuple(round(x, 1) for x in vrt.bounds) == (
             -8789636.7, 2700460.0, -8524406.4, 2943560.2)
@@ -95,9 +110,7 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         dst_transform = affine.Affine(
             resolution, 0.0, extent[0],
             0.0, -resolution, extent[1])
-        vrt = WarpedVRT(src, dst_crs=DST_CRS,
-                        dst_width=size, dst_height=size,
-                        dst_transform=dst_transform)
+        vrt = WarpedVRT(src, crs=DST_CRS, width=size, height=size, transform=dst_transform)
         assert vrt.dst_crs == CRS.from_string(DST_CRS)
         assert vrt.src_nodata == 0.0
         assert vrt.dst_nodata == 0.0
@@ -111,7 +124,7 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
 def test_warp_extras(path_rgb_byte_tif):
     """INIT_DEST warp extra is passed through."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        with WarpedVRT(src, dst_crs=DST_CRS, init_dest=255) as vrt:
+        with WarpedVRT(src, crs=DST_CRS, init_dest=255) as vrt:
             rgb = vrt.read()
             assert (rgb[:, 0, 0] == 255).all()
 
@@ -123,7 +136,7 @@ def test_wrap_s3():
     """A warp wrapper's dataset has the expected properties"""
     L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
     with rasterio.open(L8TIF) as src:
-        with WarpedVRT(src, dst_crs=DST_CRS, src_nodata=0, dst_nodata=0) as vrt:
+        with WarpedVRT(src, crs=DST_CRS, src_nodata=0, nodata=0) as vrt:
             assert vrt.crs == DST_CRS
             assert tuple(round(x, 1) for x in vrt.bounds) == (
                 9556764.6, 2345109.3, 9804595.9, 2598509.1)
@@ -137,7 +150,7 @@ def test_wrap_s3():
 def test_warped_vrt_nodata_read(path_rgb_byte_tif):
     """A read from a VirtualVRT respects dst_nodata."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        with WarpedVRT(src, dst_crs=DST_CRS, src_nodata=0) as vrt:
+        with WarpedVRT(src, crs=DST_CRS, src_nodata=0) as vrt:
             data = vrt.read(1, masked=True)
             assert data.mask.any()
             mask = vrt.dataset_mask()

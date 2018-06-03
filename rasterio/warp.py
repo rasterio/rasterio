@@ -276,7 +276,7 @@ def reproject(source, destination, src_transform=None, gcps=None,
 
     # Call the function in our extension module.
     _reproject(source, destination, src_transform, gcps, src_crs, src_nodata,
-               dst_transform, dst_crs, dst_nodata, resampling,
+               dst_transform, dst_crs, dst_nodata, False, resampling,
                init_dest_nodata, **kwargs)
 
 
