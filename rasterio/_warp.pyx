@@ -687,7 +687,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         add_alpha : bool, optional
             Whether to add an alpha masking band to the virtual dataset.
             Default: False. This option will cause deletion of the VRT
-            nodata value.
+            nodata value and is required to be true to warp the source
+            dataset's dataset mask.
         init_dest_nodata : bool, optional
             Whether or not to initialize output to `nodata`. Default: True.
         warp_extras : dict
