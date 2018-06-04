@@ -719,46 +719,51 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._gcps = None
         self._read = False
 
-        # Deprecation of "dst" parameters.
+        # The various `dst_*` parameters are deprecated and will be
+        # removed after 1.0. In the next section of code, we warn
+        # about the deprecation and treat `dst_parameter` as an
+        # alias for `parameter`.
+
+        # Deprecate dst_nodata.
         if dst_nodata is not None:
             warnings.warn(
                 "dst_nodata will be removed after 1.0, use nodata",
                 RasterioDeprecationWarning)
-
         if nodata is None:
             nodata = dst_nodata
 
+        # Deprecate dst_width.
         if dst_width is not None:
             warnings.warn(
                 "dst_width will be removed after 1.0, use width",
                 RasterioDeprecationWarning)
-
         if width is None:
             width = dst_width
 
+        # Deprecate dst_height.
         if dst_height is not None:
             warnings.warn(
                 "dst_height will be removed after 1.0, use height",
                 RasterioDeprecationWarning)
-
         if height is None:
             height = dst_height
 
+        # Deprecate dst_transform.
         if dst_transform is not None:
             warnings.warn(
                 "dst_transform will be removed after 1.0, use transform",
                 RasterioDeprecationWarning)
-
         if transform is None:
             transform = dst_transform
 
+        # Deprecate dst_crs.
         if dst_crs is not None:
             warnings.warn(
                 "dst_crs will be removed after 1.0, use crs",
                 RasterioDeprecationWarning)
-
         if crs is None:
             crs = dst_crs if dst_crs is not None else src_dataset.crs
+        # End of `dst_parameter` deprecation and aliasing.
 
         # kwargs become warp options.
         self.src_dataset = src_dataset
