@@ -63,6 +63,40 @@ def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha], ) * 3 + ([MaskFlags.all_valid], )
 
 
+def test_warped_vrt_msk_default(path_rgb_msk_byte_tif):
+    """Add an alpha band to the VRT to access per-dataset mask of a source"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+        vrt = WarpedVRT(src, crs=DST_CRS)
+        assert vrt.src_nodata is None
+        assert vrt.dst_nodata is None
+        assert vrt.count == 4
+        assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha], ) * 3 + ([MaskFlags.all_valid], )
+
+
+@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
+def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif):
+    """Specifying dst nodata also works for source with .msk"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+        vrt = WarpedVRT(src, crs=DST_CRS, nodata=0.0)
+        assert vrt.dst_crs == CRS.from_string(DST_CRS)
+        assert vrt.src_nodata is None
+        assert vrt.dst_nodata == 0.0
+        assert vrt.count == 3
+        assert vrt.mask_flag_enums == ([MaskFlags.nodata], ) * 3
+
+
+@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
+def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif):
+    """Per-dataset mask of a source can be warped using alpha band"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+        vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
+        assert vrt.dst_crs == CRS.from_string(DST_CRS)
+        assert vrt.src_nodata is None
+        assert vrt.dst_nodata is None
+        assert vrt.count == 4
+        assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha],) * 3 + ([MaskFlags.all_valid],)
+
+
 def test_warped_vrt_source(path_rgb_byte_tif):
     """A VirtualVRT has the expected source dataset."""
     with rasterio.open(path_rgb_byte_tif) as src:

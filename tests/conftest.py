@@ -211,7 +211,6 @@ def geojson_geomcollection():
     }
 
 
-
 @pytest.fixture
 def basic_feature(basic_geometry):
     """
@@ -429,7 +428,7 @@ def rotated_image_file(tmpdir, pixelated_image):
     image = 128 * np.ones((1000, 2000), dtype=np.uint8)
 
     rotated_transform = Affine(-0.05, 0.07, 481060,
-                                0.07, 0.05, 4481030)
+                               0.07, 0.05, 4481030)
 
     outfilename = str(tmpdir.join('rotated_image.tif'))
     kwargs = {
@@ -474,6 +473,11 @@ def path_rgb_byte_tif(data_dir):
 @pytest.fixture(scope='session')
 def path_rgba_byte_tif(data_dir):
     return os.path.join(data_dir, 'RGBA.byte.tif')
+
+
+@pytest.fixture(scope='session')
+def path_rgb_msk_byte_tif(data_dir):
+    return os.path.join(data_dir, 'RGB2.byte.tif')
 
 
 @pytest.fixture(scope='function')

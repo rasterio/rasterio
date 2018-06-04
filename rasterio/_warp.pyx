@@ -687,8 +687,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         add_alpha : bool, optional
             Whether to add an alpha masking band to the virtual dataset.
             Default: False. This option will cause deletion of the VRT
-            nodata value and is required to be true to warp the source
-            dataset's dataset mask.
+            nodata value.
         init_dest_nodata : bool, optional
             Whether or not to initialize output to `nodata`. Default:
             True.
@@ -698,11 +697,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         Notes
         -----
-        The warped product of source dataset masks stored as internal
-        bitmasks or sidecar .msk files can be accessed only if the
-        `add_alpha` parameter is set to True. Otherwise, the
-        `read_masks` method of a `WarpedVRT` will return an array
-        derived only from the source's nodata value.
+        When the source dataset has an internal bitmask or sidecar .msk
+        file and no nodata value and no nodata value is specified for
+        the warped VRT, the `add_alpha` parameter will be set internally
+        to True so that a mask can be computed for the VRT.
 
         Returns
         -------
@@ -850,6 +848,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             val = str(val).upper().encode('utf-8')
             c_warp_extras = CSLSetNameValue(
                 c_warp_extras, <const char *>key, <const char *>val)
+
+        # If the source dataset has a per-dataset mask and no dst_nodata
+        # value is specified, we need to specify that an alpha band is
+        # to be added to the VRT.
+        if MaskFlags.per_dataset in self.src_dataset.mask_flag_enums[0] and self.dst_nodata is None:
+            self.dst_alpha = True
 
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
