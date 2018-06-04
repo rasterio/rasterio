@@ -10,6 +10,7 @@ import pytest
 import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import Resampling, MaskFlags
+from rasterio.errors import RasterioDeprecationWarning
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -33,6 +34,14 @@ def _copy_update_profile(path_in, path_out, **kwargs):
         with rasterio.open(str(path_out), 'w', **profile) as dst:
             dst.write(src.read())
     return str(path_out)
+
+
+def test_deprecated_param(path_rgb_byte_tif):
+    """dst_crs is deprecated"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with pytest.warns(RasterioDeprecationWarning):
+            vrt = WarpedVRT(src, dst_crs=DST_CRS)
+            assert vrt.dst_crs == CRS.from_string(DST_CRS)
 
 
 def test_warped_vrt(path_rgb_byte_tif):
