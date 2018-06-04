@@ -94,7 +94,7 @@ We strongly prefer code adhering to `PEP8
 
 Tests are mandatory for new features. We use `pytest <https://pytest.org>`__.
 
-We aspire to 100% coverage for Python modules but overage of the Cython code is
+We aspire to 100% coverage for Python modules but coverage of the Cython code is
 a future aspiration (`#515 <https://github.com/mapbox/rasterio/issues/515>`__).
 
 Development Environment
