@@ -96,3 +96,4 @@ ignore/
 MANIFEST
 .ipynb_checkpoints
 .pytest_cache
+*.ipynb

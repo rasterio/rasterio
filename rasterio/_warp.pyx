@@ -15,8 +15,8 @@ from rasterio._err import (
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
+from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.crs import CRS
-from rasterio.enums import Resampling
 from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError, RasterioDeprecationWarning
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
@@ -27,6 +27,7 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
+from rasterio._shim cimport delete_nodata_value
 
 
 log = logging.getLogger(__name__)
@@ -100,14 +101,14 @@ def _transform_geom(
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata,
-        int src_count, const char **options) except NULL:
+        int src_count, object dst_alpha, const char **options) except NULL:
     """Return a pointer to a GDALWarpOptions composed from input params
     """
 
     # First, we make sure we have consistent source and destination
     # nodata values. TODO: alpha bands.
 
-    if dst_nodata is None:
+    if dst_nodata is None and not dst_alpha:
         if src_nodata is not None:
             dst_nodata = src_nodata
         else:
@@ -143,7 +144,6 @@ cdef GDALWarpOptions * create_warp_options(
             psWOptions.padfSrcNoDataReal[i] = float(src_nodata)
             psWOptions.padfSrcNoDataImag[i] = 0.0
 
-
     if dst_nodata is not None:
         psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
         psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
@@ -151,6 +151,9 @@ cdef GDALWarpOptions * create_warp_options(
         for i in range(src_count):
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
             psWOptions.padfDstNoDataImag[i] = 0.0
+
+    if dst_alpha:
+        psWOptions.nDstAlphaBand = src_count + 1
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -179,6 +182,7 @@ def _reproject(
         dst_transform=None,
         dst_crs=None,
         dst_nodata=None,
+        dst_alpha=False,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
         num_threads=1,
@@ -518,7 +522,7 @@ def _reproject(
 
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, <const char **>warp_extras)
+        dst_nodata, src_count, dst_alpha, <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
@@ -640,12 +644,68 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
 
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
-    def __init__(self, src_dataset, src_crs=None, dst_crs=None,
+    def __init__(self, src_dataset, src_crs=None, dst_crs=None, crs=None,
                  resampling=Resampling.nearest, tolerance=0.125,
-                 src_nodata=None, dst_nodata=None, dst_width=None,
-                 dst_height=None, src_transform=None, dst_transform=None,
-                 init_dest_nodata=True, **warp_extras):
+                 src_nodata=None, dst_nodata=None, nodata=None,
+                 dst_width=None, width=None, dst_height=None, height=None,
+                 src_transform=None, dst_transform=None, transform=None,
+                 init_dest_nodata=True, add_alpha=False, **warp_extras):
+        """Make a virtual warped dataset
 
+        Parameters
+        ----------
+        src_dataset : dataset object
+            The warp source.
+        src_crs : CRS or str, optional
+            Overrides the coordinate reference system of `src_dataset`.
+        src_transfrom : Affine, optional
+            Overrides the transform of `src_dataset`.
+        src_nodata : float, optional
+            Overrides the nodata value of `src_dataset`.
+        crs : CRS or str, optional
+            The coordinate reference system at the end of the warp
+            operation.  Default: the crs of `src_dataset`. dst_crs is
+            a deprecated alias for this parameter.
+        transform : Affine, optional
+            The transform for the virtual dataset. Default: will be
+            computed from the attributes of `src_dataset`. dst_transform
+            is a deprecated alias for this parameter.
+        height, width: int, optional
+            The dimensions of the virtual dataset. Defaults: will be
+            computed from the attributes of `src_dataset`. dst_height
+            and dst_width are deprecated alias for these parameters.
+        nodata : float, optional
+            Nodata value for the virtual dataset. Default: the nodata
+            value of `src_dataset` or 0.0. dst_nodata is a deprecated
+            alias for this parameter.
+        resampling : Resampling, optional
+            Warp resampling algorithm. Default: `Resampling.nearest`.
+        tolerance : float, optional
+            The maximum error tolerance in input pixels when
+            approximating the warp transformation. Default: 0.125,
+            or one-eigth of a pixel.
+        add_alpha : bool, optional
+            Whether to add an alpha masking band to the virtual dataset.
+            Default: False. This option will cause deletion of the VRT
+            nodata value.
+        init_dest_nodata : bool, optional
+            Whether or not to initialize output to `nodata`. Default:
+            True.
+        warp_extras : dict
+            GDAL extra warp options. See
+            http://www.gdal.org/structGDALWarpOptions.html.
+
+        Notes
+        -----
+        When the source dataset has an internal bitmask or sidecar .msk
+        file and no nodata value and no nodata value is specified for
+        the warped VRT, the `add_alpha` parameter will be set internally
+        to True so that a mask can be computed for the VRT.
+
+        Returns
+        -------
+        WarpedVRT
+        """
         self.mode = 'r'
         self.options = {}
         self._count = 0
@@ -659,23 +719,75 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._gcps = None
         self._read = False
 
+        # The various `dst_*` parameters are deprecated and will be
+        # removed after 1.0. In the next section of code, we warn
+        # about the deprecation and treat `dst_parameter` as an
+        # alias for `parameter`.
+
+        # Deprecate dst_nodata.
+        if dst_nodata is not None:
+            warnings.warn(
+                "dst_nodata will be removed after 1.0, use nodata",
+                RasterioDeprecationWarning)
+        if nodata is None:
+            nodata = dst_nodata
+
+        # Deprecate dst_width.
+        if dst_width is not None:
+            warnings.warn(
+                "dst_width will be removed after 1.0, use width",
+                RasterioDeprecationWarning)
+        if width is None:
+            width = dst_width
+
+        # Deprecate dst_height.
+        if dst_height is not None:
+            warnings.warn(
+                "dst_height will be removed after 1.0, use height",
+                RasterioDeprecationWarning)
+        if height is None:
+            height = dst_height
+
+        # Deprecate dst_transform.
+        if dst_transform is not None:
+            warnings.warn(
+                "dst_transform will be removed after 1.0, use transform",
+                RasterioDeprecationWarning)
+        if transform is None:
+            transform = dst_transform
+
+        # Deprecate dst_crs.
+        if dst_crs is not None:
+            warnings.warn(
+                "dst_crs will be removed after 1.0, use crs",
+                RasterioDeprecationWarning)
+        if crs is None:
+            crs = dst_crs if dst_crs is not None else src_dataset.crs
+        # End of `dst_parameter` deprecation and aliasing.
+
         # kwargs become warp options.
         self.src_dataset = src_dataset
-        self.src_crs = src_crs
+        self.src_crs = CRS.from_user_input(src_crs) if src_crs else None
+        self.dst_crs = CRS.from_user_input(crs) if crs else None
         self.src_transform = src_transform
         self.name = "WarpedVRT({})".format(src_dataset.name)
-        self.dst_crs = CRS.from_user_input(dst_crs)
         self.resampling = resampling
         self.tolerance = tolerance
 
         self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
-        self.dst_nodata = self.src_nodata if dst_nodata is None else dst_nodata
-        self.dst_width = dst_width
-        self.dst_height = dst_height
-        self.dst_transform = dst_transform
+        self.dst_nodata = self.src_nodata if nodata is None else nodata
+        self.dst_width = width
+        self.dst_height = height
+        self.dst_transform = transform
         self.warp_extras = warp_extras.copy()
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
             self.warp_extras['init_dest'] = 'NO_DATA'
+
+        # If we're adding an alpha band, set the nodata value to None
+        # so it doesn't shadow our alpha band.
+        self.dst_alpha = add_alpha
+        if self.dst_alpha:
+            self.dst_nodata = None
 
         cdef GDALDriverH driver = NULL
         cdef GDALDatasetH hds = NULL
@@ -688,11 +800,15 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef GDALWarpOptions *psWOptions = NULL
         cdef float c_tolerance = tolerance
         cdef GDALResampleAlg c_resampling = resampling
-        cdef int c_width = dst_width or 0
-        cdef int c_height = dst_height or 0
+        cdef int c_width = self.dst_width or 0
+        cdef int c_height = self.dst_height or 0
         cdef double src_gt[6]
         cdef double dst_gt[6]
         cdef void *hTransformArg = NULL
+        cdef GDALRasterBandH hband = NULL
+        cdef GDALRasterBandH hmask = NULL
+        cdef int mask_block_xsize = 0
+        cdef int mask_block_ysize = 0
 
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
@@ -738,13 +854,19 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             c_warp_extras = CSLSetNameValue(
                 c_warp_extras, <const char *>key, <const char *>val)
 
+        # If the source dataset has a per-dataset mask and no dst_nodata
+        # value is specified, we need to specify that an alpha band is
+        # to be added to the VRT.
+        if MaskFlags.per_dataset in self.src_dataset.mask_flag_enums[0] and self.dst_nodata is None:
+            self.dst_alpha = True
+
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
-            self.dst_nodata,
-            GDALGetRasterCount(hds), <const char **>c_warp_extras)
+            self.dst_nodata, GDALGetRasterCount(hds), self.dst_alpha,
+            <const char **>c_warp_extras)
 
         try:
-            if dst_width and dst_height and dst_transform:
+            if self.dst_width and self.dst_height and self.dst_transform:
                 # set up transform args (otherwise handled in
                 # GDALAutoCreateWarpedVRT)
                 try:
@@ -782,6 +904,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                         hds, NULL, dst_crs_wkt, c_resampling,
                         c_tolerance, psWOptions)
                 self._hds = exc_wrap_pointer(hds_warped)
+
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
         finally:
@@ -789,11 +912,21 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             CSLDestroy(c_warp_extras)
             GDALDestroyWarpOptions(psWOptions)
 
+        if self.dst_nodata is None:
+            for i in self.indexes:
+                delete_nodata_value(self.band(i))
+        else:
+            for i in self.indexes:
+                GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
+
+        if self.dst_alpha:
+            GDALSetRasterColorInterpretation(self.band(4), <GDALColorInterp>6)
+
         self._set_attrs_from_dataset_handle()
 
         # This attribute will be used by read().
         self._nodatavals = [
-            self.src_nodata for i in self.src_dataset.indexes]
+            self.dst_nodata for i in self.src_dataset.indexes]
 
     def get_crs(self):
         warnings.warn("get_crs() will be removed in 1.0", RasterioDeprecationWarning)
