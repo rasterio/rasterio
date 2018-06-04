@@ -72,6 +72,7 @@ def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha], ) * 3 + ([MaskFlags.all_valid], )
 
 
+@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_msk_default(path_rgb_msk_byte_tif):
     """Add an alpha band to the VRT to access per-dataset mask of a source"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
