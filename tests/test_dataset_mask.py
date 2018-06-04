@@ -13,7 +13,7 @@ except ImportError:
 
 from affine import Affine
 import rasterio
-from rasterio.enums import MaskFlags
+from rasterio.enums import MaskFlags, Resampling
 from rasterio.errors import NodataShadowWarning
 from rasterio.crs import CRS
 
@@ -53,6 +53,21 @@ alldata = np.array([[1, 1, 1],
 alp_shift_lr = np.array([[1, 1, 0],
                          [0, 1, 0],
                          [0, 0, 0]]).astype('uint8') * 255
+
+# whole mask resampled to (1, 5, 5) array
+resampmask = np.array([[0, 0, 0, 0, 0],
+                       [0, 0, 0, 0, 0],
+                       [1, 1, 1, 1, 1],
+                       [1, 1, 0, 1, 1],
+                       [1, 1, 0, 1, 1]]).astype('uint8') * 255
+
+# whole mask resampled to (1, 5, 5) array
+resampave = np.array([[0, 0, 0, 0, 0],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 1, 1, 1],
+                      [1, 1, 0, 1, 1]]).astype('uint8') * 255
+
 
 @pytest.fixture(scope='function')
 def tiffs(tmpdir):
@@ -175,6 +190,17 @@ def test_kwargs(tiffs):
         # window and boundless are passed along
         other = src.dataset_mask(window=((1, 4), (1, 4)), boundless=True)
         assert np.array_equal(alp_shift_lr, other)
+
+        other = src.dataset_mask(out_shape=(1, 5, 5))
+        assert np.array_equal(resampmask, other)
+
+        out = np.zeros((1, 5, 5), dtype=np.uint8)
+        other = src.dataset_mask(out=out)
+        assert np.array_equal(resampmask, other)
+
+        other = src.dataset_mask(out_shape=(1, 5, 5), resampling=Resampling.average) != 0
+        other = other.astype(np.uint8) * 255
+        assert np.array_equal(resampave, other)
 
         # band indexes are not supported
         with pytest.raises(TypeError):
