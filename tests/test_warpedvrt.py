@@ -48,6 +48,7 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata], ) * 3
 
 
+@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
