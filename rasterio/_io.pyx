@@ -638,14 +638,14 @@ cdef class DatasetReaderBase(DatasetBase):
 
         return out
 
-
-    def dataset_mask(self, window=None, boundless=False):
+    def dataset_mask(self, out=None, out_shape=None, window=None,
+                     boundless=False, resampling=Resampling.nearest):
         """Calculate the dataset's 2D mask. Derived from the individual band masks
         provided by read_masks().
 
         Parameters
         ----------
-        window and boundless are passed directly to read_masks()
+        out, out_shape, window, boundless and resampling are passed directly to read_masks()
 
         Returns
         -------
@@ -667,8 +667,11 @@ cdef class DatasetReaderBase(DatasetBase):
         (see https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
         """
         kwargs = {
+            'out': out,
+            'out_shape': out_shape,
             'window': window,
-            'boundless': boundless}
+            'boundless': boundless,
+            'resampling': resampling}
 
         # GDAL found dataset-wide alpha band or mask
         # All band masks are equal so we can return the first
