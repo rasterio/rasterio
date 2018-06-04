@@ -41,5 +41,7 @@ Authors
 * James Seppi <james.seppi@gmail.com>
 * Etienne B. Racine <etiennebr@gmail.com>
 * Patrick Young <patrick.young@digitalglobe.com>
+* Tyler Erickson <tylere@google.com>
+* Google LLC
 
 See also https://github.com/mapbox/rasterio/graphs/contributors.
