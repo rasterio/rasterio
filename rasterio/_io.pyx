@@ -379,12 +379,12 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             with WarpedVRT(
                     self,
-                    dst_nodata=ndv,
+                    nodata=ndv,
                     src_crs=self.crs,
-                    dst_crs=self.crs,
-                    dst_width=max(self.width, window.width) + 1,
-                    dst_height=max(self.height, window.height) + 1,
-                    dst_transform=self.window_transform(window),
+                    crs=self.crs,
+                    width=max(self.width, window.width) + 1,
+                    height=max(self.height, window.height) + 1,
+                    transform=self.window_transform(window),
                     resampling=Resampling.nearest) as vrt:
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
@@ -544,10 +544,10 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             with WarpedVRT(
                     self,
-                    dst_crs=self.crs,
-                    dst_width=max(self.width, window.width) + 1,
-                    dst_height=max(self.height, window.height) + 1,
-                    dst_transform=self.window_transform(window),
+                    crs=self.crs,
+                    width=max(self.width, window.width) + 1,
+                    height=max(self.height, window.height) + 1,
+                    transform=self.window_transform(window),
                     resampling=Resampling.nearest) as vrt:
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
