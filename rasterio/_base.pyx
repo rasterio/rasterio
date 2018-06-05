@@ -1300,6 +1300,8 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     # Make a CRS object from provided dict.
     else:
         crs = CRS(crs)
+        crs['wktext'] = True
+
         # EPSG is a special case.
         init = crs.get('init')
         if init:
@@ -1326,7 +1328,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
         retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>proj))
         if retval:
             _safe_osr_release(osr)
-            raise CRSError("Invalid CRS: {!r}".format(crs))
+            raise CRSError("Invalid CRS: {!r} and proj: {!r}".format(crs, proj))
     except CPLE_BaseError as exc:
         _safe_osr_release(osr)
         raise CRSError(str(exc))

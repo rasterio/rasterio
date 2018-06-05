@@ -36,7 +36,7 @@ def test_dst_crs_error_2(runner, tmpdir):
     result = runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', '{"proj": "foobar"}'])
     assert result.exit_code == 2
-    assert 'for dst_crs: Invalid' in result.output
+    assert 'for dst_crs: Failed' in result.output
 
 
 def test_dst_crs_error_epsg(runner, tmpdir):

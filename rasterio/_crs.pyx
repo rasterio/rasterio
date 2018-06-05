@@ -86,6 +86,7 @@ class _CRS(UserDict):
                 osr_crs1 = osr_from_crs(self)
                 osr_crs2 = osr_from_crs(other)
                 retval = OSRIsSame(osr_crs1, osr_crs2)
+                log.debug("OSRIsSame retval: {!r}", retval)
                 return bool(retval == 1)
 
         finally:
