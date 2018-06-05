@@ -198,10 +198,13 @@ def test_kwargs(tiffs):
         other = src.dataset_mask(out=out)
         assert np.array_equal(resampmask, other)
 
-        other = src.dataset_mask(out_shape=(1, 5, 5), resampling=Resampling.average) != 0
-        other = other.astype(np.uint8) * 255
-        assert np.array_equal(resampave, other)
-
         # band indexes are not supported
         with pytest.raises(TypeError):
             src.dataset_mask(indexes=1)
+
+
+def test_kwargs_resampling(tiffs):
+    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+        other = src.dataset_mask(out_shape=(1, 5, 5), resampling=Resampling.bilinear) != 0
+        other = other.astype(np.uint8) * 255
+        assert np.array_equal(resampave, other)
