@@ -83,6 +83,7 @@ class _CRS(UserDict):
                         "Comparison to str will be removed in 1.0",
                         RasterioDeprecationWarning
                     )
+
                 osr_crs1 = osr_from_crs(self)
                 osr_crs2 = osr_from_crs(other)
                 retval = OSRIsSame(osr_crs1, osr_crs2)

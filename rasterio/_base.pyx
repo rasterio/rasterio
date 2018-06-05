@@ -1300,7 +1300,6 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     # Make a CRS object from provided dict.
     else:
         crs = CRS(crs)
-        crs['wktext'] = True
 
         # EPSG is a special case.
         init = crs.get('init')

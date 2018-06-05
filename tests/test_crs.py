@@ -205,6 +205,12 @@ def test_epsg_code():
     assert not CRS({'proj': 'latlon'}).is_epsg_code
 
 
+def test_crs_OSR_equivalence():
+    crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
+    crs3 = CRS({'init': 'EPSG:4326'})
+    assert crs1 == crs3
+
+
 def test_crs_OSR_no_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     crs2 = CRS.from_string('+proj=longlat +datum=NAD27 +no_defs')
