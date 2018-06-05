@@ -132,22 +132,6 @@ def test_is_projected():
     assert CRS(wgs84_crs).is_projected is False
 
 
-def test_is_same_crs():
-    crs1 = CRS({'init': 'EPSG:4326'})
-    crs2 = CRS({'init': 'EPSG:3857'})
-
-    assert crs1 == crs1
-    assert crs1 != crs2
-
-    wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert crs1 == wgs84_crs
-
-    # Make sure that same projection with different parameter are not equal
-    lcc_crs1 = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    lcc_crs2 = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=45 +lat_0=0')
-    assert lcc_crs1 != lcc_crs2
-
-
 def test_null_crs_equality():
     assert CRS() == CRS()
     a = CRS()
@@ -223,9 +207,7 @@ def test_epsg_code():
 
 def test_crs_OSR_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
-    crs2 = CRS.from_string('+proj=latlong +datum=WGS84 +no_defs')
     crs3 = CRS({'init': 'EPSG:4326'})
-    assert crs1 == crs2
     assert crs1 == crs3
 
 
