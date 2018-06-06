@@ -131,3 +131,18 @@ def test_read_boundless_noshift():
         r2 = src.read(boundless=True,
                       window=((-1, src.shape[0] + 1), (100, 101)))[0, 0, 0:9]
         assert np.array_equal(r1, r2)
+
+
+def test_msk_read_masks(path_rgb_msk_byte_tif):
+    """Boundless read of a source with .msk succeeds
+
+    Success in this case means that we read a mask that has
+    invalid pixels around the edges, is appropriately padded,
+    and has valid data pixels in the center.
+    """
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+        msk = src.read_masks(1, boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((600, 600)))
+        # Invalid region is padded correctly.
+        assert not msk[0:195,0:195].any()
+        # We have the valid data expected in the center.
+        assert msk.mean() > 90

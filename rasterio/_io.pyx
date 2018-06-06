@@ -542,13 +542,22 @@ cdef class DatasetReaderBase(DatasetBase):
         # Create a temporary VRT to use its source/dest windowing
         # and compositing logic.
         else:
+
+            if MaskFlags.per_dataset in self.mask_flag_enums[0]:
+                # TODO: 0.0 might be wrong in rare cases.
+                nodata = 0.0
+            else:
+                nodata = self.nodata
+
             with WarpedVRT(
                     self,
+                    nodata=nodata,
                     crs=self.crs,
                     width=max(self.width, window.width) + 1,
                     height=max(self.height, window.height) + 1,
                     transform=self.window_transform(window),
                     resampling=Resampling.nearest) as vrt:
+
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling, masks=True)
