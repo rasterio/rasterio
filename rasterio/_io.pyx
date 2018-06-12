@@ -386,6 +386,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     height=max(self.height, window.height) + 1,
                     transform=self.window_transform(window),
                     resampling=Resampling.nearest) as vrt:
+
+                log.debug("read VRT nodata: {}, mask_flag_enums: {}".format(vrt.nodata, vrt.mask_flag_enums))
+
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling)
@@ -549,6 +552,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     height=max(self.height, window.height) + 1,
                     transform=self.window_transform(window),
                     resampling=Resampling.nearest) as vrt:
+
+                log.debug("read_masks VRT nodata: {}, mask_flag_enums: {}".format(vrt.nodata, vrt.mask_flag_enums))
+
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling, masks=True)

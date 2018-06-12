@@ -7,15 +7,15 @@ import affine
 import boto3
 import pytest
 
+from .conftest import requires_gdal21
 import rasterio
 from rasterio.crs import CRS
-from rasterio.enums import Resampling, MaskFlags
+from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.errors import RasterioDeprecationWarning
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
-
-from .conftest import requires_gdal21
+from rasterio.windows import Window
 
 
 # Custom markers.
@@ -245,3 +245,11 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
             rio_shutil.copy(vrt, vrt_path, driver='VRT')
         with rasterio.open(vrt_path) as src:
             assert src.crs
+
+
+def test_add_alpha_read(path_rgb_byte_tif):
+    """Boundless read of a VRT with added alpha succeeds"""
+    with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src, add_alpha=True) as vrt:
+        assert vrt.count == 4
+        assert vrt.colorinterp[3] == ColorInterp.alpha
+        data = vrt.read(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
