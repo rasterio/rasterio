@@ -253,3 +253,16 @@ def test_add_alpha_read(path_rgb_byte_tif):
         assert vrt.count == 4
         assert vrt.colorinterp[3] == ColorInterp.alpha
         data = vrt.read(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
+
+
+def test_default_add_alpha_read(path_rgb_msk_byte_tif):
+    """An alpha band is added if add_alpha is unspecified and source has .msk"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src, WarpedVRT(src) as vrt:
+        assert vrt.count == 4
+        assert vrt.colorinterp[3] == ColorInterp.alpha
+
+
+def test_no_add_alpha_read(path_rgb_msk_byte_tif):
+    """An alpha band is not added if add_alpha=False"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src, WarpedVRT(src, add_alpha=False) as vrt:
+        assert vrt.count == 3

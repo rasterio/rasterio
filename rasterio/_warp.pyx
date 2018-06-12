@@ -649,7 +649,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, nodata=None,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
-                 init_dest_nodata=True, add_alpha=False, **warp_extras):
+                 init_dest_nodata=True, add_alpha=None, **warp_extras):
         """Make a virtual warped dataset
 
         Parameters
@@ -699,8 +699,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         -----
         When the source dataset has an internal bitmask or sidecar .msk
         file and no nodata value and no nodata value is specified for
-        the warped VRT, the `add_alpha` parameter will be set internally
-        to True so that a mask can be computed for the VRT.
+        the warped VRT, *and* `add_alpha` is None, the `add_alpha`
+        parameter will be set internally to True so that a mask can be
+        computed for the VRT.
 
         Returns
         -------
@@ -857,7 +858,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # If the source dataset has a per-dataset mask and no dst_nodata
         # value is specified, we need to specify that an alpha band is
         # to be added to the VRT.
-        if MaskFlags.per_dataset in self.src_dataset.mask_flag_enums[0] and self.dst_nodata is None:
+        if MaskFlags.per_dataset in self.src_dataset.mask_flag_enums[0] and self.dst_nodata is None and self.dst_alpha is None:
             self.dst_alpha = True
 
         psWOptions = create_warp_options(
