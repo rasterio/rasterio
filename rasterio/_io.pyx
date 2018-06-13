@@ -759,7 +759,7 @@ cdef class MemoryFileBase(object):
             # GDAL 2.1 requires a .zip extension for zipped files.
             self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
 
-        self.path = self.name.encode('utf-8')
+        self._path = self.name.encode('utf-8')
         self._pos = 0
         self.closed = False
 
@@ -769,7 +769,7 @@ cdef class MemoryFileBase(object):
         if self._initial_bytes:
 
             vsi_handle = VSIFileFromMemBuffer(
-                self.path, buffer, len(self._initial_bytes), 0)
+                self._path, buffer, len(self._initial_bytes), 0)
 
             if vsi_handle == NULL:
                 raise IOError(
@@ -788,7 +788,7 @@ cdef class MemoryFileBase(object):
             True if the in-memory file exists.
         """
         cdef VSILFILE *fp = NULL
-        cdef const char *cypath = self.path
+        cdef const char *cypath = self._path
 
         with nogil:
             fp = VSIFOpenL(cypath, 'r')
@@ -810,7 +810,7 @@ cdef class MemoryFileBase(object):
 
     def close(self):
         """Close MemoryFile and release allocated memory."""
-        VSIUnlink(self.path)
+        VSIUnlink(self._path)
         self._pos = 0
         self._initial_bytes = None
         self.closed = True
@@ -834,7 +834,7 @@ cdef class MemoryFileBase(object):
         cdef unsigned char *buffer = <unsigned char *>CPLMalloc(size)
         cdef bytes result
 
-        fp = VSIFOpenL(self.path, 'r')
+        fp = VSIFOpenL(self._path, 'r')
 
         try:
             fp = exc_wrap_vsilfile(fp)
@@ -879,9 +879,9 @@ cdef class MemoryFileBase(object):
         n = len(data)
 
         if not self.exists():
-            fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'w'))
+            fp = exc_wrap_vsilfile(VSIFOpenL(self._path, 'w'))
         else:
-            fp = exc_wrap_vsilfile(VSIFOpenL(self.path, 'r+'))
+            fp = exc_wrap_vsilfile(VSIFOpenL(self._path, 'r+'))
             if VSIFSeekL(fp, self._pos, 0) < 0:
                 raise IOError(
                     "Failed to seek to offset %s in %s.", self._pos, self.name)
@@ -896,11 +896,10 @@ cdef class MemoryFileBase(object):
     def getbuffer(self):
         """Return a view on bytes of the file."""
         cdef unsigned char *buffer = NULL
-        cdef const char *path = NULL
         cdef vsi_l_offset buffer_len = 0
         cdef np.uint8_t [:] buff_view
 
-        buffer = VSIGetMemFileBuffer(self.path, &buffer_len, 0)
+        buffer = VSIGetMemFileBuffer(self._path, &buffer_len, 0)
 
         if buffer == NULL or buffer_len == 0:
             buff_view = np.array([], dtype='uint8')

@@ -865,6 +865,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, GDALGetRasterCount(hds), self.dst_alpha,
             <const char **>c_warp_extras)
+        psWOptions.hSrcDS = hds
 
         try:
             if self.dst_width and self.dst_height and self.dst_transform:
@@ -891,8 +892,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 except Exception:
                     GDALDestroyApproxTransformer(hTransformArg)
                     raise
-
-                psWOptions.hSrcDS = hds
 
                 with nogil:
                     hds_warped = GDALCreateWarpedVRT(

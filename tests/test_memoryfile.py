@@ -3,6 +3,8 @@ Tests in this file will ONLY run for GDAL >= 2.x"""
 
 from io import BytesIO
 import logging
+import os.path
+
 import pytest
 
 import rasterio
@@ -216,3 +218,18 @@ def test_zip_file_object_read(path_zip_file):
                 assert src.count == 3
                 assert src.dtypes == ('uint8', 'uint8', 'uint8')
                 assert src.read().shape == (3, 768, 1024)
+
+
+@pytest.mark.xfail(reason="Unknown bug in MemoryFile implementation")
+def test_vrt_memfile():
+    """Successfully read an in-memory VRT"""
+    with open('tests/data/white-gemini-iv.vrt') as vrtfile:
+        source = vrtfile.read()
+        source = source.replace('<SourceFilename relativeToVRT="1">389225main_sw_1965_1024.jpg</SourceFilename>', '<SourceFilename relativeToVRT="0">{}/389225main_sw_1965_1024.jpg</SourceFilename>'.format(os.path.abspath("tests/data")))
+
+    with MemoryFile(source.encode('utf-8'), ext='vrt') as memfile:
+        with memfile.open() as src:
+            assert src.driver == 'VRT'
+            assert src.count == 3
+            assert src.dtypes == ('uint8', 'uint8', 'uint8')
+            assert src.read().shape == (3, 768, 1024)

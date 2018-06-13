@@ -3,7 +3,6 @@
 Instances of these classes are called dataset objects.
 """
 
-
 import logging
 
 from rasterio._base import (
@@ -127,6 +126,7 @@ class MemoryFile(MemoryFileBase):
         if self.closed:
             raise IOError("I/O operation on closed file.")
         if self.exists():
+            log.debug("VSI path: {}".format(vsi_path.path))
             return DatasetReader(vsi_path, driver=driver, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
