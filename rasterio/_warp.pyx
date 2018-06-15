@@ -929,10 +929,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         # This attribute will be used by read().
         self._nodatavals = [
-            self.dst_nodata for i in self.indexes]
+            self.dst_nodata for i in src_dataset.indexes]
 
-        if self.dst_alpha:
-            self._nodatavals[3] = None
+        if self.dst_alpha and len(self._nodatavals) == 3:
+            self._nodatavals.append(None)
 
     def get_crs(self):
         warnings.warn("get_crs() will be removed in 1.0", RasterioDeprecationWarning)
