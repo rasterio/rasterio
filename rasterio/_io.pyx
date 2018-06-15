@@ -28,8 +28,8 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, vsi_path
-from rasterio.vrt import WarpedVRT
+from rasterio.path import parse_path, vsi_path, UnparsedPath
+from rasterio.vrt import WarpedVRT, _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
@@ -374,20 +374,16 @@ cdef class DatasetReaderBase(DatasetBase):
                         kwds['fill_value'] = nodatavals[0]
                 out = np.ma.array(out, **kwds)
 
-        # If boundless.
-        # Create a WarpedVRT to use its window and compositing logic.
+        # If this is a boundless read we will create an in-memory VRT
+        # in order to use GDAL's windowing and compositing logic.
         else:
-            with WarpedVRT(
-                    self,
-                    nodata=ndv,
-                    src_crs=self.crs,
-                    crs=self.crs,
-                    width=max(self.width, window.width) + 1,
-                    height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window),
-                    resampling=Resampling.nearest) as vrt:
 
-                log.debug("read VRT nodata: {}, mask_flag_enums: {}".format(vrt.nodata, vrt.mask_flag_enums))
+            vrt_doc = _boundless_vrt_doc(
+                self, nodata=ndv, width=max(self.width, window.width) + 1,
+                height=max(self.height, window.height) + 1,
+                transform=self.window_transform(window))
+
+            with DatasetReaderBase(UnparsedPath(vrt_doc), driver='VRT') as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
@@ -541,19 +537,15 @@ cdef class DatasetReaderBase(DatasetBase):
             out = self._read(indexes, out, window, dtype, masks=True,
                              resampling=resampling)
 
-        # If boundless is True.
-        # Create a temporary VRT to use its source/dest windowing
-        # and compositing logic.
+        # If this is a boundless read we will create an in-memory VRT
+        # in order to use GDAL's windowing and compositing logic.
         else:
-            with WarpedVRT(
-                    self,
-                    crs=self.crs,
-                    width=max(self.width, window.width) + 1,
-                    height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window),
-                    resampling=Resampling.nearest) as vrt:
+            vrt_doc = _boundless_vrt_doc(
+                self, width=max(self.width, window.width) + 1,
+                height=max(self.height, window.height) + 1,
+                transform=self.window_transform(window))
 
-                log.debug("read_masks VRT nodata: {}, mask_flag_enums: {}".format(vrt.nodata, vrt.mask_flag_enums))
+            with DatasetReaderBase(UnparsedPath(vrt_doc), driver='VRT') as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
