@@ -4,10 +4,11 @@ import xml.etree.ElementTree as ET
 
 import rasterio
 from rasterio._warp import WarpedVRTReaderBase
-from rasterio.enums import MaskFlags
 from rasterio.dtypes import _gdal_typename
-from rasterio.windows import WindowMethodsMixin
+from rasterio.enums import MaskFlags
+from rasterio.path import parse_path, vsi_path
 from rasterio.transform import TransformMethodsMixin
+from rasterio.windows import WindowMethodsMixin
 
 
 class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
@@ -95,31 +96,34 @@ def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transf
 
         colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
         colorinterp.text = ci.name.capitalize()
-        complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
-        sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
+
+        simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
+
+        sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
-        sourcefilename.text = src_dataset.name
-        sourceband = ET.SubElement(complexsource, 'SourceBand')
+        sourcefilename.text = vsi_path(parse_path(src_dataset.name))
+
+        sourceband = ET.SubElement(simplesource, 'SourceBand')
         sourceband.text = str(bidx)
-        sourceproperties = ET.SubElement(complexsource, 'SourceProperties')
+        sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
         sourceproperties.attrib['RasterXSize'] = str(width)
         sourceproperties.attrib['RasterYSize'] = str(height)
         sourceproperties.attrib['dataType'] = _gdal_typename(dtype)
         sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
         sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
-        srcrect = ET.SubElement(complexsource, 'SrcRect')
+        srcrect = ET.SubElement(simplesource, 'SrcRect')
         srcrect.attrib['xOff'] = '0'
         srcrect.attrib['yOff'] = '0'
         srcrect.attrib['xSize'] = str(src_dataset.width)
         srcrect.attrib['ySize'] = str(src_dataset.height)
-        dstrect = ET.SubElement(complexsource, 'DstRect')
+        dstrect = ET.SubElement(simplesource, 'DstRect')
         dstrect.attrib['xOff'] = str((src_dataset.transform.xoff - transform.xoff) / transform.a)
         dstrect.attrib['yOff'] = str((src_dataset.transform.yoff - transform.yoff) / transform.e)
         dstrect.attrib['xSize'] = str(src_dataset.width)
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
         if src_dataset.nodata is not None:
-            nodata_elem = ET.SubElement(complexsource, 'NODATA')
+            nodata_elem = ET.SubElement(simplesource, 'NODATA')
             nodata_elem.text = str(src_dataset.nodata)
 
     if all(MaskFlags.per_dataset in flags for flags in src_dataset.mask_flag_enums):
@@ -130,12 +134,7 @@ def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transf
         simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
         sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
-        sourcefilename.text = src_dataset.name
-
-        openoptions = ET.SubElement(simplesource, 'OpenOptions')
-        ooi = ET.SubElement(openoptions, 'OOI')
-        ooi.attrib['key'] = 'OVERVIEW_LEVEL'
-        ooi.text = 'AUTO'
+        sourcefilename.text = vsi_path(parse_path(src_dataset.name))
 
         sourceband = ET.SubElement(simplesource, 'SourceBand')
         sourceband.text = 'mask,1'
@@ -156,4 +155,4 @@ def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transf
         dstrect.attrib['xSize'] = str(src_dataset.width)
         dstrect.attrib['ySize'] = str(src_dataset.height)
 
-    return ET.tostring(vrtdataset, encoding='unicode')
+    return ET.tostring(vrtdataset)

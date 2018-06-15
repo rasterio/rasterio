@@ -381,7 +381,7 @@ cdef class DatasetReaderBase(DatasetBase):
             vrt_doc = _boundless_vrt_doc(
                 self, nodata=ndv, width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window))
+                transform=self.window_transform(window)).decode('ascii')
 
             with DatasetReaderBase(UnparsedPath(vrt_doc), driver='VRT') as vrt:
 
@@ -530,7 +530,6 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             out = np.zeros(win_shape, 'uint8')
 
-
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
@@ -543,7 +542,7 @@ cdef class DatasetReaderBase(DatasetBase):
             vrt_doc = _boundless_vrt_doc(
                 self, width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window))
+                transform=self.window_transform(window)).decode('ascii')
 
             with DatasetReaderBase(UnparsedPath(vrt_doc), driver='VRT') as vrt:
 
