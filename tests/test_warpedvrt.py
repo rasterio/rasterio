@@ -247,11 +247,11 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
             assert src.crs
 
 
-@pytest.mark.skip(reason="Boundless read of a WarpedVRT is nonsensical but not disallow")
 def test_add_alpha_read(path_rgb_byte_tif):
-    """Boundless read of a VRT with added alpha succeeds"""
-    with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src, add_alpha=True) as vrt:
-        vrt.read(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
+    """Boundless read of a VRT is prohibited"""
+    with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src) as vrt:
+        with pytest.raises(ValueError):
+            vrt.read(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
 
 
 def test_default_add_alpha_read(path_rgb_msk_byte_tif):

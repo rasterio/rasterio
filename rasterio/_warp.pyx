@@ -949,3 +949,20 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
+
+    def read(self, indexes=None, out=None, window=None, masked=False,
+            out_shape=None, boundless=False, resampling=Resampling.nearest,
+            fill_value=None):
+        """Read a dataset's raw pixels as an N-d array"""
+        if boundless:
+            raise ValueError("WarpedVRT does not permit boundless reads")
+        else:
+            return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value)
+
+    def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
+                   boundless=False, resampling=Resampling.nearest):
+        """Read raster band masks as a multidimensional array"""
+        if boundless:
+            raise ValueError("WarpedVRT does not permit boundless reads")
+        else:
+            return super(WarpedVRTReaderBase, self).read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)

@@ -29,7 +29,7 @@ from rasterio.errors import (
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, vsi_path, UnparsedPath
-from rasterio.vrt import WarpedVRT, _boundless_vrt_doc
+from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
@@ -549,6 +549,19 @@ cdef class DatasetReaderBase(DatasetBase):
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling, masks=True)
+
+                # TODO: we need to determine why `out` can contain data
+                # that looks more like the source's band 1 when doing
+                # this kind of boundless read. It looks like
+                # hmask = GDALGetMaskBand(band) may be returning the
+                # a pointer to the band instead of the mask band in 
+                # this case.
+                # 
+                # Temporary solution: convert all non-zero pixels to
+                # 255 and log that we have done so.
+
+                out = np.where(out != 0, 255, 0)
+                log.warn("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
 
         if return2d:
             out.shape = out.shape[1:]
