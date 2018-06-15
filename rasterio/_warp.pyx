@@ -10,6 +10,7 @@ import warnings
 from affine import identity
 import numpy as np
 
+from rasterio._base import gdal_version
 from rasterio._err import (
     CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
@@ -152,7 +153,7 @@ cdef GDALWarpOptions * create_warp_options(
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
             psWOptions.padfDstNoDataImag[i] = 0.0
 
-    if dst_alpha:
+    if dst_alpha and not gdal_version().startswith('1'):
         psWOptions.nDstAlphaBand = src_count + 1
 
     # Important: set back into struct or values set above are lost
@@ -865,6 +866,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, GDALGetRasterCount(hds), self.dst_alpha,
             <const char **>c_warp_extras)
+
+        if psWOptions == NULL:
+            raise RuntimeError("Warp options are NULL")
+
         psWOptions.hSrcDS = hds
 
         try:
@@ -910,7 +915,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         finally:
             CPLFree(dst_crs_wkt)
             CSLDestroy(c_warp_extras)
-            GDALDestroyWarpOptions(psWOptions)
+            # if psWOptions != NULL:
+            #    GDALDestroyWarpOptions(psWOptions)
 
         if self.dst_nodata is None:
             for i in self.indexes:
@@ -922,7 +928,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             for i in self.indexes:
                 GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
 
-        if self.dst_alpha:
+        if self.dst_alpha and not gdal_version().startswith('1'):
             GDALSetRasterColorInterpretation(self.band(4), <GDALColorInterp>6)
 
         self._set_attrs_from_dataset_handle()
@@ -930,7 +936,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # This attribute will be used by read().
         self._nodatavals = [self.dst_nodata for i in self.indexes]
 
-        if self.dst_alpha and len(self._nodatavals) == 3:
+        if self.dst_alpha and not gdal_version().startswith('1') and len(self._nodatavals) == 3:
             self._nodatavals[3] = None
 
     def get_crs(self):

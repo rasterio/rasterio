@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from rasterio._base import tastes_like_gdal
+from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._env import driver_count, GDALEnv
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError)
@@ -79,7 +79,8 @@ def _delete_dataset_if_exists(path):
         log.debug(
             "Skipped delete for overwrite.  Dataset does not exist: %s", path)
     finally:
-        GDALClose(h_dataset)
+        if h_dataset != NULL:
+            GDALClose(h_dataset)
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -383,7 +384,11 @@ cdef class DatasetReaderBase(DatasetBase):
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
 
-            with DatasetReaderBase(UnparsedPath(vrt_doc), driver='VRT') as vrt:
+            if not gdal_version().startswith('1'):
+                vrt_kwds = {'driver': 'VRT'}
+            else:
+                vrt_kwds = {}
+            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
@@ -544,7 +549,11 @@ cdef class DatasetReaderBase(DatasetBase):
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
 
-            with DatasetReaderBase(UnparsedPath(vrt_doc), driver='VRT') as vrt:
+            if not gdal_version().startswith('1'):
+                vrt_kwds = {'driver': 'VRT'}
+            else:
+                vrt_kwds = {}
+            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
