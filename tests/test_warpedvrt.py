@@ -7,7 +7,7 @@ import affine
 import boto3
 import pytest
 
-from .conftest import requires_gdal21
+from .conftest import requires_gdal21, requires_gdal2
 import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
@@ -247,13 +247,21 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
             assert src.crs
 
 
-def test_add_alpha_read(path_rgb_byte_tif):
+def test_boundless_read_prohibited(path_rgb_byte_tif):
     """Boundless read of a VRT is prohibited"""
     with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src) as vrt:
         with pytest.raises(ValueError):
             vrt.read(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
 
 
+def test_boundless_masks_read_prohibited(path_rgb_byte_tif):
+    """Boundless masks read of a VRT is prohibited"""
+    with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src) as vrt:
+        with pytest.raises(ValueError):
+            vrt.read_masks(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
+
+
+@requires_gdal2()
 def test_default_add_alpha_read(path_rgb_msk_byte_tif):
     """An alpha band is added if add_alpha is unspecified and source has .msk"""
     with rasterio.open(path_rgb_msk_byte_tif) as src, WarpedVRT(src) as vrt:
