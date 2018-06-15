@@ -914,7 +914,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         if self.dst_nodata is None:
             for i in self.indexes:
-                delete_nodata_value(self.band(i))
+                try:
+                    delete_nodata_value(self.band(i))
+                except NotImplementedError as exc:
+                    log.warn(str(exc))
         else:
             for i in self.indexes:
                 GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
