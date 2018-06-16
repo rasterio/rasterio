@@ -43,7 +43,8 @@ def exists(path):
         return False
     finally:
         with nogil:
-            GDALClose(h_dataset)
+            if h_dataset != NULL:
+                GDALClose(h_dataset)
 
 
 @ensure_env
@@ -112,9 +113,11 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
     finally:
         CSLDestroy(options)
         with nogil:
-            GDALClose(dst_dataset)
+            if dst_dataset != NULL:
+                GDALClose(dst_dataset)
             if close_src:
-                GDALClose(src_dataset)
+                if src_dataset != NULL:
+                    GDALClose(src_dataset)
 
 
 @ensure_env
@@ -155,7 +158,8 @@ def copyfiles(src, dst):
         raise RasterioIOError(str(e))
     finally:
         with nogil:
-            GDALClose(h_dataset)
+            if h_dataset != NULL:
+                GDALClose(h_dataset)
 
 
 @ensure_env
@@ -202,7 +206,8 @@ def delete(path, driver=None):
                 "Invalid dataset: {}".format(path))
         finally:
             with nogil:
-                GDALClose(h_dataset)
+                if h_dataset != NULL:
+                    GDALClose(h_dataset)
 
     with nogil:
         res = GDALDeleteDataset(h_driver, c_path)

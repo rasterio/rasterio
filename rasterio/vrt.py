@@ -1,8 +1,14 @@
 """rasterio.vrt: a module concerned with GDAL VRTs"""
 
+import xml.etree.ElementTree as ET
+
+import rasterio
 from rasterio._warp import WarpedVRTReaderBase
-from rasterio.windows import WindowMethodsMixin
+from rasterio.dtypes import _gdal_typename
+from rasterio.enums import MaskFlags
+from rasterio.path import parse_path, vsi_path
 from rasterio.transform import TransformMethodsMixin
+from rasterio.windows import WindowMethodsMixin
 
 
 class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
@@ -61,3 +67,92 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
 
     def close(self):
         self.stop()
+
+
+def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transform=None):
+    """Make a VRT XML document."""
+
+    nodata = nodata or src_dataset.nodata
+    width = width or src_dataset.width
+    height = height or src_dataset.height
+    transform = transform or src_dataset.transform
+
+    vrtdataset = ET.Element('VRTDataset')
+    vrtdataset.attrib['rasterYSize'] = str(height)
+    vrtdataset.attrib['rasterXSize'] = str(width)
+    srs = ET.SubElement(vrtdataset, 'SRS')
+    srs.text = src_dataset.crs.wkt
+    geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
+    geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
+
+    for bidx, ci, block_shape, dtype in zip(src_dataset.indexes, src_dataset.colorinterp, src_dataset.block_shapes, src_dataset.dtypes):
+        vrtrasterband = ET.SubElement(vrtdataset, 'VRTRasterBand')
+        vrtrasterband.attrib['dataType'] = _gdal_typename(dtype)
+        vrtrasterband.attrib['band'] = str(bidx)
+
+        if nodata is not None:
+            nodatavalue = ET.SubElement(vrtrasterband, 'NoDataValue')
+            nodatavalue.text = str(nodata)
+
+        colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
+        colorinterp.text = ci.name.capitalize()
+
+        simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
+
+        sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
+        sourcefilename.attrib['relativeToVRT'] = "0"
+        sourcefilename.text = vsi_path(parse_path(src_dataset.name))
+
+        sourceband = ET.SubElement(simplesource, 'SourceBand')
+        sourceband.text = str(bidx)
+        sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
+        sourceproperties.attrib['RasterXSize'] = str(width)
+        sourceproperties.attrib['RasterYSize'] = str(height)
+        sourceproperties.attrib['dataType'] = _gdal_typename(dtype)
+        sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
+        sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
+        srcrect = ET.SubElement(simplesource, 'SrcRect')
+        srcrect.attrib['xOff'] = '0'
+        srcrect.attrib['yOff'] = '0'
+        srcrect.attrib['xSize'] = str(src_dataset.width)
+        srcrect.attrib['ySize'] = str(src_dataset.height)
+        dstrect = ET.SubElement(simplesource, 'DstRect')
+        dstrect.attrib['xOff'] = str((src_dataset.transform.xoff - transform.xoff) / transform.a)
+        dstrect.attrib['yOff'] = str((src_dataset.transform.yoff - transform.yoff) / transform.e)
+        dstrect.attrib['xSize'] = str(src_dataset.width)
+        dstrect.attrib['ySize'] = str(src_dataset.height)
+
+        if src_dataset.nodata is not None:
+            nodata_elem = ET.SubElement(simplesource, 'NODATA')
+            nodata_elem.text = str(src_dataset.nodata)
+
+    if all(MaskFlags.per_dataset in flags for flags in src_dataset.mask_flag_enums):
+        maskband = ET.SubElement(vrtdataset, 'MaskBand')
+        vrtrasterband = ET.SubElement(maskband, 'VRTRasterBand')
+        vrtrasterband.attrib['dataType'] = 'Byte'
+
+        simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
+        sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
+        sourcefilename.attrib['relativeToVRT'] = "0"
+        sourcefilename.text = vsi_path(parse_path(src_dataset.name))
+
+        sourceband = ET.SubElement(simplesource, 'SourceBand')
+        sourceband.text = 'mask,1'
+        sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
+        sourceproperties.attrib['RasterXSize'] = str(width)
+        sourceproperties.attrib['RasterYSize'] = str(height)
+        sourceproperties.attrib['dataType'] = 'Byte'
+        sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
+        sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
+        srcrect = ET.SubElement(simplesource, 'SrcRect')
+        srcrect.attrib['xOff'] = '0'
+        srcrect.attrib['yOff'] = '0'
+        srcrect.attrib['xSize'] = str(src_dataset.width)
+        srcrect.attrib['ySize'] = str(src_dataset.height)
+        dstrect = ET.SubElement(simplesource, 'DstRect')
+        dstrect.attrib['xOff'] = str((src_dataset.transform.xoff - transform.xoff) / transform.a)
+        dstrect.attrib['yOff'] = str((src_dataset.transform.yoff - transform.yoff) / transform.e)
+        dstrect.attrib['xSize'] = str(src_dataset.width)
+        dstrect.attrib['ySize'] = str(src_dataset.height)
+
+    return ET.tostring(vrtdataset)

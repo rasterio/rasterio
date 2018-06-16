@@ -28,8 +28,6 @@ except RuntimeError as e:  # pragma: no cover
     plt = None
 
 
-logger = logging.getLogger('rasterio')
-
 Stats = collections.namedtuple('Stats', ['min', 'max', 'mean'])
 
 # Collect dictionary of functions for use in the interpreter in main()
@@ -73,7 +71,7 @@ def main(banner, dataset, alt_interpreter=None):
 @click.pass_context
 def insp(ctx, input, mode, interpreter):
     """Open the input file in a Python interpreter."""
-    logger = logging.getLogger('rio')
+    logger = logging.getLogger()
     try:
         with ctx.obj['env']:
             with rasterio.open(input, mode) as src:

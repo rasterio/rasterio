@@ -10,6 +10,7 @@ import warnings
 from affine import identity
 import numpy as np
 
+from rasterio._base import gdal_version
 from rasterio._err import (
     CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
@@ -498,11 +499,6 @@ def _reproject(
         CPLFree(imgProjOptions)
         raise
 
-    # Note: warp_extras is pointed to different memory locations on every
-    # call to CSLSetNameValue call below, but needs to be set here to
-    # get the defaults.
-    # warp_extras = psWOptions.papszWarpOptions
-
     valb = str(num_threads).encode('utf-8')
     warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
 
@@ -649,7 +645,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, nodata=None,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
-                 init_dest_nodata=True, add_alpha=None, **warp_extras):
+                 init_dest_nodata=True, add_alpha=False, **warp_extras):
         """Make a virtual warped dataset
 
         Parameters
@@ -766,6 +762,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             crs = dst_crs if dst_crs is not None else src_dataset.crs
         # End of `dst_parameter` deprecation and aliasing.
 
+        if add_alpha and gdal_version().startswith('1'):
+            warnings.warn("Alpha addition not supported by GDAL 1.x")
+            add_alpha = False
+
         # kwargs become warp options.
         self.src_dataset = src_dataset
         self.src_crs = CRS.from_user_input(src_crs) if src_crs else None
@@ -865,6 +865,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, GDALGetRasterCount(hds), self.dst_alpha,
             <const char **>c_warp_extras)
+
+        if psWOptions == NULL:
+            raise RuntimeError("Warp options are NULL")
+
         psWOptions.hSrcDS = hds
 
         try:
@@ -910,11 +914,15 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         finally:
             CPLFree(dst_crs_wkt)
             CSLDestroy(c_warp_extras)
-            GDALDestroyWarpOptions(psWOptions)
+            if psWOptions != NULL:
+                GDALDestroyWarpOptions(psWOptions)
 
         if self.dst_nodata is None:
             for i in self.indexes:
-                delete_nodata_value(self.band(i))
+                try:
+                    delete_nodata_value(self.band(i))
+                except NotImplementedError as exc:
+                    log.warn(str(exc))
         else:
             for i in self.indexes:
                 GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
@@ -925,10 +933,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._set_attrs_from_dataset_handle()
 
         # This attribute will be used by read().
-        self._nodatavals = [
-            self.dst_nodata for i in self.indexes]
+        self._nodatavals = [self.dst_nodata for i in self.indexes]
 
-        if self.dst_alpha:
+        if self.dst_alpha and len(self._nodatavals) == 3:
             self._nodatavals[3] = None
 
     def get_crs(self):
@@ -949,3 +956,20 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
+
+    def read(self, indexes=None, out=None, window=None, masked=False,
+            out_shape=None, boundless=False, resampling=Resampling.nearest,
+            fill_value=None):
+        """Read a dataset's raw pixels as an N-d array"""
+        if boundless:
+            raise ValueError("WarpedVRT does not permit boundless reads")
+        else:
+            return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value)
+
+    def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
+                   boundless=False, resampling=Resampling.nearest):
+        """Read raster band masks as a multidimensional array"""
+        if boundless:
+            raise ValueError("WarpedVRT does not permit boundless reads")
+        else:
+            return super(WarpedVRTReaderBase, self).read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)

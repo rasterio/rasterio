@@ -7,7 +7,10 @@ import numpy
 import rasterio
 from rasterio.windows import Window
 
+from .conftest import requires_gdal21
 
+
+@requires_gdal21(reason="Pixel equality tests require float windows and GDAL 2.1")
 @given(col_start=st.integers(min_value=-700, max_value=0),
        row_start=st.integers(min_value=-700, max_value=0),
        col_stop=st.integers(min_value=0, max_value=700),

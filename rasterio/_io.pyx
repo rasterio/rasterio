@@ -13,7 +13,7 @@ import warnings
 
 import numpy as np
 
-from rasterio._base import tastes_like_gdal
+from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._env import driver_count, GDALEnv
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError)
@@ -28,8 +28,8 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, vsi_path
-from rasterio.vrt import WarpedVRT
+from rasterio.path import parse_path, vsi_path, UnparsedPath
+from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
@@ -79,7 +79,8 @@ def _delete_dataset_if_exists(path):
         log.debug(
             "Skipped delete for overwrite.  Dataset does not exist: %s", path)
     finally:
-        GDALClose(h_dataset)
+        if h_dataset != NULL:
+            GDALClose(h_dataset)
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -374,20 +375,20 @@ cdef class DatasetReaderBase(DatasetBase):
                         kwds['fill_value'] = nodatavals[0]
                 out = np.ma.array(out, **kwds)
 
-        # If boundless.
-        # Create a WarpedVRT to use its window and compositing logic.
+        # If this is a boundless read we will create an in-memory VRT
+        # in order to use GDAL's windowing and compositing logic.
         else:
-            with WarpedVRT(
-                    self,
-                    nodata=ndv,
-                    src_crs=self.crs,
-                    crs=self.crs,
-                    width=max(self.width, window.width) + 1,
-                    height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window),
-                    resampling=Resampling.nearest) as vrt:
 
-                log.debug("read VRT nodata: {}, mask_flag_enums: {}".format(vrt.nodata, vrt.mask_flag_enums))
+            vrt_doc = _boundless_vrt_doc(
+                self, nodata=ndv, width=max(self.width, window.width) + 1,
+                height=max(self.height, window.height) + 1,
+                transform=self.window_transform(window)).decode('ascii')
+
+            if not gdal_version().startswith('1'):
+                vrt_kwds = {'driver': 'VRT'}
+            else:
+                vrt_kwds = {}
+            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
@@ -534,30 +535,42 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             out = np.zeros(win_shape, 'uint8')
 
-
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
         if not boundless or not window:
             out = self._read(indexes, out, window, dtype, masks=True,
                              resampling=resampling)
 
-        # If boundless is True.
-        # Create a temporary VRT to use its source/dest windowing
-        # and compositing logic.
+        # If this is a boundless read we will create an in-memory VRT
+        # in order to use GDAL's windowing and compositing logic.
         else:
-            with WarpedVRT(
-                    self,
-                    crs=self.crs,
-                    width=max(self.width, window.width) + 1,
-                    height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window),
-                    resampling=Resampling.nearest) as vrt:
+            vrt_doc = _boundless_vrt_doc(
+                self, width=max(self.width, window.width) + 1,
+                height=max(self.height, window.height) + 1,
+                transform=self.window_transform(window)).decode('ascii')
 
-                log.debug("read_masks VRT nodata: {}, mask_flag_enums: {}".format(vrt.nodata, vrt.mask_flag_enums))
+            if not gdal_version().startswith('1'):
+                vrt_kwds = {'driver': 'VRT'}
+            else:
+                vrt_kwds = {}
+            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling, masks=True)
+
+                # TODO: we need to determine why `out` can contain data
+                # that looks more like the source's band 1 when doing
+                # this kind of boundless read. It looks like
+                # hmask = GDALGetMaskBand(band) may be returning the
+                # a pointer to the band instead of the mask band in 
+                # this case.
+                # 
+                # Temporary solution: convert all non-zero pixels to
+                # 255 and log that we have done so.
+
+                out = np.where(out != 0, 255, 0)
+                log.warn("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
 
         if return2d:
             out.shape = out.shape[1:]
