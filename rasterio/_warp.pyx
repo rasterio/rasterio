@@ -499,11 +499,6 @@ def _reproject(
         CPLFree(imgProjOptions)
         raise
 
-    # Note: warp_extras is pointed to different memory locations on every
-    # call to CSLSetNameValue call below, but needs to be set here to
-    # get the defaults.
-    # warp_extras = psWOptions.papszWarpOptions
-
     valb = str(num_threads).encode('utf-8')
     warp_extras = CSLSetNameValue(warp_extras, "NUM_THREADS", <const char *>valb)
 
@@ -919,8 +914,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         finally:
             CPLFree(dst_crs_wkt)
             CSLDestroy(c_warp_extras)
-            # if psWOptions != NULL:
-            #    GDALDestroyWarpOptions(psWOptions)
+            if psWOptions != NULL:
+                GDALDestroyWarpOptions(psWOptions)
 
         if self.dst_nodata is None:
             for i in self.indexes:
