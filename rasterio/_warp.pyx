@@ -153,7 +153,7 @@ cdef GDALWarpOptions * create_warp_options(
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
             psWOptions.padfDstNoDataImag[i] = 0.0
 
-    if dst_alpha and not gdal_version().startswith('1'):
+    if dst_alpha:
         psWOptions.nDstAlphaBand = src_count + 1
 
     # Important: set back into struct or values set above are lost
@@ -650,7 +650,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, nodata=None,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
-                 init_dest_nodata=True, add_alpha=None, **warp_extras):
+                 init_dest_nodata=True, add_alpha=False, **warp_extras):
         """Make a virtual warped dataset
 
         Parameters
@@ -766,6 +766,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if crs is None:
             crs = dst_crs if dst_crs is not None else src_dataset.crs
         # End of `dst_parameter` deprecation and aliasing.
+
+        if add_alpha and gdal_version().startswith('1'):
+            warnings.warn("Alpha addition not supported by GDAL 1.x")
+            add_alpha = False
 
         # kwargs become warp options.
         self.src_dataset = src_dataset
@@ -928,7 +932,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             for i in self.indexes:
                 GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
 
-        if self.dst_alpha and not gdal_version().startswith('1'):
+        if self.dst_alpha:
             GDALSetRasterColorInterpretation(self.band(4), <GDALColorInterp>6)
 
         self._set_attrs_from_dataset_handle()
@@ -936,7 +940,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # This attribute will be used by read().
         self._nodatavals = [self.dst_nodata for i in self.indexes]
 
-        if self.dst_alpha and not gdal_version().startswith('1') and len(self._nodatavals) == 3:
+        if self.dst_alpha and len(self._nodatavals) == 3:
             self._nodatavals[3] = None
 
     def get_crs(self):
