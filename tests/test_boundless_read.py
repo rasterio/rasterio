@@ -1,6 +1,6 @@
 """Test of boundless reads"""
 
-from hypothesis import given
+from hypothesis import given, settings, HealthCheck
 import hypothesis.strategies as st
 import numpy
 import pytest
@@ -11,6 +11,7 @@ from rasterio.windows import Window
 from .conftest import requires_gdal21
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @requires_gdal21(reason="Pixel equality tests require float windows and GDAL 2.1")
 @given(col_start=st.integers(min_value=-700, max_value=0),
        row_start=st.integers(min_value=-700, max_value=0),
