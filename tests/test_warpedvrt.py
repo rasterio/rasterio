@@ -312,6 +312,7 @@ def test_image_nodata_mask(red_green):
             assert image[64, 64, 0] == 255
 
 
+@requires_gdal2(reason="Warped VRT overviews require GDAL 2")
 def test_hit_ovr(red_green):
     """Zoomed out read hits the overviews"""
     # GDAL doesn't log overview hits for local files , so we copy the
