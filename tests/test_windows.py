@@ -5,7 +5,7 @@ from collections import namedtuple
 import numpy as np
 import pytest
 from affine import Affine
-from hypothesis import given, assume
+from hypothesis import given, assume, settings, HealthCheck
 from hypothesis.strategies import floats, integers
 
 import rasterio
@@ -38,6 +38,7 @@ def test_window_repr():
                                        'height=2)')
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_class(col_off, row_off, width, height):
     """Floating point inputs should not be rounded, and 0 values should not
@@ -61,6 +62,7 @@ def test_window_class_invalid_inputs():
         Window(0, 0, 10, -2)
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_flatten(col_off, row_off, width, height):
     """Flattened window should match inputs"""
@@ -70,6 +72,7 @@ def test_window_flatten(col_off, row_off, width, height):
         (col_off, row_off, width, height))
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_todict(col_off, row_off, width, height):
     """Dictionary of window should match inputs"""
@@ -81,6 +84,7 @@ def test_window_todict(col_off, row_off, width, height):
         (col_off, row_off, width, height))
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_toranges(col_off, row_off, width, height):
     """window.toranges() should match inputs"""
@@ -90,6 +94,7 @@ def test_window_toranges(col_off, row_off, width, height):
         ((row_off, row_off + height), (col_off, col_off + width)))
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_OFF, row_off=F_OFF, width=F_LEN, height=F_LEN)
 def test_window_toslices(col_off, row_off, width, height):
     """window.toslices() should match inputs"""
@@ -105,6 +110,7 @@ def test_window_toslices(col_off, row_off, width, height):
     )
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_LEN, row_off=F_LEN, col_stop=F_LEN, row_stop=F_LEN)
 def test_window_fromslices(col_off, row_off, col_stop, row_stop):
     """Empty and non-empty absolute windows from slices, tuples, or lists
@@ -167,6 +173,7 @@ def test_window_fromslices_stops_lt_starts():
     )
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(abs_off=F_LEN, imp_off=F_LEN, stop=F_LEN, dim=F_LEN)
 def test_window_fromslices_implicit(abs_off, imp_off, stop, dim):
     """ providing None for start index will default to 0
@@ -266,6 +273,7 @@ def test_window_fromslices_negative_stop():
     )
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_LEN, row_off=F_LEN, col_stop=F_LEN, row_stop=F_LEN)
 def test_window_fromslices_boundless(col_off, row_off, col_stop, row_stop):
 
@@ -281,6 +289,7 @@ def test_window_fromslices_boundless(col_off, row_off, col_stop, row_stop):
     )
 
 
+@settings(suppress_health_check=[HealthCheck.filter_too_much])
 @given(col_off=F_OFF, row_off=F_OFF, num_cols=F_LEN, num_rows=F_LEN,
        height=I_LEN, width=I_LEN)
 def test_crop(col_off, row_off, num_cols, num_rows, height, width):
