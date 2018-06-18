@@ -2,9 +2,11 @@
 
 
 from __future__ import division
+import logging
 
 import affine
 import boto3
+import numpy
 import pytest
 
 from .conftest import requires_gdal21, requires_gdal2
@@ -20,10 +22,11 @@ from rasterio.windows import Window
 
 # Custom markers.
 credentials = pytest.mark.skipif(
-    not(boto3.Session()._session.get_credentials()),
-    reason="S3 raster access requires credentials")
+    not (boto3.Session()._session.get_credentials()),
+    reason="S3 raster access requires credentials",
+)
 
-DST_CRS = 'EPSG:3857'
+DST_CRS = "EPSG:3857"
 
 
 def _copy_update_profile(path_in, path_out, **kwargs):
@@ -31,7 +34,7 @@ def _copy_update_profile(path_in, path_out, **kwargs):
     with rasterio.open(str(path_in)) as src:
         profile = src.profile.copy()
         profile.update(kwargs)
-        with rasterio.open(str(path_out), 'w', **profile) as dst:
+        with rasterio.open(str(path_out), "w", **profile) as dst:
             dst.write(src.read())
     return str(path_out)
 
@@ -53,8 +56,8 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.dst_nodata == 0.0
         assert vrt.tolerance == 0.125
         assert vrt.resampling == Resampling.nearest
-        assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
-        assert vrt.mask_flag_enums == ([MaskFlags.nodata], ) * 3
+        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
+        assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
@@ -67,9 +70,13 @@ def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
         assert vrt.dst_nodata is None
         assert vrt.tolerance == 0.125
         assert vrt.resampling == Resampling.nearest
-        assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
+        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
         assert vrt.count == 4
-        assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha], ) * 3 + ([MaskFlags.all_valid], )
+        assert vrt.mask_flag_enums == (
+            [MaskFlags.per_dataset, MaskFlags.alpha],
+        ) * 3 + (
+            [MaskFlags.all_valid],
+        )
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
@@ -80,7 +87,11 @@ def test_warped_vrt_msk_default(path_rgb_msk_byte_tif):
         assert vrt.src_nodata is None
         assert vrt.dst_nodata is None
         assert vrt.count == 4
-        assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha], ) * 3 + ([MaskFlags.all_valid], )
+        assert vrt.mask_flag_enums == (
+            [MaskFlags.per_dataset, MaskFlags.alpha],
+        ) * 3 + (
+            [MaskFlags.all_valid],
+        )
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
@@ -92,7 +103,7 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif):
         assert vrt.src_nodata is None
         assert vrt.dst_nodata == 0.0
         assert vrt.count == 3
-        assert vrt.mask_flag_enums == ([MaskFlags.nodata], ) * 3
+        assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
@@ -104,7 +115,11 @@ def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif):
         assert vrt.src_nodata is None
         assert vrt.dst_nodata is None
         assert vrt.count == 4
-        assert vrt.mask_flag_enums == ([MaskFlags.per_dataset, MaskFlags.alpha],) * 3 + ([MaskFlags.all_valid],)
+        assert vrt.mask_flag_enums == (
+            [MaskFlags.per_dataset, MaskFlags.alpha],
+        ) * 3 + (
+            [MaskFlags.all_valid],
+        )
 
 
 def test_warped_vrt_source(path_rgb_byte_tif):
@@ -116,7 +131,7 @@ def test_warped_vrt_source(path_rgb_byte_tif):
 
 def test_warped_vrt_set_src_crs(path_rgb_byte_tif, tmpdir):
     """A VirtualVRT without CRS works only with parameter src_crs"""
-    path_crs_unset = str(tmpdir.join('rgb_byte_crs_unset.tif'))
+    path_crs_unset = str(tmpdir.join("rgb_byte_crs_unset.tif"))
     _copy_update_profile(path_rgb_byte_tif, path_crs_unset, crs=None)
     with rasterio.open(path_rgb_byte_tif) as src:
         original_crs = src.crs
@@ -134,12 +149,13 @@ def test_wrap_file(path_rgb_byte_tif):
         vrt = WarpedVRT(src, crs=DST_CRS)
         assert vrt.crs == CRS.from_string(DST_CRS)
         assert tuple(round(x, 1) for x in vrt.bounds) == (
-            -8789636.7, 2700460.0, -8524406.4, 2943560.2)
-        assert vrt.name.startswith('WarpedVRT(')
-        assert vrt.name.endswith('tests/data/RGB.byte.tif)')
+            -8789636.7, 2700460.0, -8524406.4, 2943560.2
+        )
+        assert vrt.name.startswith("WarpedVRT(")
+        assert vrt.name.endswith("tests/data/RGB.byte.tif)")
         assert vrt.indexes == (1, 2, 3)
         assert vrt.nodatavals == (0, 0, 0)
-        assert vrt.dtypes == ('uint8', 'uint8', 'uint8')
+        assert vrt.dtypes == ("uint8", "uint8", "uint8")
         assert vrt.read().shape == (3, 736, 803)
 
 
@@ -153,9 +169,11 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         size = (2 ** 16) * 256
         resolution = (extent[1] - extent[0]) / size
         dst_transform = affine.Affine(
-            resolution, 0.0, extent[0],
-            0.0, -resolution, extent[1])
-        vrt = WarpedVRT(src, crs=DST_CRS, width=size, height=size, transform=dst_transform)
+            resolution, 0.0, extent[0], 0.0, -resolution, extent[1]
+        )
+        vrt = WarpedVRT(
+            src, crs=DST_CRS, width=size, height=size, transform=dst_transform
+        )
         assert vrt.dst_crs == CRS.from_string(DST_CRS)
         assert vrt.src_nodata == 0.0
         assert vrt.dst_nodata == 0.0
@@ -163,7 +181,7 @@ def test_warped_vrt_dimensions(path_rgb_byte_tif):
         assert vrt.width == size
         assert vrt.height == size
         assert vrt.transform == dst_transform
-        assert vrt.warp_extras == {'init_dest': 'NO_DATA'}
+        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
 
 
 def test_warp_extras(path_rgb_byte_tif):
@@ -184,11 +202,12 @@ def test_wrap_s3():
         with WarpedVRT(src, crs=DST_CRS, src_nodata=0, nodata=0) as vrt:
             assert vrt.crs == DST_CRS
             assert tuple(round(x, 1) for x in vrt.bounds) == (
-                9556764.6, 2345109.3, 9804595.9, 2598509.1)
-            assert vrt.name == 'WarpedVRT(s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF)'
+                9556764.6, 2345109.3, 9804595.9, 2598509.1
+            )
+            assert vrt.name == "WarpedVRT(s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF)"
             assert vrt.indexes == (1,)
             assert vrt.nodatavals == (0,)
-            assert vrt.dtypes == ('uint16',)
+            assert vrt.dtypes == ("uint16",)
             assert vrt.shape == (7827, 7655)
 
 
@@ -216,11 +235,11 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
 
     """
 
-    vrt_path = str(tmpdir.join('test_crs_should_be_set.vrt'))
+    vrt_path = str(tmpdir.join("test_crs_should_be_set.vrt"))
 
     with rasterio.open(path_rgb_byte_tif) as src:
 
-        dst_crs = 'EPSG:4326'
+        dst_crs = "EPSG:4326"
         dst_height = dst_width = 10
         dst_bounds = transform_bounds(src.crs, dst_crs, *src.bounds)
 
@@ -228,21 +247,21 @@ def test_crs_should_be_set(path_rgb_byte_tif, tmpdir, complex):
         left, bottom, right, top = dst_bounds
         xres = (right - left) / dst_width
         yres = (top - bottom) / dst_height
-        dst_transform = affine.Affine(
-            xres, 0.0, left, 0.0, -yres, top)
+        dst_transform = affine.Affine(xres, 0.0, left, 0.0, -yres, top)
 
         # The 'complex' test case hits the affected code path
-        vrt_options = {'dst_crs': dst_crs}
+        vrt_options = {"dst_crs": dst_crs}
         if complex:
             vrt_options.update(
                 dst_crs=dst_crs,
                 dst_height=dst_height,
                 dst_width=dst_width,
                 dst_transform=dst_transform,
-                resampling=Resampling.nearest)
+                resampling=Resampling.nearest,
+            )
 
         with WarpedVRT(src, **vrt_options) as vrt:
-            rio_shutil.copy(vrt, vrt_path, driver='VRT')
+            rio_shutil.copy(vrt, vrt_path, driver="VRT")
         with rasterio.open(vrt_path) as src:
             assert src.crs
 
@@ -251,17 +270,85 @@ def test_boundless_read_prohibited(path_rgb_byte_tif):
     """Boundless read of a VRT is prohibited"""
     with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src) as vrt:
         with pytest.raises(ValueError):
-            vrt.read(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
+            vrt.read(
+                boundless=True,
+                window=Window(-200, -200, 1000, 1000),
+                out_shape=((3, 600, 600)),
+            )
 
 
 def test_boundless_masks_read_prohibited(path_rgb_byte_tif):
     """Boundless masks read of a VRT is prohibited"""
     with rasterio.open(path_rgb_byte_tif) as src, WarpedVRT(src) as vrt:
         with pytest.raises(ValueError):
-            vrt.read_masks(boundless=True, window=Window(-200, -200, 1000, 1000), out_shape=((3, 600, 600)))
+            vrt.read_masks(
+                boundless=True,
+                window=Window(-200, -200, 1000, 1000),
+                out_shape=((3, 600, 600)),
+            )
 
 
 def test_no_add_alpha_read(path_rgb_msk_byte_tif):
     """An alpha band is not added if add_alpha=False"""
-    with rasterio.open(path_rgb_msk_byte_tif) as src, WarpedVRT(src, add_alpha=False) as vrt:
+    with rasterio.open(path_rgb_msk_byte_tif) as src, WarpedVRT(
+        src, add_alpha=False
+    ) as vrt:
         assert vrt.count == 3
+
+
+def test_image(red_green):
+    """Read a red image with black background"""
+    with rasterio.Env():
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
+            src,
+            transform=affine.Affine.translation(-src.width / 4, src.height / 4) * src.transform,
+            width=2 * src.width,
+            height=2 * src.height
+        ) as vrt:
+            data = vrt.read()
+            image = numpy.moveaxis(data, 0, -1)
+            assert image[31, 31, 0] == 0
+            assert image[32, 32, 0] == 204
+            assert image[32, 32, 1] == 17
+
+
+def test_image_nodata_mask(red_green):
+    """Nodata of 0 masks out the black background"""
+    with rasterio.Env():
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
+            src,
+            nodata=0,
+            transform=affine.Affine.translation(-src.width / 2, src.height / 2) * src.transform,
+            width=3 * src.width,
+            height=3 * src.height
+        ) as vrt:
+            masks = vrt.read_masks()
+            image = numpy.moveaxis(masks, 0, -1)
+            assert image[63, 63, 0] == 0
+            assert image[64, 64, 0] == 255
+
+
+@pytest.mark.xfail(reason="warped vrt doesn't trigger use of overviews yet")
+def test_hit_ovr(red_green):
+    """Zoomed out read hits the overviews"""
+    # GDAL doesn't log overview hits for local files , so we copy the
+    # overviews of green.tif over the red overviews and expect to find
+    # green pixels below.
+    green_ovr = red_green.join("green.tif.ovr")
+    green_ovr.rename(red_green.join("red.tif.ovr"))
+    assert not green_ovr.exists()
+
+    with rasterio.Env():
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
+            src,
+            transform=affine.Affine.translation(-src.width, src.height) * src.transform,
+            width=5 * src.width,
+            height=5 * src.height
+        ) as vrt:
+            data = vrt.read()
+            image = numpy.moveaxis(data, 0, -1)
+            # from rasterio.shutil import copy
+            # copy(vrt, '/tmp/test.vrt', driver='VRT')
+            assert image[127, 127, 0] == 0
+            assert image[128, 128, 0] == 17
+            assert image[128, 128, 1] == 204

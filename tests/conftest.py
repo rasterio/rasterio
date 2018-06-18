@@ -56,6 +56,15 @@ def data():
     return tmpdir
 
 
+@pytest.fixture(scope='function')
+def red_green():
+    """A temporary directory containing copies of red.tif, green.tif."""
+    tmpdir = py.test.ensuretemp('tests/data')
+    for filename in ['tests/data/red.tif', 'tests/data/red.tif.ovr', 'tests/data/green.tif', 'tests/data/green.tif.ovr']:
+        shutil.copy(filename, str(tmpdir))
+    return tmpdir
+
+
 @pytest.fixture
 def basic_geometry():
     """
