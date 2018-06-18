@@ -312,7 +312,6 @@ def test_image_nodata_mask(red_green):
             assert image[64, 64, 0] == 255
 
 
-@pytest.mark.xfail(reason="warped vrt doesn't trigger use of overviews yet")
 def test_hit_ovr(red_green):
     """Zoomed out read hits the overviews"""
     # GDAL doesn't log overview hits for local files , so we copy the
@@ -321,18 +320,12 @@ def test_hit_ovr(red_green):
     green_ovr = red_green.join("green.tif.ovr")
     green_ovr.rename(red_green.join("red.tif.ovr"))
     assert not green_ovr.exists()
+    with rasterio.open(str(red_green.join("red.tif.ovr"))) as ovr:
+        data = ovr.read()
+        assert (data[1] == 204).all()
 
-    with rasterio.Env():
-        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
-            src,
-            transform=affine.Affine.translation(-src.width, src.height) * src.transform,
-            width=5 * src.width,
-            height=5 * src.height
-        ) as vrt:
-            data = vrt.read()
-            image = numpy.moveaxis(data, 0, -1)
-            # from rasterio.shutil import copy
-            # copy(vrt, '/tmp/test.vrt', driver='VRT')
-            assert image[127, 127, 0] == 0
-            assert image[128, 128, 0] == 17
-            assert image[128, 128, 1] == 204
+    with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(src) as vrt:
+        data = vrt.read(out_shape=(3, 32, 32))
+        image = numpy.moveaxis(data, 0, -1)
+        assert image[0, 0, 0] == 17
+        assert image[0, 0, 1] == 204
