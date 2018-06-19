@@ -110,10 +110,7 @@ cdef GDALWarpOptions * create_warp_options(
     # nodata values. TODO: alpha bands.
 
     if dst_nodata is None and not dst_alpha:
-        if src_nodata is not None:
-            dst_nodata = src_nodata
-        else:
-            dst_nodata = 0
+        dst_nodata = 0
 
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
 
@@ -690,14 +687,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         warp_extras : dict
             GDAL extra warp options. See
             http://www.gdal.org/structGDALWarpOptions.html.
-
-        Notes
-        -----
-        When the source dataset has an internal bitmask or sidecar .msk
-        file and no nodata value and no nodata value is specified for
-        the warped VRT, *and* `add_alpha` is None, the `add_alpha`
-        parameter will be set internally to True so that a mask can be
-        computed for the VRT.
 
         Returns
         -------
