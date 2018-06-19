@@ -60,6 +60,7 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
+@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_add_alpha(path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -101,7 +102,7 @@ def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
         assert "RGB2.byte.tif.msk" in caplog.text
 
 
-@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
+@requires_gdal21(reason="nodata deletion requires gdal 2.1+")
 def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
     """Specifying dst nodata also works for source with .msk"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
@@ -119,6 +120,7 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
             assert masks[0].mean() > 0
 
         assert "RGB2.byte.tif.msk" in caplog.text
+
 
 def test_warped_vrt_source(path_rgb_byte_tif):
     """A VirtualVRT has the expected source dataset."""
