@@ -326,7 +326,7 @@ def test_hit_ovr(red_green):
         assert (data[1] == 204).all()
 
     with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(src) as vrt:
-        data = vrt.read(out_shape=(3, 32, 32))
+        data = vrt.read(out_shape=(vrt.count, vrt.height // 2, vrt.width // 2))
         image = numpy.moveaxis(data, 0, -1)
         assert image[0, 0, 0] == 17
         assert image[0, 0, 1] == 204
