@@ -102,14 +102,18 @@ def _transform_geom(
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata,
-        int src_count, object dst_alpha, const char **options) except NULL:
+        int src_count, object dst_alpha, object src_alpha, const char **options) except NULL:
     """Return a pointer to a GDALWarpOptions composed from input params
     """
 
     # First, we make sure we have consistent source and destination
     # nodata values. TODO: alpha bands.
+    if src_alpha:
+        src_nodata = None
 
-    if dst_nodata is None and not dst_alpha:
+    if dst_alpha:
+        dst_nodata = None
+    elif dst_nodata is None:
         dst_nodata = 0
 
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
@@ -150,8 +154,11 @@ cdef GDALWarpOptions * create_warp_options(
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
             psWOptions.padfDstNoDataImag[i] = 0.0
 
+    if src_alpha:
+        psWOptions.nSrcAlphaBand = src_alpha
+
     if dst_alpha:
-        psWOptions.nDstAlphaBand = src_count + 1
+        psWOptions.nDstAlphaBand = dst_alpha
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -180,7 +187,7 @@ def _reproject(
         dst_transform=None,
         dst_crs=None,
         dst_nodata=None,
-        dst_alpha=False,
+        add_alpha=False,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
         num_threads=1,
@@ -513,9 +520,21 @@ def _reproject(
         warp_extras = CSLSetNameValue(
             warp_extras, <const char *>key, <const char *>val)
 
+    cdef GDALRasterBandH hBand = NULL
+    src_alpha = 0
+    for bidx in range(1, src_count + 1):
+        hBand = GDALGetRasterBand(src_dataset, bidx)
+        if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
+            src_alpha = bidx
+
+    if add_alpha:
+        dst_alpha = 4
+    else:
+        dst_alpha = 0
+
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, <const char **>warp_extras)
+        dst_nodata, src_count, dst_alpha, src_alpha, <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
@@ -844,16 +863,22 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             c_warp_extras = CSLSetNameValue(
                 c_warp_extras, <const char *>key, <const char *>val)
 
-        # If the source dataset has a per-dataset mask and no dst_nodata
-        # value is specified, we need to specify that an alpha band is
-        # to be added to the VRT.
-        if MaskFlags.per_dataset in self.src_dataset.mask_flag_enums[0] and self.dst_nodata is None and self.dst_alpha is None:
-            self.dst_alpha = True
+        cdef GDALRasterBandH hBand = NULL
+        src_alpha = 0
+        for bidx in src_dataset.indexes:
+            hBand = GDALGetRasterBand(hds, bidx)
+            if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
+                src_alpha = bidx
+
+        if add_alpha:
+            dst_alpha = 4
+        else:
+            dst_alpha = 0
 
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
-            self.dst_nodata, GDALGetRasterCount(hds), self.dst_alpha,
-            <const char **>c_warp_extras)
+            self.dst_nodata, GDALGetRasterCount(hds), dst_alpha,
+            src_alpha, <const char **>c_warp_extras)
 
         if psWOptions == NULL:
             raise RuntimeError("Warp options are NULL")
@@ -916,16 +941,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             for i in self.indexes:
                 GDALSetRasterNoDataValue(self.band(i), self.dst_nodata)
 
-        if self.dst_alpha:
-            GDALSetRasterColorInterpretation(self.band(4), <GDALColorInterp>6)
+        if dst_alpha:
+            GDALSetRasterColorInterpretation(self.band(dst_alpha), <GDALColorInterp>6)
 
         self._set_attrs_from_dataset_handle()
 
         # This attribute will be used by read().
         self._nodatavals = [self.dst_nodata for i in self.indexes]
 
-        if self.dst_alpha and len(self._nodatavals) == 3:
-            self._nodatavals[3] = None
+        if dst_alpha and len(self._nodatavals) == 3:
+            self._nodatavals[dst_alpha - 1] = None
 
     def get_crs(self):
         warnings.warn("get_crs() will be removed in 1.0", RasterioDeprecationWarning)

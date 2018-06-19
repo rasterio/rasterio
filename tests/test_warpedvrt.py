@@ -60,8 +60,7 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
-@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
-def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
+def test_warped_vrt_add_alpha(path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
     with rasterio.open(path_rgb_byte_tif) as src:
         vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
@@ -80,7 +79,7 @@ def test_warped_vrt_dst_alpha(path_rgb_byte_tif):
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
-def test_warped_vrt_msk_default(path_rgb_msk_byte_tif):
+def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
     """Add an alpha band to the VRT to access per-dataset mask of a source"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
         vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
@@ -93,9 +92,17 @@ def test_warped_vrt_msk_default(path_rgb_msk_byte_tif):
             [MaskFlags.all_valid],
         )
 
+        caplog.set_level(logging.DEBUG)
+        with rasterio.Env(CPL_DEBUG=True):
+            masks = vrt.read_masks()
+            assert masks[0, 0, 0] == 0
+            assert masks[0].mean() > 0
+
+        assert "RGB2.byte.tif.msk" in caplog.text
+
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
-def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif):
+def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
     """Specifying dst nodata also works for source with .msk"""
     with rasterio.open(path_rgb_msk_byte_tif) as src:
         vrt = WarpedVRT(src, crs=DST_CRS, nodata=0.0)
@@ -105,6 +112,13 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif):
         assert vrt.count == 3
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
+        caplog.set_level(logging.DEBUG)
+        with rasterio.Env(CPL_DEBUG=True):
+            masks = vrt.read_masks()
+            assert masks[0, 0, 0] == 0
+            assert masks[0].mean() > 0
+
+        assert "RGB2.byte.tif.msk" in caplog.text
 
 def test_warped_vrt_source(path_rgb_byte_tif):
     """A VirtualVRT has the expected source dataset."""
