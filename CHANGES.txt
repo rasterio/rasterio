@@ -7,7 +7,7 @@ Changes
 Breaking changes:
 
 - `boundless=True` reads from warped VRTs are disallowed. Instead, VRTs should
-  be constructed so that only data bounded by their extents is read. In 
+  be constructed so that only data bounded by their extents is read. In
   exchange, boundless reads for non-VRT datasets are faster and more robust.
 
 Upcoming deprecations:
@@ -16,13 +16,16 @@ Upcoming deprecations:
 
 New features:
 
-- 
 - Added `out`, `out_shape`, `window`, `resampling` keyword parameters to
   the `dataset_mask` method (#1298).
 - CRS.from_string can now take WKT strings as input.
 
 Bug fixes:
 
+- Tests have been added to confirm that reading from a WarpedVRT will use the
+  source dataset's masks and overviews.
+- Expectations of warp tests that use resampling algorithms other than nearest
+  neighbor have been corrected.
 - WarpedVRT.crs now returns a CRS, not a str.
 - A Windows-crashing bug in the _warp module has been fixed (#1356).
 
