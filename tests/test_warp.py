@@ -838,17 +838,17 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
     # on running rasterio with each of the following configurations
     expected = {
         Resampling.nearest: 438113,
-        Resampling.bilinear: 553945,
-        Resampling.cubic: 553945,
-        Resampling.cubic_spline: 553945,
-        Resampling.lanczos: 553945,
-        Resampling.average: 556287,
-        Resampling.mode: 556287,
-        Resampling.max: 556287,
-        Resampling.min: 556287,
-        Resampling.med: 556287,
-        Resampling.q1: 556287,
-        Resampling.q3: 556287
+        Resampling.bilinear: 439280,
+        Resampling.cubic: 437888,
+        Resampling.cubic_spline: 440475,
+        Resampling.lanczos: 436001,
+        Resampling.average: 439419,
+        Resampling.mode: 437298,
+        Resampling.max: 439464,
+        Resampling.min: 436397,
+        Resampling.med: 437194,
+        Resampling.q1: 436397,
+        Resampling.q3: 438948
     }
 
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -864,7 +864,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         dst_crs={'init': 'EPSG:3857'},
         resampling=method)
 
-    assert (out > 0).sum() == expected[method]
+    assert np.count_nonzero(out) == expected[method]
 
 
 @pytest.mark.skipif(

@@ -113,8 +113,6 @@ cdef GDALWarpOptions * create_warp_options(
 
     if dst_alpha:
         dst_nodata = None
-    elif dst_nodata is None:
-        dst_nodata = 0
 
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
 
@@ -456,9 +454,11 @@ def _reproject(
 
         log.debug("Wrote array to temp output dataset")
 
-        if dst_nodata is None and hasattr(destination, "fill_value"):
+        if hasattr(destination, "fill_value"):
             # destination is a masked array
             dst_nodata = destination.fill_value
+        elif src_nodata is not None:
+            dst_nodata = src_nodata
 
     elif isinstance(destination, tuple):
         udr, dst_bidx, _, _ = destination
