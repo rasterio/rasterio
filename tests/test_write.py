@@ -319,4 +319,4 @@ def test_wplus_transform(tmpdir):
     transform = affine.Affine.translation(10.0, 10.0) * affine.Affine.scale(0.5, -0.5)
     with rasterio.open(name, 'w+', driver='GTiff', crs='epsg:4326', transform=transform, height=10, width=10, count=1, dtype='uint8') as dst:
         dst.write(np.ones((1, 10, 10), dtype='uint8'))
-        assert dst.transform == []
+        assert dst.transform == transform
