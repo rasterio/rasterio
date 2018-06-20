@@ -102,9 +102,10 @@ class Env(object):
             "RASTERIO_ENV": True
         }
 
-    def __init__(self, session=None, aws_access_key_id=None,
-                 aws_secret_access_key=None, aws_session_token=None,
-                 region_name=None, profile_name=None, **options):
+    def __init__(
+            self, session=None, aws_unsigned=False, aws_access_key_id=None,
+            aws_secret_access_key=None, aws_session_token=None,
+            region_name=None, profile_name=None, **options):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -114,6 +115,8 @@ class Env(object):
         ----------
         session : optional
             A boto3 session object.
+        aws_unsigned : bool, optional (default: False)
+            If True, requests will be unsigned.
         aws_access_key_id : str, optional
             An access key id, as per boto3.
         aws_secret_access_key : str, optional
@@ -143,6 +146,7 @@ class Env(object):
             raise EnvError(
                 "GDAL's AWS config options can not be directly set. "
                 "AWS credentials are handled exclusively by boto3.")
+        self.aws_unsigned = aws_unsigned
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_session_token = aws_session_token
@@ -198,7 +202,10 @@ class Env(object):
         -------
         None
         """
-        if not hascreds():
+        if hascreds():
+            pass
+
+        else:
             import boto3
             if not self.session and not self.aws_access_key_id and not self.profile_name:
                 self.session = boto3.Session()
@@ -216,14 +223,19 @@ class Env(object):
 
             # Pass these credentials to the GDAL environment.
             cred_opts = {}
-            if self._creds.access_key:  # pragma: no branch
-                cred_opts['AWS_ACCESS_KEY_ID'] = self._creds.access_key
-            if self._creds.secret_key:  # pragma: no branch
-                cred_opts['AWS_SECRET_ACCESS_KEY'] = self._creds.secret_key
-            if self._creds.token:
-                cred_opts['AWS_SESSION_TOKEN'] = self._creds.token
-            if self.session.region_name:
-                cred_opts['AWS_REGION'] = self.session.region_name
+
+            if self.aws_unsigned:
+                cred_opts['AWS_NO_SIGN_REQUEST'] = 'YES'
+            else:
+                if self._creds.access_key:  # pragma: no branch
+                    cred_opts['AWS_ACCESS_KEY_ID'] = self._creds.access_key
+                if self._creds.secret_key:  # pragma: no branch
+                    cred_opts['AWS_SECRET_ACCESS_KEY'] = self._creds.secret_key
+                if self._creds.token:
+                    cred_opts['AWS_SESSION_TOKEN'] = self._creds.token
+                if self.session.region_name:
+                    cred_opts['AWS_REGION'] = self.session.region_name
+
             self.options.update(**cred_opts)
             setenv(**cred_opts)
 

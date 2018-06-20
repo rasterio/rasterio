@@ -201,6 +201,27 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.undo()
 
 
+def test_aws_unsigned(gdalenv):
+    """Create an Env with no AWS signing."""
+    with rasterio.env.Env(aws_unsigned=True) as s:
+        s.credentialize()
+        assert getenv()['AWS_NO_SIGN_REQUEST'] == 'YES'
+        assert getenv().get('AWS_ACCESS_KEY_ID') is None
+
+
+@pytest.mark.xfail(
+    reason="Turning off signing in an inner env does not work in Rasterio 1.0")
+def test_aws_unsigned_subenv(gdalenv):
+    """Create an Env with no AWS signing."""
+    with rasterio.Env(
+            aws_access_key_id='id', aws_secret_access_key='key',
+            aws_session_token='token', region_name='null-island-1'):
+        with rasterio.env.Env(aws_unsigned=True) as inner:
+            inner.credentialize()
+            assert getenv()['AWS_NO_SIGN_REQUEST'] == 'YES'
+            assert getenv().get('AWS_ACCESS_KEY_ID') is None
+
+
 def test_open_with_default_env(gdalenv):
     """Read from a dataset with a default env."""
     with rasterio.open('tests/data/RGB.byte.tif') as dataset:
