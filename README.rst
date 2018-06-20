@@ -158,6 +158,20 @@ Please install Rasterio in a `virtual environment
 <https://www.python.org/dev/peps/pep-0405/>`__ so that its requirements don't
 tamper with your system's Python.
 
+SSL certs
+---------
+
+The Linux wheels on PyPI are built on CentOS and libcurl expects certs to be in
+/etc/pki/tls/certs/ca-bundle.crt. Ubuntu's certs, for example, are in
+a different location. You may need to use the CURL_CA_BUNDLE environment
+variable to specify the location of SSL certs on your computer. On an Ubuntu
+system set the variable as shown below.
+
+.. code-block:: console
+
+    $ export CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+
 Dependencies
 ------------
 
