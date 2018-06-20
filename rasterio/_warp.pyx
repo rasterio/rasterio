@@ -792,12 +792,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if init_dest_nodata is True and 'init_dest' not in warp_extras:
             self.warp_extras['init_dest'] = 'NO_DATA'
 
-        # If we're adding an alpha band, set the nodata value to None
-        # so it doesn't shadow our alpha band.
-        self.dst_alpha = add_alpha
-        if self.dst_alpha:
-            self.dst_nodata = None
-
         cdef GDALDriverH driver = NULL
         cdef GDALDatasetH hds = NULL
         cdef GDALDatasetH hds_warped = NULL
@@ -872,6 +866,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         if add_alpha:
             dst_alpha = src_dataset.count + 1
+            self.dst_nodata = None
         else:
             dst_alpha = 0
 
