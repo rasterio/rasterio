@@ -346,3 +346,15 @@ def test_hit_ovr(red_green):
         image = numpy.moveaxis(data, 0, -1)
         assert image[0, 0, 0] == 17
         assert image[0, 0, 1] == 204
+
+
+@requires_gdal21(reason="add_alpha requires GDAL 2.1+")
+def test_warped_vrt_1band_add_alpha():
+    """Add an alpha band to the VRT to access per-dataset mask of a source"""
+    with rasterio.open('tests/data/shade.tif') as src:
+        vrt = WarpedVRT(src, add_alpha=True)
+        assert vrt.count == 2
+        assert vrt.mask_flag_enums == (
+            [MaskFlags.per_dataset, MaskFlags.alpha],
+            [MaskFlags.all_valid]
+        )
