@@ -1,6 +1,15 @@
 Changes
 =======
 
+1.0b3 ()
+------------------
+
+Bug fixes:
+
+- A regression in the VSI path of some zip:// URLs has been fixed (#1377).
+- Transform, coordinate reference system, and ground control points are
+  properly set when opening a dataset in w+ mode (#1359.
+
 1.0b2 (2018-06-19)
 ------------------
 

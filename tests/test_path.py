@@ -156,3 +156,10 @@ def test_parse_path_accept_get_params():
     assert parsed.path == 'example.com/index?a=1'
     assert parsed.archive is None
     assert parsed.scheme == 'http'
+
+
+def test_vsi_path_zip():
+    """A zip:// URLs vsi path is correct (see #1377)"""
+    from rasterio.path import parse_path, vsi_path
+    url = 'zip:///path/to/zip/some.zip!path/to/file.txt'
+    assert vsi_path(parse_path(url)) == '/vsizip//path/to/zip/some.zip/path/to/file.txt'

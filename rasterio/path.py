@@ -170,7 +170,7 @@ def vsi_path(path):
 
             if prefix:
                 if path.archive:
-                    result = '/{}/{}{}{}'.format(prefix, suffix, path.archive, path.path)
+                    result = '/{}/{}{}/{}'.format(prefix, suffix, path.archive, path.path.lstrip('/'))
                 else:
                     result = '/{}/{}{}'.format(prefix, suffix, path.path)
             else:
