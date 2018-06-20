@@ -871,7 +871,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 src_alpha = bidx
 
         if add_alpha:
-            dst_alpha = 4
+            dst_alpha = src_dataset.count + 1
         else:
             dst_alpha = 0
 

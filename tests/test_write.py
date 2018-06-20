@@ -311,3 +311,12 @@ def test_creation_metadata_deprecation(tmpdir):
     with rasterio.open(name, 'w', driver='GTiff', height=1, width=1, count=1, dtype='uint8', BIGTIFF=True) as dst:
         dst.write(np.ones((1, 1, 1), dtype='uint8'))
         assert dst.tags(ns='rio_creation_kwds') == {}
+
+
+def test_wplus_transform(tmpdir):
+    """Transform is set on a new dataset created in w+ mode (see issue #1359)"""
+    name = str(tmpdir.join("test.tif"))
+    transform = affine.Affine.translation(10.0, 10.0) * affine.Affine.scale(0.5, -0.5)
+    with rasterio.open(name, 'w+', driver='GTiff', crs='epsg:4326', transform=transform, height=10, width=10, count=1, dtype='uint8') as dst:
+        dst.write(np.ones((1, 10, 10), dtype='uint8'))
+        assert dst.transform == []

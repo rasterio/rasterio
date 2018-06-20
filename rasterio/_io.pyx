@@ -1127,7 +1127,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._descriptions = ()
         self._options = kwargs.copy()
 
-        if self.mode == 'w':
+        if self.mode in ('w', 'w+'):
             if self._transform:
                 self.write_transform(self._transform)
             if self._crs:
