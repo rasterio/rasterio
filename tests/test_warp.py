@@ -578,9 +578,11 @@ def test_reproject_no_init_nodata_tofile(tmpdir):
             init_dest_nodata=False
         )
 
-    # 200s should not be overwritten by 100s
+    # 200s should remain along with 100s
     with rasterio.open(tiffname) as src:
-        assert src.read().max() == 200
+        data = src.read()
+
+    assert data.max() == 200
 
 
 def test_reproject_no_init_nodata_toarray():

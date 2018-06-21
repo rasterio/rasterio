@@ -177,7 +177,8 @@ def transform_bounds(
 @require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
 def reproject(source, destination, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
-              dst_nodata=None, resampling=Resampling.nearest,
+              dst_nodata=None, src_alpha=False, dst_alpha=False,
+              resampling=Resampling.nearest, num_threads=1,
               init_dest_nodata=True, warp_mem_limit=0, **kwargs):
     """Reproject a source raster to a destination raster.
 
@@ -228,6 +229,12 @@ def reproject(source, destination, src_transform=None, gcps=None,
         remain in all areas not covered by the reprojected source.
         Defaults to the nodata value of the destination image (if set),
         the value of src_nodata, or 0 (GDAL default).
+    src_alpha : bool, optional
+        If True, the last band of the source will be treated as an
+        alpha band.
+    dst_alpha : bool, optional
+        If True, the last band of the destination will be treated as
+        an alpha band.
     resampling: int
         Resampling method to use.  One of the following:
             Resampling.nearest,
@@ -244,6 +251,8 @@ def reproject(source, destination, src_transform=None, gcps=None,
             Resampling.q3 (GDAL >= 2.2)
         An exception will be raised for a method not supported by the running
         version of GDAL.
+    num_threads : int, optional
+        The number of warp worker threads. Default: 1.
     init_dest_nodata: bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
@@ -281,9 +290,13 @@ def reproject(source, destination, src_transform=None, gcps=None,
                  SUPPORTED_RESAMPLING])))
 
     # Call the function in our extension module.
-    _reproject(source, destination, src_transform, gcps, src_crs, src_nodata,
-               dst_transform, dst_crs, dst_nodata, False, resampling,
-               init_dest_nodata, **kwargs)
+    _reproject(
+        source, destination, src_transform=src_transform, gcps=gcps,
+        src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
+        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpa=dst_alpha,
+        src_alpha=src_alpha, resampling=resampling,
+        init_dest_nodata=init_dest_nodata, num_threads=num_threads,
+        warp_mem_limit=warp_mem_limit, **kwargs)
 
 
 @ensure_env

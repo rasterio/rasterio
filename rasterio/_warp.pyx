@@ -106,14 +106,6 @@ cdef GDALWarpOptions * create_warp_options(
     """Return a pointer to a GDALWarpOptions composed from input params
     """
 
-    # First, we make sure we have consistent source and destination
-    # nodata values. TODO: alpha bands.
-    if src_alpha:
-        src_nodata = None
-
-    if dst_alpha:
-        dst_nodata = None
-
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
 
     # Note: warp_extras is pointed to different memory locations on every
@@ -134,32 +126,40 @@ cdef GDALWarpOptions * create_warp_options(
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
 
     if warp_mem_limit > 0:
-        psWOptions.dfWarpMemoryLimit = <double>warp_mem_limit * 1024 * 1024
+        psWOptions.dfWarpMemoryLimit = <double>(warp_mem_limit * 1024 * 1024)
+        log.debug("Warp Memory Limit set: {!r}".format(warp_mem_limit))
+
+    if src_alpha:
+        band_count = src_count - 1
+    else:
+        band_count = src_count
 
     # Assign nodata values.
     # We don't currently support an imaginary component.
 
     if src_nodata is not None:
-        psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-        psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfSrcNoDataReal = <double*>CPLMalloc(band_count * sizeof(double))
+        psWOptions.padfSrcNoDataImag = <double*>CPLMalloc(band_count * sizeof(double))
 
-        for i in range(src_count):
+        for i in range(band_count):
             psWOptions.padfSrcNoDataReal[i] = float(src_nodata)
             psWOptions.padfSrcNoDataImag[i] = 0.0
 
     if dst_nodata is not None:
-        psWOptions.padfDstNoDataReal = <double*>CPLMalloc(src_count * sizeof(double))
-        psWOptions.padfDstNoDataImag = <double*>CPLMalloc(src_count * sizeof(double))
+        psWOptions.padfDstNoDataReal = <double*>CPLMalloc(band_count * sizeof(double))
+        psWOptions.padfDstNoDataImag = <double*>CPLMalloc(band_count * sizeof(double))
 
-        for i in range(src_count):
+        for i in range(band_count):
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
             psWOptions.padfDstNoDataImag[i] = 0.0
 
     if src_alpha:
-        psWOptions.nSrcAlphaBand = src_alpha
+        psWOptions.nSrcAlphaBand = band_count
 
-    if dst_alpha:
+    if dst_alpha > band_count:
         psWOptions.nDstAlphaBand = dst_alpha
+    elif dst_alpha:
+        psWOptions.nDstAlphaBand = band_count
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -167,12 +167,12 @@ cdef GDALWarpOptions * create_warp_options(
 
     # Set up band info
     if psWOptions.nBandCount == 0:
-        psWOptions.nBandCount = src_count
+        psWOptions.nBandCount = band_count
 
-        psWOptions.panSrcBands = <int*>CPLMalloc(src_count * sizeof(int))
-        psWOptions.panDstBands = <int*>CPLMalloc(src_count * sizeof(int))
+        psWOptions.panSrcBands = <int*>CPLMalloc(band_count * sizeof(int))
+        psWOptions.panDstBands = <int*>CPLMalloc(band_count * sizeof(int))
 
-        for i in range(src_count):
+        for i in range(band_count):
             psWOptions.panSrcBands[i] = i + 1
             psWOptions.panDstBands[i] = i + 1
 
@@ -188,7 +188,8 @@ def _reproject(
         dst_transform=None,
         dst_crs=None,
         dst_nodata=None,
-        add_alpha=False,
+        dst_alpha=False,
+        src_alpha=False,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
         num_threads=1,
@@ -238,6 +239,12 @@ def _reproject(
         in all areas not covered by the reprojected source.  Defaults to the
         nodata value of the destination image (if set), the value of
         src_nodata, or 0 (gdal default).
+    dst_alpha : bool, optional
+        If True, the last band of the destination will be treated as an
+        alpha band.
+    src_alpha : bool, optional
+        If True, the last band of the source will be treated as an alpha
+        band whether or not it is marked as an alpha band.
     resampling: int
         Resampling method to use.  One of the following:
             Resampling.nearest,
@@ -253,6 +260,11 @@ def _reproject(
     num_threads : int
         Number of worker threads.
     warp_mem_limit : int, optional
+        The warp operation memory limit in MB. Larger values allow the
+        warp operation to be carried out in fewer chunks. The amount of
+        memory required to warp a 3-band uint8 2000 row x 2000 col
+        raster to a destination of the same size is approximately
+        56 MB. The default (0) means 64 MB with GDAL 2.2.
         The warp operation's memory limit in MB. The default (0)
         means 64 MB with GDAL 2.2.
     kwargs:  dict, optional
@@ -528,33 +540,29 @@ def _reproject(
             warp_extras, <const char *>key, <const char *>val)
 
     cdef GDALRasterBandH hBand = NULL
-    src_alpha = 0
+    src_alpha_band = 0
     for bidx in range(1, src_count + 1):
         hBand = GDALGetRasterBand(src_dataset, bidx)
         if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
-            src_alpha = bidx
+            src_alpha_band = bidx
 
-    if add_alpha:
-        dst_alpha = 4
+    if src_alpha:
+        src_alpha_band = src_count
+
+    if dst_alpha:
+        dst_alpha = src_count
     else:
         dst_alpha = 0
 
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit,
+        dst_nodata, src_count, dst_alpha, src_alpha_band, warp_mem_limit,
         <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
     psWOptions.hSrcDS = src_dataset
     psWOptions.hDstDS = dst_dataset
-    psWOptions.nBandCount = src_count
-    psWOptions.panSrcBands = <int *>CPLMalloc(src_count*sizeof(int))
-    psWOptions.panDstBands = <int *>CPLMalloc(src_count*sizeof(int))
-
-    for i in range(src_count):
-        psWOptions.panSrcBands[i] = src_bidx[i]
-        psWOptions.panDstBands[i] = dst_bidx[i]
 
     log.debug("Set transformer options")
 
@@ -669,7 +677,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, nodata=None,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
-                 init_dest_nodata=True, add_alpha=False,
+                 init_dest_nodata=True, src_alpha=False, add_alpha=False,
                  warp_mem_limit=0, **warp_extras):
         """Make a virtual warped dataset
 
@@ -705,6 +713,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             The maximum error tolerance in input pixels when
             approximating the warp transformation. Default: 0.125,
             or one-eigth of a pixel.
+        src_alpha : bool, optional
+            If True, treat the last band of the source as an alpha
+            no matter how it is marked.
         add_alpha : bool, optional
             Whether to add an alpha masking band to the virtual dataset.
             Default: False. This option will cause deletion of the VRT
@@ -870,11 +881,14 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 c_warp_extras, <const char *>key, <const char *>val)
 
         cdef GDALRasterBandH hBand = NULL
-        src_alpha = 0
+        src_alpha_band = 0
         for bidx in src_dataset.indexes:
             hBand = GDALGetRasterBand(hds, bidx)
             if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
-                src_alpha = bidx
+                src_alpha_band = bidx
+
+        if src_alpha:
+            src_alpha_band = src_dataset.count
 
         if add_alpha:
             dst_alpha = src_dataset.count + 1
@@ -885,7 +899,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, GDALGetRasterCount(hds), dst_alpha,
-            src_alpha, warp_mem_limit, <const char **>c_warp_extras)
+            src_alpha_band, warp_mem_limit, <const char **>c_warp_extras)
 
         if psWOptions == NULL:
             raise RuntimeError("Warp options are NULL")
