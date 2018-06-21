@@ -6,6 +6,9 @@ Changes
 
 Bug fixes:
 
+- The logic behind rio-warp's --target-aligned-pixels has been factored into
+  a new `aligned_target()` function in the warp module to help resolve 
+  #853.
 - A regression in the VSI path of some zip:// URLs has been fixed (#1377).
 - Transform, coordinate reference system, and ground control points are
   properly set when opening a dataset in w+ mode (#1359.

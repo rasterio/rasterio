@@ -14,7 +14,8 @@ from rasterio.errors import (
     GDALBehaviorChangeException, CRSError, GDALVersionError)
 from rasterio.warp import (
     reproject, transform_geom, transform, transform_bounds,
-    calculate_default_transform, SUPPORTED_RESAMPLING, GDAL2_RESAMPLING)
+    calculate_default_transform, aligned_target, SUPPORTED_RESAMPLING,
+    GDAL2_RESAMPLING)
 from rasterio import windows
 
 from .conftest import requires_gdal22
@@ -995,6 +996,42 @@ def test_resample_default_invert_proj(method):
         resampling=method)
 
     assert out.mean() > 0
+
+
+def test_target_aligned_pixels():
+    """Issue 853 has been resolved"""
+    with rasterio.open('tests/data/world.rgb.tif') as src:
+        source = src.read(1)
+        profile = src.profile.copy()
+
+    dst_crs = {'init': 'epsg:3857'}
+
+    with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
+        # Calculate the ideal dimensions and transformation in the new crs
+        dst_affine, dst_width, dst_height = calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds)
+
+        dst_affine, dst_width, dst_height = aligned_target(dst_affine, dst_width, dst_height, 100000.0)
+
+        profile['height'] = dst_height
+        profile['width'] = dst_width
+
+        out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
+
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest)
+
+        # Check that there is no black borders
+        assert out[:, 0].all()
+        assert out[:, -1].all()
+        assert out[0, :].all()
+        assert out[-1, :].all()
 
 
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)

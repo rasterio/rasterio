@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 from __future__ import division
 
-from math import ceil
+from math import ceil, floor
 
 from affine import Affine
 import numpy as np
@@ -297,6 +297,48 @@ def reproject(source, destination, src_transform=None, gcps=None,
         src_alpha=src_alpha, resampling=resampling,
         init_dest_nodata=init_dest_nodata, num_threads=num_threads,
         warp_mem_limit=warp_mem_limit, **kwargs)
+
+
+def aligned_target(transform, width, height, resolution):
+    """Aligns target to specified resolution
+
+    Parameters
+    ----------
+    transform : Affine
+        Input affine transformation matrix
+    width, height: int
+        Input dimensions
+    resolution: tuple (x resolution, y resolution) or float
+        Target resolution, in units of target coordinate reference
+        system.
+
+    Returns
+    -------
+    transform: Affine
+        Output affine transformation matrix
+    width, height: int
+        Output dimensions
+
+    """
+    if isinstance(resolution, (float, int)):
+        res = (float(resolution), float(resolution))
+    else:
+        res = resolution
+
+    xmin = transform.xoff
+    ymin = transform.yoff + height * transform.e
+    xmax = transform.xoff + width * transform.a
+    ymax = transform.yoff
+
+    xmin = floor(xmin / res[0]) * res[0]
+    xmax = ceil(xmax / res[0]) * res[0]
+    ymin = floor(ymin / res[1]) * res[1]
+    ymax = ceil(ymax / res[1]) * res[1]
+    dst_transform = Affine(res[0], 0, xmin, 0, -res[1], ymax)
+    dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
+    dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
+
+    return dst_transform, dst_width, dst_height
 
 
 @ensure_env

@@ -1,7 +1,7 @@
 """$ rio warp"""
 
 import logging
-from math import ceil, floor, log
+from math import ceil, log
 import warnings
 
 import click
@@ -16,7 +16,7 @@ from rasterio.rio.helpers import resolve_inout
 from rasterio.transform import Affine
 from rasterio.warp import (
     reproject, Resampling, SUPPORTED_RESAMPLING, transform_bounds,
-    calculate_default_transform as calcdt)
+    aligned_target, calculate_default_transform as calcdt)
 
 
 # Improper usage of rio-warp can lead to accidental creation of
@@ -211,23 +211,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
                     dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
 
-                elif target_aligned_pixels:
-                    try:
-                        xmin, ymin, xmax, ymax = transform_bounds(
-                            src.crs, dst_crs, *src.bounds)
-                    except CRSError as err:
-                        raise click.BadParameter(
-                            str(err), param='dst_crs', param_hint='dst_crs')
-
-                    xmin = floor(xmin / res[0]) * res[0]
-                    xmax = ceil(xmax / res[0]) * res[0]
-                    ymin = floor(ymin / res[1]) * res[1]
-                    ymax = ceil(ymax / res[1]) * res[1]
-
-                    dst_transform = Affine(res[0], 0, xmin, 0, -res[1], ymax)
-                    dst_width = max(int(ceil((xmax - xmin) / res[0])), 1)
-                    dst_height = max(int(ceil((ymax - ymin) / res[1])), 1)
-
                 else:
                     try:
                         if src.transform.is_identity and src.gcps:
@@ -278,6 +261,10 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 dst_transform = src.transform
                 dst_width = src.width
                 dst_height = src.height
+
+            if target_aligned_pixels:
+                dst_transform, dst_width, dst_height = aligned_target(dst_transform, dst_width, dst_height, res)
+                import pdb; pdb.set_trace()
 
             # If src_nodata is not None, update the dst metadata NODATA
             # value to src_nodata (will be overridden by dst_nodata if it is not None
