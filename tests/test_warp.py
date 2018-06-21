@@ -869,6 +869,42 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
     assert np.count_nonzero(out) == expected[method]
 
 
+@pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
+def test_reproject_resampling_alpha(method):
+    """Reprojection of a source with alpha band succeeds"""
+    # Expected count of nonzero pixels for each resampling method, based
+    # on running rasterio with each of the following configurations
+    expected = {
+        Resampling.nearest: 438113,
+        Resampling.bilinear: 439280,
+        Resampling.cubic: 437888,
+        Resampling.cubic_spline: 440475,
+        Resampling.lanczos: 436001,
+        Resampling.average: 439419,
+        Resampling.mode: 437298,
+        Resampling.max: 439464,
+        Resampling.min: 436397,
+        Resampling.med: 437194,
+        Resampling.q1: 436397,
+        Resampling.q3: 438948
+    }
+
+    with rasterio.open('tests/data/RGBA.byte.tif') as src:
+        source = src.read(1)
+
+    out = np.empty(src.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs={'init': 'EPSG:3857'},
+        resampling=method)
+
+    assert np.count_nonzero(out) == expected[method]
+
+
 @pytest.mark.skipif(
     gdal_version.at_least('2.0'),
     reason="Tests only applicable to GDAL < 2.0")
