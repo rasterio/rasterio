@@ -102,7 +102,7 @@ def _transform_geom(
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata,
-        int src_count, object dst_alpha, object src_alpha, const char **options) except NULL:
+        int src_count, object dst_alpha, object src_alpha, int warp_mem_limit, const char **options) except NULL:
     """Return a pointer to a GDALWarpOptions composed from input params
     """
 
@@ -132,6 +132,9 @@ cdef GDALWarpOptions * create_warp_options(
     warp_extras = CSLMerge(warp_extras, <char **>options)
 
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
+
+    if warp_mem_limit > 0:
+        psWOptions.dfWarpMemoryLimit = <double>warp_mem_limit * 1024 * 1024
 
     # Assign nodata values.
     # We don't currently support an imaginary component.
@@ -189,6 +192,7 @@ def _reproject(
         resampling=Resampling.nearest,
         init_dest_nodata=True,
         num_threads=1,
+        warp_mem_limit=0,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -246,8 +250,11 @@ def _reproject(
     init_dest_nodata: bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
-    num_threads: int
+    num_threads : int
         Number of worker threads.
+    warp_mem_limit : int, optional
+        The warp operation's memory limit in MB. The default (0)
+        means 64 MB with GDAL 2.2.
     kwargs:  dict, optional
         Additional arguments passed to both the image to image
         transformer GDALCreateGenImgProjTransformer2() (for example,
@@ -534,7 +541,8 @@ def _reproject(
 
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha, <const char **>warp_extras)
+        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit,
+        <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
     psWOptions.pTransformerArg = hTransformArg
@@ -661,7 +669,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, nodata=None,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
-                 init_dest_nodata=True, add_alpha=False, **warp_extras):
+                 init_dest_nodata=True, add_alpha=False,
+                 warp_mem_limit=0, **warp_extras):
         """Make a virtual warped dataset
 
         Parameters
@@ -703,6 +712,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         init_dest_nodata : bool, optional
             Whether or not to initialize output to `nodata`. Default:
             True.
+        warp_mem_limit : int, optional
+            The warp operation's memory limit in MB. The default (0)
+            means 64 MB with GDAL 2.2.
         warp_extras : dict
             GDAL extra warp options. See
             http://www.gdal.org/structGDALWarpOptions.html.
@@ -873,7 +885,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, GDALGetRasterCount(hds), dst_alpha,
-            src_alpha, <const char **>c_warp_extras)
+            src_alpha, warp_mem_limit, <const char **>c_warp_extras)
 
         if psWOptions == NULL:
             raise RuntimeError("Warp options are NULL")

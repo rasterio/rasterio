@@ -178,7 +178,7 @@ def transform_bounds(
 def reproject(source, destination, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, resampling=Resampling.nearest,
-              init_dest_nodata=True, **kwargs):
+              init_dest_nodata=True, warp_mem_limit=0, **kwargs):
     """Reproject a source raster to a destination raster.
 
     If the source and destination are ndarrays, coordinate reference
@@ -247,6 +247,12 @@ def reproject(source, destination, src_transform=None, gcps=None,
     init_dest_nodata: bool
         Flag to specify initialization of nodata in destination;
         prevents overwrite of previous warps. Defaults to True.
+    warp_mem_limit : int, optional
+        The warp operation memory limit in MB. Larger values allow the
+        warp operation to be carried out in fewer chunks. The amount of
+        memory required to warp a 3-band uint8 2000 row x 2000 col
+        raster to a destination of the same size is approximately
+        56 MB. The default (0) means 64 MB with GDAL 2.2.
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 
