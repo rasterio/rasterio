@@ -101,9 +101,21 @@ def _transform_geom(
 
 
 cdef GDALWarpOptions * create_warp_options(
-        GDALResampleAlg resampling, object src_nodata, object dst_nodata,
-        int src_count, object dst_alpha, object src_alpha, int warp_mem_limit, const char **options) except NULL:
+        GDALResampleAlg resampling, object src_nodata, object dst_nodata, int src_count,
+        object dst_alpha, object src_alpha, int warp_mem_limit, const char **options) except NULL:
     """Return a pointer to a GDALWarpOptions composed from input params
+
+    This is used in _reproject() and the WarpedVRT constructor. It sets
+    up warp options in almost exactly the same way as gdawarp.
+
+    Parameters
+    ----------
+    dst_alpha : int
+        This parameter specifies a destination alpha band for the
+        warper.
+    src_alpha : int
+        This parameter specifies the source alpha band for the warper.
+
     """
 
     cdef GDALWarpOptions *psWOptions = GDALCreateWarpOptions()
@@ -129,10 +141,13 @@ cdef GDALWarpOptions * create_warp_options(
         psWOptions.dfWarpMemoryLimit = <double>(warp_mem_limit * 1024 * 1024)
         log.debug("Warp Memory Limit set: {!r}".format(warp_mem_limit))
 
+    band_count = src_count
+
     if src_alpha:
-        band_count = src_count - 1
-    else:
-        band_count = src_count
+        psWOptions.nSrcAlphaBand = src_alpha
+
+    if dst_alpha:
+        psWOptions.nDstAlphaBand = dst_alpha
 
     # Assign nodata values.
     # We don't currently support an imaginary component.
@@ -153,13 +168,6 @@ cdef GDALWarpOptions * create_warp_options(
             psWOptions.padfDstNoDataReal[i] = float(dst_nodata)
             psWOptions.padfDstNoDataImag[i] = 0.0
 
-    if src_alpha:
-        psWOptions.nSrcAlphaBand = band_count
-
-    if dst_alpha > band_count:
-        psWOptions.nDstAlphaBand = dst_alpha
-    elif dst_alpha:
-        psWOptions.nDstAlphaBand = band_count
 
     # Important: set back into struct or values set above are lost
     # This is because CSLSetNameValue returns a new list each time
@@ -188,8 +196,8 @@ def _reproject(
         dst_transform=None,
         dst_crs=None,
         dst_nodata=None,
-        dst_alpha=False,
-        src_alpha=False,
+        dst_alpha=0,
+        src_alpha=0,
         resampling=Resampling.nearest,
         init_dest_nodata=True,
         num_threads=1,
@@ -239,12 +247,10 @@ def _reproject(
         in all areas not covered by the reprojected source.  Defaults to the
         nodata value of the destination image (if set), the value of
         src_nodata, or 0 (gdal default).
-    dst_alpha : bool, optional
-        If True, the last band of the destination will be treated as an
-        alpha band.
-    src_alpha : bool, optional
-        If True, the last band of the source will be treated as an alpha
-        band whether or not it is marked as an alpha band.
+    src_alpha : int, optional
+        Index of a band to use as the alpha band when warping.
+    dst_alpha : int, optional
+        Index of a band to use as the alpha band when warping.
     resampling: int
         Resampling method to use.  One of the following:
             Resampling.nearest,
@@ -540,23 +546,10 @@ def _reproject(
             warp_extras, <const char *>key, <const char *>val)
 
     cdef GDALRasterBandH hBand = NULL
-    src_alpha_band = 0
-    for bidx in range(1, src_count + 1):
-        hBand = GDALGetRasterBand(src_dataset, bidx)
-        if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
-            src_alpha_band = bidx
-
-    if src_alpha:
-        src_alpha_band = src_count
-
-    if dst_alpha:
-        dst_alpha = src_count
-    else:
-        dst_alpha = 0
 
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha_band, warp_mem_limit,
+        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit,
         <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
@@ -677,7 +670,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                  src_nodata=None, dst_nodata=None, nodata=None,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
-                 init_dest_nodata=True, src_alpha=False, add_alpha=False,
+                 init_dest_nodata=True, src_alpha=0, add_alpha=False,
                  warp_mem_limit=0, **warp_extras):
         """Make a virtual warped dataset
 
@@ -713,9 +706,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             The maximum error tolerance in input pixels when
             approximating the warp transformation. Default: 0.125,
             or one-eigth of a pixel.
-        src_alpha : bool, optional
-            If True, treat the last band of the source as an alpha
-            no matter how it is marked.
+        src_alpha : int, optional
+            Index of a source band to use as an alpha band for warping.
         add_alpha : bool, optional
             Whether to add an alpha masking band to the virtual dataset.
             Default: False. This option will cause deletion of the VRT
@@ -888,7 +880,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                 src_alpha_band = bidx
 
         if src_alpha:
-            src_alpha_band = src_dataset.count
+            src_alpha_band = src_alpha
 
         if add_alpha:
             dst_alpha = src_dataset.count + 1
@@ -898,7 +890,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
-            self.dst_nodata, GDALGetRasterCount(hds), dst_alpha,
+            self.dst_nodata, src_dataset.count, dst_alpha,
             src_alpha_band, warp_mem_limit, <const char **>c_warp_extras)
 
         if psWOptions == NULL:

@@ -177,7 +177,7 @@ def transform_bounds(
 @require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
 def reproject(source, destination, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
-              dst_nodata=None, src_alpha=False, dst_alpha=False,
+              dst_nodata=None, src_alpha=0, dst_alpha=0,
               resampling=Resampling.nearest, num_threads=1,
               init_dest_nodata=True, warp_mem_limit=0, **kwargs):
     """Reproject a source raster to a destination raster.
@@ -229,12 +229,10 @@ def reproject(source, destination, src_transform=None, gcps=None,
         remain in all areas not covered by the reprojected source.
         Defaults to the nodata value of the destination image (if set),
         the value of src_nodata, or 0 (GDAL default).
-    src_alpha : bool, optional
-        If True, the last band of the source will be treated as an
-        alpha band.
-    dst_alpha : bool, optional
-        If True, the last band of the destination will be treated as
-        an alpha band.
+    src_alpha : int, optional
+        Index of a band to use as the alpha band when warping.
+    dst_alpha : int, optional
+        Index of a band to use as the alpha band when warping.
     resampling: int
         Resampling method to use.  One of the following:
             Resampling.nearest,
