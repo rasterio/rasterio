@@ -90,3 +90,7 @@ class RasterBlockError(RasterioError):
 
 class BandOverviewError(UserWarning):
     """Raised when a band overview access fails."""
+
+
+class WarpOptionsError(RasterioError):
+    """Raised when options for a warp operation are invalid"""

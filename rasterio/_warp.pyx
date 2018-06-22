@@ -18,7 +18,9 @@ from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.crs import CRS
-from rasterio.errors import DriverRegistrationError, CRSError, RasterioIOError, RasterioDeprecationWarning
+from rasterio.errors import (
+    DriverRegistrationError, CRSError, RasterioIOError,
+    RasterioDeprecationWarning, WarpOptionsError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -879,14 +881,24 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
                 src_alpha_band = bidx
 
-        if src_alpha:
-            src_alpha_band = src_alpha
-
         if add_alpha:
-            dst_alpha = src_dataset.count + 1
-            self.dst_nodata = None
+
+            # Adding an alpha band when the source has one is trouble.
+            # It will result in suprisingly unmasked data. We will 
+            # raise an exception instead.
+            if src_alpha_band:
+                raise WarpOptionsError(
+                    "The VRT already has an alpha band, adding a new one is not supported")
+
+            else:
+                dst_alpha = src_dataset.count + 1
+                self.dst_nodata = None
+
         else:
             dst_alpha = 0
+
+        if src_alpha:
+            src_alpha_band = src_alpha
 
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,

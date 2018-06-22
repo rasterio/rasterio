@@ -13,7 +13,7 @@ from .conftest import requires_gdal21, requires_gdal2
 import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.errors import RasterioDeprecationWarning
+from rasterio.errors import RasterioDeprecationWarning, WarpOptionsError
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -358,3 +358,10 @@ def test_warped_vrt_1band_add_alpha():
             [MaskFlags.per_dataset, MaskFlags.alpha],
             [MaskFlags.all_valid]
         )
+
+
+def test_invalid_add_alpha():
+    """Adding an alpha band to a VRT that already has one fails"""
+    with rasterio.open('tests/data/RGBA.byte.tif') as src:
+        with pytest.raises(WarpOptionsError):
+            WarpedVRT(src, add_alpha=True)
