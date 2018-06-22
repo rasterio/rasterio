@@ -850,7 +850,7 @@ cdef class DatasetBase(object):
     def is_tiled(self):
         if len(self.block_shapes) == 0:
             return False
-        return self.block_shapes[0][1] != self.width
+        return self.block_shapes[0][1] != self.width and self.block_shapes[0][1] <= 1024
 
     property profile:
         """Basic metadata and creation options of this dataset.
