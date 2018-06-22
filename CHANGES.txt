@@ -1,11 +1,13 @@
 Changes
 =======
 
-1.0b3 ()
+1.0b3 (2018-06-21)
 ------------------
 
 Bug fixes:
 
+- The warp memory limit configuration available in gdalwarp has been added
+  to `reproject()` and `WarpedVRT`.
 - Avoid boundless reads when sampling pixels outside a dataset's extent
   (#1249).
 - The logic behind rio-warp's --target-aligned-pixels has been factored into
