@@ -360,6 +360,7 @@ def test_warped_vrt_1band_add_alpha():
         )
 
 
+@requires_gdal21(reason="add_alpha requires GDAL 2.1+")
 def test_invalid_add_alpha():
     """Adding an alpha band to a VRT that already has one fails"""
     with rasterio.open('tests/data/RGBA.byte.tif') as src:
