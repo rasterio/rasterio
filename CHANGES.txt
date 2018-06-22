@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Avoid boundless reads when sampling pixels outside a dataset's extent
+  (#1249).
 - The logic behind rio-warp's --target-aligned-pixels has been factored into
   a new `aligned_target()` function in the warp module to help resolve 
   #853.
