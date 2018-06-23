@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.0b4 (2018-06-23)
+------------------
+
+Bug fixes:
+
+- We now raise an exception when WarpedVRT is asked to add an alpha band and
+  one already exists for the VRT.
+
 1.0b3 (2018-06-21)
 ------------------
 
