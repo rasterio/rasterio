@@ -1,7 +1,6 @@
 """Fetch and edit raster dataset metadata from the command line."""
 
 import json
-import logging
 
 import click
 

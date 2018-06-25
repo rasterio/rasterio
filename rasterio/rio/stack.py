@@ -55,7 +55,7 @@ def stack(ctx, files, output, driver, bidx, photometric, overwrite,
       rio stack RGB.byte.tif --bidx ..2 RGB.byte.tif --bidx 3.. -o stacked.tif
 
     """
-    logger = logging.getLogger('rio')
+    logger = logging.getLogger(__name__)
     try:
         with ctx.obj['env']:
             output, files = resolve_inout(files=files, output=output,

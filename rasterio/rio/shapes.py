@@ -91,7 +91,6 @@ def shapes(
       $ rio shapes --as-mask --bidx 1 tests/data/RGB.byte.tif
     """
     # These import numpy, which we don't want to do unless it's needed.
-    logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
         dump_kwds['indent'] = indent

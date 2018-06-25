@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next
+------------------
+
+Bug fixes:
+
+- Local loggers have all been changed to `getLogger(__name__)` in rasterio.rio
+  module (#1328).
+
 1.0b4 (2018-06-23)
 ------------------
 

@@ -20,7 +20,7 @@ import rasterio.shutil
 def transform(ctx, input, src_crs, dst_crs, precision):
     import rasterio.warp
 
-    logger = logging.getLogger('rio')
+    logger = logging.getLogger(__name__)
 
     # Handle the case of file, stream, or string input.
     try:

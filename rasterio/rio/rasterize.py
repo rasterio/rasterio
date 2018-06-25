@@ -18,7 +18,7 @@ from rasterio.rio.helpers import resolve_inout
 import rasterio.shutil
 
 
-logger = logging.getLogger('rio')
+logger = logging.getLogger(__name__)
 
 
 # Common options used below
