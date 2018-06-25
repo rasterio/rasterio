@@ -163,3 +163,10 @@ def test_vsi_path_zip():
     from rasterio.path import parse_path, vsi_path
     url = 'zip:///path/to/zip/some.zip!path/to/file.txt'
     assert vsi_path(parse_path(url)) == '/vsizip//path/to/zip/some.zip/path/to/file.txt'
+
+
+def test_vsi_path_zip_plus_https():
+    """A zip+https:// URLs vsi path is correct (see #1151)"""
+    from rasterio.path import parse_path, vsi_path
+    url = 'zip+https://example.com/foo.zip!bar.tif'
+    assert vsi_path(parse_path(url)) == '/vsizip/vsicurl/https://example.com/foo.zip/bar.tif'
