@@ -6,6 +6,8 @@ Next
 
 Bug fixes:
 
+- Internal Env() in `rasterio.open` has been replaced with an environment
+  ensuring decorator (#1009).
 - Local loggers have all been changed to `getLogger(__name__)` in rasterio.rio
   module (#1328).
 

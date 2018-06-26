@@ -13,6 +13,7 @@ from rasterio._env import (
 from rasterio.compat import string_types, getargspec
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError, GDALVersionError
+from rasterio.path import parse_path
 from rasterio.transform import guard_transform
 
 
@@ -358,6 +359,42 @@ def ensure_env(f):
         else:
             with Env.from_defaults():
                 return f(*args, **kwds)
+    return wrapper
+
+
+def ensure_env_credentialled(f):
+    """Ensures a config environment exists and is credentialized
+
+    Parameters
+    ----------
+    f : function
+        A function.
+
+    Notes
+    -----
+    Checks the first argument of f and credentializes if it is a URI
+    with scheme "s3".
+
+    """
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if local._env:
+            env_ctor = Env
+        else:
+            env_ctor = Env.from_defaults
+        with env_ctor() as wrapper_env:
+            if isinstance(args[0], str):
+                path = parse_path(args[0])
+                scheme = getattr(path, 'scheme', None)
+                if scheme == 's3':
+                    wrapper_env.credentialize()
+                    log.debug("Credentialized: {!r}".format(getenv()))
+                else:
+                    pass
+            else:
+                pass
+            return f(*args, **kwds)
+
     return wrapper
 
 
