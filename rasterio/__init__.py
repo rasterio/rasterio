@@ -25,7 +25,7 @@ from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
-from rasterio.env import ensure_env, Env
+from rasterio.env import ensure_env_credentialled, Env
 from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
@@ -55,6 +55,7 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
+@ensure_env_credentialled
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
          crs=None, transform=None, dtype=None, nodata=None, sharing=True,
          **kwargs):
@@ -208,30 +209,25 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
         # The 'normal' filename or URL path.
         path = parse_path(fp)
-        scheme = getattr(path, 'scheme', None)
 
-        with Env() as env:
-            if scheme == 's3':
-                env.credentialize()
-
-            # Create dataset instances and pass the given env, which will
-            # be taken over by the dataset's context manager if it is not
-            # None.
-            if mode == 'r':
-                s = DatasetReader(path, driver=driver, **kwargs)
-            elif mode == 'r+':
-                s = get_writer_for_path(path)(path, mode, driver=driver, **kwargs)
-            elif mode.startswith("w"):
-                s = get_writer_for_driver(driver)(path, mode, driver=driver,
-                                                  width=width, height=height,
-                                                  count=count, crs=crs,
-                                                  transform=transform,
-                                                  dtype=dtype, nodata=nodata,
-                                                  **kwargs)
-            else:
-                raise ValueError(
-                    "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
-            return s
+        # Create dataset instances and pass the given env, which will
+        # be taken over by the dataset's context manager if it is not
+        # None.
+        if mode == 'r':
+            s = DatasetReader(path, driver=driver, **kwargs)
+        elif mode == 'r+':
+            s = get_writer_for_path(path)(path, mode, driver=driver, **kwargs)
+        elif mode.startswith("w"):
+            s = get_writer_for_driver(driver)(path, mode, driver=driver,
+                                              width=width, height=height,
+                                              count=count, crs=crs,
+                                              transform=transform,
+                                              dtype=dtype, nodata=nodata,
+                                              **kwargs)
+        else:
+            raise ValueError(
+                "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
+        return s
 
 
 Band = namedtuple('Band', ['ds', 'bidx', 'dtype', 'shape'])

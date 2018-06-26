@@ -13,6 +13,7 @@ from rasterio._env import (
 from rasterio.compat import string_types, getargspec
 from rasterio.dtypes import check_dtype
 from rasterio.errors import EnvError, GDALVersionError
+from rasterio.path import parse_path
 from rasterio.transform import guard_transform
 
 
@@ -140,6 +141,7 @@ class Env(object):
         We raise EnvError if the GDAL config options
         AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are given. AWS
         credentials are handled exclusively by boto3.
+
         """
         if ('AWS_ACCESS_KEY_ID' in options or
                 'AWS_SECRET_ACCESS_KEY' in options):
@@ -177,6 +179,7 @@ class Env(object):
         Notes
         -----
         The items in kwargs will be overlaid on the default values.
+
         """
         options = Env.default_options()
         options.update(**kwargs)
@@ -358,6 +361,47 @@ def ensure_env(f):
         else:
             with Env.from_defaults():
                 return f(*args, **kwds)
+    return wrapper
+
+
+def ensure_env_credentialled(f):
+    """Ensures a config environment exists and is credentialized
+
+    Parameters
+    ----------
+    f : function
+        A function.
+
+    Returns
+    -------
+    A function wrapper.
+
+    Notes
+    -----
+    The function wrapper checks the first argument of f and
+    credentializes the environment if the first argument is a URI with
+    scheme "s3".
+
+    """
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        if local._env:
+            env_ctor = Env
+        else:
+            env_ctor = Env.from_defaults
+        with env_ctor() as wrapper_env:
+            if isinstance(args[0], str):
+                path = parse_path(args[0])
+                scheme = getattr(path, 'scheme', None)
+                if scheme == 's3':
+                    wrapper_env.credentialize()
+                    log.debug("Credentialized: {!r}".format(getenv()))
+                else:
+                    pass
+            else:
+                pass
+            return f(*args, **kwds)
+
     return wrapper
 
 
