@@ -48,7 +48,6 @@ def bounds(ctx, input, precision, indent, compact, projection, dst_crs,
     the projection parameter.
     """
     import rasterio.warp
-    logger = logging.getLogger('rio')
     dump_kwds = {'sort_keys': True}
     if indent:
         dump_kwds['indent'] = indent

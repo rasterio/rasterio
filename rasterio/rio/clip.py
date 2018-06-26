@@ -1,5 +1,7 @@
 """File translation command"""
 
+import logging
+
 import click
 from cligj import format_opt
 
@@ -8,6 +10,9 @@ from . import options
 import rasterio
 from rasterio.coords import disjoint_bounds
 from rasterio.windows import Window
+
+
+logger = logging.getLogger(__name__)
 
 
 # Geographic (default), projected, or Mercator switch.
@@ -111,13 +116,20 @@ def clip(ctx, files, output, bounds, like, driver, projection,
             height = int(out_window.height)
             width = int(out_window.width)
 
-            out_kwargs = src.meta.copy()
+            out_kwargs = src.profile
             out_kwargs.update({
                 'driver': driver,
                 'height': height,
                 'width': width,
                 'transform': src.window_transform(out_window)})
             out_kwargs.update(**creation_options)
+
+            if 'blockxsize' in out_kwargs and out_kwargs['blockxsize'] > width:
+                del out_kwargs['blockxsize']
+                logger.warn("Blockxsize removed from creation options to accomodate small output width")
+            if 'blockysize' in out_kwargs and out_kwargs['blockysize'] > height:
+                del out_kwargs['blockysize']
+                logger.warn("Blockysize removed from creation options to accomodate small output height")
 
             with rasterio.open(output, 'w', **out_kwargs) as out:
                 out.write(src.read(window=out_window,

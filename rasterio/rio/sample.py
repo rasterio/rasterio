@@ -52,7 +52,7 @@ def sample(ctx, files, bidx):
         [25, 29]
 
     """
-    logger = logging.getLogger('rio')
+    logger = logging.getLogger(__name__)
 
     files = list(files)
     source_path = files.pop(0)

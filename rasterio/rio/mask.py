@@ -10,7 +10,7 @@ import rasterio
 import rasterio.shutil
 from rasterio.mask import mask as mask_tool
 
-logger = logging.getLogger('rio')
+logger = logging.getLogger(__name__)
 
 
 # Mask command
@@ -111,17 +111,17 @@ def mask(
                                                  'input raster',
                                                  param=crop,
                                                  param_hint='--crop')
-                else: # pragma: no cover
+                else:  # pragma: no cover
                     raise e
 
-            meta = src.meta.copy()
-            meta.update(**creation_options)
-            meta.update({
+            profile = src.profile
+            profile.update(**creation_options)
+            profile.update({
                 'driver': driver,
                 'height': out_image.shape[1],
                 'width': out_image.shape[2],
                 'transform': out_transform
             })
 
-            with rasterio.open(output, 'w', **meta) as out:
+            with rasterio.open(output, 'w', **profile) as out:
                 out.write(out_image)
