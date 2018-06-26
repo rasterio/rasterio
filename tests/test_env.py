@@ -114,6 +114,7 @@ def test_ensure_env_decorator(gdalenv):
 
 
 def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
+    """Credentialization is ensured by wrapper"""
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
