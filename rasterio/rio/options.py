@@ -111,7 +111,6 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path = parse_path(value)
-
         if isinstance(path, UnparsedPath):
             return path.name
 
@@ -231,7 +230,7 @@ file_out_arg = click.argument(
 files_in_arg = click.argument(
     'files',
     nargs=-1,
-    type=click.Path(resolve_path=True),
+    type=click.Path(),
     required=True,
     metavar="INPUTS...",
     callback=files_in_handler)
@@ -240,7 +239,7 @@ files_in_arg = click.argument(
 files_inout_arg = click.argument(
     'files',
     nargs=-1,
-    type=click.Path(resolve_path=True),
+    type=click.Path(),
     required=True,
     metavar="INPUTS... OUTPUT",
     callback=files_inout_handler)
