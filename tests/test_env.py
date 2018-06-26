@@ -9,7 +9,7 @@ import pytest
 
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
-from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env
+from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
@@ -111,6 +111,23 @@ def test_ensure_env_decorator(gdalenv):
     def f():
         return getenv()['RASTERIO_ENV']
     assert f() is True
+
+
+def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
+    monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
+    monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
+
+    @ensure_env_credentialled
+    def f(path):
+        return getenv()
+
+    config = f('s3://foo/bar')
+    assert config['AWS_ACCESS_KEY_ID'] == 'id'
+    assert config['AWS_SECRET_ACCESS_KEY'] == 'key'
+    assert config['AWS_SESSION_TOKEN'] == 'token'
+
+    monkeypatch.undo()
 
 
 def test_no_aws_gdal_config(gdalenv):
