@@ -1062,9 +1062,6 @@ cdef class DatasetBase(object):
             value : iter
                 A sequence of ``ColorInterp.<enum>``.
             """
-
-            value = tuple(value)
-
             if self.mode == 'r':
                 raise RasterioIOError(
                     "Can only set color interpretation when dataset is "
@@ -1077,7 +1074,7 @@ cdef class DatasetBase(object):
 
             for bidx, ci in zip(self.indexes, value):
                 exc_wrap_int(
-                    GDALSetRasterColorInterpretation(self.band(bidx), ci.value))
+                    GDALSetRasterColorInterpretation(self.band(bidx), <GDALColorInterp>ci.value))
 
     def colormap(self, bidx):
         """Returns a dict containing the colormap for a band or None."""

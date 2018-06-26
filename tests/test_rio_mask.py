@@ -10,9 +10,13 @@ import pytest
 
 import rasterio
 from rasterio.crs import CRS
+from rasterio.env import GDALVersion
 from rasterio.rio.main import main_group
 
 from .conftest import requires_gdal22
+
+
+gdal_version = GDALVersion.runtime()
 
 
 def test_mask(runner, tmpdir, basic_feature, basic_image_2x2,
@@ -160,7 +164,9 @@ def test_mask_invalid_geojson(runner, tmpdir, pixelated_image_file):
     assert 'Invalid GeoJSON' in result.output
 
 
-
+@pytest.mark.xfail(
+    gdal_version.at_least('2.3'),
+    reason="Test only applicable to GDAL < 2.3")
 @requires_gdal22(
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
@@ -173,7 +179,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
     outfilename = str(tmpdir.join('pixelated_image.tif'))
     kwargs = {
         "crs": CRS({'init': 'epsg:4326'}),
-        "transform": affine.Affine(1, 0, 0, 0, -1, 0),
+        "transform": affine.Affine(1.0, 0, 0, 0, -1.0, 0),
         "count": 1,
         "dtype": rasterio.uint8,
         "driver": "GTiff",
@@ -192,6 +198,7 @@ def test_mask_crop(runner, tmpdir, basic_feature, pixelated_image):
         main_group,
         ['mask', outfilename, output, '--crop', '--geojson-mask', '-'],
         input=json.dumps(basic_feature))
+
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:

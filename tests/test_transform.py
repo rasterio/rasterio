@@ -2,8 +2,12 @@ from affine import Affine
 import pytest
 import rasterio
 from rasterio import transform
+from rasterio.env import GDALVersion
 from rasterio.transform import xy, rowcol
 from rasterio.windows import Window
+
+
+gdal_version = GDALVersion.runtime()
 
 
 def test_window_transform():
@@ -78,6 +82,9 @@ def test_affine_roundtrip(tmpdir):
         assert out.transform == out_affine
 
 
+@pytest.mark.skipif(
+    gdal_version.at_least('2.3'),
+    reason="Test only applicable to GDAL < 2.3")
 def test_affine_identity(tmpdir):
     """
     Setting a transform with absolute values equivalent to Affine.identity()
