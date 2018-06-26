@@ -141,6 +141,7 @@ class Env(object):
         We raise EnvError if the GDAL config options
         AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are given. AWS
         credentials are handled exclusively by boto3.
+
         """
         if ('AWS_ACCESS_KEY_ID' in options or
                 'AWS_SECRET_ACCESS_KEY' in options):
@@ -178,6 +179,7 @@ class Env(object):
         Notes
         -----
         The items in kwargs will be overlaid on the default values.
+
         """
         options = Env.default_options()
         options.update(**kwargs)
@@ -370,10 +372,15 @@ def ensure_env_credentialled(f):
     f : function
         A function.
 
+    Returns
+    -------
+    A function wrapper.
+
     Notes
     -----
-    Checks the first argument of f and credentializes if it is a URI
-    with scheme "s3".
+    The function wrapper checks the first argument of f and
+    credentializes the environment if the first argument is a URI with
+    scheme "s3".
 
     """
     @wraps(f)
