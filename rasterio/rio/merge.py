@@ -2,7 +2,7 @@
 
 
 import click
-from cligj import files_inout_arg, format_opt
+from cligj import format_opt
 
 import rasterio
 from rasterio.rio import options
@@ -10,7 +10,7 @@ from rasterio.rio.helpers import resolve_inout
 
 
 @click.command(short_help="Merge a stack of raster datasets.")
-@files_inout_arg
+@options.files_inout_arg
 @options.output_opt
 @format_opt
 @options.bounds_opt

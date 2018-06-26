@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Mask command
 @click.command(short_help='Mask in raster using features.')
-@cligj.files_inout_arg
+@options.files_inout_arg
 @options.output_opt
 @click.option('-j', '--geojson-mask', 'geojson_mask',
               type=click.Path(), default=None,

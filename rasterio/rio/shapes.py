@@ -23,7 +23,8 @@ files_inout_arg = click.argument(
     'files',
     nargs=-1,
     type=click.Path(resolve_path=True),
-    metavar="INPUTS... OUTPUT")
+    metavar="INPUTS... OUTPUT",
+    callback=options.files_inout_handler)
 
 all_touched_opt = click.option(
     '-a', '--all', '--all_touched', 'all_touched',

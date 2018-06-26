@@ -28,7 +28,8 @@ files_inout_arg = click.argument(
     'files',
     nargs=-1,
     type=click.Path(resolve_path=True),
-    metavar="INPUTS... OUTPUT")
+    metavar="INPUTS... OUTPUT",
+    callback=options.files_inout_handler)
 
 
 @click.command(short_help='Rasterize features.')

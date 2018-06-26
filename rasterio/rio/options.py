@@ -43,10 +43,7 @@ Registry of common rio CLI options.  See cligj for more options.
 --vfs: virtual file system.
 """
 
-
-# TODO: move file_in_arg and file_out_arg to cligj
-
-
+import logging
 import os
 import re
 
@@ -55,6 +52,9 @@ import click
 import rasterio
 import rasterio.shutil
 from rasterio.path import parse_path, ParsedPath, UnparsedPath
+
+
+logger = logging.getLogger(__name__)
 
 
 class IgnoreOptionMarker(object):
@@ -137,6 +137,16 @@ def file_in_handler(ctx, param, value):
         raise click.BadParameter("{} is not a valid input file".format(value))
 
 
+def files_in_handler(ctx, param, value):
+    """Process and validate input file names"""
+    return tuple(file_in_handler(ctx, param, item) for item in value)
+
+
+def files_inout_handler(ctx, param, value):
+    """Process and validate input file names"""
+    return tuple(file_in_handler(ctx, param, item) for item in value[:-1]) + tuple(value[-1:])
+
+
 def from_like_context(ctx, param, value):
     """Return the value for an option from the context if the option
     or `--all` is given, else return None."""
@@ -216,6 +226,24 @@ file_in_arg = click.argument('INPUT', callback=file_in_handler)
 file_out_arg = click.argument(
     'OUTPUT',
     type=click.Path(resolve_path=True))
+
+# Multiple input files.
+files_in_arg = click.argument(
+    'files',
+    nargs=-1,
+    type=click.Path(resolve_path=True),
+    required=True,
+    metavar="INPUTS...",
+    callback=files_in_handler)
+
+# Multiple files, last of which is an output file.
+files_inout_arg = click.argument(
+    'files',
+    nargs=-1,
+    type=click.Path(resolve_path=True),
+    required=True,
+    metavar="INPUTS... OUTPUT",
+    callback=files_inout_handler)
 
 bidx_opt = click.option(
     '-b', '--bidx',

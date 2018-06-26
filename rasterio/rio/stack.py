@@ -5,7 +5,7 @@ import collections
 import logging
 
 import click
-from cligj import files_inout_arg, format_opt
+from cligj import format_opt
 
 import rasterio
 from rasterio.compat import zip_longest
@@ -14,7 +14,7 @@ from rasterio.rio.helpers import resolve_inout
 
 
 @click.command(short_help="Stack a number of bands into a multiband dataset.")
-@files_inout_arg
+@options.files_inout_arg
 @options.output_opt
 @format_opt
 @options.bidx_magic_opt

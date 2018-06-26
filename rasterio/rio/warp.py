@@ -5,7 +5,7 @@ from math import ceil, log
 import warnings
 
 import click
-from cligj import files_inout_arg, format_opt
+from cligj import format_opt
 
 import rasterio
 from rasterio.crs import CRS
@@ -27,7 +27,7 @@ MAX_OUTPUT_HEIGHT = 100000
 
 
 @click.command(short_help='Warp a raster dataset.')
-@files_inout_arg
+@options.files_inout_arg
 @options.output_opt
 @format_opt
 @click.option(
@@ -264,7 +264,6 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
             if target_aligned_pixels:
                 dst_transform, dst_width, dst_height = aligned_target(dst_transform, dst_width, dst_height, res)
-                import pdb; pdb.set_trace()
 
             # If src_nodata is not None, update the dst metadata NODATA
             # value to src_nodata (will be overridden by dst_nodata if it is not None

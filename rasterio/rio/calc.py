@@ -4,7 +4,6 @@ from collections import OrderedDict
 from distutils.version import LooseVersion
 
 import click
-from cligj import files_inout_arg
 import snuggs
 
 import rasterio
@@ -32,7 +31,7 @@ def read_array(ix, subix=None, dtype=None):
 
 @click.command(short_help="Raster data calculator.")
 @click.argument('command')
-@files_inout_arg
+@options.files_inout_arg
 @options.output_opt
 @click.option('--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
