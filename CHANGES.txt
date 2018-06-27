@@ -1,13 +1,16 @@
 Changes
 =======
 
-Next
-------------------
+1.0rc1 (2018-06-27)
+-------------------
 
 Bug fixes:
 
 - Internal Env() in `rasterio.open` has been replaced with an environment
-  ensuring decorator (#1009).
+  ensuring decorator (#1009). The same decorator ensures that credentials are
+  obtained when functions from `rasterio.shutils` are called.
+- Input file arguments for all CLI commands are now parsed and validated in
+  a uniform manner (#999).
 - Local loggers have all been changed to `getLogger(__name__)` in rasterio.rio
   module (#1328).
 
