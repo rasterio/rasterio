@@ -1,6 +1,19 @@
 Changes
 =======
 
+1.0rc2 (2018-06-29)
+-------------------
+
+Deprecation:
+
+- The rasterio.vfs module has been removed.
+- Reading array data or masks from datasets opened in "w" mode is prohibited.
+- Property set_* methods of datasets have been removed. The appropriate
+  properties should be used instead. For example, ``dataset.crs = "EPSG:4326"``
+  instead of ``dataset.set_crs("EPSG:4326")``.
+- Rasterio ignores creation options saved in the metadata of datasets
+  by Rasterio versions < 1.0b1.
+
 1.0rc1 (2018-06-27)
 -------------------
 

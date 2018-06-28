@@ -3,7 +3,6 @@ import warnings
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioDeprecationWarning
 from rasterio.profiles import Profile, DefaultGTiffProfile
 from rasterio.profiles import default_gtiff_profile
 
@@ -109,26 +108,3 @@ def test_profile_affine_set():
     profile['transform'] = 'foo'
     with pytest.raises(TypeError):
         profile['affine'] = 'bar'
-
-
-def test_creation_kwds_deprecation():
-    """Rasterio creation kwds metadata is deprecated"""
-    with pytest.warns(RasterioDeprecationWarning):
-        with rasterio.open('tests/data/alpha.tif') as src:
-            src.profile
-
-
-def test_creation_kwds_ignore(monkeypatch):
-    """Successfully opt in to metadata blackout"""
-    monkeypatch.setenv('RIO_IGNORE_CREATION_KWDS', 'TRUE')
-    with pytest.warns(None) as record:
-        with rasterio.open('tests/data/alpha.tif') as src:
-            src.profile
-        assert len(record) == 0
-
-
-def test_kwds_deprecation():
-    """kwds property is deprecated"""
-    with pytest.warns(RasterioDeprecationWarning):
-        with rasterio.open('tests/data/alpha.tif') as src:
-            assert src.kwds['tiled']
