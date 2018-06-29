@@ -742,14 +742,14 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._read = False
 
         # The various `dst_*` parameters are deprecated and will be
-        # removed after 1.0. In the next section of code, we warn
+        # removed in 1.1. In the next section of code, we warn
         # about the deprecation and treat `dst_parameter` as an
         # alias for `parameter`.
 
         # Deprecate dst_nodata.
         if dst_nodata is not None:
             warnings.warn(
-                "dst_nodata will be removed after 1.0, use nodata",
+                "dst_nodata will be removed in 1.1, use nodata",
                 RasterioDeprecationWarning)
         if nodata is None:
             nodata = dst_nodata
@@ -757,7 +757,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # Deprecate dst_width.
         if dst_width is not None:
             warnings.warn(
-                "dst_width will be removed after 1.0, use width",
+                "dst_width will be removed in 1.1, use width",
                 RasterioDeprecationWarning)
         if width is None:
             width = dst_width
@@ -765,7 +765,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # Deprecate dst_height.
         if dst_height is not None:
             warnings.warn(
-                "dst_height will be removed after 1.0, use height",
+                "dst_height will be removed in 1.1, use height",
                 RasterioDeprecationWarning)
         if height is None:
             height = dst_height
@@ -773,7 +773,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # Deprecate dst_transform.
         if dst_transform is not None:
             warnings.warn(
-                "dst_transform will be removed after 1.0, use transform",
+                "dst_transform will be removed in 1.1, use transform",
                 RasterioDeprecationWarning)
         if transform is None:
             transform = dst_transform
@@ -781,7 +781,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # Deprecate dst_crs.
         if dst_crs is not None:
             warnings.warn(
-                "dst_crs will be removed after 1.0, use crs",
+                "dst_crs will be removed in 1.1, use crs",
                 RasterioDeprecationWarning)
         if crs is None:
             crs = dst_crs if dst_crs is not None else src_dataset.crs
@@ -976,10 +976,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         if dst_alpha and len(self._nodatavals) == 3:
             self._nodatavals[dst_alpha - 1] = None
-
-    def get_crs(self):
-        warnings.warn("get_crs() will be removed in 1.0", RasterioDeprecationWarning)
-        return self.crs
 
     @property
     def crs(self):

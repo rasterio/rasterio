@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioDeprecationWarning
+from rasterio.errors import UnsupportedOperation
 from rasterio.profiles import DefaultGTiffProfile
 
 
@@ -25,7 +25,7 @@ def test_read_wplus_mode(tmpdir):
 
 
 def test_read_w_mode_warning(tmpdir):
-    """Get a deprecation warning when reading from dataset opened in "w" mode"""
+    """Get an UnsupportedOperation exception reading from dataset opened in "w" mode"""
     path = tmpdir.join('test.tif')
     profile = DefaultGTiffProfile(count=1, width=300, height=300)
 
@@ -33,5 +33,5 @@ def test_read_w_mode_warning(tmpdir):
 
         dst.write(255 * np.ones((1, 300, 300), dtype='uint8'))
 
-        with pytest.warns(RasterioDeprecationWarning):
+        with pytest.raises(UnsupportedOperation):
             assert (dst.read() == 255).all()

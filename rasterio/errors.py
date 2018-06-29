@@ -94,3 +94,7 @@ class BandOverviewError(UserWarning):
 
 class WarpOptionsError(RasterioError):
     """Raised when options for a warp operation are invalid"""
+
+
+class UnsupportedOperation(RasterioError):
+    """Raised when reading from a file opened in 'w' mode"""

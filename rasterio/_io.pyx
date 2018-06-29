@@ -24,7 +24,7 @@ from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    RasterioDeprecationWarning
+    UnsupportedOperation
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
@@ -204,13 +204,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
         cdef GDALRasterBandH band = NULL
 
-        # Reading from a dataset opened in "w" will be deprecated.
         if self.mode == "w":
-            warnings.warn(
-                "Reading from datasets opened in 'w' mode will not be allowed "
-                "in the next version. Use 'w+' mode instead.",
-                RasterioDeprecationWarning
-            )
+            raise UnsupportedOperation("not readable")
 
         return2d = False
         if indexes is None:
@@ -474,13 +469,8 @@ cdef class DatasetReaderBase(DatasetBase):
         preferentially used by callers.
         """
 
-        # Reading from a dataset opened in "w" will be deprecated.
         if self.mode == "w":
-            warnings.warn(
-                "Reading from datasets opened in 'w' mode will not be allowed "
-                "in the next version. Use 'w+' mode instead.",
-                RasterioDeprecationWarning
-            )
+            raise UnsupportedOperation("not readable")
 
         return2d = False
         if indexes is None:
@@ -1225,13 +1215,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         self._crs = crs
         log.debug("Self CRS: %r", self._crs)
 
-    def set_crs(self, crs):
-        warnings.warn(
-            "This method will be removed in version 1.0",
-            RasterioDeprecationWarning
-        )
-        self._set_crs(crs)
-
     def _set_all_descriptions(self, value):
         """Supports the descriptions property setter"""
         # require that we have a description for every band.
@@ -1285,13 +1268,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if success:
                 raise ValueError("Invalid nodata value: %r", val)
         self._nodatavals = vals
-
-    def set_nodatavals(self, vals):
-        warnings.warn(
-            "This method will be deprecated in version 1.0",
-            RasterioDeprecationWarning
-        )
-        self._set_nodatavals(vals)
 
     def write(self, src, indexes=None, window=None):
         """Write the src array into indexed bands of the dataset.
@@ -1444,13 +1420,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Invalidate cached descriptions.
         self._descriptions = ()
 
-    def set_description(self, bidx, val):
-        warnings.warn(
-            "This method will be removed in version 1.0",
-            RasterioDeprecationWarning
-        )
-        self.set_band_description(bidx, val)
-
     def set_band_unit(self, bidx, value):
         """Sets the unit of measure of a dataset band.
 
@@ -1473,13 +1442,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         GDALSetRasterUnitType(hband, (value or '').encode('utf-8'))
         # Invalidate cached units.
         self._units = ()
-
-    def set_units(self, bidx, val):
-        warnings.warn(
-            "This method will be removed in version 1.0",
-            RasterioDeprecationWarning
-        )
-        self.set_band_unit(bidx, val)
 
     def write_colormap(self, bidx, colormap):
         """Write a colormap for a band to the dataset."""
@@ -1634,13 +1596,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Invalidate cached value.
         self._gcps = None
-
-    def set_gcps(self, gcps, crs=None):
-        warnings.warn(
-            "This method will be deprecated in version 1.0",
-            RasterioDeprecationWarning
-        )
-        self._set_gcps(gcps, crs=crs)
 
 
 cdef class InMemoryRaster:
