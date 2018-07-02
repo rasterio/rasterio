@@ -481,11 +481,12 @@ def _reproject(
 
         log.debug("Wrote array to temp output dataset")
 
-        if hasattr(destination, "fill_value"):
-            # destination is a masked array
-            dst_nodata = destination.fill_value
-        elif src_nodata is not None:
-            dst_nodata = src_nodata
+        if dst_nodata is None:
+            if hasattr(destination, "fill_value"):
+                # destination is a masked array
+                dst_nodata = destination.fill_value
+            elif src_nodata is not None:
+                dst_nodata = src_nodata
 
     elif isinstance(destination, tuple):
         udr, dst_bidx, _, _ = destination

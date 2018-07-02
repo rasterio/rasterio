@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.0rc3 (2018-07-03)
+-------------------
+
+Bug fixes:
+
+- A regression in rasterio.warp.reproject has been reported (#1395), confirmed,
+  and fixed.
+
 1.0rc2 (2018-06-29)
 -------------------
 

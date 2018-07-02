@@ -1208,3 +1208,26 @@ def test_issue1056():
             dst_transform=DST_TRANSFORM,
             dst_crs=dst_crs,
             resampling=Resampling.nearest)
+
+
+def test_reproject_dst_nodata():
+    """Affirm resolution of issue #1395"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        source = src.read(1)
+
+    dst_crs = {'init': 'EPSG:3857'}
+    out = np.empty(src.shape, dtype=np.float32)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs=dst_crs,
+        src_nodata=0,
+        dst_nodata=np.nan,
+        resampling=Resampling.nearest)
+
+    assert (out > 0).sum() == 438113
+    assert out[0, 0] != 0
+    assert np.isnan(out[0, 0])
