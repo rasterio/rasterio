@@ -111,7 +111,6 @@ class _CRS(UserDict):
             _safe_osr_release(osr)
         return None
 
-
     @property
     def wkt(self):
         """An OGC WKT representation of the CRS
