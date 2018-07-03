@@ -14,6 +14,19 @@ The BSD license (see LICENSE.txt) applies to all contributions.
 Issue Conventions
 -----------------
 
+The Rasterio issue tracker is for actionable issues.
+
+Questions about installation, distribution, and usage should be taken to 
+the project's `general discussion group
+<https://rasterio.groups.io/g/main>`__. Opened issues which fall into one
+of these three categories may be perfunctorily closed.
+
+Questions about development of Rasterio, brainstorming, requests for comment,
+and not-yet-actionable proposals are welcome in the project's 
+`developers discussion group <https://rasterio.groups.io/g/dev>`__. Issues
+opened in Rasterio's GitHub repo which haven't been socialized there may be
+perfunctorily closed.
+
 Rasterio is a relatively new project and highly active. We have bugs, both
 known and unknown.
 
@@ -30,8 +43,6 @@ Please provide these details as well as tracebacks and relevant logs.  When
 using the ``$ rio`` CLI logging can be enabled with ``$ rio -v`` and verbosity
 can be increased with ``-vvv``.  Short scripts and datasets demonstrating the
 issue are especially helpful!
-
-Rasterio is not at 1.0 yet and issues proposing new features are welcome.
 
 Design Principles
 -----------------
