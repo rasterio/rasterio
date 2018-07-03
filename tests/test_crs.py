@@ -222,14 +222,14 @@ def test_epsg_code():
 
 
 def test_epsg():
-    assert CRS({'init': 'EPSG:4326'}).epsg == '4326'
-    assert CRS.from_string('+proj=longlat +datum=WGS84 +no_defs').epsg == '4326'
+    assert CRS({'init': 'EPSG:4326'}).to_epsg() == 4326
+    assert CRS.from_string('+proj=longlat +datum=WGS84 +no_defs').to_epsg() == 4326
 
 
 def test_epsg__no_code_available():
     lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc '
                               '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    assert lcc_crs.epsg is None
+    assert lcc_crs.to_epsg() is None
 
 
 def test_crs_OSR_equivalence():
