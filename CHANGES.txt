@@ -1,16 +1,11 @@
 Changes
 =======
 
-
-1.0rc4 (?)
+1.0rc3 (2018-07-03)
 -------------------
 New features:
 
 - CRS.epsg property added to determine the epsg code from the projection if possible (#1288).
-
-
-1.0rc3 (2018-07-03)
--------------------
 
 Bug fixes:
 
