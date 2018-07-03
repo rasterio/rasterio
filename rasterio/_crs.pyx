@@ -111,6 +111,24 @@ class _CRS(UserDict):
             CPLFree(srcwkt)
             _safe_osr_release(osr)
 
+    def to_epsg(self):
+        """The epsg code of the CRS
+
+        Returns
+        -------
+        int
+        """
+        cdef OGRSpatialReferenceH osr = NULL
+
+        try:
+            osr = osr_from_crs(self)
+            if OSRAutoIdentifyEPSG(osr) == 0:
+                epsg_code = OSRGetAuthorityCode(osr, NULL)
+                return int(epsg_code.decode('utf-8'))
+        finally:
+            _safe_osr_release(osr)
+        return None
+
     @classmethod
     def from_epsg(cls, code):
         """Make a CRS from an EPSG code
