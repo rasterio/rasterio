@@ -93,6 +93,26 @@ class _CRS(UserDict):
             _safe_osr_release(osr_crs2)
 
     @property
+    def epsg(self):
+        """The epsg code of the CRS
+
+        Returns
+        -------
+        str
+        """
+        cdef OGRSpatialReferenceH osr = NULL
+
+        try:
+            osr = osr_from_crs(self)
+            if OSRAutoIdentifyEPSG(osr) == 0:
+                epsg_code = OSRGetAuthorityCode(osr, NULL)
+                return epsg_code.decode('utf-8')
+        finally:
+            _safe_osr_release(osr)
+        return None
+
+
+    @property
     def wkt(self):
         """An OGC WKT representation of the CRS
 
