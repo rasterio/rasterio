@@ -140,7 +140,7 @@ cdef GDALWarpOptions * create_warp_options(
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
 
     if warp_mem_limit > 0:
-        psWOptions.dfWarpMemoryLimit = <double>(warp_mem_limit * 1024 * 1024)
+        psWOptions.dfWarpMemoryLimit = <double>warp_mem_limit * 1024 * 1024
         log.debug("Warp Memory Limit set: {!r}".format(warp_mem_limit))
 
     band_count = src_count

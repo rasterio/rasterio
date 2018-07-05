@@ -1231,3 +1231,19 @@ def test_reproject_dst_nodata():
     assert (out > 0).sum() == 438113
     assert out[0, 0] != 0
     assert np.isnan(out[0, 0])
+
+
+def test_issue1401():
+    """The warp_mem_limit keyword argument is in effect"""
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        dst_crs = {'init': 'EPSG:3857'}
+        out = np.zeros(src.shape, dtype=np.uint8)
+        reproject(
+            rasterio.band(src, 2),
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest,
+            warp_mem_limit=4000)

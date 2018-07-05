@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.0rc4 (2018-07-05)
+-------------------
+
+- An integer overflow when multiplying the warp memory limit (#1401) has been
+  fixed.
+
 1.0rc3 (2018-07-03)
 -------------------
 
