@@ -1,7 +1,7 @@
 name: _rasterio
 channels:
 - conda-forge
-- conda-forge/label/dev
+- defaults
 dependencies:
 - python>=3.5
 - cython
