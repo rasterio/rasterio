@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.0rc4 (2018-07-09)
+-------------------
+
+- C source files are now generated using Cython 0.28.3, which gives us support
+  for Python 3.7 (#1404, #1405).
+
 1.0rc4 (2018-07-05)
 -------------------
 
