@@ -68,7 +68,7 @@ and 50 pixels to the right of the upper left corner of the GeoTIFF.
             '/tmp/example.tif', 'w',
             driver='GTiff', width=500, height=300, count=1,
             dtype=image.dtype) as dst:
-        dst.write(image, window=Window(50, 30, 250, 150, indexes=1)
+        dst.write(image, window=Window(50, 30, 250, 150), indexes=1)
 
 The result:
 
