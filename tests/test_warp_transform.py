@@ -16,6 +16,27 @@ def test_gcps_bounds_exclusivity():
             'epsg:4326', 'epsg:3857', width=1, height=1, left=1.0, gcps=[1])
 
 
+def test_resolution_dimensions_exclusivity():
+    """resolution and dimensions parameters are mutually exclusive"""
+    with pytest.raises(ValueError):
+        calculate_default_transform(
+            'epsg:4326', 'epsg:3857', width=1, height=1, gcps=[1],
+            resolution=1, dst_width=1, dst_height=1)
+
+
+def test_dimensions_missing_params():
+    """dst_width and dst_height must be specified together"""
+    with pytest.raises(ValueError):
+        calculate_default_transform(
+            'epsg:4326', 'epsg:3857', width=1, height=1, gcps=[1],
+            resolution=1, dst_width=1, dst_height=None)
+
+    with pytest.raises(ValueError):
+        calculate_default_transform(
+            'epsg:4326', 'epsg:3857', width=1, height=1, gcps=[1],
+            resolution=1, dst_width=None, dst_height=1)
+
+
 def test_one_of_gcps_bounds():
     """at least one of gcps or bounds parameters must be provided"""
     with pytest.raises(ValueError):
