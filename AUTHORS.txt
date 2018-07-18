@@ -36,7 +36,7 @@ Authors
 * Martin Kaesberger
 * ngrue
 * Nat Wilson
-* Juan Luis
+* Juan Luis Cano
 * Gregory Raevski
 * Tyler Erickson
 * Jeffrey Gerard
