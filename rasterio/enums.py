@@ -65,6 +65,7 @@ class Compression(Enum):
     lzma = 'LZMA'
     none = 'NONE'
     zstd = 'ZSTD'
+    lerc = 'LERC'
 
 
 class Interleaving(Enum):
