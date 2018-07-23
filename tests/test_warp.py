@@ -1247,3 +1247,24 @@ def test_issue1401():
             dst_crs=dst_crs,
             resampling=Resampling.nearest,
             warp_mem_limit=4000)
+
+
+def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
+    """Materialization of external mask succeeds"""
+
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+
+        nrows, ncols = src.shape
+
+        dst_arr = np.zeros((src.count + 1, nrows, ncols), dtype=np.uint8)
+
+        reproject(
+            rasterio.band(src, src.indexes),
+            dst_arr,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=DST_TRANSFORM,
+            dst_crs={'init': 'EPSG:3857'},
+            dst_alpha=4)
+
+        assert dst_arr[3].any()

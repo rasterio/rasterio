@@ -291,7 +291,7 @@ def reproject(source, destination, src_transform=None, gcps=None,
     _reproject(
         source, destination, src_transform=src_transform, gcps=gcps,
         src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
-        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpa=dst_alpha,
+        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpha=dst_alpha,
         src_alpha=src_alpha, resampling=resampling,
         init_dest_nodata=init_dest_nodata, num_threads=num_threads,
         warp_mem_limit=warp_mem_limit, **kwargs)
