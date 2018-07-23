@@ -146,3 +146,9 @@ def test_gcps_calculate_transform():
         'epsg:3857', 'epsg:4326', width=800, height=800, gcps=src_gcps)
     assert width == 1087
     assert height == 895
+
+
+def test_transform_bounds_identity():
+    """Confirm fix of #1411"""
+    bounds = (12978395.906596646, 146759.09430753812, 12983287.876406897, 151651.06411778927)
+    assert transform_bounds("+init=epsg:3857", "+init=epsg:3857", *bounds) == bounds

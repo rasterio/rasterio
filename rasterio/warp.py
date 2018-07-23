@@ -154,13 +154,13 @@ def transform_bounds(
         for x in (left, right):
             in_xs.extend([x] * (densify_pts + 2))
             in_ys.extend(
-                bottom + np.arange(0, densify_pts + 2, dtype=np.float32) *
+                bottom + np.arange(0, densify_pts + 2, dtype=np.float64) *
                 ((top - bottom) * densify_factor)
             )
 
         for y in (bottom, top):
             in_xs.extend(
-                left + np.arange(1, densify_pts + 1, dtype=np.float32) *
+                left + np.arange(1, densify_pts + 1, dtype=np.float64) *
                 ((right - left) * densify_factor)
             )
             in_ys.extend([y] * densify_pts)
