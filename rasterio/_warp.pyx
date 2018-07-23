@@ -437,9 +437,6 @@ def _reproject(
         else:
             dst_bidx = src_bidx
 
-        if destination.shape[0] != src_count:
-            raise ValueError("Destination's shape is invalid")
-
         try:
             driver = exc_wrap_pointer(GDALGetDriverByName("MEM"))
         except:
@@ -448,13 +445,21 @@ def _reproject(
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
-        _, rows, cols = destination.shape
+        count, rows, cols = destination.shape
 
         datasetname = str(uuid.uuid4()).encode('utf-8')
         dst_dataset = exc_wrap_pointer(
-            GDALCreate(driver, <const char *>datasetname, cols, rows,
-                src_count,
+            GDALCreate(driver, <const char *>datasetname, cols, rows, count,
                 dtypes.dtype_rev[np.dtype(destination.dtype).name], NULL))
+
+        if dst_alpha:
+            for i in range(destination.shape[0]):
+                try:
+                    delete_nodata_value(GDALGetRasterBand(dst_dataset, i+1))
+                except NotImplementedError as exc:
+                    log.warn(str(exc))
+
+            GDALSetRasterColorInterpretation(GDALGetRasterBand(dst_dataset, dst_alpha), <GDALColorInterp>6)
 
         GDALSetDescription(
             dst_dataset, "Temporary destination dataset for _reproject()")
