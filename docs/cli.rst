@@ -648,6 +648,12 @@ Or provide output bounds (in source crs) and resolution:
 
     $ rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 22 -76 24 --res 0.1
 
+Previous command in case of south-up image, ``--`` escapes the next ``-``:
+
+.. code-block:: console
+
+    $ rio warp input.tif output.tif --dst-crs EPSG:4326 --bounds -78 22 -76 24 --res 0.1 -- -0.1
+
 Other options are available, see:
 
 .. code-block:: console
