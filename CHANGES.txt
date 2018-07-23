@@ -4,11 +4,15 @@ Changes
 1.0.1 (2018-07-23)
 ------------------
 
+Bug fixes:
+
 - Bounding envelopes are densified at higher precision in transform_bounds to
   fix #1411.
 - Add LERC compression to enums.Compression (#1412).
 - The reproject() function now passes dst_alpha properly to _reproject(), which
   unlocks materialization of warp destination alpha band masks (#1417).
+- The --dimensions and --src-bounds options of rio-warp can be used together
+  as expected (#1418).
 
 1.0.0 (2018-07-12)
 ------------------
