@@ -154,13 +154,13 @@ def transform_bounds(
         for x in (left, right):
             in_xs.extend([x] * (densify_pts + 2))
             in_ys.extend(
-                bottom + np.arange(0, densify_pts + 2, dtype=np.float32) *
+                bottom + np.arange(0, densify_pts + 2, dtype=np.float64) *
                 ((top - bottom) * densify_factor)
             )
 
         for y in (bottom, top):
             in_xs.extend(
-                left + np.arange(1, densify_pts + 1, dtype=np.float32) *
+                left + np.arange(1, densify_pts + 1, dtype=np.float64) *
                 ((right - left) * densify_factor)
             )
             in_ys.extend([y] * densify_pts)
@@ -291,7 +291,7 @@ def reproject(source, destination, src_transform=None, gcps=None,
     _reproject(
         source, destination, src_transform=src_transform, gcps=gcps,
         src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
-        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpa=dst_alpha,
+        dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpha=dst_alpha,
         src_alpha=src_alpha, resampling=resampling,
         init_dest_nodata=init_dest_nodata, num_threads=num_threads,
         warp_mem_limit=warp_mem_limit, **kwargs)
