@@ -177,9 +177,10 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     # Calculate resolution appropriate for dimensions
                     # in target.
                     dst_width, dst_height = dimensions
+                    bounds = src_bounds or src.bounds
                     try:
                         xmin, ymin, xmax, ymax = transform_bounds(
-                            src.crs, dst_crs, *src.bounds)
+                            src.crs, dst_crs, *bounds)
                     except CRSError as err:
                         raise click.BadParameter(
                             str(err), param='dst_crs', param_hint='dst_crs')

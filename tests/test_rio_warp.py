@@ -348,6 +348,26 @@ def test_warp_reproject_src_bounds_res(runner, tmpdir):
         assert output.height == 14
 
 
+def test_warp_reproject_src_bounds_dimensions(runner, tmpdir):
+    """--src-bounds option works with dimensions"""
+    srcname = 'tests/data/shade.tif'
+    outputname = str(tmpdir.join('test.tif'))
+    out_bounds = [-11850000, 4810000, -11849000, 4812000]
+    result = runner.invoke(
+        main_group, [
+            'warp', srcname, outputname, '--dst-crs', 'EPSG:4326',
+            '--dimensions', 9, 14, '--src-bounds'] + out_bounds)
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+
+    with rasterio.open(outputname) as output:
+        assert output.crs == {'init': 'epsg:4326'}
+        assert np.allclose(output.bounds[:],
+                           [-106.45036, 39.6138, -106.44136, 39.6278])
+        assert round(output.transform.a, 4) == 0.001
+        assert round(-output.transform.e, 4) == 0.001
+
+
 def test_warp_reproject_dst_bounds(runner, tmpdir):
     """--bounds option works."""
     srcname = 'tests/data/shade.tif'
