@@ -342,7 +342,7 @@ def aligned_target(transform, width, height, resolution):
 @ensure_env
 def calculate_default_transform(
         src_crs, dst_crs, width, height, left=None, bottom=None, right=None,
-        top=None, gcps=None, resolution=None):
+        top=None, gcps=None, resolution=None, dst_width=None, dst_height=None):
     """Output dimensions and transform for a reprojection.
 
     Source and destination coordinate reference systems and output
@@ -374,6 +374,9 @@ def calculate_default_transform(
     resolution: tuple (x resolution, y resolution) or float, optional
         Target resolution, in units of target coordinate reference
         system.
+    dst_width, dst_height: int, optional
+        Output file size in pixels and lines. Cannot be used together
+        with resolution.
 
     Returns
     -------
@@ -398,6 +401,18 @@ def calculate_default_transform(
     if any(x is None for x in (left, bottom, right, top)) and not gcps:
         raise ValueError("Either four bounding values or ground control points"
                          "must be specified")
+    
+    if (dst_width is None) != (dst_height is None):
+        raise ValueError("Either dst_width and dst_height must be specified "
+                         "or none of them.")
+
+    if all(x is not None for x in (dst_width, dst_height)):
+        dimensions = (dst_width, dst_height)
+    else:
+        dimensions = None
+
+    if resolution and dimensions:
+        raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
         src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
@@ -426,5 +441,15 @@ def calculate_default_transform(
 
         dst_width = ceil(dst_width * xratio)
         dst_height = ceil(dst_height * yratio)
+    
+    if dimensions:
+        xratio = dst_width / dimensions[0]
+        yratio = dst_height / dimensions[1]
+
+        dst_width = dimensions[0]
+        dst_height = dimensions[1]
+        
+        dst_affine = Affine(dst_affine.a * xratio, dst_affine.b, dst_affine.c,
+                            dst_affine.d, dst_affine.e * yratio, dst_affine.f)
 
     return dst_affine, dst_width, dst_height
