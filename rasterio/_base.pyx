@@ -788,7 +788,18 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             a, b, c, d, e, f, _, _, _ = self.transform
-            return BoundingBox(c, f + e * self.height, c + a * self.width, f)
+            width = self.width
+            height = self.height
+            if b == d == 0:
+                return BoundingBox(c, f + e * height, c + a * width, f)
+            else:
+                c0x, c0y = c, f
+                c1x, c1y = self.transform * (0, height)
+                c2x, c2y = self.transform * (width, height)
+                c3x, c3y = self.transform * (width, 0)
+                xs = (c0x, c1x, c2x, c3x)
+                ys = (c0y, c1y, c2y, c3y)
+                return BoundingBox(min(xs), min(ys), max(xs), max(ys))
 
     property res:
         """Returns the (width, height) of pixels in the units of its
