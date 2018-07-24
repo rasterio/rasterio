@@ -231,6 +231,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                 # Same projection, different dimensions, calculate resolution.
                 dst_crs = src.crs
                 dst_width, dst_height = dimensions
+                l, b, r, t = src_bounds or (l, b, r, t)
                 dst_transform = Affine(
                     (r - l) / float(dst_width),
                     0, l, 0,
