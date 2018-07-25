@@ -1,4 +1,5 @@
 import rasterio
+import numpy as np
 
 def test_bounds():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -13,3 +14,10 @@ def test_ul():
 def test_res():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         assert tuple(round(v, 6) for v in src.res) == (300.037927, 300.041783)
+
+def test_rotated_bounds():
+    with rasterio.open('tests/data/rotated.tif') as src:
+        assert src.res == (20.0, 10.0)
+        np.testing.assert_almost_equal(
+            src.bounds,
+            (100.0, 70.0961894323342, 348.20508075688775, 300.0))
