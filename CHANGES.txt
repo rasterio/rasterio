@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.0.2 (2018-07-27)
+------------------
+
+Bug fixes:
+
+- The output of calculate_default_transform() can be fixed to output dimensions
+  as well as to output resolution (#1409).
+- In using rio-warp, the --src-bounds option can now override the bounds of the
+  source dataset when --dimensions is used (#1419).
+- Bounds of rotated rasters are now calculated correctly (#1422).
+
 1.0.1 (2018-07-23)
 ------------------
 
