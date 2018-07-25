@@ -253,6 +253,24 @@ def test_calculate_default_transform_multiple_resolutions():
         assert height == 20
 
 
+def test_calculate_default_transform_dimensions():
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        dst_width, dst_height = (113, 103)
+        target_transform = Affine(
+            0.02108612597535966, 0.0, -78.95864996545055,
+            0.0, -0.0192823863230055, 25.550873767433984
+        )
+
+        dst_transform, width, height = calculate_default_transform(
+            src.crs, {'init': 'EPSG:4326'}, src.width, src.height,
+            *src.bounds, dst_width=dst_width, dst_height=dst_height
+        )
+
+        assert dst_transform.almost_equals(target_transform)
+        assert width == dst_width
+        assert height == dst_height
+
+
 def test_reproject_ndarray():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         source = src.read(1)
