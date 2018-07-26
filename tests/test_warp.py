@@ -1268,3 +1268,23 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
             dst_alpha=4)
 
         assert dst_arr[3].any()
+
+
+def test_issue1350():
+    """Warp bands other than 1 or All"""
+
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        dst_crs = {'init': 'EPSG:3857'}
+        out1 = np.zeros(src.shape, dtype=src.dtypes[0])
+        out2 = np.zeros(src.shape, dtype=src.dtypes[1])
+        out3 = np.zeros(src.shape, dtype=src.dtypes[2])
+
+        for i, out in enumerate([out1, out2, out3]):
+            reproject(
+                rasterio.band(src, i+1),
+                out,
+                dst_transform=DST_TRANSFORM,
+                dst_crs=dst_crs)
+
+        assert not (out1 == out2).all()
+        assert not (out2 == out3).all()
