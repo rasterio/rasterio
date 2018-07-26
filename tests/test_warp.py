@@ -1283,6 +1283,7 @@ def test_issue1350():
             reproject(
                 rasterio.band(src, i+1),
                 out,
+                resampling=Resampling.nearest,
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs)
 
