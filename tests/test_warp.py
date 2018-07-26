@@ -1275,17 +1275,20 @@ def test_issue1350():
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         dst_crs = {'init': 'EPSG:3857'}
-        out1 = np.zeros(src.shape, dtype=src.dtypes[0])
-        out2 = np.zeros(src.shape, dtype=src.dtypes[1])
-        out3 = np.zeros(src.shape, dtype=src.dtypes[2])
 
-        for i, out in enumerate([out1, out2, out3]):
+        reprojected = []
+
+        for dtype, idx in zip(src.dtypes, src.indexes):
+            out = np.zeros((1,) + src.shape, dtype=dtype)
+
             reproject(
-                rasterio.band(src, i+1),
+                rasterio.band(src, idx),
                 out,
                 resampling=Resampling.nearest,
                 dst_transform=DST_TRANSFORM,
                 dst_crs=dst_crs)
 
-        assert not (out1 == out2).all()
-        assert not (out2 == out3).all()
+            reprojected.append(out)
+
+        for i in range(1, len(reprojected)):
+            assert not (reprojected[0] == reprojected[i]).all()
