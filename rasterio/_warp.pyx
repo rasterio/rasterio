@@ -433,8 +433,14 @@ def _reproject(
     if dtypes.is_ndarray(destination):
         if len(destination.shape) == 2:
             destination = destination.reshape(1, *destination.shape)
-            dst_bidx = [1]
+
+        if destination.shape[0] == src_count:
+            # Output shape matches number of bands being extracted
+            dst_bidx = [i + 1 for i in range(src_count)]
         else:
+            # Assume src and dst are the same shape
+            if max(src_bidx) > destination.shape[0]:
+                raise ValueError("Invalid destination shape")
             dst_bidx = src_bidx
 
         try:
@@ -564,6 +570,11 @@ def _reproject(
     psWOptions.pTransformerArg = hTransformArg
     psWOptions.hSrcDS = src_dataset
     psWOptions.hDstDS = dst_dataset
+
+    for idx, (s, d) in enumerate(zip(src_bidx, dst_bidx)):
+        psWOptions.panSrcBands[idx] = s
+        psWOptions.panDstBands[idx] = d
+        log.debug('Configured to warp src band %d to destination band %d' % (s, d))
 
     log.debug("Set transformer options")
 

@@ -1268,3 +1268,31 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
             dst_alpha=4)
 
         assert dst_arr[3].any()
+
+
+@pytest.mark.skipif(
+    (gdal_version.major == 2 and gdal_version.minor == 2),
+    reason=("GDAL had regression in 2.2.X series, fixed in 2.2.4,"
+            " reproject used dst index instead of src index when destination was single band"))
+def test_issue1350():
+    """Warp bands other than 1 or All"""
+
+    with rasterio.open('tests/data/RGB.byte.tif') as src:
+        dst_crs = {'init': 'EPSG:3857'}
+
+        reprojected = []
+
+        for dtype, idx in zip(src.dtypes, src.indexes):
+            out = np.zeros((1,) + src.shape, dtype=dtype)
+
+            reproject(
+                rasterio.band(src, idx),
+                out,
+                resampling=Resampling.nearest,
+                dst_transform=DST_TRANSFORM,
+                dst_crs=dst_crs)
+
+            reprojected.append(out)
+
+        for i in range(1, len(reprojected)):
+            assert not (reprojected[0] == reprojected[i]).all()
