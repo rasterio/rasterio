@@ -1270,6 +1270,10 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
         assert dst_arr[3].any()
 
 
+@pytest.mark.skipif(
+    (gdal_version.major == 2 and gdal_version.minor == 2),
+    reason=("GDAL had regression in 2.2.X series, fixed in 2.2.4,"
+            " reproject used dst index instead of src index when destination was single band"))
 def test_issue1350():
     """Warp bands other than 1 or All"""
 
