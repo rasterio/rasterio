@@ -1288,8 +1288,8 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
         assert dst_arr[3].any()
 
 
-@pytest.mark.skipif(
-    (gdal_version.major == 2 and gdal_version.minor == 2),
+@pytest.mark.xfail(
+    rasterio.__gdal_version__ in ['2.2.0', '2.2.1', '2.2.2', '2.2.3'],
     reason=("GDAL had regression in 2.2.X series, fixed in 2.2.4,"
             " reproject used dst index instead of src index when destination was single band"))
 def test_issue1350():

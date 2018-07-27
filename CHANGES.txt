@@ -11,6 +11,7 @@ Bug fixes:
 - In using rio-warp, the --src-bounds option can now override the bounds of the
   source dataset when --dimensions is used (#1419).
 - Bounds of rotated rasters are now calculated correctly (#1422).
+- A band indexing bug in reproject() (#1350) has been fixed (#1424).
 
 1.0.1 (2018-07-23)
 ------------------
