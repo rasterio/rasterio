@@ -21,7 +21,10 @@ import rasterio.shutil
 logger = logging.getLogger(__name__)
 
 
-# Common options used below
+def files_handler(ctx, param, value):
+    """Process and validate input file names"""
+    return value
+
 
 # Unlike the version in cligj, this one doesn't require values.
 files_inout_arg = click.argument(
@@ -29,7 +32,7 @@ files_inout_arg = click.argument(
     nargs=-1,
     type=click.Path(resolve_path=True),
     metavar="INPUTS... OUTPUT",
-    callback=options.files_inout_handler)
+    callback=files_handler)
 
 
 @click.command(short_help='Rasterize features.')
