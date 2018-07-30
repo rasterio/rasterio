@@ -10,7 +10,7 @@ import pytest
 import rasterio
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
-from rasterio.env import GDALVersion, require_gdal_version
+from rasterio.env import GDALVersion, require_gdal_version, DummySession, AWSSession, Session
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
 
@@ -167,10 +167,10 @@ def test_aws_session(gdalenv):
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
     with rasterio.env.Env(session=aws_session) as s:
-        assert s._creds.access_key == 'id'
-        assert s._creds.secret_key == 'key'
-        assert s._creds.token == 'token'
-        assert s.session.region_name == 'null-island-1'
+        assert s.session._creds.access_key == 'id'
+        assert s.session._creds.secret_key == 'key'
+        assert s.session._creds.token == 'token'
+        assert s.session._session.region_name == 'null-island-1'
 
 
 def test_aws_session_credentials(gdalenv):
@@ -725,3 +725,87 @@ def test_require_gdal_version_chaining():
 
     message = 'parameter "something=else" requires GDAL >= {0}'.format(version)
     assert message in exc_info.value.args[0]
+
+
+def test_dummy_session():
+    """DummySession works"""
+    sesh = DummySession()
+    assert sesh._session is None
+    assert sesh.get_credential_options() == {}
+
+
+def test_aws_session_class():
+    """AWSSession works"""
+    sesh = AWSSession(aws_access_key_id='foo', aws_secret_access_key='bar')
+    assert sesh._session
+    assert sesh.get_credential_options()['AWS_ACCESS_KEY_ID'] == 'foo'
+    assert sesh.get_credential_options()['AWS_SECRET_ACCESS_KEY'] == 'bar'
+
+
+def test_aws_session_class_session():
+    """AWSSession works"""
+    boto3 = pytest.importorskip("boto3")
+    sesh = AWSSession(session=boto3.session.Session(aws_access_key_id='foo', aws_secret_access_key='bar'))
+    assert sesh._session
+    assert sesh.get_credential_options()['AWS_ACCESS_KEY_ID'] == 'foo'
+    assert sesh.get_credential_options()['AWS_SECRET_ACCESS_KEY'] == 'bar'
+
+
+def test_aws_session_class_unsigned():
+    """AWSSession works"""
+    pytest.importorskip("boto3")
+    sesh = AWSSession(aws_unsigned=True)
+    assert sesh._session
+    assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
+
+
+def test_aws_session_class_profile(tmpdir, monkeypatch):
+    """Confirm that profile_name kwarg works."""
+    pytest.importorskip("boto3")
+    credentials_file = tmpdir.join('credentials')
+    credentials_file.write("[testing]\n"
+                           "aws_access_key_id = foo\n"
+                           "aws_secret_access_key = bar\n"
+                           "aws_session_token = baz")
+    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
+    monkeypatch.setenv('AWS_SESSION_TOKEN', 'ignore_me')
+    sesh = AWSSession(profile_name='testing')
+    assert sesh._session
+    assert sesh.get_credential_options()['AWS_ACCESS_KEY_ID'] == 'foo'
+    assert sesh.get_credential_options()['AWS_SECRET_ACCESS_KEY'] == 'bar'
+    assert sesh.get_credential_options()['AWS_SESSION_TOKEN'] == 'baz'
+    monkeypatch.undo()
+
+
+def test_session_factory_unparsed():
+    """Get a DummySession for unparsed paths"""
+    sesh = Session.factory("/vsicurl/lolwut")
+    assert isinstance(sesh, DummySession)
+
+
+def test_session_factory_local():
+    """Get a DummySession for local paths"""
+    sesh = Session.factory("file:///lolwut")
+    assert isinstance(sesh, DummySession)
+
+
+def test_session_factory_unknown():
+    """Get a DummySession for unknown paths"""
+    sesh = Session.factory("https://fancy-cloud.com/lolwut")
+    assert isinstance(sesh, DummySession)
+
+
+def test_session_factory_s3():
+    """Get an AWSSession for s3:// paths"""
+    pytest.importorskip("boto3")
+    sesh = Session.factory("s3://lol/wut")
+    assert isinstance(sesh, AWSSession)
+
+
+def test_session_factory_s3_kwargs():
+    """Get an AWSSession for s3:// paths with keywords"""
+    pytest.importorskip("boto3")
+    sesh = Session.factory("s3://lol/wut", aws_access_key_id='foo', aws_secret_access_key='bar')
+    assert isinstance(sesh, AWSSession)
+    assert sesh._session.get_credentials().access_key == 'foo'
+    assert sesh._session.get_credentials().secret_key == 'bar'
