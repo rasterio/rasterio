@@ -836,13 +836,6 @@ def test_transform_geom_linestring_precision_iso(polygon_3373):
     assert int(result['coordinates'][0][0] * 10) == 7988423
 
 
-def test_transform_geom_linearring_precision(polygon_3373):
-    ring = polygon_3373['coordinates'][0]
-    geom = {'type': 'LinearRing', 'coordinates': ring}
-    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1, antimeridian_cutting=True)
-    assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
-
-
 def test_transform_geom_linestring_precision_z(polygon_3373):
     ring = polygon_3373['coordinates'][0]
     x, y = zip(*ring)

@@ -584,8 +584,8 @@ cdef class OGRGeomBuilder:
         cdef object coordinates
         cdef object geometries
 
-        valid_types = {'Point', 'MultiPoint', 'LineString', 'LinearRing',
-                       'MultiLineString', 'Polygon', 'MultiPolygon'}
+        valid_types = {'Point', 'MultiPoint', 'LineString', 'MultiLineString',
+                       'Polygon', 'MultiPolygon'}
 
         if typename in valid_types:
             coordinates = geometry.get('coordinates')
@@ -596,8 +596,6 @@ cdef class OGRGeomBuilder:
                 return self._buildPoint(coordinates)
             elif typename == 'LineString':
                 return self._buildLineString(coordinates)
-            elif typename == 'LinearRing':
-                return self._buildLinearRing(coordinates)
             elif typename == 'Polygon':
                 return self._buildPolygon(coordinates)
             elif typename == 'MultiPoint':
