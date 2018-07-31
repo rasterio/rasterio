@@ -308,16 +308,17 @@ def test_is_valid_geom_polygon(geojson_polygon):
 def test_is_valid_geom_ring(geojson_polygon):
     """Properly formed GeoJSON LinearRing is valid"""
     geojson_ring = deepcopy(geojson_polygon)
+    geojson_ring['type'] = 'LinearRing'
     # take first ring from polygon as sample
-    geojson_ring['geometry']['coordinates'] = geojson_ring['geometry']['coordinates'][0]
+    geojson_ring['coordinates'] = geojson_ring['coordinates'][0]
     assert is_valid_geom(geojson_ring)
 
     # Empty iterables are invalid
-    geom = deepcopy(geojson_polygon)
+    geom = deepcopy(geojson_ring)
     geom['coordinates'] = []
     assert not is_valid_geom(geom)
 
-    geom = deepcopy(geojson_polygon)
+    geom = deepcopy(geojson_ring)
     geom['coordinates'] = [[]]
     assert not is_valid_geom(geom)
 
