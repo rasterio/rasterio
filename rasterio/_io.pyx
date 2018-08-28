@@ -1708,6 +1708,7 @@ cdef class InMemoryRaster:
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
 
+        self._image = None
         if image is not None:
             self.write(image)
 
@@ -1745,6 +1746,9 @@ cdef class InMemoryRaster:
             self._hds = NULL
 
     def read(self):
+        if self._image is None:
+            raise IOError("You need to write data before you can read the data.")
+
         if self._image.ndim == 2:
             exc_wrap_int(io_auto(self._image, self.band(1), False))
         else:
