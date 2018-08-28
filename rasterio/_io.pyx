@@ -1746,17 +1746,17 @@ cdef class InMemoryRaster:
 
     def read(self):
         if self._image.ndim == 2:
-            io_auto(self._image, self.band(1), False)
+            exc_wrap_int(io_auto(self._image, self.band(1), False))
         else:
-            io_auto(self._image, self._hds, False)
+            exc_wrap_int(io_auto(self._image, self._hds, False))
         return self._image
 
-    def write(self, image):
+    def write(self, np.ndarray image):
         self._image = image
         if image.ndim == 2:
-            io_auto(self._image, self.band(1), True)
+            exc_wrap_int(io_auto(self._image, self.band(1), True))
         else:
-            io_auto(self._image, self._hds, True)
+            exc_wrap_int(io_auto(self._image, self._hds, True))
 
 
 
