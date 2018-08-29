@@ -70,7 +70,7 @@ def _transform_geom(
     # Transform options.
     valb = str(antimeridian_offset).encode('utf-8')
     options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
-    if antimeridian_cutting:
+    if antimeridian_cutting and geom['type'] != "Point":
         options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
 
     try:
