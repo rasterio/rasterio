@@ -8,6 +8,7 @@ import numpy as np
 
 import rasterio
 from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import (
@@ -1321,3 +1322,12 @@ def test_issue1350():
 
         for i in range(1, len(reprojected)):
             assert not (reprojected[0] == reprojected[i]).all()
+
+
+def test_issue_1446():
+    """Confirm resolution of #1446"""
+    g = transform_geom(
+        CRS.from_epsg(4326), CRS.from_epsg(32610),
+        {'type': 'Point', 'coordinates': (-122.51403808499907, 38.06106733107932)})
+    assert round(g['coordinates'][0], 1) == 542630.9
+    assert round(g['coordinates'][1], 1) == 4212702.1
