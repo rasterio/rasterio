@@ -6,6 +6,7 @@ import sys
 import pytest
 from affine import Affine
 import numpy as np
+from numpy.testing import assert_almost_equal
 
 import rasterio
 from rasterio.control import GroundControlPoint
@@ -441,6 +442,114 @@ def test_reproject_epsg():
         resampling=Resampling.nearest,
     )
     assert (out > 0).sum() == 438113
+
+
+def test_reproject_epsg__simple_array():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    out, dst_transform = reproject(
+        source,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 383077
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(330.2992903555146, 0.0, -8789636.707871985,
+                                     0.0, -330.2992903555146, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple_array_resolution():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    out, dst_transform = reproject(
+        source,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs=dst_crs,
+        dst_resolution=(300, 300),
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 464503
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(300, 0.0, -8789636.707871985,
+                                     0.0, -300, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple_array_dst():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    dst_out = np.empty(src.shape, dtype=np.uint8)
+
+    out, dst_transform = reproject(
+        source,
+        dst_out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 368123
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(335.3101519032594, 0.0, -8789636.707871985,
+                                     0.0, -338.579773957742, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        dst_crs = {"init": "EPSG:3857"}
+        out, dst_transform = reproject(
+            rasterio.band(src, 1),
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest,
+        )
+    assert (out > 0).sum() == 383077
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(330.2992903555146, 0.0, -8789636.707871985,
+                                     0.0, -330.2992903555146, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple_resolution():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        dst_crs = {"init": "EPSG:3857"}
+        out, dst_transform = reproject(
+            rasterio.band(src, 1),
+            dst_crs=dst_crs,
+            dst_resolution=(300, 300),
+            resampling=Resampling.nearest,
+        )
+    assert (out > 0).sum() == 464503
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(300.0, 0.0, -8789636.707871985,
+                                     0.0, -300.0, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_no_destination_with_transform():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_crs=dst_crs,
+            dst_transform=DST_TRANSFORM,
+            resampling=Resampling.nearest,
+        )
 
 
 def test_reproject_out_of_bounds():
