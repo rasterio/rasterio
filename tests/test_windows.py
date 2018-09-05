@@ -571,3 +571,11 @@ def test_round_lengths_no_op_error():
 def test_round_offsets_no_op_error():
     with pytest.raises(WindowError):
         Window(0, 0, 1, 1).round_offsets(op='lolwut')
+
+
+def test_window_hashable():
+    a = Window(0, 0, 10, 10)
+    b = Window(0, 0, 10, 10)
+    c = Window(8, 8, 12, 12)
+    assert hash(a) == hash(b)
+    assert hash(a) != hash(c)
