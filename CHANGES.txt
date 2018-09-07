@@ -1,6 +1,15 @@
 Changes
 =======
 
+1.0.3 (2018-09-06)
+------------------
+
+Bug fixes:
+
+- A regression in GeoJSON source handling in rio-rasterize (#1425) has been
+  fixed.
+- Rasterization of linear rings (#1431) is now supported.
+
 1.0.2 (2018-07-27)
 ------------------
 
