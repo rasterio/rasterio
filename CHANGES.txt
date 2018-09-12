@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next
+----
+
+Bug fixes:
+
+- Add missing bilinear, cubic spline, lanczos resampling modes for overviews
+  (#1457).
+
 1.0.3.post1 (2018-09-07)
 ------------------------
 

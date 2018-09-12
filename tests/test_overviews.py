@@ -41,6 +41,16 @@ def test_build_overviews_two(data):
         assert src.overviews(3) == [2, 4]
 
 
+def test_build_overviews_bilinear(data):
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as src:
+        overview_factors = [2, 4]
+        src.build_overviews(overview_factors, resampling=Resampling.bilinear)
+        assert src.overviews(1) == [2, 4]
+        assert src.overviews(2) == [2, 4]
+        assert src.overviews(3) == [2, 4]
+
+
 def test_build_overviews_average(data):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as src:
