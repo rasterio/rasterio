@@ -29,7 +29,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 cdef class InMemoryRaster:
     cdef GDALDatasetH _hds
     cdef double gdal_transform[6]
-    cdef int band_ids[1]
+    cdef int* band_ids
     cdef np.ndarray _image
     cdef object crs
     cdef object transform  # this is an Affine object.
