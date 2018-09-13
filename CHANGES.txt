@@ -1,19 +1,6 @@
 Changes
 =======
 
-Next
-----
-
-Bug fixes:
-
-- Add missing bilinear, cubic spline, lanczos resampling modes for overviews
-  (#1457).
-
-Refactoring:
-
-- Use of InMemoryRaster eliminates redundant code in the _warp module (#1427,
-  #816).
-
 1.0.3.post1 (2018-09-07)
 ------------------------
 

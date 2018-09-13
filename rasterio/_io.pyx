@@ -1540,10 +1540,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             # (no corresponding member in the warp enum).
             resampling_map = {
                 0: 'NEAREST',
-                1: 'BILINEAR',
                 2: 'CUBIC',
-                3: 'CUBICSPLINE',
-                4: 'LANCZOS',
                 5: 'AVERAGE',
                 6: 'MODE',
                 7: 'GAUSS'}
