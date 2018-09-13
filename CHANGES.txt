@@ -12,6 +12,8 @@ Bug fixes:
 
 Refactoring:
 
+- Use of InMemoryRaster eliminates redundant code in the _warp module (#1427,
+  #816).
 - Generalize sessions to support cloud providers other than AWS (#1429).
 
 1.0.3.post1 (2018-09-07)
