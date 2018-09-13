@@ -1,6 +1,13 @@
 Changes
 =======
 
+Next
+----
+
+Refactoring:
+
+- Generalize sessions to support cloud providers other than AWS (#1429).
+
 1.0.2 (2018-07-27)
 ------------------
 

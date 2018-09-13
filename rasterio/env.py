@@ -1,18 +1,19 @@
 """Rasterio's GDAL/AWS environment"""
 
+import attr
 from functools import wraps, total_ordering
 import logging
-import threading
 import re
-import attr
-
+import threading
+import warnings
 
 import rasterio
 from rasterio._env import (
     GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
 from rasterio.compat import string_types, getargspec
 from rasterio.dtypes import check_dtype
-from rasterio.errors import EnvError, GDALVersionError
+from rasterio.errors import (
+    EnvError, GDALVersionError, RasterioDeprecationWarning)
 from rasterio.path import parse_path, UnparsedPath, ParsedPath
 from rasterio.transform import guard_transform
 
@@ -152,6 +153,11 @@ class Env(object):
         if session:
             # Special case for older Rasterio usage.
             if not isinstance(session, Session):
+                warnings.warn(
+                    "Passing a boto3 session is deprecated. Pass a Rasterio "
+                    "AWSSession object instead.",
+                    RasterioDeprecationWarning
+                )
                 session = AWSSession(session=session)
             self.session = session
         else:
@@ -218,16 +224,12 @@ class Env(object):
             self.options.update(**cred_opts)
             setenv(**cred_opts)
 
-    def can_credentialize_on_enter(self):
-        return bool(self.session)
-
     def drivers(self):
         """Return a mapping of registered drivers."""
         return local._env.drivers()
 
     def __enter__(self):
         log.debug("Entering env context: %r", self)
-        # No parent Rasterio environment exists.
         if local._env is None:
             log.debug("Starting outermost env")
             self._has_parent_env = False
@@ -250,8 +252,7 @@ class Env(object):
             self.context_options = getenv()
             setenv(**self.options)
 
-        if True:  # self.can_credentialize_on_enter():
-            self.credentialize()
+        self.credentialize()
 
         log.debug("Entered env context: %r", self)
         return self
