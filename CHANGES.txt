@@ -14,6 +14,12 @@ Refactoring:
 
 - Generalize sessions to support cloud providers other than AWS (#1429).
 
+1.0.3.post1 (2018-09-07)
+------------------------
+
+This version corrects errors made in building binary wheels for 1.0.3. There
+are no bug fixes or new features in this version.
+
 1.0.3 (2018-08-01)
 ------------------
 
