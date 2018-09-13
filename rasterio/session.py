@@ -118,7 +118,7 @@ class AWSSession(Session):
     def __init__(
             self, session=None, aws_unsigned=False, aws_access_key_id=None,
             aws_secret_access_key=None, aws_session_token=None,
-            region_name=None, profile_name=None):
+            region_name=None, profile_name=None, requester_pays=False):
         """Create a new boto3 session
 
         Parameters
@@ -137,7 +137,9 @@ class AWSSession(Session):
             A region name, as per boto3.
         profile_name : str, optional
             A shared credentials profile name, as per boto3.
-
+        requester_pays : bool, optional
+            True if the requester agrees to pay transfer costs (default:
+            False)
         """
         import boto3
 
@@ -154,7 +156,8 @@ class AWSSession(Session):
                     region_name=region_name,
                     profile_name=profile_name)
 
-        self._unsigned = aws_unsigned
+        self.requester_pays = requester_pays
+        self.unsigned = aws_unsigned
         self._creds = self._session._session.get_credentials()
 
     @property
@@ -169,6 +172,8 @@ class AWSSession(Session):
             creds['aws_session_token'] = self._creds.token
         if self._session.region_name:
             creds['aws_region'] = self._session.region_name
+        if self.requester_pays:
+            creds['aws_request_payer'] = 'requester'
         return creds
 
     def get_credential_options(self):
@@ -179,7 +184,7 @@ class AWSSession(Session):
         dict
 
         """
-        if self._unsigned:
+        if self.unsigned:
             return {'AWS_NO_SIGN_REQUEST': 'YES'}
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
