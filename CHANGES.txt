@@ -10,6 +10,10 @@ Bug fixes:
   name.
 - Windows are now frozen so that they are hashable (#1452).
 
+Refactoring:
+
+- Generalize sessions to support cloud providers other than AWS (#1429).
+
 1.0.3 (2018-08-01)
 ------------------
 

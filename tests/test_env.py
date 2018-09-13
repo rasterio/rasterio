@@ -167,10 +167,10 @@ def test_aws_session(gdalenv):
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
     with rasterio.env.Env(session=aws_session) as s:
-        assert s._creds.access_key == 'id'
-        assert s._creds.secret_key == 'key'
-        assert s._creds.token == 'token'
-        assert s.session.region_name == 'null-island-1'
+        assert s.session._creds.access_key == 'id'
+        assert s.session._creds.secret_key == 'key'
+        assert s.session._creds.token == 'token'
+        assert s.session._session.region_name == 'null-island-1'
 
 
 def test_aws_session_credentials(gdalenv):
