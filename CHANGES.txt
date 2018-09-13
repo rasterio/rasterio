@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Missing --aws-no-sign-requests and --aws-requester-pays options added to
+  the main rio command (#1460).
 - Add missing bilinear, cubic spline, lanczos resampling modes for overviews
   (#1457).
 - Raise ValueError if get_writer_for_driver() is called without a driver
