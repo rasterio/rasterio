@@ -1,6 +1,13 @@
 Changes
 =======
 
+Next
+----
+
+Refactoring:
+
+- Use of InMemoryRaster eliminates redundant code in the _warp module (#1427,
+  #816).
 
 1.0.3 (2018-08-01)
 ------------------
