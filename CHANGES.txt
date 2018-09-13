@@ -8,6 +8,16 @@ Refactoring:
 
 - Generalize sessions to support cloud providers other than AWS (#1429).
 
+1.0.3 (2018-08-01)
+------------------
+
+Bug fixes:
+
+- The input file handler of rio-rasterize has been changed so that it does not
+  reject GeoJSON files (#1425).
+- Linear rings have been added as acceptable input for rio-rasterize and other
+  commands and functions (#1431).
+
 1.0.2 (2018-07-27)
 ------------------
 

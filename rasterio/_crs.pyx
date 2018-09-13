@@ -65,6 +65,12 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
+            if (
+                isinstance(other, self.__class__) and
+                self.data == other.data
+            ):
+                return True
+
             if not self or not other:
                 return not self and not other
 

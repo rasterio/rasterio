@@ -8,6 +8,7 @@ import numpy as np
 
 import rasterio
 from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
 from rasterio.errors import (
@@ -836,6 +837,13 @@ def test_transform_geom_linestring_precision_iso(polygon_3373):
     assert int(result['coordinates'][0][0] * 10) == 7988423
 
 
+def test_transform_geom_linearring_precision(polygon_3373):
+    ring = polygon_3373['coordinates'][0]
+    geom = {'type': 'LinearRing', 'coordinates': ring}
+    result = transform_geom('EPSG:3373', 'EPSG:4326', geom, precision=1, antimeridian_cutting=True)
+    assert all(round(x, 1) == x for x in flatten_coords(result['coordinates']))
+
+
 def test_transform_geom_linestring_precision_z(polygon_3373):
     ring = polygon_3373['coordinates'][0]
     x, y = zip(*ring)
@@ -1314,3 +1322,12 @@ def test_issue1350():
 
         for i in range(1, len(reprojected)):
             assert not (reprojected[0] == reprojected[i]).all()
+
+
+def test_issue_1446():
+    """Confirm resolution of #1446"""
+    g = transform_geom(
+        CRS.from_epsg(4326), CRS.from_epsg(32610),
+        {'type': 'Point', 'coordinates': (-122.51403808499907, 38.06106733107932)})
+    assert round(g['coordinates'][0], 1) == 542630.9
+    assert round(g['coordinates'][1], 1) == 4212702.1
