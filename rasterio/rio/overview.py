@@ -38,7 +38,7 @@ def build_handler(ctx, param, value):
               is_flag=True, default=False)
 @click.option('--resampling', help="Resampling algorithm.",
               type=click.Choice(
-                  [it.name for it in Resampling if it.value in [0, 2, 5, 6, 7]]),
+                  [it.name for it in Resampling if it.value in [0, 1, 2, 3, 4, 5, 6, 7]]),
               default='nearest', show_default=True)
 @click.pass_context
 def overview(ctx, input, build, ls, rebuild, resampling):

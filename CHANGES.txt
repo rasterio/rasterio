@@ -6,12 +6,16 @@ Changes
 
 Bug fixes:
 
+- Add missing bilinear, cubic spline, lanczos resampling modes for overviews
+  (#1457).
 - Raise ValueError if get_writer_for_driver() is called without a driver
   name.
 - Windows are now frozen so that they are hashable (#1452).
 
 Refactoring:
 
+- Use of InMemoryRaster eliminates redundant code in the _warp module (#1427,
+  #816).
 - Generalize sessions to support cloud providers other than AWS (#1429).
 
 1.0.3.post1 (2018-09-07)
