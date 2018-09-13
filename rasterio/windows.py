@@ -475,7 +475,8 @@ def validate_length_value(instance, attribute, value):
         raise ValueError("Number of columns or rows must be non-negative")
 
 
-@attr.s(slots=True)
+@attr.s(slots=True,
+        frozen=True)
 class Window(object):
     """Windows are rectangular subsets of rasters.
 

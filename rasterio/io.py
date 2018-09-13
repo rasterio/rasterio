@@ -175,6 +175,8 @@ class ZipMemoryFile(MemoryFile):
 
 def get_writer_for_driver(driver):
     """Return the writer class appropriate for the specified driver."""
+    if not driver:
+        raise ValueError("'driver' is required to write dataset.")
     cls = None
     if driver_can_create(driver):
         cls = DatasetWriter
