@@ -1,8 +1,12 @@
 Changes
 =======
 
-Next
-----
+1.0.4 (2018-09-17)
+------------------
+
+Bug fixes:
+
+- Windows are now frozen so that they are hashable (#1452).
 
 Refactoring:
 
