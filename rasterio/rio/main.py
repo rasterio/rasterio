@@ -41,6 +41,7 @@ import cligj
 
 from . import options
 import rasterio
+from rasterio.session import AWSSession
 
 
 def configure_logging(verbosity):
@@ -51,28 +52,50 @@ def configure_logging(verbosity):
 def gdal_version_cb(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
+
     click.echo("{0}".format(rasterio.__gdal_version__), color=ctx.color)
     ctx.exit()
 
 
-@with_plugins(ep for ep in list(iter_entry_points('rasterio.rio_commands')) +
-              list(iter_entry_points('rasterio.rio_plugins')))
+@with_plugins(
+    ep
+    for ep in list(iter_entry_points("rasterio.rio_commands"))
+    + list(iter_entry_points("rasterio.rio_plugins"))
+)
 @click.group()
 @cligj.verbose_opt
 @cligj.quiet_opt
-@click.option('--aws-profile',
-              help="Selects a profile from your shared AWS credentials file")
-@click.version_option(version=rasterio.__version__, message='%(version)s')
-@click.option('--gdal-version', is_eager=True, is_flag=True,
-              callback=gdal_version_cb)
+@click.option(
+    "--aws-profile", help="Select a profile from the AWS credentials file"
+)
+@click.option("--aws-no-sign-requests", is_flag=True, help="Make requests anonymously")
+@click.option(
+    "--aws-requester-pays", is_flag=True, help="Requester pays data transfer costs"
+)
+@click.version_option(version=rasterio.__version__, message="%(version)s")
+@click.option("--gdal-version", is_eager=True, is_flag=True, callback=gdal_version_cb)
 @click.pass_context
-def main_group(ctx, verbose, quiet, aws_profile, gdal_version):
+def main_group(
+    ctx,
+    verbose,
+    quiet,
+    aws_profile,
+    aws_no_sign_requests,
+    aws_requester_pays,
+    gdal_version,
+):
     """Rasterio command line interface.
     """
     verbosity = verbose - quiet
     configure_logging(verbosity)
     ctx.obj = {}
-    ctx.obj['verbosity'] = verbosity
-    ctx.obj['aws_profile'] = aws_profile
-    ctx.obj['env'] = rasterio.Env(CPL_DEBUG=(verbosity > 2),
-                                  profile_name=aws_profile)
+    ctx.obj["verbosity"] = verbosity
+    ctx.obj["aws_profile"] = aws_profile
+    ctx.obj["env"] = rasterio.Env(
+        session=AWSSession(
+            profile_name=aws_profile,
+            aws_unsigned=aws_no_sign_requests,
+            requester_pays=aws_requester_pays,
+        ),
+        CPL_DEBUG=(verbosity > 2)
+    )
