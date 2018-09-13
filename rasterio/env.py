@@ -15,6 +15,7 @@ from rasterio.dtypes import check_dtype
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
 from rasterio.path import parse_path, UnparsedPath, ParsedPath
+from rasterio.session import Session, AWSSession
 from rasterio.transform import guard_transform
 
 
@@ -107,7 +108,8 @@ class Env(object):
     def __init__(
             self, session=None, aws_unsigned=False, aws_access_key_id=None,
             aws_secret_access_key=None, aws_session_token=None,
-            region_name=None, profile_name=None, **options):
+            region_name=None, profile_name=None, session_class=AWSSession,
+            **options):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -116,7 +118,7 @@ class Env(object):
         Parameters
         ----------
         session : optional
-            A boto3 session object.
+            A Session object.
         aws_unsigned : bool, optional (default: False)
             If True, requests will be unsigned.
         aws_access_key_id : str, optional
@@ -129,6 +131,8 @@ class Env(object):
             A region name, as per boto3.
         profile_name : str, optional
             A shared credentials profile name, as per boto3.
+        session_class : Session, optional
+            A sub-class of Session.
         **options : optional
             A mapping of GDAL configuration options, e.g.,
             `CPL_DEBUG=True, CHECK_WITH_INVERT_PROJ=False`.
@@ -143,6 +147,23 @@ class Env(object):
         AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are given. AWS
         credentials are handled exclusively by boto3.
 
+        Examples
+        --------
+
+        >>> with Env(CPL_DEBUG=True, CPL_CURL_VERBOSE=True):
+        ...     with rasterio.open("https://example.com/a.tif") as src:
+        ...         print(src.profile)
+
+        For access to secured cloud resources, a Rasterio Session or a
+        foreign session object may be passed to the constructor.
+
+        >>> import boto3
+        >>> from rasterio.session import AWSSession
+        >>> boto3_session = boto3.Session(...)
+        >>> with Env(AWSSession(boto3_session)):
+        ...     with rasterio.open("s3://mybucket/a.tif") as src:
+        ...         print(src.profile)
+
         """
         if ('AWS_ACCESS_KEY_ID' in options or
                 'AWS_SECRET_ACCESS_KEY' in options):
@@ -151,7 +172,8 @@ class Env(object):
                 "AWS credentials are handled exclusively by boto3.")
 
         if session:
-            # Special case for older Rasterio usage.
+            # Passing a session via keyword argument is the canonical
+            # way to configure access to secured cloud resources.
             if not isinstance(session, Session):
                 warnings.warn(
                     "Passing a boto3 session is deprecated. Pass a Rasterio "
@@ -161,6 +183,13 @@ class Env(object):
                 session = AWSSession(session=session)
             self.session = session
         else:
+            # Before 1.0, Rasterio only supported AWS. We will special
+            # case AWS in 1.0.x. TODO: warn deprecation in 1.1.
+            warnings.warn(
+                "Passing abstract session keyword arguments is deprecated. "
+                "Pass a Rasterio AWSSession object instead.",
+                RasterioDeprecationWarning
+            )
             self.session = AWSSession(
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key,
@@ -204,7 +233,7 @@ class Env(object):
         -------
         bool
         """
-        return bool(self.session)
+        return hascreds()  # bool(self.session)
 
     def credentialize(self):
         """Get credentials and configure GDAL
@@ -274,140 +303,6 @@ class Env(object):
                     "Set discovered option back to: '%s=%s", key, val)
             local._discovered_options = None
         log.debug("Exited env context: %r", self)
-
-
-class Session(object):
-    """An abstract session"""
-
-    @staticmethod
-    def factory(path, *args, **kwargs):
-        """Create a foreign session object suited to the data at `path`.
-
-        Parameters
-        ----------
-        path : str
-            A dataset path or identifier.
-        args : sequence
-            Positional arguments for the foreign session constructor.
-        kwargs : dict
-            Keyword arguments for the foreign session constructor.
-
-        Returns
-        -------
-        Session
-
-        """
-        if path is None:
-            return DummySession()
-
-        path = parse_path(path)
-
-        if isinstance(path, UnparsedPath) or path.is_local:
-            return DummySession()
-
-        elif path.scheme == "s3" or "amazonaws.com" in path.path:
-            return AWSSession(*args, **kwargs)
-
-        else:
-            return DummySession()
-
-
-class DummySession(Session):
-    """A dummy session
-
-    Attributes
-    ----------
-    credentials : dict
-        The session credentials.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        self._session = None
-        self.credentials = {}
-
-    def get_credential_options(self):
-        """Get credentials as GDAL configuration options
-
-        Returns
-        -------
-        dict
-
-        """
-        return {}
-
-
-class AWSSession(Session):
-    """An AWS connection session
-    """
-
-    def __init__(
-            self, session=None, aws_unsigned=False, aws_access_key_id=None,
-            aws_secret_access_key=None, aws_session_token=None,
-            region_name=None, profile_name=None):
-        """Create a new boto3 session
-
-        Parameters
-        ----------
-        session : optional
-            A boto3 session object.
-        aws_unsigned : bool, optional (default: False)
-            If True, requests will be unsigned.
-        aws_access_key_id : str, optional
-            An access key id, as per boto3.
-        aws_secret_access_key : str, optional
-            A secret access key, as per boto3.
-        aws_session_token : str, optional
-            A session token, as per boto3.
-        region_name : str, optional
-            A region name, as per boto3.
-        profile_name : str, optional
-            A shared credentials profile name, as per boto3.
-        """
-        import boto3
-
-        if session:
-            self._session = session
-        else:
-            if not aws_access_key_id and not profile_name:
-                self._session = boto3.Session()
-            else:
-                self._session = boto3.Session(
-                    aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key,
-                    aws_session_token=aws_session_token,
-                    region_name=region_name,
-                    profile_name=profile_name)
-
-        self._unsigned = aws_unsigned
-        self._creds = self._session._session.get_credentials()
-
-    @property
-    def credentials(self):
-        """The session credentials as a dict"""
-        creds = {}
-        if self._creds.access_key:  # pragma: no branch
-            creds['aws_access_key_id'] = self._creds.access_key
-        if self._creds.secret_key:  # pragma: no branch
-            creds['aws_secret_access_key'] = self._creds.secret_key
-        if self._creds.token:
-            creds['aws_session_token'] = self._creds.token
-        if self._session.region_name:
-            creds['aws_region'] = self._session.region_name
-        return creds
-
-    def get_credential_options(self):
-        """Get credentials as GDAL configuration options
-
-        Returns
-        -------
-        dict
-
-        """
-        if self._unsigned:
-            return {'AWS_NO_SIGN_REQUEST': 'YES'}
-        else:
-            return {k.upper(): v for k, v in self.credentials.items()}
 
 
 def defenv(**options):
@@ -502,9 +397,9 @@ def ensure_env_credentialled(f):
             env_ctor = Env.from_defaults
 
         if isinstance(args[0], str):
-            session = Session.factory(args[0])
+            session = Session.from_path(args[0])
         else:
-            session = Session.factory(None)
+            session = Session.from_path(None)
 
         with env_ctor(session=session):
             log.debug("Credentialized: {!r}".format(getenv()))
