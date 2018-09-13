@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Raise ValueError if get_writer_for_driver() is called without a driver
+  name.
 - Windows are now frozen so that they are hashable (#1452).
 
 1.0.3 (2018-08-01)
