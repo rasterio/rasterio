@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Prevent geometries from being thrown near projection singularities (#1446).
 - Missing --aws-no-sign-requests and --aws-requester-pays options added to
   the main rio command (#1460).
 - Add missing bilinear, cubic spline, lanczos resampling modes for overviews
