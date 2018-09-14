@@ -17,6 +17,7 @@ from rasterio._err import (
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
+from rasterio.env import GDALVersion
 from rasterio.crs import CRS
 from rasterio.errors import (
     DriverRegistrationError, CRSError, RasterioIOError,
@@ -67,11 +68,15 @@ def _transform_geom(
         _safe_osr_release(dst)
         raise
 
-    # Transform options.
-    valb = str(antimeridian_offset).encode('utf-8')
-    options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
-    if antimeridian_cutting and geom['type'] != "Point":
-        options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
+    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
+        valb = str(antimeridian_offset).encode('utf-8')
+        options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
+        if antimeridian_cutting:
+            options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
+    else:
+        # GDAL cuts on the antimeridian by default and using different
+        # logic in versions >= 2.2.
+        pass
 
     try:
         factory = new OGRGeometryFactory()
