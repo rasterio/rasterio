@@ -1,11 +1,12 @@
 Changes
 =======
 
-1.0.4 (2018-09-17)
+1.0.4 (2018-09-14)
 ------------------
 
 Bug fixes:
 
+- A y-directional error in disjoint_bounds (#1459) has been fixed.
 - Missing --aws-no-sign-requests and --aws-requester-pays options added to
   the main rio command (#1460).
 - Add missing bilinear, cubic spline, lanczos resampling modes for overviews
