@@ -3,6 +3,7 @@
 import attr
 from functools import wraps, total_ordering
 import logging
+import os
 import re
 import threading
 import warnings
@@ -15,7 +16,7 @@ from rasterio.dtypes import check_dtype
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
 from rasterio.path import parse_path, UnparsedPath, ParsedPath
-from rasterio.session import Session, AWSSession
+from rasterio.session import Session, AWSSession, DummySession
 from rasterio.transform import guard_transform
 
 
@@ -105,11 +106,8 @@ class Env(object):
             "RASTERIO_ENV": True
         }
 
-    def __init__(
-            self, session=None, aws_unsigned=False, aws_access_key_id=None,
-            aws_secret_access_key=None, aws_session_token=None,
-            region_name=None, profile_name=None, session_class=AWSSession,
-            **options):
+    def __init__(self, session=None, aws_unsigned=False, profile_name=None,
+                 session_class=AWSSession, **options):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -119,16 +117,8 @@ class Env(object):
         ----------
         session : optional
             A Session object.
-        aws_unsigned : bool, optional (default: False)
-            If True, requests will be unsigned.
-        aws_access_key_id : str, optional
-            An access key id, as per boto3.
-        aws_secret_access_key : str, optional
-            A secret access key, as per boto3.
-        aws_session_token : str, optional
-            A session token, as per boto3.
-        region_name : str, optional
-            A region name, as per boto3.
+        aws_unsigned : bool, optional
+            Do not sign cloud requests.
         profile_name : str, optional
             A shared credentials profile name, as per boto3.
         session_class : Session, optional
@@ -165,6 +155,20 @@ class Env(object):
         ...         print(src.profile)
 
         """
+        aws_access_key_id = options.pop('aws_access_key_id', None)
+        # Before 1.0, Rasterio only supported AWS. We will special
+        # case AWS in 1.0.x. TODO: warn deprecation in 1.1.
+        if aws_access_key_id:
+            warnings.warn(
+                "Passing abstract session keyword arguments is deprecated. "
+                "Pass a Rasterio AWSSession object instead.",
+                RasterioDeprecationWarning
+            )
+
+        aws_secret_access_key = options.pop('aws_secret_access_key', None)
+        aws_session_token = options.pop('aws_session_token', None)
+        region_name = options.pop('region_name', None)
+
         if ('AWS_ACCESS_KEY_ID' in options or
                 'AWS_SECRET_ACCESS_KEY' in options):
             raise EnvError(
@@ -182,14 +186,7 @@ class Env(object):
                 )
                 session = AWSSession(session=session)
             self.session = session
-        else:
-            # Before 1.0, Rasterio only supported AWS. We will special
-            # case AWS in 1.0.x. TODO: warn deprecation in 1.1.
-            warnings.warn(
-                "Passing abstract session keyword arguments is deprecated. "
-                "Pass a Rasterio AWSSession object instead.",
-                RasterioDeprecationWarning
-            )
+        elif aws_access_key_id or profile_name or aws_unsigned:
             self.session = AWSSession(
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key,
@@ -197,6 +194,10 @@ class Env(object):
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
+        elif 'AWS_ACCESS_KEY_ID' in os.environ:
+            self.session = AWSSession()
+        else:
+            self.session = DummySession()
 
         self.options = options.copy()
         self.context_options = {}

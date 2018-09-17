@@ -725,3 +725,16 @@ def test_require_gdal_version_chaining():
 
     message = 'parameter "something=else" requires GDAL >= {0}'.format(version)
     assert message in exc_info.value.args[0]
+
+
+def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
+    """Confirm that we can get drivers without any credentials"""
+    credentials_file = tmpdir.join('credentials')
+    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
+
+    # Assert that we don't have any AWS credentials by accident.
+    with pytest.raises(Exception):
+        rasterio.open("s3://mapbox/rasterio/RGB.byte.tif")
+
+    with rasterio.Env() as env:
+        assert env.drivers()
