@@ -314,6 +314,7 @@ def test_ensured_env_no_credentializing(gdalenv):
 
 
 @requires_gdal21(reason="S3 access requires 2.1+")
+@credentials
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""

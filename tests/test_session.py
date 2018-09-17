@@ -111,6 +111,6 @@ def test_foreign_session_factory_s3():
 
 def test_requester_pays():
     """GDAL is configured with requester pays"""
-    sesh = AWSSession(requester_pays=True)
+    sesh = AWSSession(aws_access_key_id='foo', aws_secret_access_key='bar', requester_pays=True)
     assert sesh._session
     assert sesh.get_credential_options()['AWS_REQUEST_PAYER'] == 'requester'

@@ -273,7 +273,6 @@ class Env(object):
                 val = get_gdal_config(key, normalize=False)
                 if val is not None:
                     local._discovered_options[key] = val
-                    log.debug("Discovered option: %s=%s", key, val)
 
             defenv(**self.options)
             self.context_options = {}
@@ -300,8 +299,6 @@ class Env(object):
             while local._discovered_options:
                 key, val = local._discovered_options.popitem()
                 set_gdal_config(key, val, normalize=False)
-                log.debug(
-                    "Set discovered option back to: '%s=%s", key, val)
             local._discovered_options = None
         log.debug("Exited env context: %r", self)
 
@@ -338,7 +335,6 @@ def setenv(**options):
         raise EnvError("No GDAL environment exists")
     else:
         local._env.update_config_options(**options)
-        log.debug("Updated existing %r with options %r", local._env, options)
 
 
 def hascreds():
@@ -403,7 +399,6 @@ def ensure_env_credentialled(f):
             session = Session.from_path(None)
 
         with env_ctor(session=session):
-            log.debug("Credentialized: {!r}".format(getenv()))
             return f(*args, **kwds)
 
     return wrapper
