@@ -1,11 +1,13 @@
 Changes
 =======
 
-1.0.4 (2018-09-14)
+1.0.4 (2018-09-17)
 ------------------
 
 Bug fixes:
 
+- Boundless reads of datasets without a coordinate reference system have been
+  fixed (#1448).
 - A y-directional error in disjoint_bounds (#1459) has been fixed.
 - Prevent geometries from being thrown near projection singularities (#1446).
 - Missing --aws-no-sign-requests and --aws-requester-pays options added to
