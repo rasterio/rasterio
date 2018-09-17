@@ -146,15 +146,12 @@ class AWSSession(Session):
         if session:
             self._session = session
         else:
-            if not aws_access_key_id and not profile_name:
-                self._session = boto3.Session()
-            else:
-                self._session = boto3.Session(
-                    aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key,
-                    aws_session_token=aws_session_token,
-                    region_name=region_name,
-                    profile_name=profile_name)
+            self._session = boto3.Session(
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=aws_session_token,
+                region_name=region_name,
+                profile_name=profile_name)
 
         self.requester_pays = requester_pays
         self.unsigned = aws_unsigned
@@ -164,12 +161,13 @@ class AWSSession(Session):
     def credentials(self):
         """The session credentials as a dict"""
         creds = {}
-        if self._creds.access_key:  # pragma: no branch
-            creds['aws_access_key_id'] = self._creds.access_key
-        if self._creds.secret_key:  # pragma: no branch
-            creds['aws_secret_access_key'] = self._creds.secret_key
-        if self._creds.token:
-            creds['aws_session_token'] = self._creds.token
+        if self._creds:
+            if self._creds.access_key:  # pragma: no branch
+                creds['aws_access_key_id'] = self._creds.access_key
+            if self._creds.secret_key:  # pragma: no branch
+                creds['aws_secret_access_key'] = self._creds.secret_key
+            if self._creds.token:
+                creds['aws_session_token'] = self._creds.token
         if self._session.region_name:
             creds['aws_region'] = self._session.region_name
         if self.requester_pays:
