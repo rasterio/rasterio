@@ -91,11 +91,13 @@ def main_group(
     ctx.obj = {}
     ctx.obj["verbosity"] = verbosity
     ctx.obj["aws_profile"] = aws_profile
-    ctx.obj["env"] = rasterio.Env(
-        session=AWSSession(
-            profile_name=aws_profile,
-            aws_unsigned=aws_no_sign_requests,
-            requester_pays=aws_requester_pays,
-        ),
-        CPL_DEBUG=(verbosity > 2)
-    )
+    envopts = {"CPL_DEBUG": (verbosity > 2)}
+    if aws_profile or aws_no_sign_requests:
+        ctx.obj["env"] = rasterio.Env(
+            session=AWSSession(
+                profile_name=aws_profile,
+                aws_unsigned=aws_no_sign_requests,
+                requester_pays=aws_requester_pays,
+            ), **envopts)
+    else:
+        ctx.obj["env"] = rasterio.Env(**envopts)
