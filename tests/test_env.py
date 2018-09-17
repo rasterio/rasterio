@@ -731,7 +731,7 @@ def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
     """Confirm that we can get drivers without any credentials"""
     credentials_file = tmpdir.join('credentials')
     monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
-
+    monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
     # Assert that we don't have any AWS credentials by accident.
     with pytest.raises(Exception):
         rasterio.open("s3://mapbox/rasterio/RGB.byte.tif")
