@@ -81,7 +81,7 @@ def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transf
     vrtdataset.attrib['rasterYSize'] = str(height)
     vrtdataset.attrib['rasterXSize'] = str(width)
     srs = ET.SubElement(vrtdataset, 'SRS')
-    srs.text = src_dataset.crs.wkt
+    srs.text = src_dataset.crs.wkt if src_dataset.crs else ''
     geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
     geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
 
