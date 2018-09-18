@@ -8,7 +8,7 @@ from affine import Affine
 
 import rasterio
 from rasterio.enums import MergeAlg
-from rasterio.errors import WindowError, RasterioDeprecationWarning
+from rasterio.errors import WindowError
 from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
@@ -29,6 +29,12 @@ def test_bounds_point():
 
 def test_bounds_line():
     g = {'type': 'LineString', 'coordinates': [[0, 0], [10, 10]]}
+    assert bounds(g) == (0, 0, 10, 10)
+    assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
+
+
+def test_bounds_ring():
+    g = {'type': 'LinearRing', 'coordinates': [[0, 0], [10, 10], [10, 0]]}
     assert bounds(g) == (0, 0, 10, 10)
     assert bounds(MockGeoInterface(g)) == (0, 0, 10, 10)
 
@@ -90,6 +96,7 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
             invert=True
         )
     )
+
 
 def test_geometry_invalid_geom():
     """An invalid geometry should fail"""
@@ -295,6 +302,24 @@ def test_is_valid_geom_polygon(geojson_polygon):
     # Empty first coordinate is invalid
     geom = deepcopy(geojson_polygon)
     geom['coordinates'] = [[[]]]
+    assert not is_valid_geom(geom)
+
+
+def test_is_valid_geom_ring(geojson_polygon):
+    """Properly formed GeoJSON LinearRing is valid"""
+    geojson_ring = deepcopy(geojson_polygon)
+    geojson_ring['type'] = 'LinearRing'
+    # take first ring from polygon as sample
+    geojson_ring['coordinates'] = geojson_ring['coordinates'][0]
+    assert is_valid_geom(geojson_ring)
+
+    # Empty iterables are invalid
+    geom = deepcopy(geojson_ring)
+    geom['coordinates'] = []
+    assert not is_valid_geom(geom)
+
+    geom = deepcopy(geojson_ring)
+    geom['coordinates'] = [[]]
     assert not is_valid_geom(geom)
 
 
@@ -594,6 +619,7 @@ def test_rasterize_all_touched(basic_geometry, basic_image):
             [basic_geometry], out_shape=DEFAULT_SHAPE, all_touched=True
         )
     )
+
 
 def test_rasterize_merge_alg_add(basic_geometry, basic_image_2x2x2):
     """

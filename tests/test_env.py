@@ -167,10 +167,10 @@ def test_aws_session(gdalenv):
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
     with rasterio.env.Env(session=aws_session) as s:
-        assert s._creds.access_key == 'id'
-        assert s._creds.secret_key == 'key'
-        assert s._creds.token == 'token'
-        assert s.session.region_name == 'null-island-1'
+        assert s.session._creds.access_key == 'id'
+        assert s.session._creds.secret_key == 'key'
+        assert s.session._creds.token == 'token'
+        assert s.session._session.region_name == 'null-island-1'
 
 
 def test_aws_session_credentials(gdalenv):
@@ -314,6 +314,7 @@ def test_ensured_env_no_credentializing(gdalenv):
 
 
 @requires_gdal21(reason="S3 access requires 2.1+")
+@credentials
 @pytest.mark.network
 def test_open_https_vsicurl(gdalenv):
     """Read from HTTPS URL."""
@@ -725,3 +726,16 @@ def test_require_gdal_version_chaining():
 
     message = 'parameter "something=else" requires GDAL >= {0}'.format(version)
     assert message in exc_info.value.args[0]
+
+
+def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
+    """Confirm that we can get drivers without any credentials"""
+    credentials_file = tmpdir.join('credentials')
+    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
+    monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
+    # Assert that we don't have any AWS credentials by accident.
+    with pytest.raises(Exception):
+        rasterio.open("s3://mapbox/rasterio/RGB.byte.tif")
+
+    with rasterio.Env() as env:
+        assert env.drivers()

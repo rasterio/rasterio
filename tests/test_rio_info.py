@@ -442,3 +442,14 @@ def test_info_subdatasets():
     assert result.exit_code == 0
     assert len(result.output) == 93
     assert result.output.startswith('netcdf:tests/data/RGB.nc:Band1')
+
+
+def test_info_no_credentials(tmpdir, monkeypatch):
+    credentials_file = tmpdir.join('credentials')
+    monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
+    monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
+    runner = CliRunner()
+    result = runner.invoke(
+        main_group,
+        ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0

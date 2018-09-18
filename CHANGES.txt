@@ -1,20 +1,46 @@
 Changes
 =======
 
+1.0.4 (2018-09-17)
+------------------
+
+Bug fixes:
+
+- Boundless reads of datasets without a coordinate reference system have been
+  fixed (#1448).
+- A y-directional error in disjoint_bounds (#1459) has been fixed.
+- Prevent geometries from being thrown near projection singularities (#1446).
+- Missing --aws-no-sign-requests and --aws-requester-pays options added to
+  the main rio command (#1460).
+- Add missing bilinear, cubic spline, lanczos resampling modes for overviews
+  (#1457).
+- Raise ValueError if get_writer_for_driver() is called without a driver
+  name.
+- Windows are now frozen so that they are hashable (#1452).
+
+Refactoring:
+
+- Use of InMemoryRaster eliminates redundant code in the _warp module (#1427,
+  #816).
+- Generalize sessions to support cloud providers other than AWS (#1429).
+
 1.0.3.post1 (2018-09-07)
 ------------------------
 
 This version corrects errors made in building binary wheels for 1.0.3. There
 are no bug fixes or new features in this version.
 
-1.0.3 (2018-09-06)
-------------------
+1.0.3 (2018-08-01)
 
 Bug fixes:
 
 - A regression in GeoJSON source handling in rio-rasterize (#1425) has been
   fixed.
 - Rasterization of linear rings (#1431) is now supported.
+- The input file handler of rio-rasterize has been changed so that it does not
+  reject GeoJSON files (#1425).
+- Linear rings have been added as acceptable input for rio-rasterize and other
+  commands and functions (#1431).
 
 1.0.2 (2018-07-27)
 ------------------

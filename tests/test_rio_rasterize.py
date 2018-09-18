@@ -35,6 +35,25 @@ def test_rasterize(tmpdir, runner, basic_feature):
         assert np.all(data)
 
 
+def test_rasterize_file(tmpdir, runner, basic_feature):
+    """Confirm fix of #1425"""
+    geojson_file = tmpdir.join('input.geojson')
+    geojson_file.write(json.dumps(basic_feature))
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        main_group, [
+            'rasterize', str(geojson_file), output, '--dimensions', DEFAULT_SHAPE[0],
+            DEFAULT_SHAPE[1]])
+
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+    with rasterio.open(output) as out:
+        assert np.allclose(out.bounds, (2, 2, 4.25, 4.25))
+        data = out.read(1, masked=False)
+        assert data.shape == DEFAULT_SHAPE
+        assert np.all(data)
+
+
 def test_rasterize_bounds(tmpdir, runner, basic_feature, basic_image_2x2):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(

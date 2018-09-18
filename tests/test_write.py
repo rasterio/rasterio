@@ -320,3 +320,9 @@ def test_wplus_transform(tmpdir):
     with rasterio.open(name, 'w+', driver='GTiff', crs='epsg:4326', transform=transform, height=10, width=10, count=1, dtype='uint8') as dst:
         dst.write(np.ones((1, 10, 10), dtype='uint8'))
         assert dst.transform == transform
+
+
+def test_write_no_driver__issue_1203(tmpdir):
+    name = str(tmpdir.join("test.tif"))
+    with pytest.raises(ValueError), rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8'):
+        print("TEST FAILED IF THIS IS REACHED.")

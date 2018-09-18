@@ -181,7 +181,6 @@ cdef class ConfigEnv(object):
         while self.options:
             key, val = self.options.popitem()
             del_gdal_config(key)
-            log.debug("Unset option %s in env %r", key, self)
 
     def get_config_options(self):
         return {k: get_gdal_config(k) for k in self.options}
