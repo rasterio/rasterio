@@ -172,7 +172,7 @@ def test_geometry_window_pixel_precision(basic_image_file):
     with rasterio.open(basic_image_file) as src:
         window = geometry_window(src, [geom2], north_up=False,
                                  pixel_precision=6)
-        assert window.flatten() == (1, 2, 3, 3)
+        assert window.flatten() == (1, 2, 4, 3)
 
 
 def test_geometry_window_north_up(path_rgb_byte_tif):
@@ -190,7 +190,7 @@ def test_geometry_window_north_up(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         window = geometry_window(src, [geometry], north_up=True)
 
-    assert window.flatten() == (326, 256, 167, 167)
+    assert window.flatten() == (326, 256, 168, 167)
 
 
 def test_geometry_window_pad(basic_image_file, basic_geometry):

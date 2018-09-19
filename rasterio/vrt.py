@@ -69,7 +69,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         self.stop()
 
 
-def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transform=None):
+def _boundless_vrt_doc(src_dataset, nodata=None, hidenodata=False, width=None, height=None, transform=None):
     """Make a VRT XML document."""
 
     nodata = nodata or src_dataset.nodata
@@ -93,6 +93,10 @@ def _boundless_vrt_doc(src_dataset, nodata=None, width=None, height=None, transf
         if nodata is not None:
             nodatavalue = ET.SubElement(vrtrasterband, 'NoDataValue')
             nodatavalue.text = str(nodata)
+
+            if hidenodata:
+                hidenodatavalue = ET.SubElement(vrtrasterband, 'HideNoDataValue')
+                hidenodatavalue.text = "1"
 
         colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
         colorinterp.text = ci.name.capitalize()

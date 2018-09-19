@@ -15,6 +15,9 @@ clean:
 	find . -name '__pycache__' -delete -print -o -name '*.pyc' -delete -print
 	touch rasterio/*.pyx
 
+sdist:
+	python setup.py sdist
+
 test:
 	py.test --maxfail 1 -v --cov rasterio --cov-report html --pdb tests
 

@@ -375,7 +375,7 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, width=max(self.width, window.width) + 1,
+                self, nodata=ndv, hidenodata=bool(fill_value), width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
 
@@ -390,12 +390,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     None, resampling=resampling)
 
                 if masked:
-                    if all_valid:
-                        mask = np.ma.nomask
-                    else:
-                        mask = np.zeros(out.shape, 'uint8')
-                        mask = ~vrt._read(
-                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
+                    mask = np.zeros(out.shape, 'uint8')
+                    mask = ~vrt._read(
+                        indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
 
                     kwds = {'mask': mask}
                     # Set a fill value only if the read bands share a
