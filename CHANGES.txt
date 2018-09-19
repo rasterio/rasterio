@@ -8,7 +8,7 @@ Bug fixes:
 
 - The fill value for boundless reads was ignored in Rasterio versions 1-1.0.4
   but now applies (#1471).
-- An invalid shortcut has been eliminated a Rasterio now prroduces a proper
+- An invalid shortcut has been eliminated and Rasterio now produces a proper
   mask in the boundless masked read case (#1449).
 - Loss of a row or column in geometry_window() and mask() has been fixed
   (#1472).
