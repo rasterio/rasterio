@@ -375,7 +375,7 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, width=max(self.width, window.width) + 1,
+                self, nodata=ndv, hidenodata=bool(fill_value), width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
 

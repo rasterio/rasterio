@@ -70,3 +70,13 @@ def test_boundless_mask_not_all_valid():
     assert masked.mask[:, -1].all()
     assert masked.mask[0, :].all()
     assert masked.mask[-1, :].all()
+
+
+def test_boundless_fill_value():
+    """Confirm resolution of issue #1471"""
+    with rasterio.open("tests/data/red.tif") as src:
+        filled = src.read(1, boundless=True, fill_value=5, window=Window(-1, -1, 66, 66))
+    assert (filled[:, 0] == 5).all()
+    assert (filled[:, -1] == 5).all()
+    assert (filled[0, :] == 5).all()
+    assert (filled[-1, :] == 5).all()
