@@ -59,3 +59,14 @@ def test_hit_ovr(red_green):
             image = numpy.moveaxis(data, 0, -1)
             assert image[0, 0, 0] == 17
             assert image[0, 0, 1] == 204
+
+
+def test_boundless_mask_not_all_valid():
+    """Confirm resolution of issue #1449"""
+    with rasterio.open("tests/data/red.tif") as src:
+        masked = src.read(1, boundless=True, masked=True, window=Window(-1, -1, 66, 66))
+    assert not masked.mask.all()
+    assert masked.mask[:, 0].all()
+    assert masked.mask[:, -1].all()
+    assert masked.mask[0, :].all()
+    assert masked.mask[-1, :].all()

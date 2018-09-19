@@ -390,12 +390,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     None, resampling=resampling)
 
                 if masked:
-                    if all_valid:
-                        mask = np.ma.nomask
-                    else:
-                        mask = np.zeros(out.shape, 'uint8')
-                        mask = ~vrt._read(
-                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
+                    mask = np.zeros(out.shape, 'uint8')
+                    mask = ~vrt._read(
+                        indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
 
                     kwds = {'mask': mask}
                     # Set a fill value only if the read bands share a
