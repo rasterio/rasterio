@@ -235,14 +235,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
             log.debug("Output nodata value read from file: %r", ndv)
 
-            # Change given nodatavals to the closest value that
-            # can be represented by this band's data type to
-            # match GDAL's strategy.
-            if fill_value:
-                ndv = fill_value
-                log.debug("Output nodata value set from fill value")
-
-            elif ndv is not None:
+            if ndv is not None:
                 if np.dtype(dtype).kind in ('i', 'u'):
                     info = np.iinfo(dtype)
                     dt_min, dt_max = info.min, info.max
@@ -321,12 +314,6 @@ cdef class DatasetReaderBase(DatasetBase):
             else:
                 out = np.empty(out_shape, dtype=dtype)
 
-            for i, (ndv, arr) in enumerate(zip(
-                    nodatavals, out if len(out.shape) == 3 else [out])):
-
-                if ndv is not None:
-                    arr.fill(ndv)
-
         # Masking
         # -------
         #
@@ -337,11 +324,10 @@ cdef class DatasetReaderBase(DatasetBase):
         # read_masks(), invert them and use them in constructing masked
         # arrays.
 
-        if masked:
-            enums = self.mask_flag_enums
-            all_valid = all([MaskFlags.all_valid in flags for flags in enums])
-            log.debug("all_valid: %s", all_valid)
-            log.debug("mask_flags: %r", enums)
+        enums = self.mask_flag_enums
+        all_valid = all([MaskFlags.all_valid in flags for flags in enums])
+        log.debug("all_valid: %s", all_valid)
+        log.debug("mask_flags: %r", enums)
 
         # We can jump straight to _read() in some cases. We can ignore
         # the boundless flag if there's no given window.
@@ -353,7 +339,7 @@ cdef class DatasetReaderBase(DatasetBase):
             out = self._read(indexes, out, window, dtype,
                              resampling=resampling)
 
-            if masked:
+            if masked or fill_value is not None:
                 if all_valid:
                     mask = np.ma.nomask
                 else:
@@ -365,17 +351,23 @@ cdef class DatasetReaderBase(DatasetBase):
                 kwds = {'mask': mask}
                 # Set a fill value only if the read bands share a
                 # single nodata value.
-                if len(set(nodatavals)) == 1:
+                if fill_value is not None:
+                    kwds['fill_value'] = fill_value
+                elif len(set(nodatavals)) == 1:
                     if nodatavals[0] is not None:
                         kwds['fill_value'] = nodatavals[0]
+
                 out = np.ma.array(out, **kwds)
+
+                if not masked:
+                    out = out.filled(fill_value)
 
         # If this is a boundless read we will create an in-memory VRT
         # in order to use GDAL's windowing and compositing logic.
         else:
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, hidenodata=bool(fill_value), width=max(self.width, window.width) + 1,
+                self, nodata=ndv, width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
 
@@ -389,7 +381,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling)
 
-                if masked:
+                if masked or fill_value is not None:
                     mask = np.zeros(out.shape, 'uint8')
                     mask = ~vrt._read(
                         indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
@@ -397,10 +389,16 @@ cdef class DatasetReaderBase(DatasetBase):
                     kwds = {'mask': mask}
                     # Set a fill value only if the read bands share a
                     # single nodata value.
-                    if len(set(nodatavals)) == 1:
+                    if fill_value is not None:
+                        kwds['fill_value'] = fill_value
+                    elif len(set(nodatavals)) == 1:
                         if nodatavals[0] is not None:
                             kwds['fill_value'] = nodatavals[0]
+
                     out = np.ma.array(out, **kwds)
+
+                    if not masked:
+                        out = out.filled(fill_value)
 
         if return2d:
             out.shape = out.shape[1:]
