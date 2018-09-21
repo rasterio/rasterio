@@ -1,6 +1,15 @@
 Changes
 =======
 
+1.0.6 ()
+--------
+
+Bug fixes:
+
+- Calling calculate_default_transform for large extents should no longer result
+  in the out of memory error reported in #1131. The rio-warp command should
+  also now run more quickly and with a smaller memory footprint.
+
 1.0.5 (2018-09-19)
 ------------------
 
