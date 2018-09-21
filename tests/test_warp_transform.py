@@ -4,6 +4,7 @@ import pytest
 
 from rasterio._warp import _calculate_default_transform
 from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
 from rasterio.errors import CRSError
 from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform, transform_bounds
@@ -173,3 +174,9 @@ def test_transform_bounds_identity():
     """Confirm fix of #1411"""
     bounds = (12978395.906596646, 146759.09430753812, 12983287.876406897, 151651.06411778927)
     assert transform_bounds("+init=epsg:3857", "+init=epsg:3857", *bounds) == bounds
+
+
+def test_issue1131():
+    """Confirm that we don't run out of memory"""
+    transform, w, h = calculate_default_transform(CRS.from_epsg(4326), CRS.from_epsg(3857), 455880, 454450, 13.0460235139, 42.6925552354, 13.2511695428, 42.8970561511)
+    assert (w, h) == (381595, 518398)
