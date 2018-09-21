@@ -22,6 +22,7 @@ from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import GDALVersion
 from rasterio.crs import CRS
 from rasterio.errors import (
+    GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
@@ -550,7 +551,11 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     vrt_doc = _suggested_proxy_vrt_doc(width, height, transform=transform, crs=src_crs, gcps=gcps).decode('ascii')
 
     try:
-        hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+        try:
+            hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+        except GDALOptionNotImplementedError:
+            hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, None, None, None)
+
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer(
                 hds, NULL, NULL, wkt, 1, 1000.0,0))
