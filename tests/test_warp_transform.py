@@ -61,7 +61,7 @@ def test_identity():
     assert res_width == width
     assert res_height == height
     for res, exp in zip(res_transform, transform):
-        assert round(res, 7) == round(exp, 7)
+        assert round(res, 3) == round(exp, 3)
 
 
 def test_identity_gcps():
@@ -89,7 +89,7 @@ def test_identity_gcps():
     assert res_width == width
     assert res_height == height
     for res, exp in zip(res_transform, transform):
-        assert round(res, 7) == round(exp, 7)
+        assert round(res, 3) == round(exp, 3)
 
 
 def test_transform_bounds():
