@@ -6,10 +6,12 @@ include "gdal.pxi"
 import logging
 import uuid
 import warnings
+import xml.etree.ElementTree as ET
 
 from affine import identity
 import numpy as np
 
+import rasterio
 from rasterio._base import gdal_version
 from rasterio._err import (
     CPLE_IllegalArgError, CPLE_NotSupportedError,
@@ -31,7 +33,7 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._io cimport (
     DatasetReaderBase, InMemoryRaster, in_dtype_range, io_auto)
 from rasterio._features cimport GeomBuilder, OGRGeomBuilder
-from rasterio._shim cimport delete_nodata_value
+from rasterio._shim cimport delete_nodata_value, open_dataset
 
 
 log = logging.getLogger(__name__)
@@ -520,7 +522,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     cdef double geotransform[6]
     cdef OGRSpatialReferenceH osr = NULL
     cdef char *wkt = NULL
-    cdef InMemoryRaster temp = None
+    cdef GDALDatasetH hds = NULL
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -540,36 +542,42 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     OSRExportToWkt(osr, &wkt)
     _safe_osr_release(osr)
 
-    with InMemoryRaster(width=width, height=height, transform=transform,
-                        gcps=gcps, crs=src_crs) as temp:
-        try:
-            hTransformArg = exc_wrap_pointer(
-                GDALCreateGenImgProjTransformer(
-                    temp._hds, NULL, NULL, wkt, 1, 1000.0,0))
-            exc_wrap_int(
-                GDALSuggestedWarpOutput2(
-                    temp._hds, GDALGenImgProjTransform, hTransformArg,
-                    geotransform, &npixels, &nlines, extent, 0))
+    if isinstance(src_crs, str):
+        src_crs = CRS.from_string(src_crs)
+    elif isinstance(src_crs, dict):
+        src_crs = CRS(**src_crs)
 
-            log.debug("Created transformer and warp output.")
+    vrt_doc = _suggested_proxy_vrt_doc(width, height, transform=transform, crs=src_crs, gcps=gcps).decode('ascii')
 
-        except CPLE_NotSupportedError as err:
-            raise CRSError(err.errmsg)
+    try:
+        hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+        hTransformArg = exc_wrap_pointer(
+            GDALCreateGenImgProjTransformer(
+                hds, NULL, NULL, wkt, 1, 1000.0,0))
+        exc_wrap_int(
+            GDALSuggestedWarpOutput2(
+                hds, GDALGenImgProjTransform, hTransformArg,
+                geotransform, &npixels, &nlines, extent, 0))
 
-        except CPLE_AppDefinedError as err:
-            if "Reprojection failed" in str(err):
-                # This "exception" should be treated as a debug msg, not error
-                # "Reprojection failed, err = -14, further errors will be
-                # suppressed on the transform object."
-                log.info("Encountered points outside of valid dst crs region")
-                pass
-            else:
-                raise err
-        finally:
-            if wkt != NULL:
-                CPLFree(wkt)
-            if hTransformArg != NULL:
-                GDALDestroyGenImgProjTransformer(hTransformArg)
+        log.debug("Created transformer and warp output.")
+
+    except CPLE_NotSupportedError as err:
+        raise CRSError(err.errmsg)
+
+    except CPLE_AppDefinedError as err:
+        if "Reprojection failed" in str(err):
+            # This "exception" should be treated as a debug msg, not error
+            # "Reprojection failed, err = -14, further errors will be
+            # suppressed on the transform object."
+            log.info("Encountered points outside of valid dst crs region")
+            pass
+        else:
+            raise err
+    finally:
+        if wkt != NULL:
+            CPLFree(wkt)
+        if hTransformArg != NULL:
+            GDALDestroyGenImgProjTransformer(hTransformArg)
 
     # Convert those modified arguments to Python values.
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
@@ -922,3 +930,32 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
             return super(WarpedVRTReaderBase, self).read_masks(indexes=indexes, out=out, window=window, out_shape=out_shape, resampling=resampling)
+
+
+def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None):
+    """Make a VRT XML document to serve _calculate_default_transform."""
+    vrtdataset = ET.Element('VRTDataset')
+    vrtdataset.attrib['rasterYSize'] = str(height)
+    vrtdataset.attrib['rasterXSize'] = str(width)
+    vrtrasterband = ET.SubElement(vrtdataset, 'VRTRasterBand')
+
+    srs = ET.SubElement(vrtdataset, 'SRS')
+    srs.text = crs.wkt if crs else ""
+
+    if gcps:
+        gcplist = ET.SubElement(vrtdataset, 'GCPList')
+        gcplist.attrib['Projection'] = crs.wkt if crs else ""
+        for point in gcps:
+            gcp = ET.SubElement(gcplist, 'GCP')
+            gcp.attrib['Id'] = str(point.id)
+            gcp.attrib['Info'] = str(point.info)
+            gcp.attrib['Pixel'] = str(point.col)
+            gcp.attrib['Line'] = str(point.row)
+            gcp.attrib['X'] = str(point.x)
+            gcp.attrib['Y'] = str(point.y)
+            gcp.attrib['Z'] = str(point.z)
+    else:
+        geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
+        geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
+
+    return ET.tostring(vrtdataset)
