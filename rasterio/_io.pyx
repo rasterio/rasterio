@@ -6,6 +6,7 @@ from __future__ import absolute_import
 include "directives.pxi"
 include "gdal.pxi"
 
+from collections import Counter
 import logging
 import sys
 import uuid
@@ -24,7 +25,7 @@ from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation
+    UnsupportedOperation, OverviewCreationError
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
@@ -1548,6 +1549,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 "resampling must be one of: {0}".format(", ".join(
                     ['Resampling.{0}'.format(Resampling(k).name) for k in
                      resampling_map.keys()])))
+
+        # Check factors
+        ovr_shapes = Counter([(int((self.height + f - 1) / f), int((self.width + f - 1) / f)) for f in factors])
+        if ovr_shapes[(1, 1)] > 1:
+            raise OverviewCreationError("Too many overviews levels of 1x1 dimension were requested")
 
         # Allocate arrays.
         if factors:
