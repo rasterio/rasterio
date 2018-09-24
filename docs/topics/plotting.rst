@@ -12,7 +12,6 @@ two dimensional data can be accomplished directly with ``pyplot``.
     >>> src = rasterio.open("tests/data/RGB.byte.tif")
     >>> pyplot.imshow(src.read(1), cmap='pink')
     <matplotlib.image.AxesImage object at 0x...>
-    >>> pyplot.show = lambda : None  # prevents showing during doctests
     >>> pyplot.show()
 
 
