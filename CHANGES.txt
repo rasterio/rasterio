@@ -1,6 +1,20 @@
 Changes
 =======
 
+1.0.6 (2018-09-24)
+------------------
+
+Bug fixes:
+
+- If the build_overviews method of a dataset is passed a list of factors that
+  specify more than one 1x1 pixel overview (#1333), Rasterio raises an
+  exception.
+- Calling calculate_default_transform for large extents should no longer result
+  in the out of memory error reported in #1131. The rio-warp command should
+  also now run more quickly and with a smaller memory footprint.
+- We have a more general fix for the problem of filling the empty regions of
+  boundless reads (#1471).
+
 1.0.5 (2018-09-19)
 ------------------
 

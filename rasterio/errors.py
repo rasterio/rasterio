@@ -98,3 +98,7 @@ class WarpOptionsError(RasterioError):
 
 class UnsupportedOperation(RasterioError):
     """Raised when reading from a file opened in 'w' mode"""
+
+
+class OverviewCreationError(RasterioError):
+    """Raised when creation of an overview fails"""

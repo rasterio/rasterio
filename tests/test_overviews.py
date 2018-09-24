@@ -9,6 +9,8 @@ import pytest
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
+from rasterio.errors import OverviewCreationError
+
 
 gdal_version = GDALVersion()
 
@@ -79,3 +81,12 @@ def test_test_unsupported_algo(data):
         with rasterio.open(inputfile, 'r+') as src:
             overview_factors = [2, 4]
             src.build_overviews(overview_factors, resampling=Resampling.q1)
+
+
+def test_issue1333(data):
+    """Fail if asked to create more than one 1x1 overview"""
+    inputfile = str(data.join('RGB.byte.tif'))
+    with pytest.raises(OverviewCreationError):
+        with rasterio.open(inputfile, 'r+') as src:
+            overview_factors = [1024, 2048]
+            src.build_overviews(overview_factors, resampling=Resampling.average)

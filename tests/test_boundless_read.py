@@ -80,3 +80,18 @@ def test_boundless_fill_value():
     assert (filled[:, -1] == 5).all()
     assert (filled[0, :] == 5).all()
     assert (filled[-1, :] == 5).all()
+
+
+def test_boundless_fill_value_overview_masks():
+    """Confirm a more general resolution to issue #1471"""
+    with rasterio.open("tests/data/cogeo.tif") as src:
+        data = src.read(1, boundless=True, window=Window(-300, -335, 1000, 1000), fill_value=5, out_shape=(512, 512))
+    assert (data[:, 0] == 5).all()
+
+
+def test_boundless_masked_fill_value_overview_masks():
+    """Confirm a more general resolution to issue #1471"""
+    with rasterio.open("tests/data/cogeo.tif") as src:
+        data = src.read(1, masked=True, boundless=True, window=Window(-300, -335, 1000, 1000), fill_value=5, out_shape=(512, 512))
+    assert data.fill_value == 5
+    assert data.mask[:, 0].all()
