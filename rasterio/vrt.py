@@ -69,7 +69,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         self.stop()
 
 
-def _boundless_vrt_doc(src_dataset, nodata=None, hidenodata=False, width=None, height=None, transform=None):
+def _boundless_vrt_doc(src_dataset, nodata=None, fill_dataset=None, hidenodata=False, width=None, height=None, transform=None):
     """Make a VRT XML document."""
 
     nodata = nodata or src_dataset.nodata
@@ -101,12 +101,34 @@ def _boundless_vrt_doc(src_dataset, nodata=None, hidenodata=False, width=None, h
         colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
         colorinterp.text = ci.name.capitalize()
 
-        simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
+        if fill_dataset is not None:
+            simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
+            sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
+            sourcefilename.attrib['relativeToVRT'] = "0"
+            sourcefilename.text = vsi_path(parse_path(fill_dataset.name))
+            sourceband = ET.SubElement(simplesource, 'SourceBand')
+            sourceband.text = str(bidx)
+            sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
+            sourceproperties.attrib['RasterXSize'] = str(width)
+            sourceproperties.attrib['RasterYSize'] = str(height)
+            sourceproperties.attrib['dataType'] = _gdal_typename(dtype)
+            sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
+            sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
+            srcrect = ET.SubElement(simplesource, 'SrcRect')
+            srcrect.attrib['xOff'] = '0'
+            srcrect.attrib['yOff'] = '0'
+            srcrect.attrib['xSize'] = str(fill_dataset.width)
+            srcrect.attrib['ySize'] = str(fill_dataset.height)
+            dstrect = ET.SubElement(simplesource, 'DstRect')
+            dstrect.attrib['xOff'] = '0'
+            dstrect.attrib['yOff'] = '0'
+            dstrect.attrib['xSize'] = str(width)
+            dstrect.attrib['ySize'] = str(height)
 
+        simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
         sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
         sourcefilename.text = vsi_path(parse_path(src_dataset.name))
-
         sourceband = ET.SubElement(simplesource, 'SourceBand')
         sourceband.text = str(bidx)
         sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
