@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.0.7 (TBD)
+-----------
+
+Bug fixes:
+
+- Filling the empty regions of boundless reads was too slow in some cases and
+  a faster solution has been found (#1480).
+
 1.0.6 (2018-09-24)
 ------------------
 

@@ -369,18 +369,19 @@ cdef class DatasetReaderBase(DatasetBase):
 
             if fill_value is not None:
                 dtype = self.dtypes[0]
+                bg_path = parse_path('/vsimem/bg{}.tif'.format(uuid.uuid4()))
                 with DatasetWriterBase(
-                        UnparsedPath('/vsimem/vrtfill.tif'), 'w',
+                        bg_path, 'w',
                         driver='GTiff', count=self.count, height=3, width=3,
-                        dtype=dtype, crs=None, transform=None) as fill_dataset:
-                    fill_dataset.write(
+                        dtype=dtype, crs=None, transform=None) as bg_dataset:
+                    bg_dataset.write(
                         np.full((self.count, 3, 3), fill_value, dtype=dtype))
-                fill_dataset = DatasetReaderBase(UnparsedPath('/vsimem/vrtfill.tif'))
+                bg_dataset = DatasetReaderBase(bg_path)
             else:
-                fill_dataset = None
+                bg_dataset = None
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, fill_dataset=fill_dataset,
+                self, nodata=ndv, background=bg_dataset,
                 width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
@@ -412,8 +413,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
                     out = np.ma.array(out, **kwds)
 
-            if fill_dataset is not None:
-                fill_dataset.close()
+            if bg_dataset is not None:
+                bg_dataset.close()
 
         if return2d:
             out.shape = out.shape[1:]

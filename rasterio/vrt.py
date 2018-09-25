@@ -69,8 +69,24 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         self.stop()
 
 
-def _boundless_vrt_doc(src_dataset, nodata=None, fill_dataset=None, hidenodata=False, width=None, height=None, transform=None):
-    """Make a VRT XML document."""
+def _boundless_vrt_doc(
+        src_dataset, nodata=None, background=None, hidenodata=False,
+        width=None, height=None, transform=None):
+    """Make a VRT XML document.
+
+    Parameters
+    ----------
+    src_dataset : Dataset
+        The dataset to wrap.
+    background : Dataset, optional
+        A dataset that provides the optional VRT background. NB: this dataset
+        must have the same number of bands as the src_dataset.
+
+    Returns
+    -------
+    bytes
+        An ascii-encoded string (an ElementTree detail)
+    """
 
     nodata = nodata or src_dataset.nodata
     width = width or src_dataset.width
@@ -101,11 +117,11 @@ def _boundless_vrt_doc(src_dataset, nodata=None, fill_dataset=None, hidenodata=F
         colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
         colorinterp.text = ci.name.capitalize()
 
-        if fill_dataset is not None:
+        if background is not None:
             simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
             sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
             sourcefilename.attrib['relativeToVRT'] = "0"
-            sourcefilename.text = vsi_path(parse_path(fill_dataset.name))
+            sourcefilename.text = vsi_path(parse_path(background.name))
             sourceband = ET.SubElement(simplesource, 'SourceBand')
             sourceband.text = str(bidx)
             sourceproperties = ET.SubElement(simplesource, 'SourceProperties')
@@ -117,8 +133,8 @@ def _boundless_vrt_doc(src_dataset, nodata=None, fill_dataset=None, hidenodata=F
             srcrect = ET.SubElement(simplesource, 'SrcRect')
             srcrect.attrib['xOff'] = '0'
             srcrect.attrib['yOff'] = '0'
-            srcrect.attrib['xSize'] = str(fill_dataset.width)
-            srcrect.attrib['ySize'] = str(fill_dataset.height)
+            srcrect.attrib['xSize'] = str(background.width)
+            srcrect.attrib['ySize'] = str(background.height)
             dstrect = ET.SubElement(simplesource, 'DstRect')
             dstrect.attrib['xOff'] = '0'
             dstrect.attrib['yOff'] = '0'
