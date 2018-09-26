@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Use the non-resolving path form of files_inout_arg in rio-convert and
+  rio-shapes (#999).
 - Filling the empty regions of boundless reads was too slow in some cases and
   a faster solution has been found (#1480).
 - Require cligj>=0.5 for compatibility with click 7.0.
