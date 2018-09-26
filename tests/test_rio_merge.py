@@ -147,7 +147,7 @@ def test_merge_error(test_data_dir_1):
     runner = CliRunner()
     result = runner.invoke(
         main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1'])
-    assert result.exit_code == -1
+    assert result.exit_code
 
 
 def test_merge_bidx(test_data_dir_3):
