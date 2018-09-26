@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Use the non-resolving path form of files_inout_arg in rio-convert and
+  rio-shapes (#999).
 - Require cligj>=0.5 for compatibility with click 7.0.
 
 1.0.6 (2018-09-24)

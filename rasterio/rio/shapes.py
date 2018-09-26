@@ -16,25 +16,6 @@ from rasterio.rio.helpers import write_features
 logger = logging.getLogger(__name__)
 
 
-# Common options used below
-
-# Unlike the version in cligj, this one doesn't require values.
-files_inout_arg = click.argument(
-    'files',
-    nargs=-1,
-    type=click.Path(resolve_path=True),
-    metavar="INPUTS... OUTPUT",
-    callback=options.files_inout_handler)
-
-all_touched_opt = click.option(
-    '-a', '--all', '--all_touched', 'all_touched',
-    is_flag=True,
-    default=False,
-    help='Use all pixels touched by features, otherwise (default) use only '
-         'pixels whose center is within the polygon or that are selected by '
-         'Bresenhams line algorithm')
-
-
 @click.command(short_help="Write shapes extracted from bands or masks.")
 @options.file_in_arg
 @options.output_opt

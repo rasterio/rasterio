@@ -30,7 +30,7 @@ def files_handler(ctx, param, value):
 files_inout_arg = click.argument(
     'files',
     nargs=-1,
-    type=click.Path(resolve_path=True),
+    type=click.Path(),
     metavar="INPUTS... OUTPUT",
     callback=files_handler)
 

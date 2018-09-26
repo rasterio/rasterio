@@ -11,12 +11,7 @@ from rasterio.rio.helpers import resolve_inout
 
 
 @click.command(short_help="Copy and convert raster dataset.")
-@click.argument(
-    'files',
-    nargs=-1,
-    type=click.Path(resolve_path=True),
-    required=True,
-    metavar="INPUT OUTPUT")
+@options.files_inout_arg
 @options.output_opt
 @format_opt
 @options.dtype_opt
