@@ -52,7 +52,7 @@ from rasterio.rio import options
                    "(use --bidx).")
 @click.option('--subdatasets', 'meta_member', flag_value='subdatasets',
               help="Print subdataset identifiers.")
-@click.option('-v', '--tell-me-more', '--verbose', is_flag=True,
+@click.option('-v', '--tell-me-more', '--verbose', 'verbose', is_flag=True,
               help="Output extra information.")
 @options.bidx_opt
 @options.masked_opt
