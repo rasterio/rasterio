@@ -369,7 +369,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
             if fill_value is not None:
                 dtype = self.dtypes[0]
-                bg_path = parse_path('/vsimem/bg{}.tif'.format(uuid.uuid4()))
+                bg_path = UnparsedPath('/vsimem/bg{}.tif'.format(uuid.uuid4()))
                 with DatasetWriterBase(
                         bg_path, 'w',
                         driver='GTiff', count=self.count, height=3, width=3,
