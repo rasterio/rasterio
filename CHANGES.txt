@@ -6,7 +6,11 @@ Changes
 
 Bug fixes:
 
+- Filling the empty regions of boundless reads was too slow in some cases and
+  a faster solution has been found (#1480).
 - Require cligj>=0.5 for compatibility with click 7.0.
+- Precisely specify CLI option and argument names for click 6.x and 7.0
+  compatibility.
 
 1.0.6 (2018-09-24)
 ------------------
