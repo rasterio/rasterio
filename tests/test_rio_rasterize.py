@@ -306,7 +306,7 @@ def test_rasterize_invalid_stdin(tmpdir, runner):
     result = runner.invoke(
         main_group, ['rasterize', output], input='BOGUS')
 
-    assert result.exit_code == -1
+    assert result.exit_code
 
 
 def test_rasterize_invalid_geojson(tmpdir, runner):

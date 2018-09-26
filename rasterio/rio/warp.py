@@ -44,7 +44,7 @@ MAX_OUTPUT_HEIGHT = 100000
     help="Determine output extent from source bounds: left bottom right top "
          ". Cannot be used with destination --bounds")
 @click.option(
-    '--bounds', '--dst-bounds', nargs=4, type=float, default=None,
+    '--bounds', '--dst-bounds', 'dst_bounds', nargs=4, type=float, default=None,
     help="Determine output extent from destination bounds: left bottom right top")
 @options.resolution_opt
 @click.option('--resampling',

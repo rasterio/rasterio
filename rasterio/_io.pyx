@@ -367,8 +367,22 @@ cdef class DatasetReaderBase(DatasetBase):
         # in order to use GDAL's windowing and compositing logic.
         else:
 
+            if fill_value is not None:
+                dtype = self.dtypes[0]
+                bg_path = UnparsedPath('/vsimem/bg{}.tif'.format(uuid.uuid4()))
+                with DatasetWriterBase(
+                        bg_path, 'w',
+                        driver='GTiff', count=self.count, height=3, width=3,
+                        dtype=dtype, crs=None, transform=None) as bg_dataset:
+                    bg_dataset.write(
+                        np.full((self.count, 3, 3), fill_value, dtype=dtype))
+                bg_dataset = DatasetReaderBase(bg_path)
+            else:
+                bg_dataset = None
+
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, width=max(self.width, window.width) + 1,
+                self, nodata=ndv, background=bg_dataset,
+                width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
                 transform=self.window_transform(window)).decode('ascii')
 
@@ -376,13 +390,14 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_kwds = {'driver': 'VRT'}
             else:
                 vrt_kwds = {}
+
             with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
                 out = vrt._read(
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling)
 
-                if masked or fill_value is not None:
+                if masked:
                     mask = np.zeros(out.shape, 'uint8')
                     mask = ~vrt._read(
                         indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
@@ -398,8 +413,8 @@ cdef class DatasetReaderBase(DatasetBase):
 
                     out = np.ma.array(out, **kwds)
 
-                    if not masked:
-                        out = out.filled(fill_value)
+            if bg_dataset is not None:
+                bg_dataset.close()
 
         if return2d:
             out.shape = out.shape[1:]

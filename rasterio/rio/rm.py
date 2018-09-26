@@ -14,7 +14,7 @@ from rasterio.errors import DriverRegistrationError, RasterioIOError
     prompt="Are you sure you want to delete the dataset?",
     expose_value=True)
 @click.option(
-    '-f', '--format', '--driver',
+    '-f', '--format', '--driver', 'driver',
     help="Explicitly delete with this driver rather than probing for the "
          "appropriate driver.")
 def rm(path, yes, driver):
