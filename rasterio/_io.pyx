@@ -397,7 +397,42 @@ cdef class DatasetReaderBase(DatasetBase):
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling)
 
-                if masked:
+                if masked and all_valid:
+                    blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
+                    transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
+                    with DatasetWriterBase(
+                            blank_path, 'w',
+                            driver='GTiff', count=self.count, height=3, width=3,
+                            dtype='uint8', crs=self.crs, transform=transform) as blank_dataset:
+                        blank_dataset.write(
+                            np.ones((self.count, 3, 3), dtype='uint8'))
+
+                    with DatasetReaderBase(blank_path) as blank_dataset:
+                        mask_vrt_doc = _boundless_vrt_doc(
+                            blank_dataset, nodata=0,
+                            width=max(self.width, window.width) + 1,
+                            height=max(self.height, window.height) + 1,
+                            transform=self.window_transform(window)).decode('ascii')
+
+                        print(mask_vrt_doc)
+
+                        with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                            mask = np.zeros(out.shape, 'uint8')
+                            mask = ~mask_vrt._read(
+                                indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
+
+                            kwds = {'mask': mask}
+                            # Set a fill value only if the read bands share a
+                            # single nodata value.
+                            if fill_value is not None:
+                                kwds['fill_value'] = fill_value
+                            elif len(set(nodatavals)) == 1:
+                                if nodatavals[0] is not None:
+                                    kwds['fill_value'] = nodatavals[0]
+
+                            out = np.ma.array(out, **kwds)
+
+                elif masked:
                     mask = np.zeros(out.shape, 'uint8')
                     mask = ~vrt._read(
                         indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
@@ -545,33 +580,61 @@ cdef class DatasetReaderBase(DatasetBase):
         # If this is a boundless read we will create an in-memory VRT
         # in order to use GDAL's windowing and compositing logic.
         else:
-            vrt_doc = _boundless_vrt_doc(
-                self, width=max(self.width, window.width) + 1,
-                height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window)).decode('ascii')
+
+            enums = self.mask_flag_enums
+            all_valid = all([MaskFlags.all_valid in flags for flags in enums])
 
             if not gdal_version().startswith('1'):
                 vrt_kwds = {'driver': 'VRT'}
             else:
                 vrt_kwds = {}
-            with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
-                out = vrt._read(
-                    indexes, out, Window(0, 0, window.width, window.height),
-                    None, resampling=resampling, masks=True)
+            if all_valid:
+                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
+                transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
+                with DatasetWriterBase(
+                        blank_path, 'w',
+                        driver='GTiff', count=self.count, height=3, width=3,
+                        dtype='uint8', crs=self.crs, transform=transform) as blank_dataset:
+                    blank_dataset.write(
+                        np.full((self.count, 3, 3), 255, dtype='uint8'))
 
-                # TODO: we need to determine why `out` can contain data
-                # that looks more like the source's band 1 when doing
-                # this kind of boundless read. It looks like
-                # hmask = GDALGetMaskBand(band) may be returning the
-                # a pointer to the band instead of the mask band in 
-                # this case.
-                # 
-                # Temporary solution: convert all non-zero pixels to
-                # 255 and log that we have done so.
+                with DatasetReaderBase(blank_path) as blank_dataset:
+                    mask_vrt_doc = _boundless_vrt_doc(
+                        blank_dataset, nodata=0,
+                        width=max(self.width, window.width) + 1,
+                        height=max(self.height, window.height) + 1,
+                        transform=self.window_transform(window)).decode('ascii')
 
-                out = np.where(out != 0, 255, 0)
-                log.warn("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
+                    with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
+                        out = np.zeros(out.shape, 'uint8')
+                        out = mask_vrt._read(
+                            indexes, out, Window(0, 0, window.width, window.height), None).astype('bool')
+
+            else:
+                vrt_doc = _boundless_vrt_doc(
+                    self, width=max(self.width, window.width) + 1,
+                    height=max(self.height, window.height) + 1,
+                    transform=self.window_transform(window)).decode('ascii')
+
+                with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
+
+                    out = vrt._read(
+                        indexes, out, Window(0, 0, window.width, window.height),
+                        None, resampling=resampling, masks=True)
+
+                    # TODO: we need to determine why `out` can contain data
+                    # that looks more like the source's band 1 when doing
+                    # this kind of boundless read. It looks like
+                    # hmask = GDALGetMaskBand(band) may be returning the
+                    # a pointer to the band instead of the mask band in 
+                    # this case.
+                    # 
+                    # Temporary solution: convert all non-zero pixels to
+                    # 255 and log that we have done so.
+
+                    out = np.where(out != 0, 255, 0)
+                    log.warn("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
 
         if return2d:
             out.shape = out.shape[1:]
