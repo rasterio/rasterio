@@ -414,8 +414,6 @@ cdef class DatasetReaderBase(DatasetBase):
                             height=max(self.height, window.height) + 1,
                             transform=self.window_transform(window)).decode('ascii')
 
-                        print(mask_vrt_doc)
-
                         with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
                             mask = ~mask_vrt._read(
