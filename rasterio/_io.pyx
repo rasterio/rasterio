@@ -1924,7 +1924,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         # Validate write mode arguments.
 
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
-        if mode == 'w':
+        if mode in ('w', 'w+'):
             if not isinstance(driver, string_types):
                 raise TypeError("A driver name string is required.")
             try:
@@ -1973,7 +1973,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         memdrv = GDALGetDriverByName("MEM")
 
-        if self.mode == 'w':
+        if self.mode in ('w', 'w+'):
             # Find the equivalent GDAL data type or raise an exception
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.

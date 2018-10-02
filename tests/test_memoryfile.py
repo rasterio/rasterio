@@ -245,3 +245,15 @@ def test_write_plus_mode():
             assert (data[0] == 255).all()
             assert (data[1] == 204).all()
             assert (data[2] == 153).all()
+
+
+def test_write_plus_model_jpeg():
+    with MemoryFile() as memfile:
+        with memfile.open(driver='JPEG', dtype='uint8', count=3, height=32, width=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5)) as dst:
+            dst.write(numpy.full((32, 32), 255, dtype='uint8'), 1)
+            dst.write(numpy.full((32, 32), 204, dtype='uint8'), 2)
+            dst.write(numpy.full((32, 32), 153, dtype='uint8'), 3)
+            data = dst.read()
+            assert (data[0] == 255).all()
+            assert (data[1] == 204).all()
+            assert (data[2] == 153).all()
