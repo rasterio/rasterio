@@ -16,7 +16,7 @@ from rasterio._warp import (
 from rasterio.enums import Resampling
 from rasterio.env import ensure_env, GDALVersion, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException
-
+from rasterio.transform import array_bounds
 
 # Gauss (7) is not supported for warp
 SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
@@ -175,7 +175,7 @@ def transform_bounds(
 
 @ensure_env
 @require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
-def reproject(source, destination, src_transform=None, gcps=None,
+def reproject(source, destination=None, src_transform=None, gcps=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, src_alpha=0, dst_alpha=0,
               resampling=Resampling.nearest, num_threads=1,
@@ -287,6 +287,41 @@ def reproject(source, destination, src_transform=None, gcps=None,
                 ['Resampling.{0}'.format(r.name) for r in
                  SUPPORTED_RESAMPLING])))
 
+    # calculate the destination transform if not provided
+    if dst_transform is None and (destination is None or isinstance(destination, np.ndarray)):
+        if isinstance(source, np.ndarray):
+            if source.ndim == 3:
+                src_count, src_height, src_width = source.shape
+            else:
+                src_count = 1
+                src_height, src_width = source.shape
+            src_bounds = array_bounds(src_height, src_width, src_transform)
+        else:
+            src_rdr, src_bidx, _, src_shape = source
+            src_bounds = src_rdr.bounds()
+            src_crs = src_rdr.crs
+            src_count = len(src_bidx)
+            src_height, src_width = src_shape
+
+        dst_height = None
+        dst_width = None
+        dst_count = src_count
+        if destination is not None:
+            if isinstance(destination, np.ndarray):
+                if destination.ndim == 3:
+                    dst_count, dst_height, dst_width = destination.shape
+                else:
+                    dst_count = 1
+                    dst_height, dst_width = destination.shape
+
+        dst_transform, dst_width, dst_height = _calculate_default_transform(
+            src_crs, dst_crs, src_width, src_height,
+            **src_bounds,
+            gcps=gcps, dst_width=dst_width, dst_height=dst_height)
+
+        if destination is None:
+            destination = np.empty((dst_count, dst_height, dst_width), dtype=source.dtype)
+
     # Call the function in our extension module.
     _reproject(
         source, destination, src_transform=src_transform, gcps=gcps,
@@ -295,6 +330,8 @@ def reproject(source, destination, src_transform=None, gcps=None,
         src_alpha=src_alpha, resampling=resampling,
         init_dest_nodata=init_dest_nodata, num_threads=num_threads,
         warp_mem_limit=warp_mem_limit, **kwargs)
+
+    return destination, dst_transform
 
 
 def aligned_target(transform, width, height, resolution):
