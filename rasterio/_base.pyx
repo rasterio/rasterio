@@ -1114,6 +1114,34 @@ cdef class DatasetBase(object):
 
         return factors
 
+    def overview_block_shapes(self, bidx):
+        """An ordered list of block shapes for each overview level for a given band
+
+        Parameters
+        ----------
+        bidx : int
+            The band's index (1-indexed).
+
+        Returns
+        -------
+        list
+        """
+        cdef GDALRasterBandH ovrband = NULL
+        cdef GDALRasterBandH band = NULL
+        cdef int xsize
+        cdef int ysize
+
+        band = self.band(bidx)
+        num_overviews = GDALGetOverviewCount(band)
+        block_shapes = []
+
+        for i in range(num_overviews):
+            ovrband = GDALGetOverview(band, i)
+            GDALGetBlockSize(ovrband, &xsize, &ysize)
+            block_shapes.append((ysize, xsize))
+
+        return block_shapes
+
     def checksum(self, bidx, window=None):
         """Compute an integer checksum for the stored band
 

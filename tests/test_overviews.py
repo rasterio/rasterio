@@ -2,6 +2,7 @@
 
 import logging
 import sys
+import os
 
 from click.testing import CliRunner
 import pytest
@@ -90,3 +91,17 @@ def test_issue1333(data):
         with rasterio.open(inputfile, 'r+') as src:
             overview_factors = [1024, 2048]
             src.build_overviews(overview_factors, resampling=Resampling.average)
+
+
+def test_overview_block_shapes_none(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif, 'r') as src:
+        assert src.overview_block_shapes(1) == []
+
+
+def test_overview_block_shapes(data_dir):
+    inputfile = os.path.join(data_dir, 'cogeo.tif')
+
+    with rasterio.open(inputfile, 'r') as src:
+        ovr_block_shapes = src.overview_block_shapes(1)
+        assert len(ovr_block_shapes) == len(src.overviews(1))
+        assert ovr_block_shapes == [(512, 512)]*6
