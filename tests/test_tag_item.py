@@ -21,6 +21,7 @@ def test_get_tag_item():
 def test_get_tag_item_Tiff():
     with rasterio.open('tests/data/cogeo.tif') as src:
         assert src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1) == '8'
+        assert src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1, ovr=0) == '1104'
         assert src.get_tag_item('IFD_OFFSET', 'TIFF', bidx=1, ovr=1) == '1504'
         assert not src.get_tag_item('IF', 'TIFF', bidx=1)
         with pytest.raises(Exception):

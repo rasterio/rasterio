@@ -993,7 +993,7 @@ cdef class DatasetBase(object):
         else:
             band = self._hds
 
-        if ovr:
+        if ovr is not None:
             obj = GDALGetOverview(band, ovr)
             if obj == NULL:
               raise BandOverviewError(
