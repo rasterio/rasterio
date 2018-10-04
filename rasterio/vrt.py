@@ -161,8 +161,8 @@ def _boundless_vrt_doc(
         dstrect = ET.SubElement(simplesource, 'DstRect')
         dstrect.attrib['xOff'] = str((src_dataset.transform.xoff - transform.xoff) / transform.a)
         dstrect.attrib['yOff'] = str((src_dataset.transform.yoff - transform.yoff) / transform.e)
-        dstrect.attrib['xSize'] = str(src_dataset.width)
-        dstrect.attrib['ySize'] = str(src_dataset.height)
+        dstrect.attrib['xSize'] = str(src_dataset.width * src_dataset.transform.a / transform.a)
+        dstrect.attrib['ySize'] = str(src_dataset.height * src_dataset.transform.e / transform.e)
 
         if src_dataset.nodata is not None:
             nodata_elem = ET.SubElement(simplesource, 'NODATA')

@@ -82,6 +82,26 @@ def test_boundless_fill_value():
     assert (filled[-1, :] == 5).all()
 
 
+def test_boundless_masked_special():
+    """Confirm resolution of special case in issue #1471"""
+    with rasterio.open("tests/data/green.tif") as src:
+        masked = src.read(2, boundless=True, masked=True, window=Window(-1, -1, 66, 66))
+    assert not masked[:, 0].any()
+    assert not masked[:, -1].any()
+    assert not masked[0, :].any()
+    assert not masked[-1, :].any()
+
+
+def test_boundless_mask_special():
+    """Confirm resolution of special case in issue #1471"""
+    with rasterio.open("tests/data/green.tif") as src:
+        mask = src.read_masks(2, boundless=True, window=Window(-1, -1, 66, 66))
+    assert not mask[:, 0].any()
+    assert not mask[:, -1].any()
+    assert not mask[0, :].any()
+    assert not mask[-1, :].any()
+
+
 def test_boundless_fill_value_overview_masks():
     """Confirm a more general resolution to issue #1471"""
     with rasterio.open("tests/data/cogeo.tif") as src:

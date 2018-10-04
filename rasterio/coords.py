@@ -1,6 +1,6 @@
 """Bounding box tuple, and disjoint operator."""
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 _BoundingBox = namedtuple('BoundingBox', ('left', 'bottom', 'right', 'top'))
 
@@ -24,7 +24,8 @@ class BoundingBox(_BoundingBox):
         Top coordinate
     """
 
-    pass
+    def _asdict(self):
+        return OrderedDict(zip(self._fields, self))
 
 
 def disjoint_bounds(bounds1, bounds2):

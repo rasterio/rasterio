@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.0.8 (2018-10-02)
+------------------
+
+Bug fixes:
+
+- Datasets contained in MemoryFile buffers are now opened in r+ or w+ mode
+  instead of r or w.
+- The namedtuple _asdict method is overridden in BoundingBox to work around a
+  bug in Python 3.4.3 (#1486, #1488). This unblocks creation of manylinux1
+  wheels for Python 3.4.
+
 1.0.7 (2018-09-26)
 ------------------
 
