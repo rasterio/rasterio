@@ -230,6 +230,13 @@ this from the downloads folder:
     $ pip install GDAL-2.0.2-cp27-none-win32.whl
     $ pip install rasterio-0.34.0-cp27-cp27m-win32.whl
 
+You can also install rasterio with conda using Anaconda's conda-forge channel.
+
+.. code-block:: console
+
+    $ conda install -c conda-forge rasterio 
+
+
 Source Distributions
 --------------------
 
