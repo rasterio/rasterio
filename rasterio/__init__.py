@@ -119,7 +119,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
     Returns
     -------
-    A ``DatasetReader`` or ``DatasetUpdater`` object.
+    A ``DatasetReader`` or ``DatasetWriter`` object.
 
     Examples
     --------

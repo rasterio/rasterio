@@ -5,12 +5,11 @@ include "gdal.pxi"
 
 import json
 import logging
-import warnings
 
 from rasterio._err import CPLE_BaseError
 from rasterio.compat import UserDict
 from rasterio.compat import string_types
-from rasterio.errors import CRSError, RasterioDeprecationWarning
+from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
@@ -74,25 +73,10 @@ class _CRS(UserDict):
             if not self or not other:
                 return not self and not other
 
-            # use dictionary equality rules first
-            elif isinstance(other, dict):
-                warnings.warn(
-                    "Comparison to dict will be removed in 1.0",
-                    RasterioDeprecationWarning
-                )
-                if UserDict(self.data) == UserDict(other):
-                    return True
-
-            else:
-                if isinstance(other, str):
-                    warnings.warn(
-                        "Comparison to str will be removed in 1.0",
-                        RasterioDeprecationWarning
-                    )
-                osr_crs1 = osr_from_crs(self)
-                osr_crs2 = osr_from_crs(other)
-                retval = OSRIsSame(osr_crs1, osr_crs2)
-                return bool(retval == 1)
+            osr_crs1 = osr_from_crs(self)
+            osr_crs2 = osr_from_crs(other)
+            retval = OSRIsSame(osr_crs1, osr_crs2)
+            return bool(retval == 1)
 
         finally:
             _safe_osr_release(osr_crs1)
