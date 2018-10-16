@@ -81,10 +81,12 @@ This version corrects errors made in building binary wheels for 1.0.3. There
 are no bug fixes or new features in this version.
 
 1.0.3 (2018-08-01)
-------------------
 
 Bug fixes:
 
+- A regression in GeoJSON source handling in rio-rasterize (#1425) has been
+  fixed.
+- Rasterization of linear rings (#1431) is now supported.
 - The input file handler of rio-rasterize has been changed so that it does not
   reject GeoJSON files (#1425).
 - Linear rings have been added as acceptable input for rio-rasterize and other
