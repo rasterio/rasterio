@@ -234,7 +234,7 @@ class Env(object):
         -------
         bool
         """
-        return hascreds()  # bool(self.session)
+        return hascreds()
 
     def credentialize(self):
         """Get credentials and configure GDAL
@@ -338,9 +338,7 @@ def setenv(**options):
 
 
 def hascreds():
-    gdal_config = local._env.get_config_options()
-    return bool('AWS_ACCESS_KEY_ID' in gdal_config and
-                'AWS_SECRET_ACCESS_KEY' in gdal_config)
+    return local._env is not None and all(key in local._env.get_config_options() for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])
 
 
 def delenv():
@@ -368,6 +366,12 @@ def ensure_env(f):
 
 
 def ensure_env_credentialled(f):
+    """DEPRECATED alias for ensure_env_with_credentials"""
+    warnings.warn("Please use ensure_env_with_credentials instead", RasterioDeprecationWarning)
+    return ensure_env_with_credentials(f)
+
+
+def ensure_env_with_credentials(f):
     """Ensures a config environment exists and is credentialized
 
     Parameters
@@ -393,7 +397,9 @@ def ensure_env_credentialled(f):
         else:
             env_ctor = Env.from_defaults
 
-        if isinstance(args[0], str):
+        if hascreds():
+            session = DummySession()
+        elif isinstance(args[0], str):
             session = Session.from_path(args[0])
         else:
             session = Session.from_path(None)
@@ -449,7 +455,7 @@ class GDALVersion(object):
         elif isinstance(input, string_types):
             # Extract major and minor version components.
             # alpha, beta, rc suffixes ignored
-            match = re.search('^\d+\.\d+', input)
+            match = re.search(r'^\d+\.\d+', input)
             if not match:
                 raise ValueError(
                     "value does not appear to be a valid GDAL version "

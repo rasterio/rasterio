@@ -55,7 +55,7 @@ cdef bint is_64bit = sys.maxsize > 2 ** 32
 
 cdef void log_error(CPLErr err_class, int err_no, const char* msg) with gil:
     """Send CPL debug messages and warnings to Python's logger."""
-    log = logging.getLogger('rasterio._gdal')
+    log = logging.getLogger(__name__)
     if err_class < 3:
         if err_no in code_map:
             log.log(level_map[err_class], "%s in %s", code_map[err_no], msg)

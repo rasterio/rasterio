@@ -7,7 +7,7 @@ import logging
 
 from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio.env import ensure_env_credentialled
+from rasterio.env import ensure_env_with_credentials
 from rasterio._err import CPLE_OpenFailedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
 from rasterio.path import parse_path, vsi_path
@@ -16,7 +16,7 @@ from rasterio.path import parse_path, vsi_path
 log = logging.getLogger(__name__)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def exists(path):
 
     """Determine if a dataset exists by attempting to open it.
@@ -47,7 +47,7 @@ def exists(path):
                 GDALClose(h_dataset)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
     """Copy a raster from a path or open dataset handle to a new destination
@@ -120,7 +120,7 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
                     GDALClose(src_dataset)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def copyfiles(src, dst):
 
     """Copy files associated with a dataset from one location to another.
@@ -162,7 +162,7 @@ def copyfiles(src, dst):
                 GDALClose(h_dataset)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def delete(path, driver=None):
 
     """Delete a GDAL dataset

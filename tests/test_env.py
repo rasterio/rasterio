@@ -13,6 +13,7 @@ from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
+from rasterio.session import AWSSession
 
 from .conftest import requires_gdal21
 
@@ -22,8 +23,6 @@ credentials = pytest.mark.skipif(
     not(boto3.Session()._session.get_credentials()),
     reason="S3 raster access requires credentials")
 
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 L8TIF = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF"
 L8TIFB2 = "s3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B2.TIF"
@@ -739,3 +738,22 @@ def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
 
     with rasterio.Env() as env:
         assert env.drivers()
+
+
+def test_nested_credentials(monkeypatch):
+    """Check that rasterio.open() doesn't wipe out surrounding credentials"""
+
+    @ensure_env_credentialled
+    def fake_opener(path):
+        return getenv()
+
+    with rasterio.Env(session=AWSSession(aws_access_key_id='foo', aws_secret_access_key='bar')):
+        assert getenv()['AWS_ACCESS_KEY_ID'] == 'foo'
+        assert getenv()['AWS_SECRET_ACCESS_KEY'] == 'bar'
+
+        monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'lol')
+        monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'wut')
+
+        gdalenv = fake_opener('s3://foo/bar')
+        assert gdalenv['AWS_ACCESS_KEY_ID'] == 'foo'
+        assert gdalenv['AWS_SECRET_ACCESS_KEY'] == 'bar'

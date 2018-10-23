@@ -25,7 +25,7 @@ from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
-from rasterio.env import ensure_env_credentialled, Env
+from rasterio.env import ensure_env_with_credentials, Env
 from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
@@ -55,7 +55,7 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
          crs=None, transform=None, dtype=None, nodata=None, sharing=True,
          **kwargs):
