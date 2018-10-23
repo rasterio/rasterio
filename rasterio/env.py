@@ -194,7 +194,7 @@ class Env(object):
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
-        elif 'AWS_ACCESS_KEY_ID' in os.environ:
+        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
             self.session = AWSSession()
         else:
             self.session = DummySession()

@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.0.9 ()
+--------
+
+Bug fixes:
+
+- Check for two AWS environment variables before creating a session (#1494).
+
+
 1.0.8 (2018-10-02)
 ------------------
 
