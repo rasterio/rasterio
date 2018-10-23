@@ -6,8 +6,15 @@ Changes
 
 Bug fixes:
 
-- Check for two AWS environment variables before creating a session (#1494).
-
+- WEBP has been added to the Compression enum. Exploitation of this new
+  compression mode will require GDAL 2.4.
+- Rasterio now check for two AWS environment variables before creating a
+  session (#1494).
+- The ensure_env_with_credentials decorator which wraps rasterio.open will no
+  longer clobber the credentials in a surrounding environment or seek
+  credentials when they already exist (#1507).
+- The comparison of CRS objects to dicts and strs that we pledged to remove at
+  1.0 has at last been removed (#1492).
 
 1.0.8 (2018-10-02)
 ------------------
