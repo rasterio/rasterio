@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.9 (?)
+---------
+
+Bug fixes:
+
+- webp added to enums.Compression (#1515). Use of this requires GDAL 2.4.
+
 1.0.8 (2018-10-02)
 ------------------
 
