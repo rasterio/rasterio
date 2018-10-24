@@ -452,6 +452,15 @@ Information about existing overviews can be printed using the --ls option.
 
     $ rio overview --ls
 
+The block size (tile width and height) used for overviews (internal
+or external) can be specified by setting the ``GDAL_TIFF_OVR_BLOCKSIZE``
+environment variable to a power-of-two value between 64 and 4096. The
+default value is 128.
+
+.. code-block:: console
+
+    $ GDAL_TIFF_OVR_BLOCKSIZE=256 rio overview --build 2^1..4
+
 
 rasterize
 ---------
