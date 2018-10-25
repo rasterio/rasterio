@@ -60,6 +60,7 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
+@requires_gdal21
 def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
     """A VirtualVRT has expected nondefault nodata values."""
     with rasterio.open(path_rgb_byte_tif) as src:
