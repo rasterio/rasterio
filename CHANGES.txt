@@ -6,6 +6,10 @@ Changes
 
 Bug fixes:
 
+- Numpy masked arrays with the normal Numpy mask sense (True == invalid) are
+  now supported as input for feature.shapes(). The mask keyword argument of the
+  function keeps to the GDAL sense of masks (nonzero == invalid) and the
+  documentation has been improved to communicate this (#1517).
 - WEBP has been added to the Compression enum. Exploitation of this new
   compression mode will require GDAL 2.4.
 - Rasterio now check for two AWS environment variables before creating a

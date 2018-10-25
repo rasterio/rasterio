@@ -78,8 +78,12 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
-        Values of False or 0 will be excluded from feature generation
-        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
+        Must evaluate to bool (rasterio.bool_ or rasterio.uint8). Values
+        of False or 0 will be excluded from feature generation.  Note
+        well that this is the inverse sense from Numpy's, where a mask
+        value of True indicates invalid data in an array. If `source` is
+        a Numpy masked array and `mask` is None, the source's mask will
+        be inverted and used in place of `mask`.
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
     transform : Affine transformation, optional
@@ -104,6 +108,10 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     memory.
 
     """
+    if hasattr(source, 'mask') and mask is None:
+        mask = ~source.mask
+        source = source.data
+
     transform = guard_transform(transform)
     for s, v in _shapes(source, mask, connectivity, transform):
         yield s, v
