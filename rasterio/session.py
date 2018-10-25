@@ -20,6 +20,20 @@ class Session(object):
 
     @classmethod
     def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
         return NotImplementedError
 
     def get_credential_options(self):
@@ -104,23 +118,6 @@ class Session(object):
 
         """
         return Session.cls_from_path(path)(*args, **kwargs)
-#        if not path:
-#            return DummySession()
-#
-#        path = parse_path(path)
-#
-#        if isinstance(path, UnparsedPath) or path.is_local:
-#            return DummySession()
-#
-#        elif path.scheme == "s3" or "amazonaws.com" in path.path:
-#            return AWSSession(*args, **kwargs)
-#
-#        # This factory can be extended to other cloud providers here.
-#        # elif path.scheme == "cumulonimbus":  # for example.
-#        #     return CumulonimbusSession(*args, **kwargs)
-#
-#        else:
-#            return DummySession()
 
 
 class DummySession(Session):
@@ -139,6 +136,20 @@ class DummySession(Session):
 
     @classmethod
     def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
         return True
 
     def get_credential_options(self):
@@ -196,24 +207,38 @@ class AWSSession(Session):
 
         self.requester_pays = requester_pays
         self.unsigned = aws_unsigned
+        self._creds = self._session._session.get_credentials()
 
     @classmethod
     def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
         return 'AWS_ACCESS_KEY_ID' in config and 'AWS_SECRET_ACCESS_KEY' in config
 
     @property
     def credentials(self):
         """The session credentials as a dict"""
         res = {}
-        creds = self._session._session.get_credentials()
-        if creds:
-            creds_set = creds.get_frozen_credentials()
-            if creds_set.access_key:  # pragma: no branch
-                res['aws_access_key_id'] = creds_set.access_key
-            if creds_set.secret_key:  # pragma: no branch
-                res['aws_secret_access_key'] = creds_set.secret_key
-            if creds_set.token:
-                res['aws_session_token'] = creds_set.token
+        if self._creds:
+            frozen_creds = self._creds.get_frozen_credentials()
+            if frozen_creds.access_key:  # pragma: no branch
+                res['aws_access_key_id'] = frozen_creds.access_key
+            if frozen_creds.secret_key:  # pragma: no branch
+                res['aws_secret_access_key'] = frozen_creds.secret_key
+            if frozen_creds.token:
+                res['aws_session_token'] = frozen_creds.token
         if self._session.region_name:
             res['aws_region'] = self._session.region_name
         if self.requester_pays:
