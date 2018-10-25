@@ -8,16 +8,11 @@ import re
 import threading
 import warnings
 
-import rasterio
-from rasterio._env import (
-    GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
+from rasterio._env import GDALEnv, get_gdal_config, set_gdal_config
 from rasterio.compat import string_types, getargspec
-from rasterio.dtypes import check_dtype
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
-from rasterio.path import parse_path, UnparsedPath, ParsedPath
 from rasterio.session import Session, AWSSession, DummySession
-from rasterio.transform import guard_transform
 
 
 class ThreadEnv(threading.local):
@@ -194,7 +189,7 @@ class Env(object):
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
-        elif 'AWS_ACCESS_KEY_ID' in os.environ:
+        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
             self.session = AWSSession()
         else:
             self.session = DummySession()
@@ -226,16 +221,6 @@ class Env(object):
         options.update(**kwargs)
         return Env(*args, **options)
 
-    @property
-    def is_credentialized(self):
-        """Test for existence of cloud credentials
-
-        Returns
-        -------
-        bool
-        """
-        return hascreds()  # bool(self.session)
-
     def credentialize(self):
         """Get credentials and configure GDAL
 
@@ -247,7 +232,7 @@ class Env(object):
         None
 
         """
-        if hascreds():
+        if self.session.hascreds(getenv()):
             pass
         else:
             cred_opts = self.session.get_credential_options()
@@ -338,9 +323,8 @@ def setenv(**options):
 
 
 def hascreds():
-    gdal_config = local._env.get_config_options()
-    return bool('AWS_ACCESS_KEY_ID' in gdal_config and
-                'AWS_SECRET_ACCESS_KEY' in gdal_config)
+    warnings.warn("Please use Env.session.hascreds() instead", RasterioDeprecationWarning)
+    return local._env is not None and all(key in local._env.get_config_options() for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])
 
 
 def delenv():
@@ -368,6 +352,12 @@ def ensure_env(f):
 
 
 def ensure_env_credentialled(f):
+    """DEPRECATED alias for ensure_env_with_credentials"""
+    warnings.warn("Please use ensure_env_with_credentials instead", RasterioDeprecationWarning)
+    return ensure_env_with_credentials(f)
+
+
+def ensure_env_with_credentials(f):
     """Ensures a config environment exists and is credentialized
 
     Parameters
@@ -394,9 +384,15 @@ def ensure_env_credentialled(f):
             env_ctor = Env.from_defaults
 
         if isinstance(args[0], str):
-            session = Session.from_path(args[0])
+            session_cls = Session.cls_from_path(args[0])
+
+            if local._env and session_cls.hascreds(getenv()):
+                session_cls = DummySession
+
+            session = session_cls()
+
         else:
-            session = Session.from_path(None)
+            session = DummySession()
 
         with env_ctor(session=session):
             return f(*args, **kwds)
@@ -449,7 +445,7 @@ class GDALVersion(object):
         elif isinstance(input, string_types):
             # Extract major and minor version components.
             # alpha, beta, rc suffixes ignored
-            match = re.search('^\d+\.\d+', input)
+            match = re.search(r'^\d+\.\d+', input)
             if not match:
                 raise ValueError(
                     "value does not appear to be a valid GDAL version "

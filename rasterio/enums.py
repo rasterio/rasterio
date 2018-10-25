@@ -28,13 +28,14 @@ class ColorInterp(IntEnum):
 class Resampling(IntEnum):
     """Available warp resampling algorithms.
 
-    The subset of 'nearest', 'cubic', 'average', 'mode', and 'gauss'
-    are available in making dataset overviews.
+    The first 8, 'nearest', 'bilinear', 'cubic', 'cubic_spline',
+    'lanczos', 'average', 'mode', and 'gauss', are available for making
+    dataset overviews.
 
     'max', 'min', 'med', 'q1', 'q3' are only supported in GDAL >= 2.0.0.
 
-    'nearest', 'bilinear', 'cubic', 'cubic_spline', 'lanczos', 'average', 'mode'
-    are always available (GDAL >= 1.10).
+    'nearest', 'bilinear', 'cubic', 'cubic_spline', 'lanczos',
+    'average', 'mode' are always available (GDAL >= 1.10).
 
     Note: 'gauss' is not available to the functions in rio.warp.
     """

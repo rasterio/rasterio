@@ -592,11 +592,14 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     return dst_affine, dst_width, dst_height
 
 
+DEFAULT_NODATA_FLAG = object()
+
+
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def __init__(self, src_dataset, src_crs=None, dst_crs=None, crs=None,
                  resampling=Resampling.nearest, tolerance=0.125,
-                 src_nodata=None, dst_nodata=None, nodata=None,
+                 src_nodata=DEFAULT_NODATA_FLAG, dst_nodata=None, nodata=DEFAULT_NODATA_FLAG,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
                  init_dest_nodata=True, src_alpha=0, add_alpha=False,
@@ -612,7 +615,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         src_transfrom : Affine, optional
             Overrides the transform of `src_dataset`.
         src_nodata : float, optional
-            Overrides the nodata value of `src_dataset`.
+            Overrides the nodata value of `src_dataset`, which is the
+            default.
         crs : CRS or str, optional
             The coordinate reference system at the end of the warp
             operation.  Default: the crs of `src_dataset`. dst_crs is
@@ -727,8 +731,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.resampling = resampling
         self.tolerance = tolerance
 
-        self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
-        self.dst_nodata = self.src_nodata if nodata is None else nodata
+        self.src_nodata = self.src_dataset.nodata if src_nodata is DEFAULT_NODATA_FLAG else src_nodata
+        self.dst_nodata = self.src_nodata if nodata is DEFAULT_NODATA_FLAG else nodata
         self.dst_width = width
         self.dst_height = height
         self.dst_transform = transform

@@ -845,6 +845,25 @@ def test_shapes_mask(basic_image):
     assert value == 1
 
 
+def test_shapes_masked_array(basic_image):
+    """Only pixels not masked out should be converted to features."""
+    mask = np.full(basic_image.shape, False, dtype=rasterio.bool_)
+    mask[4:5, 4:5] = True
+
+    results = list(shapes(np.ma.masked_array(basic_image, mask=mask)))
+
+    assert len(results) == 2
+
+    shape, value = results[0]
+    assert shape == {
+        'coordinates': [
+            [(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]
+        ],
+        'type': 'Polygon'
+    }
+    assert value == 1
+
+
 def test_shapes_blank_mask(basic_image):
     """Mask is blank so results should mask shapes without mask."""
     assert np.array_equal(
