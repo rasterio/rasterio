@@ -6,6 +6,11 @@ Changes
 
 Bug fixes:
 
+- Delegate test of the environment for existing session credentials to the
+  session class to generalize credentialization of GDAL to cloud providers
+  other than AWS (#1520). The env.hascreds function is no longer used in
+  Rasterio and has been marked as deprecated.
+- Switch to use of botocore Credentials.get_frozen_credentials (#1521).
 - Numpy masked arrays with the normal Numpy mask sense (True == invalid) are
   now supported as input for feature.shapes(). The mask keyword argument of the
   function keeps to the GDAL sense of masks (nonzero == invalid) and the
