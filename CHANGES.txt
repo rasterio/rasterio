@@ -6,6 +6,11 @@ Changes
 
 Bug fixes:
 
+- The defaults for WarpedVRT's `src_nodata` and `nodata` keyword arguments are
+  no longer None, but are markers for the default behavior: inheritance of
+  nodata values from the VRT's source dataset. Values of `None` for these
+  keyword arguments means that the VRT does not inherit from the source and has
+  no nodata value at all (#1503).
 - WEBP has been added to the Compression enum. Exploitation of this new
   compression mode will require GDAL 2.4.
 - Rasterio now check for two AWS environment variables before creating a

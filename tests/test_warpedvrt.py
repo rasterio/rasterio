@@ -60,6 +60,20 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
+@requires_gdal21
+def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
+    """A VirtualVRT has expected nondefault nodata values."""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        vrt = WarpedVRT(src, crs=DST_CRS, src_nodata=None, nodata=None)
+        assert vrt.dst_crs == CRS.from_string(DST_CRS)
+        assert vrt.src_nodata is None
+        assert vrt.dst_nodata is None
+        assert vrt.tolerance == 0.125
+        assert vrt.resampling == Resampling.nearest
+        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
+        assert vrt.mask_flag_enums == ([MaskFlags.all_valid],) * 3
+
+
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_add_alpha(path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
