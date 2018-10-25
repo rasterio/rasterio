@@ -1,7 +1,7 @@
 """Abstraction for sessions in various clouds."""
 
 
-from rasterio.path import parse_path, UnparsedPath, ParsedPath
+from rasterio.path import parse_path, UnparsedPath
 
 
 class Session(object):
@@ -17,6 +17,24 @@ class Session(object):
     This class is not intended to be instantiated.
 
     """
+
+    @classmethod
+    def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
+        return NotImplementedError
 
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
@@ -50,6 +68,38 @@ class Session(object):
             return cls(session)
 
     @staticmethod
+    def cls_from_path(path):
+        """Find the session class suited to the data at `path`.
+
+        Parameters
+        ----------
+        path : str
+            A dataset path or identifier.
+
+        Returns
+        -------
+        class
+
+        """
+        if not path:
+            return DummySession
+
+        path = parse_path(path)
+
+        if isinstance(path, UnparsedPath) or path.is_local:
+            return DummySession
+
+        elif path.scheme == "s3" or "amazonaws.com" in path.path:
+            return AWSSession
+
+        # This factory can be extended to other cloud providers here.
+        # elif path.scheme == "cumulonimbus":  # for example.
+        #     return CumulonimbusSession(*args, **kwargs)
+
+        else:
+            return DummySession
+
+    @staticmethod
     def from_path(path, *args, **kwargs):
         """Create a session object suited to the data at `path`.
 
@@ -67,23 +117,7 @@ class Session(object):
         Session
 
         """
-        if not path:
-            return DummySession()
-
-        path = parse_path(path)
-
-        if isinstance(path, UnparsedPath) or path.is_local:
-            return DummySession()
-
-        elif path.scheme == "s3" or "amazonaws.com" in path.path:
-            return AWSSession(*args, **kwargs)
-
-        # This factory can be extended to other cloud providers here.
-        # elif path.scheme == "cumulonimbus":  # for example.
-        #     return CumulonimbusSession(*args, **kwargs)
-
-        else:
-            return DummySession()
+        return Session.cls_from_path(path)(*args, **kwargs)
 
 
 class DummySession(Session):
@@ -99,6 +133,24 @@ class DummySession(Session):
     def __init__(self, *args, **kwargs):
         self._session = None
         self.credentials = {}
+
+    @classmethod
+    def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
+        return True
 
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
@@ -157,22 +209,41 @@ class AWSSession(Session):
         self.unsigned = aws_unsigned
         self._creds = self._session._session.get_credentials()
 
+    @classmethod
+    def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
+        return 'AWS_ACCESS_KEY_ID' in config and 'AWS_SECRET_ACCESS_KEY' in config
+
     @property
     def credentials(self):
         """The session credentials as a dict"""
-        creds = {}
+        res = {}
         if self._creds:
-            if self._creds.access_key:  # pragma: no branch
-                creds['aws_access_key_id'] = self._creds.access_key
-            if self._creds.secret_key:  # pragma: no branch
-                creds['aws_secret_access_key'] = self._creds.secret_key
-            if self._creds.token:
-                creds['aws_session_token'] = self._creds.token
+            frozen_creds = self._creds.get_frozen_credentials()
+            if frozen_creds.access_key:  # pragma: no branch
+                res['aws_access_key_id'] = frozen_creds.access_key
+            if frozen_creds.secret_key:  # pragma: no branch
+                res['aws_secret_access_key'] = frozen_creds.secret_key
+            if frozen_creds.token:
+                res['aws_session_token'] = frozen_creds.token
         if self._session.region_name:
-            creds['aws_region'] = self._session.region_name
+            res['aws_region'] = self._session.region_name
         if self.requester_pays:
-            creds['aws_request_payer'] = 'requester'
-        return creds
+            res['aws_request_payer'] = 'requester'
+        return res
 
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
