@@ -195,7 +195,7 @@ Linux
 Rasterio distributions are available from UbuntuGIS and Anaconda's conda-forge
 channel.
 
-`Manylinux <https://github.com/pypa/manylinux>`__ distributions may be
+`Manylinux <https://pypi.org/project/rasterio/1.0.9/#files>`__ distributions may be
 available in the future.
 
 OS X
