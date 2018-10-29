@@ -208,6 +208,8 @@ cdef class DatasetBase(object):
         self._nodatavals = []
         self._units = ()
         self._descriptions = ()
+        self._scales = ()
+        self._offsets = ()
         self._gcps = None
         self._read = False
 
@@ -571,6 +573,12 @@ cdef class DatasetBase(object):
     def _set_all_descriptions(self, value):
         raise NotImplementedError
 
+    def _set_all_scales(self, value):
+        raise NotImplementedError
+
+    def _set_all_offsets(self, value):
+        raise NotImplementedError
+
     def _set_all_units(self, value):
         raise NotImplementedError
 
@@ -611,6 +619,44 @@ cdef class DatasetBase(object):
 
         def __set__(self, value):
             self.write_transform(value.to_gdal())
+
+    property offsets:
+        """Raster offset for each dataset band
+
+        To set offsets, one for each band is required.
+
+        Returns
+        -------
+        list of float
+        """
+        def __get__(self):
+            cdef int success = 0
+            if not self._offsets:
+                offsets = [GDALGetRasterOffset(self.band(j), &success) for j in self.indexes]
+                self._offsets = tuple(offsets)
+            return self._offsets
+
+        def __set__(self, value):
+            self._set_all_offsets(value)
+
+    property scales:
+        """Raster scale for each dataset band
+
+        To set scales, one for each band is required.
+
+        Returns
+        -------
+        list of float
+        """
+        def __get__(self):
+            cdef int success = 0
+            if not self._scales:
+                scales = [GDALGetRasterScale(self.band(j), &success) for j in self.indexes]
+                self._scales = tuple(scales)
+            return self._scales
+
+        def __set__(self, value):
+            self._set_all_scales(value)
 
     property units:
         """A list of str: one units string for each dataset band
