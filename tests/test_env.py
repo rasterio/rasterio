@@ -730,6 +730,11 @@ def test_require_gdal_version_chaining():
 def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
     """Confirm that we can get drivers without any credentials"""
     credentials_file = tmpdir.join('credentials')
+    credentials_file.write("""
+[default]
+aws_secret_access_key = foo
+aws_access_key_id = bar
+""")
     monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
     monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
     # Assert that we don't have any AWS credentials by accident.

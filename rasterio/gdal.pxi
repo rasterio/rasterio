@@ -265,6 +265,10 @@ cdef extern from "gdal.h" nogil:
     char** GDALGetFileList(GDALDatasetH hDS)
     CPLErr GDALCopyDatasetFiles (GDALDriverH hDriver, const char * pszNewName, const char * pszOldName)
 
+    double GDALGetRasterScale(GDALRasterBandH hBand, int * pbSuccess)
+    double GDALGetRasterOffset(GDALRasterBandH hBand, int * pbSuccess)
+    CPLErr GDALSetRasterScale(GDALRasterBandH hBand, double dfNewScale)
+    CPLErr GDALSetRasterOffset(GDALRasterBandH hBand, double dfNewOffset)
 
 cdef extern from "ogr_api.h" nogil:
 
