@@ -257,3 +257,29 @@ class AWSSession(Session):
             return {'AWS_NO_SIGN_REQUEST': 'YES'}
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
+
+
+class OSSSession(Session):
+
+    def __init__(self, oss_access_key_id=None, oss_secret_access_key=None, oss_endpoint=None):
+        self._creds = {
+            "oss_access_key_id": oss_access_key_id,
+            "oss_secret_access_key": oss_secret_access_key,
+            "oss_endpoint": oss_endpoint
+        }
+    
+    @classmethod
+    def hascreds(cls, config):
+        return 'OSS_ACCESS_KEY_ID' in config and 'OSS_SECRET_ACCESS_KEY' in config
+
+    @property
+    def credentials(self):
+        """the auth credentials as dict
+        """
+        return self._creds
+
+    def get_credential_options(self):
+        return {k.upper(): v for k, v in self.credentials.items()}
+
+    
+
