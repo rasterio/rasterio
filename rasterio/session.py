@@ -260,8 +260,21 @@ class AWSSession(Session):
 
 
 class OSSSession(Session):
+    """Configures access to secured resources stored in Alibaba Cloud OSS.
+    """
+    def __init__(self, oss_access_key_id, oss_secret_access_key, oss_endpoint='oss-us-east-1.aliyuncs.com'):
+        """Create new Alibaba Cloud OSS session
 
-    def __init__(self, oss_access_key_id=None, oss_secret_access_key=None, oss_endpoint=None):
+        Parameters
+        ----------
+        oss_access_key_id: string
+            An access key id
+        oss_secret_access_key: string
+            An secret access key
+        oss_endpoint: string, default 'oss-us-east-1.aliyuncs.com'
+            the region attached to the bucket
+        """
+
         self._creds = {
             "oss_access_key_id": oss_access_key_id,
             "oss_secret_access_key": oss_secret_access_key,
@@ -270,15 +283,35 @@ class OSSSession(Session):
     
     @classmethod
     def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
         return 'OSS_ACCESS_KEY_ID' in config and 'OSS_SECRET_ACCESS_KEY' in config
 
     @property
     def credentials(self):
-        """the auth credentials as dict
-        """
+        """The session credentials as a dict"""
         return self._creds
 
     def get_credential_options(self):
+        """Get credentials as GDAL configuration options
+
+        Returns
+        -------
+        dict
+
+        """
         return {k.upper(): v for k, v in self.credentials.items()}
 
     
