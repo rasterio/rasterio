@@ -155,7 +155,8 @@ def plotting_extent(source, transform=None):
     Parameters
     ----------
     source : array or dataset object opened in 'r' mode
-        input data
+        If array, data in the order rows, columns and optionally bands. If array
+        is band order (bands in the first dimension), use arr[0]
     transform: Affine, required if source is array
         Defines the affine transform if source is an array
 
