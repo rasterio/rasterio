@@ -233,8 +233,14 @@ class _CRS(UserDict):
             raise CRSError(str(exc))
 
         try:
-            OSRExportToProj4(osr, &prj)
-            return cls.from_string(prj.decode('utf-8'))
+            try:
+                OSRExportToProj4(osr, &prj)
+                return cls.from_string(prj.decode('utf-8'))
+            except CRSError:
+                if OSRMorphFromESRI(osr) == 0:
+                    OSRExportToProj4(osr, &prj)
+                    return cls.from_string(prj.decode('utf-8'))
+                raise
         finally:
             CPLFree(prj)
             _safe_osr_release(osr)
