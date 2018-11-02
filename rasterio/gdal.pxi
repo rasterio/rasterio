@@ -83,6 +83,7 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OCTTransform(OGRCoordinateTransformationH ct, int nCount, double *x,
                      double *y, double *z)
     int OSRAutoIdentifyEPSG(OGRSpatialReferenceH srs)
+    int OSRMorphFromESRI(OGRSpatialReferenceH srs)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
