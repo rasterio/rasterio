@@ -236,7 +236,7 @@ class Env(object):
             pass
         else:
             cred_opts = self.session.get_credential_options()
-            self.options.update(**cred_opts) ## sshuair 设置gdal环境变量
+            self.options.update(**cred_opts)
             setenv(**cred_opts)
 
     def drivers(self):
