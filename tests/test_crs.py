@@ -274,3 +274,30 @@ def test_from_wkt_invalid():
 
 def test_from_user_input_epsg():
     assert 'init' in CRS.from_user_input('EPSG:4326')
+
+
+def test_from_esri_wkt():
+    projection_string = (
+        'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
+        'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
+        'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
+        'PRIMEM["Greenwich",0.0],'
+        'UNIT["Degree",0.0174532925199433]],'
+        'PROJECTION["Albers"],'
+        'PARAMETER["false_easting",0.0],'
+        'PARAMETER["false_northing",0.0],'
+        'PARAMETER["central_meridian",-96.0],'
+        'PARAMETER["standard_parallel_1",29.5],'
+        'PARAMETER["standard_parallel_2",45.5],'
+        'PARAMETER["latitude_of_origin",23.0],'
+        'UNIT["Meter",1.0],'
+        'VERTCS["NAVD_1988",'
+        'VDATUM["North_American_Vertical_Datum_1988"],'
+        'PARAMETER["Vertical_Shift",0.0],'
+        'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+    proj_crs_str = CRS.from_string(projection_string)
+    proj_crs_wkt = CRS.from_wkt(projection_string)
+    assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
+    assert proj_crs_str.to_string() == \
+        ("+datum=NAD83 +lat_0=23 +lat_1=29.5 +lat_2=45.5 "
+         "+lon_0=-96 +no_defs +proj=aea +units=m +x_0=0 +y_0=0")
