@@ -119,12 +119,12 @@ def test_requester_pays():
 def test_oss_session_class():
     """OSSSession works"""
     oss_session = OSSSession(
-        oss_access_key_id='id', 
-        oss_secret_access_key='key', 
+        oss_access_key_id='foo', 
+        oss_secret_access_key='bar', 
         oss_endpoint='null-island-1')
     assert oss_session._creds
-    assert oss_session.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'id'
-    assert oss_session.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'key'
+    assert oss_session.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
+    assert oss_session.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'bar'
 
 
 def test_session_factory_oss_kwargs():
