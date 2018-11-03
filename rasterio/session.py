@@ -92,6 +92,9 @@ class Session(object):
         elif path.scheme == "s3" or "amazonaws.com" in path.path:
             return AWSSession
 
+        elif path.scheme == "oss" or "aliyuncs.com" in path.path:
+            return OSSSession
+
         # This factory can be extended to other cloud providers here.
         # elif path.scheme == "cumulonimbus":  # for example.
         #     return CumulonimbusSession(*args, **kwargs)

@@ -2,7 +2,7 @@
 
 import pytest
 
-from rasterio.session import DummySession, AWSSession, Session
+from rasterio.session import DummySession, AWSSession, Session, OSSSession
 
 
 def test_dummy_session():
@@ -114,3 +114,22 @@ def test_requester_pays():
     sesh = AWSSession(aws_access_key_id='foo', aws_secret_access_key='bar', requester_pays=True)
     assert sesh._session
     assert sesh.get_credential_options()['AWS_REQUEST_PAYER'] == 'requester'
+
+
+def test_oss_session_class():
+    """OSSSession works"""
+    oss_session = OSSSession(
+        oss_access_key_id='id', 
+        oss_secret_access_key='key', 
+        oss_endpoint='null-island-1')
+    assert oss_session._creds
+    assert oss_session.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'id'
+    assert oss_session.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'key'
+
+
+def test_session_factory_oss_kwargs():
+    """Get an OSSSession for oss:// paths with keywords"""
+    sesh = Session.from_path("oss://lol/wut", oss_access_key_id='foo', oss_secret_access_key='bar')
+    assert isinstance(sesh, OSSSession)
+    assert sesh.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
+    assert sesh.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'bar'
