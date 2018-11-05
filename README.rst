@@ -197,8 +197,6 @@ channel.
 
 `Manylinux1 <https://github.com/pypa/manylinux>`__ wheels are available on PyPI.```
 
-This is what I think it should say.
-
 OS X
 ++++
 
