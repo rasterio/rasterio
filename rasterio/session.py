@@ -92,6 +92,9 @@ class Session(object):
         elif path.scheme == "s3" or "amazonaws.com" in path.path:
             return AWSSession
 
+        elif path.scheme == "oss" or "aliyuncs.com" in path.path:
+            return OSSSession
+
         # This factory can be extended to other cloud providers here.
         # elif path.scheme == "cumulonimbus":  # for example.
         #     return CumulonimbusSession(*args, **kwargs)
@@ -257,3 +260,62 @@ class AWSSession(Session):
             return {'AWS_NO_SIGN_REQUEST': 'YES'}
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
+
+
+class OSSSession(Session):
+    """Configures access to secured resources stored in Alibaba Cloud OSS.
+    """
+    def __init__(self, oss_access_key_id, oss_secret_access_key, oss_endpoint='oss-us-east-1.aliyuncs.com'):
+        """Create new Alibaba Cloud OSS session
+
+        Parameters
+        ----------
+        oss_access_key_id: string
+            An access key id
+        oss_secret_access_key: string
+            An secret access key
+        oss_endpoint: string, default 'oss-us-east-1.aliyuncs.com'
+            the region attached to the bucket
+        """
+
+        self._creds = {
+            "oss_access_key_id": oss_access_key_id,
+            "oss_secret_access_key": oss_secret_access_key,
+            "oss_endpoint": oss_endpoint
+        }
+    
+    @classmethod
+    def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
+        return 'OSS_ACCESS_KEY_ID' in config and 'OSS_SECRET_ACCESS_KEY' in config
+
+    @property
+    def credentials(self):
+        """The session credentials as a dict"""
+        return self._creds
+
+    def get_credential_options(self):
+        """Get credentials as GDAL configuration options
+
+        Returns
+        -------
+        dict
+
+        """
+        return {k.upper(): v for k, v in self.credentials.items()}
+
+    
+

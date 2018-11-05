@@ -13,7 +13,7 @@ from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession
+from rasterio.session import AWSSession, OSSSession
 
 from .conftest import requires_gdal21
 
@@ -762,3 +762,16 @@ def test_nested_credentials(monkeypatch):
         gdalenv = fake_opener('s3://foo/bar')
         assert gdalenv['AWS_ACCESS_KEY_ID'] == 'foo'
         assert gdalenv['AWS_SECRET_ACCESS_KEY'] == 'bar'
+        
+
+def test_oss_session_credentials(gdalenv):
+    """Create an Env with a oss session."""
+    oss_session = OSSSession(
+        oss_access_key_id='id', 
+        oss_secret_access_key='key', 
+        oss_endpoint='null-island-1')
+    with rasterio.env.Env(session=oss_session) as s:
+        s.credentialize()
+        assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
+        assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
+        assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
