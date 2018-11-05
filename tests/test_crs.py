@@ -24,6 +24,22 @@ def test_read_epsg(tmpdir):
         assert src.crs.to_dict() == {'init': 'epsg:32618'}
 
 
+def test_read_esri_wkt(tmpdir):
+    with rasterio.open('tests/data/test_esri_wkt.tif') as src:
+        assert src.crs.to_dict() == {
+            'datum': 'NAD83',
+            'lat_0': 23,
+            'lat_1': 29.5,
+            'lat_2': 45.5,
+            'lon_0': -96,
+            'no_defs': True,
+            'proj': 'aea',
+            'units': 'm',
+            'x_0': 0,
+            'y_0': 0,
+        }
+
+
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
     subprocess.call([
