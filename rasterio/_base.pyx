@@ -261,61 +261,27 @@ cdef class DatasetBase(object):
 
     def _handle_crswkt(self, wkt):
         """Return the GDAL dataset's stored CRS"""
-        cdef char *proj = NULL
+        if not wkt:
+            log.debug("No projection detected.")
+            return None
+
         cdef OGRSpatialReferenceH osr = NULL
         wkt_b = wkt.encode('utf-8')
         cdef const char *wkt_c = wkt_b
-
-        # Test that the WKT definition isn't just an empty string, which
-        # can happen when the source dataset is not georeferenced.
-        if len(wkt) > 0:
-            crs = CRS()
-
+        try:
             osr = OSRNewSpatialReference(wkt_c)
             if osr == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             log.debug("Got coordinate system")
-
-            # Try to find an EPSG code in the spatial referencing.
             if OSRAutoIdentifyEPSG(osr) == 0:
                 key = OSRGetAuthorityName(osr, NULL)
                 val = OSRGetAuthorityCode(osr, NULL)
                 log.debug("Authority key: %s, value: %s", key, val)
-                crs['init'] = u'epsg:' + val
-            else:
-                log.debug("Failed to auto identify EPSG")
-                OSRExportToProj4(osr, &proj)
-                if proj == NULL:
-                    raise ValueError("Unexpected Null spatial reference")
+                return CRS({'init': u'epsg:' + val})
+        finally:
+             _safe_osr_release(osr)
 
-                value = proj
-                value = value.strip()
-
-                for param in value.split():
-                    kv = param.split("=")
-                    if len(kv) == 2:
-                        k, v = kv
-                        try:
-                            v = float(v)
-                            if v % 1 == 0:
-                                v = int(v)
-                        except ValueError:
-                            # Leave v as a string
-                            pass
-                    elif len(kv) == 1:
-                        k, v = kv[0], True
-                    else:
-                        raise ValueError(
-                            "Unexpected proj parameter %s" % param)
-                    k = k.lstrip("+")
-                    crs[k] = v
-
-            CPLFree(proj)
-            _safe_osr_release(osr)
-            return crs
-
-        else:
-            log.debug("No projection detected.")
+        return CRS.from_wkt(wkt)
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
