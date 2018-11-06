@@ -95,6 +95,9 @@ class Session(object):
         elif path.scheme == "oss" or "aliyuncs.com" in path.path:
             return OSSSession
 
+        elif path.scheme == "swift":   #TODO(sshuair), not necessary
+            return SwiftSession
+
         # This factory can be extended to other cloud providers here.
         # elif path.scheme == "cumulonimbus":  # for example.
         #     return CumulonimbusSession(*args, **kwargs)
@@ -318,4 +321,76 @@ class OSSSession(Session):
         return {k.upper(): v for k, v in self.credentials.items()}
 
     
+class SwiftSession(Session):
+    """Configures access to secured resources stored in OpenStack Swift Object Storage.
+    """
+    def __init__(
+                self, session=None, swift_storage_url=None, swift_auth_token=None, 
+                swift_auth_v1_url=None, swift_user=None, swift_key=None):
+        """Create new OpenStack Swift Object Storage Session,
+        Note: if session is provided the others is not nessary, 
+
+        Parameters
+        ----------
+        swift_storage_url: string
+            authentication URL
+        swift_user: string
+            user name to authenticate as
+        swift_key: string, 
+            key/password to authenticate with
+        """
+        from swiftclient.client import Connection
+
+        if swift_storage_url and swift_auth_token:
+            self._creds = {
+                'swift_storage_url':swift_storage_url,
+                'swift_auth_token':swift_auth_token
+            }
+        elif session:
+            if session:
+                self._session = session
+            else:
+                self._session = Connection(
+                    authurl=swift_auth_v1_url,
+                    user=swift_user,
+                    key=swift_key
+                )
+            self._creds = {
+                "swift_storage_url": self._session.get_auth()[0],
+                "swift_auth_token": self._session.get_auth()[1],
+            }
+
+    
+    @classmethod
+    def hascreds(cls, config):
+        """Determine if the given configuration has proper credentials
+
+        Parameters
+        ----------
+        cls : class
+            A Session class.
+        config : dict
+            GDAL configuration as a dict.
+
+        Returns
+        -------
+        bool
+
+        """
+        return 'SWIFT_STORAGE_URL' in config and 'SWIFT_AUTH_TOKEN' in config
+
+    @property
+    def credentials(self):
+        """The session credentials as a dict"""
+        return self._creds
+
+    def get_credential_options(self):
+        """Get credentials as GDAL configuration options
+
+        Returns
+        -------
+        dict
+
+        """
+        return {k.upper(): v for k, v in self.credentials.items()}
 
