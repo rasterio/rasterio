@@ -324,9 +324,7 @@ class OSSSession(Session):
 class SwiftSession(Session):
     """Configures access to secured resources stored in OpenStack Swift Object Storage.
     """
-    def __init__(
-                self, session=None, swift_storage_url=None, swift_auth_token=None, 
-                swift_auth_v1_url=None, swift_user=None, swift_key=None):
+    def __init__(self, session=None, swift_auth_v1_url=None, swift_user=None, swift_key=None):
         """Create new OpenStack Swift Object Storage Session,
         Note: if session is provided the others is not nessary, 
 
@@ -341,25 +339,15 @@ class SwiftSession(Session):
         """
         from swiftclient.client import Connection
 
-        if swift_storage_url and swift_auth_token:
-            self._creds = {
-                'swift_storage_url':swift_storage_url,
-                'swift_auth_token':swift_auth_token
-            }
-        elif session:
-            if session:
-                self._session = session
-            else:
-                self._session = Connection(
-                    authurl=swift_auth_v1_url,
-                    user=swift_user,
-                    key=swift_key
-                )
-            self._creds = {
-                "swift_storage_url": self._session.get_auth()[0],
-                "swift_auth_token": self._session.get_auth()[1],
-            }
-
+        if session:
+            self._session = session
+        else:
+            self._session = Connection(
+                authurl=swift_auth_v1_url,
+                user=swift_user,
+                key=swift_key
+            )
+        self._creds = self._session.get_auth()
     
     @classmethod
     def hascreds(cls, config):
@@ -382,7 +370,11 @@ class SwiftSession(Session):
     @property
     def credentials(self):
         """The session credentials as a dict"""
-        return self._creds
+        res = {}
+        if self._creds:
+            res['swift_storage_url'] = self._creds[0]
+            res['swift_auth_token'] = self._creds[1]
+        return res
 
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
