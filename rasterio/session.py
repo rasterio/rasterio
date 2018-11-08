@@ -95,7 +95,7 @@ class Session(object):
         elif path.scheme == "oss" or "aliyuncs.com" in path.path:
             return OSSSession
 
-        elif path.scheme == "swift":   #TODO(sshuair), not necessary
+        elif path.scheme == "swift":
             return SwiftSession
 
         # This factory can be extended to other cloud providers here.
