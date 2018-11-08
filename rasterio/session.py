@@ -320,21 +320,23 @@ class OSSSession(Session):
         """
         return {k.upper(): v for k, v in self.credentials.items()}
 
-    
+
 class SwiftSession(Session):
     """Configures access to secured resources stored in OpenStack Swift Object Storage.
     """
     def __init__(self, session=None, swift_auth_v1_url=None, swift_user=None, swift_key=None):
-        """Create new OpenStack Swift Object Storage Session,
-        Note: if session is provided the others is not nessary, 
+        """Create new OpenStack Swift Object Storage Session. 
+        This depends on the swiftclient library.
 
         Parameters
         ----------
-        swift_storage_url: string
+        session: optional
+            A swiftclient connection object
+        swift_storage_url: string, optional
             authentication URL
-        swift_user: string
+        swift_user: string, optional
             user name to authenticate as
-        swift_key: string, 
+        swift_key: string, optional
             key/password to authenticate with
         """
         from swiftclient.client import Connection
