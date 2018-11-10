@@ -2,12 +2,14 @@
 # Collected here to make them easier to skip/xfail.
 
 import logging
+import os
 import sys
 
 import boto3
 import pytest
 
 import rasterio
+from rasterio import _env
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
 from rasterio.env import GDALVersion, require_gdal_version
@@ -113,11 +115,39 @@ def test_ensure_env_decorator(gdalenv):
 
 
 def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
+    """ensure_env finds GDAL from environment"""
     @ensure_env
     def f():
         return getenv()['GDAL_DATA']
+
     monkeypatch.setenv('GDAL_DATA', '/lol/wut')
     assert f() == '/lol/wut'
+
+
+def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir):
+    """ensure_env finds GDAL data under a prefix"""
+    @ensure_env
+    def f():
+        return getenv()['GDAL_DATA']
+
+    tmpdir.ensure("share/gdal/pcs.csv")
+    monkeypatch.delenv('GDAL_DATA')
+    monkeypatch.setattr(sys, 'prefix', str(tmpdir))
+
+    assert f() == str(tmpdir.join("share/gdal"))
+
+
+def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir):
+    """ensure_env finds GDAL data in a wheel"""
+    @ensure_env
+    def f():
+        return getenv()['GDAL_DATA']
+
+    tmpdir.ensure("gdal_data/pcs.csv")
+    monkeypatch.delenv('GDAL_DATA')
+    monkeypatch.setattr(_env, '__file__', str(tmpdir.join(os.path.basename(_env.__file__))))
+
+    assert f() == str(tmpdir.join("gdal_data"))
 
 
 def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
