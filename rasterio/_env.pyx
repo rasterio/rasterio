@@ -186,6 +186,59 @@ cdef class ConfigEnv(object):
         return {k: get_gdal_config(k) for k in self.options}
 
 
+class GDALDataFinder(object):
+    """Finds GDAL and PROJ data files"""
+
+    def search(self, prefix=None):
+        """Returns GDAL_DATA location"""
+        path = self.search_wheel(prefix or __file__)
+        if not path:
+            path = self.search_prefix(prefix or sys.prefix)
+            if not path:
+                path = self.search_debian(prefix or sys.prefix)
+        return path
+
+    def search_wheel(self, prefix=None):
+        """Check wheel location"""
+        if prefix is None:
+            prefix = __file__
+        datadir = os.path.abspath(os.path.join(os.path.dirname(prefix), "gdal_data"))
+        return datadir if os.path.exists(os.path.join(datadir, 'pcs.csv')) else None
+
+    def search_prefix(self, prefix=sys.prefix):
+        """Check sys.prefix location"""
+        datadir = os.path.join(prefix, 'share/gdal')
+        return datadir if os.path.exists(os.path.join(datadir, 'pcs.csv')) else None
+
+    def search_debian(self, prefix=sys.prefix):
+        """Check Debian locations"""
+        gdal_release_name = GDALVersionInfo("RELEASE_NAME")
+        datadir = os.path.join(prefix, 'share/gdal', '{}.{}'.format(*gdal_release_name.split('.')[:2]))
+        return datadir if os.path.exists(os.path.join(datadir, 'pcs.csv')) else None
+
+
+class PROJDataFinder(object):
+
+    def search(self, prefix=None):
+        """Returns PROJ_LIB location"""
+        path = self.search_wheel(prefix or __file__)
+        if not path:
+            path = self.search_prefix(prefix or sys.prefix)
+        return path
+
+    def search_wheel(self, prefix=None):
+        """Check wheel location"""
+        if prefix is None:
+            prefix = __file__
+        datadir = os.path.abspath(os.path.join(os.path.dirname(prefix), "proj_data"))
+        return datadir if os.path.exists(datadir) else None
+
+    def search_prefix(self, prefix=sys.prefix):
+        """Check sys.prefix location"""
+        datadir = os.path.join(prefix, 'share/proj')
+        return datadir if os.path.exists(datadir) else None
+
+
 cdef class GDALEnv(ConfigEnv):
     """Configuration and driver management"""
 
@@ -210,40 +263,23 @@ cdef class GDALEnv(ConfigEnv):
 
                     if 'GDAL_DATA' not in os.environ:
 
-                        # We will try a few well-known paths, starting with the
-                        # official wheel path.
-                        whl_datadir = os.path.abspath(
-                            os.path.join(os.path.dirname(__file__), "gdal_data"))
-                        fhs_share_datadir = os.path.join(sys.prefix, 'share/gdal')
+                        path = GDALDataFinder().search()
 
-                        # Debian supports multiple GDAL installs.
-                        gdal_release_name = GDALVersionInfo("RELEASE_NAME")
-                        deb_share_datadir = os.path.join(
-                            fhs_share_datadir,
-                            "{}.{}".format(*gdal_release_name.split('.')[:2]))
+                        if path:
+                            log.debug("GDAL data found in %r", path)
+                            self.update_config_options(GDAL_DATA=path)
 
-                        # If we find GDAL data at the well-known paths, we will
-                        # add a GDAL_DATA key to the config options dict.
-                        if os.path.exists(os.path.join(whl_datadir, 'pcs.csv')):
-                            self.update_config_options(GDAL_DATA=whl_datadir)
-
-                        elif os.path.exists(os.path.join(deb_share_datadir, 'pcs.csv')):
-                            self.update_config_options(GDAL_DATA=deb_share_datadir)
-
-                        elif os.path.exists(os.path.join(fhs_share_datadir, 'pcs.csv')):
-                            self.update_config_options(GDAL_DATA=fhs_share_datadir)
+                    else:
+                        self.update_config_options(GDAL_DATA=os.environ['GDAL_DATA'])
 
                     if 'PROJ_LIB' not in os.environ:
 
-                        whl_datadir = os.path.abspath(
-                            os.path.join(os.path.dirname(__file__), 'proj_data'))
-                        share_datadir = os.path.join(sys.prefix, 'share/proj')
+                        path = PROJDataFinder().search()
 
-                        if os.path.exists(whl_datadir):
-                            os.environ['PROJ_LIB'] = whl_datadir
+                        if path:
+                            log.debug("PROJ data found in %r", path)
+                            os.environ['PROJ_LIB'] = path
 
-                        elif os.path.exists(share_datadir):
-                            os.environ['PROJ_LIB'] = share_datadir
 
                     if driver_count() == 0:
                         CPLPopErrorHandler()
