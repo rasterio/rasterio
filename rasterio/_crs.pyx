@@ -9,6 +9,7 @@ import logging
 from rasterio._err import CPLE_BaseError
 from rasterio.compat import UserDict, string_types
 from rasterio.errors import CRSError
+from rasterio.env import ensure_env
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
@@ -22,6 +23,7 @@ class _CRS(UserDict):
     """CRS base class."""
 
     @property
+    @ensure_env
     def is_geographic(self):
         """Test if the CRS is a geographic coordinate reference system
 
@@ -40,6 +42,7 @@ class _CRS(UserDict):
             _safe_osr_release(osr_crs)
 
     @property
+    @ensure_env
     def is_projected(self):
         """Test if the CRS is a projected coordinate reference system
 
@@ -100,6 +103,7 @@ class _CRS(UserDict):
             CPLFree(srcwkt)
             _safe_osr_release(osr)
 
+    @ensure_env
     def to_epsg(self):
         """The epsg code of the CRS
 

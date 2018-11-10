@@ -112,6 +112,14 @@ def test_ensure_env_decorator(gdalenv):
     assert f() is True
 
 
+def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
+    @ensure_env
+    def f():
+        return getenv()['GDAL_DATA']
+    monkeypatch.setenv('GDAL_DATA', '/lol/wut')
+    assert f() == '/lol/wut'
+
+
 def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
     """Credentialization is ensured by wrapper"""
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
