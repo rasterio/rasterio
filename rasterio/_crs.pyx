@@ -9,7 +9,6 @@ import logging
 from rasterio._err import CPLE_BaseError
 from rasterio.compat import UserDict, string_types
 from rasterio.errors import CRSError
-from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
