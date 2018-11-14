@@ -18,7 +18,6 @@ from rasterio._shim cimport open_dataset
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -1244,33 +1243,22 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
 
     cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 
-    if isinstance(crs, string_types):
-        proj = crs.encode('utf-8')
+    crs = CRS.from_user_input(crs)
 
-    # Make a CRS object from provided dict.
+    # EPSG is a special case.
+    init = crs.get('init')
+    if init:
+        auth, val = init.split(':')
+
+        if not val:
+            _safe_osr_release(osr)
+            raise CRSError("Invalid CRS: {!r}".format(crs))
+
+        if auth.upper() == 'EPSG':
+            proj = 'EPSG:{}'.format(val).encode('utf-8')
     else:
-        crs = CRS(crs)
-        # EPSG is a special case.
-        init = crs.get('init')
-        if init:
-            auth, val = init.split(':')
-
-            if not val:
-                _safe_osr_release(osr)
-                raise CRSError("Invalid CRS: {!r}".format(crs))
-
-            if auth.upper() == 'EPSG':
-                proj = 'EPSG:{}'.format(val).encode('utf-8')
-        else:
-            params = []
-            for k, v in crs.items():
-                if v is True or (k in ('no_defs', 'wktext') and v):
-                    params.append("+%s" % k)
-                else:
-                    params.append("+%s=%s" % (k, v))
-            proj = " ".join(params)
-            log.debug("PROJ.4 to be imported: %r", proj)
-            proj = proj.encode('utf-8')
+        proj = crs.to_string().encode('utf-8')
+        log.debug("PROJ.4 to be imported: %r", proj)
 
     try:
         retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>proj))
