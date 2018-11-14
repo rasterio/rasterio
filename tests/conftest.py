@@ -48,18 +48,16 @@ def runner():
 
 
 @pytest.fixture(scope='function')
-def data():
+def data(tmpdir):
     """A temporary directory containing a copy of the files in data."""
-    tmpdir = py.test.ensuretemp('tests/data')
     for filename in test_files:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
 
 
 @pytest.fixture(scope='function')
-def red_green():
+def red_green(tmpdir):
     """A temporary directory containing copies of red.tif, green.tif."""
-    tmpdir = py.test.ensuretemp('tests/data')
     for filename in ['tests/data/red.tif', 'tests/data/red.tif.ovr', 'tests/data/green.tif', 'tests/data/green.tif.ovr']:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
