@@ -558,15 +558,15 @@ def path_alpha_tif(data_dir):
 
 
 @pytest.fixture(scope='session')
-def path_zip_file():
+def path_zip_file(data_dir):
     """Creates ``coutwildrnp.zip`` if it does not exist and returns
     the absolute file path."""
-    path = '{}/white-gemini-iv.zip'.format(data_dir())
+    path = '{}/white-gemini-iv.zip'.format(data_dir)
     if not os.path.exists(path):
         with zipfile.ZipFile(path, 'w') as zip:
             for filename in ['white-gemini-iv.vrt',
                              '389225main_sw_1965_1024.jpg']:
-                zip.write(os.path.join(data_dir(), filename), filename)
+                zip.write(os.path.join(data_dir, filename), filename)
     return path
 
 
