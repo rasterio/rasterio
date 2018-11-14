@@ -1243,13 +1243,11 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     # EPSG is a special case.
     init = crs.get('init')
     if init:
-        auth, val = init.split(':')
+        auth, val = init.strip().split(':')
 
-        if not val:
+        if not val or auth.upper() != 'EPSG':
             raise CRSError("Invalid CRS: {!r}".format(crs))
-
-        if auth.upper() == 'EPSG':
-            proj = 'EPSG:{}'.format(val).encode('utf-8')
+        proj = 'EPSG:{}'.format(val).encode('utf-8')
     else:
         proj = crs.to_string().encode('utf-8')
         log.debug("PROJ.4 to be imported: %r", proj)
