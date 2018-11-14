@@ -1238,11 +1238,6 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
-    if not crs:
-        raise CRSError("A defined coordinate reference system is required")
-
-    cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
     crs = CRS.from_user_input(crs)
 
     # EPSG is a special case.
@@ -1251,7 +1246,6 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
         auth, val = init.split(':')
 
         if not val:
-            _safe_osr_release(osr)
             raise CRSError("Invalid CRS: {!r}".format(crs))
 
         if auth.upper() == 'EPSG':
@@ -1260,6 +1254,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
         proj = crs.to_string().encode('utf-8')
         log.debug("PROJ.4 to be imported: %r", proj)
 
+    cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
     try:
         retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>proj))
         if retval:
