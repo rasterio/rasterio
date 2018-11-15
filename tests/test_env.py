@@ -131,7 +131,7 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir
         return getenv()['GDAL_DATA']
 
     tmpdir.ensure("share/gdal/pcs.csv")
-    monkeypatch.delenv('GDAL_DATA')
+    monkeypatch.delenv('GDAL_DATA', raising=False)
     monkeypatch.setattr(sys, 'prefix', str(tmpdir))
 
     assert f() == str(tmpdir.join("share/gdal"))
@@ -144,7 +144,7 @@ def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir)
         return getenv()['GDAL_DATA']
 
     tmpdir.ensure("gdal_data/pcs.csv")
-    monkeypatch.delenv('GDAL_DATA')
+    monkeypatch.delenv('GDAL_DATA', raising=False)
     monkeypatch.setattr(_env, '__file__', str(tmpdir.join(os.path.basename(_env.__file__))))
 
     assert f() == str(tmpdir.join("gdal_data"))
