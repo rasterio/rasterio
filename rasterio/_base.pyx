@@ -23,7 +23,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env
+from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
@@ -262,70 +262,60 @@ cdef class DatasetBase(object):
 
     def _handle_crswkt(self, wkt):
         """Return the GDAL dataset's stored CRS"""
-        cdef char *proj = NULL
         cdef OGRSpatialReferenceH osr = NULL
+        cdef const char *auth_key = NULL
+        cdef const char *auth_val = NULL
+
+        if not wkt:
+            log.debug("No projection detected.")
+            return None
+
         wkt_b = wkt.encode('utf-8')
         cdef const char *wkt_c = wkt_b
 
-        # Test that the WKT definition isn't just an empty string, which
-        # can happen when the source dataset is not georeferenced.
-        if len(wkt) > 0:
-            crs = CRS()
+        with env_ctx_if_needed():
+            try:
 
-            osr = OSRNewSpatialReference(wkt_c)
-            if osr == NULL:
-                raise ValueError("Unexpected NULL spatial reference")
-            log.debug("Got coordinate system")
+                osr = exc_wrap_pointer(OSRNewSpatialReference(wkt_c))
+                log.debug("Got coordinate system")
 
-            # Try to find an EPSG code in the spatial referencing.
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                key = OSRGetAuthorityName(osr, NULL)
-                val = OSRGetAuthorityCode(osr, NULL)
-                log.debug("Authority key: %s, value: %s", key, val)
-                crs['init'] = u'epsg:' + val
-            else:
-                log.debug("Failed to auto identify EPSG")
-                OSRExportToProj4(osr, &proj)
-                if proj == NULL:
-                    raise ValueError("Unexpected Null spatial reference")
+                retval = OSRAutoIdentifyEPSG(osr)
 
-                value = proj
-                value = value.strip()
+                if retval > 0:
+                    log.debug("Failed to auto identify EPSG: %d", retval)
 
-                for param in value.split():
-                    kv = param.split("=")
-                    if len(kv) == 2:
-                        k, v = kv
-                        try:
-                            v = float(v)
-                            if v % 1 == 0:
-                                v = int(v)
-                        except ValueError:
-                            # Leave v as a string
-                            pass
-                    elif len(kv) == 1:
-                        k, v = kv[0], True
-                    else:
-                        raise ValueError(
-                            "Unexpected proj parameter %s" % param)
-                    k = k.lstrip("+")
-                    crs[k] = v
+                else:
+                    log.debug("Auto identified EPSG: %d", retval)
 
-            CPLFree(proj)
-            _safe_osr_release(osr)
-            return crs
+                    try:
+                        auth_key = OSRGetAuthorityName(osr, NULL)
+                        auth_val = OSRGetAuthorityCode(osr, NULL)
 
-        else:
-            log.debug("No projection detected.")
+                    except CPLE_NotSupportedError as exc:
+                        log.debug("{}".format(exc))
+
+                    if auth_key != NULL and auth_val != NULL:
+                        return CRS({'init': u'{}:{}'.format(auth_key.lower(), auth_val)})
+
+                return CRS.from_wkt(wkt)
+
+            except CPLE_BaseError as exc:
+                raise CRSError("{}".format(exc))
+
+            finally:
+                 _safe_osr_release(osr)
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
-        cdef const char *wkt_b = GDALGetProjectionRef(self._hds)
-        if wkt_b == NULL:
-            raise ValueError("Unexpected NULL spatial reference")
+        cdef const char *wkt_b = NULL
 
-        wkt = wkt_b
-        return self._handle_crswkt(wkt)
+        with env_ctx_if_needed():
+            wkt_b = GDALGetProjectionRef(self._hds)
+            if wkt_b == NULL:
+                raise ValueError("Unexpected NULL spatial reference")
+            wkt = wkt_b
+            log.debug("WKT: %r", wkt)
+            return self._handle_crswkt(wkt)
 
     def read_transform(self):
         """Return the stored GDAL GeoTransform"""
@@ -1285,10 +1275,19 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     try:
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
+        exc_wrap_int(OCTTransform(transform, n, x, y, z))
 
-        err = OCTTransform(transform, n, x, y, z)
-        err = exc_wrap_int(err)
+    except CPLE_BaseError as exc:
+        log.debug("{}".format(exc))
 
+    except:
+        CPLFree(x)
+        CPLFree(y)
+        CPLFree(z)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
+
+    try:
         res_xs = [0]*n
         res_ys = [0]*n
         for i in range(n):
@@ -1298,12 +1297,9 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             res_zs = [0]*n
             for i in range(n):
                 res_zs[i] = z[i]
-            retval = (res_xs, res_ys, res_zs)
+            return (res_xs, res_ys, res_zs)
         else:
-            retval = (res_xs, res_ys)
-
-    except CPLE_NotSupportedError as exc:
-        raise CRSError(str(exc))
+            return (res_xs, res_ys)
 
     finally:
         CPLFree(x)
@@ -1311,8 +1307,6 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         CPLFree(z)
         _safe_osr_release(src)
         _safe_osr_release(dst)
-
-    return retval
 
 
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:

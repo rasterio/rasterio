@@ -24,6 +24,22 @@ def test_read_epsg(tmpdir):
         assert src.crs.to_dict() == {'init': 'epsg:32618'}
 
 
+def test_read_esri_wkt(tmpdir):
+    with rasterio.open('tests/data/test_esri_wkt.tif') as src:
+        assert src.crs.to_dict() == {
+            'datum': 'NAD83',
+            'lat_0': 23,
+            'lat_1': 29.5,
+            'lat_2': 45.5,
+            'lon_0': -96,
+            'no_defs': True,
+            'proj': 'aea',
+            'units': 'm',
+            'x_0': 0,
+            'y_0': 0,
+        }
+
+
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
     subprocess.call([
@@ -301,3 +317,13 @@ def test_from_esri_wkt():
     assert proj_crs_str.to_string() == \
         ("+datum=NAD83 +lat_0=23 +lat_1=29.5 +lat_2=45.5 "
          "+lon_0=-96 +no_defs +proj=aea +units=m +x_0=0 +y_0=0")
+
+
+def test_compound_crs():
+    wkt = """COMPD_CS["unknown",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],VERT_CS["unknown",VERT_DATUM["unknown",2005],UNIT["metre",1.0,AUTHORITY["EPSG","9001"]],AXIS["Up",UP]]]"""
+    assert CRS.from_wkt(wkt).wkt.startswith('GEOGCS["WGS 84"')
+
+
+def test_dataset_compound_crs():
+    with rasterio.open("tests/data/compdcs.vrt") as dataset:
+        assert dataset.crs.wkt.startswith('GEOGCS["WGS 84"')
