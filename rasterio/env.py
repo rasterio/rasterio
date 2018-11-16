@@ -338,6 +338,29 @@ def delenv():
     local._env = None
 
 
+class NullContextManager(object):
+    def __init__(self):
+        pass
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        pass
+
+
+def env_ctx_if_needed():
+    """Return an Env if one does not exist
+
+    Returns
+    -------
+    Env or a do-nothing context manager
+
+    """
+    if local._env:
+        return NullContextManager()
+    else:
+        return Env.from_defaults()
+
+
 def ensure_env(f):
     """A decorator that ensures an env exists before a function
     calls any GDAL C functions."""

@@ -2,18 +2,20 @@
 # Collected here to make them easier to skip/xfail.
 
 import logging
+import os
 import sys
 
 import boto3
 import pytest
 
 import rasterio
+from rasterio import _env
 from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession
+from rasterio.session import AWSSession, OSSSession
 
 from .conftest import requires_gdal21
 
@@ -110,6 +112,42 @@ def test_ensure_env_decorator(gdalenv):
     def f():
         return getenv()['RASTERIO_ENV']
     assert f() is True
+
+
+def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
+    """ensure_env finds GDAL from environment"""
+    @ensure_env
+    def f():
+        return getenv()['GDAL_DATA']
+
+    monkeypatch.setenv('GDAL_DATA', '/lol/wut')
+    assert f() == '/lol/wut'
+
+
+def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir):
+    """ensure_env finds GDAL data under a prefix"""
+    @ensure_env
+    def f():
+        return getenv()['GDAL_DATA']
+
+    tmpdir.ensure("share/gdal/pcs.csv")
+    monkeypatch.delenv('GDAL_DATA', raising=False)
+    monkeypatch.setattr(sys, 'prefix', str(tmpdir))
+
+    assert f() == str(tmpdir.join("share/gdal"))
+
+
+def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir):
+    """ensure_env finds GDAL data in a wheel"""
+    @ensure_env
+    def f():
+        return getenv()['GDAL_DATA']
+
+    tmpdir.ensure("gdal_data/pcs.csv")
+    monkeypatch.delenv('GDAL_DATA', raising=False)
+    monkeypatch.setattr(_env, '__file__', str(tmpdir.join(os.path.basename(_env.__file__))))
+
+    assert f() == str(tmpdir.join("gdal_data"))
 
 
 def test_ensure_env_credentialled_decorator(monkeypatch, gdalenv):
@@ -730,6 +768,11 @@ def test_require_gdal_version_chaining():
 def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
     """Confirm that we can get drivers without any credentials"""
     credentials_file = tmpdir.join('credentials')
+    credentials_file.write("""
+[default]
+aws_secret_access_key = foo
+aws_access_key_id = bar
+""")
     monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
     monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
     # Assert that we don't have any AWS credentials by accident.
@@ -757,3 +800,16 @@ def test_nested_credentials(monkeypatch):
         gdalenv = fake_opener('s3://foo/bar')
         assert gdalenv['AWS_ACCESS_KEY_ID'] == 'foo'
         assert gdalenv['AWS_SECRET_ACCESS_KEY'] == 'bar'
+        
+
+def test_oss_session_credentials(gdalenv):
+    """Create an Env with a oss session."""
+    oss_session = OSSSession(
+        oss_access_key_id='id', 
+        oss_secret_access_key='key', 
+        oss_endpoint='null-island-1')
+    with rasterio.env.Env(session=oss_session) as s:
+        s.credentialize()
+        assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
+        assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
+        assert getenv()['OSS_ENDPOINT'] == 'null-island-1'

@@ -1296,6 +1296,30 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         else:
             raise ValueError("One description for each band is required")
 
+    def _set_all_scales(self, value):
+        """Supports the scales property setter"""
+        cdef GDALRasterBandH hband = NULL
+        if len(value) == self.count:
+            for (bidx, val) in zip(self.indexes, value):
+                hband = self.band(bidx)
+                GDALSetRasterScale(hband, val)
+            # Invalidate cached scales.
+            self._scales = ()
+        else:
+            raise ValueError("One scale for each band is required")
+
+    def _set_all_offsets(self, value):
+        """Supports the offsets property setter"""
+        cdef GDALRasterBandH hband = NULL
+        if len(value) == self.count:
+            for (bidx, val) in zip(self.indexes, value):
+                hband = self.band(bidx)
+                GDALSetRasterOffset(hband, val)
+            # Invalidate cached offsets.
+            self._offsets = ()
+        else:
+            raise ValueError("One offset for each band is required")
+
     def _set_all_units(self, value):
         """Supports the units property setter"""
         # require that we have a unit for every band.

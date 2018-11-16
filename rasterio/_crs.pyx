@@ -6,10 +6,10 @@ include "gdal.pxi"
 import json
 import logging
 
-from rasterio._err import CPLE_BaseError
-from rasterio.compat import UserDict
-from rasterio.compat import string_types
+from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
+from rasterio.compat import UserDict, string_types
 from rasterio.errors import CRSError
+from rasterio.env import env_ctx_if_needed
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
@@ -33,12 +33,13 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
-        try:
-            osr_crs = osr_from_crs(self)
-            retval = OSRIsGeographic(osr_crs)
-            return bool(retval == 1)
-        finally:
-            _safe_osr_release(osr_crs)
+        with env_ctx_if_needed():
+            try:
+                osr_crs = osr_from_crs(self)
+                retval = OSRIsGeographic(osr_crs)
+                return bool(retval == 1)
+            finally:
+                _safe_osr_release(osr_crs)
 
     @property
     def is_projected(self):
@@ -51,12 +52,13 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
-        try:
-            osr_crs = osr_from_crs(self)
-            retval = OSRIsProjected(osr_crs)
-            return bool(retval == 1)
-        finally:
-            _safe_osr_release(osr_crs)
+        with env_ctx_if_needed():
+            try:
+                osr_crs = osr_from_crs(self)
+                retval = OSRIsProjected(osr_crs)
+                return bool(retval == 1)
+            finally:
+                _safe_osr_release(osr_crs)
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
@@ -93,13 +95,14 @@ class _CRS(UserDict):
         cdef char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
 
-        try:
-            osr = osr_from_crs(self)
-            OSRExportToWkt(osr, &srcwkt)
-            return srcwkt.decode('utf-8')
-        finally:
-            CPLFree(srcwkt)
-            _safe_osr_release(osr)
+        with env_ctx_if_needed():
+            try:
+                osr = osr_from_crs(self)
+                OSRExportToWkt(osr, &srcwkt)
+                return srcwkt.decode('utf-8')
+            finally:
+                CPLFree(srcwkt)
+                _safe_osr_release(osr)
 
     def to_epsg(self):
         """The epsg code of the CRS
@@ -110,14 +113,16 @@ class _CRS(UserDict):
         """
         cdef OGRSpatialReferenceH osr = NULL
 
-        try:
-            osr = osr_from_crs(self)
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                epsg_code = OSRGetAuthorityCode(osr, NULL)
-                return int(epsg_code.decode('utf-8'))
-        finally:
-            _safe_osr_release(osr)
-        return None
+        with env_ctx_if_needed():
+            try:
+                osr = osr_from_crs(self)
+                if OSRAutoIdentifyEPSG(osr) == 0:
+                    epsg_code = OSRGetAuthorityCode(osr, NULL)
+                    return int(epsg_code.decode('utf-8'))
+                else:
+                    return None
+            finally:
+                _safe_osr_release(osr)
 
     @classmethod
     def from_epsg(cls, code):
@@ -137,7 +142,7 @@ class _CRS(UserDict):
         CRS
         """
         if int(code) <= 0:
-            raise ValueError("EPSG codes are positive integers")
+            raise CRSError("EPSG codes are positive integers")
         return cls(init="epsg:%s" % code, no_defs=True)
 
     @classmethod
@@ -157,7 +162,10 @@ class _CRS(UserDict):
             raise CRSError("CRS is empty or invalid: {!r}".format(s))
 
         elif s.strip().upper().startswith('EPSG:'):
-            return cls.from_epsg(s.strip().split(':')[1])
+            auth, val = s.strip().split(':')
+            if not val:
+                raise CRSError("Invalid CRS: {!r}".format(s))
+            return cls.from_epsg(val)
 
         elif '{' in s:
             # may be json, try to decode it
@@ -222,24 +230,28 @@ class _CRS(UserDict):
 
         if isinstance(s, string_types):
             b_s = s.encode('utf-8')
+            log.debug("Encoded WKT: %r", b_s)
 
         try:
-            retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_s))
-            if retval:
-                _safe_osr_release(osr)
-                raise CRSError("Invalid CRS: {!r}".format(s))
+            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_s))
+        except CPLE_NotSupportedError as exc:
+            log.debug("{}".format(exc))
         except CPLE_BaseError as exc:
             _safe_osr_release(osr)
             raise CRSError(str(exc))
 
         try:
-            try:
+            exc_wrap_int(OSRExportToProj4(osr, &prj))
+        except CPLE_NotSupportedError as exc:
+            log.debug("{}".format(exc))
+
+        try:
+            return cls.from_string(prj.decode('utf-8'))
+        except CRSError:
+            if OSRMorphFromESRI(osr) == 0:
                 OSRExportToProj4(osr, &prj)
                 return cls.from_string(prj.decode('utf-8'))
-            except CRSError:
-                if OSRMorphFromESRI(osr) == 0:
-                    OSRExportToProj4(osr, &prj)
-                    return cls.from_string(prj.decode('utf-8'))
+            else:
                 raise
         finally:
             CPLFree(prj)
@@ -266,7 +278,7 @@ class _CRS(UserDict):
             return cls.from_epsg(value)
         elif isinstance(value, dict):
             return cls(**value)
-        elif isinstance(value, str):
+        elif isinstance(value, string_types):
             return cls.from_string(value)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))

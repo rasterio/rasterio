@@ -46,7 +46,7 @@ def test_dst_crs_error_epsg(runner, tmpdir):
     result = runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', 'EPSG:'])
     assert result.exit_code == 2
-    assert 'for dst_crs: invalid literal for int()' in result.output
+    assert "for dst_crs: Invalid CRS:" in result.output
 
 
 def test_dst_crs_error_epsg_2(runner, tmpdir):
