@@ -7,7 +7,8 @@ import json
 import logging
 
 from rasterio._err import CPLE_BaseError
-from rasterio.compat import UserDict, string_types
+from rasterio.compat import UserDict
+from rasterio.compat import string_types
 from rasterio.errors import CRSError
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
@@ -136,7 +137,7 @@ class _CRS(UserDict):
         CRS
         """
         if int(code) <= 0:
-            raise CRSError("EPSG codes are positive integers")
+            raise ValueError("EPSG codes are positive integers")
         return cls(init="epsg:%s" % code, no_defs=True)
 
     @classmethod
@@ -156,10 +157,7 @@ class _CRS(UserDict):
             raise CRSError("CRS is empty or invalid: {!r}".format(s))
 
         elif s.strip().upper().startswith('EPSG:'):
-            auth, val = s.strip().split(':')
-            if not val:
-                raise CRSError("Invalid CRS: {!r}".format(s))
-            return cls.from_epsg(val)
+            return cls.from_epsg(s.strip().split(':')[1])
 
         elif '{' in s:
             # may be json, try to decode it
@@ -235,9 +233,14 @@ class _CRS(UserDict):
             raise CRSError(str(exc))
 
         try:
-            OSRMorphFromESRI(osr)
-            OSRExportToProj4(osr, &prj)
-            return cls.from_string(prj.decode('utf-8'))
+            try:
+                OSRExportToProj4(osr, &prj)
+                return cls.from_string(prj.decode('utf-8'))
+            except CRSError:
+                if OSRMorphFromESRI(osr) == 0:
+                    OSRExportToProj4(osr, &prj)
+                    return cls.from_string(prj.decode('utf-8'))
+                raise
         finally:
             CPLFree(prj)
             _safe_osr_release(osr)
@@ -263,7 +266,7 @@ class _CRS(UserDict):
             return cls.from_epsg(value)
         elif isinstance(value, dict):
             return cls(**value)
-        elif isinstance(value, string_types):
+        elif isinstance(value, str):
             return cls.from_string(value)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
