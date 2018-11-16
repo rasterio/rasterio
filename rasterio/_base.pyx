@@ -18,7 +18,6 @@ from rasterio._shim cimport open_dataset
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -1239,39 +1238,21 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
-    if not crs:
-        raise CRSError("A defined coordinate reference system is required")
+    crs = CRS.from_user_input(crs)
+
+    # EPSG is a special case.
+    init = crs.get('init')
+    if init:
+        auth, val = init.strip().split(':')
+
+        if not val or auth.upper() != 'EPSG':
+            raise CRSError("Invalid CRS: {!r}".format(crs))
+        proj = 'EPSG:{}'.format(val).encode('utf-8')
+    else:
+        proj = crs.to_string().encode('utf-8')
+        log.debug("PROJ.4 to be imported: %r", proj)
 
     cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
-    if isinstance(crs, string_types):
-        proj = crs.encode('utf-8')
-
-    # Make a CRS object from provided dict.
-    else:
-        crs = CRS(crs)
-        # EPSG is a special case.
-        init = crs.get('init')
-        if init:
-            auth, val = init.split(':')
-
-            if not val:
-                _safe_osr_release(osr)
-                raise CRSError("Invalid CRS: {!r}".format(crs))
-
-            if auth.upper() == 'EPSG':
-                proj = 'EPSG:{}'.format(val).encode('utf-8')
-        else:
-            params = []
-            for k, v in crs.items():
-                if v is True or (k in ('no_defs', 'wktext') and v):
-                    params.append("+%s" % k)
-                else:
-                    params.append("+%s=%s" % (k, v))
-            proj = " ".join(params)
-            log.debug("PROJ.4 to be imported: %r", proj)
-            proj = proj.encode('utf-8')
-
     try:
         retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>proj))
         if retval:
