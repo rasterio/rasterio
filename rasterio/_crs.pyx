@@ -9,7 +9,7 @@ import logging
 from rasterio._err import CPLE_BaseError
 from rasterio.compat import UserDict, string_types
 from rasterio.errors import CRSError
-from rasterio.env import ensure_env
+from rasterio.env import env_ctx_if_needed
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
@@ -23,7 +23,6 @@ class _CRS(UserDict):
     """CRS base class."""
 
     @property
-    @ensure_env
     def is_geographic(self):
         """Test if the CRS is a geographic coordinate reference system
 
@@ -34,15 +33,15 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
-        try:
-            osr_crs = osr_from_crs(self)
-            retval = OSRIsGeographic(osr_crs)
-            return bool(retval == 1)
-        finally:
-            _safe_osr_release(osr_crs)
+        with env_ctx_if_needed():
+            try:
+                osr_crs = osr_from_crs(self)
+                retval = OSRIsGeographic(osr_crs)
+                return bool(retval == 1)
+            finally:
+                _safe_osr_release(osr_crs)
 
     @property
-    @ensure_env
     def is_projected(self):
         """Test if the CRS is a projected coordinate reference system
 
@@ -53,14 +52,14 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
-        try:
-            osr_crs = osr_from_crs(self)
-            retval = OSRIsProjected(osr_crs)
-            return bool(retval == 1)
-        finally:
-            _safe_osr_release(osr_crs)
+        with env_ctx_if_needed():
+            try:
+                osr_crs = osr_from_crs(self)
+                retval = OSRIsProjected(osr_crs)
+                return bool(retval == 1)
+            finally:
+                _safe_osr_release(osr_crs)
 
-    @ensure_env
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
         cdef OGRSpatialReferenceH osr_crs2 = NULL
@@ -86,7 +85,6 @@ class _CRS(UserDict):
             _safe_osr_release(osr_crs2)
 
     @property
-    @ensure_env
     def wkt(self):
         """An OGC WKT representation of the CRS
 
@@ -97,15 +95,15 @@ class _CRS(UserDict):
         cdef char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
 
-        try:
-            osr = osr_from_crs(self)
-            OSRExportToWkt(osr, &srcwkt)
-            return srcwkt.decode('utf-8')
-        finally:
-            CPLFree(srcwkt)
-            _safe_osr_release(osr)
+        with env_ctx_if_needed():
+            try:
+                osr = osr_from_crs(self)
+                OSRExportToWkt(osr, &srcwkt)
+                return srcwkt.decode('utf-8')
+            finally:
+                CPLFree(srcwkt)
+                _safe_osr_release(osr)
 
-    @ensure_env
     def to_epsg(self):
         """The epsg code of the CRS
 
@@ -115,14 +113,16 @@ class _CRS(UserDict):
         """
         cdef OGRSpatialReferenceH osr = NULL
 
-        try:
-            osr = osr_from_crs(self)
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                epsg_code = OSRGetAuthorityCode(osr, NULL)
-                return int(epsg_code.decode('utf-8'))
-        finally:
-            _safe_osr_release(osr)
-        return None
+        with env_ctx_if_needed():
+            try:
+                osr = osr_from_crs(self)
+                if OSRAutoIdentifyEPSG(osr) == 0:
+                    epsg_code = OSRGetAuthorityCode(osr, NULL)
+                    return int(epsg_code.decode('utf-8'))
+                else:
+                    return None
+            finally:
+                _safe_osr_release(osr)
 
     @classmethod
     def from_epsg(cls, code):
