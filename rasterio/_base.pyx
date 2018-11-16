@@ -282,12 +282,14 @@ cdef class DatasetBase(object):
                 retval = OSRAutoIdentifyEPSG(osr)
 
                 if retval > 0:
-                    log.info("Failed to auto identify EPSG: %d", retval)
+                    log.debug("Failed to auto identify EPSG: %d", retval)
 
                 else:
+                    log.debug("Auto identified EPSG: %d", retval)
+
                     try:
-                        auth_key = <const char *>exc_wrap_pointer(<void *>OSRGetAuthorityName(osr, NULL))
-                        auth_val = <const char *>exc_wrap_pointer(<void *>OSRGetAuthorityCode(osr, NULL))
+                        auth_key = OSRGetAuthorityName(osr, NULL)
+                        auth_val = OSRGetAuthorityCode(osr, NULL)
 
                     except CPLE_NotSupportedError as exc:
                         log.debug("{}".format(exc))
@@ -312,6 +314,7 @@ cdef class DatasetBase(object):
             if wkt_b == NULL:
                 raise ValueError("Unexpected NULL spatial reference")
             wkt = wkt_b
+            log.debug("WKT: %r", wkt)
             return self._handle_crswkt(wkt)
 
     def read_transform(self):

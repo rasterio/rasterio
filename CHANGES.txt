@@ -1,11 +1,14 @@
 Changes
 =======
 
-Next
-----
+1.0.10 (2019-11-16)
+-------------------
 
-Bug fixes:
-
+- Avoid segmentation fault when OSRGetAuthority* functions return null
+  pointers, making Rasterio more robust when reading CRS that don't map
+  perfectly to PROJ.
+- Ensure that GDAL and PROJ support files can be found in Rasterio wheels when
+  we call CRS methods (#1539).
 - Accomodate the Esri flavor of projection WKT (#1537).
 - Add missing raster offsets and scales properties (#1527).
 

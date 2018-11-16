@@ -6,7 +6,7 @@ include "gdal.pxi"
 import json
 import logging
 
-from rasterio._err import CPLE_BaseError
+from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
 from rasterio.compat import UserDict, string_types
 from rasterio.errors import CRSError
 from rasterio.env import env_ctx_if_needed
@@ -230,18 +230,22 @@ class _CRS(UserDict):
 
         if isinstance(s, string_types):
             b_s = s.encode('utf-8')
+            log.debug("Encoded WKT: %r", b_s)
 
         try:
-            retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_s))
-            if retval:
-                _safe_osr_release(osr)
-                raise CRSError("Invalid CRS: {!r}".format(s))
+            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_s))
+        except CPLE_NotSupportedError as exc:
+            log.debug("{}".format(exc))
         except CPLE_BaseError as exc:
             _safe_osr_release(osr)
             raise CRSError(str(exc))
 
         try:
-            OSRExportToProj4(osr, &prj)
+            exc_wrap_int(OSRExportToProj4(osr, &prj))
+        except CPLE_NotSupportedError as exc:
+            log.debug("{}".format(exc))
+
+        try:
             return cls.from_string(prj.decode('utf-8'))
         except CRSError:
             if OSRMorphFromESRI(osr) == 0:
