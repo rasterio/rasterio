@@ -60,6 +60,7 @@ class _CRS(UserDict):
         finally:
             _safe_osr_release(osr_crs)
 
+    @ensure_env
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
         cdef OGRSpatialReferenceH osr_crs2 = NULL
@@ -85,6 +86,7 @@ class _CRS(UserDict):
             _safe_osr_release(osr_crs2)
 
     @property
+    @ensure_env
     def wkt(self):
         """An OGC WKT representation of the CRS
 

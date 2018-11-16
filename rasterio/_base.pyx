@@ -23,7 +23,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env
+from rasterio.env import Env, ensure_env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
@@ -260,6 +260,7 @@ cdef class DatasetBase(object):
         except:
             return False
 
+    @ensure_env
     def _handle_crswkt(self, wkt):
         """Return the GDAL dataset's stored CRS"""
         cdef char *proj = NULL
@@ -318,6 +319,7 @@ cdef class DatasetBase(object):
         else:
             log.debug("No projection detected.")
 
+    @ensure_env
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
         cdef const char *wkt_b = GDALGetProjectionRef(self._hds)
