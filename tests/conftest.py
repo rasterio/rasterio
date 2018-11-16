@@ -48,16 +48,18 @@ def runner():
 
 
 @pytest.fixture(scope='function')
-def data(tmpdir):
+def data():
     """A temporary directory containing a copy of the files in data."""
+    tmpdir = py.test.ensuretemp('tests/data')
     for filename in test_files:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
 
 
 @pytest.fixture(scope='function')
-def red_green(tmpdir):
+def red_green():
     """A temporary directory containing copies of red.tif, green.tif."""
+    tmpdir = py.test.ensuretemp('tests/data')
     for filename in ['tests/data/red.tif', 'tests/data/red.tif.ovr', 'tests/data/green.tif', 'tests/data/green.tif.ovr']:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
@@ -558,15 +560,15 @@ def path_alpha_tif(data_dir):
 
 
 @pytest.fixture(scope='session')
-def path_zip_file(data_dir):
+def path_zip_file():
     """Creates ``coutwildrnp.zip`` if it does not exist and returns
     the absolute file path."""
-    path = '{}/white-gemini-iv.zip'.format(data_dir)
+    path = '{}/white-gemini-iv.zip'.format(data_dir())
     if not os.path.exists(path):
         with zipfile.ZipFile(path, 'w') as zip:
             for filename in ['white-gemini-iv.vrt',
                              '389225main_sw_1965_1024.jpg']:
-                zip.write(os.path.join(data_dir, filename), filename)
+                zip.write(os.path.join(data_dir(), filename), filename)
     return path
 
 
