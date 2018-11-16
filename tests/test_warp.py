@@ -179,6 +179,43 @@ def test_transform_bounds():
         )
 
 
+def test_transform_bounds__esri_wkt():
+    left, bottom, right, top = \
+        (-78.95864996545055, 23.564991210854686,
+         -76.57492370013823, 25.550873767433984)
+    dst_projection_string = (
+        'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
+        'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
+        'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
+        'PRIMEM["Greenwich",0.0],'
+        'UNIT["Degree",0.0174532925199433]],'
+        'PROJECTION["Albers"],'
+        'PARAMETER["false_easting",0.0],'
+        'PARAMETER["false_northing",0.0],'
+        'PARAMETER["central_meridian",-96.0],'
+        'PARAMETER["standard_parallel_1",29.5],'
+        'PARAMETER["standard_parallel_2",45.5],'
+        'PARAMETER["latitude_of_origin",23.0],'
+        'UNIT["Meter",1.0],'
+        'VERTCS["NAVD_1988",'
+        'VDATUM["North_American_Vertical_Datum_1988"],'
+        'PARAMETER["Vertical_Shift",0.0],'
+        'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+    assert np.allclose(
+        transform_bounds({"init": "EPSG:4326"},
+                         dst_projection_string,
+                         left,
+                         bottom,
+                         right,
+                         top),
+        (
+            1721263.7931814701,
+            219684.49332178483,
+            2002926.56696663,
+            479360.16562217404),
+    )
+
+
 def test_transform_bounds_densify():
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
