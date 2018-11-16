@@ -1253,10 +1253,19 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     try:
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
+        exc_wrap_int(OCTTransform(transform, n, x, y, z))
 
-        err = OCTTransform(transform, n, x, y, z)
-        err = exc_wrap_int(err)
+    except CPLE_NotSupportedError as exc:
+        log.debug("{}".format(exc))
 
+    except:
+        CPLFree(x)
+        CPLFree(y)
+        CPLFree(z)
+        _safe_osr_release(src)
+        _safe_osr_release(dst)
+
+    try:
         res_xs = [0]*n
         res_ys = [0]*n
         for i in range(n):
@@ -1266,12 +1275,9 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             res_zs = [0]*n
             for i in range(n):
                 res_zs[i] = z[i]
-            retval = (res_xs, res_ys, res_zs)
+            return (res_xs, res_ys, res_zs)
         else:
-            retval = (res_xs, res_ys)
-
-    except CPLE_NotSupportedError as exc:
-        raise CRSError(str(exc))
+            return (res_xs, res_ys)
 
     finally:
         CPLFree(x)
@@ -1279,8 +1285,6 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         CPLFree(z)
         _safe_osr_release(src)
         _safe_osr_release(dst)
-
-    return retval
 
 
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
