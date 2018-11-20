@@ -60,6 +60,7 @@ def test_no_crs(tmpdir):
         dst.write(np.ones((100, 100), dtype=rasterio.uint8), indexes=1)
 
 
+@pytest.mark.gdalbin
 def test_context(tmpdir):
     name = str(tmpdir.join("test_context.tif"))
     with rasterio.open(
@@ -87,6 +88,7 @@ def test_context(tmpdir):
     assert "Band 1 Block=100x81 Type=Byte, ColorInterp=Gray" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -99,6 +101,7 @@ def test_write_ubyte(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte_multi(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -111,6 +114,7 @@ def test_write_ubyte_multi(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte_multi_list(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
     a = np.array([np.ones((100, 100), dtype=rasterio.ubyte) * 127])
@@ -123,6 +127,7 @@ def test_write_ubyte_multi_list(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte_multi_3(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
     arr = np.array(3 * [np.ones((100, 100), dtype=rasterio.ubyte) * 127])
@@ -135,6 +140,7 @@ def test_write_ubyte_multi_3(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_float(tmpdir):
     name = str(tmpdir.join("test_write_float.tif"))
     a = np.ones((100, 100), dtype=rasterio.float32) * 42.0
@@ -149,6 +155,7 @@ def test_write_float(tmpdir):
     assert "Minimum=42.000, Maximum=42.000, Mean=42.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -170,7 +177,7 @@ def test_write_crs_transform(tmpdir):
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
-
+@pytest.mark.gdalbin
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -192,6 +199,7 @@ def test_write_crs_transform_affine(tmpdir):
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
+@pytest.mark.gdalbin
 def test_write_crs_transform_2(tmpdir):
     """Using 'EPSG:32618' as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -213,6 +221,7 @@ def test_write_crs_transform_2(tmpdir):
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
+@pytest.mark.gdalbin
 def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -235,6 +244,7 @@ def test_write_crs_transform_3(tmpdir):
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
+@pytest.mark.gdalbin
 def test_write_meta(tmpdir):
     name = str(tmpdir.join("test_write_meta.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -245,6 +255,7 @@ def test_write_meta(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_nodata(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127

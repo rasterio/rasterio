@@ -50,6 +50,7 @@ def test_read_epsg3857(tmpdir):
 
 
 # Ensure that CRS sticks when we write a file.
+@pytest.mark.gdalbin
 def test_write_3857(tmpdir):
     src_path = str(tmpdir.join('lol.tif'))
     subprocess.call([

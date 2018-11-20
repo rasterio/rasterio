@@ -7,6 +7,7 @@ import rasterio
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte.png"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127

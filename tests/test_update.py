@@ -11,6 +11,7 @@ from rasterio.env import GDALVersion
 from .conftest import requires_gdal21
 
 
+@pytest.mark.gdalbin
 def test_update_tags(data):
     tiffname = str(data.join('RGB.byte.tif'))
     with rasterio.open(tiffname, 'r+') as f:
