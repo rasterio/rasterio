@@ -40,6 +40,7 @@ def test_read_esri_wkt(tmpdir):
         }
 
 
+@pytest.mark.gdalbin
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
     subprocess.call([
