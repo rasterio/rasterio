@@ -329,3 +329,9 @@ def test_compound_crs():
 def test_dataset_compound_crs():
     with rasterio.open("tests/data/compdcs.vrt") as dataset:
         assert dataset.crs.wkt.startswith('GEOGCS["WGS 84"')
+
+
+@pytest.mark.wheel
+def test_environ_patch(gdalenv, monkeypatch):
+    """GDAL_DATA is patched and persists"""
+    assert CRS.from_epsg(4326) != CRS.from_epsg(3857)

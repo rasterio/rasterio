@@ -800,7 +800,7 @@ def test_nested_credentials(monkeypatch):
         gdalenv = fake_opener('s3://foo/bar')
         assert gdalenv['AWS_ACCESS_KEY_ID'] == 'foo'
         assert gdalenv['AWS_SECRET_ACCESS_KEY'] == 'bar'
-        
+
 
 def test_oss_session_credentials(gdalenv):
     """Create an Env with a oss session."""
@@ -813,3 +813,11 @@ def test_oss_session_credentials(gdalenv):
         assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
         assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
         assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
+
+
+@pytest.mark.wheel
+def test_environ_patch(gdalenv, monkeypatch):
+    """GDAL_DATA is patched and persists"""
+    with Env():
+        path = getenv()['GDAL_DATA']
+    assert os.environ['GDAL_DATA'] == path

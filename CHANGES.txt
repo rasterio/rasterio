@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.11 (TBD)
+------------
+
+- When GDAL_DATA is not defined in os.environ but we find it in wheel data or
+  at a well-known path, we patch the environment so that subsequent calls to
+  GDAL functions requiring support files can succeed.
+
 1.0.10 (2019-11-16)
 -------------------
 
