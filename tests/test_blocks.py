@@ -112,6 +112,7 @@ class WindowWriteTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
+    @pytest.mark.gdalbin
     def test_write_window(self):
         name = os.path.join(self.tempdir, "test_write_window.tif")
         a = np.ones((50, 50), dtype=rasterio.ubyte) * 127
