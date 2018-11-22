@@ -805,8 +805,8 @@ def test_nested_credentials(monkeypatch):
 def test_oss_session_credentials(gdalenv):
     """Create an Env with a oss session."""
     oss_session = OSSSession(
-        oss_access_key_id='id', 
-        oss_secret_access_key='key', 
+        oss_access_key_id='id',
+        oss_secret_access_key='key',
         oss_endpoint='null-island-1')
     with rasterio.env.Env(session=oss_session) as s:
         s.credentialize()
@@ -819,5 +819,5 @@ def test_oss_session_credentials(gdalenv):
 def test_environ_patch(gdalenv, monkeypatch):
     """GDAL_DATA is patched and persists"""
     with Env():
-        path = getenv()['GDAL_DATA']
-    assert os.environ['GDAL_DATA'] == path
+        path = getenv().get('GDAL_DATA')
+    assert os.environ.get('GDAL_DATA') == path

@@ -463,6 +463,7 @@ def gdalenv(request):
         if rasterio.env.local._env:
             rasterio.env.delenv()
             rasterio.env.local._env = None
+
     request.addfinalizer(fin)
 
 

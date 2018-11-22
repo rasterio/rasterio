@@ -177,6 +177,7 @@ def test_write_crs_transform(tmpdir):
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
+
 @pytest.mark.gdalbin
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -191,6 +192,7 @@ def test_write_crs_transform_affine(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
+
     assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
@@ -200,8 +202,9 @@ def test_write_crs_transform_affine(tmpdir):
 
 
 @pytest.mark.gdalbin
-def test_write_crs_transform_2(tmpdir):
+def test_write_crs_transform_2(tmpdir, monkeypatch):
     """Using 'EPSG:32618' as CRS."""
+    monkeypatch.delenv('GDAL_DATA', raising=False)
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
@@ -213,6 +216,7 @@ def test_write_crs_transform_2(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
+
     assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     print(info)
