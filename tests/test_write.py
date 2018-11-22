@@ -215,6 +215,7 @@ def test_write_crs_transform_2(tmpdir):
         s.write(a, indexes=1)
     assert s.crs.to_dict() == {'init': 'epsg:32618'}
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
+    print(info)
     assert 'UTM zone 18N' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
