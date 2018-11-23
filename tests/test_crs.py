@@ -7,6 +7,7 @@ import pytest
 import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS
+from rasterio.env import env_ctx_if_needed
 from rasterio.errors import CRSError
 
 from .conftest import requires_gdal21, requires_gdal22
@@ -333,5 +334,8 @@ def test_dataset_compound_crs():
 
 @pytest.mark.wheel
 def test_environ_patch(gdalenv, monkeypatch):
-    """GDAL_DATA is patched and persists"""
-    assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)
+    """GDAL_DATA is patched as when rasterio._crs is imported"""
+    monkeypatch.delenv('GDAL_DATA', raising=False)
+    monkeypatch.delenv('PROJ_LIB', raising=False)
+    with env_ctx_if_needed():
+        assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)
