@@ -334,4 +334,4 @@ def test_dataset_compound_crs():
 @pytest.mark.wheel
 def test_environ_patch(gdalenv, monkeypatch):
     """GDAL_DATA is patched and persists"""
-    assert CRS.from_epsg(4326) != CRS.from_epsg(3857)
+    assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)
