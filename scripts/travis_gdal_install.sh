@@ -44,7 +44,7 @@ GDALOPTS="  --with-ogr \
             --without-php \
             --without-ruby \
             --without-python \
-            --with-static-proj4=/usr/lib"
+            --with-proj"
 
 # Create build dir if not exists
 if [ ! -d "$GDALBUILD" ]; then
