@@ -8,7 +8,7 @@ import re
 import threading
 import warnings
 
-from rasterio._env import GDALEnv, get_gdal_config, set_gdal_config
+from rasterio._env import GDALEnv, get_gdal_config, set_gdal_config, GDALDataFinder, PROJDataFinder
 from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)

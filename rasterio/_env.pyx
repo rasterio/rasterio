@@ -190,7 +190,15 @@ class GDALDataFinder(object):
     """Finds GDAL and PROJ data files"""
 
     def search(self, prefix=None):
-        """Returns GDAL_DATA location"""
+        """Returns GDAL data directory
+
+        Note well that os.environ is not consulted.
+
+        Returns
+        -------
+        str or None
+
+        """
         path = self.search_wheel(prefix or __file__)
         if not path:
             path = self.search_prefix(prefix or sys.prefix)
@@ -207,20 +215,28 @@ class GDALDataFinder(object):
 
     def search_prefix(self, prefix=sys.prefix):
         """Check sys.prefix location"""
-        datadir = os.path.join(prefix, 'share/gdal')
+        datadir = os.path.join(prefix, 'share', 'gdal')
         return datadir if os.path.exists(os.path.join(datadir, 'pcs.csv')) else None
 
     def search_debian(self, prefix=sys.prefix):
         """Check Debian locations"""
         gdal_release_name = GDALVersionInfo("RELEASE_NAME")
-        datadir = os.path.join(prefix, 'share/gdal', '{}.{}'.format(*gdal_release_name.split('.')[:2]))
+        datadir = os.path.join(prefix, 'share', 'gdal', '{}.{}'.format(*gdal_release_name.split('.')[:2]))
         return datadir if os.path.exists(os.path.join(datadir, 'pcs.csv')) else None
 
 
 class PROJDataFinder(object):
 
     def search(self, prefix=None):
-        """Returns PROJ_LIB location"""
+        """Returns PROJ data directory
+
+        Note well that os.environ is not consulted.
+
+        Returns
+        -------
+        str or None
+
+        """
         path = self.search_wheel(prefix or __file__)
         if not path:
             path = self.search_prefix(prefix or sys.prefix)
@@ -235,7 +251,7 @@ class PROJDataFinder(object):
 
     def search_prefix(self, prefix=sys.prefix):
         """Check sys.prefix location"""
-        datadir = os.path.join(prefix, 'share/proj')
+        datadir = os.path.join(prefix, 'share', 'proj')
         return datadir if os.path.exists(datadir) else None
 
 
@@ -248,7 +264,6 @@ cdef class GDALEnv(ConfigEnv):
 
     def start(self):
         CPLPushErrorHandler(<CPLErrorHandler>logging_error_handler)
-        log.debug("Logging error handler pushed.")
 
         # The outer if statement prevents each thread from acquiring a
         # lock when the environment starts, and the inner avoids a
@@ -259,31 +274,28 @@ cdef class GDALEnv(ConfigEnv):
 
                     GDALAllRegister()
                     OGRRegisterAll()
-                    log.debug("All drivers registered.")
 
-                    if 'GDAL_DATA' not in os.environ:
+                    if 'GDAL_DATA' in os.environ:
+                        self.update_config_options(GDAL_DATA=os.environ['GDAL_DATA'])
+                        log.debug("GDAL_DATA found in environment: %r.", os.environ['GDAL_DATA'])
 
+                    else:
                         path = GDALDataFinder().search()
 
                         if path:
-                            log.debug("GDAL data found in %r", path)
                             self.update_config_options(GDAL_DATA=path)
-
-                    else:
-                        self.update_config_options(GDAL_DATA=os.environ['GDAL_DATA'])
+                            log.debug("GDAL_DATA not found in environment, set to %r.", path)
 
                     if 'PROJ_LIB' not in os.environ:
 
                         path = PROJDataFinder().search()
 
                         if path:
-                            log.debug("PROJ data found in %r", path)
                             os.environ['PROJ_LIB'] = path
-
+                            log.debug("PROJ data not found in environment, set to %r.", path)
 
                     if driver_count() == 0:
                         CPLPopErrorHandler()
-                        log.debug("Error handler popped")
                         raise ValueError("Drivers not registered.")
 
                     # Flag the drivers as registered, otherwise every thread
@@ -298,9 +310,7 @@ cdef class GDALEnv(ConfigEnv):
         # NB: do not restore the CPL error handler to its default
         # state here. If you do, log messages will be written to stderr
         # by GDAL instead of being sent to Python's logging module.
-        log.debug("Stopping GDALEnv %r.", self)
         CPLPopErrorHandler()
-        log.debug("Error handler popped.")
         log.debug("Stopped GDALEnv %r.", self)
 
     def drivers(self):

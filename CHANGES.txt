@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.11 (TBD)
+------------
+
+- Options --gdal-data and --proj-data have been added to the rio-env command so
+  that users of Rasterio wheels can get paths to set GDAL_DATA and PROJ_LIB
+  environment variables.
+
 1.0.10 (2019-11-16)
 -------------------
 

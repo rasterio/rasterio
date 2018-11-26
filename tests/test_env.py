@@ -134,7 +134,7 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir
     monkeypatch.delenv('GDAL_DATA', raising=False)
     monkeypatch.setattr(sys, 'prefix', str(tmpdir))
 
-    assert f() == str(tmpdir.join("share/gdal"))
+    assert f() == str(tmpdir.join("share").join("gdal"))
 
 
 def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir):
@@ -800,13 +800,13 @@ def test_nested_credentials(monkeypatch):
         gdalenv = fake_opener('s3://foo/bar')
         assert gdalenv['AWS_ACCESS_KEY_ID'] == 'foo'
         assert gdalenv['AWS_SECRET_ACCESS_KEY'] == 'bar'
-        
+
 
 def test_oss_session_credentials(gdalenv):
     """Create an Env with a oss session."""
     oss_session = OSSSession(
-        oss_access_key_id='id', 
-        oss_secret_access_key='key', 
+        oss_access_key_id='id',
+        oss_secret_access_key='key',
         oss_endpoint='null-island-1')
     with rasterio.env.Env(session=oss_session) as s:
         s.credentialize()

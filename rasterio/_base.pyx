@@ -23,7 +23,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env, env_ctx_if_needed
+from rasterio.env import Env
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
@@ -273,49 +273,46 @@ cdef class DatasetBase(object):
         wkt_b = wkt.encode('utf-8')
         cdef const char *wkt_c = wkt_b
 
-        with env_ctx_if_needed():
-            try:
+        try:
 
-                osr = exc_wrap_pointer(OSRNewSpatialReference(wkt_c))
-                log.debug("Got coordinate system")
+            osr = exc_wrap_pointer(OSRNewSpatialReference(wkt_c))
+            log.debug("Got coordinate system")
 
-                retval = OSRAutoIdentifyEPSG(osr)
+            retval = OSRAutoIdentifyEPSG(osr)
 
-                if retval > 0:
-                    log.debug("Failed to auto identify EPSG: %d", retval)
+            if retval > 0:
+                log.debug("Failed to auto identify EPSG: %d", retval)
 
-                else:
-                    log.debug("Auto identified EPSG: %d", retval)
+            else:
+                log.debug("Auto identified EPSG: %d", retval)
 
-                    try:
-                        auth_key = OSRGetAuthorityName(osr, NULL)
-                        auth_val = OSRGetAuthorityCode(osr, NULL)
+                try:
+                    auth_key = OSRGetAuthorityName(osr, NULL)
+                    auth_val = OSRGetAuthorityCode(osr, NULL)
 
-                    except CPLE_NotSupportedError as exc:
-                        log.debug("{}".format(exc))
+                except CPLE_NotSupportedError as exc:
+                    log.debug("{}".format(exc))
 
-                    if auth_key != NULL and auth_val != NULL:
-                        return CRS({'init': u'{}:{}'.format(auth_key.lower(), auth_val)})
+                if auth_key != NULL and auth_val != NULL:
+                    return CRS({'init': u'{}:{}'.format(auth_key.lower(), auth_val)})
 
-                return CRS.from_wkt(wkt)
+            return CRS.from_wkt(wkt)
 
-            except CPLE_BaseError as exc:
-                raise CRSError("{}".format(exc))
+        except CPLE_BaseError as exc:
+            raise CRSError("{}".format(exc))
 
-            finally:
-                 _safe_osr_release(osr)
+        finally:
+             _safe_osr_release(osr)
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
         cdef const char *wkt_b = NULL
 
-        with env_ctx_if_needed():
-            wkt_b = GDALGetProjectionRef(self._hds)
-            if wkt_b == NULL:
-                raise ValueError("Unexpected NULL spatial reference")
-            wkt = wkt_b
-            log.debug("WKT: %r", wkt)
-            return self._handle_crswkt(wkt)
+        wkt_b = GDALGetProjectionRef(self._hds)
+        if wkt_b == NULL:
+            raise ValueError("Unexpected NULL spatial reference")
+        wkt = wkt_b
+        return self._handle_crswkt(wkt)
 
     def read_transform(self):
         """Return the stored GDAL GeoTransform"""
