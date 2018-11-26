@@ -134,7 +134,7 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir
     monkeypatch.delenv('GDAL_DATA', raising=False)
     monkeypatch.setattr(sys, 'prefix', str(tmpdir))
 
-    assert f() == str(tmpdir.join("share/gdal"))
+    assert f() == str(tmpdir.join("share").join("gdal"))
 
 
 def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir):
@@ -813,11 +813,3 @@ def test_oss_session_credentials(gdalenv):
         assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
         assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
         assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
-
-
-@pytest.mark.wheel
-def test_environ_patch(gdalenv, monkeypatch):
-    """GDAL_DATA is patched and persists"""
-    with Env():
-        path = getenv().get('GDAL_DATA')
-    assert os.environ.get('GDAL_DATA') == path
