@@ -4,9 +4,9 @@ Changes
 1.0.11 (TBD)
 ------------
 
-- When GDAL_DATA is not defined in os.environ but we find it in wheel data or
-  at a well-known path, we patch the environment so that subsequent calls to
-  GDAL functions requiring support files can succeed.
+- Options --gdal-data and --proj-data have been added to the rio-env command so
+  that users of Rasterio wheels can get paths to set GDAL_DATA and PROJ_LIB
+  environment variables.
 
 1.0.10 (2019-11-16)
 -------------------

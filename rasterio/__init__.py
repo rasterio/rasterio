@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from collections import namedtuple
 from contextlib import contextmanager
 import logging
-import warnings
 
 try:
     from pathlib import Path
