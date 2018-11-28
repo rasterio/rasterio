@@ -6,8 +6,8 @@ from enum import Enum, IntEnum
 class ColorInterp(IntEnum):
     """Raster band color interpretation."""
     undefined = 0
-    grey = 1
     gray = 1
+    grey = 1
     palette = 2
     red = 3
     green = 4
