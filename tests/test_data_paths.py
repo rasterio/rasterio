@@ -6,7 +6,7 @@ from click.testing import CliRunner
 import pytest
 
 import rasterio
-from rasterio.env import GDALDataFinder, PROJDataFinder
+from rasterio._env import GDALDataFinder, PROJDataFinder
 from rasterio.rio.main import main_group
 
 

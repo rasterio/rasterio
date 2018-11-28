@@ -5,7 +5,7 @@ import os
 
 import click
 
-from rasterio.env import GDALDataFinder, PROJDataFinder
+from rasterio._env import GDALDataFinder, PROJDataFinder
 
 
 @click.command(short_help="Print information about the Rasterio environment.")
