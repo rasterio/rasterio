@@ -15,7 +15,6 @@ import warnings
 import numpy as np
 
 from rasterio._base import tastes_like_gdal, gdal_version
-from rasterio._env import driver_count, GDALEnv
 from rasterio._err import (
     GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError)
 from rasterio.crs import CRS
@@ -373,7 +372,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 with DatasetWriterBase(
                         bg_path, 'w',
                         driver='GTiff', count=self.count, height=3, width=3,
-                        dtype=dtype, crs=None, transform=None) as bg_dataset:
+                        dtype=dtype, crs=None, transform=Affine.identity() * Affine.translation(1, 1)) as bg_dataset:
                     bg_dataset.write(
                         np.full((self.count, 3, 3), fill_value, dtype=dtype))
                 bg_dataset = DatasetReaderBase(bg_path)
