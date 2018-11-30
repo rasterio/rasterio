@@ -171,7 +171,7 @@ Tickets
 ```````
 
 * `#284 <https://github.com/mapbox/rasterio/pull/284>`__ - Deprecation of
-  ``src.read_masks()``.
+  ``src.read_mask()``.
 
 
 Moved: Functions for working with dataset windows
