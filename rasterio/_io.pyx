@@ -1644,6 +1644,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 6: 'MODE',
                 7: 'GAUSS'}
             resampling_alg = resampling_map[Resampling(resampling.value)]
+
         except (KeyError, ValueError):
             raise ValueError(
                 "resampling must be one of: {0}".format(", ".join(
@@ -1658,12 +1659,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Allocate arrays.
         if factors:
             factors_c = <int *>CPLMalloc(len(factors)*sizeof(int))
+
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
+
             try:
                 resampling_b = resampling_alg.encode('utf-8')
                 resampling_c = resampling_b
-                err = exc_wrap_int(
+                GDALFlushCache(self._hds)
+                exc_wrap_int(
                     GDALBuildOverviews(self._hds, resampling_c,
                                        len(factors), factors_c, 0, NULL, NULL,
                                        NULL))
