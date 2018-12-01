@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from collections import namedtuple
 from contextlib import contextmanager
 import logging
-import warnings
 
 try:
     from pathlib import Path
@@ -43,7 +42,7 @@ import rasterio.path
 
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.0.10"
+__version__ = "1.0.11"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its

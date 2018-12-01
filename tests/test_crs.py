@@ -7,6 +7,7 @@ import pytest
 import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS
+from rasterio.env import env_ctx_if_needed
 from rasterio.errors import CRSError
 
 from .conftest import requires_gdal21, requires_gdal22
@@ -40,6 +41,7 @@ def test_read_esri_wkt(tmpdir):
         }
 
 
+@pytest.mark.gdalbin
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
     subprocess.call([
@@ -50,6 +52,7 @@ def test_read_epsg3857(tmpdir):
 
 
 # Ensure that CRS sticks when we write a file.
+@pytest.mark.gdalbin
 def test_write_3857(tmpdir):
     src_path = str(tmpdir.join('lol.tif'))
     subprocess.call([
@@ -327,3 +330,12 @@ def test_compound_crs():
 def test_dataset_compound_crs():
     with rasterio.open("tests/data/compdcs.vrt") as dataset:
         assert dataset.crs.wkt.startswith('GEOGCS["WGS 84"')
+
+
+@pytest.mark.wheel
+def test_environ_patch(gdalenv, monkeypatch):
+    """GDAL_DATA is patched as when rasterio._crs is imported"""
+    monkeypatch.delenv('GDAL_DATA', raising=False)
+    monkeypatch.delenv('PROJ_LIB', raising=False)
+    with env_ctx_if_needed():
+        assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)

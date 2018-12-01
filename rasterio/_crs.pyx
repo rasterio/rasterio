@@ -33,13 +33,12 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
-        with env_ctx_if_needed():
-            try:
-                osr_crs = osr_from_crs(self)
-                retval = OSRIsGeographic(osr_crs)
-                return bool(retval == 1)
-            finally:
-                _safe_osr_release(osr_crs)
+        try:
+            osr_crs = osr_from_crs(self)
+            retval = OSRIsGeographic(osr_crs)
+            return bool(retval == 1)
+        finally:
+            _safe_osr_release(osr_crs)
 
     @property
     def is_projected(self):
@@ -52,13 +51,12 @@ class _CRS(UserDict):
         cdef OGRSpatialReferenceH osr_crs = NULL
         cdef int retval
 
-        with env_ctx_if_needed():
-            try:
-                osr_crs = osr_from_crs(self)
-                retval = OSRIsProjected(osr_crs)
-                return bool(retval == 1)
-            finally:
-                _safe_osr_release(osr_crs)
+        try:
+            osr_crs = osr_from_crs(self)
+            retval = OSRIsProjected(osr_crs)
+            return bool(retval == 1)
+        finally:
+            _safe_osr_release(osr_crs)
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_crs1 = NULL
@@ -95,14 +93,13 @@ class _CRS(UserDict):
         cdef char *srcwkt = NULL
         cdef OGRSpatialReferenceH osr = NULL
 
-        with env_ctx_if_needed():
-            try:
-                osr = osr_from_crs(self)
-                OSRExportToWkt(osr, &srcwkt)
-                return srcwkt.decode('utf-8')
-            finally:
-                CPLFree(srcwkt)
-                _safe_osr_release(osr)
+        try:
+            osr = osr_from_crs(self)
+            OSRExportToWkt(osr, &srcwkt)
+            return srcwkt.decode('utf-8')
+        finally:
+            CPLFree(srcwkt)
+            _safe_osr_release(osr)
 
     def to_epsg(self):
         """The epsg code of the CRS
@@ -113,16 +110,15 @@ class _CRS(UserDict):
         """
         cdef OGRSpatialReferenceH osr = NULL
 
-        with env_ctx_if_needed():
-            try:
-                osr = osr_from_crs(self)
-                if OSRAutoIdentifyEPSG(osr) == 0:
-                    epsg_code = OSRGetAuthorityCode(osr, NULL)
-                    return int(epsg_code.decode('utf-8'))
-                else:
-                    return None
-            finally:
-                _safe_osr_release(osr)
+        try:
+            osr = osr_from_crs(self)
+            if OSRAutoIdentifyEPSG(osr) == 0:
+                epsg_code = OSRGetAuthorityCode(osr, NULL)
+                return int(epsg_code.decode('utf-8'))
+            else:
+                return None
+        finally:
+            _safe_osr_release(osr)
 
     @classmethod
     def from_epsg(cls, code):
@@ -396,6 +392,7 @@ _param_data = """
 +zone      UTM zone
 """
 
-_lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
-all_proj_keys = list(set(line.split()[0].lstrip("+").strip()
-                         for line in _lines)) + ['no_mayo']
+with env_ctx_if_needed():
+    _lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
+    all_proj_keys = list(set(line.split()[0].lstrip("+").strip()
+                             for line in _lines)) + ['no_mayo']
