@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.0.11 (TBD)
-------------
+1.0.11 (2019-11-30)
+-------------------
 
 - Prevent needless warning when making boundless reads with a fill value
   (#1499).
