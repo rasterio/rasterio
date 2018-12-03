@@ -114,7 +114,7 @@ a dataset:
     from rasterio.windows import get_data_window
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        window - get_data_window(src.read(1, masked-True))
+        window = get_data_window(src.read(1, masked=True))
         # window = Window(col_off=13, row_off=3, width=757, height=711)
 
         kwargs = src.meta.copy()
