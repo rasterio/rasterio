@@ -133,3 +133,91 @@ we get an almost 3x speed up with four concurrent jobs.
    If the function that you'd like to map over raster windows doesn't release
    the GIL, you can replace ``ThreadPoolExecutor`` with ``ProcessPoolExecutor``
    and get the same results with similar performance.
+
+One of the problems with the code above, is that at some point the whole file will be loaded in
+memory. The reason for that is that ``ThreadPoolExecutor.map`` collects iteratees immediately
+rather than lazily and doesn't produce results in the returning iterator until all input
+data is collected.
+
+That might not work for your use case if you are processing large raster files on a machine
+with a small amount of memory. If that's the case, you can also overlap read and write operations
+by putting the read and write operations inside the function that will be distributed accross
+threads.
+
+.. code-block:: python
+
+    """
+
+    Operate on a raster dataset window-by-window using a ThreadPoolExecutor.
+
+    Simulates a CPU-bound thread situation where multiple threads can improve
+    performance.
+
+    With -j 4, the program returns in about 1/4 the time as with -j 1.
+
+    It also keeps the memory footprint at a maximum of window_size * num_workers.
+    """
+
+    import concurrent.futures
+
+    import rasterio
+    from rasterio._example import compute
+
+
+    def main(infile, outfile, num_workers=4):
+        """Process infile block-by-block and write to a new file
+
+        The output is the same as the input, but with band order
+        reversed.
+        """
+
+        with rasterio.Env():
+
+            with rasterio.open(infile) as src:
+
+                # Create a destination dataset based on source params. The
+                # destination will be tiled, and we'll process the tiles
+                # concurrently.
+                profile = src.profile
+                profile.update(blockxsize=128, blockysize=128, tiled=True)
+
+                with rasterio.open(outfile, "w", **profile) as dst:
+
+                    # Materialize a list of destination block windows
+                    # that we will use in several statements below.
+                    windows = [window for ij, window in dst.block_windows()]
+
+                    read_lock = threading.Lock()
+                    write_lock = threading.Lock()
+
+                    # This function will be executed in parallel in different
+                    # threads (4 by default). But reading and writing to a
+                    # dataset is not thread safe and will fail if multiple
+                    # threads read/write to the same open dataset. To make
+                    # sure only one thread reads/write to the dataset at the
+                    # same time, we use locks. Notice that we use different
+                    # locks for reading and writing because those operations
+                    # are being done to different datasets, so it's safe to
+                    # overlap them.
+                    def process(window):
+                        with read_lock:
+                            src_array = src.read(window=window)
+                        result = compute(src_array)
+                        with write_lock:
+                            dst.write(result, window=window)
+
+                    with concurrent.futures.ThreadPoolExecutor(
+                        max_workers=num_workers
+                    ) as executor:
+                        executor.map(compute, windows)
+
+.. note::
+
+    This example assumes that the ``compute`` function releases the GIL. If that doesn't happen,
+    you won't get a noticeable performance benefit because the ``compute`` function will run in
+    only one thread at a time.
+
+    In contrast with the previous example, in this case it's not possible to replace
+    ``ThreadPoolExecutor`` with ``ProcessPoolExecutor`` because we rely on memory space sharing 
+    by referencing the ``src`` and ``dst`` objects in the ``process`` function that will run in
+    multiple threads.
