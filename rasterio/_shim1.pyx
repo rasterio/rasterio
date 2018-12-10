@@ -55,8 +55,9 @@ cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
         "GDAL versions < 2.1 do not support nodata deletion")
 
 
-cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
-                 float width, float height, object data, int resampling=0):
+cdef int io_band(
+        GDALRasterBandH band, int mode, float x0, float y0,
+        float width, float height, object data, int resampling=0) except -1:
     """Read or write a region of data for the band.
 
     Implicit are
@@ -90,9 +91,9 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
     return retval
 
 
-cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
-                       float width, float height, object data,
-                       long[:] indexes, int resampling=0):
+cdef int io_multi_band(
+        GDALDatasetH hds, int mode, float x0, float y0, float width,
+        float height, object data, Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple bands.
 
     Implicit are
@@ -123,7 +124,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
     with nogil:
         bandmap = <int *>CPLMalloc(count*sizeof(int))
         for i in range(count):
-            bandmap[i] = indexes[i]
+            bandmap[i] = <int>indexes[i]
         retval = GDALDatasetRasterIO(
             hds, mode, xoff, yoff, xsize, ysize, buf,
             bufxsize, bufysize, buftype, count, bandmap,
@@ -133,9 +134,9 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
     return retval
 
 
-cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
-                       float width, float height, object data,
-                       long[:] indexes, int resampling=0):
+cdef int io_multi_mask(
+        GDALDatasetH hds, int mode, float x0, float y0, float width,
+        float height, object data, Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple band masks.
 
     Implicit are
@@ -165,7 +166,7 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
     cdef int ysize = <int>height
 
     for i in range(count):
-        j = indexes[i]
+        j = <int>indexes[i]
         band = GDALGetRasterBand(hds, j)
         if band == NULL:
             raise ValueError("Null band")
@@ -182,4 +183,4 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
             if retval:
                 break
 
-    return retval
+    return retvalt
