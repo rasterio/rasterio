@@ -4,6 +4,9 @@ Changes
 1.0.12 (TBD)
 ------------
 
+- Rasterio's lower level I/O functions now take Py_ssize_t index arrays and
+  will raise exceptions for type mismatches instead of swallowing the
+  exceptions (#1076).
 - The _boundless_vrt_doc function's background layer no longer needs an
   in-memory dataset and the performance regression noted in #1499 has been
   reversed. We've also found a performance improvement in masked boundless
