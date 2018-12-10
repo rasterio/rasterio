@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.0.12 (TBD)
-------------
+1.0.12 (2018-12-10)
+-------------------
 
 - Rasterio's lower level I/O functions now take Py_ssize_t index arrays and
   will raise exceptions for type mismatches instead of swallowing the
