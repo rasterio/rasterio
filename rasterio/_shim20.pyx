@@ -12,7 +12,7 @@ include "shim_rasterioex.pxi"
 # Declarations and implementations specific for GDAL = 2.0
 cdef extern from "gdal.h" nogil:
 
-    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
+    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings)
 
 from rasterio._err cimport exc_wrap_pointer
 
