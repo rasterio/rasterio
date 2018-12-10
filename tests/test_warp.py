@@ -1472,3 +1472,23 @@ def test_issue_1446_b():
     }
     # Before the fix, this geometry was thrown eastward of 0.0. It should be between -350 and -250.
     assert all([-350 < x < -150 for x, y in transformed_geoms[183519]["coordinates"]])
+
+
+def test_issue_1076():
+    """Confirm fix of #1076"""
+    arr = (np.random.random((20, 30)) * 100).astype('int32')
+    fill_value = 42
+    newarr = np.full((200, 300), fill_value=fill_value, dtype='int32')
+
+    src_crs = {'init': 'EPSG:32632'}
+    src_transform = Affine(600.0, 0.0, 399960.0, 0.0, -600.0, 6100020.0)
+    dst_transform = Affine(60.0, 0.0, 399960.0, 0.0, -60.0, 6100020.0)
+
+    reproject(arr, newarr,
+        src_transform=src_transform,
+        dst_transform=dst_transform,
+        src_crs=src_crs,
+        dst_crs=src_crs,
+        resample=Resampling.nearest)
+
+    assert not (newarr == fill_value).all()

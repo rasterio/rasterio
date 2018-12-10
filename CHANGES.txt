@@ -1,6 +1,23 @@
 Changes
 =======
 
+1.0.12 (2018-12-10)
+-------------------
+
+- Rasterio's lower level I/O functions now take Py_ssize_t index arrays and
+  will raise exceptions for type mismatches instead of swallowing the
+  exceptions (#1076).
+- The _boundless_vrt_doc function's background layer no longer needs an
+  in-memory dataset and the performance regression noted in #1499 has been
+  reversed. We've also found a performance improvement in masked boundless
+  reads in the case that the source data is entirely valid.
+- The signature of the private _boundless_vrt_doc function in rasterio.vrt has
+  changed. Its background keyword argument now takes an int or float, a new
+  masked keyword argument has been added, and the function returns a unicode
+  str instead of ascii-encoded bytes.
+- The copy and copyfiles functions of rasterio.shutil now raise an exception
+  when the source and destination paths identify the same dataset (#1569).
+
 1.0.11 (2019-11-30)
 -------------------
 

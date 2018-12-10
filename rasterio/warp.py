@@ -212,8 +212,8 @@ def reproject(source, destination, src_transform=None, gcps=None,
         Will be derived from source if it is a rasterio Band.
         Example: CRS({'init': 'EPSG:4326'})
     src_nodata: int or float, optional
-        The source nodata value.Pixels with this value will not be
-        used for interpolation. If not set, it will be default to the
+        The source nodata value. Pixels with this value will not be
+        used for interpolation. If not set, it will default to the
         nodata value of the source image if a masked ndarray or
         rasterio band, if available.
     dst_transform: affine.Affine(), optional

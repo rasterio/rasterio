@@ -309,8 +309,8 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
         with InMemoryRaster(image=image, transform=transform) as mem:
             exc_wrap_int(
                 GDALRasterizeGeometries(
-                    mem.handle(), 1, mem.band_ids,num_geoms, geoms, NULL,
-                    mem.gdal_transform, pixel_values, options, NULL, NULL))
+                    mem.handle(), 1, mem.band_ids, num_geoms, geoms, NULL,
+                    NULL, pixel_values, options, NULL, NULL))
 
             # Read in-memory data back into image
             image = mem.read()

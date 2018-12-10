@@ -50,4 +50,4 @@ ctypedef np.float64_t DTYPE_FLOAT64_t
 
 cdef bint in_dtype_range(value, dtype)
 
-cdef int io_auto(image, GDALRasterBandH band, bint write, int resampling=*)
+cdef int io_auto(image, GDALRasterBandH band, bint write, int resampling=*) except -1

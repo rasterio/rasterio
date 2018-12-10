@@ -104,7 +104,7 @@ cdef bint in_dtype_range(value, dtype):
     return rng.min <= value <= rng.max
 
 
-cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
+cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) except -1:
     """Convenience function to handle IO with a GDAL band.
 
     :param data: a numpy ndarray
@@ -121,7 +121,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
         return io_band(band, write, 0.0, 0.0, width, height, data,
                        resampling=resampling)
     elif ndims == 3:
-        indexes = np.arange(1, data.shape[0] + 1)
+        indexes = np.arange(1, data.shape[0] + 1).astype('int')
         return io_multi_band(band, write, 0.0, 0.0, width, height, data,
                              indexes, resampling=resampling)
     else:
@@ -367,23 +367,15 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
 
             if fill_value is not None:
-                dtype = self.dtypes[0]
-                bg_path = UnparsedPath('/vsimem/bg{}.tif'.format(uuid.uuid4()))
-                with DatasetWriterBase(
-                        bg_path, 'w',
-                        driver='GTiff', count=self.count, height=3, width=3,
-                        dtype=dtype, crs=None, transform=Affine.identity() * Affine.translation(1, 1)) as bg_dataset:
-                    bg_dataset.write(
-                        np.full((self.count, 3, 3), fill_value, dtype=dtype))
-                bg_dataset = DatasetReaderBase(bg_path)
+                nodataval = fill_value
             else:
-                bg_dataset = None
+                nodataval = ndv
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, background=bg_dataset,
+                self, nodata=nodataval, background=nodataval,
                 width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window)).decode('ascii')
+                transform=self.window_transform(window))
 
             if not gdal_version().startswith('1'):
                 vrt_kwds = {'driver': 'VRT'}
@@ -396,57 +388,42 @@ cdef class DatasetReaderBase(DatasetBase):
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling)
 
-                if masked and all_valid:
-                    blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
-                    transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
-                    with DatasetWriterBase(
-                            blank_path, 'w',
-                            driver='GTiff', count=self.count, height=3, width=3,
-                            dtype='uint8', crs=self.crs, transform=transform) as blank_dataset:
-                        blank_dataset.write(
-                            np.ones((self.count, 3, 3), dtype='uint8'))
+                if masked:
 
-                    with DatasetReaderBase(blank_path) as blank_dataset:
+                    # Below we use another VRT to compute the valid data mask
+                    # in this special case where all source pixels are valid.
+                    if all_valid:
+
                         mask_vrt_doc = _boundless_vrt_doc(
-                            blank_dataset, nodata=0,
+                            self, nodata=0,
                             width=max(self.width, window.width) + 1,
                             height=max(self.height, window.height) + 1,
-                            transform=self.window_transform(window)).decode('ascii')
+                            transform=self.window_transform(window),
+                            masked=True)
 
                         with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
                             mask = ~mask_vrt._read(
                                 indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
 
-                            kwds = {'mask': mask}
-                            # Set a fill value only if the read bands share a
-                            # single nodata value.
-                            if fill_value is not None:
-                                kwds['fill_value'] = fill_value
-                            elif len(set(nodatavals)) == 1:
-                                if nodatavals[0] is not None:
-                                    kwds['fill_value'] = nodatavals[0]
 
-                            out = np.ma.array(out, **kwds)
-
-                elif masked:
-                    mask = np.zeros(out.shape, 'uint8')
-                    mask = ~vrt._read(
-                        indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
+                    else:
+                        mask = np.zeros(out.shape, 'uint8')
+                        mask = ~vrt._read(
+                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
 
                     kwds = {'mask': mask}
+
                     # Set a fill value only if the read bands share a
                     # single nodata value.
                     if fill_value is not None:
                         kwds['fill_value'] = fill_value
+
                     elif len(set(nodatavals)) == 1:
                         if nodatavals[0] is not None:
                             kwds['fill_value'] = nodatavals[0]
 
                     out = np.ma.array(out, **kwds)
-
-            if bg_dataset is not None:
-                bg_dataset.close()
 
         if return2d:
             out.shape = out.shape[1:]
@@ -601,7 +578,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         blank_dataset, nodata=0,
                         width=max(self.width, window.width) + 1,
                         height=max(self.height, window.height) + 1,
-                        transform=self.window_transform(window)).decode('ascii')
+                        transform=self.window_transform(window))
 
                     with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                         out = np.zeros(out.shape, 'uint8')
@@ -612,7 +589,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_doc = _boundless_vrt_doc(
                     self, width=max(self.width, window.width) + 1,
                     height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window)).decode('ascii')
+                    transform=self.window_transform(window))
 
                 with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
@@ -693,7 +670,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # Call io_multi* functions with C type args so that they
         # can release the GIL.
-        indexes_arr = np.array(indexes, dtype=int)
+        indexes_arr = np.array(indexes).astype('int')
         indexes_count = <int>indexes_arr.shape[0]
 
         if masks:
