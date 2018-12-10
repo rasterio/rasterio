@@ -183,4 +183,4 @@ cdef int io_multi_mask(
             if retval:
                 break
 
-    return retvalt
+    return retval
