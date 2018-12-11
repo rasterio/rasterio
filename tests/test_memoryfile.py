@@ -220,7 +220,6 @@ def test_zip_file_object_read(path_zip_file):
                 assert src.read().shape == (3, 768, 1024)
 
 
-@pytest.mark.xfail(reason="Unknown bug in MemoryFile implementation")
 def test_vrt_memfile():
     """Successfully read an in-memory VRT"""
     with open('tests/data/white-gemini-iv.vrt') as vrtfile:
@@ -248,7 +247,7 @@ def test_write_plus_mode():
 
 
 def test_write_plus_model_jpeg():
-    with MemoryFile() as memfile:
+    with rasterio.Env(), MemoryFile() as memfile:
         with memfile.open(driver='JPEG', dtype='uint8', count=3, height=32, width=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5)) as dst:
             dst.write(numpy.full((32, 32), 255, dtype='uint8'), 1)
             dst.write(numpy.full((32, 32), 204, dtype='uint8'), 2)

@@ -127,7 +127,7 @@ class MemoryFile(MemoryFileBase):
             raise IOError("I/O operation on closed file.")
         if self.exists():
             log.debug("VSI path: {}".format(vsi_path.path))
-            return DatasetReader(vsi_path, mode='r+', driver=driver, **kwargs)
+            return DatasetReader(vsi_path, driver=driver, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
             return writer(vsi_path, 'w+', driver=driver, width=width,
