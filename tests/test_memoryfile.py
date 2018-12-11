@@ -11,7 +11,9 @@ import pytest
 
 import rasterio
 from rasterio.io import MemoryFile, ZipMemoryFile
+from rasterio.enums import MaskFlags
 from rasterio.env import GDALVersion
+from rasterio.shutil import copyfiles
 
 
 # Skip ENTIRE module if not GDAL >= 2.x.
@@ -220,7 +222,6 @@ def test_zip_file_object_read(path_zip_file):
                 assert src.read().shape == (3, 768, 1024)
 
 
-@pytest.mark.xfail(reason="Unknown bug in MemoryFile implementation")
 def test_vrt_memfile():
     """Successfully read an in-memory VRT"""
     with open('tests/data/white-gemini-iv.vrt') as vrtfile:
@@ -248,7 +249,7 @@ def test_write_plus_mode():
 
 
 def test_write_plus_model_jpeg():
-    with MemoryFile() as memfile:
+    with rasterio.Env(), MemoryFile() as memfile:
         with memfile.open(driver='JPEG', dtype='uint8', count=3, height=32, width=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5)) as dst:
             dst.write(numpy.full((32, 32), 255, dtype='uint8'), 1)
             dst.write(numpy.full((32, 32), 204, dtype='uint8'), 2)
@@ -257,3 +258,26 @@ def test_write_plus_model_jpeg():
             assert (data[0] == 255).all()
             assert (data[1] == 204).all()
             assert (data[2] == 153).all()
+
+
+def test_memfile_copyfiles(path_rgb_msk_byte_tif):
+    """Multiple files can be copied to a MemoryFile using copyfiles"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+        src_basename = os.path.basename(src.name)
+        with MemoryFile(filename=src_basename) as memfile:
+            copyfiles(src.name, memfile.name)
+            with memfile.open() as rgb2:
+                assert sorted(rgb2.files) == sorted(['/vsimem/{}'.format(src_basename), '/vsimem/{}.msk'.format(src_basename)])
+
+
+def test_multi_memfile(path_rgb_msk_byte_tif):
+    """Multiple files can be copied to a MemoryFile using copyfiles"""
+    with open(path_rgb_msk_byte_tif, 'rb') as tif_fp:
+        tif_bytes = tif_fp.read()
+    with open(path_rgb_msk_byte_tif + '.msk', 'rb') as msk_fp:
+        msk_bytes = msk_fp.read()
+
+    with MemoryFile(tif_bytes, filename='foo.tif') as tifmemfile, MemoryFile(msk_bytes, filename='foo.tif.msk') as mskmemfile:
+        with tifmemfile.open() as src:
+            assert sorted(src.files) == sorted(['/vsimem/foo.tif', '/vsimem/foo.tif.msk'])
+            assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3

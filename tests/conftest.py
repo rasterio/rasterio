@@ -475,16 +475,19 @@ def data_dir():
 
 @pytest.fixture(scope='session')
 def path_rgb_byte_tif(data_dir):
+    """The original RGB test fixture with no sidecar files"""
     return os.path.join(data_dir, 'RGB.byte.tif')
 
 
 @pytest.fixture(scope='session')
 def path_rgba_byte_tif(data_dir):
+    """Derived from RGB.byte.tif, this has an alpha band"""
     return os.path.join(data_dir, 'RGBA.byte.tif')
 
 
 @pytest.fixture(scope='session')
 def path_rgb_msk_byte_tif(data_dir):
+    """Derived from RGB.byte.tif, this has an external mask"""
     return os.path.join(data_dir, 'RGB2.byte.tif')
 
 
