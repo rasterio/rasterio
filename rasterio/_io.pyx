@@ -121,7 +121,7 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
         return io_band(band, write, 0.0, 0.0, width, height, data,
                        resampling=resampling)
     elif ndims == 3:
-        indexes = np.arange(1, data.shape[0] + 1).astype('int')
+        indexes = np.arange(1, data.shape[0] + 1, dtype='intp')
         return io_multi_band(band, write, 0.0, 0.0, width, height, data,
                              indexes, resampling=resampling)
     else:
@@ -670,7 +670,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # Call io_multi* functions with C type args so that they
         # can release the GIL.
-        indexes_arr = np.array(indexes).astype('int')
+        indexes_arr = np.array(indexes, dtype='intp')
         indexes_count = <int>indexes_arr.shape[0]
 
         if masks:
@@ -1400,7 +1400,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = <int>self.width
             height = <int>self.height
 
-        indexes_arr = np.array(indexes, dtype=int)
+        indexes_arr = np.array(indexes, dtype='intp')
         indexes_count = <int>indexes_arr.shape[0]
         retval = io_multi_band(self._hds, 1, xoff, yoff, width, height,
                                src, indexes_arr)
