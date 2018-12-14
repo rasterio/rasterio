@@ -1123,7 +1123,7 @@ cdef class DatasetBase(object):
             if color == NULL:
                 log.warn("NULL color at %d, skipping", i)
                 continue
-            log.info(
+            log.debug(
                 "Color: (%d, %d, %d, %d)",
                 color.c1, color.c2, color.c3, color.c4)
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
