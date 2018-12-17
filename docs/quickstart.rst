@@ -202,7 +202,7 @@ The coordinates of the center of the image can be computed like this.
 
 .. code-block:: pycon
 
-    >>> dataset.xy(dataset.width // 2, dataset.height // 2)
+    >>> dataset.xy(dataset.height // 2, dataset.width // 2)
     (476550.0, 4149150.0)
 
 Creating data
