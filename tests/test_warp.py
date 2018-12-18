@@ -1,5 +1,6 @@
 import json
-import logging
+"""rasterio.warp module tests"""
+
 import sys
 
 import pytest
@@ -28,7 +29,6 @@ from .conftest import requires_gdal22
 
 
 gdal_version = GDALVersion.runtime()
-logging.basicConfig(level=logging.DEBUG)
 
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235)
@@ -1492,3 +1492,17 @@ def test_issue_1076():
         resample=Resampling.nearest)
 
     assert not (newarr == fill_value).all()
+
+
+def test_reproject_init_dest_nodata():
+    """No pixels should transfer over"""
+    crs = CRS.from_epsg(4326)
+    transform = Affine.identity()
+    source = np.zeros((1, 100, 100))
+    destination = np.ones((1, 100, 100))
+    reproject(
+        source, destination, src_crs=crs, src_transform=transform,
+        dst_crs=crs, dst_transform=transform,
+        src_nodata=0, init_dest_nodata=False
+    )
+    assert destination.all()
