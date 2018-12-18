@@ -80,10 +80,10 @@ fi
 
 if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   cd $GDALBUILD
-  gdal_dir=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
-  wget http://download.osgeo.org/gdal/$gdal_dir/gdal-$GDALVERSION.tar.gz
+  gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
+  wget http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
-  cd gdal-$GDALVERSION
+  cd gdal-$gdalver
   ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
   make -s -j 2
   make install
