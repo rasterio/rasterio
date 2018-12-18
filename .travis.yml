@@ -15,14 +15,14 @@ env:
     - GDALVERSION="2.0.3"
     - GDALVERSION="2.1.4"
     - GDALVERSION="2.2.4"
-    - GDALVERSION="2.3.2"
-    - GDALVERSION="release/2.4"
+    - GDALVERSION="2.3.3"
+    - GDALVERSION="2.4.0rc1"
     - GDALVERSION="master"
 
 matrix:
   allow_failures:
     - env: GDALVERSION="master"
-    - env: GDALVERSION="release/2.4"
+    - env: GDALVERSION="2.4.0rc1"
 
 addons:
   apt:
