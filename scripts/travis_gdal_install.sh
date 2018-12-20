@@ -77,7 +77,7 @@ fi
 if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
-  wget http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
+  wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
   cd gdal-$gdalver
   ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
