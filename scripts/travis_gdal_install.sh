@@ -3,8 +3,7 @@
 # originally contributed by @rbuffat to Toblerity/Fiona
 set -e
 
-GDALOPTS="  --with-ogr \
-            --with-geos \
+GDALOPTS="  --with-geos \
             --with-expat \
             --without-libtool \
             --with-libz=internal \
@@ -37,12 +36,9 @@ GDALOPTS="  --with-ogr \
             --without-odbc \
             --with-curl \
             --without-sqlite3 \
-            --without-dwgdirect \
             --without-idb \
             --without-sde \
             --without-perl \
-            --without-php \
-            --without-ruby \
             --without-python \
             --with-static-proj4=/usr/lib"
 
