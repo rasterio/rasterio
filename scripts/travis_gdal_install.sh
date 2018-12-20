@@ -39,8 +39,13 @@ GDALOPTS="  --with-geos \
             --without-idb \
             --without-sde \
             --without-perl \
-            --without-python \
-            --with-static-proj4=/usr/lib"
+            --without-python"
+
+if [ "${GDALVERSION::1}" = "1" ]; then
+    PROJOPT="--with-static-proj4=/usr/lib"
+else
+    PROJOPT="--with-proj"
+fi
 
 # Create build dir if not exists
 if [ ! -d "$GDALBUILD" ]; then
@@ -68,7 +73,7 @@ if [ "$GDALVERSION" = "master" ]; then
   if test "$BUILD" = "yes"; then
     mkdir -p $GDALINST/gdal-$GDALVERSION
     cp newrev.txt $GDALINST/gdal-$GDALVERSION/rev.txt
-    ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
+    ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPTS
     make -s -j 2
     make install
   fi
@@ -80,7 +85,7 @@ if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
   cd gdal-$gdalver
-  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS
+  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPTS
   make -s -j 2
   make install
 fi
