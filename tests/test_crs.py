@@ -7,7 +7,7 @@ import pytest
 import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS
-from rasterio.env import env_ctx_if_needed
+from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
 from .conftest import requires_gdal21, requires_gdal22
@@ -314,12 +314,13 @@ def test_from_esri_wkt():
         'VDATUM["North_American_Vertical_Datum_1988"],'
         'PARAMETER["Vertical_Shift",0.0],'
         'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
-    proj_crs_str = CRS.from_string(projection_string)
-    proj_crs_wkt = CRS.from_wkt(projection_string)
-    assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
-    assert proj_crs_str.to_string() == \
-        ("+datum=NAD83 +lat_0=23 +lat_1=29.5 +lat_2=45.5 "
-         "+lon_0=-96 +no_defs +proj=aea +units=m +x_0=0 +y_0=0")
+    with Env(GDAL_FIX_ESRI_WKT='TOWGS84'):
+        proj_crs_str = CRS.from_string(projection_string)
+        proj_crs_wkt = CRS.from_wkt(projection_string)
+        assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
+        assert proj_crs_str.to_string() == \
+            ("+datum=NAD83 +lat_0=23 +lat_1=29.5 +lat_2=45.5 "
+             "+lon_0=-96 +no_defs +proj=aea +units=m +x_0=0 +y_0=0")
 
 
 def test_compound_crs():
@@ -339,3 +340,10 @@ def test_environ_patch(gdalenv, monkeypatch):
     monkeypatch.delenv('PROJ_LIB', raising=False)
     with env_ctx_if_needed():
         assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)
+
+
+def test_exception():
+    """Get the exception message we expect"""
+    with Env(), pytest.raises(CRSError) as exc_info:
+        CRS.from_wkt("bogus")
+    assert str(exc_info.value).startswith("The WKT could not be parsed")

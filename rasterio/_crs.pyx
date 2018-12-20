@@ -209,46 +209,34 @@ class _CRS(UserDict):
             return cls.from_wkt(s)
 
     @classmethod
-    def from_wkt(cls, s):
+    def from_wkt(cls, wkt):
         """Make a CRS from a WKT string
 
         Parameters
         ----------
-        s : str
+        wkt : str
             A WKT string.
 
         Returns
         -------
         CRS
+
         """
         cdef char *prj = NULL
         cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 
-        if isinstance(s, string_types):
-            b_s = s.encode('utf-8')
-            log.debug("Encoded WKT: %r", b_s)
+        if isinstance(wkt, string_types):
+            b_wkt = wkt.encode('utf-8')
+        else:
+            raise ValueError("A string is expected")
 
         try:
-            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_s))
-        except CPLE_NotSupportedError as exc:
-            log.debug("{}".format(exc))
-        except CPLE_BaseError as exc:
-            _safe_osr_release(osr)
-            raise CRSError(str(exc))
-
-        try:
+            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_wkt))
+            exc_wrap_int(OSRMorphFromESRI(osr))
             exc_wrap_int(OSRExportToProj4(osr, &prj))
-        except CPLE_NotSupportedError as exc:
-            log.debug("{}".format(exc))
-
-        try:
             return cls.from_string(prj.decode('utf-8'))
-        except CRSError:
-            if OSRMorphFromESRI(osr) == 0:
-                OSRExportToProj4(osr, &prj)
-                return cls.from_string(prj.decode('utf-8'))
-            else:
-                raise
+        except CPLE_BaseError as exc:
+            raise CRSError("The WKT could not be parsed. {}".format(str(exc)))
         finally:
             CPLFree(prj)
             _safe_osr_release(osr)
