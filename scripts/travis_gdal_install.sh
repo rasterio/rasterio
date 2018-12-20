@@ -42,9 +42,9 @@ GDALOPTS="  --with-geos \
             --without-python"
 
 if [ "${GDALVERSION::1}" = "1" ]; then
-    PROJOPT="--with-static-proj4=/usr/lib"
+    PROJOPT="--with-static-proj4=/usr/lib";
 else
-    PROJOPT="--with-proj"
+    PROJOPT="--with-proj";
 fi
 
 # Create build dir if not exists
