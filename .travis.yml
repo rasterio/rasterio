@@ -44,7 +44,7 @@ before_script: # configure a headless display to test matplotlib
 before_install:
   - python -m pip install -U pip
   - python -m pip install wheel
-  - travis_wait . ./scripts/travis_gdal_install.sh
+  - travis_wait 20 ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 install:
