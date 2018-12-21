@@ -3,8 +3,7 @@
 # originally contributed by @rbuffat to Toblerity/Fiona
 set -e
 
-GDALOPTS="  --with-ogr \
-            --with-geos \
+GDALOPTS="  --with-geos \
             --with-expat \
             --without-libtool \
             --with-libz=internal \
@@ -37,17 +36,15 @@ GDALOPTS="  --with-ogr \
             --without-odbc \
             --with-curl \
             --without-sqlite3 \
-            --without-dwgdirect \
             --without-idb \
             --without-sde \
             --without-perl \
-            --without-php \
-            --without-ruby \
             --without-python"
 
-PROJOPT="--with-proj"
 if [ "${GDALVERSION::1}" = "1" ]; then
-    PROJOPT="--with-static-proj4=/usr/lib"
+    PROJOPT="--with-static-proj4=/usr/lib";
+else
+    PROJOPT="--with-proj";
 fi
 
 # Create build dir if not exists
@@ -84,9 +81,10 @@ fi
 
 if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   cd $GDALBUILD
-  wget http://download.osgeo.org/gdal/$GDALVERSION/gdal-$GDALVERSION.tar.gz
+  gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
+  wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
-  cd gdal-$GDALVERSION
+  cd gdal-$gdalver
   ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPT
   make -s -j 2
   make install
