@@ -73,7 +73,7 @@ if [ "$GDALVERSION" = "master" ]; then
   if test "$BUILD" = "yes"; then
     mkdir -p $GDALINST/gdal-$GDALVERSION
     cp newrev.txt $GDALINST/gdal-$GDALVERSION/rev.txt
-    ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPTS
+    ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPT
     make -s -j 2
     make install
   fi
@@ -85,7 +85,7 @@ if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
   tar -xzf gdal-$GDALVERSION.tar.gz
   cd gdal-$gdalver
-  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPTS
+  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPT
   make -s -j 2
   make install
 fi
