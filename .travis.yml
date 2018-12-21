@@ -22,7 +22,6 @@ env:
 matrix:
   allow_failures:
     - env: GDALVERSION="master"
-    - env: GDALVERSION="2.4.0"
 
 addons:
   apt:
