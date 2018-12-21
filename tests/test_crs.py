@@ -1,6 +1,9 @@
-import logging
-import subprocess
+"""crs module tests"""
+
 import json
+import logging
+import os
+import subprocess
 
 import pytest
 
@@ -183,7 +186,7 @@ def test_to_string():
 
 
 def test_is_valid_false():
-    with pytest.raises(CRSError):
+    with Env(), pytest.raises(CRSError):
         CRS(init='EPSG:432600').is_valid
 
 
@@ -191,13 +194,10 @@ def test_is_valid():
     assert CRS(init='EPSG:4326').is_valid
 
 
-def test_empty_json():
-    with pytest.raises(CRSError):
-        CRS.from_string('{}')
-    with pytest.raises(CRSError):
-        CRS.from_string('[]')
-    with pytest.raises(CRSError):
-        CRS.from_string('')
+@pytest.mark.parametrize('arg', ['{}', '[]', ''])
+def test_empty_json(arg):
+    with Env(), pytest.raises(CRSError):
+        CRS.from_string(arg)
 
 
 @pytest.mark.parametrize('arg', [None, {}, ''])
@@ -214,7 +214,8 @@ def test_can_create_osr():
 @pytest.mark.parametrize('arg', ['EPSG:-1', 'foo'])
 def test_can_create_osr_invalid(arg):
     """invalid CRS definitions fail"""
-    assert not _can_create_osr(arg)
+    with Env():
+        assert not _can_create_osr(arg)
 
 
 @requires_gdal22(
@@ -287,7 +288,7 @@ def test_from_wkt():
 
 
 def test_from_wkt_invalid():
-    with pytest.raises(CRSError):
+    with Env(), pytest.raises(CRSError):
         CRS.from_wkt('trash')
 
 
@@ -296,6 +297,7 @@ def test_from_user_input_epsg():
 
 
 def test_from_esri_wkt():
+    """Test ESRI CRS morphing"""
     projection_string = (
         'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
         'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
@@ -314,13 +316,12 @@ def test_from_esri_wkt():
         'VDATUM["North_American_Vertical_Datum_1988"],'
         'PARAMETER["Vertical_Shift",0.0],'
         'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
-    with Env(GDAL_FIX_ESRI_WKT='TOWGS84'):
+    with Env(GDAL_FIX_ESRI_WKT='DATUM'):
         proj_crs_str = CRS.from_string(projection_string)
         proj_crs_wkt = CRS.from_wkt(projection_string)
         assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
-        assert proj_crs_str.to_string() == \
-            ("+datum=NAD83 +lat_0=23 +lat_1=29.5 +lat_2=45.5 "
-             "+lon_0=-96 +no_defs +proj=aea +units=m +x_0=0 +y_0=0")
+        assert proj_crs_str['ellps'] == 'GRS80'
+        assert proj_crs_str['towgs84'] == '0,0,0,0,0,0,0'
 
 
 def test_compound_crs():
@@ -335,7 +336,7 @@ def test_dataset_compound_crs():
 
 @pytest.mark.wheel
 def test_environ_patch(gdalenv, monkeypatch):
-    """GDAL_DATA is patched as when rasterio._crs is imported"""
+    """PROJ_LIB is patched when rasterio._crs is imported"""
     monkeypatch.delenv('GDAL_DATA', raising=False)
     monkeypatch.delenv('PROJ_LIB', raising=False)
     with env_ctx_if_needed():
