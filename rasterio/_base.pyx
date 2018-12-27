@@ -23,7 +23,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env
+from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
@@ -333,20 +333,19 @@ cdef class DatasetBase(object):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
 
     def close(self):
         self.stop()
         self._closed = True
-        log.debug("Dataset %r has been closed.", self)
 
     def __enter__(self):
-        log.debug("Entering Dataset %r context.", self)
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
         return self
 
     def __exit__(self, type, value, traceback):
+        self._env.__exit__()
         self.close()
-        log.debug("Exited Dataset %r context.", self)
 
     def __dealloc__(self):
         if self._hds != NULL:

@@ -1,6 +1,15 @@
 Changes
 =======
 
+Next
+----
+
+- On entering a dataset context (DatasetBase.__enter__) a new anonymous GDAL
+  environment is created if needed and is entered. This makes `with
+  rasterio.open(...) as dataset:` roughly equivalent to `with
+  rasterio.open(...) as dataset, Env():`. This helps prevent bugs when datasets
+  are created and then used later or are used in different scopes.
+
 1.0.13 (2018-12-14)
 -------------------
 
