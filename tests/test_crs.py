@@ -296,26 +296,42 @@ def test_from_user_input_epsg():
     assert 'init' in CRS.from_user_input('EPSG:4326')
 
 
-def test_from_esri_wkt():
-    """Test ESRI CRS morphing"""
-    projection_string = (
-        'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
-        'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
-        'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
-        'PRIMEM["Greenwich",0.0],'
-        'UNIT["Degree",0.0174532925199433]],'
-        'PROJECTION["Albers"],'
-        'PARAMETER["false_easting",0.0],'
-        'PARAMETER["false_northing",0.0],'
-        'PARAMETER["central_meridian",-96.0],'
-        'PARAMETER["standard_parallel_1",29.5],'
-        'PARAMETER["standard_parallel_2",45.5],'
-        'PARAMETER["latitude_of_origin",23.0],'
-        'UNIT["Meter",1.0],'
-        'VERTCS["NAVD_1988",'
-        'VDATUM["North_American_Vertical_Datum_1988"],'
-        'PARAMETER["Vertical_Shift",0.0],'
-        'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+ESRI_PROJECTION_STRING = (
+    'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
+    'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
+    'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
+    'PRIMEM["Greenwich",0.0],'
+    'UNIT["Degree",0.0174532925199433]],'
+    'PROJECTION["Albers"],'
+    'PARAMETER["false_easting",0.0],'
+    'PARAMETER["false_northing",0.0],'
+    'PARAMETER["central_meridian",-96.0],'
+    'PARAMETER["standard_parallel_1",29.5],'
+    'PARAMETER["standard_parallel_2",45.5],'
+    'PARAMETER["latitude_of_origin",23.0],'
+    'UNIT["Meter",1.0],'
+    'VERTCS["NAVD_1988",'
+    'VDATUM["North_American_Vertical_Datum_1988"],'
+    'PARAMETER["Vertical_Shift",0.0],'
+    'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+
+
+@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
+def test_from_esri_wkt_no_fix(projection_string):
+    """Test ESRI CRS morphing with no datum fixing"""
+    with Env():
+        proj_crs_str = CRS.from_string(projection_string)
+        proj_crs_wkt = CRS.from_wkt(projection_string)
+        assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
+        assert 'ellps' not in proj_crs_str
+        assert 'towgs84' not in proj_crs_str
+        assert proj_crs_str['datum'] == 'NAD83'
+        assert proj_crs_str['units'] == 'm'
+
+
+@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
+def test_from_esri_wkt_fix_datum(projection_string):
+    """Test ESRI CRS morphing with datum fixing"""
     with Env(GDAL_FIX_ESRI_WKT='DATUM'):
         proj_crs_str = CRS.from_string(projection_string)
         proj_crs_wkt = CRS.from_wkt(projection_string)
