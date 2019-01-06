@@ -1,13 +1,16 @@
-import logging
-import subprocess
+"""crs module tests"""
+
 import json
+import logging
+import os
+import subprocess
 
 import pytest
 
 import rasterio
 from rasterio._base import _can_create_osr
 from rasterio.crs import CRS
-from rasterio.env import env_ctx_if_needed
+from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
 from .conftest import requires_gdal21, requires_gdal22
@@ -183,7 +186,7 @@ def test_to_string():
 
 
 def test_is_valid_false():
-    with pytest.raises(CRSError):
+    with Env(), pytest.raises(CRSError):
         CRS(init='EPSG:432600').is_valid
 
 
@@ -191,13 +194,10 @@ def test_is_valid():
     assert CRS(init='EPSG:4326').is_valid
 
 
-def test_empty_json():
-    with pytest.raises(CRSError):
-        CRS.from_string('{}')
-    with pytest.raises(CRSError):
-        CRS.from_string('[]')
-    with pytest.raises(CRSError):
-        CRS.from_string('')
+@pytest.mark.parametrize('arg', ['{}', '[]', ''])
+def test_empty_json(arg):
+    with Env(), pytest.raises(CRSError):
+        CRS.from_string(arg)
 
 
 @pytest.mark.parametrize('arg', [None, {}, ''])
@@ -214,7 +214,8 @@ def test_can_create_osr():
 @pytest.mark.parametrize('arg', ['EPSG:-1', 'foo'])
 def test_can_create_osr_invalid(arg):
     """invalid CRS definitions fail"""
-    assert not _can_create_osr(arg)
+    with Env():
+        assert not _can_create_osr(arg)
 
 
 @requires_gdal22(
@@ -287,7 +288,7 @@ def test_from_wkt():
 
 
 def test_from_wkt_invalid():
-    with pytest.raises(CRSError):
+    with Env(), pytest.raises(CRSError):
         CRS.from_wkt('trash')
 
 
@@ -295,31 +296,48 @@ def test_from_user_input_epsg():
     assert 'init' in CRS.from_user_input('EPSG:4326')
 
 
-def test_from_esri_wkt():
-    projection_string = (
-        'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
-        'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
-        'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
-        'PRIMEM["Greenwich",0.0],'
-        'UNIT["Degree",0.0174532925199433]],'
-        'PROJECTION["Albers"],'
-        'PARAMETER["false_easting",0.0],'
-        'PARAMETER["false_northing",0.0],'
-        'PARAMETER["central_meridian",-96.0],'
-        'PARAMETER["standard_parallel_1",29.5],'
-        'PARAMETER["standard_parallel_2",45.5],'
-        'PARAMETER["latitude_of_origin",23.0],'
-        'UNIT["Meter",1.0],'
-        'VERTCS["NAVD_1988",'
-        'VDATUM["North_American_Vertical_Datum_1988"],'
-        'PARAMETER["Vertical_Shift",0.0],'
-        'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
-    proj_crs_str = CRS.from_string(projection_string)
-    proj_crs_wkt = CRS.from_wkt(projection_string)
-    assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
-    assert proj_crs_str.to_string() == \
-        ("+datum=NAD83 +lat_0=23 +lat_1=29.5 +lat_2=45.5 "
-         "+lon_0=-96 +no_defs +proj=aea +units=m +x_0=0 +y_0=0")
+ESRI_PROJECTION_STRING = (
+    'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
+    'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
+    'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
+    'PRIMEM["Greenwich",0.0],'
+    'UNIT["Degree",0.0174532925199433]],'
+    'PROJECTION["Albers"],'
+    'PARAMETER["false_easting",0.0],'
+    'PARAMETER["false_northing",0.0],'
+    'PARAMETER["central_meridian",-96.0],'
+    'PARAMETER["standard_parallel_1",29.5],'
+    'PARAMETER["standard_parallel_2",45.5],'
+    'PARAMETER["latitude_of_origin",23.0],'
+    'UNIT["Meter",1.0],'
+    'VERTCS["NAVD_1988",'
+    'VDATUM["North_American_Vertical_Datum_1988"],'
+    'PARAMETER["Vertical_Shift",0.0],'
+    'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+
+
+@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
+def test_from_esri_wkt_no_fix(projection_string):
+    """Test ESRI CRS morphing with no datum fixing"""
+    with Env():
+        proj_crs_str = CRS.from_string(projection_string)
+        proj_crs_wkt = CRS.from_wkt(projection_string)
+        assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
+        assert 'ellps' not in proj_crs_str
+        assert 'towgs84' not in proj_crs_str
+        assert proj_crs_str['datum'] == 'NAD83'
+        assert proj_crs_str['units'] == 'm'
+
+
+@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
+def test_from_esri_wkt_fix_datum(projection_string):
+    """Test ESRI CRS morphing with datum fixing"""
+    with Env(GDAL_FIX_ESRI_WKT='DATUM'):
+        proj_crs_str = CRS.from_string(projection_string)
+        proj_crs_wkt = CRS.from_wkt(projection_string)
+        assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
+        assert proj_crs_str['ellps'] == 'GRS80'
+        assert proj_crs_str['towgs84'] == '0,0,0,0,0,0,0'
 
 
 def test_compound_crs():
@@ -334,8 +352,15 @@ def test_dataset_compound_crs():
 
 @pytest.mark.wheel
 def test_environ_patch(gdalenv, monkeypatch):
-    """GDAL_DATA is patched as when rasterio._crs is imported"""
+    """PROJ_LIB is patched when rasterio._crs is imported"""
     monkeypatch.delenv('GDAL_DATA', raising=False)
     monkeypatch.delenv('PROJ_LIB', raising=False)
     with env_ctx_if_needed():
         assert CRS.from_epsg(4326) != CRS(units='m', proj='aeqd', ellps='WGS84', datum='WGS84', lat_0=-17.0, lon_0=-44.0)
+
+
+def test_exception():
+    """Get the exception message we expect"""
+    with Env(), pytest.raises(CRSError) as exc_info:
+        CRS.from_wkt("bogus")
+    assert str(exc_info.value).startswith("The WKT could not be parsed")
