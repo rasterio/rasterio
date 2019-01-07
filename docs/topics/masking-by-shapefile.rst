@@ -9,16 +9,15 @@ Using ``rasterio`` with ``fiona``, it is simple to open a shapefile, read geomet
         import rasterio.mask
 
         with fiona.open("tests/data/box.shp", "r") as shapefile:
-            features = [feature["geometry"] for feature in shapefile] 
+            shapes = [feature["geometry"] for feature in shapefile] 
 
 This shapefile contains a single polygon, a box near the center of the raster, so in this case, our list of features is one element long.
 
 .. code-block:: python
 
         with rasterio.open("tests/data/RGB.byte.tif") as src:
-            out_image, out_transform = rasterio.mask.mask(src, features,
-                                                                crop=True)
-            out_meta = src.meta.copy()
+            out_image, out_transform = rasterio.mask.mask(src, shapes, crop=True)
+            out_meta = src.meta
 
 Using ``plot`` and ``imshow`` from ``matplotlib``, we can see the region defined by the shapefile in red overlaid on the original raster.
 
@@ -32,6 +31,7 @@ Applying the features in the shapefile as a mask on the raster sets all pixels o
                          "height": out_image.shape[1],
                          "width": out_image.shape[2],
                          "transform": out_transform})
+
         with rasterio.open("RGB.byte.masked.tif", "w", **out_meta) as dest:
             dest.write(out_image) 
 
