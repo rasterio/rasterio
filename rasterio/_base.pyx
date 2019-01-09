@@ -9,6 +9,7 @@ import logging
 import math
 import os
 import warnings
+from libc.string cimport strncmp
 
 from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
@@ -114,6 +115,20 @@ def driver_can_create(drivername):
 def driver_can_create_copy(drivername):
     """Return True if the driver has CREATE_COPY capability"""
     return driver_supports_mode(drivername, 'DCAP_CREATECOPY')
+
+cdef _band_dtype(GDALRasterBandH band):
+    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
+    cdef const char * ptype
+    cdef int gdal_dtype = GDALGetRasterDataType(band)
+    if gdal_dtype == GDT_Byte:
+        # Can be uint8 or int8, need to check PIXELTYPE property
+        ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
+        if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:
+            return 'int8'
+        else:
+            return 'uint8'
+
+    return dtypes.dtype_fwd[gdal_dtype]
 
 
 cdef class DatasetBase(object):
@@ -363,8 +378,7 @@ cdef class DatasetBase(object):
         if not self._dtypes:
             for i in range(self._count):
                 band = self.band(i + 1)
-                self._dtypes.append(
-                    dtypes.dtype_fwd[GDALGetRasterDataType(band)])
+                self._dtypes.append(_band_dtype(band))
 
         return tuple(self._dtypes)
 
@@ -402,7 +416,7 @@ cdef class DatasetBase(object):
 
             for i in range(self._count):
                 band = self.band(i + 1)
-                dtype = dtypes.dtype_fwd[GDALGetRasterDataType(band)]
+                dtype = _band_dtype(band)
                 nodataval = GDALGetRasterNoDataValue(band, &success)
                 val = nodataval
                 # GDALGetRasterNoDataValue() has two ways of telling you that

@@ -33,14 +33,14 @@ def test_validate_dtype_str(tmpdir):
             dtype='Int16')
 
 
-def test_validate_dtype_int8(tmpdir, basic_image):
+def test_validate_dtype_float128(tmpdir, basic_image):
     """Raise TypeError if dtype is unsupported by GDAL."""
-    name = str(tmpdir.join('int8.tif'))
-    basic_image_int8 = basic_image.astype('int8')
-    height, width = basic_image_int8.shape
+    name = str(tmpdir.join('float128.tif'))
+    basic_image_f128 = basic_image.astype('float128')
+    height, width = basic_image_f128.shape
     with pytest.raises(TypeError):
         rasterio.open(name, 'w', driver='GTiff', width=width, height=height,
-                      count=1, dtype=basic_image_int8.dtype)
+                      count=1, dtype=basic_image_f128.dtype)
 
 
 def test_validate_count_None(tmpdir):
@@ -99,6 +99,20 @@ def test_write_ubyte(tmpdir):
         s.write(a, indexes=1)
     info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
+
+
+@pytest.mark.gdalbin
+def test_write_sbyte(tmpdir):
+    name = str(tmpdir.mkdir("sub").join("test_write_sbyte.tif"))
+    a = np.ones((100, 100), dtype=rasterio.sbyte) * -33
+    with rasterio.open(
+            name, 'w',
+            driver='GTiff', width=100, height=100, count=1,
+            dtype=a.dtype) as s:
+        s.write(a, indexes=1)
+    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=-33.000, Maximum=-33.000, Mean=-33.000, StdDev=0.000" in info
+    assert 'SIGNEDBYTE' in info
 
 
 @pytest.mark.gdalbin
