@@ -48,7 +48,7 @@ def test_read_esri_wkt(tmpdir):
 def test_read_epsg3857(tmpdir):
     tiffname = str(tmpdir.join('lol.tif'))
     subprocess.call([
-        'gdalwarp', '-t_srs', 'EPSG:3857',
+        'gdalwarp', '-t_srs', 'epsg:3857',
         'tests/data/RGB.byte.tif', tiffname])
     with rasterio.open(tiffname) as src:
         assert src.crs.to_dict() == {'init': 'epsg:3857'}
@@ -59,7 +59,7 @@ def test_read_epsg3857(tmpdir):
 def test_write_3857(tmpdir):
     src_path = str(tmpdir.join('lol.tif'))
     subprocess.call([
-        'gdalwarp', '-t_srs', 'EPSG:3857',
+        'gdalwarp', '-t_srs', 'epsg:3857',
         'tests/data/RGB.byte.tif', src_path])
     dst_path = str(tmpdir.join('wut.tif'))
     with rasterio.open(src_path) as src:
@@ -130,10 +130,12 @@ def test_bare_parameters():
     assert crs_dict.get('no_defs', True) is False
 
 
-def test_is_geographic():
-    assert CRS({'init': 'EPSG:4326'}).is_geographic is True
-    assert CRS({'init': 'EPSG:3857'}).is_geographic is False
+@pytest.mark.parametrize('proj,expected', [({'init': 'epsg:4326'}, True), ({'init': 'epsg:3857'}, False)])
+def test_is_geographic(proj, expected):
+    assert CRS(proj).is_geographic is expected
 
+
+def test_is_geographic_from_string():
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
     assert wgs84_crs.is_geographic is True
 
@@ -145,7 +147,7 @@ def test_is_geographic():
 
 
 def test_is_projected():
-    assert CRS({'init': 'EPSG:3857'}).is_projected is True
+    assert CRS({'init': 'epsg:3857'}).is_projected is True
 
     lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
     assert CRS(lcc_crs).is_projected is True
@@ -155,8 +157,8 @@ def test_is_projected():
 
 
 def test_is_same_crs():
-    crs1 = CRS({'init': 'EPSG:4326'})
-    crs2 = CRS({'init': 'EPSG:3857'})
+    crs1 = CRS({'init': 'epsg:4326'})
+    crs2 = CRS({'init': 'epsg:3857'})
 
     assert crs1 == crs1
     assert crs1 != crs2
@@ -178,20 +180,20 @@ def test_null_crs_equality():
 
 
 def test_null_and_valid_crs_equality():
-    assert (CRS() == CRS(init='EPSG:4326')) is False
+    assert (CRS() == CRS(init='epsg:4326')) is False
 
 
 def test_to_string():
-    assert CRS({'init': 'EPSG:4326'}).to_string() == "+init=EPSG:4326"
+    assert CRS({'init': 'epsg:4326'}).to_string() == "+init=epsg:4326"
 
 
 def test_is_valid_false():
     with Env(), pytest.raises(CRSError):
-        CRS(init='EPSG:432600').is_valid
+        CRS(init='epsg:432600').is_valid
 
 
 def test_is_valid():
-    assert CRS(init='EPSG:4326').is_valid
+    assert CRS(init='epsg:4326').is_valid
 
 
 @pytest.mark.parametrize('arg', ['{}', '[]', ''])
@@ -207,11 +209,11 @@ def test_can_create_osr_none_err(arg):
 
 
 def test_can_create_osr():
-    assert _can_create_osr({'init': 'EPSG:4326'})
-    assert _can_create_osr('EPSG:4326')
+    assert _can_create_osr({'init': 'epsg:4326'})
+    assert _can_create_osr('epsg:4326')
 
 
-@pytest.mark.parametrize('arg', ['EPSG:-1', 'foo'])
+@pytest.mark.parametrize('arg', ['epsg:-1', 'foo'])
 def test_can_create_osr_invalid(arg):
     """invalid CRS definitions fail"""
     with Env():
@@ -221,28 +223,28 @@ def test_can_create_osr_invalid(arg):
 @requires_gdal22(
     reason="GDAL bug resolved in 2.2+ allowed invalid CRS to be created")
 def test_can_create_osr_invalid_epsg_0():
-    assert not _can_create_osr('EPSG:')
+    assert not _can_create_osr('epsg:')
 
 
 def test_has_wkt_property():
-    assert CRS({'init': 'EPSG:4326'}).wkt.startswith('GEOGCS["WGS 84",DATUM')
+    assert CRS({'init': 'epsg:4326'}).wkt.startswith('GEOGCS["WGS 84",DATUM')
 
 
 def test_repr():
-    assert repr(CRS({'init': 'EPSG:4326'})).startswith("CRS({'init'")
+    assert repr(CRS({'init': 'epsg:4326'})).startswith("CRS({'init'")
 
 
 def test_dunder_str():
-    assert str(CRS({'init': 'EPSG:4326'})) == CRS({'init': 'EPSG:4326'}).to_string()
+    assert str(CRS({'init': 'epsg:4326'})) == CRS({'init': 'epsg:4326'}).to_string()
 
 
 def test_epsg_code():
-    assert CRS({'init': 'EPSG:4326'}).is_epsg_code
+    assert CRS({'init': 'epsg:4326'}).is_epsg_code
     assert not CRS({'proj': 'latlon'}).is_epsg_code
 
 
 def test_epsg():
-    assert CRS({'init': 'EPSG:4326'}).to_epsg() == 4326
+    assert CRS({'init': 'epsg:4326'}).to_epsg() == 4326
     assert CRS.from_string('+proj=longlat +datum=WGS84 +no_defs').to_epsg() == 4326
 
 
@@ -255,7 +257,7 @@ def test_epsg__no_code_available():
 def test_crs_OSR_equivalence():
     crs1 = CRS.from_string('+proj=longlat +datum=WGS84 +no_defs')
     crs2 = CRS.from_string('+proj=latlong +datum=WGS84 +no_defs')
-    crs3 = CRS({'init': 'EPSG:4326'})
+    crs3 = CRS({'init': 'epsg:4326'})
     assert crs1 == crs2
     assert crs1 == crs3
 
@@ -293,7 +295,7 @@ def test_from_wkt_invalid():
 
 
 def test_from_user_input_epsg():
-    assert 'init' in CRS.from_user_input('EPSG:4326')
+    assert 'init' in CRS.from_user_input('epsg:4326')
 
 
 ESRI_PROJECTION_STRING = (
@@ -342,12 +344,12 @@ def test_from_esri_wkt_fix_datum(projection_string):
 
 def test_compound_crs():
     wkt = """COMPD_CS["unknown",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]],VERT_CS["unknown",VERT_DATUM["unknown",2005],UNIT["metre",1.0,AUTHORITY["EPSG","9001"]],AXIS["Up",UP]]]"""
-    assert CRS.from_wkt(wkt).wkt.startswith('GEOGCS["WGS 84"')
+    assert CRS.from_wkt(wkt).wkt.startswith('COMPD_CS')
 
 
 def test_dataset_compound_crs():
     with rasterio.open("tests/data/compdcs.vrt") as dataset:
-        assert dataset.crs.wkt.startswith('GEOGCS["WGS 84"')
+        assert dataset.crs.wkt.startswith('COMPD_CS')
 
 
 @pytest.mark.wheel
@@ -364,3 +366,9 @@ def test_exception():
     with Env(), pytest.raises(CRSError) as exc_info:
         CRS.from_wkt("bogus")
     assert str(exc_info.value).startswith("The WKT could not be parsed")
+
+
+@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
+def test_crs_private_wkt(projection_string):
+    """Original WKT is saved"""
+    CRS.from_wkt(projection_string)._wkt == projection_string

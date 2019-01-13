@@ -72,27 +72,24 @@ class CRS(_CRS):
         -------
         str
         """
-        items = []
-        for k, v in sorted(filter(
-                lambda x: x[0] in all_proj_keys and x[1] is not False and (
-                    isinstance(x[1], (bool, int, float)) or
-                    isinstance(x[1], string_types)),
-                self.items())):
-            items.append("+" + "=".join(map(str, filter(
-                lambda y: (y or y == 0) and y is not True, (k, v)))))
-        return " ".join(items)
+        return self._wkt_or_proj()
+        #items = []
+        #for k, v in sorted(filter(
+        #        lambda x: x[0] in all_proj_keys and x[1] is not False and (
+        #            isinstance(x[1], (bool, int, float)) or
+        #            isinstance(x[1], string_types)),
+        #        self.items())):
+        #    items.append("+" + "=".join(map(str, filter(
+        #        lambda y: (y or y == 0) and y is not True, (k, v)))))
+        #return " ".join(items)
 
     def __repr__(self):
-        return "CRS({})".format(dict.__repr__(self.data))
+        if self._wkt:
+            return "CRS.from_wkt('{}')".format(self._wkt)
+        elif self._data:
+            return "CRS({})".format(repr(self._data))
+        else:
+            return "CRS()"
 
     def __str__(self):
         return self.to_string()
-
-    def to_dict(self):
-        """Turn CRS object into a dict
-
-        Returns
-        -------
-        dict
-        """
-        return self.data

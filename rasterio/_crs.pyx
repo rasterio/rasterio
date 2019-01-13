@@ -3,6 +3,8 @@
 
 include "gdal.pxi"
 
+from abc import abstractmethod
+import collections
 import json
 import logging
 
@@ -19,8 +21,28 @@ from rasterio._err cimport exc_wrap_int
 log = logging.getLogger(__name__)
 
 
-class _CRS(UserDict):
+class _CRS(collections.Mapping):
     """CRS base class."""
+
+    def __init__(self, initialdata=None, **kwargs):
+        self._wkt = None
+        if initialdata:
+            self._data = dict(initialdata)
+        else:
+            self._data = {}
+            self._data.update(**kwargs)
+
+    def __getitem__(self, item):
+        return self._data[item]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def _wkt_or_proj(self):
+        return self._wkt or ' '.join(['+{}={}'.format(key, val) for key, val in self._data.items()])
 
     @property
     def is_geographic(self):
@@ -30,13 +52,16 @@ class _CRS(UserDict):
         -------
         bool
         """
-        cdef OGRSpatialReferenceH osr_crs = NULL
-        cdef int retval
+        cdef OGRSpatialReferenceH osr_crs = OSRNewSpatialReference(NULL)
 
         try:
-            osr_crs = osr_from_crs(self)
-            retval = OSRIsGeographic(osr_crs)
-            return bool(retval == 1)
+            osr_input = self._wkt_or_proj().encode('utf-8')
+            exc_wrap_int(OSRSetFromUserInput(osr_crs, <const char *>osr_input))
+            exc_wrap_int(OSRMorphFromESRI(osr_crs))
+            return bool(OSRIsGeographic(osr_crs) == 1)
+        except CPLE_BaseError as exc:
+            raise CRSError("{}".format(str(exc)))
+
         finally:
             _safe_osr_release(osr_crs)
 
@@ -48,13 +73,13 @@ class _CRS(UserDict):
         -------
         bool
         """
-        cdef OGRSpatialReferenceH osr_crs = NULL
-        cdef int retval
+        cdef OGRSpatialReferenceH osr_crs = OSRNewSpatialReference(NULL)
 
         try:
-            osr_crs = osr_from_crs(self)
-            retval = OSRIsProjected(osr_crs)
-            return bool(retval == 1)
+            osr_input = self._wkt_or_proj().encode('utf-8')
+            exc_wrap_int(OSRSetFromUserInput(osr_crs, <const char *>osr_input))
+            exc_wrap_int(OSRMorphFromESRI(osr_crs))
+            return bool(OSRIsProjected(osr_crs) == 1)
         finally:
             _safe_osr_release(osr_crs)
 
@@ -64,11 +89,11 @@ class _CRS(UserDict):
         cdef int retval
 
         try:
-            if (
-                isinstance(other, self.__class__) and
-                self.data == other.data
-            ):
-                return True
+            #if (
+            #    isinstance(other, self.__class__) and
+            #    self.data == other.data
+            #):
+            #    return True
 
             if not self or not other:
                 return not self and not other
@@ -234,7 +259,33 @@ class _CRS(UserDict):
             exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_wkt))
             exc_wrap_int(OSRMorphFromESRI(osr))
             exc_wrap_int(OSRExportToProj4(osr, &prj))
-            return cls.from_string(prj.decode('utf-8'))
+            obj = cls()
+            obj._wkt = wkt
+
+            proj_str = prj.decode('utf-8')
+            parts = [o.lstrip('+') for o in proj_str.strip().split()]
+
+            def parse(v):
+                if v in ('True', 'true'):
+                    return True
+                elif v in ('False', 'false'):
+                    return False
+                else:
+                    try:
+                        return int(v)
+                    except ValueError:
+                        pass
+                    try:
+                        return float(v)
+                    except ValueError:
+                        return v
+
+            items = map(
+                lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
+                (p.split('=') for p in parts))
+
+            obj._data = {k: v for k, v in items if k in all_proj_keys}
+            return obj
         except CPLE_BaseError as exc:
             raise CRSError("The WKT could not be parsed. {}".format(str(exc)))
         finally:
@@ -267,6 +318,47 @@ class _CRS(UserDict):
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
 
+    def to_dict(self):
+        """Convert CRS to a dict"""
+        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
+        cdef char *prj = NULL
+
+        if self._data:
+            return dict(self._data)
+        else:
+            b_wkt = self._wkt.encode('utf-8')
+            try:
+                exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_wkt))
+                exc_wrap_int(OSRMorphFromESRI(osr))
+                exc_wrap_int(OSRExportToProj4(osr, &prj))
+                proj_str = prj.decode('utf-8')
+                parts = [o.lstrip('+') for o in proj_str.strip().split()]
+
+                def parse(v):
+                    if v in ('True', 'true'):
+                        return True
+                    elif v in ('False', 'false'):
+                        return False
+                    else:
+                        try:
+                            return int(v)
+                        except ValueError:
+                            pass
+                        try:
+                            return float(v)
+                        except ValueError:
+                            return v
+
+                items = map(
+                    lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
+                    (p.split('=') for p in parts))
+
+                return {k: v for k, v in items if k in all_proj_keys}
+            except CPLE_BaseError as exc:
+                raise CRSError("The WKT could not be parsed. {}".format(str(exc)))
+            finally:
+                CPLFree(prj)
+                _safe_osr_release(osr)
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
