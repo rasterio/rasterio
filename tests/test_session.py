@@ -2,7 +2,7 @@
 
 import pytest
 
-from rasterio.session import DummySession, AWSSession, Session, OSSSession
+from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession
 
 
 def test_dummy_session():
@@ -133,3 +133,10 @@ def test_session_factory_oss_kwargs():
     assert isinstance(sesh, OSSSession)
     assert sesh.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
     assert sesh.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'bar'
+
+def test_gs_session_class():
+    """GSSession works"""
+    gs_session = GSSession(
+        google_application_credentials='foo')
+    assert gs_session._creds
+    assert gs_session.get_credential_options()['GOOGLE_APPLICATION_CREDENTIALS'] == 'foo'
