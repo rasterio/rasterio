@@ -44,6 +44,11 @@ class _CRS(collections.Mapping):
         data = dict(initialdata or {})
         data.update(**kwargs)
         data = {k: v for k, v in data.items() if k in all_proj_keys}
+
+        # always use lowercase 'epsg'.
+        if 'init' in data:
+            data['init'] = data['init'].replace('EPSG:', 'epsg:')
+
         proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
         b_proj = proj.encode('utf-8')
 
@@ -354,6 +359,11 @@ class _CRS(collections.Mapping):
         data = dict(initialdata or {})
         data.update(**kwargs)
         data = {k: v for k, v in data.items() if k in all_proj_keys}
+
+        # always use lowercase 'epsg'.
+        if 'init' in data:
+            data['init'] = data['init'].replace('EPSG:', 'epsg:')
+
         proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
         b_proj = proj.encode('utf-8')
 
