@@ -170,7 +170,7 @@ def test_write_crs_transform(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
@@ -193,7 +193,7 @@ def test_write_crs_transform_affine(tmpdir):
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
 
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
@@ -217,7 +217,7 @@ def test_write_crs_transform_2(tmpdir, monkeypatch):
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
 
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'UTM zone 18N' in info
     # make sure that pixel size is nearly the same as transform
@@ -240,7 +240,7 @@ def test_write_crs_transform_3(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
     assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform

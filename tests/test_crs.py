@@ -16,20 +16,64 @@ from rasterio.errors import CRSError
 from .conftest import requires_gdal21, requires_gdal22
 
 
+# Items like "D_North_American_1983" characterize the Esri dialect
+# of WKT SRS.
+ESRI_PROJECTION_STRING = (
+    'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
+    'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
+    'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
+    'PRIMEM["Greenwich",0.0],'
+    'UNIT["Degree",0.0174532925199433]],'
+    'PROJECTION["Albers"],'
+    'PARAMETER["false_easting",0.0],'
+    'PARAMETER["false_northing",0.0],'
+    'PARAMETER["central_meridian",-96.0],'
+    'PARAMETER["standard_parallel_1",29.5],'
+    'PARAMETER["standard_parallel_2",45.5],'
+    'PARAMETER["latitude_of_origin",23.0],'
+    'UNIT["Meter",1.0],'
+    'VERTCS["NAVD_1988",'
+    'VDATUM["North_American_Vertical_Datum_1988"],'
+    'PARAMETER["Vertical_Shift",0.0],'
+    'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+
+
+def test_crs_constructor_dict():
+    """Can create a CRS from a dict"""
+    crs = CRS({'init': 'epsg:3857'})
+    assert crs['init'] == 'epsg:3857'
+    assert 'PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6378137,0]' in crs.wkt
+
+
+def test_crs_constructor_keywords():
+    """Can create a CRS from keyword args, ignoring unknowns"""
+    crs = CRS(init='epsg:3857', foo='bar')
+    assert crs['init'] == 'epsg:3857'
+    assert 'PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6378137,0]' in crs.wkt
+
+
+def test_crs_constructor_crs_obj():
+    """Can create a CRS from a CRS obj"""
+    crs = CRS(CRS(init='epsg:3857'))
+    assert crs['init'] == 'epsg:3857'
+    assert 'PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6378137,0]' in crs.wkt
+
+
 @pytest.fixture(scope='session')
 def profile_rgb_byte_tif(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         return src.profile
 
 
-# When possible, Rasterio gives you the CRS in the form of an EPSG code.
-def test_read_epsg(tmpdir):
+def test_read_epsg():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        assert src.crs.to_dict() == {'init': 'epsg:32618'}
+        assert src.crs.to_epsg() == 32618
 
 
-def test_read_esri_wkt(tmpdir):
+def test_read_esri_wkt():
     with rasterio.open('tests/data/test_esri_wkt.tif') as src:
+        assert 'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",' in src.crs.wkt
+        assert 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",' in src.crs.wkt
         assert src.crs.to_dict() == {
             'datum': 'NAD83',
             'lat_0': 23,
@@ -44,16 +88,6 @@ def test_read_esri_wkt(tmpdir):
         }
 
 
-@pytest.mark.gdalbin
-def test_read_epsg3857(tmpdir):
-    tiffname = str(tmpdir.join('lol.tif'))
-    subprocess.call([
-        'gdalwarp', '-t_srs', 'epsg:3857',
-        'tests/data/RGB.byte.tif', tiffname])
-    with rasterio.open(tiffname) as src:
-        assert src.crs.to_dict() == {'init': 'epsg:3857'}
-
-
 # Ensure that CRS sticks when we write a file.
 @pytest.mark.gdalbin
 def test_write_3857(tmpdir):
@@ -64,7 +98,7 @@ def test_write_3857(tmpdir):
     dst_path = str(tmpdir.join('wut.tif'))
     with rasterio.open(src_path) as src:
         with rasterio.open(dst_path, 'w', **src.meta) as dst:
-            assert dst.crs.to_dict() == {'init': 'epsg:3857'}
+            assert dst.crs.to_epsg() == 3857
     info = subprocess.check_output([
         'gdalinfo', dst_path])
     # WKT string may vary a bit w.r.t GDAL versions
@@ -238,8 +272,11 @@ def test_dunder_str():
     assert str(CRS({'init': 'epsg:4326'})) == CRS({'init': 'epsg:4326'}).to_string()
 
 
-def test_epsg_code():
+def test_epsg_code_true():
     assert CRS({'init': 'epsg:4326'}).is_epsg_code
+
+
+def test_epsg_code_false():
     assert not CRS({'proj': 'latlon'}).is_epsg_code
 
 
@@ -298,48 +335,25 @@ def test_from_user_input_epsg():
     assert 'init' in CRS.from_user_input('epsg:4326')
 
 
-ESRI_PROJECTION_STRING = (
-    'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
-    'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
-    'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
-    'PRIMEM["Greenwich",0.0],'
-    'UNIT["Degree",0.0174532925199433]],'
-    'PROJECTION["Albers"],'
-    'PARAMETER["false_easting",0.0],'
-    'PARAMETER["false_northing",0.0],'
-    'PARAMETER["central_meridian",-96.0],'
-    'PARAMETER["standard_parallel_1",29.5],'
-    'PARAMETER["standard_parallel_2",45.5],'
-    'PARAMETER["latitude_of_origin",23.0],'
-    'UNIT["Meter",1.0],'
-    'VERTCS["NAVD_1988",'
-    'VDATUM["North_American_Vertical_Datum_1988"],'
-    'PARAMETER["Vertical_Shift",0.0],'
-    'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
-
-
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_no_fix(projection_string):
     """Test ESRI CRS morphing with no datum fixing"""
     with Env():
-        proj_crs_str = CRS.from_string(projection_string)
-        proj_crs_wkt = CRS.from_wkt(projection_string)
-        assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
-        assert 'ellps' not in proj_crs_str
-        assert 'towgs84' not in proj_crs_str
-        assert proj_crs_str['datum'] == 'NAD83'
-        assert proj_crs_str['units'] == 'm'
+        crs = CRS.from_wkt(projection_string)
+        assert 'DATUM["D_North_American_1983"' in crs.wkt
 
 
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_fix_datum(projection_string):
     """Test ESRI CRS morphing with datum fixing"""
     with Env(GDAL_FIX_ESRI_WKT='DATUM'):
-        proj_crs_str = CRS.from_string(projection_string)
-        proj_crs_wkt = CRS.from_wkt(projection_string)
-        assert proj_crs_str.to_string() == proj_crs_wkt.to_string()
-        assert proj_crs_str['ellps'] == 'GRS80'
-        assert proj_crs_str['towgs84'] == '0,0,0,0,0,0,0'
+        crs = CRS.from_wkt(projection_string, morph_from_esri_dialect=True)
+        assert 'DATUM["North_American_Datum_1983"' in crs.wkt
+
+
+def test_to_esri_wkt_fix_datum():
+    """Morph to Esri form"""
+    assert 'DATUM["D_North_American_1983"' in CRS(init='epsg:26913').to_wkt(morph_to_esri_dialect=True)
 
 
 def test_compound_crs():
@@ -366,6 +380,13 @@ def test_exception():
     with Env(), pytest.raises(CRSError) as exc_info:
         CRS.from_wkt("bogus")
     assert str(exc_info.value).startswith("The WKT could not be parsed")
+
+
+def test_exception_proj4():
+    """Get the exception message we expect"""
+    with Env(), pytest.raises(CRSError) as exc_info:
+        print(CRS.from_proj4("+proj=bogus").to_wkt())
+    assert str(exc_info.value).startswith("Could not convert to WKT")
 
 
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])

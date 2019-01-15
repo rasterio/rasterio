@@ -44,7 +44,7 @@ def test_info():
     info = json.loads(result.output)
     assert info['count'] == 3
     assert info['dtype'] == 'uint8'
-    assert info['crs'] == 'EPSG:32618'
+    assert 'Zone 18' in info['crs']
 
     result = runner.invoke(
         main_group, ['info', 'tests/data/float.tif'])

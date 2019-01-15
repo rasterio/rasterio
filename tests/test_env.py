@@ -368,7 +368,6 @@ def test_s3_rio_info(runner):
     """S3 is supported by rio-info."""
     result = runner.invoke(main_group, ['info', L8TIF])
     assert result.exit_code == 0
-    assert '"crs": "EPSG:32645"' in result.output
 
 
 @requires_gdal21(reason="S3 access requires 2.1+")
@@ -378,7 +377,6 @@ def test_https_rio_info(runner):
     """HTTPS is supported by rio-info."""
     result = runner.invoke(main_group, ['info', httpstif])
     assert result.exit_code == 0
-    assert '"crs": "EPSG:32645"' in result.output
 
 
 def test_rio_env_credentials_options(tmpdir, monkeypatch, runner):

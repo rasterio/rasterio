@@ -1209,59 +1209,65 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
-        cdef char *proj_c = NULL
-        cdef char *wkt = NULL
-        cdef OGRSpatialReferenceH osr = NULL
-
-        osr = OSRNewSpatialReference(NULL)
-        if osr == NULL:
-            raise ValueError("Null spatial reference")
-        params = []
-
-        log.debug("Input CRS: %r", crs)
-
-        if isinstance(crs, dict):
-            crs = CRS(crs)
-        if isinstance(crs, CRS):
-            # EPSG is a special case.
-            init = crs.get('init')
-            if init:
-                auth, val = init.split(':')
-                if auth.upper() == 'EPSG':
-                    OSRImportFromEPSG(osr, int(val))
-            else:
-                for k, v in crs.items():
-                    if v is True or (k in ('no_defs', 'wktext') and v):
-                        params.append("+%s" % k)
-                    else:
-                        params.append("+%s=%s" % (k, v))
-                proj = " ".join(params)
-                log.debug("PROJ.4 to be imported: %r", proj)
-                proj_b = proj.encode('utf-8')
-                proj_c = proj_b
-                OSRImportFromProj4(osr, proj_c)
-        # Fall back for CRS strings like "EPSG:3857."
-        elif isinstance(crs, str) or crs is None:
-            if not crs:
-                crs = ''
-            proj_b = crs.encode('utf-8')
-            proj_c = proj_b
-            OSRSetFromUserInput(osr, proj_c)
-        else:
-            raise CRSError(
-                "{!r} does not define a valid CRS".format(crs))
-
-        # Fixup, export to WKT, and set the GDAL dataset's projection.
-        OSRFixup(osr)
-        OSRExportToWkt(osr, <char**>&wkt)
-        wkt_b = wkt
-        log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
-        GDALSetProjection(self._hds, wkt)
-
-        CPLFree(wkt)
-        _safe_osr_release(osr)
+        crs = CRS.from_user_input(crs)
+        wkt_b = crs.to_wkt().encode('utf-8')
+        cdef const char *wkt_c = wkt_b
+        exc_wrap_int(GDALSetProjection(self.handle(), wkt_c))
         self._crs = crs
-        log.debug("Self CRS: %r", self._crs)
+#
+#        cdef char *proj_c = NULL
+#        cdef char *wkt = NULL
+#        cdef OGRSpatialReferenceH osr = NULL
+#
+#        osr = OSRNewSpatialReference(NULL)
+#        if osr == NULL:
+#            raise ValueError("Null spatial reference")
+#        params = []
+#
+#        log.debug("Input CRS: %r", crs)
+#
+#        if isinstance(crs, dict):
+#            crs = CRS(crs)
+#        if isinstance(crs, CRS):
+#            # EPSG is a special case.
+#            init = crs.get('init')
+#            if init:
+#                auth, val = init.split(':')
+#                if auth.upper() == 'EPSG':
+#                    OSRImportFromEPSG(osr, int(val))
+#            else:
+#                for k, v in crs.items():
+#                    if v is True or (k in ('no_defs', 'wktext') and v):
+#                        params.append("+%s" % k)
+#                    else:
+#                        params.append("+%s=%s" % (k, v))
+#                proj = " ".join(params)
+#                log.debug("PROJ.4 to be imported: %r", proj)
+#                proj_b = proj.encode('utf-8')
+#                proj_c = proj_b
+#                OSRImportFromProj4(osr, proj_c)
+#        # Fall back for CRS strings like "EPSG:3857."
+#        elif isinstance(crs, str) or crs is None:
+#            if not crs:
+#                crs = ''
+#            proj_b = crs.encode('utf-8')
+#            proj_c = proj_b
+#            OSRSetFromUserInput(osr, proj_c)
+#        else:
+#            raise CRSError(
+#                "{!r} does not define a valid CRS".format(crs))
+#
+#        # Fixup, export to WKT, and set the GDAL dataset's projection.
+#        OSRFixup(osr)
+#        OSRExportToWkt(osr, &wkt)
+#        wkt_b = wkt
+#        log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
+#        GDALSetProjection(self._hds, wkt)
+#
+#        CPLFree(wkt)
+#        _safe_osr_release(osr)
+#        self._crs = crs
+#        log.debug("Self CRS: %r", self._crs)
 
     def _set_all_descriptions(self, value):
         """Supports the descriptions property setter"""

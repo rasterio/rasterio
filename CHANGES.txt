@@ -4,6 +4,8 @@ Changes
 Next
 ----
 
+- The _CRS class has been refactored so that a WKT representation, rather than PROJ4 representation, is the canonical form.
+
 - On entering a dataset context (DatasetBase.__enter__) a new anonymous GDAL
   environment is created if needed and is entered. This makes `with
   rasterio.open(...) as dataset:` roughly equivalent to `with

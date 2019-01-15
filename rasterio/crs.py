@@ -51,11 +51,12 @@ class CRS(_CRS):
         Returns
         -------
         bool
+
         """
-        for val in self.values():
-            if isinstance(val, string_types) and val.lower().startswith('epsg'):
-                return True
-        return False
+        try:
+            return bool(self.to_epsg())
+        except CRSError:
+            return False
 
     def to_string(self):
         """Turn CRS into a PROJ string
@@ -73,15 +74,8 @@ class CRS(_CRS):
         str
         """
         return self._wkt_or_proj()
-        #items = []
-        #for k, v in sorted(filter(
-        #        lambda x: x[0] in all_proj_keys and x[1] is not False and (
-        #            isinstance(x[1], (bool, int, float)) or
-        #            isinstance(x[1], string_types)),
-        #        self.items())):
-        #    items.append("+" + "=".join(map(str, filter(
-        #        lambda y: (y or y == 0) and y is not True, (k, v)))))
-        #return " ".join(items)
+
+    __str__ = to_string
 
     def __repr__(self):
         if self._wkt:
@@ -90,6 +84,3 @@ class CRS(_CRS):
             return "CRS({})".format(repr(self._data))
         else:
             return "CRS()"
-
-    def __str__(self):
-        return self.to_string()
