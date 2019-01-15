@@ -3,7 +3,6 @@
 
 include "gdal.pxi"
 
-from abc import abstractmethod
 import collections
 import json
 import logging
