@@ -69,7 +69,11 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         info['bounds'] = src.bounds
 
         if src.crs:
-            info['crs'] = src.crs.to_string()
+            epsg = src.crs.to_epsg()
+            if epsg:
+                info['crs'] = 'EPSG:{}'.format(epsg)
+            else:
+                info['crs'] = src.crs.to_string()
         else:
             info['crs'] = None
 
@@ -89,7 +93,11 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         if gcps:
             info['gcps'] = {'points': [p.asdict() for p in gcps]}
             if crs:
-                info['gcps']['crs'] = gcps_crs.to_string()
+                epsg = crs.to_epsg()
+                if epsg:
+                    info['gcps']['crs'] = 'EPSG:{}'.format(epsg)
+                else:
+                    info['gcps']['crs'] = src.crs.to_string()
             else:
                 info['gcps']['crs'] = None
 

@@ -393,3 +393,14 @@ def test_exception_proj4():
 def test_crs_private_wkt(projection_string):
     """Original WKT is saved"""
     CRS.from_wkt(projection_string)._wkt == projection_string
+
+
+@pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
+def test_implicit_proj_dict(projection_string):
+    """Ensure that old behavior is preserved"""
+    assert CRS.from_wkt(projection_string)['proj'] == 'aea'
+
+
+def test_capitalized_epsg_init():
+    """Ensure that old behavior is preserved"""
+    assert CRS(init='EPSG:4326').to_epsg() == 4326

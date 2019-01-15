@@ -62,20 +62,26 @@ class _CRS(collections.Mapping):
         finally:
             _safe_osr_release(osr)
 
+    @property
+    def data(self):
+        if not self._data and self._wkt:
+            self._data = self.to_dict()
+        return self._data
+
     def __getitem__(self, item):
-        return self._data[item]
+        return self.data[item]
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self.data)
 
     def __len__(self):
-        return len(self._data)
+        return len(self.data)
 
     def _wkt_or_proj(self):
-        return self._wkt or ' '.join(['+{}={}'.format(key, val) for key, val in self._data.items() if key in all_proj_keys])
+        return self._wkt or ' '.join(['+{}={}'.format(key, val) for key, val in self.data.items() if key in all_proj_keys])
 
     def __bool__(self):
-        return bool(self._wkt or self._data)
+        return bool(self._wkt or self.data)
 
     __nonzero__ = __bool__
 
