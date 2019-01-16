@@ -251,7 +251,7 @@ class _CRS(collections.Mapping):
         """
         if int(code) <= 0:
             raise CRSError("EPSG codes are positive integers")
-        return cls.from_dict(init="epsg:{}".format(code))
+        return cls.from_proj4('+init=epsg:{}'.format(code))
 
     @classmethod
     def from_string(cls, s, morph_from_esri_dialect=False):
