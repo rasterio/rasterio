@@ -10,7 +10,7 @@ from rasterio.env import env_ctx_if_needed
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
-from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_pointer
+from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 
 
 log = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ cdef class _CRS(object):
         proj_b = proj.encode('utf-8')
 
         try:
-            exc_wrap_ogrerr(OSRImportFromProj4(obj._osr, <const char *>proj_b))
+            exc_wrap_ogrerr(exc_wrap_int(OSRImportFromProj4(obj._osr, <const char *>proj_b)))
 
         except CPLE_BaseError as exc:
             raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))

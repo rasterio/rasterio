@@ -3,8 +3,10 @@
 Notes
 -----
 
-In Rasterio 1.0, coordinate reference system support is limited to the
-CRS that can be described by PROJ parameters.
+In Rasterio versions <= 1.0.13, coordinate reference system support was limited
+to the CRS that can be described by PROJ parameters. This limitation is gone in
+versions >= 1.0.14. Any CRS that can be defined using WKT (version 1) may be
+used.
 
 """
 
@@ -17,27 +19,31 @@ from rasterio.errors import CRSError
 
 
 class CRS(collections.Mapping):
-    """A container class for coordinate reference system info
+    """A geographic or projected coordinate reference system
 
     CRS objects may be created by passing PROJ parameters as keyword
-    arguments to the standard constructor or by passing EPSG codes,
-    PROJ strings, or WKT strings to the from_epsg and from_string
-    class methods.
+    arguments to the standard constructor or by passing EPSG codes, PROJ
+    mappings, PROJ strings, or WKT strings to the from_epsg, from_dict,
+    from_string, or from_wkt class methods or static methods.
 
     Examples
     --------
 
-    The constructor takes PROJ parameters as keyword arguments.
+    The from_dict method takes PROJ parameters as keyword arguments.
 
-    >>> crs = CRS(init='epsg:3005')
+    >>> crs = CRS.from_dict(init='epsg:3005')
 
-    EPSG codes may be used with the from_epsg class method.
+    EPSG codes may be used with the from_epsg method.
 
     >>> crs = CRS.from_epsg(3005)
 
+    The from_string method takes a variety of input.
+
+    >>> crs = CRS.from_string('EPSG:3005')
+
     """
     def __init__(self, initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
+        """Make a CRS from a PROJ dict or mapping
 
         Parameters
         ----------
@@ -92,7 +98,6 @@ class CRS(collections.Mapping):
     def to_proj4(self):
         """Convert CRS to a PROJ4 string
 
-
         Returns
         -------
         str
@@ -101,7 +106,7 @@ class CRS(collections.Mapping):
         return ' '.join(['+{}={}'.format(key, val) for key, val in self.data.items()])
 
     def to_wkt(self, morph_to_esri_dialect=False):
-        """An OGC WKT representation of the CRS
+        """Convert CRS to its OGC WKT representation
 
         Parameters
         ----------
@@ -131,6 +136,8 @@ class CRS(collections.Mapping):
     def to_epsg(self):
         """The epsg code of the CRS
 
+        Returns None if there is no corresponding EPSG code.
+
         Returns
         -------
         int
@@ -141,6 +148,9 @@ class CRS(collections.Mapping):
     def to_dict(self):
         """Convert CRS to a PROJ4 dict
 
+        Notes
+        -----
+        If there is a corresponding EPSG code, it will be used.
 
         Returns
         -------
@@ -155,13 +165,14 @@ class CRS(collections.Mapping):
 
     @property
     def data(self):
+        """A PROJ4 dict representation of the CRS"""
         if not self._data:
             self._data = self.to_dict()
         return self._data
 
     @property
     def is_geographic(self):
-        """Test if the CRS is a geographic coordinate reference system
+        """Test that the CRS is a geographic CRS
 
         Returns
         -------
@@ -172,7 +183,7 @@ class CRS(collections.Mapping):
 
     @property
     def is_projected(self):
-        """Test if the CRS is a projected coordinate reference system
+        """Test that the CRS is a projected CRS
 
         Returns
         -------
@@ -183,8 +194,12 @@ class CRS(collections.Mapping):
 
     @property
     def is_valid(self):
-        """Test if the CRS is a valid geographic or projected
-        coordinate reference system
+        """Test that the CRS is a geographic or projected CRS
+
+        Notes
+        -----
+        There are other types of CRS, such as compound or local or
+        engineering CRS, but these are not supported in Rasterio 1.0.
 
         Returns
         -------
@@ -208,15 +223,15 @@ class CRS(collections.Mapping):
             return False
 
     def to_string(self):
-        """Turn CRS into a PROJ string
+        """Convert CRS to a PROJ4 or WKT string
 
         Notes
         -----
 
-        Mapping keys are tested against the ``all_proj_keys`` list. Values of
-        ``True`` are omitted, leaving the key bare: {'no_defs': True} -> "+no_defs"
-        and items where the value is otherwise not a str, int, or float are
-        omitted.
+        Mapping keys are tested against the ``all_proj_keys`` list.
+        Values of ``True`` are omitted, leaving the key bare:
+        {'no_defs': True} -> "+no_defs" and items where the value is
+        otherwise not a str, int, or float are omitted.
 
         Returns
         -------
