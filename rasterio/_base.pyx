@@ -264,7 +264,10 @@ cdef class DatasetBase(object):
         """Return the GDAL dataset's stored CRS"""
         # No dialect morphing, if the dataset was created using software
         # "speaking" the Esri dialect, we will read Esri WKT.
-        return CRS.from_wkt(wkt)
+        if wkt:
+            return CRS.from_wkt(wkt)
+        else:
+            return CRS()
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""

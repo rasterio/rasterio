@@ -183,6 +183,17 @@ cdef int exc_wrap_int(int err) except -1:
     return err
 
 
+cdef OGRErr exc_wrap_ogrerr(OGRErr err) except -1:
+    """Wrap a function that returns OGRErr but does not use the
+    CPL error stack.
+
+    """
+    if err == 0:
+        return err
+    else:
+        raise CPLE_BaseError(3, err, "OGR Error code {}".format(err))
+
+
 cdef void *exc_wrap_pointer(void *ptr) except NULL:
     """Wrap a GDAL/OGR function that returns GDALDatasetH etc (void *)
 

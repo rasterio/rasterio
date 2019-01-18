@@ -72,6 +72,7 @@ cdef extern from "cpl_vsi.h" nogil:
 
 cdef extern from "ogr_srs_api.h" nogil:
 
+    ctypedef int OGRErr
     ctypedef void * OGRCoordinateTransformationH
     ctypedef void * OGRSpatialReferenceH
 
@@ -94,14 +95,14 @@ cdef extern from "ogr_srs_api.h" nogil:
     const char *OSRGetAuthorityCode(OGRSpatialReferenceH srs, const char *key)
     int OSRImportFromEPSG(OGRSpatialReferenceH srs, int code)
     int OSRImportFromProj4(OGRSpatialReferenceH srs, const char *proj)
-    int OSRImportFromWkt(OGRSpatialReferenceH srs, const char *wkt)
+    int OSRImportFromWkt(OGRSpatialReferenceH srs, char **wkt)
     int OSRIsGeographic(OGRSpatialReferenceH srs)
     int OSRIsProjected(OGRSpatialReferenceH srs)
     int OSRIsSame(OGRSpatialReferenceH srs1, OGRSpatialReferenceH srs2)
     OGRSpatialReferenceH OSRNewSpatialReference(const char *wkt)
     void OSRRelease(OGRSpatialReferenceH srs)
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
-
+    OGRErr OSRValidate(OGRSpatialReferenceH srs)
 
 cdef extern from "gdal.h" nogil:
 

@@ -1,88 +1,29 @@
 """Coordinate reference systems, class and functions.
 """
 
-include "gdal.pxi"
-
-import collections
-import json
 import logging
 
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
-from rasterio.compat import UserDict, string_types
+from rasterio.compat import string_types
 from rasterio.errors import CRSError
 from rasterio.env import env_ctx_if_needed
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
-from rasterio._err cimport exc_wrap_int
+from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_pointer
 
 
 log = logging.getLogger(__name__)
 
 
-class _CRS(collections.Mapping):
-    """CRS base class."""
+cdef class _CRS(object):
+    """Cython extension class"""
 
-    def __init__(self, initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
+    def __cinit__(self):
+        self._osr = OSRNewSpatialReference(NULL)
 
-        Parameters
-        ----------
-        initialdata : mapping, optional
-            A dictionary or other mapping
-        kwargs : mapping, optional
-            Another mapping. Will be overlaid on the initialdata.
-
-        Returns
-        -------
-        CRS
-
-        """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
-        data = dict(initialdata or {})
-        data.update(**kwargs)
-        data = {k: v for k, v in data.items() if k in all_proj_keys}
-
-        # always use lowercase 'epsg'.
-        if 'init' in data:
-            data['init'] = data['init'].replace('EPSG:', 'epsg:')
-
-        proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
-        b_proj = proj.encode('utf-8')
-
-        try:
-            exc_wrap_int(OSRImportFromProj4(osr, <const char *>b_proj))
-        except CPLE_BaseError as exc:
-            raise CRSError("The PROJ4 dict could not be understood. {}".format(str(exc)))
-        else:
-            self._wkt = None
-            self._data = data
-        finally:
-            _safe_osr_release(osr)
-
-    @property
-    def data(self):
-        if not self._data and self._wkt:
-            self._data = self.to_dict()
-        return self._data
-
-    def __getitem__(self, item):
-        return self.data[item]
-
-    def __iter__(self):
-        return iter(self.data)
-
-    def __len__(self):
-        return len(self.data)
-
-    def _wkt_or_proj(self):
-        return self._wkt or ' '.join(['+{}={}'.format(key, val) for key, val in self.data.items() if key in all_proj_keys])
-
-    def __bool__(self):
-        return bool(self._wkt or self.data)
-
-    __nonzero__ = __bool__
+    def __dealloc__(self):
+        _safe_osr_release(self._osr)
 
     @property
     def is_geographic(self):
@@ -93,17 +34,10 @@ class _CRS(collections.Mapping):
         bool
 
         """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
         try:
-            osr_input = self._wkt_or_proj().encode('utf-8')
-            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>osr_input))
-            exc_wrap_int(OSRMorphFromESRI(osr))
-            return bool(OSRIsGeographic(osr) == 1)
+            return bool(OSRIsGeographic(self._osr) == 1)
         except CPLE_BaseError as exc:
-            raise CRSError("{}".format(str(exc)))
-        finally:
-            _safe_osr_release(osr)
+            raise CRSError("{}".format(exc))
 
     @property
     def is_projected(self):
@@ -114,48 +48,26 @@ class _CRS(collections.Mapping):
         bool
 
         """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
         try:
-            osr_input = self._wkt_or_proj().encode('utf-8')
-            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>osr_input))
-            exc_wrap_int(OSRMorphFromESRI(osr))
-            return bool(OSRIsProjected(osr) == 1)
+            return bool(OSRIsProjected(self._osr) == 1)
         except CPLE_BaseError as exc:
-            raise CRSError("{}".format(str(exc)))
-        finally:
-            _safe_osr_release(osr)
+            raise CRSError("{}".format(exc))
 
     def __eq__(self, other):
-        cdef OGRSpatialReferenceH osr1 = NULL
-        cdef OGRSpatialReferenceH osr2 = NULL
+        cdef OGRSpatialReferenceH osr_s = NULL
+        cdef OGRSpatialReferenceH osr_o = NULL
+        cdef _CRS crs_o = other
 
-        if not self or not other:
-            return not self and not other
+        try:
+            osr_s = exc_wrap_pointer(OSRClone(self._osr))
+            exc_wrap_ogrerr(OSRMorphFromESRI(osr_s))
+            osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
+            exc_wrap_ogrerr(OSRMorphFromESRI(osr_o))
+            return bool(OSRIsSame(osr_s, osr_o) == 1)
 
-        else:
-            osr1 = OSRNewSpatialReference(NULL)
-            osr2 = OSRNewSpatialReference(NULL)
-
-            try:
-                osr_input1 = self._wkt_or_proj().encode('utf-8')
-                exc_wrap_int(OSRSetFromUserInput(osr1, <const char *>osr_input1))
-                exc_wrap_int(OSRMorphFromESRI(osr1))
-
-                if isinstance(other, string_types):
-                    other = _CRS.from_string(other)
-                elif not isinstance(other, _CRS):
-                    other = _CRS(other)
-
-                osr_input2 = other._wkt_or_proj().encode('utf-8')
-                exc_wrap_int(OSRSetFromUserInput(osr2, <const char *>osr_input2))
-                exc_wrap_int(OSRMorphFromESRI(osr2))
-
-                return bool(OSRIsSame(osr1, osr2) == 1)
-
-            finally:
-                _safe_osr_release(osr1)
-                _safe_osr_release(osr2)
+        finally:
+            _safe_osr_release(osr_s)
+            _safe_osr_release(osr_o)
 
     def to_wkt(self, morph_to_esri_dialect=False):
         """An OGC WKT representation of the CRS
@@ -171,43 +83,21 @@ class _CRS(collections.Mapping):
 
         """
         cdef char *conv_wkt = NULL
-        cdef OGRSpatialReferenceH osr = NULL
 
-        if self._wkt:
-            return self._wkt
+        try:
+            if morph_to_esri_dialect:
+                exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
+
+            exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
+
+        except CPLE_BaseError as exc:
+            raise CRSError("Cannot convert to WKT. {}".format(exc))
 
         else:
-            try:
-                osr_input = self._wkt_or_proj().encode('utf-8')
-                osr = OSRNewSpatialReference(NULL)
-                exc_wrap_int(OSRSetFromUserInput(osr, <const char *>osr_input))
+            return conv_wkt.decode('utf-8')
 
-                if morph_to_esri_dialect:
-                    exc_wrap_int(OSRMorphToESRI(osr))
-
-                exc_wrap_int(OSRExportToWkt(osr, &conv_wkt))
-
-                wkt = conv_wkt.decode('utf-8')
-
-                if not wkt:
-                    raise CRSError("Could not convert to WKT.")
-
-                return wkt
-
-            finally:
-                CPLFree(conv_wkt)
-                _safe_osr_release(osr)
-
-    @property
-    def wkt(self):
-        """An OGC WKT representation of the CRS
-
-        Returns
-        -------
-        str
-
-        """
-        return self.to_wkt()
+        finally:
+            CPLFree(conv_wkt)
 
     def to_epsg(self):
         """The epsg code of the CRS
@@ -217,12 +107,11 @@ class _CRS(collections.Mapping):
         int
 
         """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
+        cdef OGRSpatialReferenceH osr = NULL
 
         try:
-            osr_input = self._wkt_or_proj().encode('utf-8')
-            exc_wrap_int(OSRSetFromUserInput(osr, <const char *>osr_input))
-            exc_wrap_int(OSRFixup(osr))
+            osr = exc_wrap_pointer(OSRClone(self._osr))
+            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
             if OSRAutoIdentifyEPSG(osr) == 0:
                 epsg_code = OSRGetAuthorityCode(osr, NULL)
                 return int(epsg_code.decode('utf-8'))
@@ -253,52 +142,8 @@ class _CRS(collections.Mapping):
             raise CRSError("EPSG codes are positive integers")
         return cls.from_proj4('+init=epsg:{}'.format(code))
 
-    @classmethod
-    def from_string(cls, s, morph_from_esri_dialect=False):
-        """Make a CRS from an EPSG, PROJ, or WKT string
-
-        Parameters
-        ----------
-        s : str
-            An EPSG, PROJ, or WKT string.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
-
-        Returns
-        -------
-        CRS
-
-        """
-        if not s:
-            raise CRSError("CRS is empty or invalid: {!r}".format(s))
-
-        elif s.strip().upper().startswith('EPSG:'):
-            auth, val = s.strip().split(':')
-            if not val:
-                raise CRSError("Invalid CRS: {!r}".format(s))
-            return cls.from_epsg(val)
-
-        elif s.startswith('{') or s.startswith('['):
-            # may be json, try to decode it
-            try:
-                val = json.loads(s, strict=False)
-            except ValueError:
-                raise CRSError('CRS appears to be JSON but is not valid')
-
-            if not val:
-                raise CRSError("CRS is empty JSON")
-            else:
-                return cls.from_dict(**val)
-
-        elif '+' in s and '=' in s:
-            return cls.from_proj4(s)
-
-        else:
-            return cls.from_wkt(s, morph_from_esri_dialect=morph_from_esri_dialect)
-
-    @classmethod
-    def from_proj4(cls, proj):
+    @staticmethod
+    def from_proj4(proj):
         """Make a CRS from a PROJ4 string
 
         Parameters
@@ -311,7 +156,132 @@ class _CRS(collections.Mapping):
         CRS
 
         """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
+        cdef _CRS obj = _CRS.__new__(_CRS)
+
+        # Filter out nonsensical items.
+        items_filtered = []
+        items = proj.split()
+        for item in items:
+            parts = item.split('=')
+            if len(parts) == 2 and parts[1] in ('false', 'False'):
+                continue
+            items_filtered.append(item)
+
+        proj = ' '.join(items_filtered)
+        proj_b = proj.encode('utf-8')
+
+        try:
+            exc_wrap_ogrerr(OSRImportFromProj4(obj._osr, <const char *>proj_b))
+
+        except CPLE_BaseError as exc:
+            raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
+
+        else:
+            return obj
+
+    @staticmethod
+    def from_dict(initialdata=None, **kwargs):
+        """Make a CRS from a PROJ dict
+
+        Parameters
+        ----------
+        initialdata : mapping, optional
+            A dictionary or other mapping
+        kwargs : mapping, optional
+            Another mapping. Will be overlaid on the initialdata.
+
+        Returns
+        -------
+        CRS
+
+        """
+        data = dict(initialdata or {})
+        data.update(**kwargs)
+        data = {k: v for k, v in data.items() if k in all_proj_keys}
+
+        # always use lowercase 'epsg'.
+        if 'init' in data:
+            data['init'] = data['init'].replace('EPSG:', 'epsg:')
+
+        proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
+        b_proj = proj.encode('utf-8')
+
+        cdef _CRS obj = _CRS.__new__(_CRS)
+
+        try:
+            exc_wrap_ogrerr(OSRImportFromProj4(obj._osr, <const char *>b_proj))
+        except CPLE_BaseError as exc:
+            raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
+        else:
+            return obj
+
+    @staticmethod
+    def from_wkt(wkt, morph_from_esri_dialect=False):
+        """Make a CRS from a WKT string
+
+        Parameters
+        ----------
+        wkt : str
+            A WKT string.
+        morph_from_esri_dialect : bool, optional
+            If True, items in the input using Esri's dialect of WKT
+            will be replaced by OGC standard equivalents.
+
+        Returns
+        -------
+        CRS
+
+        """
+        cdef char *wkt_c = NULL
+
+        if not isinstance(wkt, string_types):
+            raise ValueError("A string is expected")
+
+        wkt_b= wkt.encode('utf-8')
+        wkt_c = wkt_b
+
+        cdef _CRS obj = _CRS.__new__(_CRS)
+
+        try:
+            errcode = exc_wrap_ogrerr(OSRImportFromWkt(obj._osr, &wkt_c))
+
+            if morph_from_esri_dialect:
+                exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
+
+        except CPLE_BaseError as exc:
+            raise CRSError("The WKT could not be parsed. {}".format(exc))
+
+        else:
+            return obj
+
+    def to_dict(self):
+        """Convert CRS to a PROJ4 dict
+
+        Returns
+        -------
+        dict
+
+        """
+        cdef OGRSpatialReferenceH osr = NULL
+        cdef char *proj_c = NULL
+
+        try:
+            osr = exc_wrap_pointer(OSRClone(self._osr))
+            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+            exc_wrap_ogrerr(OSRExportToProj4(osr, &proj_c))
+
+        except CPLE_BaseError as exc:
+            raise CRSError("The WKT could not be parsed. {}".format(exc))
+
+        else:
+            proj_b = proj_c
+            proj = proj_b.decode('utf-8')
+
+        finally:
+            CPLFree(proj_c)
+            _safe_osr_release(osr)
+
+        parts = [o.lstrip('+') for o in proj.strip().split()]
 
         def parse(v):
             if v in ('True', 'true'):
@@ -328,183 +298,11 @@ class _CRS(collections.Mapping):
                 except ValueError:
                     return v
 
-        b_proj = proj.encode('utf-8')
+        items = map(
+            lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
+            (p.split('=') for p in parts))
 
-        try:
-            exc_wrap_int(OSRImportFromProj4(osr, <const char *>b_proj))
-        except CPLE_BaseError as exc:
-            raise CRSError("The PROJ4 dict could not be understood. {}".format(str(exc)))
-        else:
-            parts = [o.lstrip('+') for o in proj.strip().split()]
-            items = map(lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True), (p.split('=') for p in parts))
-            obj = cls()
-            obj._data = {k: v for k, v in items if k in all_proj_keys}
-            return obj
-        finally:
-            _safe_osr_release(osr)
-
-    @classmethod
-    def from_dict(cls, initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
-
-        Parameters
-        ----------
-        initialdata : mapping, optional
-            A dictionary or other mapping
-        kwargs : mapping, optional
-            Another mapping. Will be overlaid on the initialdata.
-
-        Returns
-        -------
-        CRS
-
-        """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
-        data = dict(initialdata or {})
-        data.update(**kwargs)
-        data = {k: v for k, v in data.items() if k in all_proj_keys}
-
-        # always use lowercase 'epsg'.
-        if 'init' in data:
-            data['init'] = data['init'].replace('EPSG:', 'epsg:')
-
-        proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
-        b_proj = proj.encode('utf-8')
-
-        try:
-            exc_wrap_int(OSRImportFromProj4(osr, <const char *>b_proj))
-        except CPLE_BaseError as exc:
-            raise CRSError("The PROJ4 dict could not be understood. {}".format(str(exc)))
-        else:
-            obj = cls()
-            obj._data = data
-            return obj
-        finally:
-            _safe_osr_release(osr)
-
-    @classmethod
-    def from_wkt(cls, wkt, morph_from_esri_dialect=False):
-        """Make a CRS from a WKT string
-
-        Parameters
-        ----------
-        wkt : str
-            A WKT string.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
-
-        Returns
-        -------
-        CRS
-
-        """
-        cdef char *conv_wkt = NULL
-        cdef OGRSpatialReferenceH osr = NULL
-
-        if isinstance(wkt, string_types):
-            b_wkt = wkt.encode('utf-8')
-        else:
-            raise ValueError("A string is expected")
-
-        try:
-            osr = OSRNewSpatialReference(b_wkt)
-
-            if osr == NULL:
-                raise CRSError("The WKT could not be parsed.")
-
-            if morph_from_esri_dialect:
-                exc_wrap_int(OSRMorphFromESRI(osr))
-
-            exc_wrap_int(OSRExportToWkt(osr, &conv_wkt))
-        except CPLE_BaseError as exc:
-            raise CRSError("The WKT could not be parsed. {}".format(str(exc)))
-        else:
-            obj = cls()
-            obj._wkt = conv_wkt.decode('utf-8')
-            return obj
-        finally:
-            CPLFree(conv_wkt)
-            _safe_osr_release(osr)
-
-    @classmethod
-    def from_user_input(cls, value, morph_from_esri_dialect=False):
-        """Make a CRS from various input
-
-        Dispatches to from_epsg, from_proj, or from_string
-
-        Parameters
-        ----------
-        value : obj
-            A Python int, dict, or str.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
-
-        Returns
-        -------
-        CRS
-
-        """
-        if isinstance(value, _CRS):
-            return value
-        elif isinstance(value, int):
-            return cls.from_epsg(value)
-        elif isinstance(value, dict):
-            return cls(**value)
-        elif isinstance(value, string_types):
-            return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
-        else:
-            raise CRSError("CRS is invalid: {!r}".format(value))
-
-    def to_dict(self):
-        """Convert CRS to a PROJ4 dict
-
-        Returns
-        -------
-        dict
-
-        """
-        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-        cdef char *prj = NULL
-
-        if self._data:
-            return dict(self._data)
-        else:
-            b_wkt = self._wkt.encode('utf-8')
-            try:
-                exc_wrap_int(OSRSetFromUserInput(osr, <const char *>b_wkt))
-                exc_wrap_int(OSRMorphFromESRI(osr))
-                exc_wrap_int(OSRExportToProj4(osr, &prj))
-                proj_str = prj.decode('utf-8')
-                parts = [o.lstrip('+') for o in proj_str.strip().split()]
-
-                def parse(v):
-                    if v in ('True', 'true'):
-                        return True
-                    elif v in ('False', 'false'):
-                        return False
-                    else:
-                        try:
-                            return int(v)
-                        except ValueError:
-                            pass
-                        try:
-                            return float(v)
-                        except ValueError:
-                            return v
-
-                items = map(
-                    lambda kv: len(kv) == 2 and (kv[0], parse(kv[1])) or (kv[0], True),
-                    (p.split('=') for p in parts))
-
-                return {k: v for k, v in items if k in all_proj_keys}
-            except CPLE_BaseError as exc:
-                raise CRSError("The WKT could not be parsed. {}".format(str(exc)))
-            finally:
-                CPLFree(prj)
-                _safe_osr_release(osr)
+        return {k: v for k, v in items if k in all_proj_keys and v is not False}
 
 # Below is the big list of PROJ4 parameters from
 # http://trac.osgeo.org/proj/wiki/GenParms.
