@@ -320,8 +320,6 @@ class CRS(collections.Mapping):
         """
         obj = cls()
         obj._crs = _CRS.from_proj4(proj)
-        #if not obj._crs.to_dict():
-        #    raise CRSError("Could not parse PROJ4 string")
         return obj
 
     @classmethod
@@ -342,8 +340,6 @@ class CRS(collections.Mapping):
         """
         obj = cls()
         obj._crs = _CRS.from_dict(initialdata, **kwargs)
-        #if not obj._crs.to_dict():
-        #    raise CRSError("Could not parse PROJ dict")
         return obj
 
     @classmethod
@@ -365,8 +361,6 @@ class CRS(collections.Mapping):
         """
         obj = cls()
         obj._crs = _CRS.from_wkt(wkt, morph_from_esri_dialect=morph_from_esri_dialect)
-        #if not obj._crs.to_wkt():
-        #    raise CRSError("Could not parse WKT string")
         return obj
 
     @classmethod
