@@ -18,7 +18,7 @@ from rasterio.compat import string_types
 from rasterio.errors import CRSError
 
 
-class CRS(collections.Mapping):
+class CRS(_CRS, collections.Mapping):
     """A geographic or projected coordinate reference system
 
     CRS objects may be created by passing PROJ parameters as keyword
@@ -42,14 +42,17 @@ class CRS(collections.Mapping):
     >>> crs = CRS.from_string('EPSG:3005')
 
     """
-    def __init__(self, initialdata=None, **kwargs):
+    def __init__(self, initialdata=None, morph_from_esri_dialect=False, **kwargs):
         """Make a CRS from a PROJ dict or mapping
 
         Parameters
         ----------
-        initialdata : mapping, optional
-            A dictionary or other mapping
-        kwargs : mapping, optional
+        initialdata : projection string or mapping, optional
+            A projection string (WKT, PROJ.4), a dictionary or other mapping
+        morph_from_esri_dialect : bool, optional
+            If True, items in the input using Esri's dialect of WKT
+            will be replaced by OGC standard equivalents.
+       kwargs : mapping, optional
             Another mapping. Will be overlaid on the initialdata.
 
         Returns
@@ -59,9 +62,11 @@ class CRS(collections.Mapping):
         """
         self._wkt = None
         self._data = None
-        self._crs = None
 
-        if initialdata or kwargs:
+        proj = ""
+        if isinstance(initialdata, string_types):
+            proj = initialdata
+        elif initialdata or kwargs:
 
             data = dict(initialdata or {})
             data.update(**kwargs)
@@ -72,10 +77,8 @@ class CRS(collections.Mapping):
                 data['init'] = data['init'].replace('EPSG:', 'epsg:')
 
             proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
-            self._crs = _CRS.from_proj4(proj)
 
-        else:
-            self._crs = _CRS()
+        super(CRS, self).__init__(proj, morph_from_esri_dialect=morph_from_esri_dialect)
 
     def __getitem__(self, item):
         return self.data[item]
@@ -93,7 +96,7 @@ class CRS(collections.Mapping):
 
     def __eq__(self, other):
         other = CRS.from_user_input(other)
-        return (self._crs == other._crs)
+        return super(CRS, self).__eq__(other)
 
     def to_proj4(self):
         """Convert CRS to a PROJ4 string
@@ -104,21 +107,6 @@ class CRS(collections.Mapping):
 
         """
         return ' '.join(['+{}={}'.format(key, val) for key, val in self.data.items()])
-
-    def to_wkt(self, morph_to_esri_dialect=False):
-        """Convert CRS to its OGC WKT representation
-
-        Parameters
-        ----------
-        morph_to_esri_dialect : bool, optional
-            Whether or not to morph to the Esri dialect of WKT
-
-        Returns
-        -------
-        str
-
-        """
-        return self._crs.to_wkt(morph_to_esri_dialect=morph_to_esri_dialect)
 
     @property
     def wkt(self):
@@ -133,64 +121,12 @@ class CRS(collections.Mapping):
             self._wkt = self.to_wkt()
         return self._wkt
 
-    def to_epsg(self):
-        """The epsg code of the CRS
-
-        Returns None if there is no corresponding EPSG code.
-
-        Returns
-        -------
-        int
-
-        """
-        return self._crs.to_epsg()
-
-    def to_dict(self):
-        """Convert CRS to a PROJ4 dict
-
-        Notes
-        -----
-        If there is a corresponding EPSG code, it will be used.
-
-        Returns
-        -------
-        dict
-
-        """
-        epsg_code = self.to_epsg()
-        if epsg_code:
-            return {'init': 'epsg:{}'.format(epsg_code)}
-        else:
-            return self._crs.to_dict()
-
     @property
     def data(self):
         """A PROJ4 dict representation of the CRS"""
         if not self._data:
             self._data = self.to_dict()
         return self._data
-
-    @property
-    def is_geographic(self):
-        """Test that the CRS is a geographic CRS
-
-        Returns
-        -------
-        bool
-
-        """
-        return self._crs.is_geographic
-
-    @property
-    def is_projected(self):
-        """Test that the CRS is a projected CRS
-
-        Returns
-        -------
-        bool
-
-        """
-        return self._crs.is_projected
 
     @property
     def is_valid(self):
@@ -254,28 +190,6 @@ class CRS(collections.Mapping):
             return "CRS.from_wkt('{}')".format(self.wkt)
 
     @classmethod
-    def from_epsg(cls, code):
-        """Make a CRS from an EPSG code
-
-        Parameters
-        ----------
-        code : int or str
-            An EPSG code. Strings will be converted to integers.
-
-        Notes
-        -----
-        The input code is not validated against an EPSG database.
-
-        Returns
-        -------
-        CRS
-
-        """
-        obj = cls()
-        obj._crs = _CRS.from_epsg(code)
-        return obj
-
-    @classmethod
     def from_string(cls, string, morph_from_esri_dialect=False):
         """Make a CRS from an EPSG, PROJ, or WKT string
 
@@ -318,65 +232,6 @@ class CRS(collections.Mapping):
 
         else:
             return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
-
-    @classmethod
-    def from_proj4(cls, proj):
-        """Make a CRS from a PROJ4 string
-
-        Parameters
-        ----------
-        proj : str
-            A PROJ4 string like "+proj=longlat ..."
-
-        Returns
-        -------
-        CRS
-
-        """
-        obj = cls()
-        obj._crs = _CRS.from_proj4(proj)
-        return obj
-
-    @classmethod
-    def from_dict(cls, initialdata=None, **kwargs):
-        """Make a CRS from a PROJ dict
-
-        Parameters
-        ----------
-        initialdata : mapping, optional
-            A dictionary or other mapping
-        kwargs : mapping, optional
-            Another mapping. Will be overlaid on the initialdata.
-
-        Returns
-        -------
-        CRS
-
-        """
-        obj = cls()
-        obj._crs = _CRS.from_dict(initialdata, **kwargs)
-        return obj
-
-    @classmethod
-    def from_wkt(cls, wkt, morph_from_esri_dialect=False):
-        """Make a CRS from a WKT string
-
-        Parameters
-        ----------
-        wkt : str
-            A WKT string.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
-
-        Returns
-        -------
-        CRS
-
-        """
-        obj = cls()
-        obj._crs = _CRS.from_wkt(wkt, morph_from_esri_dialect=morph_from_esri_dialect)
-        return obj
 
     @classmethod
     def from_user_input(cls, value, morph_from_esri_dialect=False):
