@@ -72,8 +72,8 @@ def test_read_epsg():
 
 def test_read_esri_wkt():
     with rasterio.open('tests/data/test_esri_wkt.tif') as src:
-        assert 'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",' in src.crs.wkt
-        assert 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",' in src.crs.wkt
+        assert 'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",' in src.crs.to_wkt()
+        assert 'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",' in src.crs.to_wkt()
         assert src.crs.to_dict() == {
             'datum': 'NAD83',
             'lat_0': 23,
@@ -323,14 +323,14 @@ def test_from_esri_wkt_no_fix(projection_string):
     """Test ESRI CRS morphing with no datum fixing"""
     with Env():
         crs = CRS.from_wkt(projection_string)
-        assert 'DATUM["D_North_American_1983"' in crs.wkt
+        assert 'DATUM["D_North_American_1983"' in crs.to_wkt()
 
 
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_fix_datum(projection_string):
     """Test ESRI CRS morphing with datum fixing"""
     with Env(GDAL_FIX_ESRI_WKT='DATUM'):
-        crs = CRS.from_wkt(projection_string, morph_from_esri_dialect=True)
+        crs = CRS.from_wkt(projection_string)
         assert 'DATUM["North_American_Datum_1983"' in crs.wkt
 
 

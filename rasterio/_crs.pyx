@@ -1,6 +1,5 @@
 """Coordinate reference systems, class and functions.
 """
-
 import logging
 
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
@@ -16,6 +15,25 @@ from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
 log = logging.getLogger(__name__)
 
 
+cdef class OSRCloneManager:
+    """
+    Manager class for cleaning up clones of OGRSpatialReferenceH
+    """
+    def __cinit__(self):
+        self.osr = NULL
+
+    def __dealloc__(self):
+        _safe_osr_release(self.osr)
+    
+    @staticmethod
+    cdef OSRCloneManager create(OGRSpatialReferenceH in_osr, int from_esri):
+        cdef OSRCloneManager ocm = OSRCloneManager()
+        ocm.osr = exc_wrap_pointer(OSRClone(in_osr))
+        if from_esri:
+            exc_wrap_ogrerr(OSRMorphFromESRI(ocm.osr))
+        return ocm
+
+
 cdef class _CRS(object):
     """Cython extension class"""
 
@@ -25,7 +43,7 @@ cdef class _CRS(object):
     def __dealloc__(self):
         _safe_osr_release(self._osr)
 
-    def __init__(self, crs_str, morph_from_esri_dialect=False):
+    def __init__(self, crs_str):
         if not crs_str:
             return
 
@@ -33,8 +51,6 @@ cdef class _CRS(object):
         cdef char *crs_c = crs_b
         try:
             exc_wrap_ogrerr(OSRSetFromUserInput(self._osr, crs_c))
-            if morph_from_esri_dialect:
-                exc_wrap_ogrerr(OSRMorphFromESRI(self._osr))
         except CPLE_BaseError as exc:
             raise CRSError("The projection string could not be understood. {}".format(exc))
 
@@ -67,26 +83,18 @@ cdef class _CRS(object):
             raise CRSError("{}".format(exc))
 
     def __eq__(self, other):
-        cdef OGRSpatialReferenceH osr_s = NULL
-        cdef OGRSpatialReferenceH osr_o = NULL
         cdef _CRS crs_o = other
+        cdef OSRCloneManager ocm_s = OSRCloneManager.create(self._osr, from_esri=True)
+        cdef OSRCloneManager ocm_o = OSRCloneManager.create(crs_o._osr, from_esri=True)
+        return bool(OSRIsSame(ocm_s.osr, ocm_o.osr) == 1)
 
-        try:
-            osr_s = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr_s))
-            osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr_o))
-            return bool(OSRIsSame(osr_s, osr_o) == 1)
-
-        finally:
-            _safe_osr_release(osr_s)
-            _safe_osr_release(osr_o)
-
-    def to_wkt(self, morph_to_esri_dialect=False):
+    def to_wkt(self, morph_from_esri_dialect=False, morph_to_esri_dialect=False):
         """An OGC WKT representation of the CRS
 
         Parameters
         ----------
+        morph_from_esri_dialect : bool, optional
+            Whether or not to morph from the Esri dialect of WKT
         morph_to_esri_dialect : bool, optional
             Whether or not to morph to the Esri dialect of WKT
 
@@ -96,19 +104,16 @@ cdef class _CRS(object):
 
         """
         cdef char *conv_wkt = NULL
+        cdef OSRCloneManager ocm = OSRCloneManager.create(self._osr, from_esri=morph_from_esri_dialect)
+        if morph_to_esri_dialect:
+            exc_wrap_ogrerr(OSRMorphToESRI(ocm.osr))
 
         try:
-            if morph_to_esri_dialect:
-                exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
-
-            exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
-
+            exc_wrap_ogrerr(OSRExportToWkt(ocm.osr, &conv_wkt))
         except CPLE_BaseError as exc:
             raise CRSError("Cannot convert to WKT. {}".format(exc))
-
         else:
             return conv_wkt.decode('utf-8')
-
         finally:
             CPLFree(conv_wkt)
 
@@ -120,18 +125,11 @@ cdef class _CRS(object):
         int
 
         """
-        cdef OGRSpatialReferenceH osr = NULL
-
-        try:
-            osr = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                epsg_code = OSRGetAuthorityCode(osr, NULL)
-                return int(epsg_code.decode('utf-8'))
-            else:
-                return None
-        finally:
-            _safe_osr_release(osr)
+        cdef OSRCloneManager ocm = OSRCloneManager.create(self._osr, from_esri=True)
+        if OSRAutoIdentifyEPSG(ocm.osr) == 0:
+            epsg_code = OSRGetAuthorityCode(ocm.osr, NULL)
+            return int(epsg_code.decode('utf-8'))
+        return None
 
     @classmethod
     def from_epsg(cls, code):
@@ -209,16 +207,13 @@ cdef class _CRS(object):
         return cls(proj)
 
     @classmethod
-    def from_wkt(cls, wkt, morph_from_esri_dialect=False):
+    def from_wkt(cls, wkt):
         """Make a CRS from a WKT string
 
         Parameters
         ----------
         wkt : str
             A WKT string.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
 
         Returns
         -------
@@ -228,7 +223,7 @@ cdef class _CRS(object):
         if not isinstance(wkt, string_types):
             raise ValueError("A string is expected")
 
-        return cls(wkt, morph_from_esri_dialect=morph_from_esri_dialect)
+        return cls(wkt)
 
     def to_dict(self):
         """Convert CRS to a PROJ4 dict
@@ -242,24 +237,17 @@ cdef class _CRS(object):
         if epsg_code:
             return {'init': 'epsg:{}'.format(epsg_code)}
 
-        cdef OGRSpatialReferenceH osr = NULL
+        cdef OSRCloneManager ocm = OSRCloneManager.create(self._osr, from_esri=True)
         cdef char *proj_c = NULL
-
         try:
-            osr = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
-            exc_wrap_ogrerr(OSRExportToProj4(osr, &proj_c))
-
+            exc_wrap_ogrerr(OSRExportToProj4(ocm.osr, &proj_c))
         except CPLE_BaseError as exc:
             raise CRSError("The WKT could not be parsed. {}".format(exc))
-
         else:
             proj_b = proj_c
             proj = proj_b.decode('utf-8')
-
         finally:
             CPLFree(proj_c)
-            _safe_osr_release(osr)
 
         parts = [o.lstrip('+') for o in proj.strip().split()]
 

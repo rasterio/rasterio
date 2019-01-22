@@ -42,17 +42,14 @@ class CRS(_CRS, collections.Mapping):
     >>> crs = CRS.from_string('EPSG:3005')
 
     """
-    def __init__(self, initialdata=None, morph_from_esri_dialect=False, **kwargs):
+    def __init__(self, initialdata=None, **kwargs):
         """Make a CRS from a PROJ dict or mapping
 
         Parameters
         ----------
         initialdata : projection string or mapping, optional
             A projection string (WKT, PROJ.4), a dictionary or other mapping
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
-       kwargs : mapping, optional
+        kwargs : mapping, optional
             Another mapping. Will be overlaid on the initialdata.
 
         Returns
@@ -78,7 +75,7 @@ class CRS(_CRS, collections.Mapping):
 
             proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
 
-        super(CRS, self).__init__(proj, morph_from_esri_dialect=morph_from_esri_dialect)
+        super(CRS, self).__init__(proj)
 
     def __getitem__(self, item):
         return self.data[item]
@@ -118,7 +115,7 @@ class CRS(_CRS, collections.Mapping):
 
         """
         if not self._wkt:
-            self._wkt = self.to_wkt()
+            self._wkt = self.to_wkt(morph_from_esri_dialect=True)
         return self._wkt
 
     @property
@@ -190,16 +187,13 @@ class CRS(_CRS, collections.Mapping):
             return "CRS.from_wkt('{}')".format(self.wkt)
 
     @classmethod
-    def from_string(cls, string, morph_from_esri_dialect=False):
+    def from_string(cls, string):
         """Make a CRS from an EPSG, PROJ, or WKT string
 
         Parameters
         ----------
         string : str
             An EPSG, PROJ, or WKT string.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
 
         Returns
         -------
@@ -226,15 +220,11 @@ class CRS(_CRS, collections.Mapping):
                 raise CRSError("CRS is empty JSON")
             else:
                 return cls.from_dict(**val)
-
-        elif '+' in string and '=' in string:
-            return cls.from_proj4(string)
-
         else:
-            return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
+            return cls(string)
 
     @classmethod
-    def from_user_input(cls, value, morph_from_esri_dialect=False):
+    def from_user_input(cls, value):
         """Make a CRS from various input
 
         Dispatches to from_epsg, from_proj, or from_string
@@ -243,9 +233,6 @@ class CRS(_CRS, collections.Mapping):
         ----------
         value : obj
             A Python int, dict, or str.
-        morph_from_esri_dialect : bool, optional
-            If True, items in the input using Esri's dialect of WKT
-            will be replaced by OGC standard equivalents.
 
         Returns
         -------
@@ -259,6 +246,6 @@ class CRS(_CRS, collections.Mapping):
         elif isinstance(value, dict):
             return cls(**value)
         elif isinstance(value, string_types):
-            return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
+            return cls.from_string(value)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
