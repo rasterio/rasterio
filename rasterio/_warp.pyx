@@ -14,7 +14,7 @@ import numpy as np
 import rasterio
 from rasterio._base import gdal_version
 from rasterio._err import (
-    CPLE_IllegalArgError, CPLE_NotSupportedError,
+    CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
@@ -539,9 +539,13 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     else:
         transform = None
 
-    osr = _osr_from_crs(dst_crs)
-    OSRExportToWkt(osr, &wkt)
-    _safe_osr_release(osr)
+    try:
+        osr = _osr_from_crs(dst_crs)
+        exc_wrap_int(OSRExportToWkt(osr, &wkt))
+    except CPLE_BaseError as exc:
+        raise CRSError("Could not convert to WKT. {}".format(str(exc)))
+    finally:
+        _safe_osr_release(osr)
 
     if isinstance(src_crs, str):
         src_crs = CRS.from_string(src_crs)

@@ -105,8 +105,8 @@ def test_transform_bounds():
 
 def test_gdal_transform_notnull():
     dt, dw, dh = _calculate_default_transform(
-        src_crs={'init': 'EPSG:4326'},
-        dst_crs={'init': 'EPSG:32610'},
+        src_crs={'init': 'epsg:4326'},
+        dst_crs={'init': 'epsg:32610'},
         width=80,
         height=80,
         left=-120,
@@ -119,7 +119,7 @@ def test_gdal_transform_notnull():
 def test_gdal_transform_fail_dst_crs():
     with pytest.raises(CRSError):
         _calculate_default_transform(
-            {'init': 'EPSG:4326'},
+            {'init': 'epsg:4326'},
             '+proj=foobar',
             width=80,
             height=80,
@@ -133,7 +133,7 @@ def test_gdal_transform_fail_src_crs():
     with pytest.raises(CRSError):
         _calculate_default_transform(
             '+proj=foobar',
-            {'init': 'EPSG:32610'},
+            {'init': 'epsg:32610'},
             width=80,
             height=80,
             left=-120,
@@ -148,7 +148,7 @@ def test_gdal_transform_fail_src_crs():
 def test_gdal_transform_fail_dst_crs_xfail():
     with pytest.raises(CRSError):
         dt, dw, dh = _calculate_default_transform(
-            {'init': 'EPSG:4326'},
+            {'init': 'epsg:4326'},
             {'proj': 'foobar'},
             width=80,
             height=80,

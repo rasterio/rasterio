@@ -115,7 +115,7 @@ def test_rasterize_src_crs(tmpdir, runner, basic_feature):
     assert result.exit_code == 0
     assert os.path.exists(output)
     with rasterio.open(output) as out:
-        assert out.crs['init'].lower() == 'epsg:3857'
+        assert out.crs.to_epsg() == 3857
 
 
 def test_rasterize_mismatched_src_crs(tmpdir, runner, basic_feature):
