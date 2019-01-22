@@ -60,7 +60,7 @@ def test_write_read_gcps(tmpdir):
 
     with rasterio.open(tiffname, 'r+') as dst:
         gcps, crs = dst.gcps
-        assert crs['init'] == 'epsg:4326'
+        assert crs.to_epsg() == 4326
         assert len(gcps) == 1
         point = gcps[0]
         assert (1, 1) == (point.row, point.col)
@@ -72,7 +72,7 @@ def test_write_read_gcps(tmpdir):
 
         gcps, crs = dst.gcps
 
-        assert crs['init'] == 'epsg:4326'
+        assert crs.to_epsg() == 4326
         assert len(gcps) == 2
         point = gcps[1]
         assert (2, 2) == (point.row, point.col)
@@ -100,7 +100,7 @@ def test_read_vrt_gcps(tmpdir):
 </VRTDataset>""")
     with rasterio.open(str(vrtfile)) as src:
         gcps, crs = src.gcps
-        assert crs['init'] == 'epsg:4326'
+        assert crs.to_epsg() == 4326
         assert len(gcps) == 2
         assert [(0.5, 0.5), (13.5, 23.5)] == [(p.col, p.row) for p in gcps]
         assert ['1', '2'] == [p.id for p in gcps]

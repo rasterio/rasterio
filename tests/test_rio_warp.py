@@ -36,7 +36,7 @@ def test_dst_crs_error_2(runner, tmpdir):
     result = runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', '{"proj": "foobar"}'])
     assert result.exit_code == 2
-    assert 'for dst_crs: Invalid' in result.output
+    assert 'Invalid value for dst_crs' in result.output
 
 
 def test_dst_crs_error_epsg(runner, tmpdir):
@@ -482,7 +482,7 @@ def test_warp_reproject_nolostdata(runner, tmpdir):
         arr = output.read()
         # 50 column swath on the right edge should have some ones (gdalwarped has 7223)
         assert arr[0, :, -50:].sum() > 7000
-        assert output.crs == {'init': 'epsg:3857'}
+        assert output.crs.to_epsg() == 3857
 
 
 def test_warp_dst_crs_empty_string(runner, tmpdir):

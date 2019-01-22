@@ -35,7 +35,7 @@ class ReaderContextTest(unittest.TestCase):
             self.assertEqual(s.dtypes, tuple([rasterio.ubyte] * 3))
             self.assertEqual(s.nodatavals, (0, 0, 0))
             self.assertEqual(s.indexes, (1, 2, 3))
-            self.assertEqual(s.crs['init'], 'epsg:32618')
+            self.assertEqual(s.crs.to_epsg(), 32618)
             self.assertTrue(s.crs.wkt.startswith('PROJCS'), s.crs.wkt)
             for i, v in enumerate((101985.0, 2611485.0, 339315.0, 2826915.0)):
                 self.assertAlmostEqual(s.bounds[i], v)
@@ -56,7 +56,7 @@ class ReaderContextTest(unittest.TestCase):
         self.assertEqual(s.shape, (718, 791))
         self.assertEqual(s.dtypes, tuple([rasterio.ubyte] * 3))
         self.assertEqual(s.nodatavals, (0, 0, 0))
-        self.assertEqual(s.crs['init'], 'epsg:32618')
+        self.assertEqual(s.crs.to_epsg(), 32618)
         self.assertEqual(
             s.transform,
             (300.0379266750948, 0.0, 101985.0,

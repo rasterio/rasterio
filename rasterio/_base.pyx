@@ -23,7 +23,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env
+from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
@@ -262,56 +262,19 @@ cdef class DatasetBase(object):
 
     def _handle_crswkt(self, wkt):
         """Return the GDAL dataset's stored CRS"""
-        cdef OGRSpatialReferenceH osr = NULL
-        cdef const char *auth_key = NULL
-        cdef const char *auth_val = NULL
-
-        if not wkt:
-            log.debug("No projection detected.")
-            return None
-
-        wkt_b = wkt.encode('utf-8')
-        cdef const char *wkt_c = wkt_b
-
-        try:
-
-            osr = exc_wrap_pointer(OSRNewSpatialReference(wkt_c))
-            log.debug("Got coordinate system")
-
-            retval = OSRAutoIdentifyEPSG(osr)
-
-            if retval > 0:
-                log.debug("Failed to auto identify EPSG: %d", retval)
-
-            else:
-                log.debug("Auto identified EPSG: %d", retval)
-
-                try:
-                    auth_key = OSRGetAuthorityName(osr, NULL)
-                    auth_val = OSRGetAuthorityCode(osr, NULL)
-
-                except CPLE_NotSupportedError as exc:
-                    log.debug("{}".format(exc))
-
-                if auth_key != NULL and auth_val != NULL:
-                    return CRS({'init': u'{}:{}'.format(auth_key.lower(), auth_val)})
-
+        # No dialect morphing, if the dataset was created using software
+        # "speaking" the Esri dialect, we will read Esri WKT.
+        if wkt:
             return CRS.from_wkt(wkt)
-
-        except CPLE_BaseError as exc:
-            raise CRSError("{}".format(exc))
-
-        finally:
-             _safe_osr_release(osr)
+        else:
+            return CRS()
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
-        cdef const char *wkt_b = NULL
-
-        wkt_b = GDALGetProjectionRef(self._hds)
-        if wkt_b == NULL:
-            raise ValueError("Unexpected NULL spatial reference")
+        cdef const char *wkt_b = GDALGetProjectionRef(self.handle())
         wkt = wkt_b
+        if wkt == NULL:
+            raise ValueError("Unexpected NULL spatial reference")
         return self._handle_crswkt(wkt)
 
     def read_transform(self):
@@ -333,20 +296,19 @@ cdef class DatasetBase(object):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
 
     def close(self):
         self.stop()
         self._closed = True
-        log.debug("Dataset %r has been closed.", self)
 
     def __enter__(self):
-        log.debug("Entering Dataset %r context.", self)
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
         return self
 
     def __exit__(self, type, value, traceback):
+        self._env.__exit__()
         self.close()
-        log.debug("Exited Dataset %r context.", self)
 
     def __dealloc__(self):
         if self._hds != NULL:
@@ -1329,6 +1291,7 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
         if retval:
             _safe_osr_release(osr)
             raise CRSError("Invalid CRS: {!r}".format(crs))
+        exc_wrap_int(OSRMorphFromESRI(osr))
     except CPLE_BaseError as exc:
         _safe_osr_release(osr)
         raise CRSError(str(exc))

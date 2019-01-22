@@ -77,8 +77,8 @@ def default_reproject_params():
         top=70,
         width=80,
         height=80,
-        src_crs={"init": "EPSG:4326"},
-        dst_crs={"init": "EPSG:2163"},
+        src_crs={"init": "epsg:4326"},
+        dst_crs={"init": "epsg:2163"},
     )
 
 
@@ -90,12 +90,12 @@ def uninvertable_reproject_params():
         top=70,
         width=80,
         height=80,
-        src_crs={"init": "EPSG:4326"},
-        dst_crs={"init": "EPSG:26836"},
+        src_crs={"init": "epsg:4326"},
+        dst_crs={"init": "epsg:26836"},
     )
 
 
-WGS84_crs = {"init": "EPSG:4326"}
+WGS84_crs = {"init": "epsg:4326"}
 
 
 def test_transform_src_crs_none():
@@ -152,14 +152,14 @@ def test_reproject_dst_crs_none():
 
 def test_transform():
     """2D and 3D."""
-    WGS84_crs = {"init": "EPSG:4326"}
+    WGS84_crs = {"init": "epsg:4326"}
     WGS84_points = ([12.492269], [41.890169], [48.])
-    ECEF_crs = {"init": "EPSG:4978"}
+    ECEF_crs = {"init": "epsg:4978"}
     ECEF_points = ([4642610.], [1028584.], [4236562.])
     ECEF_result = transform(WGS84_crs, ECEF_crs, *WGS84_points)
     assert np.allclose(np.array(ECEF_result), np.array(ECEF_points))
 
-    UTM33_crs = {"init": "EPSG:32633"}
+    UTM33_crs = {"init": "epsg:32633"}
     UTM33_points = ([291952], [4640623])
     UTM33_result = transform(WGS84_crs, UTM33_crs, *WGS84_points[:2])
     assert np.allclose(np.array(UTM33_result), np.array(UTM33_points))
@@ -169,7 +169,7 @@ def test_transform_bounds():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         l, b, r, t = src.bounds
         assert np.allclose(
-            transform_bounds(src.crs, {"init": "EPSG:4326"}, l, b, r, t),
+            transform_bounds(src.crs, {"init": "epsg:4326"}, l, b, r, t),
             (
                 -78.95864996545055,
                 23.564991210854686,
@@ -202,7 +202,7 @@ def test_transform_bounds__esri_wkt():
         'PARAMETER["Vertical_Shift",0.0],'
         'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
     assert np.allclose(
-        transform_bounds({"init": "EPSG:4326"},
+        transform_bounds({"init": "epsg:4326"},
                          dst_projection_string,
                          left,
                          bottom,
@@ -219,8 +219,8 @@ def test_transform_bounds__esri_wkt():
 def test_transform_bounds_densify():
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
-    src_crs = {"init": "EPSG:4326"}
-    dst_crs = {"init": "EPSG:2163"}
+    src_crs = {"init": "epsg:4326"}
+    dst_crs = {"init": "epsg:2163"}
     assert np.allclose(
         transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=0),
         (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559),
@@ -242,8 +242,8 @@ def test_transform_bounds_no_change():
 def test_transform_bounds_densify_out_of_bounds():
     with pytest.raises(ValueError):
         transform_bounds(
-            {"init": "EPSG:4326"},
-            {"init": "EPSG:32610"},
+            {"init": "epsg:4326"},
+            {"init": "epsg:32610"},
             -120,
             40,
             -80,
@@ -263,7 +263,7 @@ def test_calculate_default_transform():
     )
 
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        wgs84_crs = {"init": "EPSG:4326"}
+        wgs84_crs = {"init": "epsg:4326"}
         dst_transform, width, height = calculate_default_transform(
             src.crs, wgs84_crs, src.width, src.height, *src.bounds
         )
@@ -286,7 +286,7 @@ def test_calculate_default_transform_single_resolution():
         )
         dst_transform, width, height = calculate_default_transform(
             src.crs,
-            {"init": "EPSG:4326"},
+            {"init": "epsg:4326"},
             src.width,
             src.height,
             *src.bounds,
@@ -312,7 +312,7 @@ def test_calculate_default_transform_multiple_resolutions():
 
         dst_transform, width, height = calculate_default_transform(
             src.crs,
-            {"init": "EPSG:4326"},
+            {"init": "epsg:4326"},
             src.width,
             src.height,
             *src.bounds,
@@ -338,7 +338,7 @@ def test_calculate_default_transform_dimensions():
 
         dst_transform, width, height = calculate_default_transform(
             src.crs,
-            {"init": "EPSG:4326"},
+            {"init": "epsg:4326"},
             src.width,
             src.height,
             *src.bounds,
@@ -429,7 +429,7 @@ def test_reproject_epsg():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:3857"}
+    dst_crs = {"init": "epsg:3857"}
     out = np.empty(src.shape, dtype=np.uint8)
     reproject(
         source,
@@ -451,7 +451,7 @@ def test_reproject_out_of_bounds():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.zeros(src.shape, dtype=np.uint8)
     reproject(
         source,
@@ -972,7 +972,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         src_transform=src.transform,
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
-        dst_crs={"init": "EPSG:3857"},
+        dst_crs={"init": "epsg:3857"},
         resampling=method,
     )
 
@@ -1009,7 +1009,7 @@ def test_reproject_resampling_alpha(method):
         src_transform=src.transform,
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
-        dst_crs={"init": "EPSG:3857"},
+        dst_crs={"init": "epsg:3857"},
         resampling=method,
     )
 
@@ -1025,7 +1025,7 @@ def test_reproject_not_yet_supported_resampling(method):
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(GDALVersionError):
         reproject(
@@ -1044,7 +1044,7 @@ def test_reproject_unsupported_resampling():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(ValueError):
         reproject(
@@ -1063,7 +1063,7 @@ def test_reproject_unsupported_resampling_guass():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(ValueError):
         reproject(
@@ -1087,7 +1087,7 @@ def test_resample_default_invert_proj(method):
         source = src.read(1)
         profile = src.profile.copy()
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
 
     # Calculate the ideal dimensions and transformation in the new crs
     dst_affine, dst_width, dst_height = calculate_default_transform(
@@ -1175,7 +1175,7 @@ def test_resample_no_invert_proj(method):
             source = src.read(1)
             profile = src.profile.copy()
 
-        dst_crs = {"init": "EPSG:32619"}
+        dst_crs = {"init": "epsg:32619"}
 
         # Calculate the ideal dimensions and transformation in the new crs
         dst_affine, dst_width, dst_height = calculate_default_transform(
@@ -1349,7 +1349,7 @@ def test_reproject_dst_nodata():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:3857"}
+    dst_crs = {"init": "epsg:3857"}
     out = np.empty(src.shape, dtype=np.float32)
     reproject(
         source,
@@ -1371,7 +1371,7 @@ def test_reproject_dst_nodata():
 def test_issue1401():
     """The warp_mem_limit keyword argument is in effect"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        dst_crs = {"init": "EPSG:3857"}
+        dst_crs = {"init": "epsg:3857"}
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
             rasterio.band(src, 2),
@@ -1400,7 +1400,7 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
             src_transform=src.transform,
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
-            dst_crs={"init": "EPSG:3857"},
+            dst_crs={"init": "epsg:3857"},
             dst_alpha=4,
         )
 
@@ -1418,7 +1418,7 @@ def test_issue1350():
     """Warp bands other than 1 or All"""
 
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        dst_crs = {"init": "EPSG:3857"}
+        dst_crs = {"init": "epsg:3857"}
 
         reprojected = []
 
@@ -1452,7 +1452,7 @@ def test_issue_1446():
 
 def test_issue_1446_b():
     """Confirm that lines aren't thrown as reported in #1446"""
-    src_crs = CRS({"init": "EPSG:4326"})
+    src_crs = CRS({"init": "epsg:4326"})
     dst_crs = CRS(
         {
             "proj": "sinu",
@@ -1480,7 +1480,7 @@ def test_issue_1076():
     fill_value = 42
     newarr = np.full((200, 300), fill_value=fill_value, dtype='int32')
 
-    src_crs = {'init': 'EPSG:32632'}
+    src_crs = {'init': 'epsg:32632'}
     src_transform = Affine(600.0, 0.0, 399960.0, 0.0, -600.0, 6100020.0)
     dst_transform = Affine(60.0, 0.0, 399960.0, 0.0, -60.0, 6100020.0)
 

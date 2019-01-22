@@ -6,6 +6,7 @@ import rasterio
 from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
+from rasterio.env import env_ctx_if_needed
 from rasterio.path import parse_path, vsi_path
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
@@ -56,10 +57,13 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
             self.closed and 'closed' or 'open', self.name, self.mode)
 
     def __enter__(self):
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
         self.start()
         return self
 
     def __exit__(self, *args, **kwargs):
+        self._env.__exit__()
         self.close()
 
     def __del__(self):

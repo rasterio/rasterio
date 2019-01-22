@@ -11,7 +11,7 @@ from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
     MemoryFileBase)
 from rasterio.windows import WindowMethodsMixin
-from rasterio.env import ensure_env
+from rasterio.env import ensure_env, env_ctx_if_needed
 from rasterio.transform import TransformMethodsMixin
 from rasterio.path import UnparsedPath
 
@@ -136,9 +136,12 @@ class MemoryFile(MemoryFileBase):
                           nodata=nodata, **kwargs)
 
     def __enter__(self):
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
         return self
 
     def __exit__(self, *args, **kwargs):
+        self._env.__exit__()
         self.close()
 
 
