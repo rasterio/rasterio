@@ -1,11 +1,15 @@
 Changes
 =======
 
-Next
-----
+1.0.14 (2019-01-22)
+-------------------
 
-- The _CRS class has been refactored so that a WKT representation, rather than PROJ4 representation, is the canonical form.
-
+- The _CRS class has been refactored so that a WKT representation, rather than
+  PROJ4 representation, is the canonical form. This resolves issues #1397 and
+  #1587 specifically, and an entire category of issues discussed in
+  https://rasterio.groups.io/g/dev/message/68.
+- Native support for Google Cloud Storage using "gs://" URLs has been added
+  (#1577).
 - On entering a dataset context (DatasetBase.__enter__) a new anonymous GDAL
   environment is created if needed and is entered. This makes `with
   rasterio.open(...) as dataset:` roughly equivalent to `with

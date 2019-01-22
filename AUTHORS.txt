@@ -68,3 +68,4 @@ Authors
 * Vincent Schut
 * Alan D.
 * grovduck
+* Dan Little

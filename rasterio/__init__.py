@@ -42,7 +42,7 @@ import rasterio.path
 
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.0.13"
+__version__ = "1.0.14"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
