@@ -4,4 +4,3 @@ channels:
 dependencies:
 - python=3.6.6
 - libgdal=2.3.2
-- numpy=1.15.4
