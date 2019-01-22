@@ -144,24 +144,11 @@ def test_from_epsg_string():
 
 def test_from_string():
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-    assert wgs84_crs.to_dict() == {'no_defs': True, 'ellps': 'WGS84', 'datum': 'WGS84', 'proj': 'longlat'}
+    assert wgs84_crs.to_dict() == {'init': 'epsg:4326'}
 
     # Make sure this doesn't get handled using the from_epsg() even though 'epsg' is in the string
     epsg_init_crs = CRS.from_string('+units=m +init=epsg:26911 +no_defs=True')
-    assert epsg_init_crs.to_dict() == {'units': 'm', 'init': 'epsg:26911', 'no_defs': True}
-
-
-def test_bare_parameters():
-    """ Make sure that bare parameters (e.g., no_defs) are handled properly,
-    even if they come in with key=True.  This covers interaction with pyproj,
-    which makes presents bare parameters as key=<bool>."""
-
-    # Example produced by pyproj
-    crs_dict = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    assert crs_dict.get('no_defs', False) is True
-
-    crs_dict = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=False +proj=lcc +x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
-    assert crs_dict.get('no_defs', True) is False
+    assert epsg_init_crs.to_dict() == {'init': 'epsg:26911'}
 
 
 @pytest.mark.parametrize('proj,expected', [({'init': 'epsg:4326'}, True), ({'init': 'epsg:3857'}, False)])
@@ -218,7 +205,7 @@ def test_null_and_valid_crs_equality():
 
 
 def test_to_string():
-    assert CRS({'init': 'epsg:4326'}).to_string() == "+init=epsg:4326"
+    assert CRS({'init': 'epsg:4326'}).to_string() == "EPSG:4326"
 
 
 def test_is_valid_false():
@@ -265,7 +252,7 @@ def test_has_wkt_property():
 
 
 def test_repr():
-    assert repr(CRS({'init': 'epsg:4326'})).startswith("CRS({'init'")
+    assert repr(CRS({'init': 'epsg:4326'})).startswith("CRS.from_dict(init")
 
 
 def test_dunder_str():
@@ -274,10 +261,6 @@ def test_dunder_str():
 
 def test_epsg_code_true():
     assert CRS({'init': 'epsg:4326'}).is_epsg_code
-
-
-def test_epsg_code_false():
-    assert not CRS({'proj': 'latlon'}).is_epsg_code
 
 
 def test_epsg():
@@ -376,17 +359,15 @@ def test_environ_patch(gdalenv, monkeypatch):
 
 
 def test_exception():
-    """Get the exception message we expect"""
-    with Env(), pytest.raises(CRSError) as exc_info:
+    """Get the exception we expect"""
+    with pytest.raises(CRSError):
         CRS.from_wkt("bogus")
-    assert str(exc_info.value).startswith("The WKT could not be parsed")
 
 
 def test_exception_proj4():
     """Get the exception message we expect"""
-    with Env(), pytest.raises(CRSError) as exc_info:
-        print(CRS.from_proj4("+proj=bogus").to_wkt())
-    assert str(exc_info.value).startswith("Could not convert to WKT")
+    with pytest.raises(CRSError):
+        CRS.from_proj4("+proj=bogus")
 
 
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
