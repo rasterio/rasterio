@@ -92,8 +92,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
         if gcps:
             info['gcps'] = {'points': [p.asdict() for p in gcps]}
-            if crs:
-                epsg = crs.to_epsg()
+            if gcps_crs:
+                epsg = gcps_crs.to_epsg()
                 if epsg:
                     info['gcps']['crs'] = 'EPSG:{}'.format(epsg)
                 else:
