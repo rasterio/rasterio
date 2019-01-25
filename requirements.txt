@@ -4,6 +4,6 @@ boto3>=1.2.4
 click==7.0
 cligj>=0.5
 enum34; python_version<'3.4'
-numpy~=1.15
+numpy>=1.10
 snuggs>=1.4.1
 setuptools>=0.9.8

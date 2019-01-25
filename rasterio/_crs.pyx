@@ -114,7 +114,10 @@ cdef class _CRS(object):
             exc_wrap_ogrerr(OSRMorphFromESRI(osr))
             if OSRAutoIdentifyEPSG(osr) == 0:
                 epsg_code = OSRGetAuthorityCode(osr, NULL)
-                return int(epsg_code.decode('utf-8'))
+                if epsg_code != NULL:
+                    return int(epsg_code.decode('utf-8'))
+                else:
+                    return None
             else:
                 return None
         finally:
