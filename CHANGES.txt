@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.0.15 (2019-01-27)
+-------------------
+
+- Google cloud storage support was *not* in fact added in 1.0.14, but is
+  present in 1.0.15.
+
 1.0.14 (2019-01-22)
 -------------------
 
