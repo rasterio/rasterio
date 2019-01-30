@@ -1956,8 +1956,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self.write_transform(self._transform)
             if self._crs:
                 self._set_crs(self._crs)
-            if self._gcps:
-                self._set_gcps(self._gcps, self._crs)
+            if self._init_gcps:
+                self._set_gcps(self._init_gcps, self._crs)
 
         elif self.mode == 'r+':
             try:
