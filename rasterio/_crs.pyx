@@ -414,6 +414,7 @@ _param_data = """
 +vopt
 +W
 +westo
++wktext
 +x_0       False easting
 +y_0       False northing
 +zone      UTM zone

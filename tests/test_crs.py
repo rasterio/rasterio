@@ -385,3 +385,33 @@ def test_implicit_proj_dict(projection_string):
 def test_capitalized_epsg_init():
     """Ensure that old behavior is preserved"""
     assert CRS(init='EPSG:4326').to_epsg() == 4326
+
+
+def test_issue1609_wktext_a():
+    """Check on fix of issue 1609"""
+    src_proj = {'ellps': 'WGS84',
+            'proj': 'stere',
+            'lat_0': -90.0,
+            'lon_0': 0.0,
+            'x_0': 0.0,
+            'y_0': 0.0,
+            'lat_ts': -70,
+            'no_defs': True}
+    wkt = CRS(src_proj).wkt
+    assert 'PROJECTION["Polar_Stereographic"]' in wkt
+    assert 'PARAMETER["latitude_of_origin",-70]' in wkt
+
+
+def test_issue1609_wktext_b():
+    """Check on fix of issue 1609"""
+    dst_proj = {'ellps': 'WGS84',
+               'h': 9000000.0,
+               'lat_0': -78.0,
+               'lon_0': 0.0,
+               'proj': 'nsper',
+               'units': 'm',
+               'x_0': 0,
+               'y_0': 0,
+               'wktext': True}
+    wkt = CRS(dst_proj).wkt
+    assert 'EXTENSION["PROJ4","+ellps=WGS84 +h=9000000.0 +lat_0=-78.0 +lon_0=0.0 +proj=nsper +units=m +x_0=0 +y_0=0 +wktext"]]' in wkt

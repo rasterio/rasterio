@@ -8,6 +8,8 @@ Next (?)
   instances (#1600) has been fixed (#1610).
 - A previously unreported bug preventing BufferedDatasetWriters from being
   opened in r+ mode has been fixed.
+- A regression in creating CRS objects from PROJ4 strings that include
+  "+wktext" (#1609) has been fixed.
 
 1.0.15 (2019-01-27)
 -------------------

@@ -71,7 +71,17 @@ class CRS(collections.Mapping):
             if 'init' in data:
                 data['init'] = data['init'].replace('EPSG:', 'epsg:')
 
-            proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
+            proj_parts = []
+
+            for key, val in data.items():
+                if val is False or None:
+                    continue
+                elif val is True:
+                    proj_parts.append('+{}'.format(key))
+                else:
+                    proj_parts.append('+{}={}'.format(key, val))
+
+            proj = ' '.join(proj_parts)
             self._crs = _CRS.from_proj4(proj)
 
         else:
