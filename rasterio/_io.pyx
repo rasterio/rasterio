@@ -1960,6 +1960,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self._set_gcps(self._init_gcps, self._crs)
 
         elif self.mode == 'r+':
+            fname = name_b
             try:
                 temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
             except Exception as exc:
@@ -1969,7 +1970,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 GDALCreateCopy(memdrv, "temp", temp, 1, NULL, NULL, NULL))
 
             drv = GDALGetDatasetDriver(temp)
-            self.driver = get_driver_name(drv)
+            self.driver = get_driver_name(drv).decode('utf-8')
             GDALClose(temp)
 
         # Instead of calling _begin() we do the following.

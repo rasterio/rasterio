@@ -1,6 +1,14 @@
 Changes
 =======
 
+Next (?)
+--------
+
+- A bug preventing GCPs from being created with new BufferedDatasetWriter
+  instances (#1600) has been fixed (#1610).
+- A previously unreported bug preventing BufferedDatasetWriters from being
+  opened in r+ mode has been fixed.
+
 1.0.15 (2019-01-27)
 -------------------
 
