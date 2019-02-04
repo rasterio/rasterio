@@ -334,3 +334,22 @@ cdef class GDALEnv(ConfigEnv):
             result[key] = val
 
         return result
+
+
+# Patch the environment if needed, such as in the installed wheel case.
+
+if 'GDAL_DATA' not in os.environ:
+
+    path = GDALDataFinder().search()
+
+    if path:
+        os.environ['GDAL_DATA'] = path
+        log.debug("GDAL_DATA not found in environment, set to %r.", path)
+
+if 'PROJ_LIB' not in os.environ:
+
+    path = PROJDataFinder().search()
+
+    if path:
+        os.environ['PROJ_LIB'] = path
+        log.debug("PROJ data not found in environment, set to %r.", path)

@@ -3,10 +3,10 @@
 
 import logging
 
+import rasterio._env
 from rasterio._err import CPLE_BaseError, CPLE_NotSupportedError
 from rasterio.compat import string_types
 from rasterio.errors import CRSError
-from rasterio.env import env_ctx_if_needed
 
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
@@ -175,10 +175,8 @@ cdef class _CRS(object):
 
         try:
             exc_wrap_ogrerr(exc_wrap_int(OSRImportFromProj4(obj._osr, <const char *>proj_b)))
-
         except CPLE_BaseError as exc:
             raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
-
         else:
             return obj
 
@@ -247,13 +245,10 @@ cdef class _CRS(object):
 
         try:
             errcode = exc_wrap_ogrerr(OSRImportFromWkt(obj._osr, &wkt_c))
-
             if morph_from_esri_dialect:
                 exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
-
         except CPLE_BaseError as exc:
             raise CRSError("The WKT could not be parsed. {}".format(exc))
-
         else:
             return obj
 
@@ -420,7 +415,5 @@ _param_data = """
 +zone      UTM zone
 """
 
-with env_ctx_if_needed():
-    _lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
-    all_proj_keys = list(set(line.split()[0].lstrip("+").strip()
-                             for line in _lines)) + ['no_mayo']
+_lines = filter(lambda x: len(x) > 1, _param_data.split("\n"))
+all_proj_keys = list(set(line.split()[0].lstrip("+").strip() for line in _lines)) + ['no_mayo']
