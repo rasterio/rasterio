@@ -1,8 +1,8 @@
 Changes
 =======
 
-Next (?)
---------
+1.0.16 (2019-02-04)
+-------------------
 
 - A bug preventing GCPs from being created with new BufferedDatasetWriter
   instances (#1600) has been fixed (#1610).
@@ -10,6 +10,8 @@ Next (?)
   opened in r+ mode has been fixed.
 - A regression in creating CRS objects from PROJ4 strings that include
   "+wktext" (#1609) has been fixed.
+- Regressions in str representations of empty CRS objects and the handling of
+  unreferenced datasets in rasterio._base have been fixed (#1616).
 
 1.0.15 (2019-01-27)
 -------------------
