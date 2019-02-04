@@ -126,6 +126,7 @@ def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
 
 def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir):
     """ensure_env finds GDAL data under a prefix"""
+
     @ensure_env
     def f():
         return getenv()['GDAL_DATA']
