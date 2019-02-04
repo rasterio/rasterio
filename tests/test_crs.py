@@ -414,4 +414,4 @@ def test_issue1609_wktext_b():
                'y_0': 0,
                'wktext': True}
     wkt = CRS(dst_proj).wkt
-    assert 'EXTENSION["PROJ4","+ellps=WGS84 +h=9000000.0 +lat_0=-78.0 +lon_0=0.0 +proj=nsper +units=m +x_0=0 +y_0=0 +wktext"]]' in wkt
+    assert '+wktext' in wkt
