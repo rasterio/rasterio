@@ -167,11 +167,18 @@ class CRS(collections.Mapping):
         dict
 
         """
-        epsg_code = self.to_epsg()
-        if epsg_code:
-            return {'init': 'epsg:{}'.format(epsg_code)}
+        if self._crs is None:
+            raise CRSError("Undefined CRS has no dict representation")
+
         else:
-            return self._crs.to_dict()
+            epsg_code = self.to_epsg()
+            if epsg_code:
+                return {'init': 'epsg:{}'.format(epsg_code)}
+            else:
+                try:
+                    return self._crs.to_dict()
+                except CRSError:
+                    return {}
 
     @property
     def data(self):

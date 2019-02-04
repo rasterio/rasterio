@@ -88,6 +88,12 @@ def test_read_esri_wkt():
         }
 
 
+def test_read_no_crs():
+    """crs of a dataset with no SRS is None"""
+    with rasterio.open('tests/data/389225main_sw_1965_1024.jpg') as src:
+        assert src.crs is None
+
+
 # Ensure that CRS sticks when we write a file.
 @pytest.mark.gdalbin
 def test_write_3857(tmpdir):
@@ -415,3 +421,8 @@ def test_issue1609_wktext_b():
                'wktext': True}
     wkt = CRS(dst_proj).wkt
     assert '+wktext' in wkt
+
+
+def test_empty_crs_str():
+    """str(CRS()) should be empty string"""
+    assert str(CRS()) == ''
