@@ -10,7 +10,7 @@ from rasterio import dtypes
 from rasterio.enums import Resampling
 
 cimport numpy as np
-from rasterio._err cimport exc_wrap_pointer
+from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
 
 from rasterio.errors import GDALOptionNotImplementedError
 
@@ -88,7 +88,7 @@ cdef int io_band(
             band, mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
             buftype, bufpixelspace, buflinespace)
 
-    return retval
+    return exc_wrap_int(retval)
 
 
 cdef int io_multi_band(
@@ -121,17 +121,21 @@ cdef int io_multi_band(
     cdef int xsize = <int>width
     cdef int ysize = <int>height
 
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = <int>indexes[i]
-        retval = GDALDatasetRasterIO(
-            hds, mode, xoff, yoff, xsize, ysize, buf,
-            bufxsize, bufysize, buftype, count, bandmap,
-            bufpixelspace, buflinespace, bufbandspace)
-        CPLFree(bandmap)
+    bandmap = <int *>CPLMalloc(count*sizeof(int))
+    for i in range(count):
+        bandmap[i] = <int>indexes[i]
 
-    return retval
+    try:
+        with nogil:
+            retval = GDALDatasetRasterIO(
+                hds, mode, xoff, yoff, xsize, ysize, buf,
+                bufxsize, bufysize, buftype, count, bandmap,
+                bufpixelspace, buflinespace, bufbandspace)
+
+        return exc_wrap_int(retval)
+
+    finally:
+        CPLFree(bandmap)
 
 
 cdef int io_multi_mask(
@@ -183,4 +187,4 @@ cdef int io_multi_mask(
             if retval:
                 break
 
-    return retval
+    return exc_wrap_int(retval)

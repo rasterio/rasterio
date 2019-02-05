@@ -6,6 +6,8 @@ from rasterio.enums import Resampling
 
 cimport numpy as np
 
+from rasterio._err cimport exc_wrap_int
+
 
 cdef extern from "cpl_progress.h":
 
@@ -73,7 +75,7 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
             band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize, bufysize,
             buftype, bufpixelspace, buflinespace, &extras)
 
-    return retval
+    return exc_wrap_int(retval)
 
 
 cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
@@ -117,17 +119,21 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
 
-    with nogil:
-        bandmap = <int *>CPLMalloc(count*sizeof(int))
-        for i in range(count):
-            bandmap[i] = <int>indexes[i]
-        retval = GDALDatasetRasterIOEx(
-            hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
-            bufxsize, bufysize, buftype, count, bandmap,
-            bufpixelspace, buflinespace, bufbandspace, &extras)
-        CPLFree(bandmap)
+    bandmap = <int *>CPLMalloc(count*sizeof(int))
+    for i in range(count):
+        bandmap[i] = <int>indexes[i]
 
-    return retval
+    try:
+        with nogil:
+            retval = GDALDatasetRasterIOEx(
+                hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
+                bufxsize, bufysize, buftype, count, bandmap,
+                bufpixelspace, buflinespace, bufbandspace, &extras)
+
+        return exc_wrap_int(retval)
+
+    finally:
+        CPLFree(bandmap)
 
 
 cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
@@ -187,7 +193,8 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
             retval = GDALRasterIOEx(
                 hmask, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
                 bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
+
             if retval:
                 break
 
-    return retval
+    return exc_wrap_int(retval)

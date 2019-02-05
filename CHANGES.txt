@@ -1,6 +1,22 @@
 Changes
 =======
 
+1.0.16 (2019-02-04)
+-------------------
+
+- A bug preventing GCPs from being created with new BufferedDatasetWriter
+  instances (#1600) has been fixed (#1610).
+- A previously unreported bug preventing BufferedDatasetWriters from being
+  opened in r+ mode has been fixed.
+- A regression in creating CRS objects from PROJ4 strings that include
+  "+wktext" (#1609) has been fixed.
+- Regressions in str representations of empty CRS objects and the handling of
+  unreferenced datasets in rasterio._base have been fixed (#1616).
+- GDAL seems to work best if GDAL_DATA is set as early as possible. Ideally it
+  is set when building the library or in the environment before importing
+  Rasterio, but for wheels we patch GDAL_DATA into os.environ when rasterio.env
+  is imported. This resolves #1611.
+
 1.0.15 (2019-01-27)
 -------------------
 

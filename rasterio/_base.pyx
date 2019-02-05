@@ -267,7 +267,7 @@ cdef class DatasetBase(object):
         if wkt:
             return CRS.from_wkt(wkt)
         else:
-            return CRS()
+            return None
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""

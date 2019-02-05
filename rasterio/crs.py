@@ -71,7 +71,17 @@ class CRS(collections.Mapping):
             if 'init' in data:
                 data['init'] = data['init'].replace('EPSG:', 'epsg:')
 
-            proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
+            proj_parts = []
+
+            for key, val in data.items():
+                if val is False or None:
+                    continue
+                elif val is True:
+                    proj_parts.append('+{}'.format(key))
+                else:
+                    proj_parts.append('+{}={}'.format(key, val))
+
+            proj = ' '.join(proj_parts)
             self._crs = _CRS.from_proj4(proj)
 
         else:
@@ -157,11 +167,18 @@ class CRS(collections.Mapping):
         dict
 
         """
-        epsg_code = self.to_epsg()
-        if epsg_code:
-            return {'init': 'epsg:{}'.format(epsg_code)}
+        if self._crs is None:
+            raise CRSError("Undefined CRS has no dict representation")
+
         else:
-            return self._crs.to_dict()
+            epsg_code = self.to_epsg()
+            if epsg_code:
+                return {'init': 'epsg:{}'.format(epsg_code)}
+            else:
+                try:
+                    return self._crs.to_dict()
+                except CRSError:
+                    return {}
 
     @property
     def data(self):

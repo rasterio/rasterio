@@ -1,5 +1,6 @@
 """Tests of ground control points"""
 
+import numpy
 import pytest
 
 import rasterio
@@ -59,6 +60,35 @@ def test_write_read_gcps(tmpdir):
         pass
 
     with rasterio.open(tiffname, 'r+') as dst:
+        gcps, crs = dst.gcps
+        assert crs.to_epsg() == 4326
+        assert len(gcps) == 1
+        point = gcps[0]
+        assert (1, 1) == (point.row, point.col)
+        assert (100.0, 1000.0, 0.0) == (point.x, point.y, point.z)
+
+        dst.gcps = [
+            GroundControlPoint(1, 1, 100.0, 1000.0, z=0.0),
+            GroundControlPoint(2, 2, 200.0, 2000.0, z=0.0)], crs
+
+        gcps, crs = dst.gcps
+
+        assert crs.to_epsg() == 4326
+        assert len(gcps) == 2
+        point = gcps[1]
+        assert (2, 2) == (point.row, point.col)
+        assert (200.0, 2000.0, 0.0) == (point.x, point.y, point.z)
+
+
+def test_write_read_gcps_buffereddatasetwriter(tmpdir):
+    filename = str(tmpdir.join('test.jpg'))
+    gcps = [GroundControlPoint(1, 1, 100.0, 1000.0, z=0.0)]
+
+    with rasterio.open(filename, 'w', driver='JPEG', dtype='uint8', count=3,
+                       width=10, height=10, crs='epsg:4326', gcps=gcps) as dst:
+        dst.write(numpy.ones((3, 10, 10), dtype='uint8'))
+
+    with rasterio.open(filename, 'r+') as dst:
         gcps, crs = dst.gcps
         assert crs.to_epsg() == 4326
         assert len(gcps) == 1
