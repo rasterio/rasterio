@@ -12,6 +12,10 @@ Changes
   "+wktext" (#1609) has been fixed.
 - Regressions in str representations of empty CRS objects and the handling of
   unreferenced datasets in rasterio._base have been fixed (#1616).
+- GDAL seems to work best if GDAL_DATA is set as early as possible. Ideally it
+  is set when building the library or in the environment before importing
+  Rasterio, but for wheels we patch GDAL_DATA into os.environ when rasterio.env
+  is imported. This resolves #1611.
 
 1.0.15 (2019-01-27)
 -------------------
