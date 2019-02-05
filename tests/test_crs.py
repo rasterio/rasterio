@@ -183,6 +183,18 @@ def test_is_projected():
     assert CRS(wgs84_crs).is_projected is False
 
 
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
+@pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
+def test_equality_from_epsg(epsg_code):
+    assert CRS.from_epsg(epsg_code) == CRS.from_epsg(epsg_code)
+
+
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
+@pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
+def test_equality_from_dict(epsg_code):
+    assert CRS.from_dict(init='epsg:{}'.format(epsg_code)) == CRS.from_dict(init='epsg:{}'.format(epsg_code))
+
+
 def test_is_same_crs():
     crs1 = CRS({'init': 'epsg:4326'})
     crs2 = CRS({'init': 'epsg:3857'})
