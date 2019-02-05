@@ -117,15 +117,20 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) excep
     cdef float height = data.shape[-2]
     cdef float width = data.shape[-1]
 
-    if ndims == 2:
-        return io_band(band, write, 0.0, 0.0, width, height, data,
-                       resampling=resampling)
-    elif ndims == 3:
-        indexes = np.arange(1, data.shape[0] + 1, dtype='intp')
-        return io_multi_band(band, write, 0.0, 0.0, width, height, data,
-                             indexes, resampling=resampling)
-    else:
-        raise ValueError("Specified data must have 2 or 3 dimensions")
+    try:
+
+        if ndims == 2:
+            return io_band(band, write, 0.0, 0.0, width, height, data, resampling=resampling)
+
+        elif ndims == 3:
+            indexes = np.arange(1, data.shape[0] + 1, dtype='intp')
+            return io_multi_band(band, write, 0.0, 0.0, width, height, data, indexes, resampling=resampling)
+
+        else:
+            raise ValueError("Specified data must have 2 or 3 dimensions")
+
+    except CPLE_BaseError as cplerr:
+        raise RasterioIOError(str(cplerr))
 
 
 cdef class DatasetReaderBase(DatasetBase):
@@ -673,25 +678,22 @@ cdef class DatasetReaderBase(DatasetBase):
         indexes_arr = np.array(indexes, dtype='intp')
         indexes_count = <int>indexes_arr.shape[0]
 
-        if masks:
-            # Warn if nodata attribute is shadowing an alpha band.
-            if self.count == 4 and self.colorinterp[3] == ColorInterp.alpha:
-                for flags in self.mask_flag_enums:
-                    if MaskFlags.nodata in flags:
-                        warnings.warn(NodataShadowWarning())
+        try:
 
-            retval = io_multi_mask(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, resampling=resampling)
+            if masks:
+                # Warn if nodata attribute is shadowing an alpha band.
+                if self.count == 4 and self.colorinterp[3] == ColorInterp.alpha:
+                    for flags in self.mask_flag_enums:
+                        if MaskFlags.nodata in flags:
+                            warnings.warn(NodataShadowWarning())
 
-        else:
-            retval = io_multi_band(self._hds, 0, xoff, yoff, width, height,
-                                  out, indexes_arr, resampling=resampling)
+                io_multi_mask(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
 
-        if retval in (1, 2, 3):
-            raise IOError("Read or write failed")
-        elif retval == 4:
-            raise ValueError("NULL band")
+            else:
+                io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
         return out
 
@@ -1354,13 +1356,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         indexes_arr = np.array(indexes, dtype='intp')
         indexes_count = <int>indexes_arr.shape[0]
-        retval = io_multi_band(self._hds, 1, xoff, yoff, width, height,
-                               src, indexes_arr)
 
-        if retval in (1, 2, 3):
-            raise IOError("Read or write failed")
-        elif retval == 4:
-            raise ValueError("NULL band")
+        try:
+            io_multi_band(self._hds, 1, xoff, yoff, width, height, src, indexes_arr)
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
@@ -1540,15 +1540,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = self.width
             height = self.height
 
-        if mask_array is True:
-            GDALFillRaster(mask, 255, 0)
-        elif mask_array is False:
-            GDALFillRaster(mask, 0, 0)
-        elif mask_array.dtype == np.bool:
-            array = 255 * mask_array.astype(np.uint8)
-            retval = io_band(mask, 1, xoff, yoff, width, height, array)
-        else:
-            retval = io_band(mask, 1, xoff, yoff, width, height, mask_array)
+        try:
+            if mask_array is True:
+                GDALFillRaster(mask, 255, 0)
+            elif mask_array is False:
+                GDALFillRaster(mask, 0, 0)
+            elif mask_array.dtype == np.bool:
+                array = 255 * mask_array.astype(np.uint8)
+                io_band(mask, 1, xoff, yoff, width, height, array)
+            else:
+                io_band(mask, 1, xoff, yoff, width, height, mask_array)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
     def build_overviews(self, factors, resampling=Resampling.nearest):
         """Build overviews at one or more decimation factors for all
@@ -1782,22 +1786,32 @@ cdef class InMemoryRaster:
             self._hds = NULL
 
     def read(self):
-        if self._image is None:
-            raise IOError("You need to write data before you can read the data.")
 
-        if self._image.ndim == 2:
-            exc_wrap_int(io_auto(self._image, self.band(1), False))
-        else:
-            exc_wrap_int(io_auto(self._image, self._hds, False))
+        if self._image is None:
+            raise RasterioIOError("You need to write data before you can read the data.")
+
+        try:
+            if self._image.ndim == 2:
+                io_auto(self._image, self.band(1), False)
+            else:
+                io_auto(self._image, self._hds, False)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+
         return self._image
 
     def write(self, np.ndarray image):
         self._image = image
-        if image.ndim == 2:
-            exc_wrap_int(io_auto(self._image, self.band(1), True))
-        else:
-            exc_wrap_int(io_auto(self._image, self._hds, True))
 
+        try:
+            if image.ndim == 2:
+                io_auto(self._image, self.band(1), True)
+            else:
+                io_auto(self._image, self._hds, True)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
 
 cdef class BufferedDatasetWriterBase(DatasetWriterBase):
