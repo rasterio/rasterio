@@ -421,6 +421,8 @@ class CRS(collections.Mapping):
         elif isinstance(value, dict):
             return cls(**value)
         elif isinstance(value, string_types):
-            return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
+            obj = cls()
+            obj._crs = _CRS.from_user_input(value, morph_from_esri_dialect=morph_from_esri_dialect)
+            return obj
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))

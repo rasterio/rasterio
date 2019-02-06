@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.0.17 (?)
+----------
+
+- Fix a regression in evaluation of CRS equality (#1620).
+
 1.0.16 (2019-02-04)
 -------------------
 
