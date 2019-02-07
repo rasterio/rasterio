@@ -58,16 +58,23 @@ cdef class _CRS(object):
         cdef OGRSpatialReferenceH osr_o = NULL
         cdef _CRS crs_o = other
 
-        try:
-            osr_s = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr_s))
-            osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr_o))
-            return bool(OSRIsSame(osr_s, osr_o) == 1)
+        epsg_s = self.to_epsg()
+        epsg_o = other.to_epsg()
 
-        finally:
-            _safe_osr_release(osr_s)
-            _safe_osr_release(osr_o)
+        if epsg_s is not None and epsg_o is not None and epsg_s == epsg_o:
+            return True
+
+        else:
+            try:
+                osr_s = exc_wrap_pointer(OSRClone(self._osr))
+                exc_wrap_ogrerr(OSRMorphFromESRI(osr_s))
+                osr_o = exc_wrap_pointer(OSRClone(crs_o._osr))
+                exc_wrap_ogrerr(OSRMorphFromESRI(osr_o))
+                return bool(OSRIsSame(osr_s, osr_o) == 1)
+
+            finally:
+                _safe_osr_release(osr_s)
+                _safe_osr_release(osr_o)
 
     def to_wkt(self, morph_to_esri_dialect=False):
         """An OGC WKT representation of the CRS
@@ -123,8 +130,8 @@ cdef class _CRS(object):
         finally:
             _safe_osr_release(osr)
 
-    @classmethod
-    def from_epsg(cls, code):
+    @staticmethod
+    def from_epsg(code):
         """Make a CRS from an EPSG code
 
         Parameters
@@ -141,9 +148,19 @@ cdef class _CRS(object):
         CRS
 
         """
-        if int(code) <= 0:
+        cdef _CRS obj = _CRS.__new__(_CRS)
+
+        code = int(code)
+
+        if code <= 0:
             raise CRSError("EPSG codes are positive integers")
-        return cls.from_proj4('+init=epsg:{}'.format(code))
+
+        try:
+            exc_wrap_ogrerr(exc_wrap_int(OSRImportFromEPSG(obj._osr, <int>code)))
+        except CPLE_BaseError as exc:
+            raise CRSError("The EPSG code is unknown. {}".format(exc))
+        else:
+            return obj
 
     @staticmethod
     def from_proj4(proj):
@@ -161,7 +178,7 @@ cdef class _CRS(object):
         """
         cdef _CRS obj = _CRS.__new__(_CRS)
 
-        # Filter out nonsensical items.
+        # Filter out nonsensical items that might have crept in.
         items_filtered = []
         items = proj.split()
         for item in items:
@@ -200,10 +217,13 @@ cdef class _CRS(object):
         data.update(**kwargs)
         data = {k: v for k, v in data.items() if k in all_proj_keys}
 
-        # always use lowercase 'epsg'.
-        if 'init' in data:
-            data['init'] = data['init'].replace('EPSG:', 'epsg:')
+        # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will
+        # extract the epsg code and dispatch to from_epsg.
+        if 'init' in data and data['init'].lower().startswith('epsg:'):
+            epsg_code = int(data['init'].split(':')[1])
+            return _CRS.from_epsg(epsg_code)
 
+        # Continue with the general case.
         proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
         b_proj = proj.encode('utf-8')
 
@@ -245,6 +265,42 @@ cdef class _CRS(object):
 
         try:
             errcode = exc_wrap_ogrerr(OSRImportFromWkt(obj._osr, &wkt_c))
+            if morph_from_esri_dialect:
+                exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
+        except CPLE_BaseError as exc:
+            raise CRSError("The WKT could not be parsed. {}".format(exc))
+        else:
+            return obj
+
+    @staticmethod
+    def from_user_input(text, morph_from_esri_dialect=False):
+        """Make a CRS from a WKT string
+
+        Parameters
+        ----------
+        text : str
+            User input text of many different kinds.
+        morph_from_esri_dialect : bool, optional
+            If True, items in the input using Esri's dialect of WKT
+            will be replaced by OGC standard equivalents.
+
+        Returns
+        -------
+        CRS
+
+        """
+        cdef const char *text_c = NULL
+
+        if not isinstance(text, string_types):
+            raise ValueError("A string is expected")
+
+        text_b = text.encode('utf-8')
+        text_c = text_b
+
+        cdef _CRS obj = _CRS.__new__(_CRS)
+
+        try:
+            errcode = exc_wrap_ogrerr(OSRSetFromUserInput(obj._osr, text_c))
             if morph_from_esri_dialect:
                 exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
         except CPLE_BaseError as exc:
