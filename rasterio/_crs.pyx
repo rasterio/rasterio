@@ -130,8 +130,8 @@ cdef class _CRS(object):
         finally:
             _safe_osr_release(osr)
 
-    @classmethod
-    def from_epsg(cls, code):
+    @staticmethod
+    def from_epsg(code):
         """Make a CRS from an EPSG code
 
         Parameters
@@ -148,9 +148,19 @@ cdef class _CRS(object):
         CRS
 
         """
-        if int(code) <= 0:
+        cdef _CRS obj = _CRS.__new__(_CRS)
+
+        code = int(code)
+
+        if code <= 0:
             raise CRSError("EPSG codes are positive integers")
-        return cls.from_proj4('+init=epsg:{}'.format(code))
+
+        try:
+            exc_wrap_ogrerr(exc_wrap_int(OSRImportFromEPSG(obj._osr, <int>code)))
+        except CPLE_BaseError as exc:
+            raise CRSError("The EPSG code is unknown. {}".format(exc))
+        else:
+            return obj
 
     @staticmethod
     def from_proj4(proj):
@@ -168,7 +178,7 @@ cdef class _CRS(object):
         """
         cdef _CRS obj = _CRS.__new__(_CRS)
 
-        # Filter out nonsensical items.
+        # Filter out nonsensical items that might have crept in.
         items_filtered = []
         items = proj.split()
         for item in items:
@@ -207,10 +217,13 @@ cdef class _CRS(object):
         data.update(**kwargs)
         data = {k: v for k, v in data.items() if k in all_proj_keys}
 
-        # always use lowercase 'epsg'.
-        if 'init' in data:
-            data['init'] = data['init'].replace('EPSG:', 'epsg:')
+        # "+init=epsg:xxxx" is deprecated in GDAL. If we find this, we will
+        # extract the epsg code and dispatch to from_epsg.
+        if 'init' in data and data['init'].lower().startswith('epsg:'):
+            epsg_code = int(data['init'].split(':')[1])
+            return _CRS.from_epsg(epsg_code)
 
+        # Continue with the general case.
         proj = ' '.join(['+{}={}'.format(key, val) for key, val in data.items()])
         b_proj = proj.encode('utf-8')
 
