@@ -17,6 +17,12 @@ def test_uint8_to_float32(path_rgb_byte_tif):
         assert dataset.read(out_dtype='float32').dtype == numpy.dtype('float32')
 
 
+def test_uint8_to_float32_out_param(path_rgb_byte_tif):
+    """Get float32 array from uint8 dataset via out parameter"""
+    with rasterio.open(path_rgb_byte_tif) as dataset:
+        assert dataset.read(out=numpy.zeros((dataset.count, dataset.height, dataset.width), dtype='float32')).dtype == numpy.dtype('float32')
+
+
 def test_float32_to_int16():
     """Get int16 array from float32 dataset"""
     with rasterio.open('tests/data/float_nan.tif') as dataset:

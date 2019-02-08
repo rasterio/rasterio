@@ -270,7 +270,6 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             dtype = check_dtypes.pop()
 
-        # XXX
         if out_dtype is not None:
             dtype = out_dtype
 
@@ -300,16 +299,14 @@ cdef class DatasetReaderBase(DatasetBase):
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
 
-        # `out` takes precedence over `out_shape`.
+        # `out` takes precedence over `out_shape` and `out_dtype`.
         elif out is not None:
+
             if out.dtype != dtype:
-                raise ValueError(
-                    "the array's dtype '%s' does not match "
-                    "the file's dtype '%s'" % (out.dtype, dtype))
+                dtype == out.dtype
+
             if out.shape[0] != win_shape[0]:
-                raise ValueError(
-                    "'out' shape %s does not match window shape %s" %
-                    (out.shape, win_shape))
+                raise ValueError("'out' shape {} does not match window shape {}".format(out.shape, win_shape))
 
         else:
             if out_shape is not None:
