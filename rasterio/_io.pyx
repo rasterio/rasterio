@@ -1101,6 +1101,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
 
+            if self._init_dtype == 'int8':
+                options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
             # Create a GDAL dataset handle.
             try:
 
