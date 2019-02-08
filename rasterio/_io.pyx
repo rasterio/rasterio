@@ -137,7 +137,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
-            fill_value=None):
+            fill_value=None, out_dtype=None):
         """Read a dataset's raw pixels as an N-d array
 
         This data is read from the dataset's band cache, which means
@@ -162,6 +162,10 @@ cdef class DatasetReaderBase(DatasetBase):
             incomplete representation of the method's results.
 
             This parameter cannot be combined with `out_shape`.
+
+        out_dtype : str or numpy dtype
+            The desired output data type. For example: 'uint8' or
+            rasterio.uint16.
 
         out_shape : tuple, optional
             A tuple describing the shape of a new output array. See
@@ -265,6 +269,10 @@ cdef class DatasetReaderBase(DatasetBase):
             dtype = self.dtypes[0]
         else:
             dtype = check_dtypes.pop()
+
+        # XXX
+        if out_dtype is not None:
+            dtype = out_dtype
 
         # Get the natural shape of the read window, boundless or not.
         # The window can have float values. In this case, we round up
