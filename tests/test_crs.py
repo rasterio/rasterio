@@ -436,7 +436,7 @@ def test_issue1620():
 
 @pytest.mark.parametrize('factory,arg', [(CRS.from_epsg, 3857), (CRS.from_dict, {'ellps': 'WGS84', 'proj': 'stere', 'lat_0': -90.0, 'lon_0': 0.0, 'x_0': 0.0, 'y_0': 0.0, 'lat_ts': -70, 'no_defs': True})])
 def test_pickle(factory, arg):
-    """A CRS is pickable"""
+    """A CRS is pickleable"""
     crs1 = factory(arg)
     crs2 = pickle.loads(pickle.dumps(crs1))
     assert crs2 == crs1
