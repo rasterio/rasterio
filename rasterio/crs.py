@@ -89,6 +89,12 @@ class CRS(collections.Mapping):
         other = CRS.from_user_input(other)
         return (self._crs == other._crs)
 
+    def __getstate__(self):
+        return self.wkt
+
+    def __setstate__(self, state):
+        self._crs = _CRS.from_wkt(state)
+
     def to_proj4(self):
         """Convert CRS to a PROJ4 string
 
