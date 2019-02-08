@@ -1,3 +1,6 @@
+"""Profile tests"""
+
+import pickle
 import warnings
 
 import pytest
@@ -77,8 +80,8 @@ def test_blockysize_guard(tmpdir):
         rasterio.open(tiffname, 'w', **profile)
 
 
-def test_profile_overlay():
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+def test_profile_overlay(path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
         kwds = src.profile
     kwds.update(**default_gtiff_profile)
     assert kwds['tiled']
@@ -94,9 +97,9 @@ def test_dataset_profile_property_tiled(data):
         assert src.profile['tiled'] is True
 
 
-def test_dataset_profile_property_untiled(data):
+def test_dataset_profile_property_untiled(data, path_rgb_byte_tif):
     """An untiled dataset's profile has no block sizes"""
-    with rasterio.open('tests/data/RGB.byte.tif') as src:
+    with rasterio.open(path_rgb_byte_tif) as src:
         assert 'blockxsize' not in src.profile
         assert 'blockysize' not in src.profile
         assert src.profile['tiled'] is False
@@ -108,3 +111,14 @@ def test_profile_affine_set():
     profile['transform'] = 'foo'
     with pytest.raises(TypeError):
         profile['affine'] = 'bar'
+
+
+def test_profile_pickle():
+    """Standard profile can be pickled"""
+    assert pickle.loads(pickle.dumps(DefaultGTiffProfile())) == DefaultGTiffProfile()
+
+
+def test_dataset_profile_pickle(path_rgb_byte_tif):
+    """Dataset profiles can be pickled"""
+    with rasterio.open(path_rgb_byte_tif) as src:
+        assert pickle.loads(pickle.dumps(src.profile)) == src.profile
