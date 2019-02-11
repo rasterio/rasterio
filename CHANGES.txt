@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.19 (?)
+----------
+
+- Restore pickle protocol for CRS, using WKT as state (#1625).
+- Support for signed 8-bit integer datasets ("int8" dtype) has been added
+  (#1595).
+
 1.0.18 (2019-02-07)
 -------------------
 
