@@ -14,7 +14,7 @@ your shell and running a command like ogrinfo:
 
 .. code-block:: console
 
-    $ GDAL_DATA="/lol/wut" ogrinfo example.shp -so example
+    $ GDAL_DATA="/path/to/nowhere" ogrinfo example.shp -so example
     INFO: Open of 'example.shp'
           using driver 'ESRI Shapefile' successful.
 
@@ -24,11 +24,15 @@ your shell and running a command like ogrinfo:
     Extent: (-113.564247, 37.068981) - (-104.970871, 41.996277)
     ERROR 4: Unable to open EPSG support file gcs.csv.  Try setting the GDAL_DATA environment variable to point to the directory containing EPSG csv files.
 
-If you're using GDAL software acquired by a package management system like apt
-or yum, or Homebrew, you can likely eliminate this message and the condition
-that causes it by unsetting GDAL_DATA in your environment.
+If you're using GDAL software installed by a package management system like apt
+or yum, or Homebrew, you don't need to set the GDAL_DATA environment variable.
+That software has the right directory path built in. If you see this error,
+it's likely a sign that GDAL_DATA is set to a bogus value. Unset GDAL_DATA if
+it exists and see if that eliminates the error condition and the message.
 
-If you see this error message when using Rasterio in a Python program or when
-using Rasterio's CLI in a shell script, the solution is to upgrade to version
-1.0.18, which almost always sets GDAL_DATA when needed and otherwise leaves it
-alone.
+If you're installing GDAL into a Conda environment or into a Python virtual
+environment by running `pip install rasterio` (remember that the Rasterio
+wheels on the Python Package Index include a GDAL library and its data files)
+the situation is different. The proper data directory path is not built in and
+GDAL_DATA must be set. Rasterio 1.0.18, whether from PyPI or Conda, will set
+the GDAL_DATA environment variable to the correct location when it is imported.
