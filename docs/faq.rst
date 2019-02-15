@@ -12,17 +12,17 @@ reference system information stored with a dataset. If you've never seen this
 before, you can summon this message by setting GDAL_DATA to a bogus value in
 your shell and running a command like ogrinfo:
 
-```bash
-$ GDAL_DATA="/lol/wut" ogrinfo example.shp -so example
-INFO: Open of 'example.shp'
-      using driver 'ESRI Shapefile' successful.
+.. code-block:: console
 
-Layer name: example
-Geometry: Polygon
-Feature Count: 67
-Extent: (-113.564247, 37.068981) - (-104.970871, 41.996277)
-ERROR 4: Unable to open EPSG support file gcs.csv.  Try setting the GDAL_DATA environment variable to point to the directory containing EPSG csv files.
-```
+    $ GDAL_DATA="/lol/wut" ogrinfo example.shp -so example
+    INFO: Open of 'example.shp'
+          using driver 'ESRI Shapefile' successful.
+
+    Layer name: example
+    Geometry: Polygon
+    Feature Count: 67
+    Extent: (-113.564247, 37.068981) - (-104.970871, 41.996277)
+    ERROR 4: Unable to open EPSG support file gcs.csv.  Try setting the GDAL_DATA environment variable to point to the directory containing EPSG csv files.
 
 If you're using GDAL software acquired by a package management system like apt
 or yum, or Homebrew, you can likely eliminate this message and the condition
