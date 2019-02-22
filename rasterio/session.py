@@ -1,6 +1,5 @@
 """Abstraction for sessions in various clouds."""
 
-
 from rasterio.path import parse_path, UnparsedPath
 
 
@@ -34,7 +33,7 @@ class Session(object):
         bool
 
         """
-        return NotImplementedError
+        return NotImplemented
 
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
@@ -44,7 +43,7 @@ class Session(object):
         dict
 
         """
-        return NotImplementedError
+        return NotImplemented
 
     @staticmethod
     def from_foreign_session(session, cls=None):
@@ -200,6 +199,8 @@ class AWSSession(Session):
 
         if session:
             self._session = session
+        elif aws_unsigned:
+            self._session = None
         else:
             self._session = boto3.Session(
                 aws_access_key_id=aws_access_key_id,
@@ -210,7 +211,7 @@ class AWSSession(Session):
 
         self.requester_pays = requester_pays
         self.unsigned = aws_unsigned
-        self._creds = self._session._session.get_credentials()
+        self._creds = self._session._session.get_credentials() if self._session else None
 
     @classmethod
     def hascreds(cls, config):
@@ -228,13 +229,13 @@ class AWSSession(Session):
         bool
 
         """
-        return 'AWS_ACCESS_KEY_ID' in config and 'AWS_SECRET_ACCESS_KEY' in config
+        return ('AWS_ACCESS_KEY_ID' in config and 'AWS_SECRET_ACCESS_KEY' in config) or 'AWS_NO_SIGN_REQUEST' in config
 
     @property
     def credentials(self):
         """The session credentials as a dict"""
         res = {}
-        if self._creds:
+        if self._creds: # pragma: no branch
             frozen_creds = self._creds.get_frozen_credentials()
             if frozen_creds.access_key:  # pragma: no branch
                 res['aws_access_key_id'] = frozen_creds.access_key
@@ -316,7 +317,7 @@ class OSSSession(Session):
 
         """
         return {k.upper(): v for k, v in self.credentials.items()}
-    
+
 
 class GSSession(Session):
     """Configures access to secured resources stored in Google Cloud Storage
@@ -330,10 +331,11 @@ class GSSession(Session):
             Path to the google application credentials JSON file.
         """
 
-        self._creds = {}
         if google_application_credentials is not None:
-            self._creds['google_application_credentials'] = google_application_credentials
-    
+            self._creds = {'google_application_credentials': google_application_credentials}
+        else:
+            self._creds = {}
+
     @classmethod
     def hascreds(cls, config):
         """Determine if the given configuration has proper credentials
