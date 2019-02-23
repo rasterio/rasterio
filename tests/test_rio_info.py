@@ -455,6 +455,8 @@ def test_info_no_credentials(tmpdir, monkeypatch):
     assert result.exit_code == 0
 
 
+@requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
+@pytest.mark.network
 def test_info_aws_unsigned():
     """Unsigned access to public dataset works (see #1637)"""
     runner = CliRunner()
