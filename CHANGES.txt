@@ -4,6 +4,7 @@ Changes
 1.0.19 (?)
 ----------
 
+- Add linear_units property to CRS (#1638).
 - Ensure that AWS_NO_SIGN_REQUESTS is sufficient for accessing public S3
   datasets and that import of boto3 is not required (#1637).
 - An out_dtype parameter has been added to DatasetReaderBase.read, enabling
