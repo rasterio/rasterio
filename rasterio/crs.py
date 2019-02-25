@@ -229,6 +229,19 @@ class CRS(collections.Mapping):
         except CRSError:
             return False
 
+    @property
+    def linear_units(self):
+        """The linear units of the CRS
+
+        Possible values include "metre" and "US survey foot".
+
+        Returns
+        -------
+        str
+
+        """
+        return self._crs.linear_units
+
     def to_string(self):
         """Convert CRS to a PROJ4 or WKT string
 

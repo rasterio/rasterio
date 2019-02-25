@@ -440,3 +440,8 @@ def test_pickle(factory, arg):
     crs1 = factory(arg)
     crs2 = pickle.loads(pickle.dumps(crs1))
     assert crs2 == crs1
+
+
+def test_linear_units():
+    """CRS linear units can be had"""
+    assert CRS.from_epsg(3857).linear_units == 'metre'
