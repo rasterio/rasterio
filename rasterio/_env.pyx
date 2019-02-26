@@ -16,6 +16,10 @@ import os.path
 import sys
 import threading
 
+from rasterio._base cimport _safe_osr_release
+from rasterio._err import CPLE_BaseError
+from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
+
 
 level_map = {
     0: 0,
@@ -192,6 +196,21 @@ class GDALDataFinder(object):
     Note: this is not part of the public API in 1.0.x.
 
     """
+    def find_file(self, basename):
+        """Returns path of a GDAL data file or None
+
+        Parameters
+        ----------
+        basename : str
+            Basename of a data file such as "header.dxf"
+
+        Returns
+        -------
+        str (on success) or None (on failure)
+
+        """
+        path = CPLFindFile("gdal", basename.encode('utf-8'))
+        return path
 
     def search(self, prefix=None):
         """Returns GDAL data directory
@@ -203,6 +222,7 @@ class GDALDataFinder(object):
         str or None
 
         """
+        # 
         path = self.search_wheel(prefix or __file__)
         if not path:
             path = self.search_prefix(prefix or sys.prefix)
@@ -235,6 +255,25 @@ class PROJDataFinder(object):
     Note: this is not part of the public API in 1.0.x.
 
     """
+    def has_data(self):
+        """Returns True if PROJ's data files can be found
+
+        Returns
+        -------
+        bool
+
+        """
+        cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
+
+        try:
+            exc_wrap_ogrerr(exc_wrap_int(OSRImportFromProj4(osr, "+init=epsg:4326")))
+        except CPLE_BaseError:
+            return False
+        else:
+            return True
+        finally:
+            _safe_osr_release(osr)
+
 
     def search(self, prefix=None):
         """Returns PROJ data directory
@@ -288,6 +327,10 @@ cdef class GDALEnv(ConfigEnv):
                         self.update_config_options(GDAL_DATA=os.environ['GDAL_DATA'])
                         log.debug("GDAL_DATA found in environment: %r.", os.environ['GDAL_DATA'])
 
+                    # See https://github.com/mapbox/rasterio/issues/1631.
+                    elif GDALDataFinder().find_file("header.dxf"):
+                        log.debug("GDAL data files are available at built-in paths")
+
                     else:
                         path = GDALDataFinder().search()
 
@@ -295,8 +338,13 @@ cdef class GDALEnv(ConfigEnv):
                             self.update_config_options(GDAL_DATA=path)
                             log.debug("GDAL_DATA not found in environment, set to %r.", path)
 
-                    if 'PROJ_LIB' not in os.environ:
+                    if 'PROJ_LIB' in os.environ:
+                        log.debug("PROJ_LIB found in environment: %r.", os.environ['PROJ_LIB'])
 
+                    elif PROJDataFinder().has_data():
+                        log.debug("PROJ data files are available at built-in paths")
+
+                    else:
                         path = PROJDataFinder().search()
 
                         if path:

@@ -4,6 +4,7 @@
 import logging
 import os
 import sys
+from unittest.mock import patch
 
 import boto3
 import pytest
@@ -124,12 +125,15 @@ def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
     assert f() == '/lol/wut'
 
 
-def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir):
+@patch("rasterio._env.GDALDataFinder.find_file")
+def test_ensure_env_decorator_sets_gdal_data_prefix(find_file, gdalenv, monkeypatch, tmpdir):
     """ensure_env finds GDAL data under a prefix"""
 
     @ensure_env
     def f():
         return getenv()['GDAL_DATA']
+
+    find_file.return_value = None
 
     tmpdir.ensure("share/gdal/pcs.csv")
     monkeypatch.delenv('GDAL_DATA', raising=False)
@@ -138,11 +142,14 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir
     assert f() == str(tmpdir.join("share").join("gdal"))
 
 
-def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir):
+@patch("rasterio._env.GDALDataFinder.find_file")
+def test_ensure_env_decorator_sets_gdal_data_wheel(find_file, gdalenv, monkeypatch, tmpdir):
     """ensure_env finds GDAL data in a wheel"""
     @ensure_env
     def f():
         return getenv()['GDAL_DATA']
+
+    find_file.return_value = None
 
     tmpdir.ensure("gdal_data/pcs.csv")
     monkeypatch.delenv('GDAL_DATA', raising=False)
