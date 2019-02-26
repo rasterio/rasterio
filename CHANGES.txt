@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.0.19 (?)
-----------
+1.0.19 (2019-02-26)
+-------------------
 
 - Do not set GDAL_DATA and PROJ_LIB when data files can be found at their built
   in locations (#1631).
