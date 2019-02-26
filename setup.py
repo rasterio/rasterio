@@ -348,7 +348,7 @@ extra_reqs = {
 
 # Add futures to 'test' for Python < 3.2.
 if sys.version_info < (3, 2):
-    extra_reqs['test'].append('futures')
+    extra_reqs['test'].extend(['futures', 'mock'])
 
 # Add all extra requirements
 extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))

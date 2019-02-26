@@ -16,10 +16,20 @@ def test_gdal_data():
     assert GDALDataFinder().search() == os.path.join(os.path.dirname(rasterio.__file__), 'gdal_data')
 
 
+def test_gdal_data_find_file():
+    """Find_file shouldn't raise any exceptions"""
+    GDALDataFinder().find_file("header.dxf")
+
+
 @pytest.mark.wheel
 def test_proj_data():
     """Get GDAL data path from a wheel"""
     assert PROJDataFinder().search() == os.path.join(os.path.dirname(rasterio.__file__), 'proj_data')
+
+
+def test_proj_data_has_data():
+    """has_data shouldn't raise any exceptions"""
+    PROJDataFinder().has_data()
 
 
 @pytest.mark.wheel
