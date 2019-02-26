@@ -22,7 +22,7 @@ except ImportError:  # pragma: no cover
 from rasterio._base import gdal_version
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
-    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
+    bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env_with_credentials, Env
 from rasterio.errors import RasterioIOError
@@ -42,7 +42,7 @@ import rasterio.path
 
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.0.18"
+__version__ = "1.0.19"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its

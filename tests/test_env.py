@@ -14,6 +14,7 @@ from rasterio._env import del_gdal_config, get_gdal_config, set_gdal_config
 from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure_env_credentialled
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
+from rasterio.compat import mock
 from rasterio.rio.main import main_group
 from rasterio.session import AWSSession, OSSSession
 
@@ -124,12 +125,15 @@ def test_ensure_env_decorator_sets_gdal_data(gdalenv, monkeypatch):
     assert f() == '/lol/wut'
 
 
-def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir):
+@mock.patch("rasterio._env.GDALDataFinder.find_file")
+def test_ensure_env_decorator_sets_gdal_data_prefix(find_file, gdalenv, monkeypatch, tmpdir):
     """ensure_env finds GDAL data under a prefix"""
 
     @ensure_env
     def f():
         return getenv()['GDAL_DATA']
+
+    find_file.return_value = None
 
     tmpdir.ensure("share/gdal/pcs.csv")
     monkeypatch.delenv('GDAL_DATA', raising=False)
@@ -138,11 +142,14 @@ def test_ensure_env_decorator_sets_gdal_data_prefix(gdalenv, monkeypatch, tmpdir
     assert f() == str(tmpdir.join("share").join("gdal"))
 
 
-def test_ensure_env_decorator_sets_gdal_data_wheel(gdalenv, monkeypatch, tmpdir):
+@mock.patch("rasterio._env.GDALDataFinder.find_file")
+def test_ensure_env_decorator_sets_gdal_data_wheel(find_file, gdalenv, monkeypatch, tmpdir):
     """ensure_env finds GDAL data in a wheel"""
     @ensure_env
     def f():
         return getenv()['GDAL_DATA']
+
+    find_file.return_value = None
 
     tmpdir.ensure("gdal_data/pcs.csv")
     monkeypatch.delenv('GDAL_DATA', raising=False)

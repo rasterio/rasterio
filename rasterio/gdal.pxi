@@ -9,7 +9,8 @@ cdef extern from "cpl_conv.h" nogil:
     void CPLFree(void* ptr)
     void CPLSetThreadLocalConfigOption(const char* key, const char* val)
     void CPLSetConfigOption(const char* key, const char* val)
-    const char* CPLGetConfigOption(const char* key, const char* default)
+    const char *CPLGetConfigOption(const char* key, const char* default)
+    const char *CPLFindFile(const char *pszClass, const char *pszBasename)
 
 
 cdef extern from "cpl_error.h" nogil:
@@ -102,6 +103,7 @@ cdef extern from "ogr_srs_api.h" nogil:
     void OSRRelease(OGRSpatialReferenceH srs)
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
     OGRErr OSRValidate(OGRSpatialReferenceH srs)
+    double OSRGetLinearUnits(OGRSpatialReferenceH srs, char **ppszName)
 
 cdef extern from "gdal.h" nogil:
 

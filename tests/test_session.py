@@ -5,6 +5,16 @@ import pytest
 from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession
 
 
+def test_base_session_hascreds_notimpl():
+    """Session.hascreds must be overridden"""
+    assert Session.hascreds({}) is NotImplemented
+
+
+def test_base_session_get_credential_options_notimpl():
+    """Session.get_credential_options must be overridden"""
+    assert Session().get_credential_options() is NotImplemented
+
+
 def test_dummy_session():
     """DummySession works"""
     sesh = DummySession()
@@ -33,7 +43,7 @@ def test_aws_session_class_unsigned():
     """AWSSession works"""
     pytest.importorskip("boto3")
     sesh = AWSSession(aws_unsigned=True)
-    assert sesh._session
+    assert sesh._session is None
     assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
 
 
@@ -119,8 +129,8 @@ def test_requester_pays():
 def test_oss_session_class():
     """OSSSession works"""
     oss_session = OSSSession(
-        oss_access_key_id='foo', 
-        oss_secret_access_key='bar', 
+        oss_access_key_id='foo',
+        oss_secret_access_key='bar',
         oss_endpoint='null-island-1')
     assert oss_session._creds
     assert oss_session.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
@@ -134,9 +144,16 @@ def test_session_factory_oss_kwargs():
     assert sesh.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
     assert sesh.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'bar'
 
+
+def test_google_session_ctor_no_arg():
+    session = GSSession()
+    assert not session._creds
+
+
 def test_gs_session_class():
     """GSSession works"""
     gs_session = GSSession(
         google_application_credentials='foo')
     assert gs_session._creds
     assert gs_session.get_credential_options()['GOOGLE_APPLICATION_CREDENTIALS'] == 'foo'
+    assert gs_session.hascreds({'GOOGLE_APPLICATION_CREDENTIALS': 'foo'})

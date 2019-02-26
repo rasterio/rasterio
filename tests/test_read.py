@@ -233,9 +233,6 @@ class ReaderContextTest(unittest.TestCase):
             b = s.read(2, a, ((310, 330), (320, 330)), False)
             self.assertEqual(id(a), id(b))
             self.assertEqual(a.ndim, 2)
-            # different data types
-            a = np.empty((3, 718, 791), np.float64)
-            self.assertRaises(ValueError, s.read, out=a)
             # different number of array dimensions
             a = np.empty((20, 10), np.ubyte)
             self.assertRaises(ValueError, s.read, [2], out=a)

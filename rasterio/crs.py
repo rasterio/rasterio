@@ -89,6 +89,12 @@ class CRS(collections.Mapping):
         other = CRS.from_user_input(other)
         return (self._crs == other._crs)
 
+    def __getstate__(self):
+        return self.wkt
+
+    def __setstate__(self, state):
+        self._crs = _CRS.from_wkt(state)
+
     def to_proj4(self):
         """Convert CRS to a PROJ4 string
 
@@ -222,6 +228,19 @@ class CRS(collections.Mapping):
             return bool(self.to_epsg())
         except CRSError:
             return False
+
+    @property
+    def linear_units(self):
+        """The linear units of the CRS
+
+        Possible values include "metre" and "US survey foot".
+
+        Returns
+        -------
+        str
+
+        """
+        return self._crs.linear_units
 
     def to_string(self):
         """Convert CRS to a PROJ4 or WKT string

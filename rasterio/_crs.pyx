@@ -53,6 +53,26 @@ cdef class _CRS(object):
         except CPLE_BaseError as exc:
             raise CRSError("{}".format(exc))
 
+    @property
+    def linear_units(self):
+        """Get linear units of the CRS
+
+        Returns
+        -------
+        str
+
+        """
+        cdef char *units_c = NULL
+        cdef double fmeter
+
+        try:
+            fmeter = OSRGetLinearUnits(self._osr, &units_c)
+        except CPLE_BaseError as exc:
+            raise CRSError("{}".format(exc))
+        else:
+            units_b = units_c
+            return units_b.decode('utf-8')
+
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_s = NULL
         cdef OGRSpatialReferenceH osr_o = NULL

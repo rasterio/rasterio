@@ -453,3 +453,12 @@ def test_info_no_credentials(tmpdir, monkeypatch):
         main_group,
         ['info', 'tests/data/RGB.byte.tif'])
     assert result.exit_code == 0
+
+
+@requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
+@pytest.mark.network
+def test_info_aws_unsigned():
+    """Unsigned access to public dataset works (see #1637)"""
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['--aws-no-sign-requests', 'info', 's3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'])
+    assert result.exit_code == 0

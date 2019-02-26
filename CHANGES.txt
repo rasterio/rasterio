@@ -1,6 +1,21 @@
 Changes
 =======
 
+1.0.19 (2019-02-26)
+-------------------
+
+- Do not set GDAL_DATA and PROJ_LIB when data files can be found at their built
+  in locations (#1631).
+- Add linear_units property to CRS (#1638).
+- Ensure that AWS_NO_SIGN_REQUESTS is sufficient for accessing public S3
+  datasets and that import of boto3 is not required (#1637).
+- An out_dtype parameter has been added to DatasetReaderBase.read, enabling
+  on-the-fly casting of raster values to the desired type (#1637). This uses
+  the same latent feature used to get support for "int8" data.
+- Restore pickle protocol for CRS, using WKT as state (#1625).
+- Support for signed 8-bit integer datasets ("int8" dtype) has been added
+  (#1595).
+
 1.0.18 (2019-02-07)
 -------------------
 

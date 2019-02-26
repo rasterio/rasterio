@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import pickle
 import subprocess
 
 import pytest
@@ -42,21 +43,21 @@ def test_crs_constructor_dict():
     """Can create a CRS from a dict"""
     crs = CRS({'init': 'epsg:3857'})
     assert crs['init'] == 'epsg:3857'
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs"],AUTHORITY["EPSG","3857"]]' in crs.wkt
+    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 def test_crs_constructor_keywords():
     """Can create a CRS from keyword args, ignoring unknowns"""
     crs = CRS(init='epsg:3857', foo='bar')
     assert crs['init'] == 'epsg:3857'
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs"],AUTHORITY["EPSG","3857"]]' in crs.wkt
+    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 def test_crs_constructor_crs_obj():
     """Can create a CRS from a CRS obj"""
     crs = CRS(CRS(init='epsg:3857'))
     assert crs['init'] == 'epsg:3857'
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs"],AUTHORITY["EPSG","3857"]]' in crs.wkt
+    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in crs.wkt
 
 
 @pytest.fixture(scope='session')
@@ -443,3 +444,16 @@ def test_empty_crs_str():
 def test_issue1620():
     """Different forms of EPSG:3857 are equal"""
     assert CRS.from_wkt('PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["X",EAST],AXIS["Y",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs"],AUTHORITY["EPSG","3857"]]') == CRS.from_dict(init='epsg:3857')
+
+
+@pytest.mark.parametrize('factory,arg', [(CRS.from_epsg, 3857), (CRS.from_dict, {'ellps': 'WGS84', 'proj': 'stere', 'lat_0': -90.0, 'lon_0': 0.0, 'x_0': 0.0, 'y_0': 0.0, 'lat_ts': -70, 'no_defs': True})])
+def test_pickle(factory, arg):
+    """A CRS is pickleable"""
+    crs1 = factory(arg)
+    crs2 = pickle.loads(pickle.dumps(crs1))
+    assert crs2 == crs1
+
+
+def test_linear_units():
+    """CRS linear units can be had"""
+    assert CRS.from_epsg(3857).linear_units == 'metre'
