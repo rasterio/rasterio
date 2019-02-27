@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.20 (2019-02-27)
+-------------------
+
+- Fix for an unchecked NULL pointer introduced in 1.0.19 that could result in
+  segmentation fault on import of rasterio._env on Linux when GDAL data files
+  are not available (for example, with wheels as on PyPI).
+
 1.0.19 (2019-02-26)
 -------------------
 
