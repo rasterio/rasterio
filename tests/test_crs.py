@@ -154,7 +154,7 @@ def test_from_string():
     assert wgs84_crs.to_dict() == {'init': 'epsg:4326'}
 
     # Make sure this doesn't get handled using the from_epsg() even though 'epsg' is in the string
-    epsg_init_crs = CRS.from_string('+units=m +init=epsg:26911 +no_defs=True')
+    epsg_init_crs = CRS.from_string('+init=epsg:26911')
     assert epsg_init_crs.to_dict() == {'init': 'epsg:26911'}
 
 
