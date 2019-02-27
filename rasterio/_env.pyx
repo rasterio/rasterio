@@ -212,8 +212,11 @@ class GDALDataFinder(object):
         cdef const char *path_c = NULL
         basename_b = basename.encode('utf-8')
         path_c = CPLFindFile("gdal", <const char *>basename_b)
-        path = path_c
-        return path
+        if path_c == NULL:
+            return None
+        else:
+            path = path_c
+            return path
 
     def search(self, prefix=None):
         """Returns GDAL data directory
