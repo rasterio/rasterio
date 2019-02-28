@@ -36,7 +36,10 @@ def test_validate_dtype_str(tmpdir):
 def test_validate_dtype_float128(tmpdir, basic_image):
     """Raise TypeError if dtype is unsupported by GDAL."""
     name = str(tmpdir.join('float128.tif'))
-    basic_image_f128 = basic_image.astype('float128')
+    try:
+        basic_image_f128 = basic_image.astype('float128')
+    except TypeError:
+        pytest.skip("Unsupported data type")
     height, width = basic_image_f128.shape
     with pytest.raises(TypeError):
         rasterio.open(name, 'w', driver='GTiff', width=width, height=height,
