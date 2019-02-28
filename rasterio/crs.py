@@ -12,6 +12,7 @@ used.
 
 import collections
 import json
+import pickle
 
 from rasterio._crs import _CRS, all_proj_keys
 from rasterio.compat import string_types
@@ -90,10 +91,15 @@ class CRS(collections.Mapping):
         return (self._crs == other._crs)
 
     def __getstate__(self):
-        return self.wkt
+        return self.to_wkt()
 
     def __setstate__(self, state):
+        self._wkt = None
+        self._data = None
         self._crs = _CRS.from_wkt(state)
+
+    def __copy__(self):
+        return pickle.loads(pickle.dumps(self))
 
     def to_proj4(self):
         """Convert CRS to a PROJ4 string
