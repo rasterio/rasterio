@@ -1,5 +1,6 @@
 """crs module tests"""
 
+import copy
 import json
 import logging
 import os
@@ -457,3 +458,8 @@ def test_pickle(factory, arg):
 def test_linear_units():
     """CRS linear units can be had"""
     assert CRS.from_epsg(3857).linear_units == 'metre'
+
+
+def test_crs_copy():
+    """CRS can be copied"""
+    assert copy.copy(CRS.from_epsg(3857)).wkt.startswith('PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84"')
