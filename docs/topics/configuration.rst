@@ -54,7 +54,7 @@ Rasterio
 
 .. code-block:: python
 
-    with rasterio.Env(GTIFF_FORCE_RGBA='YES', CPL_DEBUG='YES'):
+    with rasterio.Env(GTIFF_FORCE_RGBA=True, CPL_DEBUG=True):
         with rasterio.open('data/stefan_full_greyalpha.tif') as dataset:
            # Suite of code accessing dataset ``ds`` follows...
 
@@ -69,13 +69,13 @@ to a name like so.
 
 .. code-block:: python
 
-    with rasterio.Env(GTIFF_FORCE_RGBA='YES', CPL_DEBUG='YES') as env:
+    with rasterio.Env(GTIFF_FORCE_RGBA=True, CPL_DEBUG=True) as env:
         for key, val in env.options.items():
             print(key, val)
 
     # Prints:
-    # ('GTIFF_FORCE_RGBA', 'YES')
-    # ('CPL_DEBUG', 'YES')
+    # ('GTIFF_FORCE_RGBA', True)
+    # ('CPL_DEBUG', True)
 
 When to use rasterio.Env()
 --------------------------
