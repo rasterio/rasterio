@@ -135,12 +135,26 @@ the the block.
 
     >>> with rasterio.open('tests/data/RGB.byte.tif', 'r') as one:
     ...     with rasterio.open('tests/data/RGB.byte.tif', 'r') as two:
-    ...        print(two)
+    ...         print(two)
     ...     print(one)
+    ...     raise Exception("an error occurred")
+    ...
     <open DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
     <open DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
-
+    Traceback (most recent call last):
+      File "<stdin>", line 5, in <module>
+    Exception: an error occurred
     >>> print(two)
     <closed DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
     >>> print(one)
     <closed DatasetReader name='tests/data/RGB.byte.tif' mode='r'>
+
+Format-specific dataset reading options may be passed as keyword arguments. For
+example, to turn off all types of GeoTIFF georeference except that within the
+TIFF file's keys and tags, pass `GEOREF_SOURCES='INTERNAL'`.
+
+.. code-block:: python
+
+    >>> with rasterio.open('tests/data/RGB.byte.tif', GEOREF_SOURCES='INTERNAL') as dataset:
+    ...     # .aux.xml, .tab, .tfw sidecar files will be ignored.
+

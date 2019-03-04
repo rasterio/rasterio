@@ -63,8 +63,11 @@ Or at the command line, ``rio`` commands will accept multiple ``--co`` options::
 
     rio copy source.tif dest.tif --co tiled=true
 
-Note that some *configuration* options also have an effect on driver behavior at creation time.
+These keyword arguments may be lowercase or uppercase, as you prefer.
 
+.. attention:: Some options may at a glance appear to be boolean, but are not. The GeoTIFF format's BIGTIFF option is one of these. The value must be YES, NO, IF_NEEDED, or IF_SAFER.
+
+.. note:: Some *configuration* options also have an effect on driver behavior at creation time.
 
 .. _configuration options: https://trac.osgeo.org/gdal/wiki/ConfigOptions
 .. _formats list: http://gdal.org/formats_list.html
