@@ -13,7 +13,6 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     from urllib.parse import urlparse
     from collections import UserDict
     from inspect import getfullargspec as getargspec
-    from unittest import mock
 else:  # pragma: no cover
     string_types = basestring,
     text_type = unicode
@@ -23,4 +22,3 @@ else:  # pragma: no cover
     from urlparse import urlparse
     from UserDict import UserDict
     from inspect import getargspec
-    import mock
