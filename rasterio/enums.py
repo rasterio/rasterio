@@ -68,6 +68,7 @@ class Compression(Enum):
     zstd = 'ZSTD'
     lerc = 'LERC'
     webp = 'WEBP'
+    jpeg2000 = 'JPEG2000'
 
 
 class Interleaving(Enum):
