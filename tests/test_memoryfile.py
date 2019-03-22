@@ -11,7 +11,9 @@ import pytest
 
 import rasterio
 from rasterio.io import MemoryFile, ZipMemoryFile
+from rasterio.enums import MaskFlags
 from rasterio.env import GDALVersion
+from rasterio.shutil import copyfiles
 
 
 # Skip ENTIRE module if not GDAL >= 2.x.
@@ -256,3 +258,42 @@ def test_write_plus_model_jpeg():
             assert (data[0] == 255).all()
             assert (data[1] == 204).all()
             assert (data[2] == 153).all()
+
+
+def test_memfile_copyfiles(path_rgb_msk_byte_tif):
+    """Multiple files can be copied to a MemoryFile using copyfiles"""
+    with rasterio.open(path_rgb_msk_byte_tif) as src:
+        src_basename = os.path.basename(src.name)
+        with MemoryFile(filename=src_basename) as memfile:
+            copyfiles(src.name, memfile.name)
+            with memfile.open() as rgb2:
+                assert sorted(rgb2.files) == sorted(['/vsimem/{}'.format(src_basename), '/vsimem/{}.msk'.format(src_basename)])
+
+
+def test_multi_memfile(path_rgb_msk_byte_tif):
+    """Multiple files can be copied to a MemoryFile using copyfiles"""
+    with open(path_rgb_msk_byte_tif, 'rb') as tif_fp:
+        tif_bytes = tif_fp.read()
+    with open(path_rgb_msk_byte_tif + '.msk', 'rb') as msk_fp:
+        msk_bytes = msk_fp.read()
+
+    with MemoryFile(tif_bytes, filename='foo.tif') as tifmemfile, MemoryFile(msk_bytes, filename='foo.tif.msk') as mskmemfile:
+        with tifmemfile.open() as src:
+            assert sorted(src.files) == sorted(['/vsimem/foo.tif', '/vsimem/foo.tif.msk'])
+            assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
+
+
+def test_memory_file_gdal_error_message(capsys):
+    """No weird error messages should be seen, see #1659"""
+    memfile = MemoryFile()
+    data = numpy.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]).astype('uint8')
+    west_bound = 0; north_bound = 2; cellsize=0.5; nodata = -9999; driver='AAIGrid';
+    dtype = data.dtype
+    shape = data.shape
+    transform = rasterio.transform.from_origin(west_bound, north_bound, cellsize, cellsize)
+    dataset = memfile.open(driver=driver, width=shape[1], height=shape[0], transform=transform, count=1, dtype=dtype, nodata=nodata, crs='epsg:3226')
+    dataset.write(data, 1)
+    dataset.close()
+    captured = capsys.readouterr()
+    assert "ERROR 4" not in captured.err
+    assert "ERROR 4" not in captured.out
