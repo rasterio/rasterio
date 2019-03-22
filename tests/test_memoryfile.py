@@ -281,3 +281,19 @@ def test_multi_memfile(path_rgb_msk_byte_tif):
         with tifmemfile.open() as src:
             assert sorted(src.files) == sorted(['/vsimem/foo.tif', '/vsimem/foo.tif.msk'])
             assert src.mask_flag_enums == ([MaskFlags.per_dataset],) * 3
+
+
+def test_memory_file_gdal_error_message(capsys):
+    """No weird error messages should be seen, see #1659"""
+    memfile = MemoryFile()
+    data = numpy.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]).astype('uint8')
+    west_bound = 0; north_bound = 2; cellsize=0.5; nodata = -9999; driver='AAIGrid';
+    dtype = data.dtype
+    shape = data.shape
+    transform = rasterio.transform.from_origin(west_bound, north_bound, cellsize, cellsize)
+    dataset = memfile.open(driver=driver, width=shape[1], height=shape[0], transform=transform, count=1, dtype=dtype, nodata=nodata, crs='epsg:3226')
+    dataset.write(data, 1)
+    dataset.close()
+    captured = capsys.readouterr()
+    assert "ERROR 4" not in captured.err
+    assert "ERROR 4" not in captured.out

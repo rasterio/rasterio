@@ -7,6 +7,7 @@ include "directives.pxi"
 include "gdal.pxi"
 
 from collections import Counter
+from contextlib import contextmanager
 import logging
 import sys
 import uuid
@@ -67,8 +68,9 @@ def _delete_dataset_if_exists(path):
     path = path.encode('utf-8')
     c_path = path
 
-    with nogil:
-        h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+    with catch_errors():
+        with nogil:
+            h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
         h_driver = GDALGetDatasetDriver(h_dataset)
@@ -777,6 +779,16 @@ cdef class DatasetReaderBase(DatasetBase):
         # be confirmed and fixed, the workaround is a pure Python
         # generator implemented in sample.py.
         return sample_gen(self, xy, indexes)
+
+
+@contextmanager
+def catch_errors():
+    """Intercept GDAL errors"""
+    try:
+        CPLPushErrorHandler(CPLQuietErrorHandler)
+        yield None
+    finally:
+        CPLPopErrorHandler()
 
 
 cdef class MemoryFileBase(object):
