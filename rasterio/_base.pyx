@@ -948,6 +948,8 @@ cdef class DatasetBase(object):
         cdef GDALMajorObjectH obj = NULL
         cdef char **metadata = NULL
         cdef const char *domain = NULL
+        cdef char *key = NULL
+        cdef char *val = NULL
 
         if bidx > 0:
             obj = self.band(bidx)
@@ -959,7 +961,14 @@ cdef class DatasetBase(object):
 
         metadata = GDALGetMetadata(obj, domain)
         num_items = CSLCount(metadata)
-        return dict(metadata[i].split('=', 1) for i in range(num_items))
+
+        tag_items = []
+        for i in range(num_items):
+            val = CPLParseNameValue(metadata[i], &key)
+            tag_items.append((key[:], val[:]))
+            CPLFree(key)
+
+        return dict(tag_items)
 
 
     def get_tag_item(self, ns, dm=None, bidx=0, ovr=None):
