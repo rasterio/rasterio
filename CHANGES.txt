@@ -1,6 +1,12 @@
 Changes
 =======
 
+Next
+----
+
+- Use GDAL's string parsing to get metadata item keys and values, which
+  accommodates uncommon "KEY:VALUE" forms.
+
 1.0.22 (2019-03-20)
 -------------------
 
