@@ -10,6 +10,7 @@ option is set to a new value inside the thread.
 
 include "gdal.pxi"
 
+from contextlib import contextmanager
 import logging
 import os
 import os.path
@@ -255,6 +256,16 @@ class GDALDataFinder(object):
         return datadir if os.path.exists(os.path.join(datadir, 'pcs.csv')) else None
 
 
+@contextmanager
+def catch_errors():
+    """Intercept GDAL errors"""
+    try:
+        CPLPushErrorHandler(CPLQuietErrorHandler)
+        yield None
+    finally:
+        CPLPopErrorHandler()
+
+
 class PROJDataFinder(object):
     """Finds PROJ data files
 
@@ -272,7 +283,8 @@ class PROJDataFinder(object):
         cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
 
         try:
-            exc_wrap_ogrerr(exc_wrap_int(OSRImportFromProj4(osr, "+init=epsg:4326")))
+            with catch_errors():
+                exc_wrap_ogrerr(exc_wrap_int(OSRImportFromProj4(osr, "+init=epsg:4326")))
         except CPLE_BaseError:
             return False
         else:
