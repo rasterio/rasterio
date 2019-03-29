@@ -1,7 +1,7 @@
 Python Quickstart
 =================
 
-Reading and writing data files is a spatial data analyst's bread and butter.
+Reading and writing data files is a spatial data programmer's bread and butter.
 This document explains how to use Rasterio to read existing files and to create
 new files. Some advanced topics are glossed over to be covered in more detail
 elsewhere in Rasterio's documentation. Only the GeoTIFF format is used here,
@@ -11,7 +11,7 @@ Rasterio has been `installed <./installation>`__.
 Opening a dataset in reading mode
 ---------------------------------
 
-Consider an "example.tif" file with 16-bit Landsat 8 imagery covering a part
+Consider a GeoTIFF file named :file:`example.tif` with 16-bit Landsat 8 imagery covering a part
 of the United States's Colorado Plateau [#]_. Because the imagery is large (70
 MB) and has a wide dynamic range it is difficult to display it in a browser.
 A rescaled and dynamically squashed version is shown below.
@@ -30,7 +30,7 @@ Next, open the file.
 
     >>> dataset = rasterio.open('example.tif')
 
-Rasterio's ``rasterio.open()`` takes a path and returns a dataset object. The
+Rasterio's :func:`~rasterio.open` function takes a path string or path-like object and returns an opened dataset object. The
 path may point to a file of any supported raster format. Rasterio will open it
 using the proper GDAL format driver. Dataset objects have some of the same
 attributes as Python file objects.
@@ -47,8 +47,8 @@ attributes as Python file objects.
 Dataset attributes
 ------------------
 
-Properties of the raster data stored in "example.tif" can be accessed through
-attributes of the ``dataset`` object. Dataset objects have bands and this
+Properties of the raster data stored in the example GeoTIFF can be accessed through
+attributes of the opened dataset object. Dataset objects have bands and this
 example has a band count of 1.
 
 .. code-block:: pycon
@@ -56,14 +56,13 @@ example has a band count of 1.
     >>> dataset.count
     1
 
-A dataset band is an array of values representing the partial distribution of
-a single variable in 2-dimensional (2D) space. All band arrays of a dataset
-have the same number of rows and columns. The variable represented by the
-example dataset's sole band is Level-1 digital numbers (DN) for the Landsat
-8 Operational Land Imager (OLI) band 4 (wavelengths between 640-670
-nanometers). These values can be scaled to radiance or reflectance values. The
-array of DN values has 7731 columns (its ``width``) and
-7871 rows (its ``height``).
+A dataset band is an array of values representing the partial distribution of a
+single variable in 2-dimensional (2D) space. All band arrays of a dataset have
+the same number of rows and columns. The variable represented by the example
+dataset's sole band is Level-1 digital numbers (DN) for the Landsat 8
+Operational Land Imager (OLI) band 4 (wavelengths between 640-670 nanometers).
+These values can be scaled to radiance or reflectance values. The array of DN
+values is 7731 columns wide and 7871 rows high.
 
 .. code-block:: pycon
 
@@ -74,15 +73,16 @@ array of DN values has 7731 columns (its ``width``) and
 
 Some dataset attributes expose the properties of all dataset bands via a tuple
 of values, one per band. To get a mapping of band indexes to variable data
-types, apply a dictionary comprehension to the ``zip()`` product of a dataset's
-``indexes`` and ``dtypes`` attributes.
+types, apply a dictionary comprehension to the :func:`zip` product of a
+dataset's :attr:`~rasterio.io.DatasetReader.indexes` and
+:attr:`~rasterio.io.DatasetReader.dtypes` attributes.
 
 .. code-block:: pycon
 
     >>> {i: dtype for i, dtype in zip(dataset.indexes, dataset.dtypes)}
     {1: 'uint16'}
 
-The "example.tif" file's sole band contains unsigned 16-bit integer values. The
+The example file's sole band contains unsigned 16-bit integer values. The
 GeoTIFF format also supports signed integers and floats of different size.
 
 Dataset georeferencing
@@ -102,8 +102,8 @@ Our example covers the world from
 meters to 4265115 meters bottom to top. It covers a region 231.93 kilometers
 wide by 236.13 kilometers high.
 
-The ``bounds`` attribute is derived from a more fundamental attribute: the
-dataset's geospatial ``transform``.
+The value of :attr:`~rasterio.io.DatasetReader.bounds` attribute is derived
+from a more fundamental attribute: the dataset's geospatial transform.
 
 .. code-block:: pycon
 
@@ -111,10 +111,11 @@ dataset's geospatial ``transform``.
     Affine(30.0, 0.0, 358485.0,
            0.0, -30.0, 4265115.0)
 
-The ``transform`` attribute is an affine transformation matrix that maps pixel
-locations in (row, col) coordinates to (x, y) spatial positions. The product of
-this matrix and ``(0, 0)``, the row and column coordinates of the upper left
-corner of the dataset, is the spatial position of the upper left corner.
+A dataset's :attr:`~rasterio.io.DatasetReader.transform` is an affine
+transformation matrix that maps pixel locations in (row, col) coordinates to
+(x, y) spatial positions. The product of this matrix and ``(0, 0)``, the row
+and column coordinates of the upper left corner of the dataset, is the spatial
+position of the upper left corner.
 
 .. code-block:: pycon
 
@@ -135,25 +136,24 @@ values are relative to the origin of the dataset's coordinate reference system
 .. code-block:: pycon
 
     >>> dataset.crs
-    CRS({'init': 'epsg:32612'})
+    CRS.from_epsg(32612)
 
-"epsg:32612" identifies a particular coordinate reference system: `UTM
+"EPSG 32612" identifies a particular coordinate reference system: `UTM
 <https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system>`__
 zone 12N.  This system is used for mapping areas in the Northern Hemisphere
 between 108 and 114 degrees west. The upper left corner of the example dataset,
 ``(358485.0, 4265115.0)``, is 141.5 kilometers west of zone 12's central
 meridian (111 degrees west) and 4265 kilometers north of the equator.
 
-Coordinate reference systems are an advanced topic. Suffice it to say that
-between the ``crs`` attribute and the ``transform`` attribute a raster dataset
-is geo-referenced and can be compared to other GIS datasets.
+Between the :attr:`~rasterio.io.DatasetReader.crs` attribute and ``transform``
+the georeferencing of a raster dataset is described and the dataset can
+compared to other GIS datasets.
 
 Reading raster data
 -------------------
 
-The raster array for a raster band can be accessed by calling
-``dataset.read()`` with the band's index number. Following the GDAL convention,
-bands are indexed from 1.
+Data from a raster band can be accessed by the band's index number. Following
+the GDAL convention, bands are indexed from 1.
 
 .. code-block:: pycon
 
@@ -161,7 +161,7 @@ bands are indexed from 1.
     (1,)
     >>> band1 = dataset.read(1)
 
-The ``read()`` method returns a Numpy N-D array.
+The :meth:`~rasterio.io.DatasetReader.read` method returns a Numpy N-D array.
 
 .. code-block:: pycon
 
@@ -174,7 +174,7 @@ The ``read()`` method returns a Numpy N-D array.
            [0, 0, 0, ..., 0, 0, 0],
            [0, 0, 0, ..., 0, 0, 0]], dtype=uint16)
 
-Values from the array can be had by their row, column index.
+Values from the array can be addressed by their row, column index.
 
 .. code-block:: pycon
 
@@ -184,7 +184,8 @@ Values from the array can be had by their row, column index.
 Spatial indexing
 ----------------
 
-Datasets have a method of getting array indices for spatial points. To get the
+Datasets have an :meth:`~rasterio.io.DatasetReader.index` method for getting
+the array indices corresponding to points in georeferenced space. To get the
 value for the pixel 100 kilometers east and 50 kilometers south of the
 dataset's upper left corner, do the following.
 
@@ -197,7 +198,7 @@ dataset's upper left corner, do the following.
     >>> band1[row, col]
     7566
 
-To get the spatial coordinates of a pixel, use the dataset's ``xy()`` method.
+To get the spatial coordinates of a pixel, use the dataset's :meth:`~rasterio.io.DatasetReader.xy` method.
 The coordinates of the center of the image can be computed like this.
 
 .. code-block:: pycon
@@ -240,26 +241,26 @@ Opening a dataset in writing mode
 ---------------------------------
 
 To save this array along with georeferencing information to a new raster data
-file, call ``rasterio.open()`` with a path to the new file to be created,
+file, call :func:`rasterio.open` with a path to the new file to be created,
 ``'w'`` to specify writing mode, and several keyword arguments.
 
-* ``driver``: the name of the desired format driver
-* ``width``: the number of columns of the dataset
-* ``height``: the number of rows of the dataset
-* ``count``: a count of the dataset bands
-* ``dtype``: the data type of the dataset
-* ``crs``: a coordinate reference system identifier or description
-* ``transform``: an affine transformation matrix, and
-* ``nodata``: a "nodata" value
+* *driver*: the name of the desired format driver
+* *width*: the number of columns of the dataset
+* *height*: the number of rows of the dataset
+* *count*: a count of the dataset bands
+* *dtype*: the data type of the dataset
+* *crs*: a coordinate reference system identifier or description
+* *transform*: an affine transformation matrix, and
+* *nodata*: a "nodata" value
 
 The first 5 of these keyword arguments parametrize fixed, format-specific
-properties of the data file and are required when opening a file to 
+properties of the data file and are required when opening a file to
 write. The last 3 are optional.
 
-In this example the coordinate reference system will be "+proj=latlong", which
+In this example the coordinate reference system will be ``'+proj=latlong'``, which
 describes an equirectangular coordinate reference system with units of decimal
 degrees. The right affine transformation matrix can be computed using
-a function in the ``rasterio.transform`` module.
+:func:`~rasterio.transform.from_origin`.
 
 .. code-block:: pycon
 
@@ -278,26 +279,35 @@ A dataset for storing the example grid is opened like so
 
 .. code-block:: pycon
 
-    >>> new_dataset = rasterio.open('/tmp/new.tif', 'w', driver='GTiff',
-    ...                             height=Z.shape[0], width=Z.shape[1],
-    ...                             count=1, dtype=Z.dtype,
-    ...                             crs='+proj=latlong', transform=transform)
+    >>> new_dataset = rasterio.open(
+    ...     '/tmp/new.tif',
+    ...     'w',
+    ...     driver='GTiff',
+    ...     height=Z.shape[0],
+    ...     width=Z.shape[1],
+    ...     count=1,
+    ...     dtype=Z.dtype,
+    ...     crs='+proj=latlong',
+    ...     transform=transform,
+    ... )
 
-Values for the `height`, `width`, and `dtype` keyword arguments are taken
+Values for the *height*, *width*, and *dtype* keyword arguments are taken
 directly from attributes of the 2-D array, ``Z``. Not all raster formats can
 support the 64-bit float values in ``Z``, but the GeoTIFF format can.
 
 Saving raster data
 ------------------
 
-To save the grid, call the new dataset's ``write()`` method with the grid and
-target band number as arguments.
+To copy the grid to the opened dataset, call the new dataset's
+:meth:`~rasterio.io.DatasetWriter.write` method with the grid and target band
+number as arguments.
 
 .. code-block:: pycon
 
     >>> new_dataset.write(Z, 1)
 
-and then call the ``close()`` method to sync data to disk and finish.
+Then call the :meth:`~rasterio.io.DatasetWriter.close` method to sync data to
+disk and finish.
 
 .. code-block:: pycon
 
@@ -308,9 +318,17 @@ Python's context manager protocol, it is possible to do the following instead.
 
 .. code-block:: python
 
-    with rasterio.open('/tmp/new.tif', 'w', driver='GTiff', height=Z.shape[0],
-                       width=Z.shape[1], count=1, dtype=Z.dtype,
-                       crs='+proj=latlong', transform=transform) as dst:
+    with rasterio.open(
+        '/tmp/new.tif',
+        'w',
+        driver='GTiff',
+        height=Z.shape[0],
+        width=Z.shape[1],
+        count=1,
+        dtype=Z.dtype,
+        crs='+proj=latlong',
+        transform=transform,
+    ) as dst:
         dst.write(Z, 1)
 
 These are the basics of reading and writing raster data files. More features
