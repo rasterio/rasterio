@@ -4,6 +4,9 @@ Changes
 Next
 ----
 
+- Add links to API documentation from the Python quickstart guide.
+- Use "CRS.from_epsg({})" instead of "CRS.from_dict(init='epsg:{}')" as the
+  representation for CRS objects that are completely described by an EPSG code.
 - Use GDAL's string parsing to get metadata item keys and values, which
   accommodates uncommon "KEY:VALUE" forms.
 

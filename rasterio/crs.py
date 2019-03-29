@@ -275,7 +275,7 @@ class CRS(collections.Mapping):
     def __repr__(self):
         epsg_code = self.to_epsg()
         if epsg_code:
-            return "CRS.from_dict(init='epsg:{}')".format(epsg_code)
+            return "CRS.from_epsg({})".format(epsg_code)
         else:
             return "CRS.from_wkt('{}')".format(self.wkt)
 

@@ -260,7 +260,7 @@ def test_has_wkt_property():
 
 
 def test_repr():
-    assert repr(CRS({'init': 'epsg:4326'})).startswith("CRS.from_dict(init")
+    assert repr(CRS({'init': 'epsg:4326'})).startswith("CRS.from_epsg(4326)")
 
 
 def test_dunder_str():
