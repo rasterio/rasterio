@@ -825,7 +825,6 @@ def test_oss_session_credentials(gdalenv):
         assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
 
 
-
 def test_swift_session_credentials(gdalenv):
     """Create an Env with a oss session."""
     swift_session = SwiftSession(

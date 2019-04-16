@@ -96,7 +96,7 @@ class Session(object):
 
         elif path.scheme == "swift":
             return SwiftSession
-            
+
         # This factory can be extended to other cloud providers here.
         # elif path.scheme == "cumulonimbus":  # for example.
         #     return CumulonimbusSession(*args, **kwargs)
@@ -433,7 +433,6 @@ class SwiftSession(Session):
                 "swift_auth_token": self._session.get_auth()[1]
             }
             
-    
     @classmethod
     def hascreds(cls, config):
         """Determine if the given configuration has proper credentials
@@ -454,7 +453,6 @@ class SwiftSession(Session):
         """The session credentials as a dict"""
         return self._creds
 
-
     def get_credential_options(self):
         """Get credentials as GDAL configuration options
         Returns
@@ -462,3 +460,4 @@ class SwiftSession(Session):
         dict
         """
         return {k.upper(): v for k, v in self.credentials.items()}
+        
