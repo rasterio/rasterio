@@ -2,6 +2,11 @@
 
 import pytest
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession, SwiftSession
 
 
