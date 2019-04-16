@@ -2,7 +2,7 @@
 
 import pytest
 
-from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession
+from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession, SwiftSession
 
 
 def test_base_session_hascreds_notimpl():
@@ -157,3 +157,39 @@ def test_gs_session_class():
     assert gs_session._creds
     assert gs_session.get_credential_options()['GOOGLE_APPLICATION_CREDENTIALS'] == 'foo'
     assert gs_session.hascreds({'GOOGLE_APPLICATION_CREDENTIALS': 'foo'})
+
+
+def test_swift_session_class():
+    """SwiftSession works"""
+    swift_session = SwiftSession(
+        swift_storage_url='foo',
+        swift_auth_token='bar',)
+    assert swift_session._creds
+    assert swift_session.get_credential_options()['SWIFT_STORAGE_URL'] == 'foo'
+    assert swift_session.get_credential_options()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_swift_session_by_user_key():
+    def mock_init(self, session=None, 
+                swift_storage_url=None, swift_auth_token=None, 
+                swift_auth_v1_url=None, swift_user=None, swift_key=None):
+        self._creds = {'SWIFT_STORAGE_URL':'foo',
+                       'SWIFT_AUTH_TOKEN':'bar'}
+    with mock.patch('rasterio.session.SwiftSession.__init__', new=mock_init):
+        swift_session = SwiftSession(
+            swift_auth_v1_url='foo',
+            swift_user='bar',
+            swift_key='key')
+        assert swift_session._creds
+        assert swift_session.get_credential_options()['SWIFT_STORAGE_URL'] == 'foo'
+        assert swift_session.get_credential_options()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_session_factory_swift_kwargs():
+    """Get an SwiftSession for oss:// paths with keywords"""
+    sesh = Session.from_path("swift://lol/wut", swift_storage_url='foo', swift_auth_token='bar')
+    assert isinstance(sesh, SwiftSession)
+    assert sesh.get_credential_options()['SWIFT_STORAGE_URL'] == 'foo'
+    assert sesh.get_credential_options()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+    
