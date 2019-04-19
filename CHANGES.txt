@@ -4,6 +4,7 @@ Changes
 Next
 ----
 
+- Allow AWS regions to be specified no matter the signing of requests (#1670).
 - Add links to API documentation from the Python quickstart guide.
 - Use "CRS.from_epsg({})" instead of "CRS.from_dict(init='epsg:{}')" as the
   representation for CRS objects that are completely described by an EPSG code.
