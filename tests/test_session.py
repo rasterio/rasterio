@@ -42,9 +42,9 @@ def test_aws_session_class_session():
 def test_aws_session_class_unsigned():
     """AWSSession works"""
     pytest.importorskip("boto3")
-    sesh = AWSSession(aws_unsigned=True)
-    assert sesh._session is None
+    sesh = AWSSession(aws_unsigned=True, region_name='us-mountain-1')
     assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
+    assert sesh.get_credential_options()['AWS_REGION'] == 'us-mountain-1'
 
 
 def test_aws_session_class_profile(tmpdir, monkeypatch):

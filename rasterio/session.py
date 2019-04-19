@@ -199,8 +199,6 @@ class AWSSession(Session):
 
         if session:
             self._session = session
-        elif aws_unsigned:
-            self._session = None
         else:
             self._session = boto3.Session(
                 aws_access_key_id=aws_access_key_id,
@@ -258,7 +256,10 @@ class AWSSession(Session):
 
         """
         if self.unsigned:
-            return {'AWS_NO_SIGN_REQUEST': 'YES'}
+            opts = {'AWS_NO_SIGN_REQUEST': 'YES'}
+            if 'aws_region' in self.credentials:
+                opts['AWS_REGION'] = self.credentials['aws_region']
+            return opts
         else:
             return {k.upper(): v for k, v in self.credentials.items()}
 
