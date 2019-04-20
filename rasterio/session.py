@@ -94,7 +94,7 @@ class Session(object):
         elif path.scheme == "oss" or "aliyuncs.com" in path.path:
             return OSSSession
 
-        elif path.scheme == "swift":
+        elif path.path.startswith("/vsiswift/"):
             return SwiftSession
 
         # This factory can be extended to other cloud providers here.
@@ -404,7 +404,7 @@ class SwiftSession(Session):
         --------
         >>> import rasterio
         >>> from rasterio.session import SwiftSession
-        >>> fp = 'swift://testcontainer/test_cog.tif'
+        >>> fp = '/vsiswift/bucket/key.tif'
         >>> conn = Connection(authurl='http://127.0.0.1:7777/auth/v1.0', user='test:tester', key='testing')
         >>> session = SwiftSession(conn)
         >>> with rasterio.Env(session):

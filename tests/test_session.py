@@ -191,10 +191,8 @@ def test_swift_session_by_user_key():
 
 
 def test_session_factory_swift_kwargs():
-    """Get an SwiftSession for oss:// paths with keywords"""
-    sesh = Session.from_path("swift://lol/wut", swift_storage_url='foo', swift_auth_token='bar')
-    assert isinstance(sesh, SwiftSession)
-    assert sesh.get_credential_options()['SWIFT_STORAGE_URL'] == 'foo'
-    assert sesh.get_credential_options()['SWIFT_AUTH_TOKEN'] == 'bar'
+    """Get an SwiftSession for /vsiswift/bucket/key with keywords"""
+    sesh = Session.from_path("/vsiswift/lol/wut", swift_storage_url='foo', swift_auth_token='bar')
+    assert isinstance(sesh, DummySession)
 
     
