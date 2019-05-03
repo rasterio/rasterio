@@ -509,7 +509,7 @@ def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
     """Rasterize operation should succeed for at least one valid geometry
     and should skip any invalid or empty geometries with an error."""
 
-    with pytest.warns(UserWarning, match="SKIPPING: Invalid or empty geometry at index"):
+    with pytest.warns(UserWarning, match="Invalid or empty shape"):
         out = rasterize([geojson_polygon, {'type': 'Polygon', 'coordinates': []}], out_shape=DEFAULT_SHAPE)
 
     assert np.array_equal(out, basic_image_2x2)

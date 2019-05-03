@@ -281,7 +281,7 @@ def rasterize(
         
         else:
             # invalid or empty geometries are skipped and raise a warning instead
-            warnings.warn('SKIPPING: Invalid or empty geometry at index {}'.format(index))
+            warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index))
 
     if not valid_shapes:
         raise ValueError('No valid geometry objects found for rasterize')
