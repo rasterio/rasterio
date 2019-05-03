@@ -56,11 +56,9 @@ cdef class _CRS(object):
     @property
     def linear_units(self):
         """Get linear units of the CRS
-
         Returns
         -------
         str
-
         """
         cdef char *units_c = NULL
         cdef double fmeter
@@ -72,6 +70,29 @@ cdef class _CRS(object):
         else:
             units_b = units_c
             return units_b.decode('utf-8')
+
+    @property
+    def linear_units_factor(self):
+        """Get linear units and the conversion factor to meters of the CRS
+
+        Returns
+        -------
+        tuple
+
+        """
+        cdef char *units_c = NULL
+        cdef double to_meters
+
+        try:
+            if self.is_projected:
+                to_meters = OSRGetLinearUnits(self._osr, &units_c)
+            else:
+                raise CRSError("{}".format("Linear units factor is not defined for non projected CRS"))
+        except CPLE_BaseError as exc:
+            raise CRSError("{}".format(exc))
+        else:
+            units_b = units_c
+            return (units_b.decode('utf-8'), to_meters)
 
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_s = NULL
