@@ -175,6 +175,10 @@ def rasterize(
         dtype=None):
     """Return an image array with input geometries burned in.
 
+    Warnings will be raised for any invalid or empty geometries, and
+    an exception will be raised if there are no valid shapes
+    to rasterize.
+
     Parameters
     ----------
     shapes : iterable of (geometry, value) pairs or iterable over
@@ -260,25 +264,24 @@ def rasterize(
             value = default_value
         geom = getattr(geom, '__geo_interface__', None) or geom
 
-        # geom must be a valid GeoJSON geometry type and non-empty
-        if not is_valid_geom(geom):
-            raise ValueError(
-                'Invalid geometry object at index {0}'.format(index)
-            )
+        if is_valid_geom(geom):
+            shape_values.append(value)
 
-        if geom['type'] == 'GeometryCollection':
-            # GeometryCollections need to be handled as individual parts to
-            # avoid holes in output:
-            # https://github.com/mapbox/rasterio/issues/1253.
-            # Only 1-level deep since GeoJSON spec discourages nested
-            # GeometryCollections
-            for part in geom['geometries']:
-                valid_shapes.append((part, value))
+            if geom['type'] == 'GeometryCollection':
+                # GeometryCollections need to be handled as individual parts to
+                # avoid holes in output:
+                # https://github.com/mapbox/rasterio/issues/1253.
+                # Only 1-level deep since GeoJSON spec discourages nested
+                # GeometryCollections
+                for part in geom['geometries']:
+                    valid_shapes.append((part, value))
 
+            else:
+                valid_shapes.append((geom, value))
+        
         else:
-            valid_shapes.append((geom, value))
-
-        shape_values.append(value)
+            # invalid or empty geometries are skipped and raise a warning instead
+            warnings.warn('SKIPPING: Invalid or empty geometry at index {}'.format(index))
 
     if not valid_shapes:
         raise ValueError('No valid geometry objects found for rasterize')
@@ -435,7 +438,8 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
 def is_valid_geom(geom):
     """
     Checks to see if geometry is a valid GeoJSON geometry type or
-    GeometryCollection.
+    GeometryCollection.  Geometry must be GeoJSON or implement the geo
+    interface.
 
     Geometries must be non-empty, and have at least x, y coordinates.
 
@@ -452,6 +456,8 @@ def is_valid_geom(geom):
 
     geom_types = {'Point', 'MultiPoint', 'LineString', 'LinearRing',
                   'MultiLineString', 'Polygon', 'MultiPolygon'}
+
+    geom = getattr(geom, '__geo_interface__', None) or geom
 
     if 'type' not in geom:
         return False

@@ -114,7 +114,7 @@ def test_geometry_invalid_geom():
                 out_shape=DEFAULT_SHAPE,
                 transform=Affine.identity())
 
-        assert 'Invalid geometry' in exc_info.value.args[0]
+        assert 'No valid geometry objects found for rasterize' in exc_info.value.args[0]
 
 
 def test_geometry_mask_invalid_shape(basic_geometry):
@@ -500,6 +500,16 @@ def test_rasterize_invalid_geom():
             {'type': 'Invalid', 'coordinates': []}]}], out_shape=DEFAULT_SHAPE)
 
 
+def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
+    """Rasterize operation should succeed for at least one valid geometry
+    and should skip any invalid or empty geometries with an error."""
+
+    with pytest.warns(UserWarning, match="SKIPPING: Invalid or empty geometry at index"):
+        out = rasterize([geojson_polygon, {'type': 'Polygon', 'coordinates': []}], out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(out, basic_image_2x2)
+
+
 def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     """Rasterize operation should succeed for an out image."""
     out = np.zeros(DEFAULT_SHAPE)
@@ -540,7 +550,7 @@ def test_rasterize_invalid_shapes():
     with pytest.raises(ValueError) as ex:
         rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
 
-    assert 'Invalid geometry object' in str(ex.value)
+    assert 'No valid geometry objects found for rasterize' in str(ex.value)
 
 
 def test_rasterize_invalid_out_shape(basic_geometry):
