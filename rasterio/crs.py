@@ -236,6 +236,22 @@ class CRS(collections.Mapping):
             return False
 
     @property
+    def linear_units_factor(self):
+        """The linear units of the CRS and the conversion factor to meters.
+
+        The first element of the tuple is a string, its possible values
+        include "metre" and "US survey foot".
+        The second element of the tuple is a float that represent the conversion
+        factor of the raster units to meters.
+
+        Returns
+        -------
+        tuple
+
+        """
+        return self._crs.linear_units_factor
+
+    @property
     def linear_units(self):
         """The linear units of the CRS
 
