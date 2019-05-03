@@ -114,7 +114,7 @@ def test_geometry_invalid_geom():
                 out_shape=DEFAULT_SHAPE,
                 transform=Affine.identity())
 
-        assert 'Invalid geometry' in exc_info.value.args[0]
+        assert 'No valid geometry objects found for rasterize' in exc_info.value.args[0]
 
 
 def test_geometry_mask_invalid_shape(basic_geometry):
@@ -225,6 +225,11 @@ def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(WindowError):
             geometry_window(src, [basic_geometry], north_up=False)
+
+
+def test_is_valid_geo_interface(geojson_point):
+    """Properly formed Point object with geo interface is valid"""
+    assert is_valid_geom(MockGeoInterface(geojson_point))
 
 
 def test_is_valid_geom_point(geojson_point):
@@ -500,6 +505,16 @@ def test_rasterize_invalid_geom():
             {'type': 'Invalid', 'coordinates': []}]}], out_shape=DEFAULT_SHAPE)
 
 
+def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
+    """Rasterize operation should succeed for at least one valid geometry
+    and should skip any invalid or empty geometries with an error."""
+
+    with pytest.warns(UserWarning, match="Invalid or empty shape"):
+        out = rasterize([geojson_polygon, {'type': 'Polygon', 'coordinates': []}], out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(out, basic_image_2x2)
+
+
 def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     """Rasterize operation should succeed for an out image."""
     out = np.zeros(DEFAULT_SHAPE)
@@ -540,7 +555,7 @@ def test_rasterize_invalid_shapes():
     with pytest.raises(ValueError) as ex:
         rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
 
-    assert 'Invalid geometry object' in str(ex.value)
+    assert 'No valid geometry objects found for rasterize' in str(ex.value)
 
 
 def test_rasterize_invalid_out_shape(basic_geometry):
