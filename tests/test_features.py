@@ -227,6 +227,11 @@ def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
             geometry_window(src, [basic_geometry], north_up=False)
 
 
+def test_is_valid_geo_interface(geojson_point):
+    """Properly formed Point object with geo interface is valid"""
+    assert is_valid_geom(MockGeoInterface(geojson_point))
+
+
 def test_is_valid_geom_point(geojson_point):
     """Properly formed GeoJSON Point is valid"""
     assert is_valid_geom(geojson_point)
