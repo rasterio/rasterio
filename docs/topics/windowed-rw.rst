@@ -16,6 +16,8 @@ in pixels. These may be ints or floats.
 
 .. code-block:: python
 
+   from rasterio.windows import Window
+
    Window(col_off, row_off, width, height)
 
 Windows may also be constructed from numpy array index tuples or slice objects.
