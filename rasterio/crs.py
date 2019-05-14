@@ -101,6 +101,9 @@ class CRS(collections.Mapping):
     def __copy__(self):
         return pickle.loads(pickle.dumps(self))
 
+    def __hash__(self):
+        return hash(self.to_wkt())
+
     def to_proj4(self):
         """Convert CRS to a PROJ4 string
 
