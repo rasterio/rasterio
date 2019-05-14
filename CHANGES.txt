@@ -1,9 +1,10 @@
 Changes
 =======
 
-Next
-----
+1.0.23 (TBD)
+------------
 
+- Block sizes are no longer guarded when creating untiled datasets (#1689).
 - CRS objects are now hashable and equivalent CRS objects have the same hash
   value (#1684).
 - Allow AWS regions to be specified no matter the signing of requests (#1670).

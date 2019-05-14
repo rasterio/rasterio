@@ -12,6 +12,7 @@ import pytest
 import rasterio
 from rasterio.enums import Compression
 from rasterio.errors import RasterioIOError
+from rasterio.transform import Affine
 
 
 def test_files(data):
@@ -40,3 +41,25 @@ def test_dataset_compression(path_rgb_byte_tif, tag_value):
         dataset.tags = MagicMock()
         dataset.tags.return_value = {'COMPRESSION': tag_value}
         assert dataset.compression == Compression(tag_value)
+
+
+def test_untiled_dataset_blocksize(tmp_path):
+    """Blocksize is not relevant to untiled datasets (see #1689)"""
+    tmp_file = tmp_path / "test.tif"
+    with rasterio.open(
+            tmp_file, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
+            transform=Affine.identity(), blockxsize=256, blockysize=256) as dataset:
+        pass
+
+    with rasterio.open(tmp_file) as dataset:
+        assert not dataset.profile["tiled"]
+        assert dataset.shape == (13, 13)
+
+
+def test_tiled_dataset_blocksize_guard(tmp_path):
+    """Tiled datasets with dimensions less than blocksize are not permitted"""
+    tmp_file = tmp_path / "test.tif"
+    with pytest.raises(ValueError):
+        rasterio.open(
+            tmp_file, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
+            transform=Affine.identity(), tiled=True, blockxsize=256, blockysize=256)
