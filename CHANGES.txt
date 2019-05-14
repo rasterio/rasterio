@@ -4,6 +4,9 @@ Changes
 1.0.23 (TBD)
 ------------
 
+- Attempts to set attributes of datasets opened in "r" mode now raise a custom
+  DatasetAttributeError. This exception derives from both RasterioError and
+  NotImplementedError, which maintains backwards compatibility (#1676).
 - Block sizes are no longer guarded when creating untiled datasets (#1689).
 - CRS objects are now hashable and equivalent CRS objects have the same hash
   value (#1684).
