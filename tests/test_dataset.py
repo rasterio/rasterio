@@ -45,6 +45,7 @@ def test_dataset_compression(path_rgb_byte_tif, tag_value):
 
 def test_untiled_dataset_blocksize(tmp_path):
     """Blocksize is not relevant to untiled datasets (see #1689)"""
+    pytest.importorskip("pathlib")
     tmp_file = tmp_path / "test.tif"
     with rasterio.open(
             tmp_file, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
@@ -58,6 +59,7 @@ def test_untiled_dataset_blocksize(tmp_path):
 
 def test_tiled_dataset_blocksize_guard(tmp_path):
     """Tiled datasets with dimensions less than blocksize are not permitted"""
+    pytest.importorskip("pathlib")
     tmp_file = tmp_path / "test.tif"
     with pytest.raises(ValueError):
         rasterio.open(
