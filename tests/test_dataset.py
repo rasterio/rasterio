@@ -11,7 +11,7 @@ import pytest
 
 import rasterio
 from rasterio.enums import Compression
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, DatasetAttributeError
 from rasterio.transform import Affine
 
 
@@ -65,3 +65,16 @@ def test_tiled_dataset_blocksize_guard(tmp_path):
         rasterio.open(
             tmp_file, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
             transform=Affine.identity(), tiled=True, blockxsize=256, blockysize=256)
+
+def test_dataset_readonly_attributes(path_rgb_byte_tif):
+    """Attempts to set read-only attributes fail with DatasetAttributeError"""
+    with pytest.raises(DatasetAttributeError):
+        with rasterio.open(path_rgb_byte_tif) as dataset:
+            dataset.crs = "foo"
+
+
+def test_dataset_readonly_attributes(path_rgb_byte_tif):
+    """Attempts to set read-only attributes still fail with NotImplementedError"""
+    with pytest.raises(NotImplementedError):
+        with rasterio.open(path_rgb_byte_tif) as dataset:
+            dataset.crs = "foo"
