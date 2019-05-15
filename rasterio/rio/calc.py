@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 from distutils.version import LooseVersion
+import math
 
 import click
 import snuggs
@@ -9,24 +10,45 @@ import snuggs
 import rasterio
 from rasterio.features import sieve
 from rasterio.fill import fillnodata
+from rasterio.windows import Window
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 
 
-def get_bands(inputs, d, i=None):
+def _get_bands(inputs, sources, d, i=None):
     """Get a rasterio.Band object from calc's inputs"""
-    path = inputs[d] if d in dict(inputs) else inputs[int(d) - 1][1]
-    src = rasterio.open(path)
+    idx = d if d in dict(inputs) else int(d) - 1
+    src = sources[idx]
     return (rasterio.band(src, i) if i else
             [rasterio.band(src, j) for j in src.indexes])
 
 
-def read_array(ix, subix=None, dtype=None):
+def _read_array(ix, subix=None, dtype=None):
     """Change the type of a read array"""
     arr = snuggs._ctx.lookup(ix, subix)
     if dtype:
         arr = arr.astype(dtype)
     return arr
+
+
+def _get_work_windows(width, height, count, itemsize, mem_limit=1):
+    """Get windows for work"""
+    element_limit = mem_limit * 1.0e+6 / itemsize
+    pixel_limit = element_limit / count
+    work_window_size = int(math.floor(math.sqrt(pixel_limit)))
+    num_windows_cols = int(math.ceil(width / work_window_size))
+    num_windows_rows = int(math.ceil(height / work_window_size))
+    work_windows = []
+
+    for col in range(num_windows_cols):
+        col_offset = col * work_window_size
+        w = min(work_window_size, width - col_offset)
+        for row in range(num_windows_rows):
+            row_offset = row * work_window_size
+            h = min(work_window_size, height - row_offset)
+            work_windows.append(((row, col), Window(col_offset, row_offset, w, h)))
+
+    return work_windows
 
 
 @click.command(short_help="Raster data calculator.")
@@ -40,10 +62,10 @@ def read_array(ix, subix=None, dtype=None):
 @options.dtype_opt
 @options.masked_opt
 @options.overwrite_opt
+@click.option("--mem-limit", type=int, default=64, help="Limit on size of scratch space, in MB.")
 @options.creation_options
 @click.pass_context
-def calc(ctx, command, files, output, name, dtype, masked, overwrite,
-         creation_options):
+def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit, creation_options):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -89,19 +111,37 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite,
         with ctx.obj['env']:
             output, files = resolve_inout(files=files, output=output,
                                           overwrite=overwrite)
-
             inputs = ([tuple(n.split('=')) for n in name] +
                       [(None, n) for n in files])
+            sources = [rasterio.open(path) for name, path in inputs]
 
-            with rasterio.open(inputs[0][1]) as first:
-                kwargs = first.meta
-                kwargs.update(**creation_options)
-                dtype = dtype or first.meta['dtype']
-                kwargs['dtype'] = dtype
+            first = sources[0]
+            kwargs = first.profile
+            kwargs.update(**creation_options)
+            dtype = dtype or first.meta['dtype']
+            kwargs['dtype'] = dtype
 
-            ctxkwds = OrderedDict()
-            for i, (name, path) in enumerate(inputs):
-                with rasterio.open(path) as src:
+            # Extend snuggs.
+            snuggs.func_map['read'] = _read_array
+            snuggs.func_map['band'] = lambda d, i: _get_bands(inputs, sources, d, i)
+            snuggs.func_map['bands'] = lambda d: _get_bands(inputs, sources, d)
+            snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
+            snuggs.func_map['sieve'] = lambda *args: sieve(*args)
+
+            dst = None
+
+            # The windows iterator is initialized with a single sample.
+            # The actual work windows will be added in the second
+            # iteration of the loop.
+            work_windows = [(None, Window(0, 0, 16, 16))]
+            work_windows_itr = iter(work_windows)
+
+            for ij, window in work_windows_itr:
+
+                ctxkwds = OrderedDict()
+
+                for i, ((name, path), src) in enumerate(zip(inputs, sources)):
+
                     # Using the class method instead of instance
                     # method. Latter raises
                     #
@@ -110,32 +150,31 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite,
                     #
                     # possibly something to do with the instance being
                     # a masked array.
-                    ctxkwds[name or '_i%d' % (i + 1)] = src.read(masked=masked)
+                    ctxkwds[name or '_i%d' % (i + 1)] = src.read(masked=masked, window=window)
 
-            # Extend snuggs.
-            snuggs.func_map['read'] = read_array
-            snuggs.func_map['band'] = lambda d, i: get_bands(inputs, d, i)
-            snuggs.func_map['bands'] = lambda d: get_bands(inputs, d)
-            snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
-            snuggs.func_map['sieve'] = lambda *args: sieve(*args)
+                res = snuggs.eval(command, **ctxkwds)
 
-            res = snuggs.eval(command, ctxkwds)
+                if (isinstance(res, np.ma.core.MaskedArray) and (
+                        tuple(LooseVersion(np.__version__).version) < (1, 9) or
+                        tuple(LooseVersion(np.__version__).version) > (1, 10))):
+                    res = res.filled(kwargs['nodata'])
 
-            if (isinstance(res, np.ma.core.MaskedArray) and (
-                    tuple(LooseVersion(np.__version__).version) < (1, 9) or
-                    tuple(LooseVersion(np.__version__).version) > (1, 10))):
-                res = res.filled(kwargs['nodata'])
+                if len(res.shape) == 3:
+                    results = np.ndarray.astype(res, dtype, copy=False)
+                else:
+                    results = np.asanyarray(
+                        [np.ndarray.astype(res, dtype, copy=False)])
 
-            if len(res.shape) == 3:
-                results = np.ndarray.astype(res, dtype, copy=False)
-            else:
-                results = np.asanyarray(
-                    [np.ndarray.astype(res, dtype, copy=False)])
+                # The first iteration is only to get sample results and from them
+                # compute some properties of the output dataset.
+                if dst is None:
+                    kwargs['count'] = results.shape[0]
+                    dst = rasterio.open(output, 'w', **kwargs)
+                    work_windows.extend(_get_work_windows(dst.width, dst.height, dst.count, np.dtype(dst.dtypes[0]).itemsize, mem_limit=mem_limit))
 
-            kwargs['count'] = results.shape[0]
-
-            with rasterio.open(output, 'w', **kwargs) as dst:
-                dst.write(results)
+                # In subsequent iterations we write results.
+                else:
+                    dst.write(results, window=window)
 
     except snuggs.ExpressionError as err:
         click.echo("Expression Error:")
@@ -143,3 +182,9 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite,
         click.echo(' ' + ' ' * err.offset + "^")
         click.echo(err)
         raise click.Abort()
+
+    finally:
+        if dst:
+            dst.close()
+        for src in sources:
+            src.close()

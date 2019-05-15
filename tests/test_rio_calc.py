@@ -1,13 +1,9 @@
-import sys
-import logging
-
 from click.testing import CliRunner
+import pytest
 
 import rasterio
+from rasterio.rio.calc import _get_work_windows
 from rasterio.rio.main import main_group
-
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_err(tmpdir):
@@ -138,6 +134,7 @@ def test_fillnodata_map(tmpdir):
         assert round(data.mean(), 1) == 58.6
         assert data[0][60][60] > 0
 
+
 def test_sieve_band(tmpdir):
     outfile = str(tmpdir.join('out.tif'))
     runner = CliRunner()
@@ -183,3 +180,16 @@ def test_positional_calculation_byindex(tmpdir):
 
     with rasterio.open(outfile) as src:
         assert src.read(1, window=window) == answer
+
+
+@pytest.mark.parametrize('width', [10, 791, 3000])
+@pytest.mark.parametrize('height', [8, 718, 4000])
+@pytest.mark.parametrize('count', [1, 3, 4])
+@pytest.mark.parametrize('itemsize', [1, 2, 8])
+@pytest.mark.parametrize('mem_limit', [1, 16, 64, 512])
+def test_get_work_windows(width, height, count, itemsize, mem_limit):
+    work_windows = _get_work_windows(width, height, count, itemsize, mem_limit=mem_limit)
+    num_windows_rows = max(i for ((i, j), w) in work_windows) + 1
+    num_windows_cols = max(j for ((i, j), w) in work_windows) + 1
+    assert sum((w.width for ij, w in work_windows)) == width * num_windows_rows
+    assert sum((w.height for ij, w in work_windows)) == height * num_windows_cols
