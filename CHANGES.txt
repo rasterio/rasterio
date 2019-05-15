@@ -4,6 +4,8 @@ Changes
 1.0.23 (TBD)
 ------------
 
+- Break rio-calc output into chunks of user-specified size to constrain the
+  amount of memory used (#1668).
 - Attempts to set attributes of datasets opened in "r" mode now raise a custom
   DatasetAttributeError. This exception derives from both RasterioError and
   NotImplementedError, which maintains backwards compatibility (#1676).
