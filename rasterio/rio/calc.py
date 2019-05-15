@@ -134,9 +134,8 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
             # The actual work windows will be added in the second
             # iteration of the loop.
             work_windows = [(None, Window(0, 0, 16, 16))]
-            work_windows_itr = iter(work_windows)
 
-            for ij, window in work_windows_itr:
+            for ij, window in work_windows:
 
                 ctxkwds = OrderedDict()
 

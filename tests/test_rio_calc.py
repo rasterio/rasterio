@@ -189,7 +189,7 @@ def test_positional_calculation_byindex(tmpdir):
 @pytest.mark.parametrize('mem_limit', [1, 16, 64, 512])
 def test_get_work_windows(width, height, count, itemsize, mem_limit):
     work_windows = _get_work_windows(width, height, count, itemsize, mem_limit=mem_limit)
-    num_windows_rows = max(i for ((i, j), w) in work_windows) + 1
-    num_windows_cols = max(j for ((i, j), w) in work_windows) + 1
+    num_windows_rows = max([i for ((i, j), w) in work_windows]) + 1
+    num_windows_cols = max([j for ((i, j), w) in work_windows]) + 1
     assert sum((w.width for ij, w in work_windows)) == width * num_windows_rows
     assert sum((w.height for ij, w in work_windows)) == height * num_windows_cols
