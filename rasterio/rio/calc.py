@@ -33,24 +33,47 @@ def _read_array(ix, subix=None, dtype=None):
     return arr
 
 
-def _get_work_windows(width, height, count, itemsize, mem_limit=1):
-    """Get windows for work"""
-    element_limit = mem_limit * 1.0e+6 / itemsize
-    pixel_limit = element_limit / count
-    work_window_size = int(math.floor(math.sqrt(pixel_limit)))
-    num_windows_cols = int(math.ceil(width / work_window_size))
-    num_windows_rows = int(math.ceil(height / work_window_size))
-    work_windows = []
+def _chunk_output(width, height, count, itemsize, mem_limit=1):
+    """Divide the calculation output into chunks
 
-    for col in range(num_windows_cols):
-        col_offset = col * work_window_size
-        w = min(work_window_size, width - col_offset)
-        for row in range(num_windows_rows):
-            row_offset = row * work_window_size
-            h = min(work_window_size, height - row_offset)
-            work_windows.append(((row, col), Window(col_offset, row_offset, w, h)))
+    This function determines the chunk size such that an array of shape
+    (chunk_size, chunk_size, count) with itemsize bytes per element
+    requires no more than mem_limit megabytes of memory.
 
-    return work_windows
+    Output chunks are described by rasterio Windows.
+
+    Parameters
+    ----------
+    width : int
+        Output width
+    height : int
+        Output height
+    count : int
+        Number of output bands
+    itemsize : int
+        Number of bytes per pixel
+    mem_limit : int, default
+        The maximum size in memory of a chunk array
+
+    Returns
+    -------
+    sequence of Windows
+    """
+    max_pixels = mem_limit * 1.0e+6 / itemsize * count
+    chunk_size = int(math.floor(math.sqrt(max_pixels)))
+    ncols = int(math.ceil(width / chunk_size))
+    nrows = int(math.ceil(height / chunk_size))
+    chunk_windows = []
+
+    for col in range(ncols):
+        col_offset = col * chunk_size
+        w = min(chunk_size, width - col_offset)
+        for row in range(nrows):
+            row_offset = row * chunk_size
+            h = min(chunk_size, height - row_offset)
+            chunk_windows.append(((row, col), Window(col_offset, row_offset, w, h)))
+
+    return chunk_windows
 
 
 @click.command(short_help="Raster data calculator.")
@@ -171,7 +194,7 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
                 if dst is None:
                     kwargs['count'] = results.shape[0]
                     dst = rasterio.open(output, 'w', **kwargs)
-                    work_windows.extend(_get_work_windows(dst.width, dst.height, dst.count, np.dtype(dst.dtypes[0]).itemsize, mem_limit=mem_limit))
+                    work_windows.extend(_chunk_output(dst.width, dst.height, dst.count, np.dtype(dst.dtypes[0]).itemsize, mem_limit=mem_limit))
 
                 # In subsequent iterations we write results.
                 else:

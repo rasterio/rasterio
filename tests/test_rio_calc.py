@@ -2,7 +2,7 @@ from click.testing import CliRunner
 import pytest
 
 import rasterio
-from rasterio.rio.calc import _get_work_windows
+from rasterio.rio.calc import _chunk_output
 from rasterio.rio.main import main_group
 
 
@@ -187,8 +187,8 @@ def test_positional_calculation_byindex(tmpdir):
 @pytest.mark.parametrize('count', [1, 3, 4])
 @pytest.mark.parametrize('itemsize', [1, 2, 8])
 @pytest.mark.parametrize('mem_limit', [1, 16, 64, 512])
-def test_get_work_windows(width, height, count, itemsize, mem_limit):
-    work_windows = _get_work_windows(width, height, count, itemsize, mem_limit=mem_limit)
+def test_chunk_output(width, height, count, itemsize, mem_limit):
+    work_windows = _chunk_output(width, height, count, itemsize, mem_limit=mem_limit)
     num_windows_rows = max([i for ((i, j), w) in work_windows]) + 1
     num_windows_cols = max([j for ((i, j), w) in work_windows]) + 1
     assert sum((w.width for ij, w in work_windows)) == width * num_windows_rows
