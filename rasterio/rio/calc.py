@@ -87,7 +87,7 @@ def _chunk_output(width, height, count, itemsize, mem_limit=1):
 @options.dtype_opt
 @options.masked_opt
 @options.overwrite_opt
-@click.option("--mem-limit", type=int, default=64, help="Limit on size of scratch space, in MB.")
+@click.option("--mem-limit", type=int, default=64, help="Limit on memory used to perform calculations, in MB.")
 @options.creation_options
 @click.pass_context
 def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit, creation_options):
@@ -103,13 +103,13 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
 
     \b
         * (read i) evaluates to the i-th input dataset (a 3-D array).
-        * (read i j) evaluates to the j-th band of the i-th dataset (a 2-D
-          array).
-        * (take foo j) evaluates to the j-th band of a dataset named foo (see
-          help on the --name option above).
+        * (read i j) evaluates to the j-th band of the i-th dataset (a
+          2-D array).
+        * (take foo j) evaluates to the j-th band of a dataset named foo
+          (see help on the --name option above).
         * Standard numpy array operators (+, -, *, /) are available.
-        * When the final result is a list of arrays, a multi band output
-          file is written.
+        * When the final result is a list of arrays, a multiple band
+          output file is written.
         * When the final result is a single array, a single band output
           file is written.
 
@@ -119,15 +119,18 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
          $ rio calc "(+ 2 (* 0.95 (read 1)))" tests/data/RGB.byte.tif \\
          > /tmp/out.tif
 
-    Produces a 3-band GeoTIFF with all values scaled by 0.95 and
-    incremented by 2.
+    The command above produces a 3-band GeoTIFF with all values scaled
+    by 0.95 and incremented by 2.
 
     \b
         $ rio calc "(asarray (+ 125 (read 1)) (read 1) (read 1))" \\
         > tests/data/shade.tif /tmp/out.tif
 
-    Produces a 3-band RGB GeoTIFF, with red levels incremented by 125,
-    from the single-band input.
+    The command above produces a 3-band RGB GeoTIFF, with red levels
+    incremented by 125, from the single-band input.
+
+    The maximum amount of memory used to perform caculations defaults to
+    64 MB. This number can be increased to improve speed of calculation.
 
     """
     import numpy as np
