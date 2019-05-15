@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.0.23 (TBD)
-------------
+1.0.23 (2019-05-15)
+-------------------
 
 - Break rio-calc output into chunks of user-specified size to constrain the
   amount of memory used (#1668).
