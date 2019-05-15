@@ -1,5 +1,7 @@
 """$ rio calc"""
 
+from __future__ import division
+
 from collections import OrderedDict
 from distutils.version import LooseVersion
 import math
