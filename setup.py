@@ -81,6 +81,9 @@ extra_link_args = []
 gdal2plus = False
 gdal_output = [None] * 4
 gdalversion = None
+gdal_major_version = 0
+gdal_minor_version = 0
+sdist_fill = []
 
 try:
     import numpy as np
@@ -88,63 +91,64 @@ try:
 except ImportError:
     sys.exit("ERROR: Numpy and its headers are required to run setup().")
 
-try:
-    gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
-    for i, flag in enumerate(("--cflags", "--libs", "--datadir", "--version")):
-        gdal_output[i] = check_output([gdal_config, flag]).strip()
+if "clean" not in sys.argv:
+    try:
+        gdal_config = os.environ.get('GDAL_CONFIG', 'gdal-config')
+        for i, flag in enumerate(("--cflags", "--libs", "--datadir", "--version")):
+            gdal_output[i] = check_output([gdal_config, flag]).strip()
 
-    for item in gdal_output[0].split():
-        if item.startswith("-I"):
-            include_dirs.extend(item[2:].split(":"))
-    for item in gdal_output[1].split():
-        if item.startswith("-L"):
-            library_dirs.extend(item[2:].split(":"))
-        elif item.startswith("-l"):
-            libraries.append(item[2:])
+        for item in gdal_output[0].split():
+            if item.startswith("-I"):
+                include_dirs.extend(item[2:].split(":"))
+        for item in gdal_output[1].split():
+            if item.startswith("-L"):
+                library_dirs.extend(item[2:].split(":"))
+            elif item.startswith("-l"):
+                libraries.append(item[2:])
+            else:
+                # e.g. -framework GDAL
+                extra_link_args.append(item)
+        # datadir, gdal_output[2] handled below
+
+        gdalversion = gdal_output[3]
+        if gdalversion:
+            log.info("GDAL API version obtained from gdal-config: %s",
+                     gdalversion)
+
+    except Exception as e:
+        if os.name == "nt":
+            log.info("Building on Windows requires extra options to setup.py "
+                     "to locate needed GDAL files. More information is available "
+                     "in the README.")
         else:
-            # e.g. -framework GDAL
-            extra_link_args.append(item)
-    # datadir, gdal_output[2] handled below
+            log.warning("Failed to get options via gdal-config: %s", str(e))
 
-    gdalversion = gdal_output[3]
-    if gdalversion:
-        log.info("GDAL API version obtained from gdal-config: %s",
+
+    # Get GDAL API version from environment variable.
+    if 'GDAL_VERSION' in os.environ:
+        gdalversion = os.environ['GDAL_VERSION']
+        log.info("GDAL API version obtained from environment: %s", gdalversion)
+
+    # Get GDAL API version from the command line if specified there.
+    if '--gdalversion' in sys.argv:
+        index = sys.argv.index('--gdalversion')
+        sys.argv.pop(index)
+        gdalversion = sys.argv.pop(index)
+        log.info("GDAL API version obtained from command line option: %s",
                  gdalversion)
 
-except Exception as e:
-    if os.name == "nt":
-        log.info("Building on Windows requires extra options to setup.py "
-                 "to locate needed GDAL files. More information is available "
-                 "in the README.")
-    else:
-        log.warning("Failed to get options via gdal-config: %s", str(e))
+    if not gdalversion:
+        sys.exit("ERROR: A GDAL API version must be specified. Provide a path "
+                 "to gdal-config using a GDAL_CONFIG environment variable "
+                 "or use a GDAL_VERSION environment variable.")
 
+    gdal_version_parts = gdalversion.split('.')
+    gdal_major_version = int(gdal_version_parts[0])
+    gdal_minor_version = int(gdal_version_parts[1])
 
-# Get GDAL API version from environment variable.
-if 'GDAL_VERSION' in os.environ:
-    gdalversion = os.environ['GDAL_VERSION']
-    log.info("GDAL API version obtained from environment: %s", gdalversion)
-
-# Get GDAL API version from the command line if specified there.
-if '--gdalversion' in sys.argv:
-    index = sys.argv.index('--gdalversion')
-    sys.argv.pop(index)
-    gdalversion = sys.argv.pop(index)
-    log.info("GDAL API version obtained from command line option: %s",
-             gdalversion)
-
-if not gdalversion:
-    sys.exit("ERROR: A GDAL API version must be specified. Provide a path "
-             "to gdal-config using a GDAL_CONFIG environment variable "
-             "or use a GDAL_VERSION environment variable.")
-
-gdal_version_parts = gdalversion.split('.')
-gdal_major_version = int(gdal_version_parts[0])
-gdal_minor_version = int(gdal_version_parts[1])
-
-if gdal_major_version == 1 and gdal_minor_version < 11:
-    sys.exit("ERROR: GDAL >= 1.11 is required for rasterio. "
-             "Please upgrade GDAL.")
+    if gdal_major_version == 1 and gdal_minor_version < 11:
+        sys.exit("ERROR: GDAL >= 1.11 is required for rasterio. "
+                 "Please upgrade GDAL.")
 
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
@@ -240,13 +244,14 @@ if os.environ.get('CYTHON_COVERAGE'):
 
 log.debug('ext_options:\n%s', pprint.pformat(ext_options))
 
-if gdal_major_version >= 2:
-    # GDAL>=2.0 does not require vendorized rasterfill.cpp
-    cython_fill = ['rasterio/_fill.pyx']
-    sdist_fill = ['rasterio/_fill.cpp']
-else:
-    cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
-    sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
+if "clean" not in sys.argv:
+    if gdal_major_version >= 2:
+        # GDAL>=2.0 does not require vendorized rasterfill.cpp
+        cython_fill = ['rasterio/_fill.pyx']
+        sdist_fill = ['rasterio/_fill.cpp']
+    else:
+        cython_fill = ['rasterio/_fill.pyx', 'rasterio/rasterfill.cpp']
+        sdist_fill = ['rasterio/_fill.cpp', 'rasterio/rasterfill.cpp']
 
 
 # When building from a repo, Cython is required.
