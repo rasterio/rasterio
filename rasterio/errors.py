@@ -102,3 +102,7 @@ class UnsupportedOperation(RasterioError):
 
 class OverviewCreationError(RasterioError):
     """Raised when creation of an overview fails"""
+
+
+class DatasetAttributeError(RasterioError, NotImplementedError):
+    """Raised when dataset attributes are misused"""

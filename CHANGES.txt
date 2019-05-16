@@ -1,9 +1,18 @@
 Changes
 =======
 
-Next
-----
+1.0.23 (2019-05-15)
+-------------------
 
+- Break rio-calc output into chunks of user-specified size to constrain the
+  amount of memory used (#1668).
+- Attempts to set attributes of datasets opened in "r" mode now raise a custom
+  DatasetAttributeError. This exception derives from both RasterioError and
+  NotImplementedError, which maintains backwards compatibility (#1676).
+- Block sizes are no longer guarded when creating untiled datasets (#1689).
+- CRS objects are now hashable and equivalent CRS objects have the same hash
+  value (#1684).
+- Allow AWS regions to be specified no matter the signing of requests (#1670).
 - Add links to API documentation from the Python quickstart guide.
 - Use "CRS.from_epsg({})" instead of "CRS.from_dict(init='epsg:{}')" as the
   representation for CRS objects that are completely described by an EPSG code.
@@ -20,7 +29,8 @@ Next
 1.0.21 (2019-02-28)
 -------------------
 
-- Fix for bug in implementation of the pickle protocol (#1643).
+- Fix for bug in implementation of the pickle protocol and added support for
+  Python's copy protocol (#1643).
 
 1.0.20 (2019-02-27)
 -------------------

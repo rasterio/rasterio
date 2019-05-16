@@ -26,6 +26,7 @@ from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
+    DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
@@ -450,7 +451,7 @@ cdef class DatasetBase(object):
             return self.get_nodatavals()
 
     def _set_nodatavals(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property nodata:
         """The dataset's single nodata value
@@ -513,7 +514,7 @@ cdef class DatasetBase(object):
                 for x in self._mask_flags())
 
     def _set_crs(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property crs:
         """The dataset's coordinate reference system
@@ -533,16 +534,16 @@ cdef class DatasetBase(object):
             self._set_crs(value)
 
     def _set_all_descriptions(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     def _set_all_scales(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     def _set_all_offsets(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     def _set_all_units(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute") 
 
     property descriptions:
         """Descriptions for each dataset band
@@ -563,7 +564,7 @@ cdef class DatasetBase(object):
             self._set_all_descriptions(value)
 
     def write_transform(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property transform:
         """The dataset's georeferencing transformation matrix
@@ -1184,7 +1185,7 @@ cdef class DatasetBase(object):
                                          for i in range(num_gcps)], crs)
 
     def _set_gcps(self, values):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property gcps:
         """ground control points and their coordinate reference system.

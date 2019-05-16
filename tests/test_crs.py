@@ -463,3 +463,13 @@ def test_linear_units():
 def test_crs_copy():
     """CRS can be copied"""
     assert copy.copy(CRS.from_epsg(3857)).wkt.startswith('PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84"')
+
+
+def test_crs_hash():
+    """hashes of equivalent CRS are equal"""
+    assert hash(CRS.from_epsg(3857)) == hash(CRS.from_epsg(3857))
+
+
+def test_crs_hash_unequal():
+    """hashes of non-equivalent CRS are not equal"""
+    assert hash(CRS.from_epsg(3857)) != hash(CRS.from_epsg(4326))

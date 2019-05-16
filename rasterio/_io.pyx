@@ -1075,6 +1075,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         fname = name_b
 
         # Process dataset opening options.
+        # "tiled" affects the meaning of blocksize, so we need it
+        # before iterating.
+        tiled = bool(kwargs.get('tiled', False))
+
         for k, v in kwargs.items():
             # Skip items that are definitely *not* valid driver
             # options.
@@ -1084,9 +1088,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             k, v = k.upper(), str(v).upper()
 
             # Guard against block size that exceed image size.
-            if k == 'BLOCKXSIZE' and int(v) > width:
+            if k == 'BLOCKXSIZE' and tiled and int(v) > width:
                 raise ValueError("blockxsize exceeds raster width.")
-            if k == 'BLOCKYSIZE' and int(v) > height:
+            if k == 'BLOCKYSIZE' and tiled and int(v) > height:
                 raise ValueError("blockysize exceeds raster height.")
 
             key_b = k.encode('utf-8')
