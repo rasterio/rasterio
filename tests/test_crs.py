@@ -458,6 +458,18 @@ def test_pickle(factory, arg):
 def test_linear_units():
     """CRS linear units can be had"""
     assert CRS.from_epsg(3857).linear_units == 'metre'
+    assert CRS.from_epsg(2261).linear_units == 'US survey foot'
+    assert CRS.from_epsg(4326).linear_units == 'unknown'
+
+
+def test_linear_units_factor():
+    """CRS linear units can be had"""
+    assert CRS.from_epsg(3857).linear_units_factor[0] == 'metre'
+    assert CRS.from_epsg(3857).linear_units_factor[1] == 1.0
+    assert CRS.from_epsg(2261).linear_units_factor[0] == 'US survey foot'
+    assert CRS.from_epsg(2261).linear_units_factor[1] == pytest.approx(0.3048006096012192)
+    with pytest.raises(CRSError):
+        CRS.from_epsg(4326).linear_units_factor
 
 
 def test_crs_copy():
