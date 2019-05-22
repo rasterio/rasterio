@@ -16,11 +16,13 @@ env:
     - GDALVERSION="2.1.4"
     - GDALVERSION="2.2.4"
     - GDALVERSION="2.3.3"
-    - GDALVERSION="2.4.0"
+    - GDALVERSION="2.4.1"
+    - GDALVERSION="3.0.0"
     - GDALVERSION="master"
 
 matrix:
   allow_failures:
+    - env: GDALVERSION="3.0.0"
     - env: GDALVERSION="master"
 
 addons:
