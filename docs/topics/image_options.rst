@@ -28,7 +28,7 @@ Options set on entering the context are deleted on exit.
     with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
         # GeoTIFFs written here will have internal masks, not the
         # .msk sidecars.
-        ...
+        # ...
 
     # Option is gone and the default (False) returns.
 
@@ -36,7 +36,6 @@ Use native Python forms (``True`` and ``False``) for boolean options. Rasterio
 will convert them GDAL's internal forms.
 
 See the `configuration options`_ page for a complete list of available options.
-
 
 Creation options
 ----------------
@@ -52,16 +51,22 @@ Some of the common GeoTIFF creation options include:
   * ``PHOTOMETRIC`` to define the band's color interpretation
 
 To specify these creation options in python code, you pass them as keyword arguments
-to the ``rasterio.open()`` command in write mode::
+to the ``rasterio.open()`` command in write mode.
+
+.. code-block:: python
 
     with rasterio.open("output.tif", 'w', **src.meta, compress="JPEG",
                        tiled=True, blockxsize=256, blockysize=256,
-                       photometric="YCBCR") as dest:
-        ...
+                       photometric="YCBCR") as dataset:
+        # Write data to the dataset.
+        
+.. note:: The GeoTIFF format requires that *blockxsize* and *blockysize* be multiples of 16.
 
-Or at the command line, ``rio`` commands will accept multiple ``--co`` options::
+On the command line, ``rio`` commands will accept multiple ``--co`` options.
 
-    rio copy source.tif dest.tif --co tiled=true
+.. code-block:: bash
+
+    $ rio copy source.tif dest.tif --co tiled=true
 
 These keyword arguments may be lowercase or uppercase, as you prefer.
 
