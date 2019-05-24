@@ -4,7 +4,7 @@ import pytest
 
 from rasterio._env import GDALDataFinder, PROJDataFinder
 
-from .conftest import gdal_version
+from .conftest import gdal_version, requires_gdal_lt_3
 
 
 @pytest.fixture
@@ -70,6 +70,7 @@ def test_search_debian_gdal_data_failure(tmpdir):
     assert not finder.search_debian(str(tmpdir))
 
 
+@requires_gdal_lt_3
 def test_search_debian_gdal_data(mock_debian):
     """Find GDAL data under Debian locations"""
     finder = GDALDataFinder()
@@ -86,6 +87,7 @@ def test_search_gdal_data_fhs(mock_fhs):
     assert finder.search(str(mock_fhs)) == str(mock_fhs.join("share").join("gdal"))
 
 
+@requires_gdal_lt_3
 def test_search_gdal_data_debian(mock_debian):
     """Find GDAL data under Debian locations"""
     finder = GDALDataFinder()

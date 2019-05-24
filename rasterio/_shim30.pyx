@@ -1,18 +1,26 @@
-"""Rasterio shims for GDAL 2.0"""
+"""Rasterio shims for GDAL 3.x"""
 
 # cython: boundscheck=False
+
+include "directives.pxi"
 
 # The baseline GDAL API.
 include "gdal.pxi"
 
-# Shim API for GDAL >= 2.0
+# Shim API for GDAL >= 3.0
 include "shim_rasterioex.pxi"
 
 
-# Declarations and implementations specific for GDAL = 2.0
+# Declarations and implementations specific for GDAL >= 3.x
 cdef extern from "gdal.h" nogil:
 
-    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings)
+    cdef CPLErr GDALDeleteRasterNoDataValue(GDALRasterBandH hBand)
+    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
+
+
+cdef extern from "ogr_srs_api.h" nogil:
+    const char* OSRGetName(OGRSpatialReferenceH hSRS)
+
 
 from rasterio._err cimport exc_wrap_pointer
 
@@ -21,10 +29,10 @@ cdef GDALDatasetH open_dataset(
         object filename, int flags, object allowed_drivers,
         object open_options, object siblings) except NULL:
     """Wrapper for GDALOpen and GDALOpenShared"""
-    cdef const char *fname = NULL
     cdef char **drivers = NULL
     cdef char **options = NULL
     cdef GDALDatasetH hds = NULL
+    cdef const char *fname = NULL
 
     filename = filename.encode('utf-8')
     fname = filename
@@ -36,7 +44,6 @@ cdef GDALDatasetH open_dataset(
             name = name.encode('utf-8')
             drivers = CSLAddString(drivers, <const char *>name)
 
-    # Construct a null terminated C list of opening/creation options.
     for k, v in open_options.items():
         k = k.upper().encode('utf-8')
 
@@ -53,7 +60,7 @@ cdef GDALDatasetH open_dataset(
         raise NotImplementedError(
             "Sibling files are not implemented")
 
-    # Ensure raster flag.
+    # Ensure raster flags
     flags = flags | 0x02
 
     with nogil:
@@ -66,9 +73,8 @@ cdef GDALDatasetH open_dataset(
 
 
 cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
-    raise NotImplementedError(
-        "GDAL versions < 2.1 do not support nodata deletion")
+    return GDALDeleteRasterNoDataValue(hBand)
 
 
 cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
-    return ''
+    return OSRGetName(hSrs)

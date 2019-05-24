@@ -15,7 +15,7 @@ from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
-from rasterio._shim cimport open_dataset
+from rasterio._shim cimport open_dataset, osr_get_name
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
