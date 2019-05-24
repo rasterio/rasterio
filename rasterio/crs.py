@@ -63,7 +63,6 @@ class CRS(collections.Mapping):
         self._crs = None
 
         if initialdata or kwargs:
-
             data = dict(initialdata or {})
             data.update(**kwargs)
             data = {k: v for k, v in data.items() if k in all_proj_keys}

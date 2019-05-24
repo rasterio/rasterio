@@ -188,3 +188,8 @@ cdef int io_multi_mask(
                 break
 
     return exc_wrap_int(retval)
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    return ''
+

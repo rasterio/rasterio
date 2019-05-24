@@ -69,3 +69,7 @@ cdef GDALDatasetH open_dataset(
 
 cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
     return GDALDeleteRasterNoDataValue(hBand)
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    return ''
