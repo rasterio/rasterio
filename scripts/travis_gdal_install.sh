@@ -41,11 +41,7 @@ GDALOPTS="  --with-geos \
             --without-perl \
             --without-python"
 
-if [ "${GDALVERSION::1}" = "1" ]; then
-    PROJOPT="--with-static-proj4=/usr/lib";
-else
-    PROJOPT="--with-proj";
-fi
+PROJOPT="--with-proj=$PROJINST"
 
 # Create build dir if not exists
 if [ ! -d "$GDALBUILD" ]; then

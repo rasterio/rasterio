@@ -10,6 +10,7 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
+    - PROJINST=$HOME/projinstall
     - PROJBUILD=$HOME/projbuild
   matrix:
     - GDALVERSION="1.11.5"
