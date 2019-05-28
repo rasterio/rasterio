@@ -1,7 +1,11 @@
 #!/bin/sh
 set -e
 
-PROJVERSION=6.1.0
+if [ "$GDALVERSION" == "master" ] || [ "$GDALVERSION" == "3*" ]; then
+    PROJVERSION=6.1.0;
+else
+    PROJVERSION=4.8.0;
+fi
 
 # Create build dir if not exists
 if [ ! -d "$PROJBUILD" ]; then
@@ -14,6 +18,7 @@ fi
 
 ls -l $PROJINST
 
+echo "PROJ VERSION: $PROJVERSION"
 
 cd $PROJBUILD
 wget -q https://download.osgeo.org/proj/proj-$PROJVERSION.tar.gz
