@@ -12,7 +12,6 @@ env:
     - GDALBUILD=$HOME/gdalbuild
     - PROJINST=$HOME/projinstall
     - PROJBUILD=$HOME/projbuild
-    - LD_LIBRARY_PATH=$HOME/projbuild/lib:$LD_LIBRARY_PATH
   matrix:
     - GDALVERSION="1.11.5"
     - GDALVERSION="2.0.3"
