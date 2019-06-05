@@ -112,7 +112,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
 
 
 def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
-         filled=True, crop=False, pad=False, indexes=None):
+         filled=True, crop=False, pad=False, pad_width=0.5, indexes=None):
     """Creates a masked or filled array using input shapes.
     Pixels are masked or set to nodata outside the input shapes, unless
     `invert` is `True`.
@@ -181,7 +181,7 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
 
     shape_mask, transform, window = raster_geometry_mask(
         dataset, shapes, all_touched=all_touched, invert=invert, crop=crop,
-        pad=pad)
+        pad=pad, pad_width=pad_width)
 
     if indexes is None:
         out_shape = (dataset.count, ) + shape_mask.shape
