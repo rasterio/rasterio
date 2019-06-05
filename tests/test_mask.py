@@ -120,7 +120,7 @@ def test_raster_geometrymask_crop_pad(basic_image_2x2, basic_image_file,
 
     with rasterio.open(basic_image_file) as src:
         geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            crop=True, pad=True)
+                                                            crop=True, pad=0.5)
 
     image = basic_image_2x2[1:5, 1:5] == 0  # invert because invert=False
 
@@ -244,7 +244,7 @@ def test_mask_pad(basic_image_2x2, basic_image_file, basic_geometry):
 
     geometries = [basic_geometry]
     with rasterio.open(basic_image_file) as src:
-        masked, transform = mask(src, geometries, crop=True, pad=True)
+        masked, transform = mask(src, geometries, crop=True, pad=0.5)
 
     assert masked.shape == (1, 4, 4)
     assert np.array_equal(masked[0], basic_image_2x2[1:5, 1:5])
@@ -264,4 +264,3 @@ def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
     assert (type(masked) == np.ma.MaskedArray)
     assert np.array_equal(masked[0].mask, image.mask)
     assert np.array_equal(masked[0], image)
-

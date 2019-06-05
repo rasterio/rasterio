@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
-                         crop=False, pad=False):
+                         crop=False, pad=0):
     """Create a mask from shapes, transform, and optional window within original
     raster.
 
@@ -66,15 +66,11 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
 
-    if crop and pad:
-        pad_x = 0.5  # pad by 1/2 of pixel size
-        pad_y = 0.5
-    else:
-        pad_x = 0
-        pad_y = 0
+    pad_x = pad_width
+    pad_y = pad_width
 
     north_up = dataset.transform.e <= 0
-    rotated = dataset.transform.b != 0 or dataset.transform.d != 0 
+    rotated = dataset.transform.b != 0 or dataset.transform.d != 0
 
     try:
         window = geometry_window(dataset, shapes, north_up=north_up, rotated=rotated,
@@ -196,4 +192,3 @@ def mask(dataset, shapes, all_touched=False, invert=False, nodata=None,
         out_image = out_image.filled(nodata)
 
     return out_image, transform
-
