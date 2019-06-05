@@ -2,7 +2,10 @@
 
 import rasterio
 
+from .conftest import requires_gdal2
 
+
+@requires_gdal2
 def test_sharing_on(capfd, path_rgb_byte_tif):
     """Datasets are shared"""
     with rasterio.Env() as env:
@@ -22,6 +25,7 @@ def test_sharing_on(capfd, path_rgb_byte_tif):
                 assert "1 S GTiff" in captured.err
 
 
+@requires_gdal2
 def test_sharing_off(capfd, path_rgb_byte_tif):
     """Datasets are not shared"""
     with rasterio.Env() as env:
