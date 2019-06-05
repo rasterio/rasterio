@@ -106,7 +106,7 @@ class MemoryFile(MemoryFileBase):
 
     @ensure_env
     def open(self, driver=None, width=None, height=None, count=None, crs=None,
-             transform=None, dtype=None, nodata=None, **kwargs):
+             transform=None, dtype=None, nodata=None, sharing=False, **kwargs):
         """Open the file and return a Rasterio dataset object.
 
         If data has already been written, the file is opened in 'r'
@@ -127,13 +127,13 @@ class MemoryFile(MemoryFileBase):
             raise IOError("I/O operation on closed file.")
         if self.exists():
             log.debug("VSI path: {}".format(vsi_path.path))
-            return DatasetReader(vsi_path, driver=driver, **kwargs)
+            return DatasetReader(vsi_path, driver=driver, sharing=sharing, **kwargs)
         else:
             writer = get_writer_for_driver(driver)
             return writer(vsi_path, 'w+', driver=driver, width=width,
                           height=height, count=count, crs=crs,
                           transform=transform, dtype=dtype,
-                          nodata=nodata, **kwargs)
+                          nodata=nodata, sharing=sharing, **kwargs)
 
     def __enter__(self):
         self._env = env_ctx_if_needed()
@@ -156,7 +156,7 @@ class ZipMemoryFile(MemoryFile):
         super(ZipMemoryFile, self).__init__(file_or_bytes, ext='zip')
 
     @ensure_env
-    def open(self, path, driver=None, **kwargs):
+    def open(self, path, driver=None, sharing=False, **kwargs):
         """Open a dataset within the zipped stream.
 
         Parameters
@@ -164,6 +164,9 @@ class ZipMemoryFile(MemoryFile):
         path : str
             Path to a dataset in the zip file, relative to the root of the
             archive.
+
+        Other parameters are optional and have the same semantics as the
+        parameters of `rasterio.open()`.
 
         Returns
         -------
@@ -173,7 +176,7 @@ class ZipMemoryFile(MemoryFile):
 
         if self.closed:
             raise IOError("I/O operation on closed file.")
-        return DatasetReader(vsi_path, driver=driver, **kwargs)
+        return DatasetReader(vsi_path, driver=driver, sharing=sharing, **kwargs)
 
 
 def get_writer_for_driver(driver):

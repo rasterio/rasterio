@@ -197,6 +197,8 @@ cdef class DatasetBase(object):
         cdef int flags = 0
         cdef int sharing_flag = (0x20 if sharing else 0x0)
 
+        log.debug("Sharing flag: %r", sharing_flag)
+
         self._hds = NULL
 
         if path is not None:
