@@ -488,6 +488,11 @@ def path_rgb_msk_byte_tif(data_dir):
     return os.path.join(data_dir, 'RGB2.byte.tif')
 
 
+@pytest.fixture(scope='session')
+def path_cogeo_tif(data_dir):
+    return os.path.join(data_dir, 'cogeo.tif')
+
+
 @pytest.fixture(scope='function')
 def _path_multiband_no_colorinterp(tmpdir):
 
