@@ -66,8 +66,8 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
     if crop and invert:
         raise ValueError("crop and invert cannot both be True.")
 
-    pad_x = pad_width
-    pad_y = pad_width
+    pad_x = pad
+    pad_y = pad
 
     north_up = dataset.transform.e <= 0
     rotated = dataset.transform.b != 0 or dataset.transform.d != 0
