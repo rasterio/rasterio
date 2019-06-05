@@ -280,6 +280,9 @@ cdef extern from "gdal.h" nogil:
     CPLErr GDALSetRasterScale(GDALRasterBandH hBand, double dfNewScale)
     CPLErr GDALSetRasterOffset(GDALRasterBandH hBand, double dfNewOffset)
 
+    int GDALDumpOpenDatasets(FILE *fp)
+
+
 cdef extern from "ogr_api.h" nogil:
 
     ctypedef void * OGRLayerH
