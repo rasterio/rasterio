@@ -42,7 +42,7 @@ import rasterio.path
 
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.0.23"
+__version__ = "1.0.24"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -174,7 +174,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         @contextmanager
         def fp_reader(fp):
             memfile = MemoryFile(fp.read())
-            dataset = memfile.open()
+            dataset = memfile.open(driver=driver, sharing=sharing)
             try:
                 yield dataset
             finally:
@@ -190,7 +190,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             memfile = MemoryFile()
             dataset = memfile.open(driver=driver, width=width, height=height,
                                    count=count, crs=crs, transform=transform,
-                                   dtype=dtype, nodata=nodata, **kwargs)
+                                   dtype=dtype, nodata=nodata, sharing=sharing, **kwargs)
             try:
                 yield dataset
             finally:
@@ -213,15 +213,16 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # be taken over by the dataset's context manager if it is not
         # None.
         if mode == 'r':
-            s = DatasetReader(path, driver=driver, **kwargs)
+            s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
         elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode, driver=driver, **kwargs)
+            s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
         elif mode.startswith("w"):
             s = get_writer_for_driver(driver)(path, mode, driver=driver,
                                               width=width, height=height,
                                               count=count, crs=crs,
                                               transform=transform,
                                               dtype=dtype, nodata=nodata,
+                                              sharing=sharing,
                                               **kwargs)
         else:
             raise ValueError(

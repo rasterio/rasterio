@@ -21,6 +21,8 @@ from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
 
+from libc.stdio cimport stderr
+
 
 level_map = {
     0: 0,
@@ -400,3 +402,6 @@ cdef class GDALEnv(ConfigEnv):
             result[key] = val
 
         return result
+
+    def _dump_open_datasets(self):
+        GDALDumpOpenDatasets(stderr)

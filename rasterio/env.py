@@ -245,6 +245,13 @@ class Env(object):
         """Return a mapping of registered drivers."""
         return local._env.drivers()
 
+    def _dump_open_datasets(self):
+        """Writes descriptions of open datasets to stderr
+
+        For debugging and testing purposes.
+        """
+        return local._env._dump_open_datasets()
+
     def __enter__(self):
         log.debug("Entering env context: %r", self)
         if local._env is None:

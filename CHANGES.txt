@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.0.24 (2019-06-05)
+-------------------
+
+- By default GDAL reuses existing dataset connections when possible.
+  Multi-threaded programs must avoid this as must programs that re-open
+  datasets in a different context, such as the overview-seeking program shown
+  in issue #1504. The sharing keyword argument of rasterio.open() was supposed
+  to allow users to disable connection reuse on a case-by-case basis, but the
+  implementation was faulty and connection reuse persisted (#1701). This has
+  been fixed in PR #1704.
+
 1.0.23 (2019-05-15)
 -------------------
 
