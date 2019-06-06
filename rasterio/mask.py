@@ -46,7 +46,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         If True, the features will be padded in each direction by
         one half of a pixel prior to cropping dataset. Defaults to False.
     pad_width : float (opt)
-        If pad is set (to maintain back-compatibility), this will be the
+        If pad is set (to maintain back-compatibility), then this will be the
         pixel-size width of the padding around the mask.
 
     Returns
@@ -70,7 +70,7 @@ def raster_geometry_mask(dataset, shapes, all_touched=False, invert=False,
         raise ValueError("crop and invert cannot both be True.")
 
     if crop and pad:
-        pad_x = pad_width # pad by 1/2 of pixel size
+        pad_x = pad_width
         pad_y = pad_width
     else:
         pad_x = 0

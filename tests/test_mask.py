@@ -244,10 +244,28 @@ def test_mask_pad(basic_image_2x2, basic_image_file, basic_geometry):
 
     geometries = [basic_geometry]
     with rasterio.open(basic_image_file) as src:
-        masked, transform = mask(src, geometries, crop=True, pad=0.5)
+        masked, transform = mask(src, geometries, crop=True, pad=True)
 
     assert masked.shape == (1, 4, 4)
     assert np.array_equal(masked[0], basic_image_2x2[1:5, 1:5])
+
+
+def test_mask_extra_padding(basic_image_2x2, basic_image_file, basic_geometry):
+    """Output should be cropped to extent of data"""
+
+    geometries = [basic_geometry]
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, crop=True, pad=True, pad_width=2)
+
+    assert masked.shape == (1, 7, 7)
+    assert np.array_equal(masked[0], basic_image_2x2[0:7, 0:7])
+
+    geometries = [basic_geometry]
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, crop=True, pad=True, pad_width=4)
+
+    assert masked.shape == (1, 9, 9)
+    assert np.array_equal(masked[0], basic_image_2x2[0:9, 0:9])
 
 
 def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
