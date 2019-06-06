@@ -107,9 +107,12 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
         modes.
-    sharing : bool
-        A flag that allows sharing of dataset handles. Default is
-        `True`. Should be set to `False` in a multithreaded:w program.
+    sharing : bool; optional
+        To reduce overhead and prevent programs from running out of file
+        descriptors, rasterio maintains a pool of shared low level
+        dataset handles. When `True` (the default), this function will
+        use a shared handle if one is available. Multithreaded programs
+        must avoid sharing and should set *sharing* to `False`.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
