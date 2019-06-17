@@ -51,6 +51,12 @@ local = ThreadEnv()
 
 log = logging.getLogger(__name__)
 
+try:
+    import boto3
+except ImportError:
+    log.info("failed to import boto3, continuing.")
+    boto3 = None
+
 
 class Env(object):
     """Abstraction for GDAL and AWS configuration
@@ -191,8 +197,10 @@ class Env(object):
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
+
         elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
-            self.session = AWSSession()
+            self.session = AWSSession() if boto3 is not None else DummySession()
+
         else:
             self.session = DummySession()
 
@@ -348,10 +356,13 @@ def delenv():
 
 
 class NullContextManager(object):
+
     def __init__(self):
         pass
+
     def __enter__(self):
         return self
+
     def __exit__(self, *args):
         pass
 
