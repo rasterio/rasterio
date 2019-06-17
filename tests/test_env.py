@@ -20,7 +20,7 @@ from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession, OSSSession
+from rasterio.session import AWSSession, DummySession, OSSSession
 
 from .conftest import requires_gdal21
 
@@ -823,3 +823,13 @@ def test_oss_session_credentials(gdalenv):
         assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
         assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
         assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
+
+
+def test_dummy_session_without_boto3(monkeypatch, caplog):
+    """Without boto3, always revert to dummy session"""
+    # Confirm fix of #1708.
+    with monkeypatch.context() as mpctx:
+        mpctx.setattr("rasterio.env.boto3", None)
+        mpctx.setenv('AWS_ACCESS_KEY_ID', 'lol')
+        mpctx.setenv('AWS_SECRET_ACCESS_KEY', 'wut')
+        isinstance(rasterio.env.Env().session, DummySession)
