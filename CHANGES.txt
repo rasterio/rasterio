@@ -1,6 +1,13 @@
 Changes
 =======
 
+1.0.25 (TBD)
+------------
+
+- A bug preventing creation of Env instances, and thus dataset opening, when
+  AWS credentials exist in the environment but boto3 is unavailable has been
+  fixed (#1708).
+
 1.0.24 (2019-06-05)
 -------------------
 
