@@ -32,7 +32,7 @@ def test_delete_invalid_path():
 
     with pytest.raises(RasterioIOError) as e:
         rasterio.shutil.delete('trash')
-    assert 'Invalid dataset' in str(e)
+    assert 'Invalid dataset' in str(e.value)
 
 
 def test_delete_invalid_driver(path_rgb_byte_tif, tmpdir):
@@ -43,7 +43,7 @@ def test_delete_invalid_driver(path_rgb_byte_tif, tmpdir):
     rasterio.shutil.copy(path_rgb_byte_tif, path)
     with pytest.raises(DriverRegistrationError) as e:
         rasterio.shutil.delete(path, driver='trash')
-    assert 'Unrecognized driver' in str(e)
+    assert 'Unrecognized driver' in str(e.value)
 
 
 def test_exists(path_rgb_byte_tif):
