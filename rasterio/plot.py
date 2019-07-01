@@ -150,7 +150,7 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 def plotting_extent(source, transform=None):
     """Returns an extent in the format needed
      for matplotlib's imshow (left, right, bottom, top)
-     instead of rasterio's bounds (left, bottom, top, right)
+     instead of rasterio's bounds (left, bottom, right, top)
 
     Parameters
     ----------
