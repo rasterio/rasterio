@@ -4,6 +4,8 @@ Changes
 1.0.25 (TBD)
 ------------
 
+- We were using pytest incorrectly and pytest 5 caught us doing it. This is
+  now fixed in commit b9f34ee.
 - A bug preventing creation of Env instances, and thus dataset opening, when
   AWS credentials exist in the environment but boto3 is unavailable has been
   fixed (#1708).
