@@ -146,6 +146,9 @@ if gdal_major_version == 1 and gdal_minor_version < 11:
     sys.exit("ERROR: GDAL >= 1.11 is required for rasterio. "
              "Please upgrade GDAL.")
 
+elif gdal_major_version >= 3:
+    sys.exit("ERROR: rasterio is not compatible with GDAL >= 3.0.0.")
+
 # Conditionally copy the GDAL data. To be used in conjunction with
 # the bdist_wheel command to make self-contained binary wheels.
 if os.environ.get('PACKAGE_DATA'):
