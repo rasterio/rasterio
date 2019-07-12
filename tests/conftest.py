@@ -600,3 +600,12 @@ requires_gdal21 = pytest.mark.skipif(
 requires_gdal22 = pytest.mark.skipif(
     not gdal_version.at_least('2.2'),
     reason="Requires GDAL 2.2.x")
+
+
+@pytest.fixture(scope="function", autouse=True)
+def no_aws_environ(monkeypatch):
+    monkeypatch.delenv("AWS_ACCOUNT_ID", raising=False)
+    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
+    monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
+    monkeypatch.delenv("AWS_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("AWS_CREDENTIAL_EXPIRATION", raising=False)
