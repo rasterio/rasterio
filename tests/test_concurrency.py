@@ -7,7 +7,7 @@ import rasterio as rio
 
 def get_data(path):
     """Return all raster bands as an ndarray"""
-    with rio.open(path) as src:
+    with rio.open(path, sharing=False) as src:
         return src.read()
 
 
@@ -25,14 +25,14 @@ def test_threads_no_main_env():
             assert res.any()
 
 
-def testget_data_main_env():
+def test_mp_main_env():
     """Get raster data using ProcessPoolExecutor with main thread Env"""
     with rio.Env(), ProcessPoolExecutor() as pool:
         for res in pool.map(get_data, ['tests/data/RGB.byte.tif'] * 10):
             assert res.any()
 
 
-def testget_data_no_main_env():
+def test_mp_no_main_env():
     """Get raster data using ProcessPoolExecutor with main thread Env"""
     with ProcessPoolExecutor() as pool:
         for res in pool.map(get_data, ['tests/data/RGB.byte.tif'] * 10):
