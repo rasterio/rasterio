@@ -35,7 +35,7 @@ def mock_debian(tmpdir):
     tmpdir.ensure("share/gdal/2.2/pcs.csv")
     tmpdir.ensure("share/gdal/2.3/pcs.csv")
     tmpdir.ensure("share/gdal/2.4/pcs.csv")
-    tmpdir.ensure("share/gdal/2.5/pcs.csv")
+    tmpdir.ensure("share/gdal/3.0/pcs.csv")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
 
@@ -70,7 +70,6 @@ def test_search_debian_gdal_data_failure(tmpdir):
     assert not finder.search_debian(str(tmpdir))
 
 
-@requires_gdal_lt_3
 def test_search_debian_gdal_data(mock_debian):
     """Find GDAL data under Debian locations"""
     finder = GDALDataFinder()
@@ -87,7 +86,6 @@ def test_search_gdal_data_fhs(mock_fhs):
     assert finder.search(str(mock_fhs)) == str(mock_fhs.join("share").join("gdal"))
 
 
-@requires_gdal_lt_3
 def test_search_gdal_data_debian(mock_debian):
     """Find GDAL data under Debian locations"""
     finder = GDALDataFinder()
