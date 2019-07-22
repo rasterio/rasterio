@@ -183,6 +183,12 @@ class sdist_multi_gdal(sdist):
         shutil.copy('rasterio/_shim21.pyx', 'rasterio/_shim.pyx')
         _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
                           '-o', 'rasterio/_shim21.c'])
+
+        print(_)
+        shutil.copy('rasterio/_shim30.pyx', 'rasterio/_shim.pyx')
+        _ = check_output(['cython', '-v', '-f', 'rasterio/_shim.pyx',
+                          '-o', 'rasterio/_shim30.c'])
+
         print(_)
         sdist.run(self)
 
@@ -259,7 +265,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             "Cython is required to build from a repo.")
 
     # Copy the GDAL version-specific shim module to _shim.pyx.
-    if gdal_major_version == 2 and gdal_minor_version >= 1:
+    if gdal_major_version == 3 and gdal_minor_version >= 0:
+        shutil.copy('rasterio/_shim30.pyx', 'rasterio/_shim.pyx')
+    elif gdal_major_version == 2 and gdal_minor_version >= 1:
         shutil.copy('rasterio/_shim21.pyx', 'rasterio/_shim.pyx')
     elif gdal_major_version == 2 and gdal_minor_version == 0:
         shutil.copy('rasterio/_shim20.pyx', 'rasterio/_shim.pyx')
@@ -317,7 +325,10 @@ else:
             'rasterio.shutil', ['rasterio/shutil.c'], **ext_options)]
 
     # Copy the GDAL version-specific shim module to _shim.pyx.
-    if gdal_major_version == 2 and gdal_minor_version >= 1:
+    if gdal_major_version == 3 and gdal_minor_version >= 0:
+        ext_modules.append(
+            Extension('rasterio._shim', ['rasterio/_shim30.c'], **ext_options))
+    elif gdal_major_version == 2 and gdal_minor_version >= 1:
         ext_modules.append(
             Extension('rasterio._shim', ['rasterio/_shim21.c'], **ext_options))
     elif gdal_major_version == 2 and gdal_minor_version == 0:

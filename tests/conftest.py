@@ -475,16 +475,19 @@ def data_dir():
 
 @pytest.fixture(scope='session')
 def path_rgb_byte_tif(data_dir):
+    """The original RGB test fixture with no sidecar files"""
     return os.path.join(data_dir, 'RGB.byte.tif')
 
 
 @pytest.fixture(scope='session')
 def path_rgba_byte_tif(data_dir):
+    """Derived from RGB.byte.tif, this has an alpha band"""
     return os.path.join(data_dir, 'RGBA.byte.tif')
 
 
 @pytest.fixture(scope='session')
 def path_rgb_msk_byte_tif(data_dir):
+    """Derived from RGB.byte.tif, this has an external mask"""
     return os.path.join(data_dir, 'RGB2.byte.tif')
 
 
@@ -600,3 +603,7 @@ requires_gdal21 = pytest.mark.skipif(
 requires_gdal22 = pytest.mark.skipif(
     not gdal_version.at_least('2.2'),
     reason="Requires GDAL 2.2.x")
+
+requires_gdal_lt_3 = pytest.mark.skipif(
+    gdal_version.__lt__('3.0'),
+    reason="Requires GDAL 1.x/2.x")

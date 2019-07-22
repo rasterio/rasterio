@@ -639,8 +639,8 @@ class Window(object):
     def round_lengths(self, op='floor', pixel_precision=None):
         """Return a copy with width and height rounded.
 
-        Lengths are rounded to the nearest whole number. The offsets
-        are not changed.
+        Lengths are rounded to the preceding (floor) or succeeding (ceil)
+        whole number. The offsets are not changed.
 
         Parameters
         ----------
@@ -669,8 +669,8 @@ class Window(object):
     def round_offsets(self, op='floor', pixel_precision=None):
         """Return a copy with column and row offsets rounded.
 
-        Offsets are rounded to the nearest whole number. The lengths
-        are not changed.
+        Offsets are rounded to the preceding (floor) or succeeding (ceil)
+        whole number. The lengths are not changed.
 
         Parameters
         ----------

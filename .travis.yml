@@ -10,6 +10,8 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
+    - PROJINST=$HOME/projinstall
+    - PROJBUILD=$HOME/projbuild
   matrix:
     - GDALVERSION="1.11.5"
     - GDALVERSION="2.0.3"
@@ -29,7 +31,6 @@ addons:
   apt:
     packages:
     - gdal-bin
-    - libproj-dev
     - libhdf5-serial-dev
     - libgdal-dev
     - libatlas-dev
@@ -45,6 +46,7 @@ before_script: # configure a headless display to test matplotlib
 before_install:
   - python -m pip install -U pip
   - python -m pip install wheel
+  - travis_wait 20 bash ./scripts/travis_proj_install.sh
   - travis_wait 20 bash ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
@@ -52,7 +54,7 @@ install:
   - "if [ \"$GDALVERSION\" == \"master\" -o $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - "python -m pip wheel -r requirements-dev.txt"
   - "python -m pip install -r requirements-dev.txt"
-  - "GDAL_CONFIG=$GDALINST/gdal-$GDALVERSION/bin/gdal-config python -m pip install --upgrade --force-reinstall -e .[test,plot]"
+  - "GDAL_CONFIG=$GDALINST/gdal-$GDALVERSION/bin/gdal-config python -m pip install --upgrade --force-reinstall --no-use-pep517 -e .[test,plot]"
   - "python -m pip install coveralls>=1.1"
   - "rio --version"
   - "rio --gdal-version"

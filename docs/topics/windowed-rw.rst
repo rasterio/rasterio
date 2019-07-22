@@ -39,7 +39,6 @@ and open-ended slices may be used.
    Window.from_slices(slice(10, -10), slice(10, -10), height=100, width=100)
    # Window(col_off=10, row_off=10, width=80, height=80)
 
-
 Reading
 -------
 
@@ -117,7 +116,7 @@ a dataset:
     from rasterio.windows import get_data_window
 
     with rasterio.open('tests/data/RGB.byte.tif') as src:
-        window - get_data_window(src.read(1, masked-True))
+        window = get_data_window(src.read(1, masked=True))
         # window = Window(col_off=13, row_off=3, width=757, height=711)
 
         kwargs = src.meta.copy()
@@ -129,6 +128,29 @@ a dataset:
         with rasterio.open('/tmp/cropped.tif', 'w', **kwargs) as dst:
             dst.write(src.read(window=window))
 
+Window transforms
+-----------------
+
+The affine transform of a window can be accessed using a dataset's
+``window_transform`` method:
+
+.. code-block:: pycon
+
+    >>> import rasterio
+    >>> from rasterio.windows import Window
+    >>> win = Window(256, 256, 128, 128)
+    >>> with rasterio.open('tests/data/RGB.byte.tif') as src:
+    ...     src_transform = src.transform
+    ...     win_transform = src.window_transform(win)
+    ...
+    >>> print(src_transform)
+    | 300.04, 0.00, 101985.00|
+    | 0.00,-300.04, 2826915.00|
+    | 0.00, 0.00, 1.00|
+    >>> print(win_transform)
+    | 300.04, 0.00, 178794.71|
+    | 0.00,-300.04, 2750104.30|
+    | 0.00, 0.00, 1.00|
 
 Window utilities
 ----------------

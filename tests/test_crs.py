@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
-from .conftest import requires_gdal21, requires_gdal22
+from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3
 
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -72,6 +72,7 @@ def test_read_epsg():
         assert src.crs.to_epsg() == 32618
 
 
+@requires_gdal_lt_3
 def test_read_esri_wkt():
     with rasterio.open('tests/data/test_esri_wkt.tif') as src:
         assert 'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",' in src.crs.wkt
@@ -110,7 +111,7 @@ def test_write_3857(tmpdir):
     info = subprocess.check_output([
         'gdalinfo', dst_path])
     # WKT string may vary a bit w.r.t GDAL versions
-    assert 'PROJCS["WGS 84 / Pseudo-Mercator"' in info.decode('utf-8')
+    assert '"WGS 84 / Pseudo-Mercator"' in info.decode('utf-8')
 
 
 def test_write_bogus_fails(tmpdir, profile_rgb_byte_tif):
@@ -183,6 +184,18 @@ def test_is_projected():
 
     wgs84_crs = CRS.from_string('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
     assert CRS(wgs84_crs).is_projected is False
+
+
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
+@pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
+def test_equality_from_epsg(epsg_code):
+    assert CRS.from_epsg(epsg_code) == CRS.from_epsg(epsg_code)
+
+
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
+@pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
+def test_equality_from_dict(epsg_code):
+    assert CRS.from_dict(init='epsg:{}'.format(epsg_code)) == CRS.from_dict(init='epsg:{}'.format(epsg_code))
 
 
 def test_is_same_crs():
@@ -326,6 +339,7 @@ def test_from_user_input_epsg():
     assert 'init' in CRS.from_user_input('epsg:4326')
 
 
+@requires_gdal_lt_3
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_no_fix(projection_string):
     """Test ESRI CRS morphing with no datum fixing"""
@@ -410,6 +424,7 @@ def test_issue1609_wktext_a():
     assert 'PARAMETER["latitude_of_origin",-70]' in wkt
 
 
+@requires_gdal_lt_3
 def test_issue1609_wktext_b():
     """Check on fix of issue 1609"""
     dst_proj = {'ellps': 'WGS84',
@@ -446,6 +461,18 @@ def test_pickle(factory, arg):
 def test_linear_units():
     """CRS linear units can be had"""
     assert CRS.from_epsg(3857).linear_units == 'metre'
+    assert CRS.from_epsg(2261).linear_units == 'US survey foot'
+    assert CRS.from_epsg(4326).linear_units == 'unknown'
+
+
+def test_linear_units_factor():
+    """CRS linear units can be had"""
+    assert CRS.from_epsg(3857).linear_units_factor[0] == 'metre'
+    assert CRS.from_epsg(3857).linear_units_factor[1] == 1.0
+    assert CRS.from_epsg(2261).linear_units_factor[0] == 'US survey foot'
+    assert CRS.from_epsg(2261).linear_units_factor[1] == pytest.approx(0.3048006096012192)
+    with pytest.raises(CRSError):
+        CRS.from_epsg(4326).linear_units_factor
 
 
 def test_crs_copy():

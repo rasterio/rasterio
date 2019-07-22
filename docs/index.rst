@@ -51,6 +51,7 @@ Rasterio supports Python versions 2.7 and 3.3 or higher.
    topics/index
    api/index
    contributing
+   faq
 
 Indices and Tables
 ==================

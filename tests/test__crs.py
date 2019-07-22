@@ -12,7 +12,7 @@ from rasterio._crs import _CRS
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
-from .conftest import requires_gdal21, requires_gdal22
+from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3
 
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -110,6 +110,7 @@ def test_from_wkt_invalid():
         _CRS.from_wkt('bogus')
 
 
+@requires_gdal_lt_3
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_no_fix(projection_string):
     """Test ESRI CRS morphing with no datum fixing"""

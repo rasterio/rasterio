@@ -15,7 +15,7 @@ from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
-from rasterio._shim cimport open_dataset
+from rasterio._shim cimport open_dataset, osr_get_name
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
@@ -1111,7 +1111,7 @@ cdef class DatasetBase(object):
             if color == NULL:
                 log.warn("NULL color at %d, skipping", i)
                 continue
-            log.info(
+            log.debug(
                 "Color: (%d, %d, %d, %d)",
                 color.c1, color.c2, color.c3, color.c4)
             retval[i] = (color.c1, color.c2, color.c3, color.c4)

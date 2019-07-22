@@ -19,7 +19,7 @@ from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession, DummySession, OSSSession
+from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession
 
 from .conftest import requires_gdal21
 
@@ -849,3 +849,32 @@ def test_open_file_expired_aws_credentials(monkeypatch, caplog, path_rgb_byte_ti
         with rasterio.env.Env():
             with rasterio.open(path_rgb_byte_tif) as dataset:
                 assert not dataset.closed
+
+
+def test_swift_session_credentials(gdalenv):
+    """Create an Env with a oss session."""
+    swift_session = SwiftSession(
+        swift_storage_url='foo',
+        swift_auth_token='bar')
+    with rasterio.env.Env(session=swift_session) as s:
+        s.credentialize()
+        assert getenv()['SWIFT_STORAGE_URL'] == 'foo'
+        assert getenv()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_swift_session_by_user_key():
+    def mock_init(self, session=None, 
+                swift_storage_url=None, swift_auth_token=None, 
+                swift_auth_v1_url=None, swift_user=None, swift_key=None):
+        self._creds = {'SWIFT_STORAGE_URL':'foo',
+                       'SWIFT_AUTH_TOKEN':'bar'}
+
+    with mock.patch('rasterio.session.SwiftSession.__init__', new=mock_init):
+        swift_session = SwiftSession(
+            swift_auth_v1_url='foo',
+            swift_user='bar',
+            swift_key='key')
+        with rasterio.env.Env(session=swift_session) as s:
+            s.credentialize()
+            assert getenv()['SWIFT_STORAGE_URL'] == 'foo'
+            assert getenv()['SWIFT_AUTH_TOKEN'] == 'bar'

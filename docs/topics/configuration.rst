@@ -55,7 +55,7 @@ Rasterio
 .. code-block:: python
 
     with rasterio.Env(GTIFF_FORCE_RGBA=True, CPL_DEBUG=True):
-        with rasterio.open('data/stefan_full_greyalpha.tif') as ds:
+        with rasterio.open('data/stefan_full_greyalpha.tif') as dataset:
            # Suite of code accessing dataset ``ds`` follows...
 
 The object returned when you call ``rasterio.Env()`` is a context manager.  It
@@ -89,4 +89,4 @@ the default GDAL or format options.
 
 
 .. |WITHST| replace:: ``with``
-.. _WITHST: https://docs.python.org/2/reference/compound_stmts.html#withhttps://docs.python.org/2/reference/compound_stmts
+.. _WITHST: https://docs.python.org/3.7/reference/compound_stmts.html#the-with-statement
