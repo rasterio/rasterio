@@ -29,7 +29,7 @@ method.
     with rasterio.open("example.tif") as dataset:
         data = dataset.read(
             out_shape=(dataset.height * 2, dataset.width * 2, dataset.count),
-            resampling=resampling.bilinear
+            resampling=Resampling.bilinear
         )
 
 Here is an example of downsampling by a factor of 2 using the average resampling
@@ -40,7 +40,7 @@ method.
     with rasterio.open("example.tif") as dataset:
         data = dataset.read(
             out_shape=(dataset.height / 2, dataset.width / 2, dataset.count),
-            resampling=resampling.average
+            resampling=Resampling.average
         )
 
 .. note::
