@@ -41,9 +41,6 @@ GDALOPTS="  --with-geos \
             --without-perl \
             --without-python"
 
-# cover both GDAL 2.1.x, 2.2.x and other versions
-PROJOPT="--with-proj=$PROJINST --with-static-proj4=$PROJINST"
-
 # Create build dir if not exists
 if [ ! -d "$GDALBUILD" ]; then
   mkdir $GDALBUILD;
@@ -56,6 +53,7 @@ fi
 ls -l $GDALINST
 
 if [ "$GDALVERSION" = "master" ]; then
+  PROJOPT="--with-proj=$PROJINST"
   cd $GDALBUILD
   git clone --depth 1 https://github.com/OSGeo/gdal gdal-$GDALVERSION
   cd gdal-$GDALVERSION/gdal
@@ -74,9 +72,20 @@ if [ "$GDALVERSION" = "master" ]; then
     make -s -j 2
     make install
   fi
-fi
 
-if [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+elif [ "$GDALVERSION" = "3.0.0" ]; then
+  PROJOPT="--with-proj=$PROJINST"
+  cd $GDALBUILD
+  gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
+  wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
+  tar -xzf gdal-$GDALVERSION.tar.gz
+  cd gdal-$gdalver
+  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPT
+  make -s -j 2
+  make install
+
+elif [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+  PROJOPT="--with-static-proj4=$PROJINST"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
