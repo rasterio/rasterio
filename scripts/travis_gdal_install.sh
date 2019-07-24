@@ -73,7 +73,7 @@ if [ "$GDALVERSION" = "master" ]; then
     make install
   fi
 
-elif [[ "$GDALVERSION" == "3"* -a ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
+elif [ "$GDALVERSION" = "3"* -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   PROJOPT="--with-proj=$PROJINST"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
