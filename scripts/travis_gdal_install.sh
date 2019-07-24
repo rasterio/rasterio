@@ -74,7 +74,7 @@ if [ "$GDALVERSION" = "master" ]; then
   fi
 
 elif [ "$GDALVERSION" = "3"* -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
-  PROJOPT="--with-proj=$PROJINST"
+  PROJOPT="--with-proj=$PROJINST/proj-$PROJVERSION"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
@@ -85,7 +85,7 @@ elif [ "$GDALVERSION" = "3"* -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
   make install
 
 elif [ "$GDALVERSION" != "master" -a ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
-  PROJOPT="--with-static-proj4=$PROJINST"
+  PROJOPT="--with-static-proj4=$PROJINST/proj-$PROJVERSION"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
