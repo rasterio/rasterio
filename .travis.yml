@@ -33,7 +33,6 @@ matrix:
 addons:
   apt:
     packages:
-    - gdal-bin
     - libhdf5-serial-dev
     - libgdal-dev
     - libatlas-dev
@@ -44,7 +43,6 @@ before_install:
   - python -m pip install -U pip
   - python -m pip install wheel
   - bash ./scripts/travis_proj_install.sh
-  - export LD_LIBRARY_PATH=$PROJINST/proj-$PROJVERSION/lib:$LD_LIBRARY_PATH
   - travis_wait 20 bash ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
