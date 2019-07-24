@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-if [ "$GDALVERSION" == "master" ] || [ "$GDALVERSION" == "3*" ]; then
+if [ "$GDALVERSION" == "master" ] || [ "$GDALVERSION" == "3"* ]; then
     PROJVERSION=6.1.0;
 else
     PROJVERSION=4.8.0;
