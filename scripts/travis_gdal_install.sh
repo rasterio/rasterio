@@ -53,7 +53,7 @@ fi
 ls -l $GDALINST
 
 if [ $GDALVERSION = "master" ]; then
-  PROJOPT="--with-proj=$PROJINST/proj-$PROJVERSION"
+  PROJOPT="--with-proj=$GDALINST/gdal-$GDALVERSION"
   cd $GDALBUILD
   git clone --depth 1 https://github.com/OSGeo/gdal gdal-$GDALVERSION
   cd gdal-$GDALVERSION/gdal
@@ -74,7 +74,7 @@ if [ $GDALVERSION = "master" ]; then
   fi
 
 elif [[ $GDALVERSION =~ ^3 && ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
-  PROJOPT="--with-proj=$PROJINST/proj-$PROJVERSION"
+  PROJOPT="--with-proj=$GDALINST/gdal-$GDALVERSION"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
@@ -84,8 +84,19 @@ elif [[ $GDALVERSION =~ ^3 && ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
   make -s -j 2
   make install
 
-elif [[ $GDALVERSION =~ ^2 || $GDALVERSION =~ ^1 && ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
-  PROJOPT="--with-static-proj4=$PROJINST/proj-$PROJVERSION"
+elif [[ $GDALVERSION =~ ^2 && ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
+  PROJOPT="--with-proj=$GDALINST/gdal-$GDALVERSION"
+  cd $GDALBUILD
+  gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
+  wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz
+  tar -xzf gdal-$GDALVERSION.tar.gz
+  cd gdal-$gdalver
+  ./configure --prefix=$GDALINST/gdal-$GDALVERSION $GDALOPTS $PROJOPT
+  make -s -j 2
+  make install
+
+elif [[ $GDALVERSION =~ ^1 && ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
+  PROJOPT="--with-static-proj4=$GDALINST/gdal-$GDALVERSION"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
   wget -q http://download.osgeo.org/gdal/$gdalver/gdal-$GDALVERSION.tar.gz

@@ -18,7 +18,7 @@ cd $PROJBUILD
 wget -q https://download.osgeo.org/proj/proj-$PROJVERSION.tar.gz
 tar -xzf proj-$PROJVERSION.tar.gz
 cd proj-$PROJVERSION
-./configure --prefix=$PROJINST/proj-$PROJVERSION
+./configure --prefix=$PROJINST/gdal-$GDALVERSION
 make -s -j 2
 make install
 
