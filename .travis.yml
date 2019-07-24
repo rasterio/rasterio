@@ -12,21 +12,19 @@ env:
     - GDALBUILD=$HOME/gdalbuild
     - PROJINST=$HOME/projinstall
     - PROJBUILD=$HOME/projbuild
-  matrix:
-    - GDALVERSION="1.11.5"
-    - GDALVERSION="2.0.3"
-    - GDALVERSION="2.1.4"
-    - GDALVERSION="2.2.4"
-    - GDALVERSION="2.3.3"
-    - GDALVERSION="2.4.1"
-    - GDALVERSION="3.0.0"
-    - GDALVERSION="master"
-
 matrix:
+  include:
+    - env: GDALVERSION="1.11.5" PROJVERSION="4.9.3"
+    - env: GDALVERSION="2.0.3" PROJVERSION="4.9.3"
+    - env: GDALVERSION="2.1.4" PROJVERSION="4.9.3"
+    - env: GDALVERSION="2.2.4" PROJVERSION="4.9.3"
+    - env: GDALVERSION="2.3.3" PROJVERSION="4.9.3"
+    - env: GDALVERSION="2.4.2" PROJVERSION="4.9.3"
+    - env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
+    - env: GDALVERSION="master" PROJVERSION="6.1.1"
   allow_failures:
-    - env: GDALVERSION="3.0.0"
-    - env: GDALVERSION="master"
-
+    - env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
+    - env: GDALVERSION="master" PROJVERSION="6.1.1"
 addons:
   apt:
     packages:
