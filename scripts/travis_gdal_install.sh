@@ -53,7 +53,7 @@ fi
 ls -l $GDALINST
 
 if [ "$GDALVERSION" = "master" ]; then
-  PROJOPT="--with-proj=$PROJINST"
+  PROJOPT="--with-proj=$PROJINST/proj-$PROJVERSION"
   cd $GDALBUILD
   git clone --depth 1 https://github.com/OSGeo/gdal gdal-$GDALVERSION
   cd gdal-$GDALVERSION/gdal
@@ -73,7 +73,7 @@ if [ "$GDALVERSION" = "master" ]; then
     make install
   fi
 
-elif [ "$GDALVERSION" = "3.0.0" ]; then
+elif [[ "$GDALVERSION" == "3"* -a ! -d "$GDALINST/gdal-$GDALVERSION" ]]; then
   PROJOPT="--with-proj=$PROJINST"
   cd $GDALBUILD
   gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
