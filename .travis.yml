@@ -44,8 +44,8 @@ before_install:
   - python -m pip install wheel
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
-  - bash ./scripts/travis_proj_install.sh
-  - travis_wait 20 bash ./scripts/travis_gdal_install.sh
+  - . ./scripts/travis_proj_install.sh
+  - . ./scripts/travis_gdal_install.sh
   - export GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal
   - export PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj
 

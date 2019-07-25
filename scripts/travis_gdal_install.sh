@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # originally contributed by @rbuffat to Toblerity/Fiona
 set -e
