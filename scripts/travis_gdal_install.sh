@@ -52,7 +52,7 @@ fi
 
 ls -l $GDALINST
 
-case $GDALVERSION in
+case "$GDALVERSION" in
     master)
         PROJOPT="--with-proj=$GDALINST/gdal-$GDALVERSION"
         cd $GDALBUILD
@@ -76,7 +76,7 @@ case $GDALVERSION in
         ;;
 
     3*)
-        if [ ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+        if [ ! -d "$GDALINST/gdal-$GDALVERSION/share/gdal" ]; then
             PROJOPT="--with-proj=$GDALINST/gdal-$GDALVERSION"
             cd $GDALBUILD
             gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
@@ -90,7 +90,7 @@ case $GDALVERSION in
         ;;
 
     2*)
-        if [ ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+        if [ ! -d "$GDALINST/gdal-$GDALVERSION/share/gdal" ]; then
             PROJOPT="--with-proj=$GDALINST/gdal-$GDALVERSION"
             cd $GDALBUILD
             gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
@@ -104,7 +104,7 @@ case $GDALVERSION in
         ;;
 
     1*)
-        if [ ! -d "$GDALINST/gdal-$GDALVERSION" ]; then
+        if [ ! -d "$GDALINST/gdal-$GDALVERSION/share/gdal" ]; then
             PROJOPT="--with-static-proj4=$GDALINST/gdal-$GDALVERSION"
             cd $GDALBUILD
             gdalver=$(expr "$GDALVERSION" : '\([0-9]*.[0-9]*.[0-9]*\)')
