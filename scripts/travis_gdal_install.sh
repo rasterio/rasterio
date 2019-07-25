@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # originally contributed by @rbuffat to Toblerity/Fiona
-set -e
+set -ex
 
 GDALOPTS="  --with-geos \
             --with-expat \
