@@ -4,6 +4,7 @@ Changes
 1.0.25 (TBD)
 ------------
 
+- Add support for GDAL 3.x
 - We were using pytest incorrectly and pytest 5 caught us doing it. This is
   now fixed in commit b9f34ee.
 - A bug preventing creation of Env instances, and thus dataset opening, when

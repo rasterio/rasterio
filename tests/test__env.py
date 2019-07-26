@@ -4,7 +4,7 @@ import pytest
 
 from rasterio._env import GDALDataFinder, PROJDataFinder
 
-from .conftest import gdal_version
+from .conftest import gdal_version, requires_gdal_lt_3
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def mock_debian(tmpdir):
     tmpdir.ensure("share/gdal/2.2/pcs.csv")
     tmpdir.ensure("share/gdal/2.3/pcs.csv")
     tmpdir.ensure("share/gdal/2.4/pcs.csv")
-    tmpdir.ensure("share/gdal/2.5/pcs.csv")
+    tmpdir.ensure("share/gdal/3.0/pcs.csv")
     tmpdir.ensure("share/proj/epsg")
     return tmpdir
 

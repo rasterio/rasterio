@@ -1,53 +1,53 @@
+dist: trusty
+
 language: python
-sudo: false
-cache:
-  directories:
-    - $GDALINST
-    - ~/.cache/pip
+
+python:
+  - "2.7"
+  - "3.6"
+
 env:
   global:
     - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
+    - PROJINST=$HOME/gdalinstall
+    - PROJBUILD=$HOME/projbuild
   matrix:
-    - GDALVERSION="1.11.5"
-    - GDALVERSION="2.0.3"
-    - GDALVERSION="2.1.4"
-    - GDALVERSION="2.2.4"
-    - GDALVERSION="2.3.3"
-    - GDALVERSION="2.4.1"
-    - GDALVERSION="3.0.0"
-    - GDALVERSION="master"
+    - GDALVERSION="1.11.5" PROJVERSION="4.8.0"
+    - GDALVERSION="2.0.3" PROJVERSION="4.9.3"
+    - GDALVERSION="2.1.4" PROJVERSION="4.9.3"
+    - GDALVERSION="2.2.4" PROJVERSION="4.9.3"
+    - GDALVERSION="2.3.3" PROJVERSION="4.9.3"
+    - GDALVERSION="2.4.2" PROJVERSION="4.9.3"
+    - GDALVERSION="3.0.1" PROJVERSION="6.1.1"
+    - GDALVERSION="master" PROJVERSION="6.1.1"
 
 matrix:
   allow_failures:
-    - env: GDALVERSION="3.0.0"
-    - env: GDALVERSION="master"
+    - env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
+    - env: GDALVERSION="master" PROJVERSION="6.1.1"
 
 addons:
   apt:
     packages:
-    - gdal-bin
-    - libproj-dev
     - libhdf5-serial-dev
     - libgdal-dev
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
-python:
-  - "2.7"
-  - "3.6"
-before_script: # configure a headless display to test matplotlib
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - "sleep 3"
+
 before_install:
   - python -m pip install -U pip
   - python -m pip install wheel
-  - travis_wait 20 bash ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
+  - . ./scripts/travis_proj_install.sh
+  - travis_wait 20 . ./scripts/travis_gdal_install.sh
+  - export GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal
+  - export PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj
+
 install:
   - "if [ \"$GDALVERSION\" == \"master\" -o $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - "python -m pip wheel -r requirements-dev.txt"
@@ -57,8 +57,20 @@ install:
   - "rio --version"
   - "rio --gdal-version"
   - "python -m pip list"
+
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - "sleep 3"
+
 script:
   - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart and not switch' ; fi"
-  - python -m pytest -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+  - python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"
+
+cache:
+  directories:
+    - $GDALINST
+    - ~/.cache/pip
