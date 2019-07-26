@@ -189,7 +189,6 @@ def test_write_crs_transform(tmpdir):
         s.write(a, indexes=1)
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
@@ -212,7 +211,6 @@ def test_write_crs_transform_affine(tmpdir):
 
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
@@ -259,7 +257,7 @@ def test_write_crs_transform_3(tmpdir):
         s.write(a, indexes=1)
     assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
+    assert '"UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)

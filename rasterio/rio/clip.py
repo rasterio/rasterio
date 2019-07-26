@@ -9,6 +9,7 @@ from .helpers import resolve_inout
 from . import options
 import rasterio
 from rasterio.coords import disjoint_bounds
+from rasterio.crs import CRS
 from rasterio.windows import Window
 
 
@@ -83,7 +84,7 @@ def clip(ctx, files, output, bounds, like, driver, projection,
         with rasterio.open(input) as src:
             if bounds:
                 if projection == 'geographic':
-                    bounds = transform_bounds('epsg:4326', src.crs, *bounds)
+                    bounds = transform_bounds(CRS.from_epsg(4326), src.crs, *bounds)
                 if disjoint_bounds(bounds, src.bounds):
                     raise click.BadParameter('must overlap the extent of '
                                              'the input raster',
