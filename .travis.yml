@@ -26,7 +26,6 @@ env:
 
 matrix:
   allow_failures:
-    - env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
     - env: GDALVERSION="master" PROJVERSION="6.1.1"
 
 addons:
