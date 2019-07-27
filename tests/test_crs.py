@@ -471,3 +471,9 @@ def test_crs_hash_unequal():
 def test_crs84():
     """Create CRS from OGC code"""
     assert "WGS 84" in CRS.from_user_input("urn:ogc:def:crs:OGC::CRS84").wkt
+
+
+def test_equals_different_type():
+    assert CRS.from_epsg(4326) != ""
+    assert CRS.from_epsg(4326) != 4.2
+    assert CRS.from_epsg(4326) != 0
