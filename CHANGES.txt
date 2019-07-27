@@ -6,6 +6,7 @@ Changes
 
 - When a MemoryFile is opened in write mode, a TypeError will be raised if
   integer width and height are not given, fixing #1748.
+- Support CRS.from_user_input with other CRS object with `to_wkt()` method (#1718)
 
 1.0.25 (2019-08-06)
 -------------------

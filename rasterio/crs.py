@@ -427,6 +427,11 @@ class CRS(collections.Mapping):
         """
         if isinstance(value, cls):
             return value
+        elif hasattr(value, "to_wkt") and callable(value.to_wkt):
+            return cls.from_wkt(
+                value.to_wkt(),
+                morph_from_esri_dialect=morph_from_esri_dialect,
+            )
         elif isinstance(value, int):
             return cls.from_epsg(value)
         elif isinstance(value, dict):
