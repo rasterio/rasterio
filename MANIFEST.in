@@ -1,5 +1,5 @@
 exclude *.rst *.txt *.py
-include CHANGES.txt AUTHORS.txt LICENSE.txt VERSION.txt README.rst setup.py
+include CHANGES.txt AUTHORS.txt LICENSE.txt VERSION.txt README.rst setup.py pyproject.toml
 include rasterio/*.c rasterio/*.cpp
 exclude rasterio/_shim.c
 recursive-include examples *.py
