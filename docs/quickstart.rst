@@ -259,17 +259,17 @@ write. The last 3 are optional.
 
 In this example the coordinate reference system will be ``'+proj=latlong'``, which
 describes an equirectangular coordinate reference system with units of decimal
-degrees. The right affine transformation matrix can be computed using
-:func:`~rasterio.transform.from_origin`.
+degrees. The proper affine transformation matrix can be computed from the matrix
+product of a translation and a scaling.
 
 .. code-block:: pycon
 
-   >>> from rasterio.transform import from_origin
+   >>> from rasterio.transform import Affine
    >>> res = (x[-1] - x[0]) / 240.0
-   >>> transform = from_origin(x[0] - res / 2, y[-1] + res / 2, res, res)
+   >>> transform = Affine.translation(x[0] - res / 2, y[0] - res / 2) * Affine.scale(res, res)
    >>> transform
    Affine(0.033333333333333333, 0.0, -4.0166666666666666,
-          0.0, -0.033333333333333333, 3.0166666666666666)
+          0.0, 0.033333333333333333, -3.0166666666666666)
 
 The upper left point in the example grid is at 3 degrees west and 2 degrees
 north. The raster pixel centered on this grid point extends ``res / 2``, or
