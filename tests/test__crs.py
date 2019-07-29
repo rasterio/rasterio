@@ -119,6 +119,7 @@ def test_from_esri_wkt_no_fix(projection_string):
         assert 'DATUM["D_North_American_1983"' in crs.to_wkt()
 
 
+@requires_gdal_lt_3
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_fix_datum(projection_string):
     """Test ESRI CRS morphing with datum fixing"""
@@ -127,6 +128,7 @@ def test_from_esri_wkt_fix_datum(projection_string):
         assert 'DATUM["North_American_Datum_1983"' in crs.to_wkt()
 
 
+@requires_gdal_lt_3
 def test_to_esri_wkt_fix_datum():
     """Morph to Esri form"""
     assert 'DATUM["D_North_American_1983"' in _CRS.from_dict(init='epsg:26913').to_wkt(morph_to_esri_dialect=True)

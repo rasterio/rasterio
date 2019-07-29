@@ -11,10 +11,21 @@ from rasterio.errors import CRSError
 from rasterio._base cimport _osr_from_crs as osr_from_crs
 from rasterio._base cimport _safe_osr_release
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int, exc_wrap_pointer
-from rasterio._shim cimport osr_get_name
+from rasterio._shim cimport osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 
 log = logging.getLogger(__name__)
+
+
+cdef int OAMS_TRADITIONAL_GIS_ORDER = 0
+
+
+def gdal_version():
+    """Return the version as a major.minor.patchlevel string."""
+    cdef char *info_c = NULL
+    info_c = GDALVersionInfo("RELEASE_NAME")
+    info_b = info_c
+    return info_b.decode("utf-8")
 
 
 cdef class _CRS(object):
@@ -114,7 +125,7 @@ cdef class _CRS(object):
 
         try:
             if osr_get_name(self._osr) != NULL:
-                if morph_to_esri_dialect:
+                if morph_to_esri_dialect and not gdal_version().startswith("3"):
                     exc_wrap_ogrerr(OSRMorphToESRI(self._osr))
                 exc_wrap_ogrerr(OSRExportToWkt(self._osr, &conv_wkt))
 
@@ -184,6 +195,7 @@ cdef class _CRS(object):
         except CPLE_BaseError as exc:
             raise CRSError("The EPSG code is unknown. {}".format(exc))
         else:
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
             return obj
 
     @staticmethod
@@ -219,6 +231,7 @@ cdef class _CRS(object):
         except CPLE_BaseError as exc:
             raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
         else:
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
             return obj
 
     @staticmethod
@@ -258,6 +271,7 @@ cdef class _CRS(object):
         except CPLE_BaseError as exc:
             raise CRSError("The PROJ4 dict could not be understood. {}".format(exc))
         else:
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
             return obj
 
     @staticmethod
@@ -289,11 +303,12 @@ cdef class _CRS(object):
 
         try:
             errcode = exc_wrap_ogrerr(OSRImportFromWkt(obj._osr, &wkt_c))
-            if morph_from_esri_dialect:
+            if morph_from_esri_dialect and not gdal_version().startswith("3"):
                 exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
         except CPLE_BaseError as exc:
             raise CRSError("The WKT could not be parsed. {}".format(exc))
         else:
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
             return obj
 
     @staticmethod
@@ -325,11 +340,12 @@ cdef class _CRS(object):
 
         try:
             errcode = exc_wrap_ogrerr(OSRSetFromUserInput(obj._osr, text_c))
-            if morph_from_esri_dialect:
+            if morph_from_esri_dialect and not gdal_version().startswith("3"):
                 exc_wrap_ogrerr(OSRMorphFromESRI(obj._osr))
         except CPLE_BaseError as exc:
             raise CRSError("The WKT could not be parsed. {}".format(exc))
         else:
+            osr_set_traditional_axis_mapping_strategy(obj._osr)
             return obj
 
     def to_dict(self):

@@ -19,7 +19,12 @@ cdef extern from "gdal.h" nogil:
 
 
 cdef extern from "ogr_srs_api.h" nogil:
+
+    ctypedef enum OSRAxisMappingStrategy:
+        OAMS_TRADITIONAL_GIS_ORDER
+
     const char* OSRGetName(OGRSpatialReferenceH hSRS)
+    void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
 
 
 from rasterio._err cimport exc_wrap_pointer
@@ -78,3 +83,7 @@ cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
 
 cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
     return OSRGetName(hSrs)
+
+
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
+    OSRSetAxisMappingStrategy(hSrs, OAMS_TRADITIONAL_GIS_ORDER)

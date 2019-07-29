@@ -4,7 +4,13 @@ Changes
 1.0.25 (TBD)
 ------------
 
-- Add support for GDAL 3.x
+- Add support for using GDAL 3.x and PROJ 6 libraries (#1700, #1729). Please
+  note that new features of GDAL 3 and PROJ 6 are not intended to surface.
+  Geometries and coordinates returned from rasterio keep to the traditional GIS
+  axis order used by GDAL versions < 3. To do this, rasterio applies a new
+  private extension function named osr_set_traditional_axis_mapping_strategy to
+  every OGRSpatialReferenceH object that will be returned from methods in the
+  _CRS module.
 - We were using pytest incorrectly and pytest 5 caught us doing it. This is
   now fixed in commit b9f34ee.
 - A bug preventing creation of Env instances, and thus dataset opening, when

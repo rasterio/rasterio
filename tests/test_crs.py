@@ -336,6 +336,7 @@ def test_from_esri_wkt_no_fix(projection_string):
         assert 'DATUM["D_North_American_1983"' in crs.wkt
 
 
+@requires_gdal_lt_3
 @pytest.mark.parametrize('projection_string', [ESRI_PROJECTION_STRING])
 def test_from_esri_wkt_fix_datum(projection_string):
     """Test ESRI CRS morphing with datum fixing"""
@@ -344,6 +345,7 @@ def test_from_esri_wkt_fix_datum(projection_string):
         assert 'DATUM["North_American_Datum_1983"' in crs.wkt
 
 
+@requires_gdal_lt_3
 def test_to_esri_wkt_fix_datum():
     """Morph to Esri form"""
     assert 'DATUM["D_North_American_1983"' in CRS(init='epsg:26913').to_wkt(morph_to_esri_dialect=True)
@@ -464,3 +466,8 @@ def test_crs_hash():
 def test_crs_hash_unequal():
     """hashes of non-equivalent CRS are not equal"""
     assert hash(CRS.from_epsg(3857)) != hash(CRS.from_epsg(4326))
+
+
+def test_crs84():
+    """Create CRS from OGC code"""
+    assert "WGS 84" in CRS.from_user_input("urn:ogc:def:crs:OGC::CRS84").wkt
