@@ -43,27 +43,25 @@ def test_dataset_compression(path_rgb_byte_tif, tag_value):
         assert dataset.compression == Compression(tag_value)
 
 
-def test_untiled_dataset_blocksize(tmp_path):
+def test_untiled_dataset_blocksize(tmpdir):
     """Blocksize is not relevant to untiled datasets (see #1689)"""
-    pytest.importorskip("pathlib")
-    tmp_file = tmp_path / "test.tif"
+    tmpfile = str(tmpdir.join("test.tif"))
     with rasterio.open(
-            tmp_file, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
+            tmpfile, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
             transform=Affine.identity(), blockxsize=256, blockysize=256) as dataset:
         pass
 
-    with rasterio.open(tmp_file) as dataset:
+    with rasterio.open(tmpfile) as dataset:
         assert not dataset.profile["tiled"]
         assert dataset.shape == (13, 13)
 
 
-def test_tiled_dataset_blocksize_guard(tmp_path):
+def test_tiled_dataset_blocksize_guard(tmpdir):
     """Tiled datasets with dimensions less than blocksize are not permitted"""
-    pytest.importorskip("pathlib")
-    tmp_file = tmp_path / "test.tif"
+    tmpfile = str(tmpdir.join("test.tif"))
     with pytest.raises(ValueError):
         rasterio.open(
-            tmp_file, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
+            tmpfile, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
             transform=Affine.identity(), tiled=True, blockxsize=256, blockysize=256)
 
 def test_dataset_readonly_attributes(path_rgb_byte_tif):
