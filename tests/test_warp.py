@@ -469,7 +469,7 @@ def test_reproject_out_of_bounds():
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_nodata(options, expected):
     # Older combinations of GDAL and PROJ might have got this transformation wrong.
-    # Results look better with GDAL 3 and PROJ 6 but the expected values are off.
+    # Results look better with GDAL 3.
     nodata = 215
 
     with rasterio.Env(**options):
