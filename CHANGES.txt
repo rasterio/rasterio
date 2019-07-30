@@ -4,6 +4,9 @@ Changes
 1.0.25 (TBD)
 ------------
 
+- Rasterizing a shape with an associated value of `None` now has the same
+  effect as if the value were missing: the function's `default_value` is used
+  (#1738).
 - Instances of pytest's tmp_path fixture in tests/test_dataset.py have been
   replaced by instances of the older style tmpdir fixture (#1697).
 - Add support for using GDAL 3.x and PROJ 6 libraries (#1700, #1729). Please
