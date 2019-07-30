@@ -180,8 +180,8 @@ def rasterize(
     shapes : iterable of (`geometry`, `value`) pairs or iterable over
         geometries. The `geometry` can either be an object that
         implements the geo interface or GeoJSON-like object. If no
-        `value` is provided or is `None`, the `default_value` will be
-        used.
+        `value` is provided the `default_value` will be used. If `value`
+        is `None` the `fill` value will be used.
     out_shape : tuple or list with 2 integers
         Shape of output numpy ndarray.
     fill : int or float, optional
@@ -259,7 +259,7 @@ def rasterize(
         if isinstance(item, (tuple, list)):
             geom, value = item
             if value is None:
-                value = default_value
+                value = fill
         else:
             geom = item
             value = default_value

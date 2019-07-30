@@ -575,15 +575,8 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
 
 def test_rasterize_default_value_for_none(basic_geometry, basic_image_2x2):
     """All shapes should rasterize to the default value."""
-    default_value = 2
-    truth = basic_image_2x2 * default_value
-
-    assert np.array_equal(
-        truth,
-        rasterize(
-            [(basic_geometry, None)], out_shape=DEFAULT_SHAPE,
-            default_value=default_value
-        )
+    assert np.all(
+        rasterize([(basic_geometry, None)], out_shape=DEFAULT_SHAPE, fill=2) == 2
     )
 
 
