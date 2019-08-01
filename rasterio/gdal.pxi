@@ -233,6 +233,7 @@ cdef extern from "gdal.h" nogil:
     GDALDatasetH GDALCreateCopy(GDALDriverH driver, const char *path,
                                 GDALDatasetH hds, int strict, char **options,
                                 void *progress_func, void *progress_data)
+    char** GDALGetMetadataDomainList(GDALMajorObjectH obj)
     char** GDALGetMetadata(GDALMajorObjectH obj, const char *pszDomain)
     int GDALSetMetadata(GDALMajorObjectH obj, char **papszMD,
                         const char *pszDomain)
