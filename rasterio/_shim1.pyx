@@ -188,3 +188,11 @@ cdef int io_multi_mask(
                 break
 
     return exc_wrap_int(retval)
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    return ''
+
+
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
+    pass

@@ -15,7 +15,7 @@ from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
-from rasterio._shim cimport open_dataset
+from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
@@ -1317,12 +1317,14 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
         if retval:
             _safe_osr_release(osr)
             raise CRSError("Invalid CRS: {!r}".format(crs))
-        exc_wrap_int(OSRMorphFromESRI(osr))
     except CPLE_BaseError as exc:
         _safe_osr_release(osr)
         raise CRSError(str(exc))
-
-    return osr
+    else:
+        if not gdal_version().startswith("3"):
+            exc_wrap_int(OSRMorphFromESRI(osr))
+        osr_set_traditional_axis_mapping_strategy(osr)
+        return osr
 
 
 cdef _safe_osr_release(OGRSpatialReferenceH srs):

@@ -181,9 +181,11 @@ def rasterize(
 
     Parameters
     ----------
-    shapes : iterable of (geometry, value) pairs or iterable over
-        geometries. `geometry` can either be an object that implements
-        the geo interface or GeoJSON-like object.
+    shapes : iterable of (`geometry`, `value`) pairs or iterable over
+        geometries. The `geometry` can either be an object that
+        implements the geo interface or GeoJSON-like object. If no
+        `value` is provided the `default_value` will be used. If `value`
+        is `None` the `fill` value will be used.
     out_shape : tuple or list with 2 integers
         Shape of output numpy ndarray.
     fill : int or float, optional
@@ -201,10 +203,11 @@ def rasterize(
         false, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
     merge_alg : MergeAlg, optional
-        Merge algorithm to use.  One of:
+        Merge algorithm to use. One of:
             MergeAlg.replace (default): the new value will overwrite the
-                existing value.
-            MergeAlg.add: the new value will be added to the existing raster.
+              existing value.
+            MergeAlg.add: the new value will be added
+              to the existing raster.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
@@ -259,6 +262,8 @@ def rasterize(
     for index, item in enumerate(shapes):
         if isinstance(item, (tuple, list)):
             geom, value = item
+            if value is None:
+                value = fill
         else:
             geom = item
             value = default_value

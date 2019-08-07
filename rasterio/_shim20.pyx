@@ -68,3 +68,11 @@ cdef GDALDatasetH open_dataset(
 cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
     raise NotImplementedError(
         "GDAL versions < 2.1 do not support nodata deletion")
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    return ''
+
+
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
+    pass

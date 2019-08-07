@@ -1,4 +1,4 @@
-"""Rasterio shims for GDAL 2.1"""
+"""Rasterio shims for GDAL 3.x"""
 
 # cython: boundscheck=False
 
@@ -7,15 +7,25 @@ include "directives.pxi"
 # The baseline GDAL API.
 include "gdal.pxi"
 
-# Shim API for GDAL >= 2.0
+# Shim API for GDAL >= 3.0
 include "shim_rasterioex.pxi"
 
 
-# Declarations and implementations specific for GDAL >= 2.1
+# Declarations and implementations specific for GDAL >= 3.x
 cdef extern from "gdal.h" nogil:
 
     cdef CPLErr GDALDeleteRasterNoDataValue(GDALRasterBandH hBand)
     GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
+
+
+cdef extern from "ogr_srs_api.h" nogil:
+
+    ctypedef enum OSRAxisMappingStrategy:
+        OAMS_TRADITIONAL_GIS_ORDER
+
+    const char* OSRGetName(OGRSpatialReferenceH hSRS)
+    void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
+
 
 from rasterio._err cimport exc_wrap_pointer
 
@@ -72,7 +82,8 @@ cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
 
 
 cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
-    return ''
+    return OSRGetName(hSrs)
+
 
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
-    pass
+    OSRSetAxisMappingStrategy(hSrs, OAMS_TRADITIONAL_GIS_ORDER)

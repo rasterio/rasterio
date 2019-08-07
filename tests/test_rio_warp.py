@@ -15,8 +15,7 @@ from rasterio.warp import SUPPORTED_RESAMPLING, GDAL2_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
 
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+from .conftest import requires_gdal_lt_3
 
 
 def test_dst_crs_error(runner, tmpdir):
@@ -542,6 +541,7 @@ def test_warp_reproject_check_invert_true(runner, tmpdir):
         assert output.shape == output2.shape
 
 
+@requires_gdal_lt_3
 def test_warp_reproject_check_invert_false(runner, tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     output2name = str(tmpdir.join('test2.tif'))

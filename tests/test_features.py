@@ -588,6 +588,13 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
     )
 
 
+def test_rasterize_default_value_for_none(basic_geometry, basic_image_2x2):
+    """All shapes should rasterize to the default value."""
+    assert np.all(
+        rasterize([(basic_geometry, None)], out_shape=DEFAULT_SHAPE, fill=2) == 2
+    )
+
+
 def test_rasterize_invalid_default_value(basic_geometry):
     """A default value that requires an int64 should raise an exception."""
     with pytest.raises(ValueError):

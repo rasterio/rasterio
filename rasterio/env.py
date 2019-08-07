@@ -51,6 +51,12 @@ local = ThreadEnv()
 
 log = logging.getLogger(__name__)
 
+try:
+    import boto3
+except ImportError:
+    log.info("failed to import boto3, continuing.")
+    boto3 = None
+
 
 class Env(object):
     """Abstraction for GDAL and AWS configuration
@@ -182,7 +188,9 @@ class Env(object):
                     RasterioDeprecationWarning
                 )
                 session = AWSSession(session=session)
+
             self.session = session
+
         elif aws_access_key_id or profile_name or aws_unsigned:
             self.session = AWSSession(
                 aws_access_key_id=aws_access_key_id,
@@ -191,8 +199,15 @@ class Env(object):
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
-        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
-            self.session = AWSSession()
+
+        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ and boto3 is not None:
+            try:
+                self.session = AWSSession()
+                self.session.credentials
+            except RuntimeError as exc:
+                log.info("No AWS session created. Credentials in environment have expired.")
+                self.session = DummySession()
+
         else:
             self.session = DummySession()
 
@@ -234,12 +249,9 @@ class Env(object):
         None
 
         """
-        if self.session.hascreds(getenv()):
-            pass
-        else:
-            cred_opts = self.session.get_credential_options()
-            self.options.update(**cred_opts)
-            setenv(**cred_opts)
+        cred_opts = self.session.get_credential_options()
+        self.options.update(**cred_opts)
+        setenv(**cred_opts)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
@@ -348,10 +360,13 @@ def delenv():
 
 
 class NullContextManager(object):
+
     def __init__(self):
         pass
+
     def __enter__(self):
         return self
+
     def __exit__(self, *args):
         pass
 

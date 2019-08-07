@@ -1,7 +1,6 @@
 # Tests requiring S3 credentials.
 # Collected here to make them easier to skip/xfail.
 
-import logging
 import os
 import sys
 
@@ -20,7 +19,7 @@ from rasterio.env import Env, defenv, delenv, getenv, setenv, ensure_env, ensure
 from rasterio.env import GDALVersion, require_gdal_version
 from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
-from rasterio.session import AWSSession, OSSSession, SwiftSession
+from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession
 
 from .conftest import requires_gdal21
 
@@ -227,8 +226,7 @@ def test_aws_session_credentials(gdalenv):
     aws_session = boto3.Session(
         aws_access_key_id='id', aws_secret_access_key='key',
         aws_session_token='token', region_name='null-island-1')
-    with rasterio.env.Env(session=aws_session) as s:
-        s.credentialize()
+    with rasterio.env.Env(session=aws_session):
         assert getenv()['AWS_ACCESS_KEY_ID'] == 'id'
         assert getenv()['AWS_REGION'] == 'null-island-1'
         assert getenv()['AWS_SECRET_ACCESS_KEY'] == 'key'
@@ -255,8 +253,7 @@ def test_session_env_lazy(monkeypatch, gdalenv):
     monkeypatch.setenv('AWS_ACCESS_KEY_ID', 'id')
     monkeypatch.setenv('AWS_SECRET_ACCESS_KEY', 'key')
     monkeypatch.setenv('AWS_SESSION_TOKEN', 'token')
-    with rasterio.Env() as s:
-        s.credentialize()
+    with rasterio.Env():
         assert getenv() == rasterio.env.local._env.options
         expected = {
             'AWS_ACCESS_KEY_ID': 'id',
@@ -270,8 +267,7 @@ def test_session_env_lazy(monkeypatch, gdalenv):
 
 def test_aws_unsigned(gdalenv):
     """Create an Env with no AWS signing."""
-    with rasterio.env.Env(aws_unsigned=True) as s:
-        s.credentialize()
+    with rasterio.env.Env(aws_unsigned=True):
         assert getenv()['AWS_NO_SIGN_REQUEST'] == 'YES'
         assert getenv().get('AWS_ACCESS_KEY_ID') is None
 
@@ -283,8 +279,7 @@ def test_aws_unsigned_subenv(gdalenv):
     with rasterio.Env(
             aws_access_key_id='id', aws_secret_access_key='key',
             aws_session_token='token', region_name='null-island-1'):
-        with rasterio.env.Env(aws_unsigned=True) as inner:
-            inner.credentialize()
+        with rasterio.env.Env(aws_unsigned=True):
             assert getenv()['AWS_NO_SIGN_REQUEST'] == 'YES'
             assert getenv().get('AWS_ACCESS_KEY_ID') is None
 
@@ -313,7 +308,7 @@ def test_skip_gtiff(gdalenv):
 @credentials
 @pytest.mark.network
 def test_s3_open_with_env(gdalenv):
-    """Read from S3 demonstrating lazy credentials."""
+    """Read from S3 within explicit env."""
     with rasterio.Env():
         with rasterio.open(L8TIF) as dataset:
             assert dataset.count == 1
@@ -818,8 +813,7 @@ def test_oss_session_credentials(gdalenv):
         oss_access_key_id='id',
         oss_secret_access_key='key',
         oss_endpoint='null-island-1')
-    with rasterio.env.Env(session=oss_session) as s:
-        s.credentialize()
+    with rasterio.env.Env(session=oss_session):
         assert getenv()['OSS_ACCESS_KEY_ID'] == 'id'
         assert getenv()['OSS_SECRET_ACCESS_KEY'] == 'key'
         assert getenv()['OSS_ENDPOINT'] == 'null-island-1'
@@ -852,3 +846,35 @@ def test_swift_session_by_user_key():
             s.credentialize()
             assert getenv()['SWIFT_STORAGE_URL'] == 'foo'
             assert getenv()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_dummy_session_without_boto3(monkeypatch, caplog):
+    """Without boto3, always revert to dummy session"""
+    # Confirm fix of #1708.
+    with monkeypatch.context() as mpctx:
+        mpctx.setattr("rasterio.env.boto3", None)
+        mpctx.setenv('AWS_ACCESS_KEY_ID', 'lol')
+        mpctx.setenv('AWS_SECRET_ACCESS_KEY', 'wut')
+        assert isinstance(rasterio.env.Env().session, DummySession)
+
+
+def test_dummy_session_with_boto3_expired_credentials(monkeypatch, caplog):
+    """With expired credentials, revert to dummy session"""
+    with monkeypatch.context() as mpctx:
+        mpctx.setenv("AWS_ACCESS_KEY_ID", "ASIAVGH5PWXB5KSL4ZUD")
+        mpctx.setenv("AWS_SECRET_ACCESS_KEY", "tv3WkpUiW++91eAPTCDcOAIxKrk6N")
+        mpctx.setenv("AWS_SESSION_TOKEN", "FQoGZXIvYXdzEH0aDIyhzy8S3gql/UawbyKrAa3R03j4JBTNfRHmfBAaGQ366PsaWfO+cHtrRS")
+        mpctx.setenv("AWS_CREDENTIAL_EXPIRATION", "2019-07-12T20:06:06.000Z")
+        assert isinstance(rasterio.env.Env().session, DummySession)
+
+
+def test_open_file_expired_aws_credentials(monkeypatch, caplog, path_rgb_byte_tif):
+    """Local file can be opened With expired credentials in environ"""
+    with monkeypatch.context() as mpctx:
+        mpctx.setenv("AWS_ACCESS_KEY_ID", "ASIAVGH5PWXB5KSL4ZUD")
+        mpctx.setenv("AWS_SECRET_ACCESS_KEY", "tv3WkpUiW++91eAPTCDcOAIxKrk6N")
+        mpctx.setenv("AWS_SESSION_TOKEN", "FQoGZXIvYXdzEH0aDIyhzy8S3gql/UawbyKrAa3R03j4JBTNfRHmfBAaGQ366PsaWfO+cHtrRS")
+        mpctx.setenv("AWS_CREDENTIAL_EXPIRATION", "2019-07-12T20:06:06.000Z")
+        with rasterio.env.Env():
+            with rasterio.open(path_rgb_byte_tif) as dataset:
+                assert not dataset.closed
