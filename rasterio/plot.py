@@ -53,8 +53,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     contour_label_kws : dictionary (opt)
         Keyword arguments for labeling the contours,
         empty dictionary for no labels.
-    ax : matplotlib axis (opt)
-        Axis to plot on, otherwise uses current axis.
+    ax : matplotlib axes (opt)
+        Axes to plot on, otherwise uses current axes.
     title : str, optional
         Title for the figure.
     transform : Affine, optional
