@@ -5,6 +5,7 @@ Changes
 ------------
 
 - Allow complex datasets to be created with a specified nodata value (#1747).
+- Several Python deprecation warnings have been eliminated (#1742).
 - When a MemoryFile is opened in write mode, a TypeError will be raised if
   integer width and height are not given, fixing #1748.
 
@@ -739,6 +740,7 @@ Packaging:
 
 1.0a5 (2016-12-23)
 ------------------
+
 - New binary wheels using version 1.2.0 of sgillies/frs-wheel-builds. See
   https://github.com/sgillies/frs-wheel-builds/blob/master/CHANGES.txt.
 

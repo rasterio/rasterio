@@ -15,11 +15,11 @@ import json
 import pickle
 
 from rasterio._crs import _CRS, all_proj_keys
-from rasterio.compat import string_types
+from rasterio.compat import Mapping, string_types
 from rasterio.errors import CRSError
 
 
-class CRS(collections.Mapping):
+class CRS(Mapping):
     """A geographic or projected coordinate reference system
 
     CRS objects may be created by passing PROJ parameters as keyword
