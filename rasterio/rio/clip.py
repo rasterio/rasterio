@@ -127,10 +127,10 @@ def clip(ctx, files, output, bounds, like, driver, projection,
 
             if 'blockxsize' in out_kwargs and out_kwargs['blockxsize'] > width:
                 del out_kwargs['blockxsize']
-                logger.warn("Blockxsize removed from creation options to accomodate small output width")
+                logger.warning("Blockxsize removed from creation options to accomodate small output width")
             if 'blockysize' in out_kwargs and out_kwargs['blockysize'] > height:
                 del out_kwargs['blockysize']
-                logger.warn("Blockysize removed from creation options to accomodate small output height")
+                logger.warning("Blockysize removed from creation options to accomodate small output height")
 
             with rasterio.open(output, 'w', **out_kwargs) as out:
                 out.write(src.read(window=out_window,

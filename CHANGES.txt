@@ -4,16 +4,25 @@ Changes
 1.0.26 (TBD)
 ------------
 
+- A WarpedVRTs destination crs now will default to ``src_crs`` if given, else
+  to the crs of the source dataset (#1755).
+- Prevent open's ``sharing`` keyword argument from being pass on to GDAL as a
+  dataset opening option for create-copy formats like JPEG and PNG (#1758).
+- Allow complex datasets to be created with a specified nodata value (#1747).
+- Several Python deprecation warnings have been eliminated (#1742).
 - When a MemoryFile is opened in write mode, a TypeError will be raised if
   integer width and height are not given, fixing #1748.
-- Return False when checking equality with objects incompatible with `CRS.from_user_input()` (#1719)
+- Return False when checking equality with objects incompatible with
+  ``CRS.from_user_input()`` (#1719)
+- Support CRS.from_user_input with other CRS object with ``to_wkt()`` method
+  (#1718)
 
 1.0.25 (2019-08-06)
 -------------------
 
-- In `features.rasterize()`, a shape with an associated value of `None` is now
-  burned in using the function's `fill` value and no longer triggers a
-  `TypeError` (#1738).
+- In ``features.rasterize()``, a shape with an associated value of ``None`` is
+  now burned in using the function's ``fill`` value and no longer triggers a
+  TypeError (#1738).
 - Instances of pytest's tmp_path fixture in tests/test_dataset.py have been
   replaced by instances of the older style tmpdir fixture (#1697).
 - Add support for using GDAL 3.x and PROJ 6 libraries (#1700, #1729). Please
@@ -739,6 +748,7 @@ Packaging:
 
 1.0a5 (2016-12-23)
 ------------------
+
 - New binary wheels using version 1.2.0 of sgillies/frs-wheel-builds. See
   https://github.com/sgillies/frs-wheel-builds/blob/master/CHANGES.txt.
 

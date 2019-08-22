@@ -620,7 +620,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     # 255 and log that we have done so.
 
                     out = np.where(out != 0, 255, 0)
-                    log.warn("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
+                    log.warning("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
 
         if return2d:
             out.shape = out.shape[1:]
@@ -1442,7 +1442,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             CSLDestroy(papszStrList)
 
         if retval == 2:
-            log.warn("Tags accepted but may not be persisted.")
+            log.warning("Tags accepted but may not be persisted.")
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
 
@@ -1514,7 +1514,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 rgba = tuple(rgba) + (255,)
 
             if i not in vals:
-                log.warn("Invalid colormap key %d", i)
+                log.warning("Invalid colormap key %d", i)
                 continue
 
             color.c1, color.c2, color.c3, color.c4 = rgba
@@ -1848,7 +1848,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, **kwargs):
+                 gcps=None, sharing=True, **kwargs):
         """Construct a new dataset
 
         Parameters
