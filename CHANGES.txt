@@ -4,6 +4,8 @@ Changes
 1.0.26 (TBD)
 ------------
 
+- A WarpedVRTs destination crs now will default to ``src_crs`` if given, else
+  to the crs of the source dataset (#1755).
 - Prevent open's ``sharing`` keyword argument from being pass on to GDAL as a
   dataset opening option for create-copy formats like JPEG and PNG (#1758).
 - Allow complex datasets to be created with a specified nodata value (#1747).
