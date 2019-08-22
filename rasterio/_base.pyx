@@ -420,6 +420,13 @@ cdef class DatasetBase(object):
             for i in range(self._count):
                 band = self.band(i + 1)
                 dtype = _band_dtype(band)
+
+                # To address the issue in #1747.
+                if dtype == "complex128":
+                    dtype = "float64"
+                elif dtype == "complex64":
+                    dtype = "float32"
+
                 nodataval = GDALGetRasterNoDataValue(band, &success)
                 val = nodataval
                 # GDALGetRasterNoDataValue() has two ways of telling you that

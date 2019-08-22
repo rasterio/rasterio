@@ -4,6 +4,7 @@ Changes
 1.0.26 (TBD)
 ------------
 
+- Allow complex datasets to be created with a specified nodata value (#1747).
 - When a MemoryFile is opened in write mode, a TypeError will be raised if
   integer width and height are not given, fixing #1748.
 
