@@ -12,6 +12,7 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     import configparser
     from urllib.parse import urlparse
     from collections import UserDict
+    from collections.abc import Mapping
     from inspect import getfullargspec as getargspec
 else:  # pragma: no cover
     string_types = basestring,
@@ -22,3 +23,4 @@ else:  # pragma: no cover
     from urlparse import urlparse
     from UserDict import UserDict
     from inspect import getargspec
+    from collections import Mapping
