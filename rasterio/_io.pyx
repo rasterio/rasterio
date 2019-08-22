@@ -1048,7 +1048,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
-        if mode == 'w':
+        if mode in ('w', 'w+'):
             if not isinstance(driver, string_types):
                 raise TypeError("A driver name string is required.")
             try:
