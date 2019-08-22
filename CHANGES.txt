@@ -4,6 +4,8 @@ Changes
 1.0.26 (TBD)
 ------------
 
+- Prevent open's ``sharing`` keyword argument from being pass on to GDAL as a
+  dataset opening option for create-copy formats like JPEG and PNG (#1758).
 - Allow complex datasets to be created with a specified nodata value (#1747).
 - Several Python deprecation warnings have been eliminated (#1742).
 - When a MemoryFile is opened in write mode, a TypeError will be raised if
@@ -12,9 +14,9 @@ Changes
 1.0.25 (2019-08-06)
 -------------------
 
-- In `features.rasterize()`, a shape with an associated value of `None` is now
-  burned in using the function's `fill` value and no longer triggers a
-  `TypeError` (#1738).
+- In ``features.rasterize()``, a shape with an associated value of ``None`` is
+  now burned in using the function's ``fill`` value and no longer triggers a
+  TypeError (#1738).
 - Instances of pytest's tmp_path fixture in tests/test_dataset.py have been
   replaced by instances of the older style tmpdir fixture (#1697).
 - Add support for using GDAL 3.x and PROJ 6 libraries (#1700, #1729). Please

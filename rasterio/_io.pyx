@@ -1848,7 +1848,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, **kwargs):
+                 gcps=None, sharing=True, **kwargs):
         """Construct a new dataset
 
         Parameters
