@@ -473,7 +473,8 @@ def test_crs84():
     assert "WGS 84" in CRS.from_user_input("urn:ogc:def:crs:OGC::CRS84").wkt
 
 
-def test_equals_different_type():
-    assert CRS.from_epsg(4326) != ""
+@pytest.mark.parametrize("other", ["", 4.2, 0])
+def test_equals_different_type(other):
+    assert CRS.from_epsg(4326) != other
     assert CRS.from_epsg(4326) != 4.2
     assert CRS.from_epsg(4326) != 0
