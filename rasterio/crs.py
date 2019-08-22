@@ -86,7 +86,10 @@ class CRS(Mapping):
     __nonzero__ = __bool__
 
     def __eq__(self, other):
-        other = CRS.from_user_input(other)
+        try:
+            other = CRS.from_user_input(other)
+        except CRSError:
+            return False
         return (self._crs == other._crs)
 
     def __getstate__(self):

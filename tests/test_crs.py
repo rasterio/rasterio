@@ -478,5 +478,12 @@ def test_crs84():
     assert "WGS 84" in CRS.from_user_input("urn:ogc:def:crs:OGC::CRS84").wkt
 
 
+@pytest.mark.parametrize("other", ["", 4.2, 0])
+def test_equals_different_type(other):
+    """Comparison to non-CRS objects is False"""
+    assert CRS.from_epsg(4326) != other
+
+
 def test_from_user_input_custom_crs_class():
+    """Support comparison to foreign objects that provide to_wkt()"""
     assert CRS.from_user_input(CustomCRS()) == CRS.from_epsg(4326)
