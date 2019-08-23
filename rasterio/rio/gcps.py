@@ -65,7 +65,7 @@ def gcps(ctx, input, geojson_type, projection, precision, use_rs, indent,
 
     with ctx.obj['env'], rasterio.open(input) as src:
 
-        gcps, crs = src.gcps
+        gcps, crs, _ = src.gcps
         proj = crs.to_string()
         proj = proj.split('=')[1].upper() if proj.startswith('+init=epsg') else proj
 

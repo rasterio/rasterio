@@ -88,7 +88,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         if src.crs:
             info['lnglat'] = src.lnglat()
 
-        gcps, gcps_crs = src.gcps
+        gcps, gcps_crs, gcps_tranform = src.gcps
 
         if gcps:
             info['gcps'] = {'points': [p.asdict() for p in gcps]}
@@ -100,6 +100,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     info['gcps']['crs'] = src.crs.to_string()
             else:
                 info['gcps']['crs'] = None
+            if gcps_tranform:
+                info['gcps']['transform'] = gcps_tranform
 
         if verbose:
             stats = [{'min': float(b.min()),

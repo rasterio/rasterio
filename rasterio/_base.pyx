@@ -251,8 +251,6 @@ cdef class DatasetBase(object):
 
         # touch self.meta, triggering data type evaluation.
         _ = self.meta
-        if self._crs is None and self._gcps:
-            self._crs = self._gcps[1]
 
         self._closed = False
         log.debug("Dataset %r is started.", self)
@@ -305,27 +303,9 @@ cdef class DatasetBase(object):
             raise ValueError("Null dataset")
         err = GDALGetGeoTransform(self._hds, gt)
         if err == GDALError.failure:
-            if self.gcps:
-                gcplist = <GDAL_GCP *>CPLMalloc(len(self.gcps[0]) * sizeof(GDAL_GCP))
-                try:
-                    for i, obj in enumerate(self.gcps[0]):
-                        ident = str(i).encode('utf-8')
-                        info = "".encode('utf-8')
-                        gcplist[i].pszId = ident
-                        gcplist[i].pszInfo = info
-                        gcplist[i].dfGCPPixel = obj.col
-                        gcplist[i].dfGCPLine = obj.row
-                        gcplist[i].dfGCPX = obj.x
-                        gcplist[i].dfGCPY = obj.y
-                        gcplist[i].dfGCPZ = obj.z or 0.0
-
-                    err = GDALGCPsToGeoTransform(len(self.gcps[0]), gcplist, gt, 0)
-                finally:
-                    CPLFree(gcplist)
-            else:
-                warnings.warn(
-                    "Dataset has no geotransform set. The identity matrix may be returned.",
-                    NotGeoreferencedWarning)
+            warnings.warn(
+                "Dataset has no geotransform set. The identity matrix may be returned.",
+                NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
 
@@ -1197,14 +1177,29 @@ cdef class DatasetBase(object):
         gcplist = GDALGetGCPs(self.handle())
         num_gcps = GDALGetGCPCount(self.handle())
 
-        return ([GroundControlPoint(col=gcplist[i].dfGCPPixel,
-                                         row=gcplist[i].dfGCPLine,
-                                         x=gcplist[i].dfGCPX,
-                                         y=gcplist[i].dfGCPY,
-                                         z=gcplist[i].dfGCPZ,
-                                         id=gcplist[i].pszId,
-                                         info=gcplist[i].pszInfo)
-                                         for i in range(num_gcps)], crs)
+        cdef double gt[6]
+        err = GDALGCPsToGeoTransform(num_gcps, gcplist, gt, 0)
+        if err == GDALError.failure:
+            warnings.warn(
+                "Could not get geotransform set from gcps. The identity matrix may be returned.",
+                NotGeoreferencedWarning)
+
+        return (
+            [
+                GroundControlPoint(
+                    col=gcplist[i].dfGCPPixel,
+                    row=gcplist[i].dfGCPLine,
+                    x=gcplist[i].dfGCPX,
+                    y=gcplist[i].dfGCPY,
+                    z=gcplist[i].dfGCPZ,
+                    id=gcplist[i].pszId,
+                    info=gcplist[i].pszInfo
+                )
+                for i in range(num_gcps)
+            ], 
+            crs, 
+            Affine.from_gdal(*[gt[i] for i in range(6)])
+        )
 
     def _set_gcps(self, values):
         raise DatasetAttributeError("read-only attribute")
