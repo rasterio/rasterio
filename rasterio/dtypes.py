@@ -157,7 +157,11 @@ def can_cast_dtype(values, dtype):
     if values.dtype.name == np.dtype(dtype).name:
         return True
 
-    elif values.dtype.kind == 'f':
+    elif values.dtype.kind == "f" and np.dtype(dtype).kind == "f":
+        values_no_nan = values[~np.isnan(values)]
+        return np.allclose(values_no_nan, values_no_nan.astype(dtype))
+
+    elif values.dtype.kind == "f":
         return np.allclose(values, values.astype(dtype))
 
     else:

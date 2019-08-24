@@ -51,13 +51,23 @@ def test_get_minimum_dtype():
     assert get_minimum_dtype(np.array([-1.5, 0, 1.5], dtype=np.float64)) == float32
 
 
-def test_can_cast_dtype():
-    assert can_cast_dtype((1, 2, 3), np.uint8) == True
-    assert can_cast_dtype(np.array([1, 2, 3]), np.uint8) == True
-    assert can_cast_dtype(np.array([1, 2, 3], dtype=np.uint8), np.uint8) == True
-    assert can_cast_dtype(np.array([1, 2, 3]), np.float32) == True
-    assert can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.float32) == True
-    assert can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.uint8) == False
+@pytest.mark.parametrize(
+    "value, nptype, can_cast",
+    [
+        ((1, 2, 3), np.uint8, True),
+        (np.array([1, 2, 3]), np.uint8, True),
+        (np.array([1, 2, 3], dtype=np.uint8), np.uint8, True),
+        (np.array([1, 2, 3]), np.float32, True),
+        (np.array([1.4, 2.1, 3.65]), np.float32, True),
+        (np.array([1.4, 2.1, 3.65]), np.uint8, False),
+        (np.array((1, np.nan)), np.float32, True),
+        (np.array(np.nan), np.float32, True),
+        (np.array(np.nan), np.uint8, False),
+        ([1.0000001, 2.0000001, 3.0000001], np.uint8, True),
+    ],
+)
+def test_can_cast_dtype(value, nptype, can_cast):
+    assert can_cast_dtype(value, nptype) == can_cast
 
 
 def test_validate_dtype():
