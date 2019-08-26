@@ -1,9 +1,10 @@
 Changes
 =======
 
-1.0.26 (TBD)
-------------
+1.0.26 (2019-08-26)
+-------------------
 
+- Allow `nan` to be used as fill for float32 datasets in ``rasterize`` (#1761).
 - A WarpedVRTs destination crs now will default to ``src_crs`` if given, else
   to the crs of the source dataset (#1755).
 - Prevent open's ``sharing`` keyword argument from being pass on to GDAL as a
