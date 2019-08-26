@@ -356,3 +356,12 @@ def test_write_no_driver__issue_1203(tmpdir):
     name = str(tmpdir.join("test.tif"))
     with pytest.raises(ValueError), rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8'):
         print("TEST FAILED IF THIS IS REACHED.")
+
+
+@pytest.mark.parametrize("mode", ["w", "w+"])
+def test_require_width(tmpdir, mode):
+    """width and height are required for w and w+ mode"""
+    name = str(tmpdir.join("test.tif"))
+    with pytest.raises(TypeError):
+        with rasterio.open(name, mode, driver="GTiff", height=1, count=1, dtype='uint8'):
+            print("TEST FAILED IF THIS IS REACHED.")

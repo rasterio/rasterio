@@ -40,6 +40,11 @@ ESRI_PROJECTION_STRING = (
     'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
 
 
+class CustomCRS(object):
+    def to_wkt(self):
+        return CRS.from_epsg(4326).to_wkt()
+
+
 def test_crs_constructor_dict():
     """Can create a CRS from a dict"""
     crs = CRS({'init': 'epsg:3857'})
@@ -495,3 +500,14 @@ def test_crs_hash_unequal():
 def test_crs84():
     """Create CRS from OGC code"""
     assert "WGS 84" in CRS.from_user_input("urn:ogc:def:crs:OGC::CRS84").wkt
+
+
+@pytest.mark.parametrize("other", ["", 4.2, 0])
+def test_equals_different_type(other):
+    """Comparison to non-CRS objects is False"""
+    assert CRS.from_epsg(4326) != other
+
+
+def test_from_user_input_custom_crs_class():
+    """Support comparison to foreign objects that provide to_wkt()"""
+    assert CRS.from_user_input(CustomCRS()) == CRS.from_epsg(4326)

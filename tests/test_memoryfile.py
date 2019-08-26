@@ -297,3 +297,17 @@ def test_memory_file_gdal_error_message(capsys):
     captured = capsys.readouterr()
     assert "ERROR 4" not in captured.err
     assert "ERROR 4" not in captured.out
+
+
+def test_write_plus_mode_requires_width():
+    """Width is required"""
+    with MemoryFile() as memfile:
+        with pytest.raises(TypeError):
+            memfile.open(driver='GTiff', dtype='uint8', count=3, height=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5))
+
+
+def test_write_plus_mode_blockxsize_requires_width():
+    """Width is required"""
+    with MemoryFile() as memfile:
+        with pytest.raises(TypeError):
+            memfile.open(driver='GTiff', dtype='uint8', count=3, height=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5), blockxsize=128)
