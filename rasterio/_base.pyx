@@ -22,6 +22,7 @@ from rasterio.control import GroundControlPoint
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
+from rasterio.gcps import GCPS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env, env_ctx_if_needed
@@ -1216,7 +1217,7 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             if not self._gcps:
-                self._gcps = self.get_gcps()
+                self._gcps = GCPS(*self.get_gcps())
             return self._gcps
 
         def __set__(self, value):
