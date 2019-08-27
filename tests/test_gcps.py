@@ -4,7 +4,10 @@ import numpy
 import pytest
 
 import rasterio
-from rasterio.control import GroundControlPoint
+from rasterio.crs import CRS
+from rasterio.control import GroundControlPoint, GCPS
+
+from affine import Affine
 
 
 def test_gcp_empty():
@@ -130,8 +133,21 @@ def test_read_vrt_gcps(tmpdir):
 </VRTDataset>""")
     with rasterio.open(str(vrtfile)) as src:
         gcps, crs = src.gcps
+        assert src.gcps.transform
         assert crs.to_epsg() == 4326
         assert len(gcps) == 2
         assert [(0.5, 0.5), (13.5, 23.5)] == [(p.col, p.row) for p in gcps]
         assert ['1', '2'] == [p.id for p in gcps]
         assert ['a', 'b'] == [p.info for p in gcps]
+
+
+def test_gcps():
+    """Test GCPS base class."""
+    gcps = [GroundControlPoint(1, 1, 100.0, 1000.0, z=0.0)]
+    crs = CRS.from_epsg(4326)
+    transform = Affine(5.0, 0.0, 0.0, 0.0, -5.0, 0.0)
+    gcps = GCPS(gcps, crs, transform)
+    assert len([*gcps]) == 2
+    assert gcps.crs == crs
+    assert gcps.transform == transform
+    assert len(gcps.points) == 1

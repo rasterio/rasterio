@@ -18,11 +18,10 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
-from rasterio.control import GroundControlPoint
+from rasterio.control import GroundControlPoint, GCPS
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
-from rasterio.gcps import GCPS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
 from rasterio.env import Env, env_ctx_if_needed
