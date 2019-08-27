@@ -718,8 +718,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             warnings.warn(
                 "dst_crs will be removed in 1.1, use crs",
                 RasterioDeprecationWarning)
+
         if crs is None:
-            crs = dst_crs if dst_crs is not None else src_dataset.crs
+            crs = dst_crs if dst_crs is not None else (src_crs or src_dataset.crs)
         # End of `dst_parameter` deprecation and aliasing.
 
         if add_alpha and gdal_version().startswith('1'):

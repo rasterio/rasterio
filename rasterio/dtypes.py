@@ -158,7 +158,7 @@ def can_cast_dtype(values, dtype):
         return True
 
     elif values.dtype.kind == 'f':
-        return np.allclose(values, values.astype(dtype))
+        return np.allclose(values, values.astype(dtype), equal_nan=True)
 
     else:
         return np.array_equal(values, values.astype(dtype))
