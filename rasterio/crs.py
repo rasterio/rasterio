@@ -10,7 +10,6 @@ used.
 
 """
 
-import collections
 import json
 import pickle
 
