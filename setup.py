@@ -296,7 +296,9 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
         Extension(
             'rasterio._crs', ['rasterio/_crs.pyx'], **ext_options),
         Extension(
-            'rasterio.shutil', ['rasterio/shutil.pyx'], **ext_options)],
+            'rasterio.shutil', ['rasterio/shutil.pyx'], **ext_options),
+        Extension(
+            'rasterio._transform', ['rasterio/_transform.pyx'], **ext_options)],
         quiet=True, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.

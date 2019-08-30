@@ -18,7 +18,7 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
-from rasterio.control import GroundControlPoint, GCPS
+from rasterio.control import GroundControlPoint
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -1184,29 +1184,14 @@ cdef class DatasetBase(object):
         gcplist = GDALGetGCPs(self.handle())
         num_gcps = GDALGetGCPCount(self.handle())
 
-        cdef double gt[6]
-        err = GDALGCPsToGeoTransform(num_gcps, gcplist, gt, 0)
-        if err == GDALError.failure:
-            warnings.warn(
-                "Could not get geotransform set from gcps. The identity matrix may be returned.",
-                NotGeoreferencedWarning)
-
-        return (
-            [
-                GroundControlPoint(
-                    col=gcplist[i].dfGCPPixel,
-                    row=gcplist[i].dfGCPLine,
-                    x=gcplist[i].dfGCPX,
-                    y=gcplist[i].dfGCPY,
-                    z=gcplist[i].dfGCPZ,
-                    id=gcplist[i].pszId,
-                    info=gcplist[i].pszInfo
-                )
-                for i in range(num_gcps)
-            ], 
-            crs, 
-            Affine.from_gdal(*[gt[i] for i in range(6)])
-        )
+        return ([GroundControlPoint(col=gcplist[i].dfGCPPixel,
+	                                         row=gcplist[i].dfGCPLine,
+	                                         x=gcplist[i].dfGCPX,
+	                                         y=gcplist[i].dfGCPY,
+	                                         z=gcplist[i].dfGCPZ,
+	                                         id=gcplist[i].pszId,
+	                                         info=gcplist[i].pszInfo)
+	                                         for i in range(num_gcps)], crs)
 
     def _set_gcps(self, values):
         raise DatasetAttributeError("read-only attribute")
@@ -1223,7 +1208,7 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             if not self._gcps:
-                self._gcps = GCPS(*self.get_gcps())
+                self._gcps = self.get_gcps()
             return self._gcps
 
         def __set__(self, value):

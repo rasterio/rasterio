@@ -7,6 +7,8 @@ import math
 
 from affine import Affine
 
+from rasterio._transform import _transform_from_gcps
+
 
 IDENTITY = Affine.identity()
 GDAL_IDENTITY = IDENTITY.to_gdal()
@@ -248,3 +250,7 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         rows = rows[0]
 
     return rows, cols
+
+
+def from_gcps(gcpslist):
+    return _transform_from_gcps(gcpslist)
