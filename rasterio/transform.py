@@ -2,10 +2,11 @@
 
 from __future__ import division
 
-import collections
 import math
 
 from affine import Affine
+
+from rasterio.compat import Iterable
 
 
 IDENTITY = Affine.identity()
@@ -153,10 +154,10 @@ def xy(transform, rows, cols, offset='center'):
 
     single_col = False
     single_row = False
-    if not isinstance(cols, collections.Iterable):
+    if not isinstance(cols, Iterable):
         cols = [cols]
         single_col = True
-    if not isinstance(rows, collections.Iterable):
+    if not isinstance(rows, Iterable):
         rows = [rows]
         single_row = True
 
@@ -221,10 +222,10 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
 
     single_x = False
     single_y = False
-    if not isinstance(xs, collections.Iterable):
+    if not isinstance(xs, Iterable):
         xs = [xs]
         single_x = True
-    if not isinstance(ys, collections.Iterable):
+    if not isinstance(ys, Iterable):
         ys = [ys]
         single_y = True
 
