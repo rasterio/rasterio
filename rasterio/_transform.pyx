@@ -25,7 +25,7 @@ def _transform_from_gcps(gcps):
             gcplist[i].dfGCPY = obj.y
             gcplist[i].dfGCPZ = obj.z or 0.0
 
-        err = GDALGCPsToGeoTransform(len(gcps), gcplist, gt, 0)
+        err = GDALGCPsToGeoTransform(len(gcps), gcplist, &gt, 0)
         if err == GDALError.failure:
                 warnings.warn(
                 "Could not get geotransform set from gcps. The identity matrix may be returned.",
