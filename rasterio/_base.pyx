@@ -1185,13 +1185,13 @@ cdef class DatasetBase(object):
         num_gcps = GDALGetGCPCount(self.handle())
 
         return ([GroundControlPoint(col=gcplist[i].dfGCPPixel,
-	                                         row=gcplist[i].dfGCPLine,
-	                                         x=gcplist[i].dfGCPX,
-	                                         y=gcplist[i].dfGCPY,
-	                                         z=gcplist[i].dfGCPZ,
-	                                         id=gcplist[i].pszId,
-	                                         info=gcplist[i].pszInfo)
-	                                         for i in range(num_gcps)], crs)
+                                         row=gcplist[i].dfGCPLine,
+                                         x=gcplist[i].dfGCPX,
+                                         y=gcplist[i].dfGCPY,
+                                         z=gcplist[i].dfGCPZ,
+                                         id=gcplist[i].pszId,
+                                         info=gcplist[i].pszInfo)
+                                         for i in range(num_gcps)], crs)
 
     def _set_gcps(self, values):
         raise DatasetAttributeError("read-only attribute")
