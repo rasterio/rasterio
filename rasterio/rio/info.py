@@ -7,6 +7,7 @@ import click
 
 import rasterio
 from rasterio.rio import options
+from rasterio.transform import from_gcps
 
 
 @click.command(short_help="Print information about a data file.")
@@ -90,10 +91,10 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
 
         gcps, gcps_crs = src.gcps
 
-        if src.gcps:
-            info['gcps'] = {'points': [p.asdict() for p in src.gcps.points]}
-            if src.gcps.crs:
-                epsg = src.gcps.crs.to_epsg()
+        if gcps:
+            info['gcps'] = {'points': [p.asdict() for p in gcps]}
+            if gcps_crs:
+                epsg = gcps_crs.to_epsg()
                 if epsg:
                     info['gcps']['crs'] = 'EPSG:{}'.format(epsg)
                 else:
@@ -101,7 +102,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
             else:
                 info['gcps']['crs'] = None
             if src.gcps.transform:
-                info['gcps']['transform'] = src.gcps.transform
+                info['gcps']['transform'] = from_gcps(gcps)
 
         if verbose:
             stats = [{'min': float(b.min()),
