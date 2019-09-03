@@ -1509,12 +1509,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         vals = range(256)
 
         for i, rgba in colormap.items():
-            if len(rgba) == 4 and self.driver in ('GTiff'):
-                warnings.warn(
-                    "This format doesn't support alpha in colormap entries. "
-                    "The value will be ignored.")
 
-            elif len(rgba) == 3:
+            if len(rgba) == 3:
                 rgba = tuple(rgba) + (255,)
 
             if i not in vals:

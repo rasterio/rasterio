@@ -1368,7 +1368,7 @@ def test_reproject_dst_nodata():
         resampling=Resampling.nearest,
     )
 
-    assert (out > 0).sum() == 438113
+    assert (out[~np.isnan(out)] > 0.0).sum() == 438113
     assert out[0, 0] != 0
     assert np.isnan(out[0, 0])
 
