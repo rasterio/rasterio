@@ -4,6 +4,8 @@ Changes
 1.0.27 (TBD)
 ------------
 
+- Tear down coordinate transformer at the end of _base._transform(), fixing
+  #1713.
 - Remove unavoidable warning about 4-channel colormap entries in
   DatasetWriterBase.write_colormap().
 - Another category of Python deprecation warnings has been eliminated (#1742,
