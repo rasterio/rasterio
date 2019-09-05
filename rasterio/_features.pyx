@@ -367,7 +367,7 @@ def _bounds(geometry, north_up=True, transform=None):
     else:
         if transform is not None:
             xyz = list(_explode(geometry['coordinates']))
-            xyz_px = [point * transform for point in xyz]
+            xyz_px = [transform * point for point in xyz]
             xyz = tuple(zip(*xyz_px))
             return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
         else:

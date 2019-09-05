@@ -419,8 +419,8 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
         right = min(dataset.shape[1], right)
         bottom = min(dataset.shape[0], bottom)
         # convert the bounds back to the CRS domain
-        left, top = (left, top) * dataset.transform
-        right, bottom = (right, bottom) * dataset.transform
+        left, top = dataset.transform * (left, top)
+        right, bottom = dataset.transform * (right, bottom)
 
     window = dataset.window(left, bottom, right, top)
     window_floored = window.round_offsets(op='floor', pixel_precision=pixel_precision)
