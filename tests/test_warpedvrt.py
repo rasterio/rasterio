@@ -392,3 +392,10 @@ def test_invalid_add_alpha():
     with rasterio.open('tests/data/RGBA.byte.tif') as src:
         with pytest.raises(WarpOptionsError):
             WarpedVRT(src, add_alpha=True)
+
+
+def test_warpedvrt_float32_preserve(data):
+    """WarpedVRT preserves float32 dtype of source"""
+    with rasterio.open("tests/data/float32.tif") as src:
+        with WarpedVRT(src, src_crs="EPSG:4326") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
