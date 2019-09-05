@@ -10,8 +10,8 @@ Changes
 - All cases of deprecated affine right multiplication have been changed to be
   forward compatible with affine 3.0. The rasterio tests now pass without
   warnings.
-- Tear down coordinate transformer at the end of _base._transform(), fixing
-  the memory leak reported in #1713.
+- The coordinate transformer used in _base._transform() is now properly
+  deleted, fixing the memory leak reported in #1713.
 - An unavoidable warning about 4-channel colormap entries in
   DatasetWriterBase.write_colormap() has been removed.
 - All deprecated imports of abstract base classes for collections have been
