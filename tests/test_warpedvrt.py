@@ -412,6 +412,17 @@ def test_warpedvrt_float32_override(data):
             assert src.dtypes == vrt.dtypes == ("float32",)
 
 
+def test_warpedvrt_float32_overridei_nodata(data):
+    """Override GDAL defaults for working data type"""
+    float32file = str(data.join("float32.tif"))
+    with rasterio.open(float32file, "r+") as dst:
+        dst.nodata = -3.4028230607370965e+38
+
+    with rasterio.open(float32file) as src:
+        with WarpedVRT(src, src_crs="EPSG:4326", nodata=0.0001, dtype="float32") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
+
+
 @pytest.mark.xfail(reason="GDAL's output defaults to float64")
 def test_warpedvrt_issue1744(data):
     """Reproduce the bug reported in 1744"""
