@@ -25,7 +25,7 @@ from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
@@ -1077,7 +1077,14 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Process dataset opening options.
         # "tiled" affects the meaning of blocksize, so we need it
         # before iterating.
-        tiled = bool(kwargs.get('tiled', False))
+        tiled = kwargs.pop("tiled", False) or kwargs.pop("TILED", False)
+
+        if tiled:
+            blockxsize = kwargs.get("blockxsize", None)
+            blockysize = kwargs.get("blockysize", None)
+            if (blockxsize and blockxsize % 16) or (blockysize and blockysize % 16):
+                raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
+            kwargs["tiled"] = "TRUE"
 
         for k, v in kwargs.items():
             # Skip items that are definitely *not* valid driver
@@ -1087,11 +1094,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             k, v = k.upper(), str(v).upper()
 
-            # Guard against block size that exceed image size.
-            if k == 'BLOCKXSIZE' and tiled and int(v) > width:
-                raise ValueError("blockxsize exceeds raster width.")
-            if k == 'BLOCKYSIZE' and tiled and int(v) > height:
-                raise ValueError("blockysize exceeds raster height.")
+            if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
+                continue
 
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
@@ -1505,12 +1509,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         vals = range(256)
 
         for i, rgba in colormap.items():
-            if len(rgba) == 4 and self.driver in ('GTiff'):
-                warnings.warn(
-                    "This format doesn't support alpha in colormap entries. "
-                    "The value will be ignored.")
 
-            elif len(rgba) == 3:
+            if len(rgba) == 3:
                 rgba = tuple(rgba) + (255,)
 
             if i not in vals:

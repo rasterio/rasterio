@@ -58,6 +58,7 @@ def test_show_cmyk_interp(tmpdir):
         meta = src.meta
     meta['photometric'] = 'cmyk'
     meta['count'] = 4
+    del meta["nodata"]
     tiffname = str(tmpdir.join('foo.tif'))
     with rasterio.open(tiffname, 'w', **meta) as dst:
         assert dst.colorinterp == (

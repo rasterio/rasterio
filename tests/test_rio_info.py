@@ -8,7 +8,7 @@ import rasterio
 from rasterio.rio.main import main_group
 from rasterio.env import GDALVersion
 
-from .conftest import requires_gdal21
+from .conftest import requires_gdal21, requires_gdal23
 
 
 with rasterio.Env() as env:
@@ -455,7 +455,7 @@ def test_info_no_credentials(tmpdir, monkeypatch):
     assert result.exit_code == 0
 
 
-@requires_gdal21(reason="S3 raster access requires GDAL 2.1+")
+@requires_gdal23(reason="Unsigned S3 requests require GDAL ~= 2.3")
 @pytest.mark.network
 def test_info_aws_unsigned():
     """Unsigned access to public dataset works (see #1637)"""

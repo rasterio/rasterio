@@ -47,22 +47,15 @@ def test_untiled_dataset_blocksize(tmpdir):
     """Blocksize is not relevant to untiled datasets (see #1689)"""
     tmpfile = str(tmpdir.join("test.tif"))
     with rasterio.open(
-            tmpfile, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
-            transform=Affine.identity(), blockxsize=256, blockysize=256) as dataset:
+            tmpfile, "w", driver="GTiff", count=1, height=13, width=23, dtype="uint8", crs="epsg:3857",
+            transform=Affine.identity(), blockxsize=64, blockysize=64) as dataset:
         pass
 
     with rasterio.open(tmpfile) as dataset:
         assert not dataset.profile["tiled"]
-        assert dataset.shape == (13, 13)
+        assert dataset.shape == (13, 23)
+        assert dataset.block_shapes == [(13, 23)]
 
-
-def test_tiled_dataset_blocksize_guard(tmpdir):
-    """Tiled datasets with dimensions less than blocksize are not permitted"""
-    tmpfile = str(tmpdir.join("test.tif"))
-    with pytest.raises(ValueError):
-        rasterio.open(
-            tmpfile, "w", driver="GTiff", count=1, height=13, width=13, dtype="uint8", crs="epsg:3857",
-            transform=Affine.identity(), tiled=True, blockxsize=256, blockysize=256)
 
 def test_dataset_readonly_attributes(path_rgb_byte_tif):
     """Attempts to set read-only attributes fail with DatasetAttributeError"""

@@ -11,6 +11,7 @@ import pytest
 import rasterio
 from rasterio import windows
 from rasterio.errors import RasterBlockError
+from rasterio.profiles import default_gtiff_profile
 
 from .conftest import requires_gdal2
 
@@ -50,6 +51,7 @@ class WindowTest(unittest.TestCase):
         self.assertEqual(
             rasterio.windows.evaluate(((None, -10), (None, -10)), 100, 90),
             windows.Window.from_slices((0, 90), (0, 80)))
+
 
 def test_window_index():
     idx = rasterio.windows.window_index(((0, 4), (1, 12)))
@@ -191,3 +193,29 @@ def test_block_window_tiff(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         for (i, j), w in src.block_windows():
             assert src.block_window(1, i, j) == w
+
+
+@pytest.mark.parametrize("blocksize", [16, 32, 256, 1024])
+def test_block_windows_bigger_blocksize(tmpdir, blocksize):
+    """Ensure that block sizes greater than raster size are ok"""
+    tempfile = str(tmpdir.join("test.tif"))
+    profile = default_gtiff_profile.copy()
+    profile.update(height=16, width=16, count=1, blockxsize=blocksize, blockysize=blocksize)
+    with rasterio.open(tempfile, "w", **profile) as dst:
+        assert dst.is_tiled
+        for ij, window in dst.block_windows():
+            dst.write(np.ones((1, 1), dtype="uint8"), 1, window=window)
+
+    with rasterio.open(tempfile) as dst:
+        assert list(dst.block_windows()) == [((0, 0), windows.Window(0, 0, 16, 16))]
+        assert (dst.read(1) == 1).all()
+
+
+@pytest.mark.parametrize("blocksizes", [{"blockxsize": 33, "blockysize": 32}, {"blockxsize": 32, "blockysize": 33}])
+def test_odd_blocksize_error(tmpdir, blocksizes):
+    """For a tiled TIFF block sizes must be multiples of 16"""
+    tempfile = str(tmpdir.join("test.tif"))
+    profile = default_gtiff_profile.copy()
+    profile.update(height=64, width=64, count=1, **blocksizes)
+    with pytest.raises(RasterBlockError):
+        rasterio.open(tempfile, "w", **profile)

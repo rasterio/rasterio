@@ -879,7 +879,15 @@ cdef class DatasetBase(object):
     def is_tiled(self):
         if len(self.block_shapes) == 0:
             return False
-        return self.block_shapes[0][1] < self.width and self.block_shapes[0][1] <= 1024
+        else:
+            blockysize, blockxsize = self.block_shapes[0]
+            if blockxsize % 16 or blockysize % 16:
+                return False
+            # Perfectly square is a special case/
+            if blockxsize == blockysize == self.height == self.width:
+                return True
+            else:
+                return blockxsize < self.width or blockxsize > self.width
 
     property profile:
         """Basic metadata and creation options of this dataset.

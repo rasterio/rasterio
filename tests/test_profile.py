@@ -62,24 +62,6 @@ def test_open_with_profile(tmpdir):
         assert not dst.closed
 
 
-def test_blockxsize_guard(tmpdir):
-    """blockxsize can't be greater than image width."""
-    tiffname = str(tmpdir.join('foo.tif'))
-    with pytest.raises(ValueError):
-        profile = default_gtiff_profile.copy()
-        profile.update(count=1, height=256, width=128)
-        rasterio.open(tiffname, 'w', **profile)
-
-
-def test_blockysize_guard(tmpdir):
-    """blockysize can't be greater than image height."""
-    tiffname = str(tmpdir.join('foo.tif'))
-    with pytest.raises(ValueError):
-        profile = default_gtiff_profile.copy()
-        profile.update(count=1, width=256, height=128)
-        rasterio.open(tiffname, 'w', **profile)
-
-
 def test_profile_overlay(path_rgb_byte_tif):
     with rasterio.open(path_rgb_byte_tif) as src:
         kwds = src.profile

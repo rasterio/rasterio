@@ -1,6 +1,21 @@
 Changes
 =======
 
+1.0.27 (TBD)
+------------
+
+- Remove unavoidable warning about 4-channel colormap entries in
+  DatasetWriterBase.write_colormap().
+- Another category of Python deprecation warnings has been eliminated (#1742,
+  #1764).
+- DatasetWriterBase no longer requires that GeoTIFF block sizes be smaller than
+  the raster size (#1760). Block sizes are however checked to ensure that they
+are multiples of 16.
+- DatasetBase.is_tiled has been made more reliable, fixing #1376.
+- Tests have been added to demonstrate that image corruption when writing
+  block-wise to an image with extra large block sizes (#520) is no longer an
+issue.
+
 1.0.26 (2019-08-26)
 -------------------
 
