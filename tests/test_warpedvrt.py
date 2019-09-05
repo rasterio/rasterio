@@ -399,3 +399,14 @@ def test_warpedvrt_float32_preserve(data):
     with rasterio.open("tests/data/float32.tif") as src:
         with WarpedVRT(src, src_crs="EPSG:4326") as vrt:
             assert src.dtypes == vrt.dtypes == ("float32",)
+
+
+def test_warpedvrt_float32_override(data):
+    """Override GDAL defaults for working data type"""
+    float32file = str(data.join("float32.tif"))
+    with rasterio.open(float32file, "r+") as dst:
+        dst.nodata = -3.4028230607370965e+38
+
+    with rasterio.open(float32file) as src:
+        with WarpedVRT(src, src_crs="EPSG:4326", dtype="float32") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
