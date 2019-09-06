@@ -1,20 +1,28 @@
 Changes
 =======
 
-1.0.27 (TBD)
-------------
+1.0.27 (2019-09-05)
+-------------------
 
-- Remove unavoidable warning about 4-channel colormap entries in
-  DatasetWriterBase.write_colormap().
-- Another category of Python deprecation warnings has been eliminated (#1742,
-  #1764).
+- Resolve #1744 by adding a `dtype` keyword argument to the WarpedVRT
+  constructor. It allows a user to specify the working data type for the warp
+  operation and output.
+- All cases of deprecated affine right multiplication have been changed to be
+  forward compatible with affine 3.0. The rasterio tests now pass without
+  warnings.
+- The coordinate transformer used in _base._transform() is now properly
+  deleted, fixing the memory leak reported in #1713.
+- An unavoidable warning about 4-channel colormap entries in
+  DatasetWriterBase.write_colormap() has been removed.
+- All deprecated imports of abstract base classes for collections have been
+  corrected, eliminating the warnings reported in #1742 and #1764.
 - DatasetWriterBase no longer requires that GeoTIFF block sizes be smaller than
   the raster size (#1760). Block sizes are however checked to ensure that they
-are multiples of 16.
+  are multiples of 16.
 - DatasetBase.is_tiled has been made more reliable, fixing #1376.
 - Tests have been added to demonstrate that image corruption when writing
   block-wise to an image with extra large block sizes (#520) is no longer an
-issue.
+  issue.
 
 1.0.26 (2019-08-26)
 -------------------
