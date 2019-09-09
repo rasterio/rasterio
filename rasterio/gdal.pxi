@@ -267,8 +267,6 @@ cdef extern from "gdal.h" nogil:
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
     int GDALGetGCPCount(GDALDatasetH hDS)
     const char *GDALGetGCPProjection(GDALDatasetH hDS)
-    int GDALGCPsToGeoTransform(int nGCPCount, const GDAL_GCP *pasGCPs, double *padfGeoTransform,
-                               int bApproxOK)
     int GDALGetCacheMax()
     void GDALSetCacheMax(int nBytes)
     GIntBig GDALGetCacheMax64()

@@ -111,15 +111,6 @@ def test_info_quiet():
     assert result.exit_code == 0
 
 
-def test_info_gcps():
-    runner = CliRunner()
-    result = runner.invoke(main_group, [
-        'info',
-        'tests/data/white-gemini-iv.vrt'
-    ])
-    assert result.exit_code == 0
-
-
 def test_info_count():
     runner = CliRunner()
     result = runner.invoke(
