@@ -101,8 +101,8 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     info['gcps']['crs'] = src.crs.to_string()
             else:
                 info['gcps']['crs'] = None
-            if src.gcps.transform:
-                info['gcps']['transform'] = from_gcps(gcps)
+
+            info['gcps']['transform'] = from_gcps(gcps)
 
         if verbose:
             stats = [{'min': float(b.min()),
