@@ -7,7 +7,6 @@ import click
 
 import rasterio
 from rasterio.rio import options
-from rasterio.transform import from_gcps
 
 
 @click.command(short_help="Print information about a data file.")
@@ -101,8 +100,6 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                     info['gcps']['crs'] = src.crs.to_string()
             else:
                 info['gcps']['crs'] = None
-
-            info['gcps']['transform'] = from_gcps(gcps)
 
         if verbose:
             stats = [{'min': float(b.min()),
