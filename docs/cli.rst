@@ -10,7 +10,7 @@ to use a ready-made command as opposed to implementing similar functionality
 as a python script.
 
 The rio program is developed using the `Click <http://click.pocoo.org/>`__
-framwork.  Its plugin system allows external modules to share a common
+framework.  Its plugin system allows external modules to share a common
 namespace and handling of context variables.
 
 .. code-block:: console
@@ -685,7 +685,7 @@ See `click-plugins <https://github.com/click-contrib/click-plugins>`__ for more
 information on how to build these plugins in general.
 
 To use these plugins with rio, add the commands to the
-``rasterio.rio_plugins'`` entry point in your ``setup.py`` file, as described
+``rasterio.rio_plugins`` entry point in your ``setup.py`` file, as described
 `here <https://github.com/click-contrib/click-plugins#developing-plugins>`__
 and in ``rasterio/rio/main.py``.
 
