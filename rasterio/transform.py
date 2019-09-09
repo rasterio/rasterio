@@ -6,6 +6,7 @@ import math
 
 from affine import Affine
 
+from rasterio._transform import _transform_from_gcps
 from rasterio.compat import Iterable
 
 
@@ -249,3 +250,19 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
         rows = rows[0]
 
     return rows, cols
+
+
+def from_gcps(gcps):
+    """Make an Affine transform from ground control points.
+
+    Parameters
+    ----------
+    gcps : sequence of GroundControlPoint
+        Such as the first item of a dataset's `gcps` property.
+
+    Returns
+    -------
+    Affine
+
+    """
+    return Affine.from_gdal(*_transform_from_gcps(gcps))
