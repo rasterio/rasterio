@@ -252,17 +252,17 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     return rows, cols
 
 
-def from_gcps(gcpslist):
-    """Make an Affine transform from ground control points
+def from_gcps(gcps):
+    """Make an Affine transform from ground control points.
 
     Parameters
     ----------
     gcps : sequence of GroundControlPoint
         Such as the first item of a dataset's `gcps` property.
-        
+
     Returns
     -------
     Affine
 
     """
-    return Affine.from_gdal(*_transform_from_gcps(gcpslist))
+    return Affine.from_gdal(*_transform_from_gcps(gcps))
