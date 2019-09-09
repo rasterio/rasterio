@@ -1,6 +1,19 @@
 Changes
 =======
 
+1.1dev (TBD)
+------------
+
+Deprecations:
+
+- Support for Python 2 is deprecated and a warning is raised from the
+  rasterio.compat module. This module will be deleted in a future version.
+
+New features:
+
+- A new ``rasterio.transform.from_gcps()`` returns the Affine matrix that is a
+  best fit to given ground control points (#1749).
+
 1.0.28 (2019-09-09)
 -------------------
 

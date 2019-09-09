@@ -2,6 +2,7 @@
 
 import itertools
 import sys
+import warnings
 
 
 if sys.version_info[0] >= 3:   # pragma: no cover
@@ -15,6 +16,7 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     from collections.abc import Iterable, Mapping
     from inspect import getfullargspec as getargspec
 else:  # pragma: no cover
+    warnings.warn("Python 2 compatibility will be removed after version 1.1", DeprecationWarning)
     string_types = basestring,
     text_type = unicode
     integer_types = int, long
