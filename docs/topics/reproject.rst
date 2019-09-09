@@ -170,5 +170,5 @@ the output dataset's transform matrix and, thereby, its spatial extent.
 References
 ----------
 
-.. [1] http://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.interpolation.geometric_transform.html#scipy.ndimage.interpolation.geometric_transform
+.. [1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.geometric_transform.html#scipy.ndimage.geometric_transform
 

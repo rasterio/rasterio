@@ -243,7 +243,7 @@ Web Mercator (EPSG:3857),
 
     $ rio edit-info --crs EPSG:3857 example.tif
 
-set its `affine transformation matrix <https://github.com/mapbox/rasterio/blob/master/docs/georeferencing.rst#coordinate-transformation>`__,
+set its :ref:`affine transformation matrix <coordinate-transformation>`,
 
 .. code-block:: console
 

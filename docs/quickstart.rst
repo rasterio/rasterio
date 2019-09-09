@@ -6,7 +6,7 @@ This document explains how to use Rasterio to read existing files and to create
 new files. Some advanced topics are glossed over to be covered in more detail
 elsewhere in Rasterio's documentation. Only the GeoTIFF format is used here,
 but the examples do apply to other raster data formats. It is presumed that
-Rasterio has been `installed <./installation>`__.
+Rasterio has been :doc:`installed <installation>`.
 
 Opening a dataset in reading mode
 ---------------------------------
