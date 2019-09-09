@@ -9,7 +9,7 @@ cases are covered by CLI sub-commands and it is often more convenient
 to use a ready-made command as opposed to implementing similar functionality
 as a python script.
 
-The rio program is developed using the `Click <http://click.pocoo.org/>`__
+The rio program is developed using the `Click <http://click.palletsprojects.com/>`__
 framework.  Its plugin system allows external modules to share a common
 namespace and handling of context variables.
 
@@ -21,12 +21,14 @@ namespace and handling of context variables.
       Rasterio command line interface.
 
     Options:
-      -v, --verbose       Increase verbosity.
-      -q, --quiet         Decrease verbosity.
-      --aws-profile TEXT  Selects a profile from your shared AWS credentials file
-      --version           Show the version and exit.
+      -v, --verbose           Increase verbosity.
+      -q, --quiet             Decrease verbosity.
+      --aws-profile TEXT      Select a profile from the AWS credentials file
+      --aws-no-sign-requests  Make requests anonymously
+      --aws-requester-pays    Requester pays data transfer costs
+      --version               Show the version and exit.
       --gdal-version
-      --help              Show this message and exit.
+      --help                  Show this message and exit.
 
     Commands:
       blocks     Write dataset blocks as GeoJSON features.
@@ -514,7 +516,7 @@ rm
 
 New in 1.0
 
-Invoking the shell's '$ rm <path>' on a dataset can be used to
+Invoking the shell's ``$ rm <path>`` on a dataset can be used to
 delete a dataset referenced by a file path, but it won't handle
 deleting side car files.  This command is aware of datasets and
 their sidecar files.
