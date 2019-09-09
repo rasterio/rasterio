@@ -269,7 +269,7 @@ which can also be expressed as:
 
     $ rio edit-info --colorinterp RGBA example.tif
 
-See ``rasterio.enums.ColorInterp`` for a full list of supported color
+See :class:`rasterio.enums.ColorInterp` for a full list of supported color
 interpretations and the color docs for more information.
 
 
@@ -619,6 +619,8 @@ a raster dataset, do the following.
     $ echo "[-78.0, 23.0, -76.0, 25.0]" | rio transform - --dst-crs tests/data/RGB.byte.tif --precision 2
     [192457.13, 2546667.68, 399086.97, 2765319.94]
 
+
+.. _warp:
 
 warp
 ----

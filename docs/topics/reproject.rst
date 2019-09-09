@@ -6,11 +6,11 @@ coordinate reference system and transform to the pixels of a source image with
 a different coordinate reference system and transform. This process is known as
 reprojection.
 
-Rasterio's ``rasterio.warp.reproject()`` is a geospatial-specific analog
+Rasterio's :func:`rasterio.warp.reproject()` is a geospatial-specific analog
 to SciPy's ``scipy.ndimage.interpolation.geometric_transform()`` [1]_.
 
 The code below reprojects between two arrays, using no pre-existing GIS
-datasets.  ``rasterio.warp.reproject()`` has two positional arguments: source
+datasets.  :func:`rasterio.warp.reproject()` has two positional arguments: source
 and destination.  The remaining keyword arguments parameterize the reprojection
 transform.
 
@@ -62,7 +62,7 @@ correct: https://a.tiles.mapbox.com/v3/sgillies.hfek2oko/page.html?secure=1#6/0.
 Estimating optimal output shape
 -------------------------------
 
-Rasterio provides a ``rasterio.warp.calculate_default_transform()`` function to
+Rasterio provides a :func:`rasterio.warp.calculate_default_transform()` function to
 determine the optimal resolution and transform for the destination raster.
 Given a source dataset in a known coordinate reference system, this 
 function will return a ``transform, width, height`` tuple which is calculated
@@ -74,13 +74,13 @@ Reprojecting a GeoTIFF dataset
 Reprojecting a GeoTIFF dataset from one coordinate reference system is a common
 use case.  Rasterio provides a few utilities to make this even easier:
 
-``transform_bounds()``
+:func:`~rasterio.warp.transform_bounds()`
 transforms the bounding coordinates of the source raster to the target
 coordinate reference system, densifiying points along the edges to account
 for non-linear transformations of the edges.
 
 
-``calculate_default_transform()``
+:func:`~rasterio.warp.calculate_default_transform()`
 transforms bounds to target coordinate system, calculates resolution if not
 provided, and returns destination transform and dimensions.
 
@@ -118,13 +118,12 @@ provided, and returns destination transform and dimensions.
 
 See ``rasterio/rio/warp.py`` for more complex examples of reprojection based on
 new bounds, dimensions, and resolution (as well as a command-line interface
-described
-`here <https://github.com/mapbox/rasterio/blob/master/docs/cli.rst#warp>`__).
+described :ref:`here <warp>`).
 
 
 
-It is also possible to use ``reproject()`` to create an output dataset zoomed
-out by a factor of 2.  Methods of the ``rasterio.Affine`` class help us generate
+It is also possible to use :func:`~rasterio.warp.reproject()` to create an output dataset zoomed
+out by a factor of 2.  Methods of the :class:`rasterio.Affine` class help us generate
 the output dataset's transform matrix and, thereby, its spatial extent.
 
 .. code-block:: python
