@@ -58,7 +58,7 @@ Rasterio
         with rasterio.open('data/stefan_full_greyalpha.tif') as dataset:
            # Suite of code accessing dataset ``ds`` follows...
 
-The object returned when you call ``rasterio.Env()`` is a context manager.  It
+The object returned when you call :class:`rasterio.Env()` is a context manager.  It
 handles the GDAL configuration for a specific block of code and resets the
 configuration when the block exits for any reason, success or failure. The
 Rasterio ``with rasterio.Env()`` pattern organizes GDAL configuration into single

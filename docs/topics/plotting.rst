@@ -17,10 +17,10 @@ two dimensional data can be accomplished directly with ``pyplot``.
 
 .. image:: http://farm6.staticflickr.com/5032/13938576006_b99b23271b_o_d.png
 
-Rasterio also provides ``rasterio.plot.show`` to perform common tasks such as
+Rasterio also provides :func:`rasterio.plot.show` to perform common tasks such as
 displaying multi-band images as RGB and labeling the axes with proper geo-referenced extents.
 
-The first argument to ``show`` represent the data source to be plotted. This can be one of
+The first argument to :func:`~rasterio.plot.show` represent the data source to be plotted. This can be one of
 
    * A dataset object opened in 'r' mode
    * A single band of a source, represented by a ``(src, band_index)`` tuple
@@ -42,7 +42,7 @@ you can pass in a transform in order to get extent labels.
 .. image:: ../img/rgb.jpg
 
 and similarly for single band plots. Note that you can pass in ``cmap`` to
-specify a matplotlib color ramp. Any kwargs passed to ``show`` will passed
+specify a matplotlib color ramp. Any kwargs passed to :func:`~rasterio.plot.show`  will be passed
 through to the underlying pyplot functions.
 
 .. code-block:: python
@@ -87,7 +87,7 @@ For single-band rasters, there is also an option to generate contours.
 
 .. image:: ../img/contours.jpg
 
-Rasterio also provides a ``plot.show_hist`` function for generating histograms of
+Rasterio also provides a :func:`~rasterio.plot.show_hist` function for generating histograms of
 single or multiband rasters:
 
 .. code-block:: python
@@ -100,7 +100,7 @@ single or multiband rasters:
 
 .. image:: ../img/hist.jpg
 
-The ``show_hist`` function also takes an ``ax`` argument to allow subplot configurations
+The :func:`~rasterio.plot.show_hist` function also takes an ``ax`` argument to allow subplot configurations
 
 .. code-block:: python
 

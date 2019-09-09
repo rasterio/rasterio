@@ -43,7 +43,6 @@ Submodules
    rasterio.shutil
    rasterio.tools
    rasterio.transform
-   rasterio.vfs
    rasterio.vrt
    rasterio.warp
    rasterio.windows
