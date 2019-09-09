@@ -1,10 +1,18 @@
 Changes
 =======
 
+1.0.28 (2019-09-09)
+-------------------
+
+- Coercion to ``int`` was forgotten in the block size guard introduced in
+  1.0.27 and code that passes string valued ``blockxsize`` and ``blockysize``
+  keyword arguments to ``rasterio.open()`` was broken (#1769).  This has been
+  fixed in 1.0.28.
+
 1.0.27 (2019-09-05)
 -------------------
 
-- Resolve #1744 by adding a `dtype` keyword argument to the WarpedVRT
+- Resolve #1744 by adding a ``dtype`` keyword argument to the WarpedVRT
   constructor. It allows a user to specify the working data type for the warp
   operation and output.
 - All cases of deprecated affine right multiplication have been changed to be
