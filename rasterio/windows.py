@@ -27,6 +27,7 @@ import attr
 from affine import Affine
 import numpy as np
 
+from rasterio.compat import Iterable
 from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
 
@@ -114,7 +115,7 @@ def iter_args(function):
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], collections.Iterable):
+        if len(args) == 1 and isinstance(args[0], Iterable):
             return function(*args[0])
         else:
             return function(*args)

@@ -21,6 +21,57 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
 
     This class is backed by an in-memory GDAL VRTWarpedDataset VRT file.
 
+    Parameters
+    ----------
+    src_dataset : dataset object
+        The warp source.
+    src_crs : CRS or str, optional
+        Overrides the coordinate reference system of `src_dataset`.
+    src_transfrom : Affine, optional
+        Overrides the transform of `src_dataset`.
+    src_nodata : float, optional
+        Overrides the nodata value of `src_dataset`, which is the
+        default.
+    crs : CRS or str, optional
+        The coordinate reference system at the end of the warp
+        operation.  Default: the crs of `src_dataset`. dst_crs is
+        a deprecated alias for this parameter.
+    transform : Affine, optional
+        The transform for the virtual dataset. Default: will be
+        computed from the attributes of `src_dataset`. dst_transform
+        is a deprecated alias for this parameter.
+    height, width: int, optional
+        The dimensions of the virtual dataset. Defaults: will be
+        computed from the attributes of `src_dataset`. dst_height
+        and dst_width are deprecated alias for these parameters.
+    nodata : float, optional
+        Nodata value for the virtual dataset. Default: the nodata
+        value of `src_dataset` or 0.0. dst_nodata is a deprecated
+        alias for this parameter.
+    resampling : Resampling, optional
+        Warp resampling algorithm. Default: `Resampling.nearest`.
+    tolerance : float, optional
+        The maximum error tolerance in input pixels when
+        approximating the warp transformation. Default: 0.125,
+        or one-eigth of a pixel.
+    src_alpha : int, optional
+        Index of a source band to use as an alpha band for warping.
+    add_alpha : bool, optional
+        Whether to add an alpha masking band to the virtual dataset.
+        Default: False. This option will cause deletion of the VRT
+        nodata value.
+    init_dest_nodata : bool, optional
+        Whether or not to initialize output to `nodata`. Default:
+        True.
+    warp_mem_limit : int, optional
+        The warp operation's memory limit in MB. The default (0)
+        means 64 MB with GDAL 2.2.
+    dtype : str, optional
+        The working data type for warp operation and output.
+    warp_extras : dict
+        GDAL extra warp options. See
+        http://www.gdal.org/structGDALWarpOptions.html.
+
     Attributes
     ----------
     src_dataset : dataset
@@ -39,6 +90,8 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The nodata value used to initialize the destination; it will
         remain in all areas not covered by the reprojected source.
         Defaults to the value of src_nodata, or 0 (gdal default).
+    working_dtype : str, optional
+        The working data type for warp operation and output.
     warp_extras : dict
         GDAL extra warp options. See
         http://www.gdal.org/structGDALWarpOptions.html.

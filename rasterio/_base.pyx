@@ -879,7 +879,15 @@ cdef class DatasetBase(object):
     def is_tiled(self):
         if len(self.block_shapes) == 0:
             return False
-        return self.block_shapes[0][1] < self.width and self.block_shapes[0][1] <= 1024
+        else:
+            blockysize, blockxsize = self.block_shapes[0]
+            if blockxsize % 16 or blockysize % 16:
+                return False
+            # Perfectly square is a special case/
+            if blockxsize == blockysize == self.height == self.width:
+                return True
+            else:
+                return blockxsize < self.width or blockxsize > self.width
 
     property profile:
         """Basic metadata and creation options of this dataset.
@@ -1269,17 +1277,6 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         transform = exc_wrap_pointer(transform)
         exc_wrap_int(OCTTransform(transform, n, x, y, z))
 
-    except CPLE_BaseError as exc:
-        log.debug("{}".format(exc))
-
-    except:
-        CPLFree(x)
-        CPLFree(y)
-        CPLFree(z)
-        _safe_osr_release(src)
-        _safe_osr_release(dst)
-
-    try:
         res_xs = [0]*n
         res_ys = [0]*n
         for i in range(n):
@@ -1297,6 +1294,7 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
+        OCTDestroyCoordinateTransformation(transform)
         _safe_osr_release(src)
         _safe_osr_release(dst)
 

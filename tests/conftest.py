@@ -27,8 +27,8 @@ if sys.version_info > (3,):
     reduce = functools.reduce
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
-    'data/RGB.byte.tif', 'data/float.tif', 'data/float_nan.tif',
-    'data/shade.tif', 'data/RGBA.byte.tif']]
+    'data/RGB.byte.tif', 'data/float.tif', 'data/float32.tif',
+    'data/float_nan.tif', 'data/shade.tif', 'data/RGBA.byte.tif']]
 
 
 def pytest_cmdline_main(config):
@@ -600,6 +600,10 @@ requires_gdal21 = pytest.mark.skipif(
 requires_gdal22 = pytest.mark.skipif(
     not gdal_version.at_least('2.2'),
     reason="Requires GDAL 2.2.x")
+
+requires_gdal23 = pytest.mark.skipif(
+    not gdal_version.at_least('2.3'),
+    reason="Requires GDAL ~= 2.3")
 
 requires_gdal_lt_3 = pytest.mark.skipif(
     gdal_version.__lt__('3.0'),
