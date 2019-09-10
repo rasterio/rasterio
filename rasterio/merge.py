@@ -24,8 +24,8 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     coordinate reference system.
 
     Input files are merged in their listed order using the reverse
-    painter's algorithm. If the output file exists, its values will be
-    overwritten by input values.
+    painter's algorithm (default) or another method. If the output file exists,
+    its values will be overwritten by input values.
 
     Geospatial bounds and resolution of a new output file in the
     units of the input file coordinate reference system may be provided
@@ -50,15 +50,25 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     indexes : list of ints or a single int, optional
         bands to read and merge
     method : str or callable
-        pre-defined or custom merging method
-        callable must have signature
+        pre-defined method:
+            first: reverse painting
+            last: paint valid new on top of existing
+            min: pixel-wise min of existing and new
+            max: pixel-wise max of existing and new
+        or custom callable with signature:
 
-        function(old_data, new_data, old_nodata, new_nodata)
-        
-        Parameters
-        -----------
-        old_data : array_like
-        ...
+        def function(old_data, new_data, old_nodata, new_nodata):
+
+            Parameters
+            ----------
+            old_data : array_like
+                array to update with new_data
+            new_data : array_like
+                data to merge
+                same shape as old_data
+            old_nodata, new_data : array_like
+                boolean masks where old/new data is nodata
+                same shape as old_data
 
     Returns
     -------
