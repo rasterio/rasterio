@@ -50,7 +50,13 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     method : str or callable
         pre-defined or custom merging method
         callable must have signature
-        (old_data, new_data, old_nodata, new_nodata)
+
+        function(old_data, new_data, old_nodata, new_nodata)
+        
+        Parameters
+        -----------
+        old_data : array_like
+        ...
 
     Returns
     -------
