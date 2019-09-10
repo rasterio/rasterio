@@ -984,7 +984,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=True, **kwargs):
+                 gcps=None, sharing=False, **kwargs):
         """Create a new dataset writer or updater
 
         Parameters
@@ -1025,7 +1025,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `True`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded:w program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1848,7 +1848,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=True, **kwargs):
+                 gcps=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -1890,7 +1890,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `True`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded:w program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes

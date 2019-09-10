@@ -174,7 +174,7 @@ cdef class DatasetBase(object):
         Photometric interpretation's short name
     """
 
-    def __init__(self, path=None, driver=None, sharing=True, **kwargs):
+    def __init__(self, path=None, driver=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -185,7 +185,7 @@ cdef class DatasetBase(object):
             A single driver name or a list of driver names to consider when
             opening the dataset.
         sharing : bool, optional
-            Whether to share underlying GDAL dataset handles (default: True).
+            Whether to share underlying GDAL dataset handles (default: False).
         kwargs : dict
             GDAL dataset opening options.
 

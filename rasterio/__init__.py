@@ -56,7 +56,7 @@ log.addHandler(NullHandler())
 
 @ensure_env_with_credentials
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
-         crs=None, transform=None, dtype=None, nodata=None, sharing=True,
+         crs=None, transform=None, dtype=None, nodata=None, sharing=False,
          **kwargs):
     """Open a dataset for reading or writing.
 
@@ -110,9 +110,9 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     sharing : bool; optional
         To reduce overhead and prevent programs from running out of file
         descriptors, rasterio maintains a pool of shared low level
-        dataset handles. When `True` (the default), this function will
-        use a shared handle if one is available. Multithreaded programs
-        must avoid sharing and should set *sharing* to `False`.
+        dataset handles. When `True` this function will use a shared
+        handle if one is available. Multithreaded programs must avoid
+        sharing and should set *sharing* to `False`.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
