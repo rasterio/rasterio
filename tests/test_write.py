@@ -33,14 +33,17 @@ def test_validate_dtype_str(tmpdir):
             dtype='Int16')
 
 
-def test_validate_dtype_int8(tmpdir, basic_image):
+def test_validate_dtype_float128(tmpdir, basic_image):
     """Raise TypeError if dtype is unsupported by GDAL."""
-    name = str(tmpdir.join('int8.tif'))
-    basic_image_int8 = basic_image.astype('int8')
-    height, width = basic_image_int8.shape
+    name = str(tmpdir.join('float128.tif'))
+    try:
+        basic_image_f128 = basic_image.astype('float128')
+    except TypeError:
+        pytest.skip("Unsupported data type")
+    height, width = basic_image_f128.shape
     with pytest.raises(TypeError):
         rasterio.open(name, 'w', driver='GTiff', width=width, height=height,
-                      count=1, dtype=basic_image_int8.dtype)
+                      count=1, dtype=basic_image_f128.dtype)
 
 
 def test_validate_count_None(tmpdir):
@@ -60,6 +63,7 @@ def test_no_crs(tmpdir):
         dst.write(np.ones((100, 100), dtype=rasterio.uint8), indexes=1)
 
 
+@pytest.mark.gdalbin
 def test_context(tmpdir):
     name = str(tmpdir.join("test_context.tif"))
     with rasterio.open(
@@ -87,6 +91,7 @@ def test_context(tmpdir):
     assert "Band 1 Block=100x81 Type=Byte, ColorInterp=Gray" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -99,6 +104,21 @@ def test_write_ubyte(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
+def test_write_sbyte(tmpdir):
+    name = str(tmpdir.mkdir("sub").join("test_write_sbyte.tif"))
+    a = np.ones((100, 100), dtype=rasterio.sbyte) * -33
+    with rasterio.open(
+            name, 'w',
+            driver='GTiff', width=100, height=100, count=1,
+            dtype=a.dtype) as s:
+        s.write(a, indexes=1)
+    info = subprocess.check_output(["gdalinfo", "-stats", name]).decode('utf-8')
+    assert "Minimum=-33.000, Maximum=-33.000, Mean=-33.000, StdDev=0.000" in info
+    assert 'SIGNEDBYTE' in info
+
+
+@pytest.mark.gdalbin
 def test_write_ubyte_multi(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -111,6 +131,7 @@ def test_write_ubyte_multi(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte_multi_list(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
     a = np.array([np.ones((100, 100), dtype=rasterio.ubyte) * 127])
@@ -123,6 +144,7 @@ def test_write_ubyte_multi_list(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_ubyte_multi_3(tmpdir):
     name = str(tmpdir.mkdir("sub").join("test_write_ubyte_multi_list.tif"))
     arr = np.array(3 * [np.ones((100, 100), dtype=rasterio.ubyte) * 127])
@@ -135,6 +157,7 @@ def test_write_ubyte_multi_3(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_float(tmpdir):
     name = str(tmpdir.join("test_write_float.tif"))
     a = np.ones((100, 100), dtype=rasterio.float32) * 42.0
@@ -149,6 +172,7 @@ def test_write_float(tmpdir):
     assert "Minimum=42.000, Maximum=42.000, Mean=42.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_crs_transform(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -163,14 +187,14 @@ def test_write_crs_transform(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
+@pytest.mark.gdalbin
 def test_write_crs_transform_affine(tmpdir):
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -184,16 +208,18 @@ def test_write_crs_transform_affine(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
-def test_write_crs_transform_2(tmpdir):
+@pytest.mark.gdalbin
+def test_write_crs_transform_2(tmpdir, monkeypatch):
     """Using 'EPSG:32618' as CRS."""
+    monkeypatch.delenv('GDAL_DATA', raising=False)
     name = str(tmpdir.join("test_write_crs_transform.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
     transform = affine.Affine(300.0379266750948, 0.0, 101985.0,
@@ -205,14 +231,16 @@ def test_write_crs_transform_2(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["WGS 84 / UTM zone 18N",' in info
+    assert 'UTM zone 18N' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
+@pytest.mark.gdalbin
 def test_write_crs_transform_3(tmpdir):
     """Using WKT as CRS."""
     name = str(tmpdir.join("test_write_crs_transform.tif"))
@@ -227,14 +255,15 @@ def test_write_crs_transform_3(tmpdir):
             transform=transform,
             dtype=rasterio.ubyte) as s:
         s.write(a, indexes=1)
-    assert s.crs.to_dict() == {'init': 'epsg:32618'}
+    assert s.crs.to_epsg() == 32618
     info = subprocess.check_output(["gdalinfo", name]).decode('utf-8')
-    assert 'PROJCS["UTM Zone 18, Northern Hemisphere",' in info
+    assert '"UTM Zone 18, Northern Hemisphere",' in info
     # make sure that pixel size is nearly the same as transform
     # (precision varies slightly by platform)
     assert re.search(r'Pixel Size = \(300.03792\d+,-300.04178\d+\)', info)
 
 
+@pytest.mark.gdalbin
 def test_write_meta(tmpdir):
     name = str(tmpdir.join("test_write_meta.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -245,6 +274,7 @@ def test_write_meta(tmpdir):
     assert "Minimum=127.000, Maximum=127.000, Mean=127.000, StdDev=0.000" in info
 
 
+@pytest.mark.gdalbin
 def test_write_nodata(tmpdir):
     name = str(tmpdir.join("test_write_nodata.tif"))
     a = np.ones((100, 100), dtype=rasterio.ubyte) * 127
@@ -308,7 +338,7 @@ def test_write_blacklist(tmpdir, driver):
 
 def test_creation_metadata_deprecation(tmpdir):
     name = str(tmpdir.join("test.tif"))
-    with rasterio.open(name, 'w', driver='GTiff', height=1, width=1, count=1, dtype='uint8', BIGTIFF=True) as dst:
+    with rasterio.open(name, 'w', driver='GTiff', height=1, width=1, count=1, dtype='uint8', BIGTIFF='YES') as dst:
         dst.write(np.ones((1, 1, 1), dtype='uint8'))
         assert dst.tags(ns='rio_creation_kwds') == {}
 
@@ -326,3 +356,12 @@ def test_write_no_driver__issue_1203(tmpdir):
     name = str(tmpdir.join("test.tif"))
     with pytest.raises(ValueError), rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8'):
         print("TEST FAILED IF THIS IS REACHED.")
+
+
+@pytest.mark.parametrize("mode", ["w", "w+"])
+def test_require_width(tmpdir, mode):
+    """width and height are required for w and w+ mode"""
+    name = str(tmpdir.join("test.tif"))
+    with pytest.raises(TypeError):
+        with rasterio.open(name, mode, driver="GTiff", height=1, count=1, dtype='uint8'):
+            print("TEST FAILED IF THIS IS REACHED.")

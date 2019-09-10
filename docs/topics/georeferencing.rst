@@ -37,6 +37,8 @@ argument.
    >>> with rasterio.open('/tmp/foo.tif', 'w', crs='EPSG:3857', **profile) as dst:
    ...     pass # write data to this Web Mercator projection dataset.
 
+.. _coordinate-transformation:
+
 Coordinate Transformation
 -------------------------
 

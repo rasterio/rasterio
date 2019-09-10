@@ -12,8 +12,8 @@ from rasterio.dtypes import (
 
 def test_is_ndarray():
     assert is_ndarray(np.zeros((1,)))
-    assert is_ndarray([0]) == False
-    assert is_ndarray((0,)) == False
+    assert not is_ndarray([0])
+    assert not is_ndarray((0,))
 
 
 def test_np_dt_uint8():
@@ -25,7 +25,7 @@ def test_dt_ubyte():
 
 
 def test_check_dtype_invalid():
-    assert check_dtype('foo') == False
+    assert not check_dtype('foo')
 
 
 def test_gdal_name():
@@ -52,19 +52,29 @@ def test_get_minimum_dtype():
 
 
 def test_can_cast_dtype():
-    assert can_cast_dtype((1, 2, 3), np.uint8) == True
-    assert can_cast_dtype(np.array([1, 2, 3]), np.uint8) == True
-    assert can_cast_dtype(np.array([1, 2, 3], dtype=np.uint8), np.uint8) == True
-    assert can_cast_dtype(np.array([1, 2, 3]), np.float32) == True
-    assert can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.float32) == True
-    assert can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.uint8) == False
+    assert can_cast_dtype((1, 2, 3), np.uint8)
+    assert can_cast_dtype(np.array([1, 2, 3]), np.uint8)
+    assert can_cast_dtype(np.array([1, 2, 3], dtype=np.uint8), np.uint8)
+    assert can_cast_dtype(np.array([1, 2, 3]), np.float32)
+    assert can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.float32)
+    assert not can_cast_dtype(np.array([1.4, 2.1, 3.65]), np.uint8)
+
+
+@pytest.mark.parametrize("dtype", ["float64", "float32"])
+def test_can_cast_dtype_nan(dtype):
+    assert can_cast_dtype([np.nan], dtype)
+
+
+@pytest.mark.parametrize("dtype", ["uint8", "uint16", "uint32", "int32"])
+def test_cant_cast_dtype_nan(dtype):
+    assert not can_cast_dtype([np.nan], dtype)
 
 
 def test_validate_dtype():
-    assert validate_dtype([1, 2, 3], ('uint8', 'uint16')) == True
-    assert validate_dtype(np.array([1, 2, 3]), ('uint8', 'uint16')) == True
-    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float32',)) == True
-    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('uint8',)) == False
+    assert validate_dtype([1, 2, 3], ('uint8', 'uint16'))
+    assert validate_dtype(np.array([1, 2, 3]), ('uint8', 'uint16'))
+    assert validate_dtype(np.array([1.4, 2.1, 3.65]), ('float32',))
+    assert not validate_dtype(np.array([1.4, 2.1, 3.65]), ('uint8',))
 
 
 def test_complex(tmpdir):

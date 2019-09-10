@@ -78,8 +78,12 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
-        Values of False or 0 will be excluded from feature generation
-        Must evaluate to bool (rasterio.bool_ or rasterio.uint8)
+        Must evaluate to bool (rasterio.bool_ or rasterio.uint8). Values
+        of False or 0 will be excluded from feature generation.  Note
+        well that this is the inverse sense from Numpy's, where a mask
+        value of True indicates invalid data in an array. If `source` is
+        a Numpy masked array and `mask` is None, the source's mask will
+        be inverted and used in place of `mask`.
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
     transform : Affine transformation, optional
@@ -104,6 +108,10 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     memory.
 
     """
+    if hasattr(source, 'mask') and mask is None:
+        mask = ~source.mask
+        source = source.data
+
     transform = guard_transform(transform)
     for s, v in _shapes(source, mask, connectivity, transform):
         yield s, v
@@ -167,11 +175,17 @@ def rasterize(
         dtype=None):
     """Return an image array with input geometries burned in.
 
+    Warnings will be raised for any invalid or empty geometries, and
+    an exception will be raised if there are no valid shapes
+    to rasterize.
+
     Parameters
     ----------
-    shapes : iterable of (geometry, value) pairs or iterable over
-        geometries. `geometry` can either be an object that implements
-        the geo interface or GeoJSON-like object.
+    shapes : iterable of (`geometry`, `value`) pairs or iterable over
+        geometries. The `geometry` can either be an object that
+        implements the geo interface or GeoJSON-like object. If no
+        `value` is provided the `default_value` will be used. If `value`
+        is `None` the `fill` value will be used.
     out_shape : tuple or list with 2 integers
         Shape of output numpy ndarray.
     fill : int or float, optional
@@ -189,10 +203,11 @@ def rasterize(
         false, only pixels whose center is within the polygon or that
         are selected by Bresenham's line algorithm will be burned in.
     merge_alg : MergeAlg, optional
-        Merge algorithm to use.  One of:
+        Merge algorithm to use. One of:
             MergeAlg.replace (default): the new value will overwrite the
-                existing value.
-            MergeAlg.add: the new value will be added to the existing raster.
+              existing value.
+            MergeAlg.add: the new value will be added
+              to the existing raster.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
@@ -247,30 +262,31 @@ def rasterize(
     for index, item in enumerate(shapes):
         if isinstance(item, (tuple, list)):
             geom, value = item
+            if value is None:
+                value = fill
         else:
             geom = item
             value = default_value
         geom = getattr(geom, '__geo_interface__', None) or geom
 
-        # geom must be a valid GeoJSON geometry type and non-empty
-        if not is_valid_geom(geom):
-            raise ValueError(
-                'Invalid geometry object at index {0}'.format(index)
-            )
+        if is_valid_geom(geom):
+            shape_values.append(value)
 
-        if geom['type'] == 'GeometryCollection':
-            # GeometryCollections need to be handled as individual parts to
-            # avoid holes in output:
-            # https://github.com/mapbox/rasterio/issues/1253.
-            # Only 1-level deep since GeoJSON spec discourages nested
-            # GeometryCollections
-            for part in geom['geometries']:
-                valid_shapes.append((part, value))
+            if geom['type'] == 'GeometryCollection':
+                # GeometryCollections need to be handled as individual parts to
+                # avoid holes in output:
+                # https://github.com/mapbox/rasterio/issues/1253.
+                # Only 1-level deep since GeoJSON spec discourages nested
+                # GeometryCollections
+                for part in geom['geometries']:
+                    valid_shapes.append((part, value))
 
+            else:
+                valid_shapes.append((geom, value))
+        
         else:
-            valid_shapes.append((geom, value))
-
-        shape_values.append(value)
+            # invalid or empty geometries are skipped and raise a warning instead
+            warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index))
 
     if not valid_shapes:
         raise ValueError('No valid geometry objects found for rasterize')
@@ -406,8 +422,8 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
         right = min(dataset.shape[1], right)
         bottom = min(dataset.shape[0], bottom)
         # convert the bounds back to the CRS domain
-        left, top = (left, top) * dataset.transform
-        right, bottom = (right, bottom) * dataset.transform
+        left, top = dataset.transform * (left, top)
+        right, bottom = dataset.transform * (right, bottom)
 
     window = dataset.window(left, bottom, right, top)
     window_floored = window.round_offsets(op='floor', pixel_precision=pixel_precision)
@@ -427,7 +443,8 @@ def geometry_window(dataset, shapes, pad_x=0, pad_y=0, north_up=True,
 def is_valid_geom(geom):
     """
     Checks to see if geometry is a valid GeoJSON geometry type or
-    GeometryCollection.
+    GeometryCollection.  Geometry must be GeoJSON or implement the geo
+    interface.
 
     Geometries must be non-empty, and have at least x, y coordinates.
 
@@ -444,6 +461,8 @@ def is_valid_geom(geom):
 
     geom_types = {'Point', 'MultiPoint', 'LineString', 'LinearRing',
                   'MultiLineString', 'Polygon', 'MultiPolygon'}
+
+    geom = getattr(geom, '__geo_interface__', None) or geom
 
     if 'type' not in geom:
         return False

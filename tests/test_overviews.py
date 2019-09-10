@@ -1,10 +1,8 @@
 """Tests of overview counting and creation."""
 
-import logging
-import sys
-
-from click.testing import CliRunner
 import pytest
+
+from .conftest import requires_gdal2
 
 import rasterio
 from rasterio.enums import Resampling
@@ -41,6 +39,7 @@ def test_build_overviews_two(data):
         assert src.overviews(1) == [2, 4]
         assert src.overviews(2) == [2, 4]
         assert src.overviews(3) == [2, 4]
+
 
 @pytest.mark.xfail(
     gdal_version < GDALVersion.parse('2.0'),
@@ -89,4 +88,21 @@ def test_issue1333(data):
     with pytest.raises(OverviewCreationError):
         with rasterio.open(inputfile, 'r+') as src:
             overview_factors = [1024, 2048]
-            src.build_overviews(overview_factors, resampling=Resampling.average)
+            src.build_overviews(
+                overview_factors, resampling=Resampling.average)
+
+
+@requires_gdal2
+def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
+    """Confirm fix of #1497"""
+    dst_file = str(tmpdir.join('test.tif'))
+    with rasterio.open(path_rgb_byte_tif) as src:
+        with rasterio.open(dst_file, 'w', **src.profile) as dst:
+            dst.write(src.read())
+            overview_factors = [2, 4]
+            dst.build_overviews(
+                overview_factors, resampling=Resampling.nearest)
+
+    with rasterio.open(dst_file, overview_level=1) as src:
+        data = src.read()
+        assert data.any()

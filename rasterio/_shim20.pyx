@@ -12,7 +12,7 @@ include "shim_rasterioex.pxi"
 # Declarations and implementations specific for GDAL = 2.0
 cdef extern from "gdal.h" nogil:
 
-    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
+    GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings)
 
 from rasterio._err cimport exc_wrap_pointer
 
@@ -68,3 +68,11 @@ cdef GDALDatasetH open_dataset(
 cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
     raise NotImplementedError(
         "GDAL versions < 2.1 do not support nodata deletion")
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    return ''
+
+
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
+    pass

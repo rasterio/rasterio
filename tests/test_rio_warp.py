@@ -15,8 +15,7 @@ from rasterio.warp import SUPPORTED_RESAMPLING, GDAL2_RESAMPLING
 from rasterio.rio import warp
 from rasterio.rio.main import main_group
 
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+from .conftest import requires_gdal_lt_3
 
 
 def test_dst_crs_error(runner, tmpdir):
@@ -36,7 +35,7 @@ def test_dst_crs_error_2(runner, tmpdir):
     result = runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', '{"proj": "foobar"}'])
     assert result.exit_code == 2
-    assert 'for dst_crs: Invalid' in result.output
+    assert 'Invalid value for dst_crs' in result.output
 
 
 def test_dst_crs_error_epsg(runner, tmpdir):
@@ -46,7 +45,7 @@ def test_dst_crs_error_epsg(runner, tmpdir):
     result = runner.invoke(main_group, [
         'warp', srcname, outputname, '--dst-crs', 'EPSG:'])
     assert result.exit_code == 2
-    assert 'for dst_crs: invalid literal for int()' in result.output
+    assert "for dst_crs: Invalid CRS:" in result.output
 
 
 def test_dst_crs_error_epsg_2(runner, tmpdir):
@@ -482,7 +481,7 @@ def test_warp_reproject_nolostdata(runner, tmpdir):
         arr = output.read()
         # 50 column swath on the right edge should have some ones (gdalwarped has 7223)
         assert arr[0, :, -50:].sum() > 7000
-        assert output.crs == {'init': 'epsg:3857'}
+        assert output.crs.to_epsg() == 3857
 
 
 def test_warp_dst_crs_empty_string(runner, tmpdir):
@@ -542,6 +541,7 @@ def test_warp_reproject_check_invert_true(runner, tmpdir):
         assert output.shape == output2.shape
 
 
+@requires_gdal_lt_3
 def test_warp_reproject_check_invert_false(runner, tmpdir):
     outputname = str(tmpdir.join('test.tif'))
     output2name = str(tmpdir.join('test2.tif'))

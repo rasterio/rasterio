@@ -45,6 +45,8 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
         in the first input raster.
+    precision: float, optional
+        Number of decimal points of precision when computing inverse transform.
     indexes : list of ints or a single int, optional
         bands to read and merge
     method : str or callable

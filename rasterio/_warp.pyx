@@ -14,7 +14,7 @@ import numpy as np
 import rasterio
 from rasterio._base import gdal_version
 from rasterio._err import (
-    CPLE_IllegalArgError, CPLE_NotSupportedError,
+    CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
@@ -112,7 +112,7 @@ def _transform_geom(
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata, int src_count,
-        object dst_alpha, object src_alpha, int warp_mem_limit, const char **options) except NULL:
+        object dst_alpha, object src_alpha, int warp_mem_limit, GDALDataType working_data_type, const char **options) except NULL:
     """Return a pointer to a GDALWarpOptions composed from input params
 
     This is used in _reproject() and the WarpedVRT constructor. It sets
@@ -145,6 +145,7 @@ cdef GDALWarpOptions * create_warp_options(
 
     warp_extras = CSLMerge(warp_extras, <char **>options)
 
+    psWOptions.eWorkingDataType = <GDALDataType>working_data_type
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
 
     if warp_mem_limit > 0:
@@ -212,6 +213,7 @@ def _reproject(
         init_dest_nodata=True,
         num_threads=1,
         warp_mem_limit=0,
+        working_data_type=0,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -315,7 +317,7 @@ def _reproject(
         if not in_dtype_range(dst_nodata, destination.dtype):
             raise ValueError("dst_nodata must be in valid range for "
                              "destination dtype")
-        
+
     def format_transform(in_transform):
         if not in_transform:
             return in_transform
@@ -461,7 +463,7 @@ def _reproject(
 
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit,
+        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit, <GDALDataType>working_data_type,
         <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
@@ -539,9 +541,13 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     else:
         transform = None
 
-    osr = _osr_from_crs(dst_crs)
-    OSRExportToWkt(osr, &wkt)
-    _safe_osr_release(osr)
+    try:
+        osr = _osr_from_crs(dst_crs)
+        exc_wrap_int(OSRExportToWkt(osr, &wkt))
+    except CPLE_BaseError as exc:
+        raise CRSError("Could not convert to WKT. {}".format(str(exc)))
+    finally:
+        _safe_osr_release(osr)
 
     if isinstance(src_crs, str):
         src_crs = CRS.from_string(src_crs)
@@ -592,15 +598,18 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     return dst_affine, dst_width, dst_height
 
 
+DEFAULT_NODATA_FLAG = object()
+
+
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def __init__(self, src_dataset, src_crs=None, dst_crs=None, crs=None,
                  resampling=Resampling.nearest, tolerance=0.125,
-                 src_nodata=None, dst_nodata=None, nodata=None,
+                 src_nodata=DEFAULT_NODATA_FLAG, dst_nodata=None, nodata=DEFAULT_NODATA_FLAG,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
                  init_dest_nodata=True, src_alpha=0, add_alpha=False,
-                 warp_mem_limit=0, **warp_extras):
+                 warp_mem_limit=0, dtype=None, **warp_extras):
         """Make a virtual warped dataset
 
         Parameters
@@ -612,7 +621,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         src_transfrom : Affine, optional
             Overrides the transform of `src_dataset`.
         src_nodata : float, optional
-            Overrides the nodata value of `src_dataset`.
+            Overrides the nodata value of `src_dataset`, which is the
+            default.
         crs : CRS or str, optional
             The coordinate reference system at the end of the warp
             operation.  Default: the crs of `src_dataset`. dst_crs is
@@ -647,6 +657,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         warp_mem_limit : int, optional
             The warp operation's memory limit in MB. The default (0)
             means 64 MB with GDAL 2.2.
+        dtype : str, optional
+            The working data type for warp operation and output.
         warp_extras : dict
             GDAL extra warp options. See
             http://www.gdal.org/structGDALWarpOptions.html.
@@ -710,8 +722,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             warnings.warn(
                 "dst_crs will be removed in 1.1, use crs",
                 RasterioDeprecationWarning)
+
         if crs is None:
-            crs = dst_crs if dst_crs is not None else src_dataset.crs
+            crs = dst_crs if dst_crs is not None else (src_crs or src_dataset.crs)
         # End of `dst_parameter` deprecation and aliasing.
 
         if add_alpha and gdal_version().startswith('1'):
@@ -726,9 +739,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.name = "WarpedVRT({})".format(src_dataset.name)
         self.resampling = resampling
         self.tolerance = tolerance
+        self.working_dtype = dtype
 
-        self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
-        self.dst_nodata = self.src_nodata if nodata is None else nodata
+        self.src_nodata = self.src_dataset.nodata if src_nodata is DEFAULT_NODATA_FLAG else src_nodata
+        self.dst_nodata = self.src_nodata if nodata is DEFAULT_NODATA_FLAG else nodata
         self.dst_width = width
         self.dst_height = height
         self.dst_transform = transform
@@ -830,7 +844,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, src_dataset.count, dst_alpha,
-            src_alpha_band, warp_mem_limit, <const char **>c_warp_extras)
+            src_alpha_band, warp_mem_limit, <GDALDataType>dtypes.dtype_rev[self.working_dtype],
+            <const char **>c_warp_extras)
 
         if psWOptions == NULL:
             raise RuntimeError("Warp options are NULL")

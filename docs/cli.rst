@@ -9,8 +9,8 @@ cases are covered by CLI sub-commands and it is often more convenient
 to use a ready-made command as opposed to implementing similar functionality
 as a python script.
 
-The rio program is developed using the `Click <http://click.pocoo.org/>`__
-framwork.  Its plugin system allows external modules to share a common
+The rio program is developed using the `Click <http://click.palletsprojects.com/>`__
+framework.  Its plugin system allows external modules to share a common
 namespace and handling of context variables.
 
 .. code-block:: console
@@ -21,12 +21,14 @@ namespace and handling of context variables.
       Rasterio command line interface.
 
     Options:
-      -v, --verbose       Increase verbosity.
-      -q, --quiet         Decrease verbosity.
-      --aws-profile TEXT  Selects a profile from your shared AWS credentials file
-      --version           Show the version and exit.
+      -v, --verbose           Increase verbosity.
+      -q, --quiet             Decrease verbosity.
+      --aws-profile TEXT      Select a profile from the AWS credentials file
+      --aws-no-sign-requests  Make requests anonymously
+      --aws-requester-pays    Requester pays data transfer costs
+      --version               Show the version and exit.
       --gdal-version
-      --help              Show this message and exit.
+      --help                  Show this message and exit.
 
     Commands:
       blocks     Write dataset blocks as GeoJSON features.
@@ -243,7 +245,7 @@ Web Mercator (EPSG:3857),
 
     $ rio edit-info --crs EPSG:3857 example.tif
 
-set its `affine transformation matrix <https://github.com/mapbox/rasterio/blob/master/docs/georeferencing.rst#coordinate-transformation>`__,
+set its :ref:`affine transformation matrix <coordinate-transformation>`,
 
 .. code-block:: console
 
@@ -267,7 +269,7 @@ which can also be expressed as:
 
     $ rio edit-info --colorinterp RGBA example.tif
 
-See ``rasterio.enums.ColorInterp`` for a full list of supported color
+See :class:`rasterio.enums.ColorInterp` for a full list of supported color
 interpretations and the color docs for more information.
 
 
@@ -452,6 +454,15 @@ Information about existing overviews can be printed using the --ls option.
 
     $ rio overview --ls
 
+The block size (tile width and height) used for overviews (internal
+or external) can be specified by setting the ``GDAL_TIFF_OVR_BLOCKSIZE``
+environment variable to a power-of-two value between 64 and 4096. The
+default value is 128.
+
+.. code-block:: console
+
+    $ GDAL_TIFF_OVR_BLOCKSIZE=256 rio overview --build 2^1..4
+
 
 rasterize
 ---------
@@ -505,7 +516,7 @@ rm
 
 New in 1.0
 
-Invoking the shell's '$ rm <path>' on a dataset can be used to
+Invoking the shell's ``$ rm <path>`` on a dataset can be used to
 delete a dataset referenced by a file path, but it won't handle
 deleting side car files.  This command is aware of datasets and
 their sidecar files.
@@ -609,6 +620,8 @@ a raster dataset, do the following.
     [192457.13, 2546667.68, 399086.97, 2765319.94]
 
 
+.. _warp:
+
 warp
 ----
 
@@ -676,7 +689,7 @@ See `click-plugins <https://github.com/click-contrib/click-plugins>`__ for more
 information on how to build these plugins in general.
 
 To use these plugins with rio, add the commands to the
-``rasterio.rio_plugins'`` entry point in your ``setup.py`` file, as described
+``rasterio.rio_plugins`` entry point in your ``setup.py`` file, as described
 `here <https://github.com/click-contrib/click-plugins#developing-plugins>`__
 and in ``rasterio/rio/main.py``.
 

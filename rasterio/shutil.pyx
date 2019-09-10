@@ -1,13 +1,18 @@
-"""Raster management."""
-
+"""Raster file management."""
 
 include "gdal.pxi"
 
 import logging
 
+try:
+    from pathlib import Path
+except ImportError:  # pragma: no cover
+    class Path:
+        pass
+
 from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
-from rasterio.env import ensure_env_credentialled
+from rasterio.env import ensure_env_with_credentials
 from rasterio._err import CPLE_OpenFailedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
 from rasterio.path import parse_path, vsi_path
@@ -16,7 +21,7 @@ from rasterio.path import parse_path, vsi_path
 log = logging.getLogger(__name__)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def exists(path):
 
     """Determine if a dataset exists by attempting to open it.
@@ -47,7 +52,7 @@ def exists(path):
                 GDALClose(h_dataset)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
     """Copy a raster from a path or open dataset handle to a new destination
@@ -55,9 +60,9 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
 
     Parameters
     ----------
-    src : str or dataset object opened in 'r' mode
+    src : str or pathlib.Path or dataset object opened in 'r' mode
         Source dataset
-    dst : str
+    dst : str or pathlib.Path
         Output dataset path
     driver : str, optional
         Output driver name
@@ -66,6 +71,11 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         driver may adapt as necessary
     creation_options : **kwargs, optional
         Creation options for output dataset
+
+    Returns
+    -------
+    None
+
     """
 
     cdef bint c_strictness
@@ -87,29 +97,47 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
     c_strictness = strict
     driverb = driver.encode('utf-8')
     drv = GDALGetDriverByName(driverb)
+
     if drv == NULL:
         raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
 
-    # Input is a path or GDAL connection string
+    # Convert src and dst Paths to strings.
+    if isinstance(src, Path):
+        src = str(src)
+    if isinstance(dst, Path):
+        dst = str(dst)
+
+    # Open a new GDAL dataset if src is a string.
     if isinstance(src, str):
+
+        if vsi_path(parse_path(src)) == vsi_path(parse_path(dst)):
+            raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
+
         src = src.encode('utf-8')
         c_src_path = src
         with nogil:
             src_dataset = GDALOpenShared(c_src_path, <GDALAccess>0)
         src_dataset = exc_wrap_pointer(src_dataset)
         close_src = True
-    # Input is something like 'rasterio.open()'
+
+    # Try to use the existing GDAL dataset handle otherwise.
     else:
+
+        if src.name == vsi_path(parse_path(dst)):
+            raise RasterioIOError("{} and {} identify the same dataset.".format(src.name, dst))
+
         src_dataset = (<DatasetReaderBase?>src).handle()
         close_src = False
 
     dst = dst.encode('utf-8')
     c_dst_path = dst
+
     try:
         with nogil:
             dst_dataset = GDALCreateCopy(
                 drv, c_dst_path, src_dataset, c_strictness, options, NULL, NULL)
         dst_dataset = exc_wrap_pointer(dst_dataset)
+
     finally:
         CSLDestroy(options)
         with nogil:
@@ -120,26 +148,42 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
                     GDALClose(src_dataset)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def copyfiles(src, dst):
 
     """Copy files associated with a dataset from one location to another.
 
     Parameters
     ----------
-    src : str
+    src : str or pathlib.Path
         Source dataset
-    dst : str
+    dst : str or pathlib.Path
         Target dataset
+
+    Returns
+    -------
+    None
+
     """
 
     cdef GDALDatasetH h_dataset = NULL
     cdef GDALDriverH h_driver = NULL
 
+    # Convert src and dst Paths to strings.
+    if isinstance(src, Path):
+        src = str(src)
+    if isinstance(dst, Path):
+        dst = str(dst)
+
+    src_path = parse_path(src)
+    dst_path = parse_path(dst)
+    if vsi_path(src_path) == vsi_path(dst_path):
+        raise RasterioIOError("{} and {} identify the same dataset.".format(src, dst))
+
     # VFS paths probabaly don't work, but its hard to be completely certain
     # so just attempt to use them.
-    gdal_src_path = vsi_path(parse_path(src))
-    gdal_dst_path = vsi_path(parse_path(dst))
+    gdal_src_path = vsi_path(src_path)
+    gdal_dst_path = vsi_path(dst_path)
     b_gdal_src_path = gdal_src_path.encode('utf-8')
     b_gdal_dst_path = gdal_dst_path.encode('utf-8')
     cdef char* c_gdal_src_path = b_gdal_src_path
@@ -162,7 +206,7 @@ def copyfiles(src, dst):
                 GDALClose(h_dataset)
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def delete(path, driver=None):
 
     """Delete a GDAL dataset

@@ -99,6 +99,10 @@ class CPLE_AWSSignatureDoesNotMatchError(CPLE_BaseError):
     pass
 
 
+class CPLE_AWSError(CPLE_BaseError):
+    pass
+
+
 # Map of GDAL error numbers to the Python exceptions.
 exception_map = {
     1: CPLE_AppDefinedError,
@@ -119,7 +123,9 @@ exception_map = {
     13: CPLE_AWSObjectNotFoundError,
     14: CPLE_AWSAccessDeniedError,
     15: CPLE_AWSInvalidCredentialsError,
-    16: CPLE_AWSSignatureDoesNotMatchError}
+    16: CPLE_AWSSignatureDoesNotMatchError,
+    17: CPLE_AWSError
+}
 
 
 # CPL Error types as an enum.
@@ -175,6 +181,17 @@ cdef int exc_wrap_int(int err) except -1:
         if exc:
             raise exc
     return err
+
+
+cdef OGRErr exc_wrap_ogrerr(OGRErr err) except -1:
+    """Wrap a function that returns OGRErr but does not use the
+    CPL error stack.
+
+    """
+    if err == 0:
+        return err
+    else:
+        raise CPLE_BaseError(3, err, "OGR Error code {}".format(err))
 
 
 cdef void *exc_wrap_pointer(void *ptr) except NULL:

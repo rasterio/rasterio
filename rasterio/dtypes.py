@@ -12,6 +12,7 @@ do something like this:
 
 bool_ = 'bool'
 ubyte = uint8 = 'uint8'
+sbyte = int8 = 'int8'
 uint16 = 'uint16'
 int16 = 'int16'
 uint32 = 'uint32'
@@ -41,6 +42,7 @@ dtype_fwd = {
 
 dtype_rev = dict((v, k) for k, v in dtype_fwd.items())
 dtype_rev['uint8'] = 1
+dtype_rev['int8'] = 1
 
 typename_fwd = {
     0: 'Unknown',
@@ -59,6 +61,7 @@ typename_fwd = {
 typename_rev = dict((v, k) for k, v in typename_fwd.items())
 
 dtype_ranges = {
+    'int8': (-128, 127),
     'uint8': (0, 255),
     'uint16': (0, 65535),
     'int16': (-32768, 32767),
@@ -155,7 +158,7 @@ def can_cast_dtype(values, dtype):
         return True
 
     elif values.dtype.kind == 'f':
-        return np.allclose(values, values.astype(dtype))
+        return np.allclose(values, values.astype(dtype), equal_nan=True)
 
     else:
         return np.array_equal(values, values.astype(dtype))

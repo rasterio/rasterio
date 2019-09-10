@@ -32,7 +32,7 @@ def test_delete_invalid_path():
 
     with pytest.raises(RasterioIOError) as e:
         rasterio.shutil.delete('trash')
-    assert 'Invalid dataset' in str(e)
+    assert 'Invalid dataset' in str(e.value)
 
 
 def test_delete_invalid_driver(path_rgb_byte_tif, tmpdir):
@@ -43,13 +43,21 @@ def test_delete_invalid_driver(path_rgb_byte_tif, tmpdir):
     rasterio.shutil.copy(path_rgb_byte_tif, path)
     with pytest.raises(DriverRegistrationError) as e:
         rasterio.shutil.delete(path, driver='trash')
-    assert 'Unrecognized driver' in str(e)
+    assert 'Unrecognized driver' in str(e.value)
 
 
 def test_exists(path_rgb_byte_tif):
 
     assert rasterio.shutil.exists(path_rgb_byte_tif)
     assert not rasterio.shutil.exists('trash')
+
+
+def test_copy_fail_same_dataset(data):
+    """A dataset can't be copied to itself."""
+    path = str(data.join('RGB.byte.tif'))
+    with pytest.raises(RasterioIOError):
+        with rasterio.open(path) as src:
+            rasterio.shutil.copy(src, path, **src.profile)
 
 
 @pytest.mark.parametrize("pass_handle", (True, False))
@@ -141,6 +149,20 @@ def test_copyfiles(data, tmpdir):
             rasterio.open(outfile) as actual:
         assert len(expected.files) == len(actual.files)
         assert all(map(os.path.exists, actual.files))
+
+
+def test_copyfiles_same_dataset(data):
+    """A dataset can't be copied to itself."""
+    path = str(data.join('RGB.byte.tif'))
+    with pytest.raises(RasterioIOError):
+        rasterio.shutil.copyfiles(path, path)
+
+
+def test_copyfiles_same_dataset_another_name(data):
+    """A dataset can't be copied to itself by another name."""
+    path = str(data.join('RGB.byte.tif'))
+    with pytest.raises(RasterioIOError):
+        rasterio.shutil.copyfiles(path, 'file://' + path)
 
 
 def test_copyfiles_fail():

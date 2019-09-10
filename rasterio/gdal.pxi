@@ -9,7 +9,8 @@ cdef extern from "cpl_conv.h" nogil:
     void CPLFree(void* ptr)
     void CPLSetThreadLocalConfigOption(const char* key, const char* val)
     void CPLSetConfigOption(const char* key, const char* val)
-    const char* CPLGetConfigOption(const char* key, const char* default)
+    const char *CPLGetConfigOption(const char* key, const char* default)
+    const char *CPLFindFile(const char *pszClass, const char *pszBasename)
 
 
 cdef extern from "cpl_error.h" nogil:
@@ -21,6 +22,8 @@ cdef extern from "cpl_error.h" nogil:
         CE_Failure
         CE_Fatal
 
+    ctypedef int CPLErrorNum
+
     # CPLErrorNum eludes me at the moment, I'm calling it 'int'
     # for now.
     ctypedef void (*CPLErrorHandler)(CPLErr, int, const char*)
@@ -31,6 +34,7 @@ cdef extern from "cpl_error.h" nogil:
     CPLErr CPLGetLastErrorType()
     void CPLPushErrorHandler(CPLErrorHandler handler)
     void CPLPopErrorHandler()
+    void CPLQuietErrorHandler(CPLErr eErrClass, CPLErrorNum nError, const char *pszErrorMsg)
 
 
 cdef extern from "cpl_string.h" nogil:
@@ -46,6 +50,7 @@ cdef extern from "cpl_string.h" nogil:
     char **CSLSetNameValue(char **list, char *name, char *val)
     void CSLDestroy(char **list)
     char **CSLMerge(char **first, char **second)
+    const char* CPLParseNameValue(const char *pszNameValue, char **ppszKey)
 
 
 cdef extern from "cpl_vsi.h" nogil:
@@ -72,6 +77,7 @@ cdef extern from "cpl_vsi.h" nogil:
 
 cdef extern from "ogr_srs_api.h" nogil:
 
+    ctypedef int OGRErr
     ctypedef void * OGRCoordinateTransformationH
     ctypedef void * OGRSpatialReferenceH
 
@@ -83,22 +89,25 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OCTTransform(OGRCoordinateTransformationH ct, int nCount, double *x,
                      double *y, double *z)
     int OSRAutoIdentifyEPSG(OGRSpatialReferenceH srs)
+    int OSRMorphFromESRI(OGRSpatialReferenceH srs)
+    int OSRMorphToESRI(OGRSpatialReferenceH srs)
     void OSRCleanup()
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
     int OSRExportToWkt(OGRSpatialReferenceH srs, char **params)
-    int OSRFixup(OGRSpatialReferenceH srs)
     const char *OSRGetAuthorityName(OGRSpatialReferenceH srs, const char *key)
     const char *OSRGetAuthorityCode(OGRSpatialReferenceH srs, const char *key)
     int OSRImportFromEPSG(OGRSpatialReferenceH srs, int code)
     int OSRImportFromProj4(OGRSpatialReferenceH srs, const char *proj)
+    int OSRImportFromWkt(OGRSpatialReferenceH srs, char **wkt)
     int OSRIsGeographic(OGRSpatialReferenceH srs)
     int OSRIsProjected(OGRSpatialReferenceH srs)
     int OSRIsSame(OGRSpatialReferenceH srs1, OGRSpatialReferenceH srs2)
     OGRSpatialReferenceH OSRNewSpatialReference(const char *wkt)
     void OSRRelease(OGRSpatialReferenceH srs)
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
-
+    OGRErr OSRValidate(OGRSpatialReferenceH srs)
+    double OSRGetLinearUnits(OGRSpatialReferenceH srs, char **ppszName)
 
 cdef extern from "gdal.h" nogil:
 
@@ -257,6 +266,8 @@ cdef extern from "gdal.h" nogil:
     const GDAL_GCP *GDALGetGCPs(GDALDatasetH hDS)
     int GDALGetGCPCount(GDALDatasetH hDS)
     const char *GDALGetGCPProjection(GDALDatasetH hDS)
+    int GDALGCPsToGeoTransform(int nGCPCount, const GDAL_GCP *pasGCPs, double *padfGeoTransform,
+                               int bApproxOK)
     int GDALGetCacheMax()
     void GDALSetCacheMax(int nBytes)
     GIntBig GDALGetCacheMax64()
@@ -264,6 +275,13 @@ cdef extern from "gdal.h" nogil:
     CPLErr GDALDeleteDataset(GDALDriverH, const char *)
     char** GDALGetFileList(GDALDatasetH hDS)
     CPLErr GDALCopyDatasetFiles (GDALDriverH hDriver, const char * pszNewName, const char * pszOldName)
+
+    double GDALGetRasterScale(GDALRasterBandH hBand, int * pbSuccess)
+    double GDALGetRasterOffset(GDALRasterBandH hBand, int * pbSuccess)
+    CPLErr GDALSetRasterScale(GDALRasterBandH hBand, double dfNewScale)
+    CPLErr GDALSetRasterOffset(GDALRasterBandH hBand, double dfNewOffset)
+
+    int GDALDumpOpenDatasets(FILE *fp)
 
 
 cdef extern from "ogr_api.h" nogil:

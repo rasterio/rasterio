@@ -2,7 +2,22 @@
 
 import pytest
 
-from rasterio.session import DummySession, AWSSession, Session
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
+from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession, SwiftSession
+
+
+def test_base_session_hascreds_notimpl():
+    """Session.hascreds must be overridden"""
+    assert Session.hascreds({}) is NotImplemented
+
+
+def test_base_session_get_credential_options_notimpl():
+    """Session.get_credential_options must be overridden"""
+    assert Session().get_credential_options() is NotImplemented
 
 
 def test_dummy_session():
@@ -32,9 +47,9 @@ def test_aws_session_class_session():
 def test_aws_session_class_unsigned():
     """AWSSession works"""
     pytest.importorskip("boto3")
-    sesh = AWSSession(aws_unsigned=True)
-    assert sesh._session
+    sesh = AWSSession(aws_unsigned=True, region_name='us-mountain-1')
     assert sesh.get_credential_options()['AWS_NO_SIGN_REQUEST'] == 'YES'
+    assert sesh.get_credential_options()['AWS_REGION'] == 'us-mountain-1'
 
 
 def test_aws_session_class_profile(tmpdir, monkeypatch):
@@ -114,3 +129,70 @@ def test_requester_pays():
     sesh = AWSSession(aws_access_key_id='foo', aws_secret_access_key='bar', requester_pays=True)
     assert sesh._session
     assert sesh.get_credential_options()['AWS_REQUEST_PAYER'] == 'requester'
+
+
+def test_oss_session_class():
+    """OSSSession works"""
+    oss_session = OSSSession(
+        oss_access_key_id='foo',
+        oss_secret_access_key='bar',
+        oss_endpoint='null-island-1')
+    assert oss_session._creds
+    assert oss_session.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
+    assert oss_session.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'bar'
+
+
+def test_session_factory_oss_kwargs():
+    """Get an OSSSession for oss:// paths with keywords"""
+    sesh = Session.from_path("oss://lol/wut", oss_access_key_id='foo', oss_secret_access_key='bar')
+    assert isinstance(sesh, OSSSession)
+    assert sesh.get_credential_options()['OSS_ACCESS_KEY_ID'] == 'foo'
+    assert sesh.get_credential_options()['OSS_SECRET_ACCESS_KEY'] == 'bar'
+
+
+def test_google_session_ctor_no_arg():
+    session = GSSession()
+    assert not session._creds
+
+
+def test_gs_session_class():
+    """GSSession works"""
+    gs_session = GSSession(
+        google_application_credentials='foo')
+    assert gs_session._creds
+    assert gs_session.get_credential_options()['GOOGLE_APPLICATION_CREDENTIALS'] == 'foo'
+    assert gs_session.hascreds({'GOOGLE_APPLICATION_CREDENTIALS': 'foo'})
+
+
+def test_swift_session_class():
+    """SwiftSession works"""
+    swift_session = SwiftSession(
+        swift_storage_url='foo',
+        swift_auth_token='bar',)
+    assert swift_session._creds
+    assert swift_session.get_credential_options()['SWIFT_STORAGE_URL'] == 'foo'
+    assert swift_session.get_credential_options()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_swift_session_by_user_key():
+    def mock_init(self, session=None, 
+                swift_storage_url=None, swift_auth_token=None, 
+                swift_auth_v1_url=None, swift_user=None, swift_key=None):
+        self._creds = {'SWIFT_STORAGE_URL':'foo',
+                       'SWIFT_AUTH_TOKEN':'bar'}
+    with mock.patch('rasterio.session.SwiftSession.__init__', new=mock_init):
+        swift_session = SwiftSession(
+            swift_auth_v1_url='foo',
+            swift_user='bar',
+            swift_key='key')
+        assert swift_session._creds
+        assert swift_session.get_credential_options()['SWIFT_STORAGE_URL'] == 'foo'
+        assert swift_session.get_credential_options()['SWIFT_AUTH_TOKEN'] == 'bar'
+
+
+def test_session_factory_swift_kwargs():
+    """Get an SwiftSession for /vsiswift/bucket/key with keywords"""
+    sesh = Session.from_path("/vsiswift/lol/wut", swift_storage_url='foo', swift_auth_token='bar')
+    assert isinstance(sesh, DummySession)
+
+    

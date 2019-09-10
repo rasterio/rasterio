@@ -114,7 +114,7 @@ def test_geometry_invalid_geom():
                 out_shape=DEFAULT_SHAPE,
                 transform=Affine.identity())
 
-        assert 'Invalid geometry' in exc_info.value.args[0]
+        assert 'No valid geometry objects found for rasterize' in exc_info.value.args[0]
 
 
 def test_geometry_mask_invalid_shape(basic_geometry):
@@ -225,6 +225,11 @@ def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(WindowError):
             geometry_window(src, [basic_geometry], north_up=False)
+
+
+def test_is_valid_geo_interface(geojson_point):
+    """Properly formed Point object with geo interface is valid"""
+    assert is_valid_geom(MockGeoInterface(geojson_point))
 
 
 def test_is_valid_geom_point(geojson_point):
@@ -500,6 +505,16 @@ def test_rasterize_invalid_geom():
             {'type': 'Invalid', 'coordinates': []}]}], out_shape=DEFAULT_SHAPE)
 
 
+def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
+    """Rasterize operation should succeed for at least one valid geometry
+    and should skip any invalid or empty geometries with an error."""
+
+    with pytest.warns(UserWarning, match="Invalid or empty shape"):
+        out = rasterize([geojson_polygon, {'type': 'Polygon', 'coordinates': []}], out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(out, basic_image_2x2)
+
+
 def test_rasterize_out_image(basic_geometry, basic_image_2x2):
     """Rasterize operation should succeed for an out image."""
     out = np.zeros(DEFAULT_SHAPE)
@@ -540,7 +555,7 @@ def test_rasterize_invalid_shapes():
     with pytest.raises(ValueError) as ex:
         rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
 
-    assert 'Invalid geometry object' in str(ex.value)
+    assert 'No valid geometry objects found for rasterize' in str(ex.value)
 
 
 def test_rasterize_invalid_out_shape(basic_geometry):
@@ -570,6 +585,13 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
             [basic_geometry], out_shape=DEFAULT_SHAPE,
             default_value=default_value
         )
+    )
+
+
+def test_rasterize_default_value_for_none(basic_geometry, basic_image_2x2):
+    """All shapes should rasterize to the default value."""
+    assert np.all(
+        rasterize([(basic_geometry, None)], out_shape=DEFAULT_SHAPE, fill=2) == 2
     )
 
 
@@ -832,6 +854,25 @@ def test_shapes_mask(basic_image):
     mask[4:5, 4:5] = False
 
     results = list(shapes(basic_image, mask=mask))
+
+    assert len(results) == 2
+
+    shape, value = results[0]
+    assert shape == {
+        'coordinates': [
+            [(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]
+        ],
+        'type': 'Polygon'
+    }
+    assert value == 1
+
+
+def test_shapes_masked_array(basic_image):
+    """Only pixels not masked out should be converted to features."""
+    mask = np.full(basic_image.shape, False, dtype=rasterio.bool_)
+    mask[4:5, 4:5] = True
+
+    results = list(shapes(np.ma.masked_array(basic_image, mask=mask)))
 
     assert len(results) == 2
 

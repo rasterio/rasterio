@@ -222,7 +222,7 @@ def test_edit_crs_like(data):
         ['edit-info', inputfile, '--like', templatefile, '--crs', 'like'])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
+        assert src.crs.to_epsg() == 32618
         assert src.nodata == 1.0
 
 
@@ -271,7 +271,7 @@ def test_edit_all_like(data):
         main_group, ['edit-info', '--all', inputfile, '--like', templatefile])
     assert result.exit_code == 0
     with rasterio.open(inputfile) as src:
-        assert src.crs == {'init': 'epsg:32618'}
+        assert src.crs.to_epsg() == 32618
         assert src.nodata == 0.0
 
 
