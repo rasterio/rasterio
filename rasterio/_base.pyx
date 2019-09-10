@@ -74,7 +74,7 @@ def get_dataset_driver(path):
     path = path.encode('utf-8')
 
     try:
-        dataset = exc_wrap_pointer(GDALOpenShared(<const char *>path, <GDALAccess>0))
+        dataset = exc_wrap_pointer(open_dataset(<const char *>path, 0, None, {}, None))
         driver = GDALGetDatasetDriver(dataset)
         drivername = get_driver_name(driver)
 

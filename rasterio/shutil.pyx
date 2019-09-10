@@ -39,7 +39,7 @@ def exists(path):
     cdef char* c_path = b_path
 
     with nogil:
-        h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+        h_dataset = GDALOpen(c_path, <GDALAccess>0)
 
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
@@ -116,7 +116,7 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         src = src.encode('utf-8')
         c_src_path = src
         with nogil:
-            src_dataset = GDALOpenShared(c_src_path, <GDALAccess>0)
+            src_dataset = GDALOpen(c_src_path, <GDALAccess>0)
         src_dataset = exc_wrap_pointer(src_dataset)
         close_src = True
 
@@ -190,7 +190,7 @@ def copyfiles(src, dst):
     cdef char* c_gdal_dst_path = b_gdal_dst_path
 
     with nogil:
-            h_dataset = GDALOpenShared(c_gdal_src_path, <GDALAccess>0)
+            h_dataset = GDALOpen(c_gdal_src_path, <GDALAccess>0)
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
         h_driver = exc_wrap_pointer(GDALGetDatasetDriver(h_dataset))
@@ -237,7 +237,7 @@ def delete(path, driver=None):
     # Need to determine driver by opening the input dataset
     else:
         with nogil:
-            h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+            h_dataset = GDALOpen(c_path, <GDALAccess>0)
 
         try:
             h_dataset = exc_wrap_pointer(h_dataset)

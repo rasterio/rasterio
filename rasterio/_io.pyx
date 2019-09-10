@@ -65,21 +65,26 @@ def _delete_dataset_if_exists(path):
     cdef GDALDatasetH h_dataset = NULL
     cdef const char *c_path = NULL
 
-    path = path.encode('utf-8')
-    c_path = path
+    b_path = path.encode('utf-8')
+    c_path = b_path
 
     with catch_errors():
         with nogil:
-            h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+            h_dataset = GDALOpen(c_path, <GDALAccess>0)
+        #open_dataset(path, 0, None, None, None)
+
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
         h_driver = GDALGetDatasetDriver(h_dataset)
+
         if h_driver != NULL:
             with nogil:
                 GDALDeleteDataset(h_driver, c_path)
+
     except CPLE_OpenFailedError:
         log.debug(
-            "Skipped delete for overwrite.  Dataset does not exist: %s", path)
+            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+
     finally:
         if h_dataset != NULL:
             GDALClose(h_dataset)
@@ -1910,7 +1915,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
         cdef int success = -1
-        cdef const char *fname = NULL
         cdef const char *drv_name = NULL
         cdef GDALDriverH memdrv = NULL
         cdef GDALDatasetH temp = NULL
@@ -1998,9 +2002,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self._set_gcps(self._init_gcps, self._crs)
 
         elif self.mode == 'r+':
-            fname = name_b
             try:
-                temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
+                temp = exc_wrap_pointer(open_dataset(path, 0, None, None, None))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 

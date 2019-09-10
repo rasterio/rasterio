@@ -18,7 +18,8 @@ from rasterio.errors import GDALOptionNotImplementedError
 cdef GDALDatasetH open_dataset(
         object filename, int flags, object allowed_drivers,
         object open_options, object siblings) except NULL:
-    """Wrapper for GDALOpen and GDALOpenShared"""
+    """Open a dataset and return a handle"""
+
     cdef const char *fname = NULL
     cdef GDALDatasetH hds = NULL
 
