@@ -11,6 +11,10 @@ Deprecations:
 
 New features:
 
+- The merge tool has a new ``method`` keyword argument that can be used to
+  override the default painter's algorithm. It takes an alternative method name
+  as a string or a callable. Please see the merge tool docstring for the
+  callable's signature (#1500).
 - A new ``rasterio.transform.from_gcps()`` returns the Affine matrix that is a
   best fit to given ground control points (#1749).
 
