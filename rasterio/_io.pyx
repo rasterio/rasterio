@@ -2003,7 +2003,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         elif self.mode == 'r+':
             try:
-                temp = exc_wrap_pointer(open_dataset(path, 0, None, None, None))
+                temp = exc_wrap_pointer(GDALOpen(<const char *>name_b, <GDALAccess>0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 

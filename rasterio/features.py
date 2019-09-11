@@ -283,7 +283,7 @@ def rasterize(
 
             else:
                 valid_shapes.append((geom, value))
-        
+
         else:
             # invalid or empty geometries are skipped and raise a warning instead
             warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index))
