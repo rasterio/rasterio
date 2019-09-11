@@ -283,6 +283,9 @@ cdef extern from "gdal.h" nogil:
 
     int GDALDumpOpenDatasets(FILE *fp)
 
+    int GDALReferenceDataset(GDALDatasetH hds)
+    int GDALDereferenceDataset(GDALDatasetH hds)
+
 
 cdef extern from "ogr_api.h" nogil:
 

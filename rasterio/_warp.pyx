@@ -773,6 +773,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         hds = (<DatasetReaderBase?>self.src_dataset).handle()
         hds = exc_wrap_pointer(hds)
+        GDALReferenceDataset(hds)
 
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
