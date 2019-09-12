@@ -314,6 +314,7 @@ cdef class DatasetBase(object):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
+        self._closed = True
 
     def close(self):
         self.stop()

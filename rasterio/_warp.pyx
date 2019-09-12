@@ -25,6 +25,7 @@ from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError)
+from rasterio.path import parse_path, vsi_path
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -376,9 +377,9 @@ def _reproject(
                 raise ValueError("Invalid destination shape")
             dst_bidx = src_bidx
 
-        dst_dataset = InMemoryRaster(image=destination,
-                                     transform=format_transform(dst_transform),
-                                     crs=dst_crs).handle()
+        mem_raster = InMemoryRaster(image=destination, transform=format_transform(dst_transform), crs=dst_crs)
+        dst_dataset = mem_raster.handle()
+
         if dst_alpha:
             for i in range(destination.shape[0]):
                 try:
@@ -771,9 +772,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef int mask_block_xsize = 0
         cdef int mask_block_ysize = 0
 
-        hds = (<DatasetReaderBase?>self.src_dataset).handle()
-        hds = exc_wrap_pointer(hds)
-        GDALReferenceDataset(hds)
+        # Get a new handle for the source dataset instead of using its handle.
+        cdef int flags = 0x00 | 0x02 | 0x20 | 0x40
+        filename = vsi_path(parse_path(self.src_dataset.name))
+        hds = open_dataset(filename, flags, [self.src_dataset.driver], self.src_dataset.options, None)
 
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
@@ -934,6 +936,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
+        self._closed = True
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,

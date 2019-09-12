@@ -71,7 +71,6 @@ def _delete_dataset_if_exists(path):
     with catch_errors():
         with nogil:
             h_dataset = GDALOpen(c_path, <GDALAccess>0)
-        #open_dataset(path, 0, None, None, None)
 
     try:
         h_dataset = exc_wrap_pointer(h_dataset)

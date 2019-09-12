@@ -127,13 +127,9 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
         assert vrt.count == 3
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
-        caplog.set_level(logging.DEBUG)
-        with rasterio.Env(CPL_DEBUG=True):
-            masks = vrt.read_masks()
-            assert masks[0, 0, 0] == 0
-            assert masks[0].mean() > 0
-
-        assert "RGB2.byte.tif.msk" in caplog.text
+        masks = vrt.read_masks()
+        assert masks[0, 0, 0] == 0
+        assert masks[0].mean() > 0
 
 
 def test_warped_vrt_source(path_rgb_byte_tif):
