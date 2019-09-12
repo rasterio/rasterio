@@ -775,6 +775,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         # Get a new handle for the source dataset instead of using its handle.
         cdef int flags = 0x00 | 0x02 | 0x20 | 0x40
         filename = vsi_path(parse_path(self.src_dataset.name))
+
         hds = open_dataset(filename, flags, [self.src_dataset.driver], self.src_dataset.options, None)
 
         if not self.src_transform:
