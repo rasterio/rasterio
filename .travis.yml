@@ -36,7 +36,6 @@ addons:
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
-    - gdb
 
 before_install:
   - python -m pip install -U pip
@@ -65,7 +64,7 @@ before_script:
 
 script:
   - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart and not switch' ; fi"
-  - gdb -batch -ex "run" -ex "bt" --args python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
+  - python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
 after_success:
   - coveralls || echo "!! intermittent coveralls failure"
