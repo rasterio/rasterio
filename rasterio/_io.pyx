@@ -9,8 +9,9 @@ include "gdal.pxi"
 from collections import Counter
 from contextlib import contextmanager
 import logging
+import os
 import sys
-import uuid
+from uuid import uuid4
 import warnings
 
 import numpy as np
@@ -65,21 +66,25 @@ def _delete_dataset_if_exists(path):
     cdef GDALDatasetH h_dataset = NULL
     cdef const char *c_path = NULL
 
-    path = path.encode('utf-8')
-    c_path = path
+    b_path = path.encode('utf-8')
+    c_path = b_path
 
     with catch_errors():
         with nogil:
-            h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+            h_dataset = GDALOpen(c_path, <GDALAccess>0)
+
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
         h_driver = GDALGetDatasetDriver(h_dataset)
+
         if h_driver != NULL:
             with nogil:
                 GDALDeleteDataset(h_driver, c_path)
+
     except CPLE_OpenFailedError:
         log.debug(
-            "Skipped delete for overwrite.  Dataset does not exist: %s", path)
+            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+
     finally:
         if h_dataset != NULL:
             GDALClose(h_dataset)
@@ -576,7 +581,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_kwds = {}
 
             if all_valid:
-                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
+                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
                 transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
                 with DatasetWriterBase(
                         blank_path, 'w',
@@ -827,7 +832,7 @@ cdef class MemoryFileBase(object):
             self.name = '/vsimem/{0}'.format(filename)
         else:
             # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+            self.name = '/vsimem/{0}.{1}'.format(uuid4(), ext.lstrip('.'))
 
         self._path = self.name.encode('utf-8')
         self._pos = 0
@@ -984,7 +989,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=True, **kwargs):
+                 gcps=None, sharing=False, **kwargs):
         """Create a new dataset writer or updater
 
         Parameters
@@ -1025,7 +1030,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `True`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded:w program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1729,7 +1734,7 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
-        datasetname = str(uuid.uuid4()).encode('utf-8')
+        datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
                        count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
@@ -1807,7 +1812,7 @@ cdef class InMemoryRaster:
     def close(self):
         if self._hds != NULL:
             GDALClose(self._hds)
-            self._hds = NULL
+        self._hds = NULL
 
     def read(self):
 
@@ -1848,7 +1853,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=True, **kwargs):
+                 gcps=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -1890,7 +1895,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `True`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded:w program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1910,7 +1915,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
         cdef int success = -1
-        cdef const char *fname = NULL
         cdef const char *drv_name = NULL
         cdef GDALDriverH memdrv = NULL
         cdef GDALDatasetH temp = NULL
@@ -1998,9 +2002,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self._set_gcps(self._init_gcps, self._crs)
 
         elif self.mode == 'r+':
-            fname = name_b
             try:
-                temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
+                temp = exc_wrap_pointer(GDALOpen(<const char *>name_b, <GDALAccess>0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 

@@ -11,7 +11,7 @@ def test_sharing_on(capfd, path_rgb_byte_tif):
     with rasterio.Env() as env:
 
         # Opens a new file.
-        with rasterio.open(path_rgb_byte_tif, sharing=False) as srcx:
+        with rasterio.open(path_rgb_byte_tif) as srcx:
             env._dump_open_datasets()
             captured = capfd.readouterr()
             assert "1 N GTiff" in captured.err
@@ -37,7 +37,7 @@ def test_sharing_off(capfd, path_rgb_byte_tif):
             assert "1 N GTiff" in captured.err
             assert "1 S GTiff" not in captured.err
 
-            # Does not open a new file.
+            # Opens a new file.
             with rasterio.open(path_rgb_byte_tif, sharing=False) as srcy:
                 env._dump_open_datasets()
                 captured = capfd.readouterr()

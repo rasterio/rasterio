@@ -6,11 +6,11 @@ import operator
 import os
 import shutil
 import sys
+import uuid
 import zipfile
 
 import affine
 from click.testing import CliRunner
-import py
 import pytest
 import numpy as np
 
@@ -577,6 +577,13 @@ def path_zip_file(data_dir):
                              '389225main_sw_1965_1024.jpg']:
                 zip.write(os.path.join(data_dir, filename), filename)
     return path
+
+
+@pytest.fixture(autouse=True)
+def set_mem_name(request, monkeypatch):
+    def youyoueyedeefour():
+        return "{}-{}".format(request.node.name, uuid.uuid4())
+    monkeypatch.setattr(rasterio._io, "uuid4", youyoueyedeefour)
 
 
 class MockGeoInterface(object):

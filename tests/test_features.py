@@ -1130,9 +1130,14 @@ def test_sieve_band(pixelated_image, pixelated_image_file):
         )
 
 
-def test_sieve_internal_driver_manager(basic_image, pixelated_image):
+def test_sieve_internal_driver_manager(capfd, basic_image, pixelated_image):
     """Sieve should work without explicitly calling driver manager."""
-    assert np.array_equal(
-        basic_image,
-        sieve(pixelated_image, basic_image.sum())
-    )
+    with rasterio.Env() as env:
+        assert np.array_equal(
+            basic_image,
+            sieve(pixelated_image, basic_image.sum())
+        )
+
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert not captured.err

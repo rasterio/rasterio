@@ -127,13 +127,9 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
         assert vrt.count == 3
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
-        caplog.set_level(logging.DEBUG)
-        with rasterio.Env(CPL_DEBUG=True):
-            masks = vrt.read_masks()
-            assert masks[0, 0, 0] == 0
-            assert masks[0].mean() > 0
-
-        assert "RGB2.byte.tif.msk" in caplog.text
+        masks = vrt.read_masks()
+        assert masks[0, 0, 0] == 0
+        assert masks[0].mean() > 0
 
 
 def test_warped_vrt_source(path_rgb_byte_tif):
@@ -412,7 +408,7 @@ def test_warpedvrt_float32_override(data):
             assert src.dtypes == vrt.dtypes == ("float32",)
 
 
-def test_warpedvrt_float32_overridei_nodata(data):
+def test_warpedvrt_float32_override_nodata(data):
     """Override GDAL defaults for working data type"""
     float32file = str(data.join("float32.tif"))
     with rasterio.open(float32file, "r+") as dst:
@@ -433,3 +429,24 @@ def test_warpedvrt_issue1744(data):
     with rasterio.open(float32file) as src:
         with WarpedVRT(src, src_crs="EPSG:4326") as vrt:
             assert src.dtypes == vrt.dtypes == ("float32",)
+
+
+@requires_gdal2
+def test_open_datasets(capfd, path_rgb_byte_tif):
+    """Number of open datasets is expected"""
+    with rasterio.Env() as env:
+
+        with rasterio.open(path_rgb_byte_tif) as src:
+            env._dump_open_datasets()
+            captured = capfd.readouterr()
+            assert "1 N GTiff" in captured.err
+            assert "1 S GTiff" not in captured.err
+
+            with WarpedVRT(src) as vrt:
+                env._dump_open_datasets()
+                captured = capfd.readouterr()
+                assert "2 N GTiff" in captured.err
+
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert not captured.err
