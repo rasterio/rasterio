@@ -1109,7 +1109,7 @@ def test_sieve_internal_driver_manager(capfd, basic_image, pixelated_image):
     )
 
 
-def test_zz_no_dataset_leaks():
+def test_zz_no_dataset_leaks(capfd):
     with rasterio.Env() as env:
         env._dump_open_datasets()
         captured = capfd.readouterr()
