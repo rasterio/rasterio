@@ -628,8 +628,14 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
 
 if 'GDAL_DATA' not in os.environ:
 
+    path = GDALDataFinder().search_wheel()
+
+    if path:
+        os.environ['GDAL_DATA'] = path
+        log.debug("GDAL data found in package, GDAL_DATA set to %r.", path)
+
     # See https://github.com/mapbox/rasterio/issues/1631.
-    if GDALDataFinder().find_file("header.dxf"):
+    elif GDALDataFinder().find_file("header.dxf"):
         log.debug("GDAL data files are available at built-in paths")
 
     else:
@@ -641,8 +647,14 @@ if 'GDAL_DATA' not in os.environ:
 
 if 'PROJ_LIB' not in os.environ:
 
+    path = PROJDataFinder().searchi_wheel()
+
+    if path:
+        os.environ['PROJ_LIB'] = path
+        log.debug("PROJ data found in package, PROJ_LIB set to %r.", path)
+
     # See https://github.com/mapbox/rasterio/issues/1631.
-    if PROJDataFinder().has_data():
+    elif PROJDataFinder().has_data():
         log.debug("PROJ data files are available at built-in paths")
 
     else:
