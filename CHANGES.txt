@@ -11,12 +11,28 @@ Deprecations:
 
 New features:
 
+- An alternative endpoint for S3-compatible network storage can now be set when
+  creating an instance of AWSSession (#1779). See GDAL's documentation of its
+  AWS_S3_ENDPOINT configuration option for more details.
 - The merge tool has a new ``method`` keyword argument that can be used to
   override the default painter's algorithm. It takes an alternative method name
   as a string or a callable. Please see the merge tool docstring for the
   callable's signature (#1500).
 - A new ``rasterio.transform.from_gcps()`` returns the Affine matrix that is a
   best fit to given ground control points (#1749).
+
+Bug fixes:
+
+- A syntax error in the specification of a Python version marker for enum34 in
+  requirements.txt has been fixed.
+- Several cases of memory leaks involving temporary in-memory datasets have
+  been fixed. The rasterio test suite now runs without leaving any datasets
+  open.
+- The default mode for dataset sharing has been switch from ``sharing=True`` to
+  ``sharing=False`` to better serve development of multithreaded applications
+  (#1775).
+- Tests of rasterizing invalid shapes now catch the warnings about shape
+  skipping.
 
 1.0.28 (2019-09-09)
 -------------------

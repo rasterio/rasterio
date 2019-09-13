@@ -14,6 +14,7 @@ from rasterio.crs import CRS
 from rasterio.dtypes import validate_dtype, can_cast_dtype, get_minimum_dtype
 from rasterio.enums import MergeAlg
 from rasterio.env import ensure_env
+from rasterio.errors import ShapeSkipWarning
 from rasterio.rio.helpers import coords
 from rasterio.transform import Affine
 from rasterio.transform import IDENTITY, guard_transform
@@ -286,7 +287,7 @@ def rasterize(
 
         else:
             # invalid or empty geometries are skipped and raise a warning instead
-            warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index))
+            warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index), ShapeSkipWarning)
 
     if not valid_shapes:
         raise ValueError('No valid geometry objects found for rasterize')
