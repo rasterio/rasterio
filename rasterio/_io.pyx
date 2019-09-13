@@ -9,8 +9,9 @@ include "gdal.pxi"
 from collections import Counter
 from contextlib import contextmanager
 import logging
+import os
 import sys
-import uuid
+from uuid import uuid4
 import warnings
 
 import numpy as np
@@ -580,7 +581,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_kwds = {}
 
             if all_valid:
-                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
+                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
                 transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
                 with DatasetWriterBase(
                         blank_path, 'w',
@@ -831,7 +832,7 @@ cdef class MemoryFileBase(object):
             self.name = '/vsimem/{0}'.format(filename)
         else:
             # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+            self.name = '/vsimem/{0}.{1}'.format(uuid4(), ext.lstrip('.'))
 
         self._path = self.name.encode('utf-8')
         self._pos = 0
@@ -1733,7 +1734,7 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
-        datasetname = str(uuid.uuid4()).encode('utf-8')
+        datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
                        count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
@@ -1811,7 +1812,7 @@ cdef class InMemoryRaster:
     def close(self):
         if self._hds != NULL:
             GDALClose(self._hds)
-            self._hds = NULL
+        self._hds = NULL
 
     def read(self):
 

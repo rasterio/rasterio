@@ -73,74 +73,80 @@ def _shapes(image, mask, connectivity, transform):
     if connectivity not in (4, 8):
         raise ValueError("Connectivity Option must be 4 or 8")
 
-    if dtypes.is_ndarray(image):
-        mem_ds = InMemoryRaster(image=image, transform=transform)
-        band = mem_ds.band(1)
-    elif isinstance(image, tuple):
-        rdr = image.ds
-        band = (<DatasetReaderBase?>rdr).band(image.bidx)
-    else:
-        raise ValueError("Invalid source image")
+    try:
 
-    if mask is not None:
-        if mask.shape != image.shape:
-            raise ValueError("Mask must have same shape as image")
+        if dtypes.is_ndarray(image):
+            mem_ds = InMemoryRaster(image=image, transform=transform)
+            band = mem_ds.band(1)
+        elif isinstance(image, tuple):
+            rdr = image.ds
+            band = (<DatasetReaderBase?>rdr).band(image.bidx)
+        else:
+            raise ValueError("Invalid source image")
 
-        if np.dtype(mask.dtype).name not in ('bool', 'uint8'):
-            raise ValueError("Mask must be dtype rasterio.bool_ or "
-                             "rasterio.uint8")
+        if mask is not None:
+            if mask.shape != image.shape:
+                raise ValueError("Mask must have same shape as image")
 
-        if dtypes.is_ndarray(mask):
-            # A boolean mask must be converted to uint8 for GDAL
-            mask_ds = InMemoryRaster(image=mask.astype('uint8'),
-                                     transform=transform)
-            maskband = mask_ds.band(1)
-        elif isinstance(mask, tuple):
-            mrdr = mask.ds
-            maskband = (<DatasetReaderBase?>mrdr).band(mask.bidx)
+            if np.dtype(mask.dtype).name not in ('bool', 'uint8'):
+                raise ValueError("Mask must be dtype rasterio.bool_ or "
+                                 "rasterio.uint8")
 
-    # Create an in-memory feature store.
-    driver = OGRGetDriverByName("Memory")
-    if driver == NULL:
-        raise ValueError("NULL driver")
-    fs = OGR_Dr_CreateDataSource(driver, "temp", NULL)
-    if fs == NULL:
-        raise ValueError("NULL feature dataset")
+            if dtypes.is_ndarray(mask):
+                # A boolean mask must be converted to uint8 for GDAL
+                mask_ds = InMemoryRaster(image=mask.astype('uint8'),
+                                         transform=transform)
+                maskband = mask_ds.band(1)
+            elif isinstance(mask, tuple):
+                mrdr = mask.ds
+                maskband = (<DatasetReaderBase?>mrdr).band(mask.bidx)
 
-    # And a layer.
-    layer = OGR_DS_CreateLayer(fs, "polygons", NULL, 3, NULL)
-    if layer == NULL:
-        raise ValueError("NULL layer")
+        # Create an in-memory feature store.
+        driver = OGRGetDriverByName("Memory")
+        if driver == NULL:
+            raise ValueError("NULL driver")
+        fs = OGR_Dr_CreateDataSource(driver, "temp", NULL)
+        if fs == NULL:
+            raise ValueError("NULL feature dataset")
 
-    fielddefn = OGR_Fld_Create("image_value", fieldtp)
-    if fielddefn == NULL:
-        raise ValueError("NULL field definition")
-    OGR_L_CreateField(layer, fielddefn, 1)
-    OGR_Fld_Destroy(fielddefn)
+        # And a layer.
+        layer = OGR_DS_CreateLayer(fs, "polygons", NULL, 3, NULL)
+        if layer == NULL:
+            raise ValueError("NULL layer")
 
-    if connectivity == 8:
-        options = CSLSetNameValue(options, "8CONNECTED", "8")
+        fielddefn = OGR_Fld_Create("image_value", fieldtp)
+        if fielddefn == NULL:
+            raise ValueError("NULL field definition")
+        OGR_L_CreateField(layer, fielddefn, 1)
+        OGR_Fld_Destroy(fielddefn)
 
-    if is_float:
-        GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
-    else:
-        GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
+        if connectivity == 8:
+            options = CSLSetNameValue(options, "8CONNECTED", "8")
 
-    # Yield Fiona-style features
-    shape_iter = ShapeIterator()
-    shape_iter.layer = layer
-    shape_iter.fieldtype = fieldtp
-    for s, v in shape_iter:
-        yield s, v
+        if is_float:
+            GDALFPolygonize(band, maskband, layer, 0, options, NULL, NULL)
+        else:
+            GDALPolygonize(band, maskband, layer, 0, options, NULL, NULL)
 
-    if mem_ds is not None:
-        mem_ds.close()
-    if mask_ds is not None:
-        mask_ds.close()
-    if fs != NULL:
-        OGR_DS_Destroy(fs)
-    if options:
-        CSLDestroy(options)
+    finally:
+        if mem_ds is not None:
+            mem_ds.close()
+        if mask_ds is not None:
+            mask_ds.close()
+        if options:
+            CSLDestroy(options)
+
+    try:
+        # Yield Fiona-style features
+        shape_iter = ShapeIterator()
+        shape_iter.layer = layer
+        shape_iter.fieldtype = fieldtp
+        for s, v in shape_iter:
+            yield s, v
+
+    finally:
+        if fs != NULL:
+            OGR_DS_Destroy(fs)
 
 
 def _sieve(image, size, out, mask, connectivity):
@@ -199,54 +205,58 @@ def _sieve(image, size, out, mask, connectivity):
     if np.dtype(image.dtype).name != np.dtype(out.dtype).name:
         raise ValueError('out raster must match dtype of image')
 
-    if dtypes.is_ndarray(image):
-        in_mem_ds = InMemoryRaster(image=image)
-        in_band = in_mem_ds.band(1)
-    elif isinstance(image, tuple):
-        rdr = image.ds
-        in_band = (<DatasetReaderBase?>rdr).band(image.bidx)
+    try:
+
+        if dtypes.is_ndarray(image):
+            in_mem_ds = InMemoryRaster(image=image)
+            in_band = in_mem_ds.band(1)
+        elif isinstance(image, tuple):
+            rdr = image.ds
+            in_band = (<DatasetReaderBase?>rdr).band(image.bidx)
+        else:
+            raise ValueError("Invalid source image")
+
+        if dtypes.is_ndarray(out):
+            log.debug("out array: %r", out)
+            out_mem_ds = InMemoryRaster(image=out)
+            out_band = out_mem_ds.band(1)
+        elif isinstance(out, tuple):
+            udr = out.ds
+            out_band = (<DatasetReaderBase?>udr).band(out.bidx)
+        else:
+            raise ValueError("Invalid out image")
+
+        if mask is not None:
+            if mask.shape != image.shape:
+                raise ValueError("Mask must have same shape as image")
+
+            if np.dtype(mask.dtype) not in ('bool', 'uint8'):
+                raise ValueError("Mask must be dtype rasterio.bool_ or "
+                                 "rasterio.uint8")
+
+            if dtypes.is_ndarray(mask):
+                # A boolean mask must be converted to uint8 for GDAL
+                mask_mem_ds = InMemoryRaster(image=mask.astype('uint8'))
+                mask_band = mask_mem_ds.band(1)
+
+            elif isinstance(mask, tuple):
+                mask_reader = mask.ds
+                mask_band = (<DatasetReaderBase?>mask_reader).band(mask.bidx)
+
+        GDALSieveFilter(in_band, mask_band, out_band, size, connectivity,
+                              NULL, NULL, NULL)
+
     else:
-        raise ValueError("Invalid source image")
+        # Read from out_band into out
+        io_auto(out, out_band, False)
 
-    if dtypes.is_ndarray(out):
-        log.debug("out array: %r", out)
-        out_mem_ds = InMemoryRaster(image=out)
-        out_band = out_mem_ds.band(1)
-    elif isinstance(out, tuple):
-        udr = out.ds
-        out_band = (<DatasetReaderBase?>udr).band(out.bidx)
-    else:
-        raise ValueError("Invalid out image")
-
-    if mask is not None:
-        if mask.shape != image.shape:
-            raise ValueError("Mask must have same shape as image")
-
-        if np.dtype(mask.dtype) not in ('bool', 'uint8'):
-            raise ValueError("Mask must be dtype rasterio.bool_ or "
-                             "rasterio.uint8")
-
-        if dtypes.is_ndarray(mask):
-            # A boolean mask must be converted to uint8 for GDAL
-            mask_mem_ds = InMemoryRaster(image=mask.astype('uint8'))
-            mask_band = mask_mem_ds.band(1)
-
-        elif isinstance(mask, tuple):
-            mask_reader = mask.ds
-            mask_band = (<DatasetReaderBase?>mask_reader).band(mask.bidx)
-
-    GDALSieveFilter(in_band, mask_band, out_band, size, connectivity,
-                          NULL, NULL, NULL)
-
-    # Read from out_band into out
-    io_auto(out, out_band, False)
-
-    if in_mem_ds is not None:
-        in_mem_ds.close()
-    if out_mem_ds is not None:
-        out_mem_ds.close()
-    if mask_mem_ds is not None:
-        mask_mem_ds.close()
+    finally:
+        if in_mem_ds is not None:
+            in_mem_ds.close()
+        if out_mem_ds is not None:
+            out_mem_ds.close()
+        if mask_mem_ds is not None:
+            mask_mem_ds.close()
 
 
 def _rasterize(shapes, image, transform, all_touched, merge_alg):
