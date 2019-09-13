@@ -175,7 +175,8 @@ class AWSSession(Session):
     def __init__(
             self, session=None, aws_unsigned=False, aws_access_key_id=None,
             aws_secret_access_key=None, aws_session_token=None,
-            region_name=None, profile_name=None, requester_pays=False):
+            region_name=None, profile_name=None, endpoint_url=None,
+            requester_pays=False):
         """Create a new boto3 session
 
         Parameters
@@ -194,6 +195,8 @@ class AWSSession(Session):
             A region name, as per boto3.
         profile_name : str, optional
             A shared credentials profile name, as per boto3.
+        endpoint_url: str, optional
+            An endpoint_url, as per GDAL's AWS_S3_ENPOINT
         requester_pays : bool, optional
             True if the requester agrees to pay transfer costs (default:
             False)
@@ -212,6 +215,7 @@ class AWSSession(Session):
 
         self.requester_pays = requester_pays
         self.unsigned = aws_unsigned
+        self.endpoint_url = endpoint_url
         self._creds = self._session._session.get_credentials() if self._session else None
 
     @classmethod
@@ -248,6 +252,8 @@ class AWSSession(Session):
             res['aws_region'] = self._session.region_name
         if self.requester_pays:
             res['aws_request_payer'] = 'requester'
+        if self.endpoint_url:
+            res['aws_s3_endpoint'] = self.endpoint_url
         return res
 
     def get_credential_options(self):

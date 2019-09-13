@@ -70,6 +70,13 @@ def test_aws_session_class_profile(tmpdir, monkeypatch):
     monkeypatch.undo()
 
 
+def test_aws_session_class_endpoint():
+    """Confirm that endpoint_url kwarg works."""
+    pytest.importorskip("boto3")
+    sesh = AWSSession(endpoint_url="example.com")
+    assert sesh.get_credential_options()['AWS_S3_ENDPOINT'] == 'example.com'
+
+
 def test_session_factory_unparsed():
     """Get a DummySession for unparsed paths"""
     sesh = Session.from_path("/vsicurl/lolwut")
