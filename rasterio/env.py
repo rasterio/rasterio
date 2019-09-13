@@ -647,7 +647,7 @@ if 'GDAL_DATA' not in os.environ:
 
 if 'PROJ_LIB' not in os.environ:
 
-    path = PROJDataFinder().searchi_wheel()
+    path = PROJDataFinder().search_wheel()
 
     if path:
         os.environ['PROJ_LIB'] = path

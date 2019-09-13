@@ -231,7 +231,6 @@ class GDALDataFinder(object):
         str or None
 
         """
-        # 
         path = self.search_wheel(prefix or __file__)
         if not path:
             path = self.search_prefix(prefix or sys.prefix)
