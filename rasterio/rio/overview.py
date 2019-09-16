@@ -19,19 +19,49 @@ def build_handler(ctx, param, value):
                 base, exp_range = value.split('^')
                 exp_min, exp_max = (int(v) for v in exp_range.split('..'))
                 value = [pow(int(base), k) for k in range(exp_min, exp_max + 1)]
-            else:
+            elif ',' in value:
                 value = [int(v) for v in value.split(',')]
+            elif int(value) == -1:
+                value = -1
+            else:
+                raise Exception
         except Exception:
-            raise click.BadParameter(u"must match 'n,n,n,…' or 'n^n..n'.")
+            raise click.BadParameter(u"must match 'n,n,n,…', 'n^n..n', or '-1'.")
     return value
+
+
+def get_maximum_overview_level(src_dst, minsize=256):
+    """
+    Calculate the maximum overview level.
+
+    Attributes
+    ----------
+    src_dst : rasterio.io.DatasetReader
+        Rasterio io.DatasetReader object.
+    minsize : int (default: 256)
+        Minimum overview size.
+
+    Returns
+    -------
+    overview_level: int
+        overview level.
+
+    """
+    overview_level = 0
+    overview_factor = 1
+    while min(src_dst.width // overview_factor, src_dst.height // overview_factor) > minsize:
+        overview_factor *= 2
+        overview_level += 1
+
+    return overview_level
 
 
 @click.command('overview', short_help="Construct overviews in an existing dataset.")
 @options.file_in_arg
-@click.option('--build', callback=build_handler, metavar=u"f1,f2,…|b^min..max",
-              help="A sequence of decimation factors specied as "
+@click.option('--build', callback=build_handler, metavar=u"f1,f2,…|b^min..max|-1",
+              help="A sequence of decimation factors specified as "
                    "comma-separated list of numbers or a base and range of "
-                   "exponents.")
+                   "exponents, or -1 to automatically determine the maximum factor.")
 @click.option('--ls', help="Print the overviews for each band.",
               is_flag=True, default=False)
 @click.option('--rebuild', help="Reconstruct existing overviews.",
@@ -52,9 +82,14 @@ def overview(ctx, input, build, ls, rebuild, resampling):
 
       rio overview --build 2,4,8,16
 
-    or a base and range of exponents.
+    or a base and range of exponents
 
       rio overview --build 2^1..4
+
+    or -1 to automatically determine the maximum decimation level at
+    which the smallest overview is smaller than 256 pixels in size.
+
+      rio overview --build -1
 
     Note that overviews can not currently be removed and are not
     automatically updated when the dataset's primary bands are
@@ -92,6 +127,9 @@ def overview(ctx, input, build, ls, rebuild, resampling):
 
         elif build:
             with rasterio.open(input, 'r+') as dst:
+                if build == -1:
+                    overview_level = get_maximum_overview_level(dst)
+                    build = [2 ** j for j in range(1, overview_level + 1)]
                 dst.build_overviews(build, Resampling[resampling])
 
                 # Save the resampling method to a tag.
