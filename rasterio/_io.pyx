@@ -18,7 +18,7 @@ import numpy as np
 
 from rasterio._base import tastes_like_gdal, gdal_version
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError)
+    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
 from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
@@ -69,21 +69,23 @@ def _delete_dataset_if_exists(path):
     b_path = path.encode('utf-8')
     c_path = b_path
 
-    with catch_errors():
+    with silence_errors():
         with nogil:
             h_dataset = GDALOpen(c_path, <GDALAccess>0)
 
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
+
+    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError):
+        log.debug(
+            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+
+    else:
         h_driver = GDALGetDatasetDriver(h_dataset)
 
         if h_driver != NULL:
             with nogil:
                 GDALDeleteDataset(h_driver, c_path)
-
-    except CPLE_OpenFailedError:
-        log.debug(
-            "Skipped delete for overwrite. Dataset does not exist: %s", path)
 
     finally:
         if h_dataset != NULL:
@@ -787,7 +789,7 @@ cdef class DatasetReaderBase(DatasetBase):
 
 
 @contextmanager
-def catch_errors():
+def silence_errors():
     """Intercept GDAL errors"""
     try:
         CPLPushErrorHandler(CPLQuietErrorHandler)

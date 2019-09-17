@@ -23,6 +23,8 @@ New features:
 
 Bug fixes:
 
+- Handle the AWS extension mentioned in #1159. Note that this does not enable
+  writing directly to S3.
 - A syntax error in the specification of a Python version marker for enum34 in
   requirements.txt has been fixed.
 - Several cases of memory leaks involving temporary in-memory datasets have
