@@ -135,7 +135,10 @@ def parse_path(path):
 
         # if the scheme is not one of Rasterio's supported schemes, we
         # return an UnparsedPath.
-        if parts.scheme and not all(p in SCHEMES for p in parts.scheme.split('+')):
+        if path.startswith('SENTINEL2_L1C:'):
+            return UnparsedPath(path)
+            
+        elif parts.scheme and not all(p in SCHEMES for p in parts.scheme.split('+')):
             return UnparsedPath(path)
 
         else:
