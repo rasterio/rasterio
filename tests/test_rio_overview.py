@@ -79,7 +79,7 @@ def test_no_args(data):
 def test_build_auto_ls(data):
     runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
-    result = runner.invoke(cli, ['overview', inputfile, '--build', '-1'])
+    result = runner.invoke(cli, ['overview', inputfile, '--build', 'auto'])
     assert result.exit_code == 0
     result = runner.invoke(cli, ['overview', inputfile, '--ls'])
     assert result.exit_code == 0
