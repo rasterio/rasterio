@@ -953,7 +953,7 @@ cdef class DatasetBase(object):
         namespaces = GDALGetMetadataDomainList(obj)
         num_items = CSLCount(namespaces)
         try:
-            return list([namespaces[i] for i in range(num_items) if namespaces[i] != ""])
+            return list([namespaces[i] for i in range(num_items) if str(namespaces[i])])
         finally:
             CSLDestroy(namespaces)
 
