@@ -338,7 +338,7 @@ def test_write_blacklist(tmpdir, driver):
 
 def test_creation_metadata_deprecation(tmpdir):
     name = str(tmpdir.join("test.tif"))
-    with rasterio.open(name, 'w', driver='GTiff', height=1, width=1, count=1, dtype='uint8', BIGTIFF=True) as dst:
+    with rasterio.open(name, 'w', driver='GTiff', height=1, width=1, count=1, dtype='uint8', BIGTIFF='YES') as dst:
         dst.write(np.ones((1, 1, 1), dtype='uint8'))
         assert dst.tags(ns='rio_creation_kwds') == {}
 

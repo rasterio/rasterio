@@ -120,7 +120,7 @@ def test_raster_geometrymask_crop_pad(basic_image_2x2, basic_image_file,
 
     with rasterio.open(basic_image_file) as src:
         geometrymask, transform, window = raster_geometry_mask(src, geometries,
-                                                            crop=True, pad=True)
+                                                            crop=True, pad=0.5)
 
     image = basic_image_2x2[1:5, 1:5] == 0  # invert because invert=False
 
@@ -250,6 +250,35 @@ def test_mask_pad(basic_image_2x2, basic_image_file, basic_geometry):
     assert np.array_equal(masked[0], basic_image_2x2[1:5, 1:5])
 
 
+def test_mask_with_extra_padding(basic_image_2x2, basic_image_file, basic_geometry):
+    """Output should have 2 extra pixels compared to the standard padded mask"""
+
+    geometries = [basic_geometry]
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, crop=True, pad=True, pad_width=2)
+
+    assert masked.shape == (1, 7, 7)
+    assert np.array_equal(masked[0], basic_image_2x2[0:7, 0:7])
+
+def test_mask_with_even_more_padding(basic_image_2x2, basic_image_file, basic_geometry):
+    """Output should contain 4 extra pixels on each side"""
+    geometries = [basic_geometry]
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, crop=True, pad=True, pad_width=4)
+
+    assert masked.shape == (1, 9, 9)
+    assert np.array_equal(masked[0], basic_image_2x2[0:9, 0:9])
+
+def test_mask_with_maximum_padding(basic_image_2x2, basic_image_file, basic_geometry):
+    """Output should not break if too much padding is requested"""
+    geometries = [basic_geometry]
+    with rasterio.open(basic_image_file) as src:
+        masked, transform = mask(src, geometries, crop=True, pad=True, pad_width=10)
+
+    assert masked.shape == (1, 10, 10)
+    assert np.array_equal(masked[0], basic_image_2x2[0:10, 0:10])
+
+
 def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
                      basic_geometry):
     """Should be returned as numpy.ma.MaskedArray if filled is False"""
@@ -264,4 +293,3 @@ def test_mask_filled(basic_image, basic_image_2x2, basic_image_file,
     assert (type(masked) == np.ma.MaskedArray)
     assert np.array_equal(masked[0].mask, image.mask)
     assert np.array_equal(masked[0], image)
-

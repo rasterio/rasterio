@@ -186,6 +186,18 @@ def test_is_projected():
     assert CRS(wgs84_crs).is_projected is False
 
 
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
+@pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
+def test_equality_from_epsg(epsg_code):
+    assert CRS.from_epsg(epsg_code) == CRS.from_epsg(epsg_code)
+
+
+@requires_gdal21(reason="CRS equality is buggy pre-2.1")
+@pytest.mark.parametrize('epsg_code', [3857, 4326, 26913, 32618])
+def test_equality_from_dict(epsg_code):
+    assert CRS.from_dict(init='epsg:{}'.format(epsg_code)) == CRS.from_dict(init='epsg:{}'.format(epsg_code))
+
+
 def test_is_same_crs():
     crs1 = CRS({'init': 'epsg:4326'})
     crs2 = CRS({'init': 'epsg:3857'})
@@ -451,6 +463,18 @@ def test_pickle(factory, arg):
 def test_linear_units():
     """CRS linear units can be had"""
     assert CRS.from_epsg(3857).linear_units == 'metre'
+    assert CRS.from_epsg(2261).linear_units == 'US survey foot'
+    assert CRS.from_epsg(4326).linear_units == 'unknown'
+
+
+def test_linear_units_factor():
+    """CRS linear units can be had"""
+    assert CRS.from_epsg(3857).linear_units_factor[0] == 'metre'
+    assert CRS.from_epsg(3857).linear_units_factor[1] == 1.0
+    assert CRS.from_epsg(2261).linear_units_factor[0] == 'US survey foot'
+    assert CRS.from_epsg(2261).linear_units_factor[1] == pytest.approx(0.3048006096012192)
+    with pytest.raises(CRSError):
+        CRS.from_epsg(4326).linear_units_factor
 
 
 def test_crs_copy():

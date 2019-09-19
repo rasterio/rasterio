@@ -938,8 +938,11 @@ cdef class DatasetBase(object):
 
     def get_tag_ns(self, bidx=0):
         """Returns the list of metadata domains.
-        
+
         The optional bidx argument can be used to select a specific band.
+
+        Note: GDAL version =< 2.4.3 and =< 3.0.2 will return additional `EXIF`
+        tag on second get_tag_ns call.
         """
         cdef GDALMajorObjectH obj = NULL
         if bidx > 0:
@@ -950,7 +953,7 @@ cdef class DatasetBase(object):
         namespaces = GDALGetMetadataDomainList(obj)
         num_items = CSLCount(namespaces)
         try:
-            return list([namespaces[i] for i in range(num_items)])
+            return list([namespaces[i] for i in range(num_items) if namespaces[i] != ""])
         finally:
             CSLDestroy(namespaces)
 
@@ -1131,7 +1134,7 @@ cdef class DatasetBase(object):
             if color == NULL:
                 log.warn("NULL color at %d, skipping", i)
                 continue
-            log.info(
+            log.debug(
                 "Color: (%d, %d, %d, %d)",
                 color.c1, color.c2, color.c3, color.c4)
             retval[i] = (color.c1, color.c2, color.c3, color.c4)

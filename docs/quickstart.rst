@@ -195,7 +195,7 @@ dataset's upper left corner, do the following.
     >>> row, col = dataset.index(x, y)
     >>> row, col
     (1666, 3333)
-    >>> band_one[row, col]
+    >>> band1[row, col]
     7566
 
 To get the spatial coordinates of a pixel, use the dataset's :meth:`~rasterio.io.DatasetReader.xy` method.

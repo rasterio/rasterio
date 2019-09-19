@@ -95,7 +95,6 @@ cdef extern from "ogr_srs_api.h" nogil:
     OGRSpatialReferenceH OSRClone(OGRSpatialReferenceH srs)
     int OSRExportToProj4(OGRSpatialReferenceH srs, char **params)
     int OSRExportToWkt(OGRSpatialReferenceH srs, char **params)
-    int OSRFixup(OGRSpatialReferenceH srs)
     const char *OSRGetAuthorityName(OGRSpatialReferenceH srs, const char *key)
     const char *OSRGetAuthorityCode(OGRSpatialReferenceH srs, const char *key)
     int OSRImportFromEPSG(OGRSpatialReferenceH srs, int code)
