@@ -952,10 +952,21 @@ cdef class DatasetBase(object):
             return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
 
-    def get_tag_ns(self, bidx=0):
-        """Returns the list of metadata domains.
-        
-        The optional bidx argument can be used to select a specific band.
+    def tag_namespaces(self, bidx=0):
+        """Get a list of the dataset's metadata domains.
+
+        Returned items may be passed as `ns` to the tags method.
+
+        Parameters
+        ----------
+        bidx int, optional
+            Can be used to select a specific band, otherwise the
+            dataset's general metadata domains are returned.
+
+        Returns
+        -------
+        list of str
+
         """
         cdef GDALMajorObjectH obj = NULL
         if bidx > 0:
@@ -966,7 +977,7 @@ cdef class DatasetBase(object):
         namespaces = GDALGetMetadataDomainList(obj)
         num_items = CSLCount(namespaces)
         try:
-            return list([namespaces[i] for i in range(num_items)])
+            return list([namespaces[i] for i in range(num_items) if str(namespaces[i])])
         finally:
             CSLDestroy(namespaces)
 
