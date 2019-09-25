@@ -263,6 +263,8 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
     """
     Burns input geometries into `image`.
 
+    The `image` array is modified in place.
+
     Parameters
     ----------
     shapes : iterable of (geometry, value) pairs
@@ -274,15 +276,44 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
         coordinate system of the input `shapes`. See the `transform`
         property of dataset objects.
     all_touched : boolean, optional
-        If True, all pixels touched by geometries will be burned in.
-        If false, only pixels whose center is within the polygon or
-        that are selected by Bresenham's line algorithm will be burned
-        in.
+        If True, all pixels touched by geometries will be burned in. If
+        false, only pixels whose center is within the polygon or that
+        are selected by Bresenham's line algorithm will be burned in.
     merge_alg : MergeAlg, required
         Merge algorithm to use.  One of:
-            MergeAlg.replace (default): the new value will overwrite the
-                existing value.
-            MergeAlg.add: the new value will be added to the existing raster.
+            MergeAlg.replace (default):
+                the new value will overwrite the existing value.
+            MergeAlg.add:
+                the new value will be added to the existing raster.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    This function uses significant memory resources.
+    GDALRasterizeGeometries does the bulk of the work and requires a
+    working buffer. The size of this buffer is the smaller of the
+    `image` data or GDAL's maximum cache size.  That latter value is 5%
+    of a computer's physical RAM unless otherwise specified using the
+    GDAL_CACHEMAX configuration option. Additionally, this function uses
+    a temporary in-memory dataset containing a copy of the input `image`
+    data and an array of OGRGeometryH structs. The size of that array is
+    approximately equal to the size of all objects in `shapes`. Note
+    that the `shapes` iterator is also materialized to a list within
+    this function.
+
+    If the working buffer is smaller than the `image` data, the array of
+    shapes will be iterated multiple times. Performance is thus a linear
+    function of the buffer size. For maximum speed, ensure that
+    GDAL_CACHEMAX is larger than the size of the input `image`.
+
+    The minimum memory requirement of this function is approximately
+    equal to 2x the `image` data size plus 2x the smaller of the the
+    `image` data and GDAL max cache size, plus 2x the size of the
+    objects in `shapes`.
+
     """
     cdef int retval
     cdef size_t i
@@ -316,6 +347,7 @@ def _rasterize(shapes, image, transform, all_touched, merge_alg):
                 log.error("Geometry %r at index %d with value %d skipped",
                     geometry, i, value)
 
+        # TODO: is a vsimem file more memory efficient?
         with InMemoryRaster(image=image, transform=transform) as mem:
             exc_wrap_int(
                 GDALRasterizeGeometries(

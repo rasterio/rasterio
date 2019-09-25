@@ -55,8 +55,13 @@ def geometry_mask(
 
     Returns
     -------
-    out : numpy ndarray of type 'bool'
+    numpy ndarray of type 'bool'
         Result
+
+    Notes
+    -----
+    See rasterize() for performance notes.
+
     """
     fill, mask_value = (0, 1) if invert else (1, 0)
 
@@ -205,10 +210,10 @@ def rasterize(
         are selected by Bresenham's line algorithm will be burned in.
     merge_alg : MergeAlg, optional
         Merge algorithm to use. One of:
-            MergeAlg.replace (default): the new value will overwrite the
-              existing value.
-            MergeAlg.add: the new value will be added
-              to the existing raster.
+            MergeAlg.replace (default):
+                the new value will overwrite the existing value.
+            MergeAlg.add:
+                the new value will be added to the existing raster.
     default_value : int or float, optional
         Used as value for all geometries, if not provided in `shapes`.
     dtype : rasterio or numpy data type, optional
@@ -216,15 +221,27 @@ def rasterize(
 
     Returns
     -------
-    out : numpy ndarray
-        Results
+    numpy ndarray
+        If `out` was not None then `out` is returned, it will have been
+        modified in-place. If `out` was None, this will be a new array.
 
     Notes
     -----
     Valid data types for `fill`, `default_value`, `out`, `dtype` and
-    shape values are rasterio.int16, rasterio.int32, rasterio.uint8,
-    rasterio.uint16, rasterio.uint32, rasterio.float32,
-    rasterio.float64.
+    shape values are "int16", "int32", "uint8", "uint16", "uint32",
+    "float32", and "float64".
+
+    This function requires significant memory resources. The shapes
+    iterator will be materialized to a Python list and another C copy of
+    that list will be made. The `out` array will be copied and
+    additional temporary raster memory equal to 2x the smaller of `out`
+    data or GDAL's max cache size (controlled by GDAL_CACHEMAX, default
+    is 5% of the computer's physical memory) is required.
+
+    If GDAL max cache size is smaller than the output data, the array of
+    shapes will be iterated multiple times. Performance is thus a linear
+    function of buffer size. For maximum speed, ensure that
+    GDAL_CACHEMAX is larger than the size of `out` or `out_shape`.
 
     """
     valid_dtypes = (
