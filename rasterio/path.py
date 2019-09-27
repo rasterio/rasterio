@@ -133,9 +133,12 @@ def parse_path(path):
     else:
         parts = urlparse(path)
 
+        if not parts.scheme:
+            return UnparsedPath(path)
+
         # if the scheme is not one of Rasterio's supported schemes, we
         # return an UnparsedPath.
-        if parts.scheme and not all(p in SCHEMES for p in parts.scheme.split('+')):
+        elif parts.scheme and not all(p in SCHEMES for p in parts.scheme.split('+')):
             return UnparsedPath(path)
 
         else:

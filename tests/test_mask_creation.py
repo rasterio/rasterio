@@ -2,8 +2,13 @@
 Tests of band mask creation, both .msk sidecar and internal.
 """
 
+import numpy as np
+import pytest
+
 import rasterio
 from rasterio.enums import MaskFlags
+from rasterio.errors import RasterioIOError
+from rasterio.windows import Window
 
 
 def test_create_internal_mask(data):
@@ -71,3 +76,13 @@ def test_create_mask_windowed_internal(data):
                 blue = dst.read(1, window=window, masked=False)
                 mask = 255 * (blue == 0).astype('uint8')
                 dst.write_mask(mask, window=window)
+
+
+def test_create_mask_windowed_internal_spillover(data):
+    """Writing mask to a window that spills over dataset raises an error
+    """
+    with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
+        with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
+            mask = np.ones((1024, 1024), dtype="bool")
+            with pytest.raises(RasterioIOError):
+                dst.write_mask(mask, window=Window(800, 800, 1024, 1024))

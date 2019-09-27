@@ -1,14 +1,11 @@
-import logging
+"""Tests of rasterio.path"""
+
 import sys
 
 import pytest
 
 import rasterio
-from rasterio.profiles import default_gtiff_profile
 from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
-
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_parsed_path_name():
@@ -70,9 +67,8 @@ def test_parse_path_file_scheme():
 def test_parse_path_file():
     """Correctly parse an ordinary filesystem path"""
     parsed = parse_path('/foo.tif')
+    assert isinstance(parsed, UnparsedPath)
     assert parsed.path == '/foo.tif'
-    assert parsed.archive is None
-    assert parsed.scheme is None
 
 
 def test_parse_gdal_vsi():
@@ -130,6 +126,7 @@ def test_read_vfs_file():
         assert src.name == 'file://tests/data/RGB.byte.tif'
         assert src.count == 3
 
+
 def test_read_vfs_zip_cmp_array():
     with rasterio.open(
             'zip://tests/data/files.zip!/RGB.byte.tif') as src:
@@ -160,13 +157,17 @@ def test_parse_path_accept_get_params():
 
 def test_vsi_path_zip():
     """A zip:// URLs vsi path is correct (see #1377)"""
-    from rasterio.path import parse_path, vsi_path
     url = 'zip:///path/to/zip/some.zip!path/to/file.txt'
     assert vsi_path(parse_path(url)) == '/vsizip//path/to/zip/some.zip/path/to/file.txt'
 
 
 def test_vsi_path_zip_plus_https():
     """A zip+https:// URLs vsi path is correct (see #1151)"""
-    from rasterio.path import parse_path, vsi_path
     url = 'zip+https://example.com/foo.zip!bar.tif'
     assert vsi_path(parse_path(url)) == '/vsizip/vsicurl/https://example.com/foo.zip/bar.tif'
+
+
+def test_sentinel2_l1c():
+    """A Sentinel 2 L1C identifier is not parsed"""
+    path = "SENTINEL2_L1C:S2A_OPER_MTD_SAFL1C_PDMC_20150818T101440_R022_V20150813T102406_20150813T102406.xml:10m:EPSG_32632"
+    assert isinstance(parse_path(path), UnparsedPath)
