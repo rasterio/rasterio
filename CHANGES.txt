@@ -11,6 +11,7 @@ Deprecations:
 
 New features:
 
+- Zoom levels can be automatically computed by rio-overview (#511).
 - An alternative endpoint for S3-compatible network storage can now be set when
   creating an instance of AWSSession (#1779). See GDAL's documentation of its
   AWS_S3_ENDPOINT configuration option for more details.
