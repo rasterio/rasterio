@@ -74,7 +74,7 @@ def test_create_mask_windowed_internal(data):
         with rasterio.open(str(data.join('RGB.byte.tif')), 'r+') as dst:
             for ij, window in dst.block_windows():
                 blue = dst.read(1, window=window, masked=False)
-                mask = 255 * (blue == 0).astype('uint8')
+                mask = (blue != 0)
                 dst.write_mask(mask, window=window)
 
 
