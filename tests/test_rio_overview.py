@@ -2,6 +2,7 @@ import logging
 import sys
 
 from click.testing import CliRunner
+import pytest
 
 import rasterio
 from rasterio.rio.main import main_group as cli
@@ -87,13 +88,15 @@ def test_build_auto_ls(data):
     assert result.output.endswith(expected)
 
 
-def test_max_overview(data):
-    inputfile = str(data.join('RGB.byte.tif'))
-
-    with rasterio.open(inputfile) as src:
-        overview_level = get_maximum_overview_level(src)
-    assert overview_level == 2
-
-    with rasterio.open(inputfile) as src:
-        overview_level = get_maximum_overview_level(src, minsize=128)
-    assert overview_level == 3
+@pytest.mark.parametrize(
+    "width, height, minsize, expected",
+    [
+        (256, 256, 256, 0),
+        (257, 257, 256, 1),
+        (1000, 1000, 128, 3),
+        (1000, 100, 128, 0)
+    ]
+)
+def test_max_overview(width, height, minsize, expected):
+    overview_level = get_maximum_overview_level(width, height, minsize)
+    assert overview_level == expected

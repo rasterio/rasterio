@@ -30,14 +30,17 @@ def build_handler(ctx, param, value):
     return value
 
 
-def get_maximum_overview_level(src_dst, minsize=256):
+def get_maximum_overview_level(width, height, minsize=256):
     """
-    Calculate the maximum overview level.
+    Calculate the maximum overview level of a dataset at which
+    the smallest overview is smaller than `minsize`.
 
     Attributes
     ----------
-    src_dst : rasterio.io.DatasetReader
-        Rasterio io.DatasetReader object.
+    width : int
+        Width of the dataset.
+    height : int
+        Height of the dataset.
     minsize : int (default: 256)
         Minimum overview size.
 
@@ -49,7 +52,7 @@ def get_maximum_overview_level(src_dst, minsize=256):
     """
     overview_level = 0
     overview_factor = 1
-    while min(src_dst.width // overview_factor, src_dst.height // overview_factor) > minsize:
+    while min(width // overview_factor, height // overview_factor) > minsize:
         overview_factor *= 2
         overview_level += 1
 
@@ -128,7 +131,7 @@ def overview(ctx, input, build, ls, rebuild, resampling):
         elif build:
             with rasterio.open(input, 'r+') as dst:
                 if build == "auto":
-                    overview_level = get_maximum_overview_level(dst)
+                    overview_level = get_maximum_overview_level(dst.width, dst.height)
                     build = [2 ** j for j in range(1, overview_level + 1)]
                 dst.build_overviews(build, Resampling[resampling])
 
