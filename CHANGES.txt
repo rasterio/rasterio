@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.1dev (TBD)
-------------
+1.1b1 (2019-10-01)
+------------------
 
 Deprecations:
 
@@ -39,6 +39,11 @@ Bug fixes:
   (#1775).
 - Tests of rasterizing invalid shapes now catch the warnings about shape
   skipping.
+
+Other:
+
+- The AUTHORS file has been updated and is now sorted by name (first name
+  first) or GitHub username.
 
 1.0.28 (2019-09-09)
 -------------------

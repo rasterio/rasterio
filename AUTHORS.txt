@@ -1,71 +1,90 @@
 Authors
 -------
 
-* Sean Gillies
-* Matthew Perry
-* Kevin Wurster
-* Brendan Ward
-* Jonas Sølvsteen
-* Colin Talbert
-* James McBride
-* Erik Seglem
-* Vincent Sarago
-* Seth Fitzsimmons
-* James Hiebert
-* Amit Kapadia
-* Damon Burgett
-* Even Rouault
-* Kelsey Jordahl
-* Maxim Dubinin
-* Ryan Grout
-* Joshua Arnott
-* AsgerPetersen
-* Mike Toews
-* Nick Grue
-* Alessandro Amici
-* Bas Couwenberg
-* Frédéric Bonifas
-* Ben Lewis
-* Johan Van
-* Chris Holdgraf
-* morrme
-* Chris Holden
-* cgohlke
-* Andrew Catellier
-* mwtoews
-* Martin Kaesberger
-* ngrue
-* Nat Wilson
-* Juan Luis Cano
-* Gregory Raevski
-* Tyler Erickson
-* Jeffrey Gerard
-* Jacques Tardie
-* Robin Wilson
-* Jonas
-* asmith26
+* Alan D. Snow
 * Aldo Culquicondor
+* Alessandro Amici
+* Alexander
 * Alexander Ivanov
+* Amit Kapadia
+* Andrew Annex
+* Andrew Catellier
 * Ariel Zerahia
+* AsgerPetersen
+* Bas Couwenberg
+* Ben Lewis
+* Brendan Ward
+* Caleb Robinson
 * Charlie Loyd
+* Chris Holden
+* Chris Holdgraf
+* Christoph Rieke
+* Colin Talbert
 * Damien Ayers
+* Dan "Ducky" Little
 * Dan Baston
-* Etienne B.
+* Darren Weber
+* Denis Rykov
+* Erik Seglem
+* Etienne B. Racine
+* Even Rouault
 * Filipe
+* Frédéric Bonifas
+* Gregory Raevski
+* Guillaume Lostis
 * Guy Doulberg
+* Ismail Sunni
+* Jacques Tardie
+* James Hiebert
+* James McBride
 * James Seppi
+* Jeffrey Gerard
+* Jennifer Reiber Kyle
 * Jeremy Hooke
 * Jesse Crocker
-* Joris Van
+* Johan Van de Wauw
+* Jonas Sølvsteen
+* Joris Van den Bossche
+* Joshua Arnott
+* Juan Luis Cano Rodríguez
+* Kelsey Jordahl
+* Kevin Wurster
 * Kirill Kouzoubov
+* Koshy Thomas
+* Leah Wasser
+* Lukasz
 * Martijn Visser
+* Martin Kaesberger
+* Martin Raspaud
 * Matt Savoie
+* Matthew Perry
+* Maxim Dubinin
+* Mike Taves
+* Nat Wilson
+* Nick Grue
+* Pablo Sanfilippo
 * Patrick Young
 * Pratik Yadav
+* RK Aranas
+* Raaj Tilak Sarma
+* Robert Sare
+* Robin Wilson
+* Ryan Grout
 * Sam Murphy
-* Talbert
-* Trevor R.H.
+* Sean Gillies
+* Seth Fitzsimmons
+* Trevor R.H. Clarke
+* Tyler Erickson
+* Vincent Sarago
 * Vincent Schut
-* Alan D.
+* Yuvi Panda
+* appanacca
+* asmith26
+* cgohlke
+* derekjanni
+* dnomadb
+* firas omrane
 * grovduck
-* Dan "Ducky" Little
+* jaredairbusaerial
+* morrme
+* sshuair
