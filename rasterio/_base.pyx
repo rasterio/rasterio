@@ -951,6 +951,37 @@ cdef class DatasetBase(object):
                 subs[idx][fld] = val.replace('"', '')
             return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
+
+    def tag_namespaces(self, bidx=0):
+        """Get a list of the dataset's metadata domains.
+
+        Returned items may be passed as `ns` to the tags method.
+
+        Parameters
+        ----------
+        bidx int, optional
+            Can be used to select a specific band, otherwise the
+            dataset's general metadata domains are returned.
+
+        Returns
+        -------
+        list of str
+
+        """
+        cdef GDALMajorObjectH obj = NULL
+        if bidx > 0:
+            obj = self.band(bidx)
+        else:
+            obj = self._hds
+
+        namespaces = GDALGetMetadataDomainList(obj)
+        num_items = CSLCount(namespaces)
+        try:
+            return list([namespaces[i] for i in range(num_items) if str(namespaces[i])])
+        finally:
+            CSLDestroy(namespaces)
+
+
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
         tags.
