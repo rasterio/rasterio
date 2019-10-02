@@ -1,6 +1,15 @@
 Changes
 =======
 
+1.1b2 (2019-10-02)
+------------------
+
+Bug fixes:
+
+- When built from the official source distribution rasterio 1.1b1 would not
+  import due to the omission of _transform.c from the list of extension sources
+  in setup.py. This has been fixed.
+
 1.1b1 (2019-10-01)
 ------------------
 
