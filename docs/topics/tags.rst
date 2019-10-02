@@ -1,7 +1,7 @@
 Tagging datasets and bands
 ==========================
 
-GDAL's `data model <http://www.gdal.org/gdal_datamodel.html>`__ includes
+GDAL's `data model <https://gdal.org/user/raster_data_model.html>`__ includes
 collections of key, value pairs for major classes. In that model, these are
 "metadata", but since they don't have to be just for metadata, these key, value
 pairs are called "tags" in rasterio.
