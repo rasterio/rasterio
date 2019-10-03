@@ -452,6 +452,7 @@ def test_open_datasets(capfd, path_rgb_byte_tif):
         assert not captured.err
 
 
+@requires_gdal2
 def test_warp_warp(dsrec, path_rgb_byte_tif):
     """Vincent! :P"""
     with rasterio.Env() as env:
