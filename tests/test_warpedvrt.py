@@ -75,23 +75,32 @@ def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
-def test_warped_vrt_add_alpha(path_rgb_byte_tif):
+def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
-    with rasterio.open(path_rgb_byte_tif) as src:
-        vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
-        assert vrt.dst_crs == CRS.from_string(DST_CRS)
-        assert vrt.src_nodata == 0.0
-        assert vrt.dst_nodata is None
-        assert vrt.tolerance == 0.125
-        assert vrt.resampling == Resampling.nearest
-        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
-        assert vrt.count == 4
-        assert vrt.mask_flag_enums == (
-            [MaskFlags.per_dataset, MaskFlags.alpha],
-        ) * 3 + (
-            [MaskFlags.all_valid],
-        )
+    with rasterio.Env() as env:
+        with rasterio.open(path_rgb_byte_tif) as src:
+            vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
 
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "2 N GTiff" in records[0]
+
+            assert vrt.dst_crs == CRS.from_string(DST_CRS)
+            assert vrt.src_nodata == 0.0
+            assert vrt.dst_nodata is None
+            assert vrt.tolerance == 0.125
+            assert vrt.resampling == Resampling.nearest
+            assert vrt.warp_extras == {"init_dest": "NO_DATA"}
+            assert vrt.count == 4
+            assert vrt.mask_flag_enums == (
+                [MaskFlags.per_dataset, MaskFlags.alpha],
+            ) * 3 + (
+                [MaskFlags.all_valid],
+            )
+
+        records = dsrec(env)
+        assert len(records) == 1
+        assert "1 N GTiff" in records[0]
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
@@ -449,4 +458,65 @@ def test_open_datasets(capfd, path_rgb_byte_tif):
 
         env._dump_open_datasets()
         captured = capfd.readouterr()
-        assert not captured.err
+        assert "1 N GTiff" not in captured.err
+
+
+@requires_gdal2
+def test_warp_warp(dsrec, path_rgb_byte_tif):
+    """Vincent! :P"""
+    with rasterio.Env() as env:
+
+        with rasterio.open(path_rgb_byte_tif) as src:
+            # We should have one open dataset with a refcount of 1.
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "1 N GTiff" in records[0]
+
+            with WarpedVRT(src) as vrt:
+                # The VRT increments the refcount of the source by 1.
+                records = dsrec(env)
+                assert len(records) == 1
+                assert "2 N GTiff" in records[0]
+
+                with WarpedVRT(vrt) as vrtvrt:
+                    assert vrtvrt.profile
+                    # Apparently VRTs are tracked in the same way.
+                    records = dsrec(env)
+                    assert len(records) == 1
+                    assert "2 N GTiff" in records[0]
+
+                # Inner VRT is closed.
+                records = dsrec(env)
+                assert len(records) == 1
+                assert "2 N GTiff" in records[0]
+
+            # VRTs are closed, we have one open dataset.
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "1 N GTiff" in records[0]
+
+
+@pytest.fixture
+def dsrec(capfd):
+    """GDAL's open dataset records as a pytest fixture"""
+    def func(env):
+        """Get records of GDAL's open datasets
+
+        Parameters
+        ----------
+        env : Env
+            A rasterio environment.
+
+        Returns
+        -------
+        list of str
+            Each string record represents an open dataset and tells the
+            filename, the driver used to open the dataset, the reference
+            count, and other information.
+
+        """
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        records = captured.err.strip("\n").split("\n")[1:]
+        return records
+    return func

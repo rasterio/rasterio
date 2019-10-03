@@ -787,6 +787,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             self.warp_extras['init_dest'] = 'NO_DATA'
 
         cdef GDALDriverH driver = NULL
+        cdef GDALDatasetH hds = NULL
         cdef GDALDatasetH hds_warped = NULL
         cdef const char *cypath = NULL
         cdef char *src_crs_wkt = NULL
@@ -806,11 +807,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef int mask_block_xsize = 0
         cdef int mask_block_ysize = 0
 
-        # Get a new handle for the source dataset instead of using its handle.
-        cdef int flags = 0x00 | 0x02 | 0x40
-        filename = vsi_path(parse_path(self.src_dataset.name))
-
-        self._hds_source = open_dataset(filename, flags, [self.src_dataset.driver], self.src_dataset.options, None)
+        hds = exc_wrap_pointer((<DatasetReaderBase?>self.src_dataset).handle())
 
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
@@ -856,7 +853,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef GDALRasterBandH hBand = NULL
         src_alpha_band = 0
         for bidx in src_dataset.indexes:
-            hBand = GDALGetRasterBand(self._hds_source, bidx)
+            hBand = GDALGetRasterBand(hds, bidx)
             if GDALGetRasterColorInterpretation(hBand) == GCI_AlphaBand:
                 src_alpha_band = bidx
 
@@ -888,7 +885,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if psWOptions == NULL:
             raise RuntimeError("Warp options are NULL")
 
-        psWOptions.hSrcDS = self._hds_source
+        psWOptions.hSrcDS = hds
 
         try:
             if self.dst_width and self.dst_height and self.dst_transform:
@@ -918,13 +915,13 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
                 with nogil:
                     hds_warped = GDALCreateWarpedVRT(
-                        self._hds_source, c_width, c_height, dst_gt, psWOptions)
+                        hds, c_width, c_height, dst_gt, psWOptions)
                     GDALSetProjection(hds_warped, dst_crs_wkt)
                 self._hds = exc_wrap_pointer(hds_warped)
             else:
                 with nogil:
                     hds_warped = GDALAutoCreateWarpedVRT(
-                        self._hds_source, NULL, dst_crs_wkt, c_resampling,
+                        hds, NULL, dst_crs_wkt, c_resampling,
                         c_tolerance, psWOptions)
                 self._hds = exc_wrap_pointer(hds_warped)
 
@@ -971,9 +968,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
-        if self._hds_source != NULL:
-            GDALClose(self._hds_source)
-        self._hds_source = NULL
         self._closed = True
 
     def read(self, indexes=None, out=None, window=None, masked=False,

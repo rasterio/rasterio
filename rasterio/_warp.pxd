@@ -58,4 +58,4 @@ cdef extern from "gdal_alg.h":
 
 
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
-    cdef GDALDatasetH _hds_source
+    pass

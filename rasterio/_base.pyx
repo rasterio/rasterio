@@ -312,11 +312,13 @@ cdef class DatasetBase(object):
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:
-            GDALClose(self._hds)
+            refcount = GDALDereferenceDataset(self._hds)
+            if refcount == 0:
+                GDALClose(self._hds)
         self._hds = NULL
-        self._closed = True
 
     def close(self):
+        """Close the dataset"""
         self.stop()
         self._closed = True
 
