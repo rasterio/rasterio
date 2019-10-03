@@ -75,23 +75,32 @@ def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
 
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
-def test_warped_vrt_add_alpha(path_rgb_byte_tif):
+def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
     """A VirtualVRT has the expected VRT properties."""
-    with rasterio.open(path_rgb_byte_tif) as src:
-        vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
-        assert vrt.dst_crs == CRS.from_string(DST_CRS)
-        assert vrt.src_nodata == 0.0
-        assert vrt.dst_nodata is None
-        assert vrt.tolerance == 0.125
-        assert vrt.resampling == Resampling.nearest
-        assert vrt.warp_extras == {"init_dest": "NO_DATA"}
-        assert vrt.count == 4
-        assert vrt.mask_flag_enums == (
-            [MaskFlags.per_dataset, MaskFlags.alpha],
-        ) * 3 + (
-            [MaskFlags.all_valid],
-        )
+    with rasterio.Env() as env:
+        with rasterio.open(path_rgb_byte_tif) as src:
+            vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
 
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "2 N GTiff" in records[0]
+
+            assert vrt.dst_crs == CRS.from_string(DST_CRS)
+            assert vrt.src_nodata == 0.0
+            assert vrt.dst_nodata is None
+            assert vrt.tolerance == 0.125
+            assert vrt.resampling == Resampling.nearest
+            assert vrt.warp_extras == {"init_dest": "NO_DATA"}
+            assert vrt.count == 4
+            assert vrt.mask_flag_enums == (
+                [MaskFlags.per_dataset, MaskFlags.alpha],
+            ) * 3 + (
+                [MaskFlags.all_valid],
+            )
+
+        records = dsrec(env)
+        assert len(records) == 1
+        assert "1 N GTiff" in records[0]
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
@@ -449,7 +458,7 @@ def test_open_datasets(capfd, path_rgb_byte_tif):
 
         env._dump_open_datasets()
         captured = capfd.readouterr()
-        assert not captured.err
+        assert "1 N GTiff" not in captured.err
 
 
 @requires_gdal2
@@ -485,10 +494,6 @@ def test_warp_warp(dsrec, path_rgb_byte_tif):
             records = dsrec(env)
             assert len(records) == 1
             assert "1 N GTiff" in records[0]
-
-        # At this point we don't have any open datasets.
-        records = dsrec(env)
-        assert len(records) == 0
 
 
 @pytest.fixture

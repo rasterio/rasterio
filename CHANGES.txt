@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.1b3 (2019-10-03)
+------------------
+
+Bug fixes:
+
+- A regression in WarpedVRT creation (#1799) has been fixed. This required
+  implementation of GDALDatasetH reference counting in DatasetBase.stop().
+
 1.1b2 (2019-10-02)
 ------------------
 

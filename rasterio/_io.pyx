@@ -1238,10 +1238,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:
-            GDALFlushCache(self._hds)
             GDALClose(self._hds)
         self._hds = NULL
-        self._closed = True
         log.debug("Dataset %r has been stopped.", self)
 
     def _set_crs(self, crs):
@@ -2033,7 +2031,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         _ = self.meta
         self._closed = False
 
-    def close(self):
+    def stop(self):
         cdef const char *drv_name = NULL
         cdef char **options = NULL
         cdef char *key_c = NULL
