@@ -450,3 +450,67 @@ def test_open_datasets(capfd, path_rgb_byte_tif):
         env._dump_open_datasets()
         captured = capfd.readouterr()
         assert not captured.err
+
+
+def test_warp_warp(dsrec, path_rgb_byte_tif):
+    """Vincent! :P"""
+    with rasterio.Env() as env:
+
+        with rasterio.open(path_rgb_byte_tif) as src:
+            # We should have one open dataset with a refcount of 1.
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "1 N GTiff" in records[0]
+
+            with WarpedVRT(src) as vrt:
+                # The VRT increments the refcount of the source by 1.
+                records = dsrec(env)
+                assert len(records) == 1
+                assert "2 N GTiff" in records[0]
+
+                with WarpedVRT(vrt) as vrtvrt:
+                    assert vrtvrt.profile
+                    # Apparently VRTs are tracked in the same way.
+                    records = dsrec(env)
+                    assert len(records) == 1
+                    assert "2 N GTiff" in records[0]
+
+                # Inner VRT is closed.
+                records = dsrec(env)
+                assert len(records) == 1
+                assert "2 N GTiff" in records[0]
+
+            # VRTs are closed, we have one open dataset.
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "1 N GTiff" in records[0]
+
+        # At this point we don't have any open datasets.
+        records = dsrec(env)
+        assert len(records) == 0
+
+
+@pytest.fixture
+def dsrec(capfd):
+    """GDAL's open dataset records as a pytest fixture"""
+    def func(env):
+        """Get records of GDAL's open datasets
+
+        Parameters
+        ----------
+        env : Env
+            A rasterio environment.
+
+        Returns
+        -------
+        list of str
+            Each string record represents an open dataset and tells the
+            filename, the driver used to open the dataset, the reference
+            count, and other information.
+
+        """
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        records = captured.err.strip("\n").split("\n")[1:]
+        return records
+    return func

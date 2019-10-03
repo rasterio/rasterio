@@ -806,11 +806,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef int mask_block_xsize = 0
         cdef int mask_block_ysize = 0
 
-        # Get a new handle for the source dataset instead of using its handle.
-        cdef int flags = 0x00 | 0x02 | 0x40
-        filename = vsi_path(parse_path(self.src_dataset.name))
-
-        self._hds_source = open_dataset(filename, flags, [self.src_dataset.driver], self.src_dataset.options, None)
+        self._hds_source = exc_wrap_pointer((<DatasetReaderBase?>self.src_dataset).handle())
 
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
@@ -971,8 +967,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
-        if self._hds_source != NULL:
-            GDALClose(self._hds_source)
         self._hds_source = NULL
         self._closed = True
 
