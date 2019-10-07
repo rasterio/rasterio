@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.1.0 (2019-10-07)
+------------------
+
+There have been no changes since 1.1b3.
+
 1.1b3 (2019-10-03)
 ------------------
 
@@ -39,8 +44,8 @@ New features:
   override the default painter's algorithm. It takes an alternative method name
   as a string or a callable. Please see the merge tool docstring for the
   callable's signature (#1500).
-- A new ``rasterio.transform.from_gcps()`` returns the Affine matrix that is a
-  best fit to given ground control points (#1749).
+- A new ``rasterio.transform.from_gcps()`` function returns the Affine matrix
+  that is a best fit to given ground control points (#1749).
 
 Bug fixes:
 
