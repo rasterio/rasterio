@@ -277,7 +277,7 @@ For a Homebrew based Python environment, do the following.
     $ brew update
     $ brew install gdal
     $ pip install -U pip
-    $ pip install --no-use-wheel rasterio
+    $ pip install --no-binary rasterio
 
 Alternatively, you can install GDAL binaries from `kyngchaos
 <http://www.kyngchaos.com/software/frameworks#gdal_complete>`__.  You will then
