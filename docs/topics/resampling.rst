@@ -26,7 +26,7 @@ method.
     import rasterio
     from rasterio.enums import Resampling
 
-    scaling = 2
+    upscale_factor = 2
 
     with rasterio.open("example.tif") as dataset:
         
@@ -34,8 +34,8 @@ method.
         data = dataset.read(
             out_shape=(
                 dataset.count, 
-                int(dataset.width * scaling), 
-                int(dataset.height * scaling)
+                int(dataset.width * upscale_factor), 
+                int(dataset.height * upscale_factor)
             ),
             resampling=Resampling.bilinear
         )
@@ -46,7 +46,7 @@ method.
             (dataset.height / data.shape[-1])
         )
 
-Downsampling to 1/2 of the resolution can be done with ``scaling = 1/2``.
+Downsampling to 1/2 of the resolution can be done with ``upscale_factor = 1/2``.
 
 
 Resampling Methods
