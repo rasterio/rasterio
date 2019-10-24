@@ -355,7 +355,7 @@ all_touched_opt = click.option(
 
 # Feature collection or feature sequence switch.
 sequence_opt = click.option(
-    '--sequence/--collection',
+    '--sequence/--no-sequence',
     default=True,
     help="Write a LF-delimited sequence of texts containing individual "
          "objects (the default) or write a single JSON text containing a "
