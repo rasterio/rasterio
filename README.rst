@@ -19,7 +19,11 @@ versions 1.11.x through 2.4.x. Official binary packages for Linux and Mac OS X a
 available on PyPI. Unofficial binary packages for Windows are available through other
 channels.
 
-Rasterio 1.0.x is not compatible with GDAL versions 3.0.0 or greater.
+**GDAL Compatibility:** 
+
+* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.1
+* Rasterio ~= 1.0.25 requires GDAL >= 1.11, < 3.1
+* Rasterio ~= 1.0.0, < 1.0.25 requires GDAL >= 1.11, < 3.0
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 
