@@ -21,8 +21,9 @@ channels.
 
 **GDAL Compatibility:** 
 
-* Rasterio 1.1.x requires GDAL > 3.0.1
-* Rasterio 1.0.x requires GDAL 2.x, < 3.0.0
+* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.1
+* Rasterio ~= 1.0.25 requires GDAL >= 1.11, < 3.1
+* Rasterio ~= 1.0.0, < 1.0.25 requires GDAL >= 1.11, < 3.0
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 
