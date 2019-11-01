@@ -1,7 +1,7 @@
 If you use Rasterio for any published work, please cite it using the reference
 below:
 
-@Misc{,
+@software{gillies_2019,
   author =    {Sean Gillies and others},
   organization = {Mapbox},
   title =     {Rasterio: geospatial raster I/O for {Python} programmers},
