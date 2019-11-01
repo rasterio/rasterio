@@ -191,3 +191,11 @@ def test_xy_rowcol_inverse():
     rows_cols = ([0, 0, 10, 10],
                  [0, 10, 0, 10])
     assert rows_cols == rowcol(aff, *xy(aff, *rows_cols))
+
+
+def test_from_gcps():
+    with rasterio.open("tests/data/white-gemini-iv.vrt", 'r') as src:
+        aff = transform.from_gcps(src.gcps[0])
+        assert not aff == src.transform
+        assert len(aff) == 9
+        assert not transform.tastes_like_gdal(aff)

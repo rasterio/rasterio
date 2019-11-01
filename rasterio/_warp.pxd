@@ -1,5 +1,10 @@
 # _warp definitions.
 
+from rasterio._io cimport DatasetReaderBase
+
+include "gdal.pxi"
+
+
 cdef extern from "gdalwarper.h" nogil:
 
     ctypedef enum GDALResampleAlg:
@@ -50,3 +55,7 @@ cdef extern from "gdal_alg.h":
     ctypedef int (*GDALTransformerFunc)(
         void *pTransformerArg, int bDstToSrc, int nPointCount, double *x,
         double *y, double *z, int *panSuccess)
+
+
+cdef class WarpedVRTReaderBase(DatasetReaderBase):
+    pass

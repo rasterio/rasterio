@@ -8,7 +8,7 @@ from affine import Affine
 
 import rasterio
 from rasterio.enums import MergeAlg
-from rasterio.errors import WindowError
+from rasterio.errors import WindowError, ShapeSkipWarning
 from rasterio.features import (
     bounds, geometry_mask, geometry_window, is_valid_geom, rasterize, sieve,
     shapes)
@@ -17,8 +17,6 @@ from .conftest import MockGeoInterface
 
 
 DEFAULT_SHAPE = (10, 10)
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
 def test_bounds_point():
@@ -98,23 +96,16 @@ def test_geometry_mask_invert(basic_geometry, basic_image_2x2):
     )
 
 
-def test_geometry_invalid_geom():
+@pytest.mark.parametrize("geom", [{'type': 'Invalid'}, {'type': 'Point'}, {'type': 'Point', 'coordinates': []}])
+def test_geometry_invalid_geom(geom):
     """An invalid geometry should fail"""
+    with pytest.raises(ValueError) as exc_info, pytest.warns(ShapeSkipWarning):
+        geometry_mask(
+            [geom],
+            out_shape=DEFAULT_SHAPE,
+            transform=Affine.identity())
 
-    invalid_geoms = [
-        {'type': 'Invalid'},  # wrong type
-        {'type': 'Point'},  # missing coordinates
-        {'type': 'Point', 'coordinates': []}  # empty coordinates
-    ]
-
-    for geom in invalid_geoms:
-        with pytest.raises(ValueError) as exc_info:
-            geometry_mask(
-                [geom],
-                out_shape=DEFAULT_SHAPE,
-                transform=Affine.identity())
-
-        assert 'Invalid geometry' in exc_info.value.args[0]
+    assert 'No valid geometry objects found for rasterize' in exc_info.value.args[0]
 
 
 def test_geometry_mask_invalid_shape(basic_geometry):
@@ -225,6 +216,11 @@ def test_geometry_window_no_overlap(path_rgb_byte_tif, basic_geometry):
     with rasterio.open(path_rgb_byte_tif) as src:
         with pytest.raises(WindowError):
             geometry_window(src, [basic_geometry], north_up=False)
+
+
+def test_is_valid_geo_interface(geojson_point):
+    """Properly formed Point object with geo interface is valid"""
+    assert is_valid_geom(MockGeoInterface(geojson_point))
 
 
 def test_is_valid_geom_point(geojson_point):
@@ -472,32 +468,22 @@ def test_rasterize_geomcollection_no_hole():
     )
 
 
-def test_rasterize_invalid_geom():
+@pytest.mark.parametrize("input", [
+    [{'type'}], [{'type': 'Invalid'}], [{'type': 'Point'}], [{'type': 'Point', 'coordinates': []}], [{'type': 'GeometryCollection', 'geometries': []}]])
+def test_rasterize_invalid_geom(input):
     """Invalid GeoJSON should fail with exception"""
+    with pytest.raises(ValueError), pytest.warns(ShapeSkipWarning):
+        rasterize(input, out_shape=DEFAULT_SHAPE)
 
-    with pytest.raises(ValueError):
-        rasterize([{'type'}], out_shape=DEFAULT_SHAPE)
 
-    with pytest.raises(ValueError):
-        rasterize([{'type': 'Invalid'}], out_shape=DEFAULT_SHAPE)
+def test_rasterize_skip_invalid_geom(geojson_polygon, basic_image_2x2):
+    """Rasterize operation should succeed for at least one valid geometry
+    and should skip any invalid or empty geometries with an error."""
 
-    with pytest.raises(ValueError):
-        rasterize([{'type': 'Point'}], out_shape=DEFAULT_SHAPE)
+    with pytest.warns(UserWarning, match="Invalid or empty shape"):
+        out = rasterize([geojson_polygon, {'type': 'Polygon', 'coordinates': []}], out_shape=DEFAULT_SHAPE)
 
-    with pytest.raises(ValueError):
-        # Empty coordinates should fail
-        rasterize([{'type': 'Point', 'coordinates': []}],
-                  out_shape=DEFAULT_SHAPE)
-
-    with pytest.raises(ValueError):
-        # Empty GeometryCollection should fail
-        rasterize([{'type': 'GeometryCollection', 'geometries': []}],
-                  out_shape=DEFAULT_SHAPE)
-
-    with pytest.raises(ValueError):
-        # GeometryCollection with bad geometry should fail
-        rasterize([{'type': 'GeometryCollection', 'geometries': [
-            {'type': 'Invalid', 'coordinates': []}]}], out_shape=DEFAULT_SHAPE)
+    assert np.array_equal(out, basic_image_2x2)
 
 
 def test_rasterize_out_image(basic_geometry, basic_image_2x2):
@@ -537,10 +523,10 @@ def test_rasterize_missing_shapes():
 
 def test_rasterize_invalid_shapes():
     """Invalid shapes should raise an exception rather than be skipped."""
-    with pytest.raises(ValueError) as ex:
+    with pytest.raises(ValueError) as ex, pytest.warns(ShapeSkipWarning):
         rasterize([{'foo': 'bar'}], out_shape=DEFAULT_SHAPE)
 
-    assert 'Invalid geometry object' in str(ex.value)
+    assert 'No valid geometry objects found for rasterize' in str(ex.value)
 
 
 def test_rasterize_invalid_out_shape(basic_geometry):
@@ -570,6 +556,13 @@ def test_rasterize_default_value(basic_geometry, basic_image_2x2):
             [basic_geometry], out_shape=DEFAULT_SHAPE,
             default_value=default_value
         )
+    )
+
+
+def test_rasterize_default_value_for_none(basic_geometry, basic_image_2x2):
+    """All shapes should rasterize to the default value."""
+    assert np.all(
+        rasterize([(basic_geometry, None)], out_shape=DEFAULT_SHAPE, fill=2) == 2
     )
 
 
@@ -845,6 +838,25 @@ def test_shapes_mask(basic_image):
     assert value == 1
 
 
+def test_shapes_masked_array(basic_image):
+    """Only pixels not masked out should be converted to features."""
+    mask = np.full(basic_image.shape, False, dtype=rasterio.bool_)
+    mask[4:5, 4:5] = True
+
+    results = list(shapes(np.ma.masked_array(basic_image, mask=mask)))
+
+    assert len(results) == 2
+
+    shape, value = results[0]
+    assert shape == {
+        'coordinates': [
+            [(2, 2), (2, 5), (4, 5), (4, 4), (5, 4), (5, 2), (2, 2)]
+        ],
+        'type': 'Polygon'
+    }
+    assert value == 1
+
+
 def test_shapes_blank_mask(basic_image):
     """Mask is blank so results should mask shapes without mask."""
     assert np.array_equal(
@@ -1089,9 +1101,16 @@ def test_sieve_band(pixelated_image, pixelated_image_file):
         )
 
 
-def test_sieve_internal_driver_manager(basic_image, pixelated_image):
+def test_sieve_internal_driver_manager(capfd, basic_image, pixelated_image):
     """Sieve should work without explicitly calling driver manager."""
     assert np.array_equal(
         basic_image,
         sieve(pixelated_image, basic_image.sum())
     )
+
+
+def test_zz_no_dataset_leaks(capfd):
+    with rasterio.Env() as env:
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert not captured.err

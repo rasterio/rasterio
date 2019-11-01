@@ -51,6 +51,10 @@ class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
 
 
+class ShapeSkipWarning(UserWarning):
+    """Warn that an invalid or empty shape in a collection has been skipped"""
+
+
 class GDALBehaviorChangeException(RuntimeError):
     """Raised when GDAL's behavior differs from the given arguments.  For
     example, antimeridian cutting is always on as of GDAL 2.2.0.  Users
@@ -102,3 +106,7 @@ class UnsupportedOperation(RasterioError):
 
 class OverviewCreationError(RasterioError):
     """Raised when creation of an overview fails"""
+
+
+class DatasetAttributeError(RasterioError, NotImplementedError):
+    """Raised when dataset attributes are misused"""

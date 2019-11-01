@@ -1,12 +1,328 @@
 Changes
 =======
 
-1.0.9 (?)
----------
+1.1.0 (2019-10-07)
+------------------
+
+There have been no changes since 1.1b3.
+
+1.1b3 (2019-10-03)
+------------------
 
 Bug fixes:
 
-- webp added to enums.Compression (#1515). Use of this requires GDAL 2.4.
+- A regression in WarpedVRT creation (#1799) has been fixed. This required
+  implementation of GDALDatasetH reference counting in DatasetBase.stop().
+
+1.1b2 (2019-10-02)
+------------------
+
+Bug fixes:
+
+- When built from the official source distribution rasterio 1.1b1 would not
+  import due to the omission of _transform.c from the list of extension sources
+  in setup.py. This has been fixed.
+
+1.1b1 (2019-10-01)
+------------------
+
+Deprecations:
+
+- Support for Python 2 is deprecated and a warning is raised from the
+  rasterio.compat module. This module will be deleted in a future version.
+
+New features:
+
+- Added a new ``tag_namespaces()`` method datasets that returns names of
+  metadata namespaces that can be passed to the existing ``tags()`` method
+  (#1740).
+- Zoom levels can be automatically computed by rio-overview (#511).
+- An alternative endpoint for S3-compatible network storage can now be set when
+  creating an instance of AWSSession (#1779). See GDAL's documentation of its
+  AWS_S3_ENDPOINT configuration option for more details.
+- The merge tool has a new ``method`` keyword argument that can be used to
+  override the default painter's algorithm. It takes an alternative method name
+  as a string or a callable. Please see the merge tool docstring for the
+  callable's signature (#1500).
+- A new ``rasterio.transform.from_gcps()`` function returns the Affine matrix
+  that is a best fit to given ground control points (#1749).
+
+Bug fixes:
+
+- Handle the AWS extension mentioned in #1159. Note that this does not enable
+  writing directly to S3.
+- A syntax error in the specification of a Python version marker for enum34 in
+  requirements.txt has been fixed.
+- Several cases of memory leaks involving temporary in-memory datasets have
+  been fixed. The rasterio test suite now runs without leaving any datasets
+  open.
+- The default mode for dataset sharing has been switch from ``sharing=True`` to
+  ``sharing=False`` to better serve development of multithreaded applications
+  (#1775).
+- Tests of rasterizing invalid shapes now catch the warnings about shape
+  skipping.
+
+Other:
+
+- The AUTHORS file has been updated and is now sorted by name (first name
+  first) or GitHub username.
+
+1.0.28 (2019-09-09)
+-------------------
+
+- Coercion to ``int`` was forgotten in the block size guard introduced in
+  1.0.27 and code that passes string valued ``blockxsize`` and ``blockysize``
+  keyword arguments to ``rasterio.open()`` was broken (#1769).  This has been
+  fixed in 1.0.28.
+
+1.0.27 (2019-09-05)
+-------------------
+
+- Resolve #1744 by adding a ``dtype`` keyword argument to the WarpedVRT
+  constructor. It allows a user to specify the working data type for the warp
+  operation and output.
+- All cases of deprecated affine right multiplication have been changed to be
+  forward compatible with affine 3.0. The rasterio tests now pass without
+  warnings.
+- The coordinate transformer used in _base._transform() is now properly
+  deleted, fixing the memory leak reported in #1713.
+- An unavoidable warning about 4-channel colormap entries in
+  DatasetWriterBase.write_colormap() has been removed.
+- All deprecated imports of abstract base classes for collections have been
+  corrected, eliminating the warnings reported in #1742 and #1764.
+- DatasetWriterBase no longer requires that GeoTIFF block sizes be smaller than
+  the raster size (#1760). Block sizes are however checked to ensure that they
+  are multiples of 16.
+- DatasetBase.is_tiled has been made more reliable, fixing #1376.
+- Tests have been added to demonstrate that image corruption when writing
+  block-wise to an image with extra large block sizes (#520) is no longer an
+  issue.
+
+1.0.26 (2019-08-26)
+-------------------
+
+- Allow `nan` to be used as fill for float32 datasets in ``rasterize`` (#1761).
+- A WarpedVRTs destination crs now will default to ``src_crs`` if given, else
+  to the crs of the source dataset (#1755).
+- Prevent open's ``sharing`` keyword argument from being pass on to GDAL as a
+  dataset opening option for create-copy formats like JPEG and PNG (#1758).
+- Allow complex datasets to be created with a specified nodata value (#1747).
+- Several Python deprecation warnings have been eliminated (#1742).
+- When a MemoryFile is opened in write mode, a TypeError will be raised if
+  integer width and height are not given, fixing #1748.
+- Return False when checking equality with objects incompatible with
+  ``CRS.from_user_input()`` (#1719)
+- Support CRS.from_user_input with other CRS object with ``to_wkt()`` method
+  (#1718)
+
+1.0.25 (2019-08-06)
+-------------------
+
+- In ``features.rasterize()``, a shape with an associated value of ``None`` is
+  now burned in using the function's ``fill`` value and no longer triggers a
+  TypeError (#1738).
+- Instances of pytest's tmp_path fixture in tests/test_dataset.py have been
+  replaced by instances of the older style tmpdir fixture (#1697).
+- Add support for using GDAL 3.x and PROJ 6 libraries (#1700, #1729). Please
+  note that new features of GDAL 3 and PROJ 6 are not intended to surface.
+  Geometries and coordinates returned from rasterio keep to the traditional GIS
+  axis order used by GDAL versions < 3. To do this, rasterio applies a new
+  private extension function named osr_set_traditional_axis_mapping_strategy to
+  every OGRSpatialReferenceH object that will be returned from methods in the
+  _CRS module. Please also note that the binary wheels uploaded to PyPI for
+  1.0.25 will include GDAL 2.4, *not* GDAL 3.0.
+- We were using pytest incorrectly and pytest 5 caught us doing it. This is
+  now fixed in commit b9f34ee.
+- A bug preventing creation of Env instances, and thus dataset opening, when
+  AWS credentials exist in the environment but boto3 is unavailable has been
+  fixed (#1708).
+
+1.0.24 (2019-06-05)
+-------------------
+
+- By default GDAL reuses existing dataset connections when possible.
+  Multi-threaded programs must avoid this as must programs that re-open
+  datasets in a different context, such as the overview-seeking program shown
+  in issue #1504. The sharing keyword argument of rasterio.open() was supposed
+  to allow users to disable connection reuse on a case-by-case basis, but the
+  implementation was faulty and connection reuse persisted (#1701). This has
+  been fixed in PR #1704.
+
+1.0.23 (2019-05-15)
+-------------------
+
+- Break rio-calc output into chunks of user-specified size to constrain the
+  amount of memory used (#1668).
+- Attempts to set attributes of datasets opened in "r" mode now raise a custom
+  DatasetAttributeError. This exception derives from both RasterioError and
+  NotImplementedError, which maintains backwards compatibility (#1676).
+- Block sizes are no longer guarded when creating untiled datasets (#1689).
+- CRS objects are now hashable and equivalent CRS objects have the same hash
+  value (#1684).
+- Allow AWS regions to be specified no matter the signing of requests (#1670).
+- Add links to API documentation from the Python quickstart guide.
+- Use "CRS.from_epsg({})" instead of "CRS.from_dict(init='epsg:{}')" as the
+  representation for CRS objects that are completely described by an EPSG code.
+- Use GDAL's string parsing to get metadata item keys and values, which
+  accommodates uncommon "KEY:VALUE" forms.
+
+1.0.22 (2019-03-20)
+-------------------
+
+- Add JPEG2000 to enums.Compression so that the compression of JP2 files can be
+  reported (#1654).
+- Remove mock import from compat and move to test code (#1651).
+
+1.0.21 (2019-02-28)
+-------------------
+
+- Fix for bug in implementation of the pickle protocol and added support for
+  Python's copy protocol (#1643).
+
+1.0.20 (2019-02-27)
+-------------------
+
+- Fix for an unchecked NULL pointer introduced in 1.0.19 that could result in
+  segmentation fault on import of rasterio._env on Linux when GDAL data files
+  are not available (for example, with wheels as on PyPI).
+
+1.0.19 (2019-02-26)
+-------------------
+
+- Do not set GDAL_DATA and PROJ_LIB when data files can be found at their built
+  in locations (#1631).
+- Add linear_units property to CRS (#1638).
+- Ensure that AWS_NO_SIGN_REQUESTS is sufficient for accessing public S3
+  datasets and that import of boto3 is not required (#1637).
+- An out_dtype parameter has been added to DatasetReaderBase.read, enabling
+  on-the-fly casting of raster values to the desired type (#1637). This uses
+  the same latent feature used to get support for "int8" data.
+- Restore pickle protocol for CRS, using WKT as state (#1625).
+- Support for signed 8-bit integer datasets ("int8" dtype) has been added
+  (#1595).
+
+1.0.18 (2019-02-07)
+-------------------
+
+- Fix a regression reported in #1623.
+
+1.0.17 (2019-02-05)
+-------------------
+
+- Fix a regression in evaluation of CRS equality (#1620).
+
+1.0.16 (2019-02-04)
+-------------------
+
+- A bug preventing GCPs from being created with new BufferedDatasetWriter
+  instances (#1600) has been fixed (#1610).
+- A previously unreported bug preventing BufferedDatasetWriters from being
+  opened in r+ mode has been fixed.
+- A regression in creating CRS objects from PROJ4 strings that include
+  "+wktext" (#1609) has been fixed.
+- Regressions in str representations of empty CRS objects and the handling of
+  unreferenced datasets in rasterio._base have been fixed (#1616).
+- GDAL seems to work best if GDAL_DATA is set as early as possible. Ideally it
+  is set when building the library or in the environment before importing
+  Rasterio, but for wheels we patch GDAL_DATA into os.environ when rasterio.env
+  is imported. This resolves #1611.
+
+1.0.15 (2019-01-27)
+-------------------
+
+- Google cloud storage support was *not* in fact added in 1.0.14, but is
+  present in 1.0.15.
+
+1.0.14 (2019-01-22)
+-------------------
+
+- The _CRS class has been refactored so that a WKT representation, rather than
+  PROJ4 representation, is the canonical form. This resolves issues #1397 and
+  #1587 specifically, and an entire category of issues discussed in
+  https://rasterio.groups.io/g/dev/message/68.
+- Native support for Google Cloud Storage using "gs://" URLs has been added
+  (#1577).
+- On entering a dataset context (DatasetBase.__enter__) a new anonymous GDAL
+  environment is created if needed and is entered. This makes `with
+  rasterio.open(...) as dataset:` roughly equivalent to `with
+  rasterio.open(...) as dataset, Env():`. This helps prevent bugs when datasets
+  are created and then used later or are used in different scopes.
+
+1.0.13 (2018-12-14)
+-------------------
+
+- Fix a buffer dttype mismatch on Windows introduced in 1.0.12 (#1579).
+
+1.0.12 (2018-12-10)
+-------------------
+
+- Rasterio's lower level I/O functions now take Py_ssize_t index arrays and
+  will raise exceptions for type mismatches instead of swallowing the
+  exceptions (#1076).
+- The _boundless_vrt_doc function's background layer no longer needs an
+  in-memory dataset and the performance regression noted in #1499 has been
+  reversed. We've also found a performance improvement in masked boundless
+  reads in the case that the source data is entirely valid.
+- The signature of the private _boundless_vrt_doc function in rasterio.vrt has
+  changed. Its background keyword argument now takes an int or float, a new
+  masked keyword argument has been added, and the function returns a unicode
+  str instead of ascii-encoded bytes.
+- The copy and copyfiles functions of rasterio.shutil now raise an exception
+  when the source and destination paths identify the same dataset (#1569).
+
+1.0.11 (2018-11-30)
+-------------------
+
+- Prevent needless warning when making boundless reads with a fill value
+  (#1499).
+- The GDAL band cache is flushed at the top of build_overviews to fix #1497.
+- Options --gdal-data and --proj-data have been added to the rio-env command so
+  that users of Rasterio wheels can get paths to set GDAL_DATA and PROJ_LIB
+  environment variables.
+- The attempt to make GDAL and PROJ support file discovery and configuration
+  automatic within methods of the CRS class has been reverted. Users must
+  execute such code inside a `with Env()` block or set the GDAL_DATA and
+  PROJ_LIB environment variables needed by GDAL.
+
+1.0.10 (2018-11-16)
+-------------------
+
+- Avoid segmentation fault when OSRGetAuthority* functions return null
+  pointers, making Rasterio more robust when reading CRS that don't map
+  perfectly to PROJ.
+- Ensure that GDAL and PROJ support files can be found in Rasterio wheels when
+  we call CRS methods (#1539).
+- Accomodate the Esri flavor of projection WKT (#1537).
+- Add missing raster offsets and scales properties (#1527).
+
+1.0.9 (2018-10-25)
+------------------
+
+Bug fixes:
+
+- Delegate test of the environment for existing session credentials to the
+  session class to generalize credentialization of GDAL to cloud providers
+  other than AWS (#1520). The env.hascreds function is no longer used in
+  Rasterio and has been marked as deprecated.
+- Switch to use of botocore Credentials.get_frozen_credentials (#1521).
+- Numpy masked arrays with the normal Numpy mask sense (True == invalid) are
+  now supported as input for feature.shapes(). The mask keyword argument of the
+  function keeps to the GDAL sense of masks (nonzero == invalid) and the
+  documentation has been improved to communicate this (#1517).
+- The defaults for WarpedVRT's `src_nodata` and `nodata` keyword arguments are
+  no longer None, but are markers for the default behavior: inheritance of
+  nodata values from the VRT's source dataset. Values of `None` for these
+  keyword arguments means that the VRT does not inherit from the source and has
+  no nodata value at all (#1503).
+- WEBP has been added to the Compression enum. Exploitation of this new
+  compression mode will require GDAL 2.4.
+- Rasterio now check for two AWS environment variables before creating a
+  session (#1494).
+- The ensure_env_with_credentials decorator which wraps rasterio.open will no
+  longer clobber the credentials in a surrounding environment or seek
+  credentials when they already exist (#1507).
+- The comparison of CRS objects to dicts and strs that we pledged to remove at
+  1.0 has at last been removed (#1492).
 
 1.0.8 (2018-10-02)
 ------------------
@@ -530,6 +846,7 @@ Packaging:
 
 1.0a5 (2016-12-23)
 ------------------
+
 - New binary wheels using version 1.2.0 of sgillies/frs-wheel-builds. See
   https://github.com/sgillies/frs-wheel-builds/blob/master/CHANGES.txt.
 

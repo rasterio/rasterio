@@ -133,7 +133,7 @@ def test_file_in_handler_vsi():
 def test_like_dataset_callback(data):
     ctx = MockContext()
     assert like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
-    assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+    assert ctx.obj['like']['crs'].to_epsg() == 32618
     assert ctx.obj['like']['colorinterp'] == (
         ColorInterp.red, ColorInterp.green, ColorInterp.blue)
 
@@ -142,7 +142,7 @@ def test_like_dataset_callback_obj_init(data):
     ctx = MockContext()
     ctx.obj = None
     assert like_handler(ctx, 'like', str(data.join('RGB.byte.tif')))
-    assert ctx.obj['like']['crs'] == {'init': 'epsg:32618'}
+    assert ctx.obj['like']['crs'].to_epsg() == 32618
 
 
 def test_nodata_callback_err(data):

@@ -1,3 +1,8 @@
+"""
+Rasterio exposes GDAL's resampling/decimation on I/O. These are the tests
+that it does this correctly.
+"""
+
 import numpy as np
 
 import rasterio
@@ -7,9 +12,6 @@ from rasterio.windows import Window
 from .conftest import requires_gdal2
 
 
-# Rasterio exposes GDAL's resampling/decimation on I/O. These are the tests
-# that it does this correctly.
-#
 # Rasterio's test dataset is 718 rows by 791 columns.
 
 def test_read_out_shape_resample_down():
@@ -38,6 +40,7 @@ def test_read_out_shape_resample_up():
         assert data.mean() == s.read(1, masked=True).mean()
 
 
+# TODO: justify or remove this test.
 def test_read_downsample_alpha():
     with rasterio.Env(GTIFF_IMPLICIT_JPEG_OVR=False):
         with rasterio.open('tests/data/alpha.tif') as src:
@@ -51,13 +54,29 @@ def test_read_downsample_alpha():
 
 
 @requires_gdal2
-def test_resample_alg():
+def test_resample_alg_effect_1():
     """default (nearest) and cubic produce different results"""
     with rasterio.open('tests/data/RGB.byte.tif') as s:
+        # Existence of overviews can upset our expectations, so we
+        # guard against that here.
+        assert not any([s.overviews(bidx) for bidx in s.indexes])
         out_shape = (s.height // 2, s.width // 2)
         nearest = s.read(1, out_shape=out_shape)
         cubic = s.read(1, out_shape=out_shape, resampling=Resampling.cubic)
         assert np.any(nearest != cubic)
+
+
+@requires_gdal2
+def test_resample_alg_effect_2():
+    """Average and bilinear produce different results"""
+    with rasterio.open('tests/data/RGB.byte.tif') as s:
+        # Existence of overviews can upset our expectations, so we
+        # guard against that here.
+        assert not any([s.overviews(bidx) for bidx in s.indexes])
+        out_shape = (s.height // 2, s.width // 2)
+        avg = s.read(1, out_shape=out_shape, resampling=Resampling.average)
+        bilin = s.read(1, out_shape=out_shape, resampling=Resampling.bilinear)
+        assert np.any(avg != bilin)
 
 
 @requires_gdal2

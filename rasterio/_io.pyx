@@ -7,17 +7,18 @@ include "directives.pxi"
 include "gdal.pxi"
 
 from collections import Counter
+from contextlib import contextmanager
 import logging
+import os
 import sys
-import uuid
+from uuid import uuid4
 import warnings
 
 import numpy as np
 
 from rasterio._base import tastes_like_gdal, gdal_version
-from rasterio._env import driver_count, GDALEnv
 from rasterio._err import (
-    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError)
+    GDALError, CPLE_OpenFailedError, CPLE_IllegalArgError, CPLE_BaseError, CPLE_AWSObjectNotFoundError)
 from rasterio.crs import CRS
 from rasterio.compat import text_type, string_types
 from rasterio import dtypes
@@ -25,7 +26,7 @@ from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import (
     CRSError, DriverRegistrationError, RasterioIOError,
     NotGeoreferencedWarning, NodataShadowWarning, WindowError,
-    UnsupportedOperation, OverviewCreationError
+    UnsupportedOperation, OverviewCreationError, RasterBlockError
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
@@ -65,20 +66,27 @@ def _delete_dataset_if_exists(path):
     cdef GDALDatasetH h_dataset = NULL
     cdef const char *c_path = NULL
 
-    path = path.encode('utf-8')
-    c_path = path
+    b_path = path.encode('utf-8')
+    c_path = b_path
 
-    with nogil:
-        h_dataset = GDALOpenShared(c_path, <GDALAccess>0)
+    with silence_errors():
+        with nogil:
+            h_dataset = GDALOpen(c_path, <GDALAccess>0)
+
     try:
         h_dataset = exc_wrap_pointer(h_dataset)
+
+    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError):
+        log.debug(
+            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+
+    else:
         h_driver = GDALGetDatasetDriver(h_dataset)
+
         if h_driver != NULL:
             with nogil:
                 GDALDeleteDataset(h_driver, c_path)
-    except CPLE_OpenFailedError:
-        log.debug(
-            "Skipped delete for overwrite.  Dataset does not exist: %s", path)
+
     finally:
         if h_dataset != NULL:
             GDALClose(h_dataset)
@@ -105,7 +113,7 @@ cdef bint in_dtype_range(value, dtype):
     return rng.min <= value <= rng.max
 
 
-cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
+cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0) except -1:
     """Convenience function to handle IO with a GDAL band.
 
     :param data: a numpy ndarray
@@ -118,22 +126,27 @@ cdef int io_auto(data, GDALRasterBandH band, bint write, int resampling=0):
     cdef float height = data.shape[-2]
     cdef float width = data.shape[-1]
 
-    if ndims == 2:
-        return io_band(band, write, 0.0, 0.0, width, height, data,
-                       resampling=resampling)
-    elif ndims == 3:
-        indexes = np.arange(1, data.shape[0] + 1)
-        return io_multi_band(band, write, 0.0, 0.0, width, height, data,
-                             indexes, resampling=resampling)
-    else:
-        raise ValueError("Specified data must have 2 or 3 dimensions")
+    try:
+
+        if ndims == 2:
+            return io_band(band, write, 0.0, 0.0, width, height, data, resampling=resampling)
+
+        elif ndims == 3:
+            indexes = np.arange(1, data.shape[0] + 1, dtype='intp')
+            return io_multi_band(band, write, 0.0, 0.0, width, height, data, indexes, resampling=resampling)
+
+        else:
+            raise ValueError("Specified data must have 2 or 3 dimensions")
+
+    except CPLE_BaseError as cplerr:
+        raise RasterioIOError(str(cplerr))
 
 
 cdef class DatasetReaderBase(DatasetBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
-            fill_value=None):
+            fill_value=None, out_dtype=None):
         """Read a dataset's raw pixels as an N-d array
 
         This data is read from the dataset's band cache, which means
@@ -158,6 +171,10 @@ cdef class DatasetReaderBase(DatasetBase):
             incomplete representation of the method's results.
 
             This parameter cannot be combined with `out_shape`.
+
+        out_dtype : str or numpy dtype
+            The desired output data type. For example: 'uint8' or
+            rasterio.uint16.
 
         out_shape : tuple, optional
             A tuple describing the shape of a new output array. See
@@ -262,6 +279,9 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
             dtype = check_dtypes.pop()
 
+        if out_dtype is not None:
+            dtype = out_dtype
+
         # Get the natural shape of the read window, boundless or not.
         # The window can have float values. In this case, we round up
         # when computing the shape.
@@ -288,16 +308,14 @@ cdef class DatasetReaderBase(DatasetBase):
         if out is not None and out_shape is not None:
             raise ValueError("out and out_shape are exclusive")
 
-        # `out` takes precedence over `out_shape`.
+        # `out` takes precedence over `out_shape` and `out_dtype`.
         elif out is not None:
+
             if out.dtype != dtype:
-                raise ValueError(
-                    "the array's dtype '%s' does not match "
-                    "the file's dtype '%s'" % (out.dtype, dtype))
+                dtype == out.dtype
+
             if out.shape[0] != win_shape[0]:
-                raise ValueError(
-                    "'out' shape %s does not match window shape %s" %
-                    (out.shape, win_shape))
+                raise ValueError("'out' shape {} does not match window shape {}".format(out.shape, win_shape))
 
         else:
             if out_shape is not None:
@@ -368,23 +386,15 @@ cdef class DatasetReaderBase(DatasetBase):
         else:
 
             if fill_value is not None:
-                dtype = self.dtypes[0]
-                bg_path = UnparsedPath('/vsimem/bg{}.tif'.format(uuid.uuid4()))
-                with DatasetWriterBase(
-                        bg_path, 'w',
-                        driver='GTiff', count=self.count, height=3, width=3,
-                        dtype=dtype, crs=None, transform=None) as bg_dataset:
-                    bg_dataset.write(
-                        np.full((self.count, 3, 3), fill_value, dtype=dtype))
-                bg_dataset = DatasetReaderBase(bg_path)
+                nodataval = fill_value
             else:
-                bg_dataset = None
+                nodataval = ndv
 
             vrt_doc = _boundless_vrt_doc(
-                self, nodata=ndv, background=bg_dataset,
+                self, nodata=nodataval, background=nodataval,
                 width=max(self.width, window.width) + 1,
                 height=max(self.height, window.height) + 1,
-                transform=self.window_transform(window)).decode('ascii')
+                transform=self.window_transform(window))
 
             if not gdal_version().startswith('1'):
                 vrt_kwds = {'driver': 'VRT'}
@@ -397,57 +407,42 @@ cdef class DatasetReaderBase(DatasetBase):
                     indexes, out, Window(0, 0, window.width, window.height),
                     None, resampling=resampling)
 
-                if masked and all_valid:
-                    blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
-                    transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
-                    with DatasetWriterBase(
-                            blank_path, 'w',
-                            driver='GTiff', count=self.count, height=3, width=3,
-                            dtype='uint8', crs=self.crs, transform=transform) as blank_dataset:
-                        blank_dataset.write(
-                            np.ones((self.count, 3, 3), dtype='uint8'))
+                if masked:
 
-                    with DatasetReaderBase(blank_path) as blank_dataset:
+                    # Below we use another VRT to compute the valid data mask
+                    # in this special case where all source pixels are valid.
+                    if all_valid:
+
                         mask_vrt_doc = _boundless_vrt_doc(
-                            blank_dataset, nodata=0,
+                            self, nodata=0,
                             width=max(self.width, window.width) + 1,
                             height=max(self.height, window.height) + 1,
-                            transform=self.window_transform(window)).decode('ascii')
+                            transform=self.window_transform(window),
+                            masked=True)
 
                         with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                             mask = np.zeros(out.shape, 'uint8')
                             mask = ~mask_vrt._read(
                                 indexes, mask, Window(0, 0, window.width, window.height), None).astype('bool')
 
-                            kwds = {'mask': mask}
-                            # Set a fill value only if the read bands share a
-                            # single nodata value.
-                            if fill_value is not None:
-                                kwds['fill_value'] = fill_value
-                            elif len(set(nodatavals)) == 1:
-                                if nodatavals[0] is not None:
-                                    kwds['fill_value'] = nodatavals[0]
 
-                            out = np.ma.array(out, **kwds)
-
-                elif masked:
-                    mask = np.zeros(out.shape, 'uint8')
-                    mask = ~vrt._read(
-                        indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
+                    else:
+                        mask = np.zeros(out.shape, 'uint8')
+                        mask = ~vrt._read(
+                            indexes, mask, Window(0, 0, window.width, window.height), None, masks=True).astype('bool')
 
                     kwds = {'mask': mask}
+
                     # Set a fill value only if the read bands share a
                     # single nodata value.
                     if fill_value is not None:
                         kwds['fill_value'] = fill_value
+
                     elif len(set(nodatavals)) == 1:
                         if nodatavals[0] is not None:
                             kwds['fill_value'] = nodatavals[0]
 
                     out = np.ma.array(out, **kwds)
-
-            if bg_dataset is not None:
-                bg_dataset.close()
 
         if return2d:
             out.shape = out.shape[1:]
@@ -588,7 +583,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_kwds = {}
 
             if all_valid:
-                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid.uuid4()))
+                blank_path = UnparsedPath('/vsimem/blank-{}.tif'.format(uuid4()))
                 transform = Affine.translation(self.transform.xoff, self.transform.yoff) * (Affine.scale(self.width / 3, self.height / 3) * (Affine.translation(-self.transform.xoff, -self.transform.yoff) * self.transform))
                 with DatasetWriterBase(
                         blank_path, 'w',
@@ -602,7 +597,7 @@ cdef class DatasetReaderBase(DatasetBase):
                         blank_dataset, nodata=0,
                         width=max(self.width, window.width) + 1,
                         height=max(self.height, window.height) + 1,
-                        transform=self.window_transform(window)).decode('ascii')
+                        transform=self.window_transform(window))
 
                     with DatasetReaderBase(UnparsedPath(mask_vrt_doc), **vrt_kwds) as mask_vrt:
                         out = np.zeros(out.shape, 'uint8')
@@ -613,7 +608,7 @@ cdef class DatasetReaderBase(DatasetBase):
                 vrt_doc = _boundless_vrt_doc(
                     self, width=max(self.width, window.width) + 1,
                     height=max(self.height, window.height) + 1,
-                    transform=self.window_transform(window)).decode('ascii')
+                    transform=self.window_transform(window))
 
                 with DatasetReaderBase(UnparsedPath(vrt_doc), **vrt_kwds) as vrt:
 
@@ -632,7 +627,7 @@ cdef class DatasetReaderBase(DatasetBase):
                     # 255 and log that we have done so.
 
                     out = np.where(out != 0, 255, 0)
-                    log.warn("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
+                    log.warning("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
 
         if return2d:
             out.shape = out.shape[1:]
@@ -694,28 +689,25 @@ cdef class DatasetReaderBase(DatasetBase):
 
         # Call io_multi* functions with C type args so that they
         # can release the GIL.
-        indexes_arr = np.array(indexes, dtype=int)
+        indexes_arr = np.array(indexes, dtype='intp')
         indexes_count = <int>indexes_arr.shape[0]
 
-        if masks:
-            # Warn if nodata attribute is shadowing an alpha band.
-            if self.count == 4 and self.colorinterp[3] == ColorInterp.alpha:
-                for flags in self.mask_flag_enums:
-                    if MaskFlags.nodata in flags:
-                        warnings.warn(NodataShadowWarning())
+        try:
 
-            retval = io_multi_mask(
-                            self._hds, 0, xoff, yoff, width, height,
-                            out, indexes_arr, resampling=resampling)
+            if masks:
+                # Warn if nodata attribute is shadowing an alpha band.
+                if self.count == 4 and self.colorinterp[3] == ColorInterp.alpha:
+                    for flags in self.mask_flag_enums:
+                        if MaskFlags.nodata in flags:
+                            warnings.warn(NodataShadowWarning())
 
-        else:
-            retval = io_multi_band(self._hds, 0, xoff, yoff, width, height,
-                                  out, indexes_arr, resampling=resampling)
+                io_multi_mask(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
 
-        if retval in (1, 2, 3):
-            raise IOError("Read or write failed")
-        elif retval == 4:
-            raise ValueError("NULL band")
+            else:
+                io_multi_band(self._hds, 0, xoff, yoff, width, height, out, indexes_arr, resampling=resampling)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
         return out
 
@@ -796,6 +788,16 @@ cdef class DatasetReaderBase(DatasetBase):
         return sample_gen(self, xy, indexes)
 
 
+@contextmanager
+def silence_errors():
+    """Intercept GDAL errors"""
+    try:
+        CPLPushErrorHandler(CPLQuietErrorHandler)
+        yield None
+    finally:
+        CPLPopErrorHandler()
+
+
 cdef class MemoryFileBase(object):
     """Base for a BytesIO-like class backed by an in-memory file."""
 
@@ -832,7 +834,7 @@ cdef class MemoryFileBase(object):
             self.name = '/vsimem/{0}'.format(filename)
         else:
             # GDAL 2.1 requires a .zip extension for zipped files.
-            self.name = '/vsimem/{0}.{1}'.format(uuid.uuid4(), ext.lstrip('.'))
+            self.name = '/vsimem/{0}.{1}'.format(uuid4(), ext.lstrip('.'))
 
         self._path = self.name.encode('utf-8')
         self._pos = 0
@@ -989,7 +991,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=True, **kwargs):
+                 gcps=None, sharing=False, **kwargs):
         """Create a new dataset writer or updater
 
         Parameters
@@ -1030,7 +1032,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `True`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded:w program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1053,7 +1055,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Validate write mode arguments.
         log.debug("Path: %s, mode: %s, driver: %s", path, mode, driver)
-        if mode == 'w':
+        if mode in ('w', 'w+'):
             if not isinstance(driver, string_types):
                 raise TypeError("A driver name string is required.")
             try:
@@ -1080,6 +1082,17 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         fname = name_b
 
         # Process dataset opening options.
+        # "tiled" affects the meaning of blocksize, so we need it
+        # before iterating.
+        tiled = kwargs.pop("tiled", False) or kwargs.pop("TILED", False)
+
+        if tiled:
+            blockxsize = kwargs.get("blockxsize", None)
+            blockysize = kwargs.get("blockysize", None)
+            if (blockxsize and int(blockxsize) % 16) or (blockysize and int(blockysize) % 16):
+                raise RasterBlockError("The height and width of dataset blocks must be multiples of 16")
+            kwargs["tiled"] = "TRUE"
+
         for k, v in kwargs.items():
             # Skip items that are definitely *not* valid driver
             # options.
@@ -1088,11 +1101,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
             k, v = k.upper(), str(v).upper()
 
-            # Guard against block size that exceed image size.
-            if k == 'BLOCKXSIZE' and int(v) > width:
-                raise ValueError("blockxsize exceeds raster width.")
-            if k == 'BLOCKYSIZE' and int(v) > height:
-                raise ValueError("blockysize exceeds raster height.")
+            if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
+                continue
 
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
@@ -1122,6 +1132,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                     "Unsupported dtype: %s" % self._init_dtype)
             else:
                 gdal_dtype = dtypes.dtype_rev.get(self._init_dtype)
+
+            if self._init_dtype == 'int8':
+                options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
 
             # Create a GDAL dataset handle.
             try:
@@ -1225,67 +1238,17 @@ cdef class DatasetWriterBase(DatasetReaderBase):
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:
-            GDALFlushCache(self._hds)
             GDALClose(self._hds)
         self._hds = NULL
-        self._closed = True
         log.debug("Dataset %r has been stopped.", self)
 
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
-        cdef char *proj_c = NULL
-        cdef char *wkt = NULL
-        cdef OGRSpatialReferenceH osr = NULL
-
-        osr = OSRNewSpatialReference(NULL)
-        if osr == NULL:
-            raise ValueError("Null spatial reference")
-        params = []
-
-        log.debug("Input CRS: %r", crs)
-
-        if isinstance(crs, dict):
-            crs = CRS(crs)
-        if isinstance(crs, CRS):
-            # EPSG is a special case.
-            init = crs.get('init')
-            if init:
-                auth, val = init.split(':')
-                if auth.upper() == 'EPSG':
-                    OSRImportFromEPSG(osr, int(val))
-            else:
-                for k, v in crs.items():
-                    if v is True or (k in ('no_defs', 'wktext') and v):
-                        params.append("+%s" % k)
-                    else:
-                        params.append("+%s=%s" % (k, v))
-                proj = " ".join(params)
-                log.debug("PROJ.4 to be imported: %r", proj)
-                proj_b = proj.encode('utf-8')
-                proj_c = proj_b
-                OSRImportFromProj4(osr, proj_c)
-        # Fall back for CRS strings like "EPSG:3857."
-        elif isinstance(crs, str) or crs is None:
-            if not crs:
-                crs = ''
-            proj_b = crs.encode('utf-8')
-            proj_c = proj_b
-            OSRSetFromUserInput(osr, proj_c)
-        else:
-            raise CRSError(
-                "{!r} does not define a valid CRS".format(crs))
-
-        # Fixup, export to WKT, and set the GDAL dataset's projection.
-        OSRFixup(osr)
-        OSRExportToWkt(osr, <char**>&wkt)
-        wkt_b = wkt
-        log.debug("Exported WKT: %s", wkt_b.decode('utf-8'))
-        GDALSetProjection(self._hds, wkt)
-
-        CPLFree(wkt)
-        _safe_osr_release(osr)
+        crs = CRS.from_user_input(crs)
+        wkt_b = crs.to_wkt().encode('utf-8')
+        cdef const char *wkt_c = wkt_b
+        exc_wrap_int(GDALSetProjection(self.handle(), wkt_c))
         self._crs = crs
-        log.debug("Self CRS: %r", self._crs)
 
     def _set_all_descriptions(self, value):
         """Supports the descriptions property setter"""
@@ -1295,6 +1258,30 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self.set_band_description(i, val)
         else:
             raise ValueError("One description for each band is required")
+
+    def _set_all_scales(self, value):
+        """Supports the scales property setter"""
+        cdef GDALRasterBandH hband = NULL
+        if len(value) == self.count:
+            for (bidx, val) in zip(self.indexes, value):
+                hband = self.band(bidx)
+                GDALSetRasterScale(hband, val)
+            # Invalidate cached scales.
+            self._scales = ()
+        else:
+            raise ValueError("One scale for each band is required")
+
+    def _set_all_offsets(self, value):
+        """Supports the offsets property setter"""
+        cdef GDALRasterBandH hband = NULL
+        if len(value) == self.count:
+            for (bidx, val) in zip(self.indexes, value):
+                hband = self.band(bidx)
+                GDALSetRasterOffset(hband, val)
+            # Invalidate cached offsets.
+            self._offsets = ()
+        else:
+            raise ValueError("One offset for each band is required")
 
     def _set_all_units(self, value):
         """Supports the units property setter"""
@@ -1400,15 +1387,13 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = <int>self.width
             height = <int>self.height
 
-        indexes_arr = np.array(indexes, dtype=int)
+        indexes_arr = np.array(indexes, dtype='intp')
         indexes_count = <int>indexes_arr.shape[0]
-        retval = io_multi_band(self._hds, 1, xoff, yoff, width, height,
-                               src, indexes_arr)
 
-        if retval in (1, 2, 3):
-            raise IOError("Read or write failed")
-        elif retval == 4:
-            raise ValueError("NULL band")
+        try:
+            io_multi_band(self._hds, 1, xoff, yoff, width, height, src, indexes_arr)
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
     def write_band(self, bidx, src, window=None):
         """Write the src array into the `bidx` band.
@@ -1466,7 +1451,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             CSLDestroy(papszStrList)
 
         if retval == 2:
-            log.warn("Tags accepted but may not be persisted.")
+            log.warning("Tags accepted but may not be persisted.")
         elif retval == 3:
             raise RuntimeError("Tag update failed.")
 
@@ -1529,16 +1514,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         vals = range(256)
 
         for i, rgba in colormap.items():
-            if len(rgba) == 4 and self.driver in ('GTiff'):
-                warnings.warn(
-                    "This format doesn't support alpha in colormap entries. "
-                    "The value will be ignored.")
 
-            elif len(rgba) == 3:
+            if len(rgba) == 3:
                 rgba = tuple(rgba) + (255,)
 
             if i not in vals:
-                log.warn("Invalid colormap key %d", i)
+                log.warning("Invalid colormap key %d", i)
                 continue
 
             color.c1, color.c2, color.c3, color.c4 = rgba
@@ -1588,15 +1569,19 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             width = self.width
             height = self.height
 
-        if mask_array is True:
-            GDALFillRaster(mask, 255, 0)
-        elif mask_array is False:
-            GDALFillRaster(mask, 0, 0)
-        elif mask_array.dtype == np.bool:
-            array = 255 * mask_array.astype(np.uint8)
-            retval = io_band(mask, 1, xoff, yoff, width, height, array)
-        else:
-            retval = io_band(mask, 1, xoff, yoff, width, height, mask_array)
+        try:
+            if mask_array is True:
+                GDALFillRaster(mask, 255, 0)
+            elif mask_array is False:
+                GDALFillRaster(mask, 0, 0)
+            elif mask_array.dtype == np.bool:
+                array = 255 * mask_array.astype(np.uint8)
+                io_band(mask, 1, xoff, yoff, width, height, array)
+            else:
+                io_band(mask, 1, xoff, yoff, width, height, mask_array)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
     def build_overviews(self, factors, resampling=Resampling.nearest):
         """Build overviews at one or more decimation factors for all
@@ -1620,6 +1605,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 6: 'MODE',
                 7: 'GAUSS'}
             resampling_alg = resampling_map[Resampling(resampling.value)]
+
         except (KeyError, ValueError):
             raise ValueError(
                 "resampling must be one of: {0}".format(", ".join(
@@ -1634,12 +1620,15 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Allocate arrays.
         if factors:
             factors_c = <int *>CPLMalloc(len(factors)*sizeof(int))
+
             for i, factor in enumerate(factors):
                 factors_c[i] = factor
+
             try:
                 resampling_b = resampling_alg.encode('utf-8')
                 resampling_c = resampling_b
-                err = exc_wrap_int(
+                GDALFlushCache(self._hds)
+                exc_wrap_int(
                     GDALBuildOverviews(self._hds, resampling_c,
                                        len(factors), factors_c, 0, NULL, NULL,
                                        NULL))
@@ -1745,7 +1734,7 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
-        datasetname = str(uuid.uuid4()).encode('utf-8')
+        datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
                        count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
@@ -1823,25 +1812,35 @@ cdef class InMemoryRaster:
     def close(self):
         if self._hds != NULL:
             GDALClose(self._hds)
-            self._hds = NULL
+        self._hds = NULL
 
     def read(self):
-        if self._image is None:
-            raise IOError("You need to write data before you can read the data.")
 
-        if self._image.ndim == 2:
-            exc_wrap_int(io_auto(self._image, self.band(1), False))
-        else:
-            exc_wrap_int(io_auto(self._image, self._hds, False))
+        if self._image is None:
+            raise RasterioIOError("You need to write data before you can read the data.")
+
+        try:
+            if self._image.ndim == 2:
+                io_auto(self._image, self.band(1), False)
+            else:
+                io_auto(self._image, self._hds, False)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
+
         return self._image
 
     def write(self, np.ndarray image):
         self._image = image
-        if image.ndim == 2:
-            exc_wrap_int(io_auto(self._image, self.band(1), True))
-        else:
-            exc_wrap_int(io_auto(self._image, self._hds, True))
 
+        try:
+            if image.ndim == 2:
+                io_auto(self._image, self.band(1), True)
+            else:
+                io_auto(self._image, self._hds, True)
+
+        except CPLE_BaseError as cplerr:
+            raise RasterioIOError("Read or write failed. {}".format(cplerr))
 
 
 cdef class BufferedDatasetWriterBase(DatasetWriterBase):
@@ -1854,7 +1853,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, **kwargs):
+                 gcps=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -1896,7 +1895,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `True`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded:w program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1916,7 +1915,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         cdef GDALDriverH drv = NULL
         cdef GDALRasterBandH band = NULL
         cdef int success = -1
-        cdef const char *fname = NULL
         cdef const char *drv_name = NULL
         cdef GDALDriverH memdrv = NULL
         cdef GDALDatasetH temp = NULL
@@ -2000,12 +1998,12 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self.write_transform(self._transform)
             if self._crs:
                 self._set_crs(self._crs)
-            if self._gcps:
-                self._set_gcps(self._gcps, self._crs)
+            if self._init_gcps:
+                self._set_gcps(self._init_gcps, self._crs)
 
         elif self.mode == 'r+':
             try:
-                temp = exc_wrap_pointer(GDALOpenShared(fname, <GDALAccess>0))
+                temp = exc_wrap_pointer(GDALOpen(<const char *>name_b, <GDALAccess>0))
             except Exception as exc:
                 raise RasterioIOError(str(exc))
 
@@ -2013,7 +2011,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 GDALCreateCopy(memdrv, "temp", temp, 1, NULL, NULL, NULL))
 
             drv = GDALGetDatasetDriver(temp)
-            self.driver = get_driver_name(drv)
+            self.driver = get_driver_name(drv).decode('utf-8')
             GDALClose(temp)
 
         # Instead of calling _begin() we do the following.
@@ -2033,7 +2031,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         _ = self.meta
         self._closed = False
 
-    def close(self):
+    def stop(self):
         cdef const char *drv_name = NULL
         cdef char **options = NULL
         cdef char *key_c = NULL

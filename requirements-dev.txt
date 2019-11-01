@@ -1,7 +1,7 @@
 -r requirements.txt
 
 # development specific requirements
-cython==0.28.3
+cython~=0.29
 delocate
 hypothesis
 numpydoc

@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from collections import namedtuple
 from contextlib import contextmanager
 import logging
-import warnings
 
 try:
     from pathlib import Path
@@ -23,9 +22,9 @@ except ImportError:  # pragma: no cover
 from rasterio._base import gdal_version
 from rasterio.drivers import is_blacklisted
 from rasterio.dtypes import (
-    bool_, ubyte, uint8, uint16, int16, uint32, int32, float32, float64,
+    bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
-from rasterio.env import ensure_env_credentialled, Env
+from rasterio.env import ensure_env_with_credentials, Env
 from rasterio.errors import RasterioIOError
 from rasterio.compat import string_types
 from rasterio.io import (
@@ -43,7 +42,7 @@ import rasterio.path
 
 
 __all__ = ['band', 'open', 'pad', 'Env']
-__version__ = "1.0.9"
+__version__ = "1.1.0"
 __gdal_version__ = gdal_version()
 
 # Rasterio attaches NullHandler to the 'rasterio' logger and its
@@ -55,9 +54,9 @@ log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
 
 
-@ensure_env_credentialled
+@ensure_env_with_credentials
 def open(fp, mode='r', driver=None, width=None, height=None, count=None,
-         crs=None, transform=None, dtype=None, nodata=None, sharing=True,
+         crs=None, transform=None, dtype=None, nodata=None, sharing=False,
          **kwargs):
     """Open a dataset for reading or writing.
 
@@ -108,9 +107,12 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
         modes.
-    sharing : bool
-        A flag that allows sharing of dataset handles. Default is
-        `True`. Should be set to `False` in a multithreaded:w program.
+    sharing : bool; optional
+        To reduce overhead and prevent programs from running out of file
+        descriptors, rasterio maintains a pool of shared low level
+        dataset handles. When `True` this function will use a shared
+        handle if one is available. Multithreaded programs must avoid
+        sharing and should set *sharing* to `False`.
     kwargs : optional
         These are passed to format drivers as directives for creating or
         interpreting datasets. For example: in 'w' or 'w+' modes
@@ -119,7 +121,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
 
     Returns
     -------
-    A ``DatasetReader`` or ``DatasetUpdater`` object.
+    A ``DatasetReader`` or ``DatasetWriter`` object.
 
     Examples
     --------
@@ -175,7 +177,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         @contextmanager
         def fp_reader(fp):
             memfile = MemoryFile(fp.read())
-            dataset = memfile.open()
+            dataset = memfile.open(driver=driver, sharing=sharing)
             try:
                 yield dataset
             finally:
@@ -191,7 +193,7 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
             memfile = MemoryFile()
             dataset = memfile.open(driver=driver, width=width, height=height,
                                    count=count, crs=crs, transform=transform,
-                                   dtype=dtype, nodata=nodata, **kwargs)
+                                   dtype=dtype, nodata=nodata, sharing=sharing, **kwargs)
             try:
                 yield dataset
             finally:
@@ -214,15 +216,16 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # be taken over by the dataset's context manager if it is not
         # None.
         if mode == 'r':
-            s = DatasetReader(path, driver=driver, **kwargs)
+            s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
         elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode, driver=driver, **kwargs)
+            s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
         elif mode.startswith("w"):
             s = get_writer_for_driver(driver)(path, mode, driver=driver,
                                               width=width, height=height,
                                               count=count, crs=crs,
                                               transform=transform,
                                               dtype=dtype, nodata=nodata,
+                                              sharing=sharing,
                                               **kwargs)
         else:
             raise ValueError(

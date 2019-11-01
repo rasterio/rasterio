@@ -60,24 +60,47 @@ def test_warped_vrt(path_rgb_byte_tif):
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
 
-@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
-def test_warped_vrt_add_alpha(path_rgb_byte_tif):
-    """A VirtualVRT has the expected VRT properties."""
+@requires_gdal21
+def test_warped_vrt_nondefault_nodata(path_rgb_byte_tif):
+    """A VirtualVRT has expected nondefault nodata values."""
     with rasterio.open(path_rgb_byte_tif) as src:
-        vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
+        vrt = WarpedVRT(src, crs=DST_CRS, src_nodata=None, nodata=None)
         assert vrt.dst_crs == CRS.from_string(DST_CRS)
-        assert vrt.src_nodata == 0.0
+        assert vrt.src_nodata is None
         assert vrt.dst_nodata is None
         assert vrt.tolerance == 0.125
         assert vrt.resampling == Resampling.nearest
         assert vrt.warp_extras == {"init_dest": "NO_DATA"}
-        assert vrt.count == 4
-        assert vrt.mask_flag_enums == (
-            [MaskFlags.per_dataset, MaskFlags.alpha],
-        ) * 3 + (
-            [MaskFlags.all_valid],
-        )
+        assert vrt.mask_flag_enums == ([MaskFlags.all_valid],) * 3
 
+
+@requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
+def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
+    """A VirtualVRT has the expected VRT properties."""
+    with rasterio.Env() as env:
+        with rasterio.open(path_rgb_byte_tif) as src:
+            vrt = WarpedVRT(src, crs=DST_CRS, add_alpha=True)
+
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "2 N GTiff" in records[0]
+
+            assert vrt.dst_crs == CRS.from_string(DST_CRS)
+            assert vrt.src_nodata == 0.0
+            assert vrt.dst_nodata is None
+            assert vrt.tolerance == 0.125
+            assert vrt.resampling == Resampling.nearest
+            assert vrt.warp_extras == {"init_dest": "NO_DATA"}
+            assert vrt.count == 4
+            assert vrt.mask_flag_enums == (
+                [MaskFlags.per_dataset, MaskFlags.alpha],
+            ) * 3 + (
+                [MaskFlags.all_valid],
+            )
+
+        records = dsrec(env)
+        assert len(records) == 1
+        assert "1 N GTiff" in records[0]
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
@@ -113,13 +136,9 @@ def test_warped_vrt_msk_nodata(path_rgb_msk_byte_tif, caplog):
         assert vrt.count == 3
         assert vrt.mask_flag_enums == ([MaskFlags.nodata],) * 3
 
-        caplog.set_level(logging.DEBUG)
-        with rasterio.Env(CPL_DEBUG=True):
-            masks = vrt.read_masks()
-            assert masks[0, 0, 0] == 0
-            assert masks[0].mean() > 0
-
-        assert "RGB2.byte.tif.msk" in caplog.text
+        masks = vrt.read_masks()
+        assert masks[0, 0, 0] == 0
+        assert masks[0].mean() > 0
 
 
 def test_warped_vrt_source(path_rgb_byte_tif):
@@ -141,6 +160,18 @@ def test_warped_vrt_set_src_crs(path_rgb_byte_tif, tmpdir):
                 pass
         with WarpedVRT(src, src_crs=original_crs, crs=DST_CRS) as vrt:
             assert vrt.src_crs == original_crs
+
+
+def test_warped_vrt_set_src_crs_default(path_rgb_byte_tif, tmpdir):
+    """A warped VRT's dst_src defaults to the given src_crs"""
+    path_crs_unset = str(tmpdir.join("rgb_byte_crs_unset.tif"))
+    _copy_update_profile(path_rgb_byte_tif, path_crs_unset, crs=None)
+    with rasterio.open(path_rgb_byte_tif) as src:
+        original_crs = src.crs
+    with rasterio.open(path_crs_unset) as src:
+        with WarpedVRT(src, src_crs=original_crs) as vrt:
+            assert vrt.src_crs == original_crs
+            assert vrt.dst_crs == original_crs
 
 
 def test_wrap_file(path_rgb_byte_tif):
@@ -366,3 +397,126 @@ def test_invalid_add_alpha():
     with rasterio.open('tests/data/RGBA.byte.tif') as src:
         with pytest.raises(WarpOptionsError):
             WarpedVRT(src, add_alpha=True)
+
+
+def test_warpedvrt_float32_preserve(data):
+    """WarpedVRT preserves float32 dtype of source"""
+    with rasterio.open("tests/data/float32.tif") as src:
+        with WarpedVRT(src, src_crs="EPSG:4326") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
+
+
+def test_warpedvrt_float32_override(data):
+    """Override GDAL defaults for working data type"""
+    float32file = str(data.join("float32.tif"))
+    with rasterio.open(float32file, "r+") as dst:
+        dst.nodata = -3.4028230607370965e+38
+
+    with rasterio.open(float32file) as src:
+        with WarpedVRT(src, src_crs="EPSG:4326", dtype="float32") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
+
+
+def test_warpedvrt_float32_override_nodata(data):
+    """Override GDAL defaults for working data type"""
+    float32file = str(data.join("float32.tif"))
+    with rasterio.open(float32file, "r+") as dst:
+        dst.nodata = -3.4028230607370965e+38
+
+    with rasterio.open(float32file) as src:
+        with WarpedVRT(src, src_crs="EPSG:4326", nodata=0.0001, dtype="float32") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
+
+
+@pytest.mark.xfail(reason="GDAL's output defaults to float64")
+def test_warpedvrt_issue1744(data):
+    """Reproduce the bug reported in 1744"""
+    float32file = str(data.join("float32.tif"))
+    with rasterio.open(float32file, "r+") as dst:
+        dst.nodata = -3.4028230607370965e+38
+
+    with rasterio.open(float32file) as src:
+        with WarpedVRT(src, src_crs="EPSG:4326") as vrt:
+            assert src.dtypes == vrt.dtypes == ("float32",)
+
+
+@requires_gdal2
+def test_open_datasets(capfd, path_rgb_byte_tif):
+    """Number of open datasets is expected"""
+    with rasterio.Env() as env:
+
+        with rasterio.open(path_rgb_byte_tif) as src:
+            env._dump_open_datasets()
+            captured = capfd.readouterr()
+            assert "1 N GTiff" in captured.err
+            assert "1 S GTiff" not in captured.err
+
+            with WarpedVRT(src) as vrt:
+                env._dump_open_datasets()
+                captured = capfd.readouterr()
+                assert "2 N GTiff" in captured.err
+
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        assert "1 N GTiff" not in captured.err
+
+
+@requires_gdal2
+def test_warp_warp(dsrec, path_rgb_byte_tif):
+    """Vincent! :P"""
+    with rasterio.Env() as env:
+
+        with rasterio.open(path_rgb_byte_tif) as src:
+            # We should have one open dataset with a refcount of 1.
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "1 N GTiff" in records[0]
+
+            with WarpedVRT(src) as vrt:
+                # The VRT increments the refcount of the source by 1.
+                records = dsrec(env)
+                assert len(records) == 1
+                assert "2 N GTiff" in records[0]
+
+                with WarpedVRT(vrt) as vrtvrt:
+                    assert vrtvrt.profile
+                    # Apparently VRTs are tracked in the same way.
+                    records = dsrec(env)
+                    assert len(records) == 1
+                    assert "2 N GTiff" in records[0]
+
+                # Inner VRT is closed.
+                records = dsrec(env)
+                assert len(records) == 1
+                assert "2 N GTiff" in records[0]
+
+            # VRTs are closed, we have one open dataset.
+            records = dsrec(env)
+            assert len(records) == 1
+            assert "1 N GTiff" in records[0]
+
+
+@pytest.fixture
+def dsrec(capfd):
+    """GDAL's open dataset records as a pytest fixture"""
+    def func(env):
+        """Get records of GDAL's open datasets
+
+        Parameters
+        ----------
+        env : Env
+            A rasterio environment.
+
+        Returns
+        -------
+        list of str
+            Each string record represents an open dataset and tells the
+            filename, the driver used to open the dataset, the reference
+            count, and other information.
+
+        """
+        env._dump_open_datasets()
+        captured = capfd.readouterr()
+        records = captured.err.strip("\n").split("\n")[1:]
+        return records
+    return func

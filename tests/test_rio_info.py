@@ -8,7 +8,7 @@ import rasterio
 from rasterio.rio.main import main_group
 from rasterio.env import GDALVersion
 
-from .conftest import requires_gdal21
+from .conftest import requires_gdal21, requires_gdal23
 
 
 with rasterio.Env() as env:
@@ -107,6 +107,15 @@ def test_info_quiet():
         '-q',
         'info',
         'tests/data/RGB.byte.tif'
+    ])
+    assert result.exit_code == 0
+
+
+def test_info_gcps():
+    runner = CliRunner()
+    result = runner.invoke(main_group, [
+        'info',
+        'tests/data/white-gemini-iv.vrt'
     ])
     assert result.exit_code == 0
 
@@ -452,4 +461,13 @@ def test_info_no_credentials(tmpdir, monkeypatch):
     result = runner.invoke(
         main_group,
         ['info', 'tests/data/RGB.byte.tif'])
+    assert result.exit_code == 0
+
+
+@requires_gdal23(reason="Unsigned S3 requests require GDAL ~= 2.3")
+@pytest.mark.network
+def test_info_aws_unsigned():
+    """Unsigned access to public dataset works (see #1637)"""
+    runner = CliRunner()
+    result = runner.invoke(main_group, ['--aws-no-sign-requests', 'info', 's3://landsat-pds/L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF'])
     assert result.exit_code == 0

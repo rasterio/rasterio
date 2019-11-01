@@ -14,9 +14,18 @@ Geographic information systems use GeoTIFF and other formats to organize and
 store gridded, or raster, datasets. Rasterio reads and writes these formats and
 provides a Python API based on N-D arrays.
 
-Rasterio supports Python 2.7 and 3.3-3.6 on Linux and Mac OS X.
+Rasterio 1.0.x works with Python versions 2.7.x and 3.5.0 through 3.7.x, and GDAL
+versions 1.11.x through 2.4.x. Official binary packages for Linux and Mac OS X are
+available on PyPI. Unofficial binary packages for Windows are available through other
+channels.
 
-Read the documentation for more details: https://rasterio.readthedocs.io/en/latest/.
+**GDAL Compatibility:** 
+
+* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.1
+* Rasterio ~= 1.0.25 requires GDAL >= 1.11, < 3.1
+* Rasterio ~= 1.0.0, < 1.0.25 requires GDAL >= 1.11, < 3.0
+
+Read the documentation for more details: https://rasterio.readthedocs.io/.
 
 Example
 =======
@@ -195,8 +204,7 @@ Linux
 Rasterio distributions are available from UbuntuGIS and Anaconda's conda-forge
 channel.
 
-`Manylinux1 <https://github.com/pypa/manylinux>`__ distributions may be
-available in the future.
+`Manylinux1 <https://github.com/pypa/manylinux>`__ wheels are available on PyPI.
 
 OS X
 ++++
@@ -273,7 +281,7 @@ For a Homebrew based Python environment, do the following.
     $ brew update
     $ brew install gdal
     $ pip install -U pip
-    $ pip install --no-use-wheel rasterio
+    $ pip install --no-binary rasterio
 
 Alternatively, you can install GDAL binaries from `kyngchaos
 <http://www.kyngchaos.com/software/frameworks#gdal_complete>`__.  You will then

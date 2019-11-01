@@ -2,7 +2,7 @@ Switching from GDAL's Python bindings
 =====================================
 
 This document is written specifically for users of GDAL's Python bindings
-(``osgeo.gdal``) who have read about Rasterio's `philosophy <intro.html>`__ and
+(``osgeo.gdal``) who have read about Rasterio's :doc:`philosophy <../intro>` and
 want to know what switching entails.  The good news is that switching may not
 be complicated. This document explains the key similarities and differences
 between these two Python packages and highlights the features of Rasterio that

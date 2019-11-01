@@ -27,6 +27,7 @@ import attr
 from affine import Affine
 import numpy as np
 
+from rasterio.compat import Iterable
 from rasterio.errors import WindowError
 from rasterio.transform import rowcol, guard_transform
 
@@ -114,7 +115,7 @@ def iter_args(function):
     """
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], collections.Iterable):
+        if len(args) == 1 and isinstance(args[0], Iterable):
             return function(*args[0])
         else:
             return function(*args)
@@ -639,8 +640,8 @@ class Window(object):
     def round_lengths(self, op='floor', pixel_precision=None):
         """Return a copy with width and height rounded.
 
-        Lengths are rounded to the nearest whole number. The offsets
-        are not changed.
+        Lengths are rounded to the preceding (floor) or succeeding (ceil)
+        whole number. The offsets are not changed.
 
         Parameters
         ----------
@@ -669,8 +670,8 @@ class Window(object):
     def round_offsets(self, op='floor', pixel_precision=None):
         """Return a copy with column and row offsets rounded.
 
-        Offsets are rounded to the nearest whole number. The lengths
-        are not changed.
+        Offsets are rounded to the preceding (floor) or succeeding (ceil)
+        whole number. The lengths are not changed.
 
         Parameters
         ----------

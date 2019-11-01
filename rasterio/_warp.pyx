@@ -14,7 +14,7 @@ import numpy as np
 import rasterio
 from rasterio._base import gdal_version
 from rasterio._err import (
-    CPLE_IllegalArgError, CPLE_NotSupportedError,
+    CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
 from rasterio.control import GroundControlPoint
@@ -25,6 +25,7 @@ from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError)
+from rasterio.path import parse_path, vsi_path
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -112,7 +113,7 @@ def _transform_geom(
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata, int src_count,
-        object dst_alpha, object src_alpha, int warp_mem_limit, const char **options) except NULL:
+        object dst_alpha, object src_alpha, int warp_mem_limit, GDALDataType working_data_type, const char **options) except NULL:
     """Return a pointer to a GDALWarpOptions composed from input params
 
     This is used in _reproject() and the WarpedVRT constructor. It sets
@@ -145,6 +146,7 @@ cdef GDALWarpOptions * create_warp_options(
 
     warp_extras = CSLMerge(warp_extras, <char **>options)
 
+    psWOptions.eWorkingDataType = <GDALDataType>working_data_type
     psWOptions.eResampleAlg = <GDALResampleAlg>resampling
 
     if warp_mem_limit > 0:
@@ -212,6 +214,7 @@ def _reproject(
         init_dest_nodata=True,
         num_threads=1,
         warp_mem_limit=0,
+        working_data_type=0,
         **kwargs):
     """
     Reproject a source raster to a destination raster.
@@ -315,7 +318,7 @@ def _reproject(
         if not in_dtype_range(dst_nodata, destination.dtype):
             raise ValueError("dst_nodata must be in valid range for "
                              "destination dtype")
-        
+
     def format_transform(in_transform):
         if not in_transform:
             return in_transform
@@ -327,86 +330,116 @@ def _reproject(
             in_transform = in_transform.translation(eps, eps)
         return in_transform
 
-    # If the source is an ndarray, we copy to a MEM dataset.
-    # We need a src_transform and src_dst in this case. These will
-    # be copied to the MEM dataset.
-    if dtypes.is_ndarray(source):
-        if not src_crs:
-            raise CRSError("Missing src_crs.")
-        if src_nodata is None and hasattr(source, 'fill_value'):
-            # source is a masked array
-            src_nodata = source.fill_value
-        # Convert 2D single-band arrays to 3D multi-band.
-        if len(source.shape) == 2:
-            source = source.reshape(1, *source.shape)
-        src_count = source.shape[0]
-        src_bidx = range(1, src_count + 1)
-        src_dataset = InMemoryRaster(image=source,
-                                     transform=format_transform(src_transform),
-                                     gcps=gcps,
-                                     crs=src_crs).handle()
-    # If the source is a rasterio MultiBand, no copy necessary.
-    # A MultiBand is a tuple: (dataset, bidx, dtype, shape(2d))
-    elif isinstance(source, tuple):
-        rdr, src_bidx, dtype, shape = source
-        if isinstance(src_bidx, int):
-            src_bidx = [src_bidx]
-        src_count = len(src_bidx)
-        src_dataset = (<DatasetReaderBase?>rdr).handle()
-        if src_nodata is None:
-            src_nodata = rdr.nodata
-    else:
-        raise ValueError("Invalid source")
+    mem_raster = None
+    src_mem = None
+
+    try:
+
+        # If the source is an ndarray, we copy to a MEM dataset.
+        # We need a src_transform and src_dst in this case. These will
+        # be copied to the MEM dataset.
+        if dtypes.is_ndarray(source):
+
+            if not src_crs:
+                raise CRSError("Missing src_crs.")
+
+            if src_nodata is None and hasattr(source, 'fill_value'):
+                # source is a masked array
+                src_nodata = source.fill_value
+            # Convert 2D single-band arrays to 3D multi-band.
+            if len(source.shape) == 2:
+                source = source.reshape(1, *source.shape)
+            src_count = source.shape[0]
+            src_bidx = range(1, src_count + 1)
+            src_mem = InMemoryRaster(image=source,
+                                         transform=format_transform(src_transform),
+                                         gcps=gcps,
+                                         crs=src_crs)
+            src_dataset = src_mem.handle()
+
+        # If the source is a rasterio MultiBand, no copy necessary.
+        # A MultiBand is a tuple: (dataset, bidx, dtype, shape(2d))
+        elif isinstance(source, tuple):
+
+            rdr, src_bidx, dtype, shape = source
+            if isinstance(src_bidx, int):
+                src_bidx = [src_bidx]
+            src_count = len(src_bidx)
+            src_dataset = (<DatasetReaderBase?>rdr).handle()
+            if src_nodata is None:
+                src_nodata = rdr.nodata
+
+        else:
+            raise ValueError("Invalid source")
+
+    except:
+        if src_mem is not None:
+            src_mem.close()
+            src_mem = None
+        raise
 
     # Next, do the same for the destination raster.
-    if dtypes.is_ndarray(destination):
-        if not dst_crs:
-            raise CRSError("Missing dst_crs.")
-        if len(destination.shape) == 2:
-            destination = destination.reshape(1, *destination.shape)
+    try:
 
-        if destination.shape[0] == src_count:
-            # Output shape matches number of bands being extracted
-            dst_bidx = [i + 1 for i in range(src_count)]
+        if dtypes.is_ndarray(destination):
+
+            if not dst_crs:
+                raise CRSError("Missing dst_crs.")
+
+            if len(destination.shape) == 2:
+                destination = destination.reshape(1, *destination.shape)
+
+            if destination.shape[0] == src_count:
+                # Output shape matches number of bands being extracted
+                dst_bidx = [i + 1 for i in range(src_count)]
+            else:
+                # Assume src and dst are the same shape
+                if max(src_bidx) > destination.shape[0]:
+                    raise ValueError("Invalid destination shape")
+                dst_bidx = src_bidx
+
+            mem_raster = InMemoryRaster(image=destination, transform=format_transform(dst_transform), crs=dst_crs)
+            dst_dataset = mem_raster.handle()
+
+            if dst_alpha:
+                for i in range(destination.shape[0]):
+                    try:
+                        delete_nodata_value(GDALGetRasterBand(dst_dataset, i+1))
+                    except NotImplementedError as exc:
+                        log.warn(str(exc))
+
+                GDALSetRasterColorInterpretation(GDALGetRasterBand(dst_dataset, dst_alpha), <GDALColorInterp>6)
+
+            GDALSetDescription(
+                dst_dataset, "Temporary destination dataset for _reproject()")
+
+            log.debug("Created temp destination dataset.")
+
+            if dst_nodata is None:
+                if hasattr(destination, "fill_value"):
+                    # destination is a masked array
+                    dst_nodata = destination.fill_value
+                elif src_nodata is not None:
+                    dst_nodata = src_nodata
+
+        elif isinstance(destination, tuple):
+            udr, dst_bidx, _, _ = destination
+            if isinstance(dst_bidx, int):
+                dst_bidx = [dst_bidx]
+            dst_dataset = (<DatasetReaderBase?>udr).handle()
+            if dst_nodata is None:
+                dst_nodata = udr.nodata
         else:
-            # Assume src and dst are the same shape
-            if max(src_bidx) > destination.shape[0]:
-                raise ValueError("Invalid destination shape")
-            dst_bidx = src_bidx
+            raise ValueError("Invalid destination")
 
-        dst_dataset = InMemoryRaster(image=destination,
-                                     transform=format_transform(dst_transform),
-                                     crs=dst_crs).handle()
-        if dst_alpha:
-            for i in range(destination.shape[0]):
-                try:
-                    delete_nodata_value(GDALGetRasterBand(dst_dataset, i+1))
-                except NotImplementedError as exc:
-                    log.warn(str(exc))
-
-            GDALSetRasterColorInterpretation(GDALGetRasterBand(dst_dataset, dst_alpha), <GDALColorInterp>6)
-
-        GDALSetDescription(
-            dst_dataset, "Temporary destination dataset for _reproject()")
-
-        log.debug("Created temp destination dataset.")
-
-        if dst_nodata is None:
-            if hasattr(destination, "fill_value"):
-                # destination is a masked array
-                dst_nodata = destination.fill_value
-            elif src_nodata is not None:
-                dst_nodata = src_nodata
-
-    elif isinstance(destination, tuple):
-        udr, dst_bidx, _, _ = destination
-        if isinstance(dst_bidx, int):
-            dst_bidx = [dst_bidx]
-        dst_dataset = (<DatasetReaderBase?>udr).handle()
-        if dst_nodata is None:
-            dst_nodata = udr.nodata
-    else:
-        raise ValueError("Invalid destination")
+    except:
+        if src_mem is not None:
+            src_mem.close()
+            src_mem = None
+        if mem_raster is not None:
+            mem_raster.close()
+            mem_raster = None
+        raise
 
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
@@ -438,6 +471,12 @@ def _reproject(
     except:
         GDALDestroyApproxTransformer(hTransformArg)
         CPLFree(imgProjOptions)
+        if src_mem is not None:
+            src_mem.close()
+            src_mem = None
+        if mem_raster is not None:
+            mem_raster.close()
+            mem_raster = None
         raise
 
     valb = str(num_threads).encode('utf-8')
@@ -461,7 +500,7 @@ def _reproject(
 
     psWOptions = create_warp_options(
         <GDALResampleAlg>resampling, src_nodata,
-        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit,
+        dst_nodata, src_count, dst_alpha, src_alpha, warp_mem_limit, <GDALDataType>working_data_type,
         <const char **>warp_extras)
 
     psWOptions.pfnTransformer = pfnTransformer
@@ -481,7 +520,9 @@ def _reproject(
     cdef GDALWarpOperation oWarper
     cdef int rows
     cdef int cols
+
     try:
+
         exc_wrap_int(oWarper.Initialize(psWOptions))
         rows, cols = destination.shape[-2:]
 
@@ -499,17 +540,15 @@ def _reproject(
         if dtypes.is_ndarray(destination):
             exc_wrap_int(io_auto(destination, dst_dataset, 0))
 
-            if dst_dataset != NULL:
-                GDALClose(dst_dataset)
-
     # Clean up transformer, warp options, and dataset handles.
     finally:
         GDALDestroyApproxTransformer(hTransformArg)
         GDALDestroyWarpOptions(psWOptions)
         CPLFree(imgProjOptions)
-        if dtypes.is_ndarray(source):
-            if src_dataset != NULL:
-                GDALClose(src_dataset)
+        if mem_raster is not None:
+            mem_raster.close()
+        if src_mem is not None:
+            src_mem.close()
 
 
 def _calculate_default_transform(src_crs, dst_crs, width, height,
@@ -539,9 +578,13 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     else:
         transform = None
 
-    osr = _osr_from_crs(dst_crs)
-    OSRExportToWkt(osr, &wkt)
-    _safe_osr_release(osr)
+    try:
+        osr = _osr_from_crs(dst_crs)
+        exc_wrap_int(OSRExportToWkt(osr, &wkt))
+    except CPLE_BaseError as exc:
+        raise CRSError("Could not convert to WKT. {}".format(str(exc)))
+    finally:
+        _safe_osr_release(osr)
 
     if isinstance(src_crs, str):
         src_crs = CRS.from_string(src_crs)
@@ -551,10 +594,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     vrt_doc = _suggested_proxy_vrt_doc(width, height, transform=transform, crs=src_crs, gcps=gcps).decode('ascii')
 
     try:
-        try:
-            hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
-        except GDALOptionNotImplementedError:
-            hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, None, None, None)
+        hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
 
         hTransformArg = exc_wrap_pointer(
             GDALCreateGenImgProjTransformer(
@@ -583,6 +623,8 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             CPLFree(wkt)
         if hTransformArg != NULL:
             GDALDestroyGenImgProjTransformer(hTransformArg)
+        if hds != NULL:
+            GDALClose(hds)
 
     # Convert those modified arguments to Python values.
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])
@@ -592,15 +634,18 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     return dst_affine, dst_width, dst_height
 
 
+DEFAULT_NODATA_FLAG = object()
+
+
 cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def __init__(self, src_dataset, src_crs=None, dst_crs=None, crs=None,
                  resampling=Resampling.nearest, tolerance=0.125,
-                 src_nodata=None, dst_nodata=None, nodata=None,
+                 src_nodata=DEFAULT_NODATA_FLAG, dst_nodata=None, nodata=DEFAULT_NODATA_FLAG,
                  dst_width=None, width=None, dst_height=None, height=None,
                  src_transform=None, dst_transform=None, transform=None,
                  init_dest_nodata=True, src_alpha=0, add_alpha=False,
-                 warp_mem_limit=0, **warp_extras):
+                 warp_mem_limit=0, dtype=None, **warp_extras):
         """Make a virtual warped dataset
 
         Parameters
@@ -612,7 +657,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         src_transfrom : Affine, optional
             Overrides the transform of `src_dataset`.
         src_nodata : float, optional
-            Overrides the nodata value of `src_dataset`.
+            Overrides the nodata value of `src_dataset`, which is the
+            default.
         crs : CRS or str, optional
             The coordinate reference system at the end of the warp
             operation.  Default: the crs of `src_dataset`. dst_crs is
@@ -647,6 +693,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         warp_mem_limit : int, optional
             The warp operation's memory limit in MB. The default (0)
             means 64 MB with GDAL 2.2.
+        dtype : str, optional
+            The working data type for warp operation and output.
         warp_extras : dict
             GDAL extra warp options. See
             http://www.gdal.org/structGDALWarpOptions.html.
@@ -710,8 +758,9 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             warnings.warn(
                 "dst_crs will be removed in 1.1, use crs",
                 RasterioDeprecationWarning)
+
         if crs is None:
-            crs = dst_crs if dst_crs is not None else src_dataset.crs
+            crs = dst_crs if dst_crs is not None else (src_crs or src_dataset.crs)
         # End of `dst_parameter` deprecation and aliasing.
 
         if add_alpha and gdal_version().startswith('1'):
@@ -726,9 +775,10 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self.name = "WarpedVRT({})".format(src_dataset.name)
         self.resampling = resampling
         self.tolerance = tolerance
+        self.working_dtype = dtype
 
-        self.src_nodata = self.src_dataset.nodata if src_nodata is None else src_nodata
-        self.dst_nodata = self.src_nodata if nodata is None else nodata
+        self.src_nodata = self.src_dataset.nodata if src_nodata is DEFAULT_NODATA_FLAG else src_nodata
+        self.dst_nodata = self.src_nodata if nodata is DEFAULT_NODATA_FLAG else nodata
         self.dst_width = width
         self.dst_height = height
         self.dst_transform = transform
@@ -757,8 +807,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         cdef int mask_block_xsize = 0
         cdef int mask_block_ysize = 0
 
-        hds = (<DatasetReaderBase?>self.src_dataset).handle()
-        hds = exc_wrap_pointer(hds)
+        hds = exc_wrap_pointer((<DatasetReaderBase?>self.src_dataset).handle())
 
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
@@ -830,7 +879,8 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         psWOptions = create_warp_options(
             <GDALResampleAlg>c_resampling, self.src_nodata,
             self.dst_nodata, src_dataset.count, dst_alpha,
-            src_alpha_band, warp_mem_limit, <const char **>c_warp_extras)
+            src_alpha_band, warp_mem_limit, <GDALDataType>dtypes.dtype_rev[self.working_dtype],
+            <const char **>c_warp_extras)
 
         if psWOptions == NULL:
             raise RuntimeError("Warp options are NULL")
@@ -918,6 +968,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if self._hds != NULL:
             GDALClose(self._hds)
         self._hds = NULL
+        self._closed = True
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,

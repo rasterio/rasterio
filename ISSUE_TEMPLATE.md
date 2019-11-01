@@ -11,10 +11,14 @@ often omit.
 The primary forum for questions about installation and usage of Rasterio is 
 https://rasterio.groups.io/g/main. The authors and other users will answer 
 questions when they have expertise to share and time to explain. Please take the
-time to craft a clear question and be patient about responses.
+time to craft a clear question and be patient about responses. Please do not
+bring these questions to Rasterio's issue tracker, which we want to reserve for
+bug reports and other actionable issues.
 
-Please do not bring these questions to Rasterio's issue tracker, which we want
-to reserve for bug reports and other actionable issues.
+Questions about development of Rasterio, brainstorming, requests for comment,
+and not-yet-actionable proposals are welcome in the project's developers 
+discussion group https://rasterio.groups.io/g/dev. Issues opened in Rasterio's
+GitHub repo which haven't been socialized there may be perfunctorily closed.
 
 Please note: Rasterio contains extension modules and is thus susceptible to
 C library compatibility issues. If you are reporting an installation or module

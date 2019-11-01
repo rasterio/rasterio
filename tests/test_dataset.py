@@ -2,11 +2,17 @@
 
 
 import os
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import MagicMock
 
 import pytest
 
 import rasterio
-from rasterio.errors import RasterioIOError
+from rasterio.enums import Compression
+from rasterio.errors import RasterioIOError, DatasetAttributeError
+from rasterio.transform import Affine
 
 
 def test_files(data):
@@ -26,3 +32,40 @@ def test_handle_closed(path_rgb_byte_tif):
         pass
     with pytest.raises(RasterioIOError):
         src.files
+
+
+@pytest.mark.parametrize('tag_value', [item.value for item in Compression])
+def test_dataset_compression(path_rgb_byte_tif, tag_value):
+    """Compression is found from tags"""
+    with rasterio.open(path_rgb_byte_tif) as dataset:
+        dataset.tags = MagicMock()
+        dataset.tags.return_value = {'COMPRESSION': tag_value}
+        assert dataset.compression == Compression(tag_value)
+
+
+def test_untiled_dataset_blocksize(tmpdir):
+    """Blocksize is not relevant to untiled datasets (see #1689)"""
+    tmpfile = str(tmpdir.join("test.tif"))
+    with rasterio.open(
+            tmpfile, "w", driver="GTiff", count=1, height=13, width=23, dtype="uint8", crs="epsg:3857",
+            transform=Affine.identity(), blockxsize=64, blockysize=64) as dataset:
+        pass
+
+    with rasterio.open(tmpfile) as dataset:
+        assert not dataset.profile["tiled"]
+        assert dataset.shape == (13, 23)
+        assert dataset.block_shapes == [(13, 23)]
+
+
+def test_dataset_readonly_attributes(path_rgb_byte_tif):
+    """Attempts to set read-only attributes fail with DatasetAttributeError"""
+    with pytest.raises(DatasetAttributeError):
+        with rasterio.open(path_rgb_byte_tif) as dataset:
+            dataset.crs = "foo"
+
+
+def test_dataset_readonly_attributes(path_rgb_byte_tif):
+    """Attempts to set read-only attributes still fail with NotImplementedError"""
+    with pytest.raises(NotImplementedError):
+        with rasterio.open(path_rgb_byte_tif) as dataset:
+            dataset.crs = "foo"

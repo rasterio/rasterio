@@ -9,23 +9,24 @@ import logging
 import math
 import os
 import warnings
+from libc.string cimport strncmp
 
 from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
 from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
-from rasterio._shim cimport open_dataset
+from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
-from rasterio.crs import CRS
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.enums import (
     ColorInterp, Compression, Interleaving, MaskFlags, PhotometricInterp)
-from rasterio.env import Env
+from rasterio.env import Env, env_ctx_if_needed
 from rasterio.errors import (
+    DatasetAttributeError,
     RasterioIOError, CRSError, DriverRegistrationError, NotGeoreferencedWarning,
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
@@ -73,7 +74,7 @@ def get_dataset_driver(path):
     path = path.encode('utf-8')
 
     try:
-        dataset = exc_wrap_pointer(GDALOpenShared(<const char *>path, <GDALAccess>0))
+        dataset = exc_wrap_pointer(GDALOpen(<const char *>path, <GDALAccess>0))
         driver = GDALGetDatasetDriver(dataset)
         drivername = get_driver_name(driver)
 
@@ -115,6 +116,20 @@ def driver_can_create(drivername):
 def driver_can_create_copy(drivername):
     """Return True if the driver has CREATE_COPY capability"""
     return driver_supports_mode(drivername, 'DCAP_CREATECOPY')
+
+cdef _band_dtype(GDALRasterBandH band):
+    """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
+    cdef const char * ptype
+    cdef int gdal_dtype = GDALGetRasterDataType(band)
+    if gdal_dtype == GDT_Byte:
+        # Can be uint8 or int8, need to check PIXELTYPE property
+        ptype = GDALGetMetadataItem(band, 'PIXELTYPE', 'IMAGE_STRUCTURE')
+        if ptype and strncmp(ptype, 'SIGNEDBYTE', 10) == 0:
+            return 'int8'
+        else:
+            return 'uint8'
+
+    return dtypes.dtype_fwd[gdal_dtype]
 
 
 cdef class DatasetBase(object):
@@ -159,7 +174,7 @@ cdef class DatasetBase(object):
         Photometric interpretation's short name
     """
 
-    def __init__(self, path=None, driver=None, sharing=True, **kwargs):
+    def __init__(self, path=None, driver=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -170,7 +185,7 @@ cdef class DatasetBase(object):
             A single driver name or a list of driver names to consider when
             opening the dataset.
         sharing : bool, optional
-            Whether to share underlying GDAL dataset handles (default: True).
+            Whether to share underlying GDAL dataset handles (default: False).
         kwargs : dict
             GDAL dataset opening options.
 
@@ -181,6 +196,8 @@ cdef class DatasetBase(object):
         cdef GDALDatasetH hds = NULL
         cdef int flags = 0
         cdef int sharing_flag = (0x20 if sharing else 0x0)
+
+        log.debug("Sharing flag: %r", sharing_flag)
 
         self._hds = NULL
 
@@ -197,7 +214,7 @@ cdef class DatasetBase(object):
 
             try:
                 self._hds = open_dataset(filename, flags, driver, kwargs, None)
-            except CPLE_OpenFailedError as err:
+            except CPLE_BaseError as err:
                 raise RasterioIOError(str(err))
 
         self.name = path.name
@@ -208,6 +225,8 @@ cdef class DatasetBase(object):
         self._nodatavals = []
         self._units = ()
         self._descriptions = ()
+        self._scales = ()
+        self._offsets = ()
         self._gcps = None
         self._read = False
 
@@ -261,69 +280,19 @@ cdef class DatasetBase(object):
 
     def _handle_crswkt(self, wkt):
         """Return the GDAL dataset's stored CRS"""
-        cdef char *proj = NULL
-        cdef OGRSpatialReferenceH osr = NULL
-        wkt_b = wkt.encode('utf-8')
-        cdef const char *wkt_c = wkt_b
-
-        # Test that the WKT definition isn't just an empty string, which
-        # can happen when the source dataset is not georeferenced.
-        if len(wkt) > 0:
-            crs = CRS()
-
-            osr = OSRNewSpatialReference(wkt_c)
-            if osr == NULL:
-                raise ValueError("Unexpected NULL spatial reference")
-            log.debug("Got coordinate system")
-
-            # Try to find an EPSG code in the spatial referencing.
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                key = OSRGetAuthorityName(osr, NULL)
-                val = OSRGetAuthorityCode(osr, NULL)
-                log.debug("Authority key: %s, value: %s", key, val)
-                crs['init'] = u'epsg:' + val
-            else:
-                log.debug("Failed to auto identify EPSG")
-                OSRExportToProj4(osr, &proj)
-                if proj == NULL:
-                    raise ValueError("Unexpected Null spatial reference")
-
-                value = proj
-                value = value.strip()
-
-                for param in value.split():
-                    kv = param.split("=")
-                    if len(kv) == 2:
-                        k, v = kv
-                        try:
-                            v = float(v)
-                            if v % 1 == 0:
-                                v = int(v)
-                        except ValueError:
-                            # Leave v as a string
-                            pass
-                    elif len(kv) == 1:
-                        k, v = kv[0], True
-                    else:
-                        raise ValueError(
-                            "Unexpected proj parameter %s" % param)
-                    k = k.lstrip("+")
-                    crs[k] = v
-
-            CPLFree(proj)
-            _safe_osr_release(osr)
-            return crs
-
+        # No dialect morphing, if the dataset was created using software
+        # "speaking" the Esri dialect, we will read Esri WKT.
+        if wkt:
+            return CRS.from_wkt(wkt)
         else:
-            log.debug("No projection detected.")
+            return None
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
-        cdef const char *wkt_b = GDALGetProjectionRef(self._hds)
-        if wkt_b == NULL:
-            raise ValueError("Unexpected NULL spatial reference")
-
+        cdef const char *wkt_b = GDALGetProjectionRef(self.handle())
         wkt = wkt_b
+        if wkt == NULL:
+            raise ValueError("Unexpected NULL spatial reference")
         return self._handle_crswkt(wkt)
 
     def read_transform(self):
@@ -343,22 +312,24 @@ cdef class DatasetBase(object):
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:
-            GDALClose(self._hds)
+            refcount = GDALDereferenceDataset(self._hds)
+            if refcount == 0:
+                GDALClose(self._hds)
         self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
 
     def close(self):
+        """Close the dataset"""
         self.stop()
         self._closed = True
-        log.debug("Dataset %r has been closed.", self)
 
     def __enter__(self):
-        log.debug("Entering Dataset %r context.", self)
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
         return self
 
     def __exit__(self, type, value, traceback):
+        self._env.__exit__()
         self.close()
-        log.debug("Exited Dataset %r context.", self)
 
     def __dealloc__(self):
         if self._hds != NULL:
@@ -413,8 +384,7 @@ cdef class DatasetBase(object):
         if not self._dtypes:
             for i in range(self._count):
                 band = self.band(i + 1)
-                self._dtypes.append(
-                    dtypes.dtype_fwd[GDALGetRasterDataType(band)])
+                self._dtypes.append(_band_dtype(band))
 
         return tuple(self._dtypes)
 
@@ -452,7 +422,14 @@ cdef class DatasetBase(object):
 
             for i in range(self._count):
                 band = self.band(i + 1)
-                dtype = dtypes.dtype_fwd[GDALGetRasterDataType(band)]
+                dtype = _band_dtype(band)
+
+                # To address the issue in #1747.
+                if dtype == "complex128":
+                    dtype = "float64"
+                elif dtype == "complex64":
+                    dtype = "float32"
+
                 nodataval = GDALGetRasterNoDataValue(band, &success)
                 val = nodataval
                 # GDALGetRasterNoDataValue() has two ways of telling you that
@@ -486,7 +463,7 @@ cdef class DatasetBase(object):
             return self.get_nodatavals()
 
     def _set_nodatavals(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property nodata:
         """The dataset's single nodata value
@@ -549,7 +526,7 @@ cdef class DatasetBase(object):
                 for x in self._mask_flags())
 
     def _set_crs(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property crs:
         """The dataset's coordinate reference system
@@ -569,10 +546,16 @@ cdef class DatasetBase(object):
             self._set_crs(value)
 
     def _set_all_descriptions(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
+
+    def _set_all_scales(self, value):
+        raise DatasetAttributeError("read-only attribute")
+
+    def _set_all_offsets(self, value):
+        raise DatasetAttributeError("read-only attribute")
 
     def _set_all_units(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute") 
 
     property descriptions:
         """Descriptions for each dataset band
@@ -593,7 +576,7 @@ cdef class DatasetBase(object):
             self._set_all_descriptions(value)
 
     def write_transform(self, value):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property transform:
         """The dataset's georeferencing transformation matrix
@@ -611,6 +594,44 @@ cdef class DatasetBase(object):
 
         def __set__(self, value):
             self.write_transform(value.to_gdal())
+
+    property offsets:
+        """Raster offset for each dataset band
+
+        To set offsets, one for each band is required.
+
+        Returns
+        -------
+        list of float
+        """
+        def __get__(self):
+            cdef int success = 0
+            if not self._offsets:
+                offsets = [GDALGetRasterOffset(self.band(j), &success) for j in self.indexes]
+                self._offsets = tuple(offsets)
+            return self._offsets
+
+        def __set__(self, value):
+            self._set_all_offsets(value)
+
+    property scales:
+        """Raster scale for each dataset band
+
+        To set scales, one for each band is required.
+
+        Returns
+        -------
+        list of float
+        """
+        def __get__(self):
+            cdef int success = 0
+            if not self._scales:
+                scales = [GDALGetRasterScale(self.band(j), &success) for j in self.indexes]
+                self._scales = tuple(scales)
+            return self._scales
+
+        def __set__(self, value):
+            self._set_all_scales(value)
 
     property units:
         """A list of str: one units string for each dataset band
@@ -861,7 +882,15 @@ cdef class DatasetBase(object):
     def is_tiled(self):
         if len(self.block_shapes) == 0:
             return False
-        return self.block_shapes[0][1] < self.width and self.block_shapes[0][1] <= 1024
+        else:
+            blockysize, blockxsize = self.block_shapes[0]
+            if blockxsize % 16 or blockysize % 16:
+                return False
+            # Perfectly square is a special case/
+            if blockxsize == blockysize == self.height == self.width:
+                return True
+            else:
+                return blockxsize < self.width or blockxsize > self.width
 
     property profile:
         """Basic metadata and creation options of this dataset.
@@ -924,6 +953,37 @@ cdef class DatasetBase(object):
                 subs[idx][fld] = val.replace('"', '')
             return [subs[idx]['name'] for idx in sorted(subs.keys())]
 
+
+    def tag_namespaces(self, bidx=0):
+        """Get a list of the dataset's metadata domains.
+
+        Returned items may be passed as `ns` to the tags method.
+
+        Parameters
+        ----------
+        bidx int, optional
+            Can be used to select a specific band, otherwise the
+            dataset's general metadata domains are returned.
+
+        Returns
+        -------
+        list of str
+
+        """
+        cdef GDALMajorObjectH obj = NULL
+        if bidx > 0:
+            obj = self.band(bidx)
+        else:
+            obj = self._hds
+
+        namespaces = GDALGetMetadataDomainList(obj)
+        num_items = CSLCount(namespaces)
+        try:
+            return list([namespaces[i] for i in range(num_items) if str(namespaces[i])])
+        finally:
+            CSLDestroy(namespaces)
+
+
     def tags(self, bidx=0, ns=None):
         """Returns a dict containing copies of the dataset or band's
         tags.
@@ -940,6 +1000,8 @@ cdef class DatasetBase(object):
         cdef GDALMajorObjectH obj = NULL
         cdef char **metadata = NULL
         cdef const char *domain = NULL
+        cdef char *key = NULL
+        cdef char *val = NULL
 
         if bidx > 0:
             obj = self.band(bidx)
@@ -951,7 +1013,14 @@ cdef class DatasetBase(object):
 
         metadata = GDALGetMetadata(obj, domain)
         num_items = CSLCount(metadata)
-        return dict(metadata[i].split('=', 1) for i in range(num_items))
+
+        tag_items = []
+        for i in range(num_items):
+            val = CPLParseNameValue(metadata[i], &key)
+            tag_items.append((key[:], val[:]))
+            CPLFree(key)
+
+        return dict(tag_items)
 
 
     def get_tag_item(self, ns, dm=None, bidx=0, ovr=None):
@@ -1091,7 +1160,7 @@ cdef class DatasetBase(object):
             if color == NULL:
                 log.warn("NULL color at %d, skipping", i)
                 continue
-            log.info(
+            log.debug(
                 "Color: (%d, %d, %d, %d)",
                 color.c1, color.c2, color.c3, color.c4)
             retval[i] = (color.c1, color.c2, color.c3, color.c4)
@@ -1167,7 +1236,7 @@ cdef class DatasetBase(object):
                                          for i in range(num_gcps)], crs)
 
     def _set_gcps(self, values):
-        raise NotImplementedError
+        raise DatasetAttributeError("read-only attribute")
 
     property gcps:
         """ground control points and their coordinate reference system.
@@ -1240,9 +1309,7 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
     try:
         transform = OCTNewCoordinateTransformation(src, dst)
         transform = exc_wrap_pointer(transform)
-
-        err = OCTTransform(transform, n, x, y, z)
-        err = exc_wrap_int(err)
+        exc_wrap_int(OCTTransform(transform, n, x, y, z))
 
         res_xs = [0]*n
         res_ys = [0]*n
@@ -1253,59 +1320,37 @@ def _transform(src_crs, dst_crs, xs, ys, zs):
             res_zs = [0]*n
             for i in range(n):
                 res_zs[i] = z[i]
-            retval = (res_xs, res_ys, res_zs)
+            return (res_xs, res_ys, res_zs)
         else:
-            retval = (res_xs, res_ys)
-
-    except CPLE_NotSupportedError as exc:
-        raise CRSError(str(exc))
+            return (res_xs, res_ys)
 
     finally:
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
+        OCTDestroyCoordinateTransformation(transform)
         _safe_osr_release(src)
         _safe_osr_release(dst)
-
-    return retval
 
 
 cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     """Returns a reference to memory that must be deallocated
     by the caller."""
-    if not crs:
-        raise CRSError("A defined coordinate reference system is required")
+    crs = CRS.from_user_input(crs)
+
+    # EPSG is a special case.
+    init = crs.get('init')
+    if init:
+        auth, val = init.strip().split(':')
+
+        if not val or auth.upper() != 'EPSG':
+            raise CRSError("Invalid CRS: {!r}".format(crs))
+        proj = 'EPSG:{}'.format(val).encode('utf-8')
+    else:
+        proj = crs.to_string().encode('utf-8')
+        log.debug("PROJ.4 to be imported: %r", proj)
 
     cdef OGRSpatialReferenceH osr = OSRNewSpatialReference(NULL)
-
-    if isinstance(crs, string_types):
-        proj = crs.encode('utf-8')
-
-    # Make a CRS object from provided dict.
-    else:
-        crs = CRS(crs)
-        # EPSG is a special case.
-        init = crs.get('init')
-        if init:
-            auth, val = init.split(':')
-
-            if not val:
-                _safe_osr_release(osr)
-                raise CRSError("Invalid CRS: {!r}".format(crs))
-
-            if auth.upper() == 'EPSG':
-                proj = 'EPSG:{}'.format(val).encode('utf-8')
-        else:
-            params = []
-            for k, v in crs.items():
-                if v is True or (k in ('no_defs', 'wktext') and v):
-                    params.append("+%s" % k)
-                else:
-                    params.append("+%s=%s" % (k, v))
-            proj = " ".join(params)
-            log.debug("PROJ.4 to be imported: %r", proj)
-            proj = proj.encode('utf-8')
-
     try:
         retval = exc_wrap_int(OSRSetFromUserInput(osr, <const char *>proj))
         if retval:
@@ -1314,8 +1359,11 @@ cdef OGRSpatialReferenceH _osr_from_crs(object crs) except NULL:
     except CPLE_BaseError as exc:
         _safe_osr_release(osr)
         raise CRSError(str(exc))
-
-    return osr
+    else:
+        if not gdal_version().startswith("3"):
+            exc_wrap_int(OSRMorphFromESRI(osr))
+        osr_set_traditional_axis_mapping_strategy(osr)
+        return osr
 
 
 cdef _safe_osr_release(OGRSpatialReferenceH srs):

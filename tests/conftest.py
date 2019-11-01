@@ -6,11 +6,11 @@ import operator
 import os
 import shutil
 import sys
+import uuid
 import zipfile
 
 import affine
 from click.testing import CliRunner
-import py
 import pytest
 import numpy as np
 
@@ -27,8 +27,8 @@ if sys.version_info > (3,):
     reduce = functools.reduce
 
 test_files = [os.path.join(os.path.dirname(__file__), p) for p in [
-    'data/RGB.byte.tif', 'data/float.tif', 'data/float_nan.tif',
-    'data/shade.tif', 'data/RGBA.byte.tif']]
+    'data/RGB.byte.tif', 'data/float.tif', 'data/float32.tif',
+    'data/float_nan.tif', 'data/shade.tif', 'data/RGBA.byte.tif']]
 
 
 def pytest_cmdline_main(config):
@@ -48,18 +48,16 @@ def runner():
 
 
 @pytest.fixture(scope='function')
-def data():
+def data(tmpdir):
     """A temporary directory containing a copy of the files in data."""
-    tmpdir = py.test.ensuretemp('tests/data')
     for filename in test_files:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
 
 
 @pytest.fixture(scope='function')
-def red_green():
+def red_green(tmpdir):
     """A temporary directory containing copies of red.tif, green.tif."""
-    tmpdir = py.test.ensuretemp('tests/data')
     for filename in ['tests/data/red.tif', 'tests/data/red.tif.ovr', 'tests/data/green.tif', 'tests/data/green.tif.ovr']:
         shutil.copy(filename, str(tmpdir))
     return tmpdir
@@ -465,6 +463,7 @@ def gdalenv(request):
         if rasterio.env.local._env:
             rasterio.env.delenv()
             rasterio.env.local._env = None
+
     request.addfinalizer(fin)
 
 
@@ -476,17 +475,25 @@ def data_dir():
 
 @pytest.fixture(scope='session')
 def path_rgb_byte_tif(data_dir):
+    """The original RGB test fixture with no sidecar files"""
     return os.path.join(data_dir, 'RGB.byte.tif')
 
 
 @pytest.fixture(scope='session')
 def path_rgba_byte_tif(data_dir):
+    """Derived from RGB.byte.tif, this has an alpha band"""
     return os.path.join(data_dir, 'RGBA.byte.tif')
 
 
 @pytest.fixture(scope='session')
 def path_rgb_msk_byte_tif(data_dir):
+    """Derived from RGB.byte.tif, this has an external mask"""
     return os.path.join(data_dir, 'RGB2.byte.tif')
+
+
+@pytest.fixture(scope='session')
+def path_cogeo_tif(data_dir):
+    return os.path.join(data_dir, 'cogeo.tif')
 
 
 @pytest.fixture(scope='function')
@@ -560,16 +567,23 @@ def path_alpha_tif(data_dir):
 
 
 @pytest.fixture(scope='session')
-def path_zip_file():
+def path_zip_file(data_dir):
     """Creates ``coutwildrnp.zip`` if it does not exist and returns
     the absolute file path."""
-    path = '{}/white-gemini-iv.zip'.format(data_dir())
+    path = '{}/white-gemini-iv.zip'.format(data_dir)
     if not os.path.exists(path):
         with zipfile.ZipFile(path, 'w') as zip:
             for filename in ['white-gemini-iv.vrt',
                              '389225main_sw_1965_1024.jpg']:
-                zip.write(os.path.join(data_dir(), filename), filename)
+                zip.write(os.path.join(data_dir, filename), filename)
     return path
+
+
+@pytest.fixture(autouse=True)
+def set_mem_name(request, monkeypatch):
+    def youyoueyedeefour():
+        return "{}-{}".format(request.node.name, uuid.uuid4())
+    monkeypatch.setattr(rasterio._io, "uuid4", youyoueyedeefour)
 
 
 class MockGeoInterface(object):
@@ -596,3 +610,15 @@ requires_gdal21 = pytest.mark.skipif(
 requires_gdal22 = pytest.mark.skipif(
     not gdal_version.at_least('2.2'),
     reason="Requires GDAL 2.2.x")
+
+requires_gdal23 = pytest.mark.skipif(
+    not gdal_version.at_least('2.3'),
+    reason="Requires GDAL ~= 2.3")
+
+requires_gdal_lt_3 = pytest.mark.skipif(
+    gdal_version.__lt__('3.0'),
+    reason="Requires GDAL 1.x/2.x")
+
+requires_gdal3 = pytest.mark.skipif(
+    not gdal_version.at_least('3.0'),
+    reason="Requires GDAL 3.0.x")

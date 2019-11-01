@@ -53,8 +53,8 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
     contour_label_kws : dictionary (opt)
         Keyword arguments for labeling the contours,
         empty dictionary for no labels.
-    ax : matplotlib axis (opt)
-        Axis to plot on, otherwise uses current axis.
+    ax : matplotlib axes (opt)
+        Axes to plot on, otherwise uses current axes.
     title : str, optional
         Title for the figure.
     transform : Affine, optional
@@ -150,12 +150,13 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
 def plotting_extent(source, transform=None):
     """Returns an extent in the format needed
      for matplotlib's imshow (left, right, bottom, top)
-     instead of rasterio's bounds (left, bottom, top, right)
+     instead of rasterio's bounds (left, bottom, right, top)
 
     Parameters
     ----------
     source : array or dataset object opened in 'r' mode
-        input data
+        If array, data in the order rows, columns and optionally bands. If array
+        is band order (bands in the first dimension), use arr[0]
     transform: Affine, required if source is array
         Defines the affine transform if source is an array
 

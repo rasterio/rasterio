@@ -1,10 +1,12 @@
 import json
-import logging
+"""rasterio.warp module tests"""
+
 import sys
 
 import pytest
 from affine import Affine
 import numpy as np
+from numpy.testing import assert_almost_equal
 
 import rasterio
 from rasterio.control import GroundControlPoint
@@ -24,11 +26,10 @@ from rasterio.warp import (
 )
 from rasterio import windows
 
-from .conftest import requires_gdal22
+from .conftest import requires_gdal22, requires_gdal3, requires_gdal_lt_3
 
 
 gdal_version = GDALVersion.runtime()
-logging.basicConfig(level=logging.DEBUG)
 
 
 DST_TRANSFORM = Affine(300.0, 0.0, -8789636.708, 0.0, -300.0, 2943560.235)
@@ -46,7 +47,7 @@ def flatten_coords(coordinates):
 
 
 reproj_expected = (
-    ({"CHECK_WITH_INVERT_PROJ": False}, 7608), ({"CHECK_WITH_INVERT_PROJ": True}, 2216)
+    ({"CHECK_WITH_INVERT_PROJ": False}, 6644), ({"CHECK_WITH_INVERT_PROJ": True}, 6644)
 )
 
 
@@ -77,8 +78,8 @@ def default_reproject_params():
         top=70,
         width=80,
         height=80,
-        src_crs={"init": "EPSG:4326"},
-        dst_crs={"init": "EPSG:2163"},
+        src_crs=CRS.from_epsg(4326),
+        dst_crs=CRS.from_epsg(2163),
     )
 
 
@@ -90,12 +91,12 @@ def uninvertable_reproject_params():
         top=70,
         width=80,
         height=80,
-        src_crs={"init": "EPSG:4326"},
-        dst_crs={"init": "EPSG:26836"},
+        src_crs=CRS.from_epsg(4326),
+        dst_crs=CRS.from_epsg(26836),
     )
 
 
-WGS84_crs = {"init": "EPSG:4326"}
+WGS84_crs = CRS.from_epsg(4326)
 
 
 def test_transform_src_crs_none():
@@ -152,14 +153,14 @@ def test_reproject_dst_crs_none():
 
 def test_transform():
     """2D and 3D."""
-    WGS84_crs = {"init": "EPSG:4326"}
+    WGS84_crs = CRS.from_epsg(4326)
     WGS84_points = ([12.492269], [41.890169], [48.])
-    ECEF_crs = {"init": "EPSG:4978"}
+    ECEF_crs = CRS.from_epsg(4978)
     ECEF_points = ([4642610.], [1028584.], [4236562.])
     ECEF_result = transform(WGS84_crs, ECEF_crs, *WGS84_points)
     assert np.allclose(np.array(ECEF_result), np.array(ECEF_points))
 
-    UTM33_crs = {"init": "EPSG:32633"}
+    UTM33_crs = CRS.from_epsg(32633)
     UTM33_points = ([291952], [4640623])
     UTM33_result = transform(WGS84_crs, UTM33_crs, *WGS84_points[:2])
     assert np.allclose(np.array(UTM33_result), np.array(UTM33_points))
@@ -169,7 +170,7 @@ def test_transform_bounds():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         l, b, r, t = src.bounds
         assert np.allclose(
-            transform_bounds(src.crs, {"init": "EPSG:4326"}, l, b, r, t),
+            transform_bounds(src.crs, CRS.from_epsg(4326), l, b, r, t),
             (
                 -78.95864996545055,
                 23.564991210854686,
@@ -179,11 +180,48 @@ def test_transform_bounds():
         )
 
 
+def test_transform_bounds__esri_wkt():
+    left, bottom, right, top = \
+        (-78.95864996545055, 23.564991210854686,
+         -76.57492370013823, 25.550873767433984)
+    dst_projection_string = (
+        'PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",'
+        'GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",'
+        'SPHEROID["GRS_1980",6378137.0,298.257222101]],'
+        'PRIMEM["Greenwich",0.0],'
+        'UNIT["Degree",0.0174532925199433]],'
+        'PROJECTION["Albers"],'
+        'PARAMETER["false_easting",0.0],'
+        'PARAMETER["false_northing",0.0],'
+        'PARAMETER["central_meridian",-96.0],'
+        'PARAMETER["standard_parallel_1",29.5],'
+        'PARAMETER["standard_parallel_2",45.5],'
+        'PARAMETER["latitude_of_origin",23.0],'
+        'UNIT["Meter",1.0],'
+        'VERTCS["NAVD_1988",'
+        'VDATUM["North_American_Vertical_Datum_1988"],'
+        'PARAMETER["Vertical_Shift",0.0],'
+        'PARAMETER["Direction",1.0],UNIT["Centimeter",0.01]]]')
+    assert np.allclose(
+        transform_bounds(CRS.from_epsg(4326),
+                         dst_projection_string,
+                         left,
+                         bottom,
+                         right,
+                         top),
+        (
+            1721263.7931814701,
+            219684.49332178483,
+            2002926.56696663,
+            479360.16562217404),
+    )
+
+
 def test_transform_bounds_densify():
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
-    src_crs = {"init": "EPSG:4326"}
-    dst_crs = {"init": "EPSG:2163"}
+    src_crs = CRS.from_epsg(4326)
+    dst_crs = CRS.from_epsg(2163)
     assert np.allclose(
         transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=0),
         (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559),
@@ -205,8 +243,8 @@ def test_transform_bounds_no_change():
 def test_transform_bounds_densify_out_of_bounds():
     with pytest.raises(ValueError):
         transform_bounds(
-            {"init": "EPSG:4326"},
-            {"init": "EPSG:32610"},
+            CRS.from_epsg(4326),
+            CRS.from_epsg(32610),
             -120,
             40,
             -80,
@@ -226,7 +264,7 @@ def test_calculate_default_transform():
     )
 
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        wgs84_crs = {"init": "EPSG:4326"}
+        wgs84_crs = CRS.from_epsg(4326)
         dst_transform, width, height = calculate_default_transform(
             src.crs, wgs84_crs, src.width, src.height, *src.bounds
         )
@@ -249,7 +287,7 @@ def test_calculate_default_transform_single_resolution():
         )
         dst_transform, width, height = calculate_default_transform(
             src.crs,
-            {"init": "EPSG:4326"},
+            CRS.from_epsg(4326),
             src.width,
             src.height,
             *src.bounds,
@@ -275,7 +313,7 @@ def test_calculate_default_transform_multiple_resolutions():
 
         dst_transform, width, height = calculate_default_transform(
             src.crs,
-            {"init": "EPSG:4326"},
+            CRS.from_epsg(4326),
             src.width,
             src.height,
             *src.bounds,
@@ -301,7 +339,7 @@ def test_calculate_default_transform_dimensions():
 
         dst_transform, width, height = calculate_default_transform(
             src.crs,
-            {"init": "EPSG:4326"},
+            CRS.from_epsg(4326),
             src.width,
             src.height,
             *src.bounds,
@@ -392,7 +430,7 @@ def test_reproject_epsg():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:3857"}
+    dst_crs = {"init": "epsg:3857"}
     out = np.empty(src.shape, dtype=np.uint8)
     reproject(
         source,
@@ -406,6 +444,114 @@ def test_reproject_epsg():
     assert (out > 0).sum() == 438113
 
 
+def test_reproject_epsg__simple_array():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    out, dst_transform = reproject(
+        source,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 383077
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(330.2992903555146, 0.0, -8789636.707871985,
+                                     0.0, -330.2992903555146, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple_array_resolution():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    out, dst_transform = reproject(
+        source,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs=dst_crs,
+        dst_resolution=(300, 300),
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 464503
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(300, 0.0, -8789636.707871985,
+                                     0.0, -300, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple_array_dst():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    dst_out = np.empty(src.shape, dtype=np.uint8)
+
+    out, dst_transform = reproject(
+        source,
+        dst_out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_crs=dst_crs,
+        resampling=Resampling.nearest,
+    )
+    assert (out > 0).sum() == 368123
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(335.3101519032594, 0.0, -8789636.707871985,
+                                     0.0, -338.579773957742, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        dst_crs = {"init": "EPSG:3857"}
+        out, dst_transform = reproject(
+            rasterio.band(src, 1),
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest,
+        )
+    assert (out > 0).sum() == 383077
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(330.2992903555146, 0.0, -8789636.707871985,
+                                     0.0, -330.2992903555146, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_epsg__simple_resolution():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        dst_crs = {"init": "EPSG:3857"}
+        out, dst_transform = reproject(
+            rasterio.band(src, 1),
+            dst_crs=dst_crs,
+            dst_resolution=(300, 300),
+            resampling=Resampling.nearest,
+        )
+    assert (out > 0).sum() == 464503
+    assert_almost_equal(tuple(dst_transform),
+                        tuple(Affine(300.0, 0.0, -8789636.707871985,
+                                     0.0, -300.0, 2943560.2346221623)),
+                        decimal=5)
+
+
+def test_reproject_no_destination_with_transform():
+    with rasterio.open("tests/data/RGB.byte.tif") as src:
+        source = src.read(1)
+
+    dst_crs = {"init": "EPSG:3857"}
+    with pytest.raises(ValueError):
+        reproject(
+            source,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_crs=dst_crs,
+            dst_transform=DST_TRANSFORM,
+            resampling=Resampling.nearest,
+        )
+
+
 def test_reproject_out_of_bounds():
     """Using EPSG code is not appropriate for the transform.
 
@@ -414,7 +560,7 @@ def test_reproject_out_of_bounds():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.zeros(src.shape, dtype=np.uint8)
     reproject(
         source,
@@ -428,8 +574,11 @@ def test_reproject_out_of_bounds():
     assert not out.any()
 
 
+@requires_gdal3
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_nodata(options, expected):
+    # Older combinations of GDAL and PROJ might have got this transformation wrong.
+    # Results look better with GDAL 3.
     nodata = 215
 
     with rasterio.Env(**options):
@@ -455,6 +604,7 @@ def test_reproject_nodata(options, expected):
         )
 
 
+@requires_gdal3
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_nodata_nan(options, expected):
 
@@ -479,6 +629,7 @@ def test_reproject_nodata_nan(options, expected):
         assert np.isnan(out).sum() == (params.dst_width * params.dst_height - expected)
 
 
+@requires_gdal3
 @pytest.mark.parametrize("options, expected", reproj_expected)
 def test_reproject_dst_nodata_default(options, expected):
     """If nodata is not provided, destination will be filled with 0."""
@@ -935,7 +1086,7 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         src_transform=src.transform,
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
-        dst_crs={"init": "EPSG:3857"},
+        dst_crs={"init": "epsg:3857"},
         resampling=method,
     )
 
@@ -972,7 +1123,7 @@ def test_reproject_resampling_alpha(method):
         src_transform=src.transform,
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
-        dst_crs={"init": "EPSG:3857"},
+        dst_crs={"init": "epsg:3857"},
         resampling=method,
     )
 
@@ -988,7 +1139,7 @@ def test_reproject_not_yet_supported_resampling(method):
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(GDALVersionError):
         reproject(
@@ -1007,7 +1158,7 @@ def test_reproject_unsupported_resampling():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(ValueError):
         reproject(
@@ -1026,7 +1177,7 @@ def test_reproject_unsupported_resampling_guass():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(ValueError):
         reproject(
@@ -1050,7 +1201,7 @@ def test_resample_default_invert_proj(method):
         source = src.read(1)
         profile = src.profile.copy()
 
-    dst_crs = {"init": "EPSG:32619"}
+    dst_crs = {"init": "epsg:32619"}
 
     # Calculate the ideal dimensions and transformation in the new crs
     dst_affine, dst_width, dst_height = calculate_default_transform(
@@ -1138,7 +1289,7 @@ def test_resample_no_invert_proj(method):
             source = src.read(1)
             profile = src.profile.copy()
 
-        dst_crs = {"init": "EPSG:32619"}
+        dst_crs = {"init": "epsg:32619"}
 
         # Calculate the ideal dimensions and transformation in the new crs
         dst_affine, dst_width, dst_height = calculate_default_transform(
@@ -1312,7 +1463,7 @@ def test_reproject_dst_nodata():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "EPSG:3857"}
+    dst_crs = {"init": "epsg:3857"}
     out = np.empty(src.shape, dtype=np.float32)
     reproject(
         source,
@@ -1326,7 +1477,7 @@ def test_reproject_dst_nodata():
         resampling=Resampling.nearest,
     )
 
-    assert (out > 0).sum() == 438113
+    assert (out[~np.isnan(out)] > 0.0).sum() == 438113
     assert out[0, 0] != 0
     assert np.isnan(out[0, 0])
 
@@ -1334,7 +1485,7 @@ def test_reproject_dst_nodata():
 def test_issue1401():
     """The warp_mem_limit keyword argument is in effect"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        dst_crs = {"init": "EPSG:3857"}
+        dst_crs = {"init": "epsg:3857"}
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
             rasterio.band(src, 2),
@@ -1363,7 +1514,7 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
             src_transform=src.transform,
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
-            dst_crs={"init": "EPSG:3857"},
+            dst_crs={"init": "epsg:3857"},
             dst_alpha=4,
         )
 
@@ -1381,7 +1532,7 @@ def test_issue1350():
     """Warp bands other than 1 or All"""
 
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        dst_crs = {"init": "EPSG:3857"}
+        dst_crs = {"init": "epsg:3857"}
 
         reprojected = []
 
@@ -1413,9 +1564,10 @@ def test_issue_1446():
     assert round(g["coordinates"][1], 1) == 4212702.1
 
 
+@requires_gdal_lt_3
 def test_issue_1446_b():
     """Confirm that lines aren't thrown as reported in #1446"""
-    src_crs = CRS({"init": "EPSG:4326"})
+    src_crs = CRS.from_epsg(4326)
     dst_crs = CRS(
         {
             "proj": "sinu",
@@ -1435,3 +1587,37 @@ def test_issue_1446_b():
     }
     # Before the fix, this geometry was thrown eastward of 0.0. It should be between -350 and -250.
     assert all([-350 < x < -150 for x, y in transformed_geoms[183519]["coordinates"]])
+
+
+def test_issue_1076():
+    """Confirm fix of #1076"""
+    arr = (np.random.random((20, 30)) * 100).astype('int32')
+    fill_value = 42
+    newarr = np.full((200, 300), fill_value=fill_value, dtype='int32')
+
+    src_crs = CRS.from_epsg(32632)
+    src_transform = Affine(600.0, 0.0, 399960.0, 0.0, -600.0, 6100020.0)
+    dst_transform = Affine(60.0, 0.0, 399960.0, 0.0, -60.0, 6100020.0)
+
+    reproject(arr, newarr,
+        src_transform=src_transform,
+        dst_transform=dst_transform,
+        src_crs=src_crs,
+        dst_crs=src_crs,
+        resample=Resampling.nearest)
+
+    assert not (newarr == fill_value).all()
+
+
+def test_reproject_init_dest_nodata():
+    """No pixels should transfer over"""
+    crs = CRS.from_epsg(4326)
+    transform = Affine.identity()
+    source = np.zeros((1, 100, 100))
+    destination = np.ones((1, 100, 100))
+    reproject(
+        source, destination, src_crs=crs, src_transform=transform,
+        dst_crs=crs, dst_transform=transform,
+        src_nodata=0, init_dest_nodata=False
+    )
+    assert destination.all()

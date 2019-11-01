@@ -105,9 +105,9 @@ def test_merge_with_colormap(test_data_dir_1):
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
 
-    # Add a colormap to the first input prior merge
-    with rasterio.open(inputs[0], 'r+') as src:
-        src.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 0)})
+    for inputname in inputs:
+        with rasterio.open(inputname, 'r+') as src:
+            src.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 255)})
 
     runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
@@ -139,6 +139,7 @@ def test_merge_with_nodata(test_data_dir_1):
         assert np.all(data == expected)
 
 
+@pytest.mark.filterwarnings("ignore:Input file's nodata value")
 def test_merge_error(test_data_dir_1):
     """A nodata value outside the valid range results in an error"""
     outputname = str(test_data_dir_1.join('merged.tif'))

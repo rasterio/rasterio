@@ -8,6 +8,7 @@ import rasterio
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
+@pytest.mark.gdalbin
 def test_nodata(tmpdir):
     dst_path = str(tmpdir.join('lol.tif'))
     with rasterio.open('tests/data/RGB.byte.tif') as src:
@@ -24,6 +25,7 @@ def test_nodata(tmpdir):
     pattern = b'Band 2.*?NoData Value=0'
     assert re.search(pattern, info, re.DOTALL) is not None
 
+@pytest.mark.gdalbin
 def test_set_nodata(tmpdir):
     dst_path = str(tmpdir.join('lol.tif'))
     with rasterio.open('tests/data/RGB.byte.tif') as src:

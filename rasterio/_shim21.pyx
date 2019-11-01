@@ -23,7 +23,8 @@ from rasterio._err cimport exc_wrap_pointer
 cdef GDALDatasetH open_dataset(
         object filename, int flags, object allowed_drivers,
         object open_options, object siblings) except NULL:
-    """Wrapper for GDALOpen and GDALOpenShared"""
+    """Open a dataset and return a handle"""
+
     cdef char **drivers = NULL
     cdef char **options = NULL
     cdef GDALDatasetH hds = NULL
@@ -39,16 +40,17 @@ cdef GDALDatasetH open_dataset(
             name = name.encode('utf-8')
             drivers = CSLAddString(drivers, <const char *>name)
 
-    for k, v in open_options.items():
-        k = k.upper().encode('utf-8')
+    if open_options:
+        for k, v in open_options.items():
+            k = k.upper().encode('utf-8')
 
-        # Normalize values consistent with code in _env module.
-        if isinstance(v, bool):
-            v = ('ON' if v else 'OFF').encode('utf-8')
-        else:
-            v = str(v).encode('utf-8')
+            # Normalize values consistent with code in _env module.
+            if isinstance(v, bool):
+                v = ('ON' if v else 'OFF').encode('utf-8')
+            else:
+                v = str(v).encode('utf-8')
 
-        options = CSLAddNameValue(options, <const char *>k, <const char *>v)
+            options = CSLAddNameValue(options, <const char *>k, <const char *>v)
 
     # Support for sibling files is not yet implemented.
     if siblings:
@@ -69,3 +71,10 @@ cdef GDALDatasetH open_dataset(
 
 cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
     return GDALDeleteRasterNoDataValue(hBand)
+
+
+cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
+    return ''
+
+cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
+    pass

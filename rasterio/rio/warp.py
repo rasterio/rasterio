@@ -1,15 +1,13 @@
 """$ rio warp"""
 
-import logging
-from math import ceil, log
-import warnings
+from math import ceil
 
 import click
 from cligj import format_opt
 
 import rasterio
 from rasterio.crs import CRS
-from rasterio.env import setenv, GDALVersion
+from rasterio.env import setenv
 from rasterio.errors import CRSError
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
@@ -150,8 +148,8 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
 
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
-            out_kwargs = src.profile.copy()
-            out_kwargs['driver'] = driver
+            out_kwargs = src.profile
+            out_kwargs.update(driver=driver)
 
             # Sort out the bounds options.
             if src_bounds and dst_bounds:
@@ -271,9 +269,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
             # value to src_nodata (will be overridden by dst_nodata if it is not None
             if src_nodata is not None:
                 # Update the dst nodata value
-                out_kwargs.update({
-                    'nodata': src_nodata
-                })
+                out_kwargs.update(nodata=src_nodata)
 
             # Validate a manually set destination NODATA value
             # against the input datatype.
@@ -283,7 +279,7 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                         "--src-nodata must be provided because dst-nodata is not None")
                 else:
                     # Update the dst nodata value
-                    out_kwargs.update({'nodata': dst_nodata})
+                    out_kwargs.update(nodata=dst_nodata)
 
             # When the bounds option is misused, extreme values of
             # destination width and height may result.
@@ -294,12 +290,12 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
                     "Invalid output dimensions: {0}.".format(
                         (dst_width, dst_height)))
 
-            out_kwargs.update({
-                'crs': dst_crs,
-                'transform': dst_transform,
-                'width': dst_width,
-                'height': dst_height
-            })
+            out_kwargs.update(
+                crs=dst_crs,
+                transform=dst_transform,
+                width=dst_width,
+                height=dst_height
+            )
 
             # Adjust block size if necessary.
             if ('blockxsize' in out_kwargs and

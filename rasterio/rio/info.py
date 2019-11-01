@@ -6,8 +6,8 @@ import json
 import click
 
 import rasterio
-import rasterio.crs
 from rasterio.rio import options
+from rasterio.transform import from_gcps
 
 
 @click.command(short_help="Print information about a data file.")
@@ -70,13 +70,13 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         info['bounds'] = src.bounds
 
         if src.crs:
-            proj4 = src.crs.to_string()
-            if proj4.startswith('+init=epsg'):
-                proj4 = proj4.split('=')[1].upper()
-            info['crs'] = proj4
+            epsg = src.crs.to_epsg()
+            if epsg:
+                info['crs'] = 'EPSG:{}'.format(epsg)
+            else:
+                info['crs'] = src.crs.to_string()
         else:
             info['crs'] = None
-            proj4 = ''
 
         info['res'] = src.res
         info['colorinterp'] = [ci.name for ci in src.colorinterp]
@@ -86,8 +86,23 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
         info['mask_flags'] = [[
             flag.name for flag in flags] for flags in src.mask_flag_enums]
 
-        if proj4 != '':
+        if src.crs:
             info['lnglat'] = src.lnglat()
+
+        gcps, gcps_crs = src.gcps
+
+        if gcps:
+            info['gcps'] = {'points': [p.asdict() for p in gcps]}
+            if gcps_crs:
+                epsg = gcps_crs.to_epsg()
+                if epsg:
+                    info['gcps']['crs'] = 'EPSG:{}'.format(epsg)
+                else:
+                    info['gcps']['crs'] = src.crs.to_string()
+            else:
+                info['gcps']['crs'] = None
+
+            info['gcps']['transform'] = from_gcps(gcps)
 
         if verbose:
             stats = [{'min': float(b.min()),
@@ -95,16 +110,7 @@ def info(ctx, input, aspect, indent, namespace, meta_member, verbose, bidx,
                       'mean': float(b.mean())
                       } for b in src.read(masked=masked)]
             info['stats'] = stats
-
             info['checksum'] = [src.checksum(i) for i in src.indexes]
-
-            gcps, crs = src.gcps
-            proj4 = crs.to_string()
-            if proj4.startswith('+init=epsg'):
-                proj4 = proj4.split('=')[1].upper()
-            if gcps:
-                info['gcps'] = {
-                    'crs': proj4, 'points': [p.asdict() for p in gcps]}
 
         if aspect == 'meta':
             if meta_member == 'subdatasets':

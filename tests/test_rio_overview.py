@@ -2,9 +2,11 @@ import logging
 import sys
 
 from click.testing import CliRunner
+import pytest
 
 import rasterio
 from rasterio.rio.main import main_group as cli
+from rasterio.rio.overview import get_maximum_overview_level
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -73,4 +75,28 @@ def test_no_args(data):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile])
     assert result.exit_code == 2
-    assert "Please specify --ls, --rebuild, or --build ..." in result.output
+
+
+def test_build_auto_ls(data):
+    runner = CliRunner()
+    inputfile = str(data.join('RGB.byte.tif'))
+    result = runner.invoke(cli, ['overview', inputfile, '--build', 'auto'])
+    assert result.exit_code == 0
+    result = runner.invoke(cli, ['overview', inputfile, '--ls'])
+    assert result.exit_code == 0
+    expected = "  Band 1: [2, 4] (method: 'nearest')\n  Band 2: [2, 4] (method: 'nearest')\n  Band 3: [2, 4] (method: 'nearest')\n"
+    assert result.output.endswith(expected)
+
+
+@pytest.mark.parametrize(
+    "width, height, minsize, expected",
+    [
+        (256, 256, 256, 0),
+        (257, 257, 256, 1),
+        (1000, 1000, 128, 3),
+        (1000, 100, 128, 0)
+    ]
+)
+def test_max_overview(width, height, minsize, expected):
+    overview_level = get_maximum_overview_level(width, height, minsize)
+    assert overview_level == expected

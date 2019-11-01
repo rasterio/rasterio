@@ -8,16 +8,13 @@ import re
 import threading
 import warnings
 
-import rasterio
 from rasterio._env import (
-    GDALEnv, del_gdal_config, get_gdal_config, set_gdal_config)
+        GDALEnv, get_gdal_config, set_gdal_config,
+        GDALDataFinder, PROJDataFinder)
 from rasterio.compat import string_types, getargspec
-from rasterio.dtypes import check_dtype
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
-from rasterio.path import parse_path, UnparsedPath, ParsedPath
 from rasterio.session import Session, AWSSession, DummySession
-from rasterio.transform import guard_transform
 
 
 class ThreadEnv(threading.local):
@@ -53,6 +50,12 @@ class ThreadEnv(threading.local):
 local = ThreadEnv()
 
 log = logging.getLogger(__name__)
+
+try:
+    import boto3
+except ImportError:
+    log.info("failed to import boto3, continuing.")
+    boto3 = None
 
 
 class Env(object):
@@ -185,7 +188,9 @@ class Env(object):
                     RasterioDeprecationWarning
                 )
                 session = AWSSession(session=session)
+
             self.session = session
+
         elif aws_access_key_id or profile_name or aws_unsigned:
             self.session = AWSSession(
                 aws_access_key_id=aws_access_key_id,
@@ -194,8 +199,15 @@ class Env(object):
                 region_name=region_name,
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
-        elif 'AWS_ACCESS_KEY_ID' in os.environ:
-            self.session = AWSSession()
+
+        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ and boto3 is not None:
+            try:
+                self.session = AWSSession()
+                self.session.credentials
+            except RuntimeError as exc:
+                log.info("No AWS session created. Credentials in environment have expired.")
+                self.session = DummySession()
+
         else:
             self.session = DummySession()
 
@@ -226,16 +238,6 @@ class Env(object):
         options.update(**kwargs)
         return Env(*args, **options)
 
-    @property
-    def is_credentialized(self):
-        """Test for existence of cloud credentials
-
-        Returns
-        -------
-        bool
-        """
-        return hascreds()  # bool(self.session)
-
     def credentialize(self):
         """Get credentials and configure GDAL
 
@@ -247,16 +249,20 @@ class Env(object):
         None
 
         """
-        if hascreds():
-            pass
-        else:
-            cred_opts = self.session.get_credential_options()
-            self.options.update(**cred_opts)
-            setenv(**cred_opts)
+        cred_opts = self.session.get_credential_options()
+        self.options.update(**cred_opts)
+        setenv(**cred_opts)
 
     def drivers(self):
         """Return a mapping of registered drivers."""
         return local._env.drivers()
+
+    def _dump_open_datasets(self):
+        """Writes descriptions of open datasets to stderr
+
+        For debugging and testing purposes.
+        """
+        return local._env._dump_open_datasets()
 
     def __enter__(self):
         log.debug("Entering env context: %r", self)
@@ -338,9 +344,8 @@ def setenv(**options):
 
 
 def hascreds():
-    gdal_config = local._env.get_config_options()
-    return bool('AWS_ACCESS_KEY_ID' in gdal_config and
-                'AWS_SECRET_ACCESS_KEY' in gdal_config)
+    warnings.warn("Please use Env.session.hascreds() instead", RasterioDeprecationWarning)
+    return local._env is not None and all(key in local._env.get_config_options() for key in ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])
 
 
 def delenv():
@@ -352,6 +357,32 @@ def delenv():
         log.debug("Cleared existing %r options", local._env)
     local._env.stop()
     local._env = None
+
+
+class NullContextManager(object):
+
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
+def env_ctx_if_needed():
+    """Return an Env if one does not exist
+
+    Returns
+    -------
+    Env or a do-nothing context manager
+
+    """
+    if local._env:
+        return NullContextManager()
+    else:
+        return Env.from_defaults()
 
 
 def ensure_env(f):
@@ -368,6 +399,12 @@ def ensure_env(f):
 
 
 def ensure_env_credentialled(f):
+    """DEPRECATED alias for ensure_env_with_credentials"""
+    warnings.warn("Please use ensure_env_with_credentials instead", RasterioDeprecationWarning)
+    return ensure_env_with_credentials(f)
+
+
+def ensure_env_with_credentials(f):
     """Ensures a config environment exists and is credentialized
 
     Parameters
@@ -394,9 +431,15 @@ def ensure_env_credentialled(f):
             env_ctor = Env.from_defaults
 
         if isinstance(args[0], str):
-            session = Session.from_path(args[0])
+            session_cls = Session.cls_from_path(args[0])
+
+            if local._env and session_cls.hascreds(getenv()):
+                session_cls = DummySession
+
+            session = session_cls()
+
         else:
-            session = Session.from_path(None)
+            session = DummySession()
 
         with env_ctor(session=session):
             return f(*args, **kwds)
@@ -449,7 +492,7 @@ class GDALVersion(object):
         elif isinstance(input, string_types):
             # Extract major and minor version components.
             # alpha, beta, rc suffixes ignored
-            match = re.search('^\d+\.\d+', input)
+            match = re.search(r'^\d+\.\d+', input)
             if not match:
                 raise ValueError(
                     "value does not appear to be a valid GDAL version "
@@ -579,3 +622,44 @@ def require_gdal_version(version, param=None, values=None, is_max_version=False,
         return wrapper
 
     return decorator
+
+
+# Patch the environment if needed, such as in the installed wheel case.
+
+if 'GDAL_DATA' not in os.environ:
+
+    path = GDALDataFinder().search_wheel()
+
+    if path:
+        os.environ['GDAL_DATA'] = path
+        log.debug("GDAL data found in package, GDAL_DATA set to %r.", path)
+
+    # See https://github.com/mapbox/rasterio/issues/1631.
+    elif GDALDataFinder().find_file("header.dxf"):
+        log.debug("GDAL data files are available at built-in paths")
+
+    else:
+        path = GDALDataFinder().search()
+
+        if path:
+            os.environ['GDAL_DATA'] = path
+            log.debug("GDAL_DATA not found in environment, set to %r.", path)
+
+if 'PROJ_LIB' not in os.environ:
+
+    path = PROJDataFinder().search_wheel()
+
+    if path:
+        os.environ['PROJ_LIB'] = path
+        log.debug("PROJ data found in package, PROJ_LIB set to %r.", path)
+
+    # See https://github.com/mapbox/rasterio/issues/1631.
+    elif PROJDataFinder().has_data():
+        log.debug("PROJ data files are available at built-in paths")
+
+    else:
+        path = PROJDataFinder().search()
+
+        if path:
+            os.environ['PROJ_LIB'] = path
+            log.debug("PROJ data not found in environment, set to %r.", path)

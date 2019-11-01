@@ -1,14 +1,13 @@
 """$ rio stack"""
 
 
-import collections
 import logging
 
 import click
 from cligj import format_opt
 
 import rasterio
-from rasterio.compat import zip_longest
+from rasterio.compat import Iterable, zip_longest
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 
@@ -104,7 +103,7 @@ def stack(ctx, files, output, driver, bidx, photometric, overwrite,
                             data = src.read(index)
                             dst.write(data, dst_idx)
                             dst_idx += 1
-                        elif isinstance(index, collections.Iterable):
+                        elif isinstance(index, Iterable):
                             data = src.read(index)
                             dst.write(data, range(dst_idx, dst_idx + len(index)))
                             dst_idx += len(index)

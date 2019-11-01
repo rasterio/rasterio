@@ -8,22 +8,24 @@ import warnings
 import numpy as np
 
 from rasterio import windows
-from rasterio.enums import Resampling
 from rasterio.transform import Affine
 
 
 logger = logging.getLogger(__name__)
 
+MERGE_METHODS = ('first', 'last', 'min', 'max')
 
-def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=None):
+
+def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=None,
+          method='first'):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
     coordinate reference system.
 
     Input files are merged in their listed order using the reverse
-    painter's algorithm. If the output file exists, its values will be
-    overwritten by input values.
+    painter's algorithm (default) or another method. If the output file exists,
+    its values will be overwritten by input values.
 
     Geospatial bounds and resolution of a new output file in the
     units of the input file coordinate reference system may be provided
@@ -43,8 +45,30 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
         in the first input raster.
+    precision: float, optional
+        Number of decimal points of precision when computing inverse transform.
     indexes : list of ints or a single int, optional
         bands to read and merge
+    method : str or callable
+        pre-defined method:
+            first: reverse painting
+            last: paint valid new on top of existing
+            min: pixel-wise min of existing and new
+            max: pixel-wise max of existing and new
+        or custom callable with signature:
+
+        def function(old_data, new_data, old_nodata, new_nodata):
+
+            Parameters
+            ----------
+            old_data : array_like
+                array to update with new_data
+            new_data : array_like
+                data to merge
+                same shape as old_data
+            old_nodata, new_data : array_like
+                boolean masks where old/new data is nodata
+                same shape as old_data
 
     Returns
     -------
@@ -63,6 +87,10 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     first_res = first.res
     nodataval = first.nodatavals[0]
     dtype = first.dtypes[0]
+
+    if method not in MERGE_METHODS and not callable(method):
+        raise ValueError('Unknown method {0}, must be one of {1} or callable'
+                         .format(method, MERGE_METHODS))
 
     # Determine output band count
     if indexes is None:
@@ -139,6 +167,38 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
     else:
         nodataval = 0
 
+    if method == 'first':
+        def copyto(old_data, new_data, old_nodata, new_nodata):
+            mask = np.logical_and(old_nodata, ~new_nodata)
+            old_data[mask] = new_data[mask]
+
+    elif method == 'last':
+        def copyto(old_data, new_data, old_nodata, new_nodata):
+            mask = ~new_nodata
+            old_data[mask] = new_data[mask]
+
+    elif method == 'min':
+        def copyto(old_data, new_data, old_nodata, new_nodata):
+            mask = np.logical_and(~old_nodata, ~new_nodata)
+            old_data[mask] = np.minimum(old_data[mask], new_data[mask])
+
+            mask = np.logical_and(old_nodata, ~new_nodata)
+            old_data[mask] = new_data[mask]
+
+    elif method == 'max':
+        def copyto(old_data, new_data, old_nodata, new_nodata):
+            mask = np.logical_and(~old_nodata, ~new_nodata)
+            old_data[mask] = np.maximum(old_data[mask], new_data[mask])
+
+            mask = np.logical_and(old_nodata, ~new_nodata)
+            old_data[mask] = new_data[mask]
+
+    elif callable(method):
+        copyto = method
+
+    else:
+        raise ValueError(method)
+
     for src in datasets:
         # Real World (tm) use of boundless reads.
         # This approach uses the maximum amount of memory to solve the
@@ -181,7 +241,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=Non
         else:
             region_nodata = region == nodataval
             temp_nodata = temp.mask
-        mask = np.logical_and(region_nodata, ~temp_nodata)
-        np.copyto(region, temp, where=mask)
+
+        copyto(region, temp, region_nodata, temp_nodata)
 
     return dest, output_transform
