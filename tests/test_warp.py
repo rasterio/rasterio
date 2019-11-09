@@ -1057,6 +1057,13 @@ def test_transform_geom_multipolygon(polygon_3373):
     assert all(round(x, 1) == x for x in flatten_coords(result["coordinates"]))
 
 
+def test_transform_geom_array(polygon_3373):
+    geom = [polygon_3373 for _ in range(10)]
+    result = transform_geom("EPSG:3373", "EPSG:4326", geom, precision=1)
+    assert isinstance(result, list)
+    assert len(result) == 10
+
+
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_reproject_resampling(path_rgb_byte_tif, method):
     # Expected count of nonzero pixels for each resampling method, based
