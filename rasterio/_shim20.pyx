@@ -8,6 +8,7 @@ include "gdal.pxi"
 # Shim API for GDAL >= 2.0
 include "shim_rasterioex.pxi"
 
+import os
 
 # Declarations and implementations specific for GDAL = 2.0
 cdef extern from "gdal.h" nogil:

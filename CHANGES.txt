@@ -1,6 +1,17 @@
 Changes
 =======
 
+1.1.1 (2019-11-12)
+------------------
+
+- Use new set_proj_search_path() function to set the PROJ data search path. For
+  GDAL versions before 3.0 this sets the PROJ_LIB environment variable. For
+  GDAL version 3.0 this calls OSRSetPROJSearchPaths(), which overrides
+  PROJ_LIB (#1823).
+- Check for header.dxf file instead of pcs.csv when looking for installed GDAL
+  data. The latter is gone with GDAL 3.0 but the former remains (#1823).
+- RGB rasters are now properly displayed by rasterio.plot.show (#1650).
+
 1.1.0 (2019-10-07)
 ------------------
 

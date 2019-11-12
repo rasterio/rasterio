@@ -94,7 +94,7 @@ cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
 
 
 cdef void set_proj_search_path(object path):
-    cdef const char *const *paths = NULL
+    cdef char **paths = NULL
     cdef const char *path_c = NULL
     path_b = path.encode("utf-8")
     path_c = path_b

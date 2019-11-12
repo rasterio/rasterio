@@ -5,6 +5,8 @@ include "directives.pxi"
 # The baseline GDAL API.
 include "gdal.pxi"
 
+import os
+
 # Implementation specific to GDAL<2.0
 from rasterio import dtypes
 from rasterio.enums import Resampling
