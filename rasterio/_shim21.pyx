@@ -10,6 +10,7 @@ include "gdal.pxi"
 # Shim API for GDAL >= 2.0
 include "shim_rasterioex.pxi"
 
+import os
 
 # Declarations and implementations specific for GDAL >= 2.1
 cdef extern from "gdal.h" nogil:
@@ -78,3 +79,7 @@ cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
 
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
     pass
+
+
+cdef void set_proj_search_path(object path):
+    os.environ["PROJ_LIB"] = path

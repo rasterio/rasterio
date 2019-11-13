@@ -10,7 +10,7 @@ import warnings
 
 from rasterio._env import (
         GDALEnv, get_gdal_config, set_gdal_config,
-        GDALDataFinder, PROJDataFinder)
+        GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
 from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
@@ -645,21 +645,17 @@ if 'GDAL_DATA' not in os.environ:
             os.environ['GDAL_DATA'] = path
             log.debug("GDAL_DATA not found in environment, set to %r.", path)
 
-if 'PROJ_LIB' not in os.environ:
+if "PROJ_LIB" in os.environ:
+    path = os.environ["PROJ_LIB"]
+    set_proj_data_search_path(path)
 
-    path = PROJDataFinder().search_wheel()
+# See https://github.com/mapbox/rasterio/issues/1631.
+elif PROJDataFinder().has_data():
+    log.debug("PROJ data files are available at built-in paths")
+
+else:
+    path = PROJDataFinder().search()
 
     if path:
-        os.environ['PROJ_LIB'] = path
-        log.debug("PROJ data found in package, PROJ_LIB set to %r.", path)
-
-    # See https://github.com/mapbox/rasterio/issues/1631.
-    elif PROJDataFinder().has_data():
-        log.debug("PROJ data files are available at built-in paths")
-
-    else:
-        path = PROJDataFinder().search()
-
-        if path:
-            os.environ['PROJ_LIB'] = path
-            log.debug("PROJ data not found in environment, set to %r.", path)
+        log.debug("PROJ data not found in environment, setting to %r.", path)
+        set_proj_data_search_path(path)
