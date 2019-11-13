@@ -1,9 +1,12 @@
 Changes
 =======
 
-1.1.1 (2019-11-12)
+1.1.1 (2019-11-13)
 ------------------
 
+- Calling a dataset's sample method with coordinates outside the extent of a
+  dataset with a nodata value of None has raised a TypeError (#1822). Now, it
+  gives the values we would get from a boundless read of the dataset's values.
 - Use new set_proj_search_path() function to set the PROJ data search path. For
   GDAL versions before 3.0 this sets the PROJ_LIB environment variable. For
   GDAL version 3.0 this calls OSRSetPROJSearchPaths(), which overrides
