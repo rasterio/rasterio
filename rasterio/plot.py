@@ -93,10 +93,19 @@ def show(source, with_bounds=True, contour=False, contour_label_kws=None,
             arr = source.read(1, masked=True)
         else:
             try:
-                source_colorinterp = OrderedDict(zip(source.indexes, source.colorinterp))
+
+                # Lookup table for the color space in the source file. This will allow us to re-order it
+                # to RGB if needed
+                source_colorinterp = OrderedDict(zip(source.colorinterp, source.indexes))
+
                 colorinterp = rasterio.enums.ColorInterp
+
+                # Gather the indexes of the RGB channels in that order
                 rgb_indexes = [source_colorinterp[ci] for ci in
                                (colorinterp.red, colorinterp.green, colorinterp.blue)]
+
+                # Read the image in the proper order so the numpy array will have the colors in the
+                # order expected by matplotlib (RGB)
                 arr = source.read(rgb_indexes, masked=True)
                 arr = reshape_as_image(arr)
 
