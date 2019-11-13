@@ -762,30 +762,35 @@ cdef class DatasetReaderBase(DatasetBase):
                 mask = mask | self.read_masks(i, **kwargs)
             return mask
 
-    def sample(self, xy, indexes=None):
+    def sample(self, xy, indexes=None, masked=False):
         """Get the values of a dataset at certain positions
 
         Values are from the nearest pixel. They are not interpolated.
 
         Parameters
         ----------
-        xy : iterable, pairs of floats
-            A sequence or generator of (x, y) pairs.
-
-        indexes : list of ints or a single int, optional
-            If `indexes` is a list, the result is a 3D array, but is
-            a 2D array if it is a band index number.
+        xy : iterable
+            Pairs of x, y coordinates (floats) in the dataset's
+            reference system.
+        indexes : int or list of int
+            Indexes of dataset bands to sample.
+        masked : bool, default: False
+            Whether to mask samples that fall outside the extent of the
+            dataset.
 
         Returns
-        -------
-        Iterable, yielding dataset values for the specified `indexes`
-        as an ndarray.
+        ------
+        iterable
+            Arrays of length equal to the number of specified indexes
+            containing the dataset values for the bands corresponding to
+            those indexes.
+
         """
         # In https://github.com/mapbox/rasterio/issues/378 a user has
         # found what looks to be a Cython generator bug. Until that can
         # be confirmed and fixed, the workaround is a pure Python
         # generator implemented in sample.py.
-        return sample_gen(self, xy, indexes)
+        return sample_gen(self, xy, indexes=indexes, masked=masked)
 
 
 @contextmanager

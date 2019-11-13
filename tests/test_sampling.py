@@ -1,3 +1,5 @@
+import numpy
+
 import rasterio
 
 
@@ -11,6 +13,24 @@ def test_sampling_beyond_bounds():
     with rasterio.open('tests/data/RGB.byte.tif') as src:
         data = next(src.sample([(-10, 2719200.0)]))
         assert list(data) == [0, 0, 0]
+
+
+def test_sampling_beyond_bounds_no_nodata():
+    with rasterio.open('tests/data/RGB2.byte.tif') as src:
+        data = next(src.sample([(-10, 2719200.0)]))
+        assert list(data) == [0, 0, 0]
+
+
+def test_sampling_beyond_bounds_masked():
+    with rasterio.open('tests/data/RGBA.byte.tif') as src:
+        data = next(src.sample([(-10, 2719200.0)], masked=True))
+        assert list(data.mask) == [True, True, True, False]
+
+
+def test_sampling_beyond_bounds_nan():
+    with rasterio.open('tests/data/float_nan.tif') as src:
+        data = next(src.sample([(-10, 0.0)]))
+        assert numpy.isnan(data)
 
 
 def test_sampling_indexes():
