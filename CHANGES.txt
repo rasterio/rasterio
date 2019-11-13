@@ -4,6 +4,8 @@ Changes
 1.1.1 (2019-11-13)
 ------------------
 
+Bug fixes:
+
 - Calling a dataset's sample method with coordinates outside the extent of a
   dataset with a nodata value of None has raised a TypeError (#1822). Now, it
   gives the values we would get from a boundless read of the dataset's values.
@@ -14,6 +16,11 @@ Changes
 - Check for header.dxf file instead of pcs.csv when looking for installed GDAL
   data. The latter is gone with GDAL 3.0 but the former remains (#1823).
 - RGB rasters are now properly displayed by rasterio.plot.show (#1650).
+
+Notes:
+
+- The wheels on PyPI include GDAL 2.4.3 with a patch that addresses the
+  multithreading issue reported in #1828.
 
 1.1.0 (2019-10-07)
 ------------------
