@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 
 language: python
 
@@ -68,11 +68,6 @@ install:
   - "rio --version"
   - "rio --gdal-version"
   - "python -m pip list"
-
-before_script:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - "sleep 3"
 
 script:
   - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart and not switch' ; fi"
