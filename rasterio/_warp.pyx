@@ -888,13 +888,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         psWOptions.hSrcDS = hds
 
         try:
+
             if self.dst_width and self.dst_height and self.dst_transform:
                 # set up transform args (otherwise handled in
                 # GDALAutoCreateWarpedVRT)
                 try:
+
                     hTransformArg = exc_wrap_pointer(
                         GDALCreateGenImgProjTransformer3(
                             src_crs_wkt, src_gt, dst_crs_wkt, dst_gt))
+
                     if c_tolerance > 0.0:
                         hTransformArg = exc_wrap_pointer(
                             GDALCreateApproxTransformer(
@@ -909,6 +912,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
                     log.debug("Created transformer and options.")
                     psWOptions.pTransformerArg = hTransformArg
+
                 except Exception:
                     GDALDestroyApproxTransformer(hTransformArg)
                     raise
@@ -917,16 +921,20 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     hds_warped = GDALCreateWarpedVRT(
                         hds, c_width, c_height, dst_gt, psWOptions)
                     GDALSetProjection(hds_warped, dst_crs_wkt)
+
                 self._hds = exc_wrap_pointer(hds_warped)
+
             else:
                 with nogil:
                     hds_warped = GDALAutoCreateWarpedVRT(
-                        hds, NULL, dst_crs_wkt, c_resampling,
+                        hds, src_crs_wkt, dst_crs_wkt, c_resampling,
                         c_tolerance, psWOptions)
+
                 self._hds = exc_wrap_pointer(hds_warped)
 
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
+
         finally:
             CPLFree(dst_crs_wkt)
             CSLDestroy(c_warp_extras)
