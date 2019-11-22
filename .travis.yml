@@ -1,9 +1,6 @@
 language: python
 
-dist: xenial
-
-services:
-  - xvfb
+dist: trusty
 
 env:
   global:
@@ -28,20 +25,8 @@ jobs:
       env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
-    - python: "3.7"
-      env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
-    - python: "3.8"
-      env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
-    - python: "3.7"
-      env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
-    - python: "3.8"
-      env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
-    - python: "3.8"
-      env: GDALVERSION="master" PROJVERSION="6.1.1"
-  allow_failures:
-    - env: GDALVERSION="master" PROJVERSION="6.1.1"
 
 addons:
   apt:
@@ -51,6 +36,11 @@ addons:
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
+
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - "sleep 3"
 
 before_install:
   - python -m pip install -U pip
