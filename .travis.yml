@@ -1,6 +1,9 @@
+language: python
+
 dist: xenial
 
-language: python
+services:
+  - xvfb
 
 env:
   global:
