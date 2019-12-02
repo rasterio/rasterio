@@ -48,10 +48,11 @@ projection_projected_opt = click.option(
 @format_opt
 @projection_geographic_opt
 @projection_projected_opt
+@options.overwrite_opt
 @options.creation_options
 @click.pass_context
 def clip(ctx, files, output, bounds, like, driver, projection,
-         creation_options):
+         overwrite, creation_options):
     """Clips a raster using projected or geographic bounds.
 
     \b
@@ -78,7 +79,7 @@ def clip(ctx, files, output, bounds, like, driver, projection,
 
     with ctx.obj['env']:
 
-        output, files = resolve_inout(files=files, output=output)
+        output, files = resolve_inout(files=files, output=output, overwrite=overwrite)
         input = files[0]
 
         with rasterio.open(input) as src:
