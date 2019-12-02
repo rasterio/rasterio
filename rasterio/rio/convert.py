@@ -20,11 +20,12 @@ from rasterio.rio.helpers import resolve_inout
 @click.option('--scale-offset', type=float, default=None,
               help="Source to destination scaling offset.")
 @options.rgb_opt
+@options.overwrite_opt
 @options.creation_options
 @click.pass_context
 def convert(
         ctx, files, output, driver, dtype, scale_ratio, scale_offset,
-        photometric, creation_options):
+        photometric, overwrite, creation_options):
     """Copy and convert raster datasets to other data types and formats.
 
     Data values may be linearly scaled when copying by using the
@@ -50,7 +51,7 @@ def convert(
     """
     with ctx.obj['env']:
 
-        outputfile, files = resolve_inout(files=files, output=output)
+        outputfile, files = resolve_inout(files=files, output=output, overwrite=overwrite)
         inputfile = files[0]
 
         with rasterio.open(inputfile) as src:

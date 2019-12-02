@@ -84,6 +84,34 @@ def test_clip_like_disjunct(runner, tmpdir):
     assert '--like' in result.output
 
 
+def test_clip_overwrite_without_option(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        main_group,
+        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+    assert result.exit_code == 0
+
+    result = runner.invoke(
+        main_group,
+        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+    assert result.exit_code == 1
+    assert '--overwrite' in result.output
+
+
+def test_clip_overwrite_with_option(runner, tmpdir):
+    output = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        main_group,
+        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+    assert result.exit_code == 0
+
+    result = runner.invoke(
+        main_group, [
+        'clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX),
+        '--overwrite'])
+    assert result.exit_code == 0
+
+
 # Tests: format and type conversion, --format and --dtype
 
 def test_format(tmpdir):
@@ -202,3 +230,31 @@ def test_rgb(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(outputname) as src:
         assert src.colorinterp[0] == rasterio.enums.ColorInterp.red
+
+
+def test_convert_overwrite_without_option(runner, tmpdir):
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG'])
+    assert result.exit_code == 0
+
+    result = runner.invoke(
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG'])
+    assert result.exit_code == 1
+    assert '--overwrite' in result.output
+
+
+def test_convert_overwrite_with_option(runner, tmpdir):
+    outputname = str(tmpdir.join('test.tif'))
+    result = runner.invoke(
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG'])
+    assert result.exit_code == 0
+
+    result = runner.invoke(
+        main_group, [
+        'convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG',
+        '--overwrite'])
+    assert result.exit_code == 0
