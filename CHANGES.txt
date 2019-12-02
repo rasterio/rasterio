@@ -4,6 +4,7 @@ Changes
 Next
 ----
 
+- Allow rio-clip and rio-convert to overwrite output files (#1836).
 - Allow src_crs parameter to fully override the source dataset's CRS (#1808).
 
 1.1.1 (2019-11-13)
