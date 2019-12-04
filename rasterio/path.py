@@ -85,7 +85,7 @@ class ParsedPath(Path):
     @property
     def is_local(self):
         """Test if the path is a local URI"""
-        return not self.scheme or (self.scheme and self.scheme.split('+')[-1] not in REMOTESCHEMES)
+        return not self.is_remote
 
 
 @attr.s(slots=True)
@@ -105,9 +105,49 @@ class UnparsedPath(Path):
         return self.path
 
 
+def parse_subdataset(path):
+    """
+    Subdataset paths can get quite messy.
+
+    Examples:
+
+    netcdf:/input/PLANET_SCOPE_3D.nc:blue
+    HDF4_EOS:EOS_GRID:"/modis/MOD09GQ.A2017290.h11v04.006.NRT.hdf":MODIS_Grid_2D:sur_refl_b01_1
+    HDF4_EOS:EOS_GRID:"./modis/MOD09GQ.A2017290.h11v04.006.NRT.hdf"://MODIS_Grid_2D://sur_refl_b01_1
+    NETCDF:S5P_NRTI_L2__NO2_20190513T181819.nc:/PRODUCT/tm5_constant_a
+
+    Only supports:
+    - NETCDF
+    - HDF4
+    - HDF5
+
+    Parameters
+    ----------
+    path : str or path-like object
+        The path to be parsed.
+
+    Returns
+    -------
+    UnparsedPath
+    """
+    remote_schemes = "|".join(
+        ["{}://".format(remote_scheme) for remote_scheme in REMOTESCHEMES]
+    )
+    parts = re.match(
+        r"^(NETCDF|HDF4\w+:\w+|HDF5):(?P<quote>['\"]?)((?:{})?[^:]+)(?P=quote):(.*)$".format(remote_schemes),
+        path,
+        flags=re.IGNORECASE,
+    )
+    if not parts:
+        return None
+    driver = parts.group(1)
+    path = vsi_path(parse_path(parts.group(3)))
+    variable = parts.group(4)
+    return UnparsedPath(":".join([driver, path, variable]))
+
+
 def parse_path(path):
     """Parse a dataset's identifier or path into its parts
-
     Parameters
     ----------
     path : str or path-like object
@@ -131,6 +171,10 @@ def parse_path(path):
         return UnparsedPath(path)
 
     else:
+        parsed_subdataset = parse_subdataset(path)
+        if parsed_subdataset is not None:
+            return parsed_subdataset
+
         parts = urlparse(path)
 
         # if the scheme is not one of Rasterio's supported schemes, we

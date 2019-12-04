@@ -5,7 +5,13 @@ import sys
 import pytest
 
 import rasterio
-from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
+from rasterio.path import (
+    ParsedPath,
+    UnparsedPath,
+    parse_path,
+    parse_subdataset,
+    vsi_path,
+)
 
 
 def test_parsed_path_name():
@@ -164,3 +170,62 @@ def test_vsi_path_zip_plus_https():
     """A zip+https:// URLs vsi path is correct (see #1151)"""
     url = 'zip+https://example.com/foo.zip!bar.tif'
     assert vsi_path(parse_path(url)) == '/vsizip/vsicurl/https://example.com/foo.zip/bar.tif'
+
+
+@pytest.mark.parametrize("path, expected_path", [
+    (
+        "netcdf:/input/PLANET_SCOPE_3D.nc:blue",
+        "netcdf:/input/PLANET_SCOPE_3D.nc:blue",
+    ),
+    (
+        "netcdf:https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%:blue",
+        "netcdf:/vsicurl/https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%:blue",
+    ),
+    (
+        'netcdf:/vsicurl/"https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%":blue',
+        'netcdf:/vsicurl/"https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%":blue',
+    ),
+    (
+        'netcdf:"/vsicurl/https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%":blue',
+        'netcdf:"/vsicurl/https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%":blue',
+    ),
+    (
+        'netcdf:/vsicurl/https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%:blue',
+        'netcdf:/vsicurl/https://path/to/file/PLANET_SCOPE_3D.nc?0098y20423%:blue',
+    ),
+    (
+        'HDF5:"/modis/MOD09GQ.A2017290.h11v04.006.NRT.hdf":'
+        'MODIS_Grid_2D:sur_refl_b01_1',
+        'HDF5:/modis/MOD09GQ.A2017290.h11v04.006.NRT.hdf:'
+        'MODIS_Grid_2D:sur_refl_b01_1',
+    ),
+    (
+        'HDF4_EOS:EOS_GRID:"./modis/MOD09GQ.A2017290.h11v04.006.NRT.hdf":'
+        '//MODIS_Grid_2D://sur_refl_b01_1',
+        'HDF4_EOS:EOS_GRID:./modis/MOD09GQ.A2017290.h11v04.006.NRT.hdf:'
+        '//MODIS_Grid_2D://sur_refl_b01_1',
+    ),
+    (
+        'NETCDF:"http://path/to/file.nc":MODIS_Grid_2D:sur_refl_b01_1',
+        'NETCDF:/vsicurl/http://path/to/file.nc:MODIS_Grid_2D:sur_refl_b01_1',
+    ),
+    (
+        'NETCDF:"http://path/to/file.nc"://MODIS_Grid_2D://sur_refl_b01_1',
+        'NETCDF:/vsicurl/http://path/to/file.nc://MODIS_Grid_2D://sur_refl_b01_1',
+    ),
+    (
+        'NETCDF:S5P_NRTI_L2__NO2_20190513T181819.nc:/PRODUCT/tm5_constant_a',
+        'NETCDF:S5P_NRTI_L2__NO2_20190513T181819.nc:/PRODUCT/tm5_constant_a',
+    ),
+])
+def test_parse_subdataset(path, expected_path):
+    parsed = parse_subdataset(path)
+    parsed_path = parse_path(path)
+    if parsed is None:
+        assert expected_path is None
+        assert parsed_path.path == path 
+    else:
+        assert isinstance(parsed, UnparsedPath)
+        assert parsed.path == expected_path 
+        assert isinstance(parsed_path, UnparsedPath)
+        assert parsed_path.path == expected_path 
