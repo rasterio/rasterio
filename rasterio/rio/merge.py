@@ -18,7 +18,7 @@ from rasterio.rio.helpers import resolve_inout
 @options.nodata_opt
 @options.bidx_mult_opt
 @options.overwrite_opt
-@click.option('--precision', type=int, default=7,
+@click.option('--precision', type=int, default=10,
               help="Number of decimal places of precision in alignment of "
                    "pixels")
 @options.creation_options

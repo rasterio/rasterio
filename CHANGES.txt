@@ -4,6 +4,7 @@ Changes
 Next
 ----
 
+- Increase default precision for the merge tool from 7 to 10 (#1837).
 - Allow rio-clip and rio-convert to overwrite output files (#1836).
 - Allow src_crs parameter to fully override the source dataset's CRS (#1808).
 
