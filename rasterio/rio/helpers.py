@@ -38,25 +38,18 @@ def write_features(
             bbox = (min(xs), min(ys), max(xs), max(ys))
             if use_rs:
                 fobj.write(u'\u001e')
-            if geojson_type == 'feature':
-                fobj.write(json.dumps(feat, **dump_kwds))
-            elif geojson_type == 'bbox':
+            if geojson_type == 'bbox':
                 fobj.write(json.dumps(bbox, **dump_kwds))
             else:
-                fobj.write(
-                    json.dumps({
-                        'type': 'FeatureCollection',
-                        'bbox': bbox,
-                        'features': [feat]}, **dump_kwds))
+                fobj.write(json.dumps(feat, **dump_kwds))
             fobj.write('\n')
+
     # Aggregate all features into a single object expressed as
     # bbox or collection.
     else:
         features = list(collection())
         if geojson_type == 'bbox':
             fobj.write(json.dumps(collection.bbox, **dump_kwds))
-        elif geojson_type == 'feature':
-            fobj.write(json.dumps(features[0], **dump_kwds))
         else:
             fobj.write(json.dumps({
                 'bbox': collection.bbox,
