@@ -4,6 +4,9 @@ Changes
 Next
 ----
 
+- The conflict between the --bbox/--feature/--collection and
+  --sequence/--collection option of rio-bounds (#1807) has been fixed by
+  removing "collection" from the possible JSON type options.
 - Increase default precision for the merge tool from 7 to 10 (#1837).
 - Allow rio-clip and rio-convert to overwrite output files (#1836).
 - Allow src_crs parameter to fully override the source dataset's CRS (#1808).

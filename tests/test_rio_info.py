@@ -266,7 +266,7 @@ def test_bounds_defaults():
         'tests/data/RGB.byte.tif'
     ])
     assert result.exit_code == 0
-    assert 'FeatureCollection' in result.output
+    assert 'Feature' in result.output
 
 
 def test_bounds_err():
