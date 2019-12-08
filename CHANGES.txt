@@ -4,6 +4,8 @@ Changes
 Next
 ----
 
+- PR #1842 makes sure that rio-calc's cleanup doesn't fail due to unbound
+  variables.
 - The conflict between the --bbox/--feature/--collection and
   --sequence/--collection option of rio-bounds (#1807) has been fixed by
   removing "collection" from the possible JSON type options.

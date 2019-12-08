@@ -206,8 +206,8 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
 
     except snuggs.ExpressionError as err:
         click.echo("Expression Error:")
-        click.echo('  %s' % err.text)
-        click.echo(' ' + ' ' * err.offset + "^")
+        click.echo("  {}".format(err.text))
+        click.echo(" {}^".format(" " * err.offset))
         click.echo(err)
         raise click.Abort()
 
