@@ -135,6 +135,9 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
     """
     import numpy as np
 
+    dst = None
+    sources = []
+
     try:
         with ctx.obj['env']:
             output, files = resolve_inout(files=files, output=output,
@@ -155,8 +158,6 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
             snuggs.func_map['bands'] = lambda d: _get_bands(inputs, sources, d)
             snuggs.func_map['fillnodata'] = lambda *args: fillnodata(*args)
             snuggs.func_map['sieve'] = lambda *args: sieve(*args)
-
-            dst = None
 
             # The windows iterator is initialized with a single sample.
             # The actual work windows will be added in the second
