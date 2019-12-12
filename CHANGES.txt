@@ -4,6 +4,8 @@ Changes
 Next
 ----
 
+- Reduce all the band masks when computing the dataset mask. Previously we had
+  missed the last band.
 - PR #1842 makes sure that rio-calc's cleanup doesn't fail due to unbound
   variables.
 - The conflict between the --bbox/--feature/--collection and
