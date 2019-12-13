@@ -4,6 +4,7 @@ Changes
 Next
 ----
 
+- The missing --format option has been added to rio-calc (#1846).
 - Reduce all the band masks when computing the dataset mask. Previously we had
   missed the last band.
 - PR #1842 makes sure that rio-calc's cleanup doesn't fail due to unbound
