@@ -4,6 +4,8 @@ Changes
 Next
 ----
 
+- The missing out_dtype keyword argument has been added to
+  WarpedVRTReaderBase.read() (#1849).
 - The missing --format option has been added to rio-calc (#1846).
 - Reduce all the band masks when computing the dataset mask. Previously we had
   missed the last band.
