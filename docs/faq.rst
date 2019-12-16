@@ -44,3 +44,11 @@ environment of the process, but there's really no better option.
 Get the latest version of Rasterio, 1.0.18, and use it without setting
 GDAL_DATA. You shouldn't experience the error condition or the message about
 it.
+
+Why can't rasterio find proj.db?
+--------------------------------
+
+If you see ``rasterio.errors.CRSError: The EPSG code is unknown. PROJ: proj_create_from_database: Cannot find proj.db`` it is because the PROJ library (one of rasterio's dependencies) cannot find its database of projections and coordinate systems. In some installations the ``PROJ_LIB`` `environment variable must be set <https://proj.org/usage/environmentvars.html#envvar-PROJ_LIB>`__ for PROJ to work properly.
+
+.. important:: activate your conda environments.
+   The PROJ conda package will set ``PROJ_LIB`` to the proper value if you activate your conda environment. If you don't activate your conda enviornment, you are likely to see the exception shown above.
