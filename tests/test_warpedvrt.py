@@ -512,6 +512,19 @@ def test_out_dtype(red_green):
             assert image[32, 32, 1] == 17.0
 
 
+def test_sample(red_green):
+    """See https://github.com/mapbox/rasterio/issues/1833."""
+    with rasterio.Env():
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
+            src,
+            transform=affine.Affine.translation(-src.width / 4, src.height / 4) * src.transform,
+            width=2 * src.width,
+            height=2 * src.height
+        ) as vrt:
+            sample = next(vrt.sample([(-20, -50)]))
+            assert not sample.any()
+
+
 @pytest.fixture
 def dsrec(capfd):
     """GDAL's open dataset records as a pytest fixture"""

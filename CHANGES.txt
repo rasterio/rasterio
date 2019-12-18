@@ -4,6 +4,8 @@ Changes
 Next
 ----
 
+- Sampling of WarpedVRT datasets was broken in version in 1.1.1 (#1833) and has
+  been fixed.
 - The missing out_dtype keyword argument has been added to
   WarpedVRTReaderBase.read() (#1849).
 - The missing --format option has been added to rio-calc (#1846).
