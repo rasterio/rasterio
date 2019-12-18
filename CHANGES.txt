@@ -1,8 +1,10 @@
 Changes
 =======
 
-Next
-----
+1.1.2 (2019-12-18)
+------------------
+
+Bug fixes:
 
 - Sampling of WarpedVRT datasets was broken in version in 1.1.1 (#1833) and has
   been fixed.
@@ -19,6 +21,11 @@ Next
 - Increase default precision for the merge tool from 7 to 10 (#1837).
 - Allow rio-clip and rio-convert to overwrite output files (#1836).
 - Allow src_crs parameter to fully override the source dataset's CRS (#1808).
+
+Packaging notes:
+
+- The wheels on PyPI now include the base (version 1.8) PROJ datum grids and
+  are thus a few MB larger in size.
 
 1.1.1 (2019-11-13)
 ------------------
