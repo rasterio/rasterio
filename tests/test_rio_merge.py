@@ -3,10 +3,8 @@
 
 import sys
 import os
-import logging
 
 import affine
-from click.testing import CliRunner
 import numpy as np
 from pytest import fixture
 import pytest
@@ -100,7 +98,7 @@ def test_data_dir_3(tmpdir):
     return tmpdir
 
 
-def test_merge_with_colormap(test_data_dir_1):
+def test_merge_with_colormap(test_data_dir_1, runner):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
@@ -109,7 +107,6 @@ def test_merge_with_colormap(test_data_dir_1):
         with rasterio.open(inputname, 'r+') as src:
             src.write_colormap(1, {0: (255, 0, 0, 255), 255: (0, 0, 0, 255)})
 
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -122,11 +119,10 @@ def test_merge_with_colormap(test_data_dir_1):
 
 @requires_gdal22(
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
-def test_merge_with_nodata(test_data_dir_1):
+def test_merge_with_nodata(test_data_dir_1, runner):
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -140,22 +136,20 @@ def test_merge_with_nodata(test_data_dir_1):
 
 
 @pytest.mark.filterwarnings("ignore:Input file's nodata value")
-def test_merge_error(test_data_dir_1):
+def test_merge_error(test_data_dir_1, runner):
     """A nodata value outside the valid range results in an error"""
     outputname = str(test_data_dir_1.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_1.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(
         main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1'])
     assert result.exit_code
 
 
-def test_merge_bidx(test_data_dir_3):
+def test_merge_bidx(test_data_dir_3, runner):
     outputname = str(test_data_dir_3.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_3.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(
         main_group, ['merge'] + inputs + [outputname] + ['--bidx', '1'])
     assert result.exit_code == 0
@@ -168,11 +162,10 @@ def test_merge_bidx(test_data_dir_3):
 
 @requires_gdal22(
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
-def test_merge_without_nodata(test_data_dir_2):
+def test_merge_without_nodata(test_data_dir_2, runner):
     outputname = str(test_data_dir_2.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_2.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -185,9 +178,8 @@ def test_merge_without_nodata(test_data_dir_2):
         assert np.all(data == expected)
 
 
-def test_merge_output_exists(tmpdir):
+def test_merge_output_exists(tmpdir, runner):
     outputname = str(tmpdir.join('merged.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, ['merge', 'tests/data/RGB.byte.tif', outputname])
     assert result.exit_code == 0
@@ -198,9 +190,8 @@ def test_merge_output_exists(tmpdir):
         assert out.count == 3
 
 
-def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
+def test_merge_output_exists_without_nodata_fails(test_data_dir_2, runner):
     """Fails without --overwrite"""
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'merge', str(test_data_dir_2.join('a.tif')),
@@ -208,9 +199,8 @@ def test_merge_output_exists_without_nodata_fails(test_data_dir_2):
     assert result.exit_code == 1
 
 
-def test_merge_output_exists_without_nodata(test_data_dir_2):
+def test_merge_output_exists_without_nodata(test_data_dir_2, runner):
     """Succeeds with --overwrite"""
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'merge', '--overwrite', str(test_data_dir_2.join('a.tif')),
@@ -218,16 +208,14 @@ def test_merge_output_exists_without_nodata(test_data_dir_2):
     assert result.exit_code == 0
 
 
-def test_merge_err():
-    runner = CliRunner()
+def test_merge_err(runner):
     result = runner.invoke(
         main_group, ['merge', 'tests'])
     assert result.exit_code == 1
 
 
-def test_format_jpeg(tmpdir):
+def test_format_jpeg(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.jpg'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'merge', 'tests/data/RGB.byte.tif', outputname,
@@ -265,11 +253,10 @@ def test_data_dir_overlapping(tmpdir):
     return tmpdir
 
 
-def test_merge_overlapping(test_data_dir_overlapping):
+def test_merge_overlapping(test_data_dir_overlapping, runner):
     outputname = str(test_data_dir_overlapping.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
     assert os.path.exists(outputname)
@@ -313,11 +300,10 @@ def test_data_dir_float(tmpdir):
 
 @requires_gdal22(
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
-def test_merge_float(test_data_dir_float):
+def test_merge_float(test_data_dir_float, runner):
     outputname = str(test_data_dir_float.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_float.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(
         main_group, ['merge'] + inputs + [outputname] + ['--nodata', '-1.5'])
     assert result.exit_code == 0
@@ -369,11 +355,10 @@ def tiffs(tmpdir):
     return tmpdir
 
 
-def test_merge_tiny_base(tiffs):
+def test_merge_tiny_base(tiffs, runner):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
 
@@ -393,11 +378,10 @@ def test_merge_tiny_base(tiffs):
         assert data[0][3][0] == 40
 
 
-def test_merge_tiny_output_opt(tiffs):
+def test_merge_tiny_output_opt(tiffs, runner):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + ['-o', outputname])
     assert result.exit_code == 0
 
@@ -420,11 +404,10 @@ def test_merge_tiny_output_opt(tiffs):
     reason="This test is sensitive to pixel values and requires GDAL 2.2+")
 @pytest.mark.xfail(sys.version_info < (3,),
                    reason="Test is sensitive to rounding behavior")
-def test_merge_tiny_res_bounds(tiffs):
+def test_merge_tiny_res_bounds(tiffs, runner):
     outputname = str(tiffs.join('merged.tif'))
     inputs = [str(x) for x in tiffs.listdir()]
     inputs.sort()
-    runner = CliRunner()
     result = runner.invoke(
         main_group, ['merge'] + inputs + [outputname, '--res', 2, '--bounds', '1, 0, 5, 4'])
     assert result.exit_code == 0
@@ -442,7 +425,7 @@ def test_merge_tiny_res_bounds(tiffs):
         assert data[0, 1, 1] == 0
 
 
-def test_merge_rgb(tmpdir):
+def test_merge_rgb(tmpdir, runner):
     """Get back original image"""
     outputname = str(tmpdir.join('merged.tif'))
     inputs = [
@@ -450,7 +433,6 @@ def test_merge_rgb(tmpdir):
         'tests/data/rgb2.tif',
         'tests/data/rgb3.tif',
         'tests/data/rgb4.tif']
-    runner = CliRunner()
     result = runner.invoke(main_group, ['merge'] + inputs + [outputname])
     assert result.exit_code == 0
 

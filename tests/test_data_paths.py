@@ -2,7 +2,6 @@
 
 import os.path
 
-from click.testing import CliRunner
 import pytest
 
 import rasterio
@@ -37,8 +36,7 @@ def test_proj_data_has_data():
 
 @requires_gdal_lt_3
 @pytest.mark.wheel
-def test_env_gdal_data():
-    runner = CliRunner()
+def test_env_gdal_data(runner):
     result = runner.invoke(main_group, ['env', '--gdal-data'])
     assert result.exit_code == 0
     assert result.output.strip() == os.path.join(os.path.dirname(rasterio.__file__), 'gdal_data')
@@ -46,8 +44,7 @@ def test_env_gdal_data():
 
 @requires_gdal_lt_3
 @pytest.mark.wheel
-def test_env_proj_data():
-    runner = CliRunner()
+def test_env_proj_data(runner):
     result = runner.invoke(main_group, ['env', '--proj-data'])
     assert result.exit_code == 0
     assert result.output.strip() == os.path.join(os.path.dirname(rasterio.__file__), 'proj_data')

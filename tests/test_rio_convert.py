@@ -2,7 +2,6 @@ import sys
 import os
 import logging
 import numpy as np
-from click.testing import CliRunner
 
 import rasterio
 from rasterio.rio.main import main_group
@@ -114,9 +113,8 @@ def test_clip_overwrite_with_option(runner, tmpdir):
 
 # Tests: format and type conversion, --format and --dtype
 
-def test_format(tmpdir):
+def test_format(tmpdir, runner):
     outputname = str(tmpdir.join('test.jpg'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', outputname, '--format', 'JPEG'])
@@ -125,9 +123,8 @@ def test_format(tmpdir):
         assert src.driver == 'JPEG'
 
 
-def test_format_short(tmpdir):
+def test_format_short(tmpdir, runner):
     outputname = str(tmpdir.join('test.jpg'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', outputname, '-f', 'JPEG'])
@@ -136,9 +133,8 @@ def test_format_short(tmpdir):
         assert src.driver == 'JPEG'
 
 
-def test_output_opt(tmpdir):
+def test_output_opt(tmpdir, runner):
     outputname = str(tmpdir.join('test.jpg'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG'])
@@ -147,9 +143,8 @@ def test_output_opt(tmpdir):
         assert src.driver == 'JPEG'
 
 
-def test_dtype(tmpdir):
+def test_dtype(tmpdir, runner):
     outputname = str(tmpdir.join('test.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16'])
@@ -158,10 +153,9 @@ def test_dtype(tmpdir):
         assert src.dtypes == tuple(['uint16'] * 3)
 
 
-def test_dtype_rescaling_uint8_full(tmpdir):
+def test_dtype_rescaling_uint8_full(tmpdir, runner):
     """Rescale uint8 [0, 255] to uint8 [0, 255]"""
     outputname = str(tmpdir.join('test.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', outputname, '--scale-ratio', '1.0'])
@@ -179,10 +173,9 @@ def test_dtype_rescaling_uint8_full(tmpdir):
             assert round(band.mean() - expected['mean'], 6) == 0.0
 
 
-def test_dtype_rescaling_uint8_half(tmpdir):
+def test_dtype_rescaling_uint8_half(tmpdir, runner):
     """Rescale uint8 [0, 255] to uint8 [0, 127]"""
     outputname = str(tmpdir.join('test.tif'))
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'convert', 'tests/data/RGB.byte.tif', outputname, '--scale-ratio', '0.5'])
     assert result.exit_code == 0
@@ -192,11 +185,10 @@ def test_dtype_rescaling_uint8_half(tmpdir):
             assert round(band.max() - 127, 6) == 0.0
 
 
-def test_dtype_rescaling_uint16(tmpdir):
+def test_dtype_rescaling_uint16(tmpdir, runner):
     """Rescale uint8 [0, 255] to uint16 [0, 4095]"""
     # NB: 255 * 16 is 4080, we don't actually get to 4095.
     outputname = str(tmpdir.join('test.tif'))
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'uint16',
         '--scale-ratio', '16'])
@@ -207,10 +199,9 @@ def test_dtype_rescaling_uint16(tmpdir):
             assert round(band.max() - 4080, 6) == 0.0
 
 
-def test_dtype_rescaling_float64(tmpdir):
+def test_dtype_rescaling_float64(tmpdir, runner):
     """Rescale uint8 [0, 255] to float64 [-1, 1]"""
     outputname = str(tmpdir.join('test.tif'))
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'convert', 'tests/data/RGB.byte.tif', outputname, '--dtype', 'float64',
         '--scale-ratio', str(2.0 / 255), '--scale-offset', '-1.0'])
@@ -221,9 +212,8 @@ def test_dtype_rescaling_float64(tmpdir):
             assert round(band.max() - 1.0, 6) == 0.0
 
 
-def test_rgb(tmpdir):
+def test_rgb(tmpdir, runner):
     outputname = str(tmpdir.join('test.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group,
         ['convert', 'tests/data/RGB.byte.tif', outputname, '--rgb'])

@@ -1,13 +1,9 @@
-from click.testing import CliRunner
-
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.rio.stack import stack
 
 
-def test_stack(tmpdir):
+def test_stack(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, ['stack', 'tests/data/RGB.byte.tif', outputname])
     assert result.exit_code == 0
@@ -16,9 +12,8 @@ def test_stack(tmpdir):
         assert out.read(1).max() > 0
 
 
-def test_stack_list(tmpdir):
+def test_stack_list(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'stack', 'tests/data/RGB.byte.tif', '--bidx', '1,2,3', outputname])
@@ -27,9 +22,8 @@ def test_stack_list(tmpdir):
         assert out.count == 3
 
 
-def test_stack_slice(tmpdir):
+def test_stack_slice(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'stack',
@@ -41,9 +35,8 @@ def test_stack_slice(tmpdir):
         assert out.count == 3
 
 
-def test_stack_single_slice(tmpdir):
+def test_stack_single_slice(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'stack',
@@ -55,9 +48,8 @@ def test_stack_single_slice(tmpdir):
         assert out.count == 3
 
 
-def test_format_jpeg(tmpdir):
+def test_format_jpeg(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.jpg'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'stack', 'tests/data/RGB.byte.tif', outputname,
@@ -65,9 +57,8 @@ def test_format_jpeg(tmpdir):
     assert result.exit_code == 0
 
 
-def test_error(tmpdir):
+def test_error(tmpdir, runner):
     outputname = str(tmpdir.join('stacked.tif'))
-    runner = CliRunner()
     result = runner.invoke(
         main_group, [
             'stack', 'tests/data/RGB.byte.tif', outputname,
