@@ -4,7 +4,6 @@
 import json
 
 import click
-from click.testing import CliRunner
 import pytest
 
 import rasterio
@@ -39,26 +38,23 @@ class MockOption:
         self.name = name
 
 
-def test_delete_nodata_exclusive_opts(data):
+def test_delete_nodata_exclusive_opts(data, runner):
     """--unset-nodata and --nodata can't be used together"""
-    runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--unset-nodata', '--nodata', '0'])
     assert result.exit_code == 2
 
 
-def test_delete_crs_exclusive_opts(data):
+def test_delete_crs_exclusive_opts(data, runner):
     """--unset-crs and --crs can't be used together"""
-    runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--unset-crs', '--crs', 'epsg:4326'])
     assert result.exit_code == 2
 
 
-def test_edit_nodata_err(data):
-    runner = CliRunner()
+def test_edit_nodata_err(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(main_group,
                            ['edit-info', inputfile, '--nodata', '-1'])
@@ -66,17 +62,15 @@ def test_edit_nodata_err(data):
 
 
 @requires_gdal21
-def test_delete_nodata(data):
+def test_delete_nodata(data, runner):
     """Delete a dataset's nodata value"""
-    runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--unset-nodata'])
     assert result.exit_code == 0
 
 
-def test_edit_nodata(data):
-    runner = CliRunner()
+def test_edit_nodata(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--nodata', '255'])
@@ -85,16 +79,14 @@ def test_edit_nodata(data):
         assert src.nodata == 255.0
 
 
-def test_edit_crs_err(data):
-    runner = CliRunner()
+def test_edit_crs_err(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--crs', 'LOL:WUT'])
     assert result.exit_code == 2
 
 
-def test_edit_crs_epsg(data):
-    runner = CliRunner()
+def test_edit_crs_epsg(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--crs', 'EPSG:32618'])
@@ -103,8 +95,7 @@ def test_edit_crs_epsg(data):
         assert src.crs == {'init': 'epsg:32618'}
 
 
-def test_edit_crs_proj4(data):
-    runner = CliRunner()
+def test_edit_crs_proj4(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--crs', '+init=epsg:32618'])
@@ -113,8 +104,7 @@ def test_edit_crs_proj4(data):
         assert src.crs == {'init': 'epsg:32618'}
 
 
-def test_edit_crs_obj(data):
-    runner = CliRunner()
+def test_edit_crs_obj(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group,
@@ -124,24 +114,21 @@ def test_edit_crs_obj(data):
         assert src.crs.to_dict() == {'init': 'epsg:32618'}
 
 
-def test_edit_transform_err_not_json(data):
-    runner = CliRunner()
+def test_edit_transform_err_not_json(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--transform', 'LOL'])
     assert result.exit_code == 2
 
 
-def test_edit_transform_err_bad_array(data):
-    runner = CliRunner()
+def test_edit_transform_err_bad_array(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(
         main_group, ['edit-info', inputfile, '--transform', '[1,2]'])
     assert result.exit_code == 2
 
 
-def test_edit_transform_affine(data):
-    runner = CliRunner()
+def test_edit_transform_affine(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     input_t = '[300.038, 0.0, 101985.0, 0.0, -300.042, 2826915.0]'
     result = runner.invoke(
@@ -152,8 +139,7 @@ def test_edit_transform_affine(data):
             assert round(a, 6) == round(b, 6)
 
 
-def test_edit_transform_gdal(data):
-    runner = CliRunner()
+def test_edit_transform_gdal(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     gdal_geotransform = '[101985.0, 300.038, 0.0, 2826915.0, 0.0, -300.042]'
     result = runner.invoke(main_group, [
@@ -163,8 +149,7 @@ def test_edit_transform_gdal(data):
     assert gdal_geotransform in result.output
 
 
-def test_edit_tags(data):
-    runner = CliRunner()
+def test_edit_tags(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(main_group, [
         'edit-info', inputfile, '--tag', 'lol=1', '--tag', 'wut=2'])
@@ -175,9 +160,8 @@ def test_edit_tags(data):
 
 
 @requires_gdal21(reason="decription setting requires GDAL 2.1+")
-def test_edit_band_description(data):
+def test_edit_band_description(data, runner):
     """Edit band descriptions"""
-    runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(main_group, [
         'edit-info', inputfile, '--bidx', '3', '--description',
@@ -188,9 +172,8 @@ def test_edit_band_description(data):
         assert src.descriptions[2] == 'this is another test'
 
 
-def test_edit_units(data):
+def test_edit_units(data, runner):
     """Edit units"""
-    runner = CliRunner()
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(main_group, [
         'edit-info', inputfile, '--bidx', '1', '--units', 'DN'],
@@ -201,9 +184,7 @@ def test_edit_units(data):
         assert src.units[0] == 'DN'
 
 
-def test_edit_crs_like(data):
-    runner = CliRunner()
-
+def test_edit_crs_like(data, runner):
     # Set up the file to be edited.
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
@@ -226,9 +207,7 @@ def test_edit_crs_like(data):
         assert src.nodata == 1.0
 
 
-def test_edit_nodata_like(data):
-    runner = CliRunner()
-
+def test_edit_nodata_like(data, runner):
     # Set up the file to be edited.
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
@@ -251,9 +230,7 @@ def test_edit_nodata_like(data):
         assert src.nodata == 0.0
 
 
-def test_edit_all_like(data):
-    runner = CliRunner()
-
+def test_edit_all_like(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     with rasterio.open(inputfile, 'r+') as dst:
         dst.crs = {'init': 'epsg:32617'}
@@ -320,7 +297,6 @@ def test_all_callback_None(data):
 ))
 def test_colorinterp_wrong_band_count(runner, path_3band_no_colorinterp, setci):
     """Provide the wrong band count."""
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', path_3band_no_colorinterp,
         '--colorinterp', setci])
@@ -333,9 +309,8 @@ def test_colorinterp_wrong_band_count(runner, path_3band_no_colorinterp, setci):
     ('RGB', (ColorInterp.red, ColorInterp.green, ColorInterp.blue)),
     ('red,green,blue', (ColorInterp.red, ColorInterp.green, ColorInterp.blue)),
 ])
-def test_colorinterp_rgb(setci, expected, path_3band_no_colorinterp):
+def test_colorinterp_rgb(setci, expected, path_3band_no_colorinterp, runner):
     """Set 3 band color interpretation."""
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', path_3band_no_colorinterp,
         '--colorinterp', setci])
@@ -349,9 +324,8 @@ def test_colorinterp_rgb(setci, expected, path_3band_no_colorinterp):
     ('RGBA', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha)),
     ('red,green,blue,alpha', (ColorInterp.red, ColorInterp.green, ColorInterp.blue, ColorInterp.alpha)),
 ])
-def test_colorinterp_4band(setci, expected, path_4band_no_colorinterp):
+def test_colorinterp_4band(setci, expected, path_4band_no_colorinterp, runner):
     """Set 4 band color interpretation."""
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', path_4band_no_colorinterp,
         '--colorinterp', setci])
@@ -360,9 +334,8 @@ def test_colorinterp_4band(setci, expected, path_4band_no_colorinterp):
         assert src.colorinterp == expected
 
 
-def test_colorinterp_bad_instructions():
+def test_colorinterp_bad_instructions(runner):
     """Can't combine shorthand and normal band instructions."""
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', 'path-to-something',
         '--colorinterp', 'RGB,alpha'])
@@ -370,9 +343,8 @@ def test_colorinterp_bad_instructions():
     assert "color interpretation 'RGB' is invalid"
 
 
-def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif):
+def test_colorinterp_like(path_4band_no_colorinterp, path_rgba_byte_tif, runner):
     """Set color interpretation from a ``--like`` image."""
-    runner = CliRunner()
     result = runner.invoke(main_group, [
         'edit-info', path_4band_no_colorinterp,
         '--like', path_rgba_byte_tif,

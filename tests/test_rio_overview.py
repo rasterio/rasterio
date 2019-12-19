@@ -1,7 +1,6 @@
 import logging
 import sys
 
-from click.testing import CliRunner
 import pytest
 
 import rasterio
@@ -12,16 +11,14 @@ from rasterio.rio.overview import get_maximum_overview_level
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 
-def test_err(data):
-    runner = CliRunner()
+def test_err(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile, '--build', 'a^2'])
     assert result.exit_code == 2
     assert "must match" in result.output
 
 
-def test_ls_none(data):
-    runner = CliRunner()
+def test_ls_none(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile, '--ls'])
     assert result.exit_code == 0
@@ -29,8 +26,7 @@ def test_ls_none(data):
     assert result.output == expected
 
 
-def test_build_ls(data):
-    runner = CliRunner()
+def test_build_ls(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile, '--build', '2,4,8'])
     assert result.exit_code == 0
@@ -40,8 +36,7 @@ def test_build_ls(data):
     assert result.output.endswith(expected)
 
 
-def test_build_pow_ls(data):
-    runner = CliRunner()
+def test_build_pow_ls(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile, '--build', '2^1..3'])
     assert result.exit_code == 0
@@ -51,8 +46,7 @@ def test_build_pow_ls(data):
     assert result.output.endswith(expected)
 
 
-def test_rebuild_ls(data):
-    runner = CliRunner()
+def test_rebuild_ls(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
 
     result = runner.invoke(
@@ -70,15 +64,13 @@ def test_rebuild_ls(data):
     assert result.output.endswith(expected)
 
 
-def test_no_args(data):
-    runner = CliRunner()
+def test_no_args(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile])
     assert result.exit_code == 2
 
 
-def test_build_auto_ls(data):
-    runner = CliRunner()
+def test_build_auto_ls(data, runner):
     inputfile = str(data.join('RGB.byte.tif'))
     result = runner.invoke(cli, ['overview', inputfile, '--build', 'auto'])
     assert result.exit_code == 0
