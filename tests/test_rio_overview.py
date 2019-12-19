@@ -3,7 +3,6 @@ import sys
 
 import pytest
 
-import rasterio
 from rasterio.rio.main import main_group as cli
 from rasterio.rio.overview import get_maximum_overview_level
 

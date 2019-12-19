@@ -3,7 +3,6 @@
 
 import sys
 import os
-import logging
 
 import affine
 import numpy as np

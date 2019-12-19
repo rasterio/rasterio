@@ -1,8 +1,5 @@
-import json
 import logging
 import sys
-
-import pytest
 
 from rasterio.rio.main import main_group
 
@@ -17,6 +14,7 @@ def test_feature_seq(runner):
     assert result.exit_code == 0
     assert result.output.count('"Feature"') == 3
     assert '-78' in result.output
+
 
 def test_collection(runner):
     """GeoJSON collections can be had, optionally"""

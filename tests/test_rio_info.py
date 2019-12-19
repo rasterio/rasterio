@@ -2,10 +2,8 @@ import json
 
 import pytest
 
-import numpy as np
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.env import GDALVersion
 
 from .conftest import requires_gdal21, requires_gdal23
 

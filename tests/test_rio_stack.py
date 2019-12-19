@@ -1,6 +1,5 @@
 import rasterio
 from rasterio.rio.main import main_group
-from rasterio.rio.stack import stack
 
 
 def test_stack(tmpdir, runner):

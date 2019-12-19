@@ -1,9 +1,6 @@
 import logging
 import sys
 
-import click
-
-import rasterio
 from rasterio.rio.main import main_group
 
 
