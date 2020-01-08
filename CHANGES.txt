@@ -6,7 +6,7 @@ Changes
 
 Bug fixes:
 
-- dataset_mask returned in some cases an array with dtype "int64" (#1846). This
+- dataset_mask returned in some cases an array with dtype "int64" (#1856). This
   bug was introduced in 1.1.2 and has been fixed.
 
 1.1.2 (2019-12-18)
