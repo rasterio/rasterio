@@ -797,13 +797,14 @@ cdef class DatasetReaderBase(DatasetBase):
         elif out is not None:
             kwargs.pop("out", None)
             kwargs["out_shape"] = (self.count, out.shape[-2], out.shape[-1])
-            out = 255 * np.logical_or.reduce(self.read_masks(**kwargs))
+            out = np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
+            out *= 255
             return out
 
         elif out_shape is not None:
             kwargs["out_shape"] = (self.count, out_shape[-2], out_shape[-1])
 
-        return 255 * np.logical_or.reduce(self.read_masks(**kwargs))
+        return 255 * np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
 
 
     def sample(self, xy, indexes=None, masked=False):

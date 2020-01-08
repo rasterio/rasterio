@@ -160,6 +160,8 @@ def test_no_ndv(tiffs):
 
 def test_rgb_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+        res = src.dataset_mask()
+        assert res.dtype.name == "uint8"
         assert np.array_equal(src.dataset_mask(), alp)
 
 def test_rgba_no_ndv(tiffs):
@@ -194,13 +196,6 @@ def test_kwargs(tiffs, kwds, expected):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
         result = src.dataset_mask(**kwds)
         assert np.array_equal(expected, result)
-#
-#        other = src.dataset_mask(out_shape=(1, 5, 5))
-#        assert np.array_equal(resampmask, other)
-#
-#        out = np.zeros((1, 5, 5), dtype=np.uint8)
-#        other = src.dataset_mask(out=out)
-#        assert np.array_equal(resampmask, other)
 
 
 def test_indexes_not_supported(tiffs):
