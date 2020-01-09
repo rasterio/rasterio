@@ -273,7 +273,11 @@ def from_bounds(left, bottom, right, top, transform=None,
     -------
     Window
         A new Window
+
     """
+    if not isinstance(transform, Affine):  # TODO: RPCs?
+        raise WindowError("A transform object is required to calculate the window")
+
     row_start, col_start = rowcol(
         transform, left, top, op=float, precision=precision)
 
