@@ -9,7 +9,7 @@ from rasterio._err import GDALError
 from rasterio._err cimport exc_wrap_pointer
 from rasterio.errors import NotGeoreferencedWarning
 
-def _rpc_transformer(rpcs, xs, ys, zs, transform_direction=1, **kwargs):
+def _rpc_transformer(rpcs, xs, ys, zs=None, transform_direction=1, **kwargs):
     cdef int i
     cdef char **papszMD = NULL
     cdef char **options = NULL
@@ -24,12 +24,13 @@ def _rpc_transformer(rpcs, xs, ys, zs, transform_direction=1, **kwargs):
     cdef double dfPixErrThreshold = 0.0
     cdef int *success_ptr = NULL
 
-    src_count = len(xs)
     n = len(xs)
     x = <double *>CPLMalloc(n * sizeof(double))
     y = <double *>CPLMalloc(n * sizeof(double))
     z = <double *>CPLMalloc(n * sizeof(double))
 
+    if not zs:
+        zs = [0.] * n
     for i in range(n):
         x[i] = xs[i]
         y[i] = ys[i]
@@ -52,7 +53,7 @@ def _rpc_transformer(rpcs, xs, ys, zs, transform_direction=1, **kwargs):
     try:
         GDALExtractRPCInfo(papszMD, &rpcinfo)
         pTransformArg = exc_wrap_pointer(GDALCreateRPCTransformer(&rpcinfo, bReversed, dfPixErrThreshold, options))
-        err = GDALRPCTransform(pTransformArg, bDstToSrc, src_count, x, y, z, success_ptr)
+        err = GDALRPCTransform(pTransformArg, bDstToSrc, n, x, y, z, success_ptr)
         if err == GDALError.failure:
             warnings.warn(
             "Could not transform points using RPCs",
