@@ -555,7 +555,7 @@ cdef class DatasetBase(object):
         raise DatasetAttributeError("read-only attribute")
 
     def _set_all_units(self, value):
-        raise DatasetAttributeError("read-only attribute") 
+        raise DatasetAttributeError("read-only attribute")
 
     property descriptions:
         """Descriptions for each dataset band

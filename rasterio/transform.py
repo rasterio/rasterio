@@ -3,6 +3,7 @@
 from __future__ import division
 
 import math
+from functools import wraps
 
 from affine import Affine
 
@@ -128,7 +129,7 @@ def array_bounds(height, width, transform):
     return w, s, e, n
 
 
-def xy(transform, rows, cols, offset='center'):
+def xy(transform, rows, cols, offset='center', rpcs=None):
     """Returns the x and y coordinates of pixels at `rows` and `cols`.
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
@@ -190,7 +191,7 @@ def xy(transform, rows, cols, offset='center'):
     return xs, ys
 
 
-def rowcol(transform, xs, ys, op=math.floor, precision=None):
+def rowcol(transform, xs, ys, op=math.floor, precision=None, rpcs=None):
     """
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
@@ -235,10 +236,9 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None):
     else:
         eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
 
-    invtransform = ~transform
-
     rows = []
     cols = []
+    invtransform = ~transform
     for x, y in zip(xs, ys):
         fcol, frow = invtransform * (x + eps, y - eps)
         cols.append(op(fcol))
