@@ -38,7 +38,6 @@ def _rpc_transformer(rpcs, xs, ys, zs=None, transform_direction=1, **kwargs):
 
     success_ptr = <int *>CPLMalloc(n * sizeof(int))
 
-
     for key, val in rpcs.items():
         key = key.upper().encode('utf-8')
         val = str(val).upper().encode('utf-8')
@@ -65,15 +64,16 @@ def _rpc_transformer(rpcs, xs, ys, zs=None, transform_direction=1, **kwargs):
             res_xs[i] = x[i]
             res_ys[i] = y[i]
             res_zs[i] = z[i]
-        return (res_xs, res_ys)
     finally:
         CPLFree(x)
         CPLFree(y)
         CPLFree(z)
         CPLFree(success_ptr)
         GDALDestroyRPCTransformer(pTransformArg)
-        CPLFree(options)
-        CPLFree(papszMD)
+        CSLDestroy(options)
+        CSLDestroy(papszMD)
+
+    return (res_xs, res_ys)
 
 def _transform_from_gcps(gcps):
     cdef double gt[6]
