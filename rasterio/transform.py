@@ -7,7 +7,7 @@ from functools import wraps
 
 from affine import Affine
 
-from rasterio._transform import _transform_from_gcps
+from rasterio._transform import _transform_from_gcps, _rpc_transformer
 from rasterio.compat import Iterable
 
 
@@ -47,7 +47,11 @@ class TransformMethodsMixin(object):
         tuple
             ``(x, y)``
         """
-        return xy(self.transform, row, col, offset=offset)
+        transform = self.transform
+        rpcs = self.rpcs.to_gdal()
+        if transform.is_identity and not self.crs and rpcs:
+            transform = None
+        return xy(row, col, transform=transform, rpcs=rpcs, offset=offset)
 
     def index(self, x, y, op=math.floor, precision=None):
         """
@@ -129,19 +133,21 @@ def array_bounds(height, width, transform):
     return w, s, e, n
 
 
-def xy(transform, rows, cols, offset='center', rpcs=None):
+def xy(rows, cols, transform=None, rpcs=None, offset='center'):
     """Returns the x and y coordinates of pixels at `rows` and `cols`.
     The pixel's center is returned by default, but a corner can be returned
     by setting `offset` to one of `ul, ur, ll, lr`.
 
     Parameters
     ----------
-    transform : affine.Affine
-        Transformation from pixel coordinates to coordinate reference system.
     rows : list or int
         Pixel rows.
     cols : list or int
         Pixel columns.
+    transform : affine.Affine
+        Transformation from pixel coordinates to coordinate reference system.
+    rpcs: dict
+        Coefficients used for pixel coordinate to coordinate reference system.
     offset : str, optional
         Determines if the returned coordinates are for the center of the
         pixel or for a corner.
@@ -153,6 +159,7 @@ def xy(transform, rows, cols, offset='center', rpcs=None):
     ys : list
         y coordinates in coordinate reference system
     """
+    assert not (transform and rpcs), "Only one of transform or rpcs may be passed as input"
 
     single_col = False
     single_row = False
@@ -176,22 +183,25 @@ def xy(transform, rows, cols, offset='center', rpcs=None):
     else:
         raise ValueError("Invalid offset")
 
-    xs = []
-    ys = []
-    for col, row in zip(cols, rows):
-        x, y = transform * transform.translation(coff, roff) * (col, row)
-        xs.append(x)
-        ys.append(y)
+    if transform:
+        xs = []
+        ys = []
+        for col, row in zip(cols, rows):
+            x, y = transform * transform.translation(coff, roff) * (col, row)
+            xs.append(x)
+            ys.append(y)
+    elif rpcs:
+        xs, ys = _rpc_transformer(rpcs, rows, cols, transform_direction=0)
 
     if single_row:
-        ys = ys[0]
-    if single_col:
         xs = xs[0]
+    if single_col:
+        ys = ys[0]
 
     return xs, ys
 
 
-def rowcol(transform, xs, ys, op=math.floor, precision=None, rpcs=None):
+def rowcol(xs, ys, zs=None, transform=None, rpcs=None, op=math.floor, precision=None):
     """
     Returns the rows and cols of the pixels containing (x, y) given a
     coordinate reference system.
@@ -202,12 +212,14 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None, rpcs=None):
 
     Parameters
     ----------
-    transform : Affine
-        Coefficients mapping pixel coordinates to coordinate reference system.
     xs : list or float
         x values in coordinate reference system
     ys : list or float
         y values in coordinate reference system
+    transform : Affine
+        Coefficients mapping pixel coordinates to coordinate reference system.
+    rpcs: dict
+        Coefficients used for pixel coordinate to coordinate reference system.
     op : function
         Function to convert fractional pixels to whole numbers (floor, ceiling,
         round)
@@ -221,6 +233,7 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None, rpcs=None):
     cols : list of ints
         list of column indices
     """
+    assert not (transform and rpcs), "Only one of transform or rpcs may be passed as input"
 
     single_x = False
     single_y = False
@@ -236,13 +249,20 @@ def rowcol(transform, xs, ys, op=math.floor, precision=None, rpcs=None):
     else:
         eps = 10.0 ** -precision * (1.0 - 2.0 * op(0.1))
 
-    rows = []
-    cols = []
-    invtransform = ~transform
-    for x, y in zip(xs, ys):
-        fcol, frow = invtransform * (x + eps, y - eps)
-        cols.append(op(fcol))
-        rows.append(op(frow))
+    if transform:
+        rows = []
+        cols = []
+        invtransform = ~transform
+        for x, y in zip(xs, ys):
+            fcol, frow = invtransform * (x + eps, y - eps)
+            cols.append(op(fcol))
+            rows.append(op(frow))
+    elif rpcs:
+        fxs = [x + eps for x in xs]
+        fys = [y - eps for y in ys]
+        frows, fcols = _rpc_transformer(rpcs, fxs, fys, transform_direction=1)
+        rows = [op(frow) for frow in frows]
+        cols = [op(fcol) for fcol in fcols]
 
     if single_x:
         cols = cols[0]

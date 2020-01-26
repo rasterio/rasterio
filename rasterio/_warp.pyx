@@ -714,6 +714,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         self._descriptions = ()
         self._crs = None
         self._gcps = None
+        self._rpcs = None
         self._read = False
 
         # The various `dst_*` parameters are deprecated and will be
@@ -860,7 +861,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if add_alpha:
 
             # Adding an alpha band when the source has one is trouble.
-            # It will result in suprisingly unmasked data. We will 
+            # It will result in suprisingly unmasked data. We will
             # raise an exception instead.
             if src_alpha_band:
                 raise WarpOptionsError(

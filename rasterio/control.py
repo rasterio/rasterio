@@ -1,6 +1,7 @@
 """Ground control points"""
 
 import uuid
+from rasterio.compat import Iterable
 
 
 class GroundControlPoint(object):
@@ -57,3 +58,32 @@ class GroundControlPoint(object):
         return {'id': self.id, 'type': 'Feature',
                 'geometry': {'type': 'Point', 'coordinates': tuple(coords)},
                 'properties': self.asdict()}
+
+class RPC(dict):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def to_gdal(self):
+        out = {}
+
+        for key, val in self.items():
+            if isinstance(val, Iterable):
+                out[key] = ' '.join(map(str, val))
+            else:
+                out[key] = str(val)
+
+        return out
+
+    @classmethod
+    def from_gdal(cls, rpcs):
+        out = {}
+
+        for key, val in rpcs.items():
+            vals = val.split()
+            if len(vals) > 1:
+                out[key] = [float(v) for v in vals]
+            else:
+                out[key] = float(vals[0])
+
+        return cls(out)

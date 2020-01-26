@@ -620,9 +620,9 @@ cdef class DatasetReaderBase(DatasetBase):
                     # that looks more like the source's band 1 when doing
                     # this kind of boundless read. It looks like
                     # hmask = GDALGetMaskBand(band) may be returning the
-                    # a pointer to the band instead of the mask band in 
+                    # a pointer to the band instead of the mask band in
                     # this case.
-                    # 
+                    #
                     # Temporary solution: convert all non-zero pixels to
                     # 255 and log that we have done so.
 
@@ -1199,6 +1199,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if transform is not None:
             self._transform = transform.to_gdal()
         self._gcps = None
+        self._rpcs = None
         self._init_gcps = gcps
         self._closed = True
         self._dtypes = []
@@ -1670,6 +1671,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Invalidate cached value.
         self._gcps = None
+
+    def _set_rpcs(self, rpcs):
+        self.update_tags(ns='RPC', **rpcs)
 
 
 cdef class InMemoryRaster:
