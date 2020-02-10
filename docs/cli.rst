@@ -273,37 +273,6 @@ See :class:`rasterio.enums.ColorInterp` for a full list of supported color
 interpretations and the color docs for more information.
 
 
-mask
-----
-
-Added in 0.21
-
-The ``mask`` command masks in pixels from all bands of a raster using features
-(masking out all areas not covered by features) and optionally crops the output
-raster to the extent of the features.  Features are assumed to be in the same
-coordinate reference system as the input raster.
-
-A common use case is masking in raster data by political or other boundaries.
-
-.. code-block:: console
-
-    $ rio mask input.tif output.tif --geojson-mask input.geojson
-
-GeoJSON features may be provided using stdin or specified directly as first
-argument, and output can be cropped to the extent of the features.
-
-.. code-block:: console
-
-    $ rio mask input.tif output.tif --crop --geojson-mask - < input.geojson
-
-The feature mask can be inverted to mask out pixels covered by features and
-keep pixels not covered by features.
-
-.. code-block:: console
-
-    $ rio mask input.tif output.tif --invert --geojson-mask input.geojson
-
-
 info
 ----
 
@@ -409,6 +378,37 @@ The ``insp`` command opens a dataset and an interpreter.
 
     In [2]: print(src.bounds)
     BoundingBox(left=101985.0, bottom=2611485.0, right=339315.0, top=2826915.0)
+
+
+mask
+----
+
+Added in 0.21
+
+The ``mask`` command masks in pixels from all bands of a raster using features
+(masking out all areas not covered by features) and optionally crops the output
+raster to the extent of the features.  Features are assumed to be in the same
+coordinate reference system as the input raster.
+
+A common use case is masking in raster data by political or other boundaries.
+
+.. code-block:: console
+
+    $ rio mask input.tif output.tif --geojson-mask input.geojson
+
+GeoJSON features may be provided using stdin or specified directly as first
+argument, and output can be cropped to the extent of the features.
+
+.. code-block:: console
+
+    $ rio mask input.tif output.tif --crop --geojson-mask - < input.geojson
+
+The feature mask can be inverted to mask out pixels covered by features and
+keep pixels not covered by features.
+
+.. code-block:: console
+
+    $ rio mask input.tif output.tif --invert --geojson-mask input.geojson
 
 
 merge
