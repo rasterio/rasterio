@@ -64,7 +64,7 @@ def test_file_in_handler_no_vfs_nonexistent():
     """file does not exist"""
     ctx = MockContext()
     with pytest.raises(click.BadParameter):
-        file_in_handler(ctx, 'INPUT', '{0}.tif'.format(uuid.uuid4()))
+        file_in_handler(ctx, 'INPUT', 'file://{0}.tif'.format(uuid.uuid4()))
 
 
 def test_file_in_handler_no_vfs():

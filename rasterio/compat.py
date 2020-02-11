@@ -15,6 +15,8 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     from collections import UserDict
     from collections.abc import Iterable, Mapping
     from inspect import getfullargspec as getargspec
+    from pathlib import Path
+
 else:  # pragma: no cover
     warnings.warn("Python 2 compatibility will be removed after version 1.1", DeprecationWarning)
     string_types = basestring,
@@ -26,3 +28,5 @@ else:  # pragma: no cover
     from UserDict import UserDict
     from inspect import getargspec
     from collections import Iterable, Mapping
+    class Path(object):
+        pass
