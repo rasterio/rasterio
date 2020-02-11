@@ -154,16 +154,6 @@ def parse_path(path):
             return ParsedPath.from_uri(path)
 
     return UnparsedPath(path)
-#        else:
-#            return UnparsedPath(path)
-#
-#    else:
-#
-#        if os.path.exists(path):
-#            return ParsedPath(path, None, None)
-#
-#        else:
-#            return UnparsedPath(path)
 
 
 def vsi_path(path):
