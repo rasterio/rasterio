@@ -17,6 +17,7 @@ from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
+from rasterio.compat import DICT_TYPES
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import GDALVersion
@@ -48,43 +49,17 @@ def recursive_round(val, precision):
     else:
         return [recursive_round(part, precision) for part in val]
 
-
-def _transform_geom(
-        src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
-        precision):
-    """Return a transformed geometry."""
-    cdef char **options = NULL
-    cdef OGRSpatialReferenceH src = NULL
-    cdef OGRSpatialReferenceH dst = NULL
-    cdef OGRCoordinateTransformationH transform = NULL
-    cdef OGRGeometryFactory *factory = NULL
+cdef object _transform_single_geom(
+    object single_geom,
+    OGRGeometryFactory *factory,
+    void *transform,
+    char **options,
+    int precision
+):
     cdef OGRGeometryH src_geom = NULL
     cdef OGRGeometryH dst_geom = NULL
-    cdef int i
-
-    src = _osr_from_crs(src_crs)
-    dst = _osr_from_crs(dst_crs)
-
     try:
-        transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
-    except:
-        _safe_osr_release(src)
-        _safe_osr_release(dst)
-        raise
-
-    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
-        valb = str(antimeridian_offset).encode('utf-8')
-        options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
-        if antimeridian_cutting:
-            options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
-    else:
-        # GDAL cuts on the antimeridian by default and using different
-        # logic in versions >= 2.2.
-        pass
-
-    try:
-        factory = new OGRGeometryFactory()
-        src_geom = OGRGeomBuilder().build(geom)
+        src_geom = OGRGeomBuilder().build(single_geom)
         dst_geom = exc_wrap_pointer(
             factory.transformWithOptions(
                 <const OGRGeometry *>src_geom,
@@ -92,24 +67,61 @@ def _transform_geom(
                 options))
 
         result = GeomBuilder().build(dst_geom)
-
-        if precision >= 0:
-            # TODO: Geometry collections.
-            result['coordinates'] = recursive_round(result['coordinates'],
-                                                    precision)
-
-        return result
-
     finally:
-        del factory
         OGR_G_DestroyGeometry(dst_geom)
         OGR_G_DestroyGeometry(src_geom)
-        OCTDestroyCoordinateTransformation(transform)
-        if options != NULL:
-            CSLDestroy(options)
+
+    if precision >= 0:
+        # TODO: Geometry collections.
+        result['coordinates'] = recursive_round(result['coordinates'],
+                                                precision)
+
+    return result
+
+
+def _transform_geom(
+        src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
+        int precision):
+    """Return a transformed geometry."""
+    cdef char **options = NULL
+    cdef OGRSpatialReferenceH src = NULL
+    cdef OGRSpatialReferenceH dst = NULL
+    cdef OGRCoordinateTransformationH transform = NULL
+    cdef OGRGeometryFactory *factory = NULL
+
+    src = _osr_from_crs(src_crs)
+    dst = _osr_from_crs(dst_crs)
+
+    try:
+        transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
+    finally:
         _safe_osr_release(src)
         _safe_osr_release(dst)
 
+    # GDAL cuts on the antimeridian by default and using different
+    # logic in versions >= 2.2.
+    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
+        valb = str(antimeridian_offset).encode('utf-8')
+        options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
+        if antimeridian_cutting:
+            options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
+
+    factory = new OGRGeometryFactory()
+    try:
+        if isinstance(geom, DICT_TYPES):
+            out_geom = _transform_single_geom(geom, factory, transform, options, precision)
+        else:
+            out_geom = [
+                _transform_single_geom(single_geom, factory, transform, options, precision)
+                for single_geom in geom
+            ]
+    finally:
+        del factory
+        OCTDestroyCoordinateTransformation(transform)
+        if options != NULL:
+            CSLDestroy(options)
+
+    return out_geom
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata, int src_count,
