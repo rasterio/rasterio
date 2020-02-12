@@ -1,6 +1,17 @@
 """Abstraction for sessions in various clouds."""
 
+import logging
+
+try:
+    import boto3
+except ImportError:
+    log.info("failed to import boto3, continuing.")
+    boto3 = None
+
 from rasterio.path import parse_path, UnparsedPath
+
+
+log = logging.getLogger(__name__)
 
 
 class Session(object):
@@ -89,10 +100,15 @@ class Session(object):
             return DummySession
 
         elif path.scheme == "s3" or "amazonaws.com" in path.path:
-            return AWSSession
+            if boto3:
+                return AWSSession
+            else:
+                log.info("boto3 not available, falling back to a DummySession.")
+                return DummySession
 
         elif path.scheme == "oss" or "aliyuncs.com" in path.path:
             return OSSSession
+
 
         elif path.path.startswith("/vsiswift/"):
             return SwiftSession
@@ -201,8 +217,6 @@ class AWSSession(Session):
             True if the requester agrees to pay transfer costs (default:
             False)
         """
-        import boto3
-
         if session:
             self._session = session
         else:

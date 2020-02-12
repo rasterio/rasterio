@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Fall back to use of a DummySession instead of failing when boto3 isn't
+  available (#1864).
 - A crashing bug involving boundless reads of VRTs (#1863) has been fixed.
 - The required transform argument of windows.from_bounds() was changed from a
   positional arg to a keyword arg in commit 361112e but no guard against the
