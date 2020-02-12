@@ -7,7 +7,7 @@ import sys
 import attr
 
 from rasterio.compat import Path as PathlibPath
-from rasterio.compat import urlparse
+from rasterio.compat import string_types, urlparse
 from rasterio.errors import PathError
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
@@ -132,7 +132,7 @@ def parse_path(path):
     elif isinstance(path, PathlibPath):
         return ParsedPath(path, None, None)
 
-    elif isinstance(path, str):
+    elif isinstance(path, string_types):
 
         if sys.platform == "win32" and re.match("^[a-zA-Z]\\:", path):
             return UnparsedPath(path)
