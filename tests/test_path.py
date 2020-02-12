@@ -5,6 +5,7 @@ import sys
 import pytest
 
 import rasterio
+from rasterio.errors import PathError
 from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
 
 
@@ -164,3 +165,20 @@ def test_vsi_path_zip_plus_https():
     """A zip+https:// URLs vsi path is correct (see #1151)"""
     url = 'zip+https://example.com/foo.zip!bar.tif'
     assert vsi_path(parse_path(url)) == '/vsizip/vsicurl/https://example.com/foo.zip/bar.tif'
+
+
+@pytest.mark.parametrize("path", ["DRIVER:/vsifoo/bar:var", "SENTINEL2_L1C:S2A_OPER_MTD_SAFL1C_PDMC_20150818T101440_R022_V20150813T102406_20150813T102406.xml:10m:EPSG_32632"])
+def test_driver_prefixed_path(path):
+    parsed = parse_path(path)
+    assert isinstance(parsed, UnparsedPath)
+
+
+@pytest.mark.parametrize("path", [0, -1.0, object()])
+def test_path_error(path):
+    with pytest.raises(PathError):
+        parse_path(path)
+
+
+def test_parse_path():
+    pathlib = pytest.importorskip("pathlib")
+    assert isinstance(parse_path(pathlib.Path("/foo/bar.tif")), ParsedPath)

@@ -32,8 +32,6 @@ def test_info_err():
         main_group, ['info', 'tests'])
     assert result.exit_code != 0
     assert result.exception
-    # Note: text of exception changed after 2.1, don't test on full string
-    assert 'not' in result.output and ' a valid input file' in result.output
 
 
 def test_info():

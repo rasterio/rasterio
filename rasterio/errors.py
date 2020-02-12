@@ -110,3 +110,7 @@ class OverviewCreationError(RasterioError):
 
 class DatasetAttributeError(RasterioError, NotImplementedError):
     """Raised when dataset attributes are misused"""
+
+
+class PathError(RasterioError):
+    """Raised when a dataset path is malformed or invalid"""
