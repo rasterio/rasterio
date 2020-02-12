@@ -179,7 +179,8 @@ def _boundless_vrt_doc(
             complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
             sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
             sourcefilename.attrib['relativeToVRT'] = '1'
-            sourcefilename.text = 'dummy.tif'  # vsi_path(parse_path(background.name))
+            sourcefilename.attrib["shared"] = "0"
+            sourcefilename.text = "dummy.tif"
             sourceband = ET.SubElement(complexsource, 'SourceBand')
             sourceband.text = str(bidx)
             sourceproperties = ET.SubElement(complexsource, 'SourceProperties')
@@ -191,13 +192,13 @@ def _boundless_vrt_doc(
             srcrect = ET.SubElement(complexsource, 'SrcRect')
             srcrect.attrib['xOff'] = '0'
             srcrect.attrib['yOff'] = '0'
-            srcrect.attrib['xSize'] = '1'  # str(background.width)
-            srcrect.attrib['ySize'] = '1'  # str(background.height)
+            srcrect.attrib['xSize'] = '1'
+            srcrect.attrib['ySize'] = '1'
             dstrect = ET.SubElement(complexsource, 'DstRect')
             dstrect.attrib['xOff'] = '0'
             dstrect.attrib['yOff'] = '0'
-            dstrect.attrib['xSize'] = '1'  # str(width)
-            dstrect.attrib['ySize'] = '1'  # str(height)
+            dstrect.attrib['xSize'] = '1'
+            dstrect.attrib['ySize'] = '1'
             scaleratio = ET.SubElement(complexsource, 'ScaleRatio')
             scaleratio.text = '0'
             scaleoffset = ET.SubElement(complexsource, 'ScaleOffset')
@@ -206,6 +207,7 @@ def _boundless_vrt_doc(
         complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
         sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
+        sourcefilename.attrib["shared"] = "0"
         sourcefilename.text = vsi_path(parse_path(src_dataset.name))
         sourceband = ET.SubElement(complexsource, 'SourceBand')
         sourceband.text = str(bidx)
@@ -247,6 +249,7 @@ def _boundless_vrt_doc(
         simplesource = ET.SubElement(vrtrasterband, 'SimpleSource')
         sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
+        sourcefilename.attrib["shared"] = "0"
         sourcefilename.text = vsi_path(parse_path(src_dataset.name))
 
         sourceband = ET.SubElement(simplesource, 'SourceBand')
