@@ -1,6 +1,47 @@
 Changes
 =======
 
+1.1.3 (TBD)
+-----------
+
+Bug fixes:
+
+- Fall back to use of a DummySession instead of failing when boto3 isn't
+  available (#1864).
+- A crashing bug involving boundless reads of VRTs (#1863) has been fixed.
+- The required transform argument of windows.from_bounds() was changed from a
+  positional arg to a keyword arg in commit 361112e but no guard against the
+  default value of None was added (#1857). The function now raises WindowError
+  if no transform is given.
+- dataset_mask returned in some cases an array with dtype "int64" (#1856). This
+  bug was introduced in 1.1.2 and has been fixed.
+
+1.1.2 (2019-12-18)
+------------------
+
+Bug fixes:
+
+- Sampling of WarpedVRT datasets was broken in version in 1.1.1 (#1833) and has
+  been fixed.
+- The missing out_dtype keyword argument has been added to
+  WarpedVRTReaderBase.read() (#1849).
+- The missing --format option has been added to rio-calc (#1846).
+- Reduce all the band masks when computing the dataset mask. Previously we had
+  missed the last band.
+- PR #1842 makes sure that rio-calc's cleanup doesn't fail due to unbound
+  variables.
+- The conflict between the --bbox/--feature/--collection and
+  --sequence/--collection option of rio-bounds (#1807) has been fixed by
+  removing "collection" from the possible JSON type options.
+- Increase default precision for the merge tool from 7 to 10 (#1837).
+- Allow rio-clip and rio-convert to overwrite output files (#1836).
+- Allow src_crs parameter to fully override the source dataset's CRS (#1808).
+
+Packaging notes:
+
+- The wheels on PyPI now include the base (version 1.8) PROJ datum grids and
+  are thus a few MB larger in size.
+
 1.1.1 (2019-11-13)
 ------------------
 

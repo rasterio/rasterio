@@ -160,6 +160,8 @@ def test_no_ndv(tiffs):
 
 def test_rgb_ndv(tiffs):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
+        res = src.dataset_mask()
+        assert res.dtype.name == "uint8"
         assert np.array_equal(src.dataset_mask(), alp)
 
 def test_rgba_no_ndv(tiffs):
@@ -188,20 +190,16 @@ def test_rgba_msk(tiffs):
         # mask takes precendent over alpha
         assert np.array_equal(src.dataset_mask(), msk)
 
-def test_kwargs(tiffs):
+
+@pytest.mark.parametrize("kwds,expected", [(dict(window=((1, 4), (1, 4)), boundless=True), alp_shift_lr), (dict(out_shape=(1, 5, 5)), resampmask), (dict(out=np.zeros((1, 5, 5), dtype=np.uint8)), resampmask)])
+def test_kwargs(tiffs, kwds, expected):
     with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
-        # window and boundless are passed along
-        other = src.dataset_mask(window=((1, 4), (1, 4)), boundless=True)
-        assert np.array_equal(alp_shift_lr, other)
+        result = src.dataset_mask(**kwds)
+        assert np.array_equal(expected, result)
 
-        other = src.dataset_mask(out_shape=(1, 5, 5))
-        assert np.array_equal(resampmask, other)
 
-        out = np.zeros((1, 5, 5), dtype=np.uint8)
-        other = src.dataset_mask(out=out)
-        assert np.array_equal(resampmask, other)
-
-        # band indexes are not supported
+def test_indexes_not_supported(tiffs):
+    with rasterio.open(str(tiffs.join('rgb_ndv.tif'))) as src:
         with pytest.raises(TypeError):
             src.dataset_mask(indexes=1)
 

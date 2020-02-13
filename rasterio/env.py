@@ -8,6 +8,12 @@ import re
 import threading
 import warnings
 
+try:
+    import boto3
+except ImportError:
+    log.info("failed to import boto3, continuing.")
+    boto3 = None
+
 from rasterio._env import (
         GDALEnv, get_gdal_config, set_gdal_config,
         GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
@@ -50,12 +56,6 @@ class ThreadEnv(threading.local):
 local = ThreadEnv()
 
 log = logging.getLogger(__name__)
-
-try:
-    import boto3
-except ImportError:
-    log.info("failed to import boto3, continuing.")
-    boto3 = None
 
 
 class Env(object):

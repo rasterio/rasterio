@@ -108,6 +108,15 @@ def test_session_factory_s3():
     assert isinstance(sesh, AWSSession)
 
 
+def test_session_factory_s3_no_boto3(monkeypatch):
+    """Get an AWSSession for s3:// paths"""
+    pytest.importorskip("boto3")
+    with monkeypatch.context() as mpctx:
+        mpctx.setattr("rasterio.session.boto3", None)
+        sesh = Session.from_path("s3://lol/wut")
+        assert isinstance(sesh, DummySession)
+
+
 def test_session_factory_s3_kwargs():
     """Get an AWSSession for s3:// paths with keywords"""
     pytest.importorskip("boto3")

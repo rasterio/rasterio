@@ -326,6 +326,18 @@ def test_s3_open_with_implicit_env(gdalenv):
 @requires_gdal21(reason="S3 access requires 2.1+")
 @credentials
 @pytest.mark.network
+def test_s3_open_with_implicit_env_no_boto3(monkeypatch, gdalenv):
+    """Read from S3 using default env."""
+    with monkeypatch.context() as mpctx:
+        mpctx.setattr("rasterio.env.boto3", None)
+        mpctx.setattr("rasterio.session.boto3", None)
+        with rasterio.open(L8TIF) as dataset:
+            assert dataset.count == 1
+
+
+@requires_gdal21(reason="S3 access requires 2.1+")
+@credentials
+@pytest.mark.network
 def test_env_open_s3(gdalenv):
     """Read using env as context."""
     creds = boto3.Session().get_credentials()

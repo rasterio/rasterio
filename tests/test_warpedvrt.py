@@ -496,6 +496,35 @@ def test_warp_warp(dsrec, path_rgb_byte_tif):
             assert "1 N GTiff" in records[0]
 
 
+def test_out_dtype(red_green):
+    """Read as float"""
+    with rasterio.Env():
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
+            src,
+            transform=affine.Affine.translation(-src.width / 4, src.height / 4) * src.transform,
+            width=2 * src.width,
+            height=2 * src.height
+        ) as vrt:
+            data = vrt.read(out_dtype="float32")
+            image = numpy.moveaxis(data, 0, -1)
+            assert image[31, 31, 0] == 0.0
+            assert image[32, 32, 0] == 204.0
+            assert image[32, 32, 1] == 17.0
+
+
+def test_sample(red_green):
+    """See https://github.com/mapbox/rasterio/issues/1833."""
+    with rasterio.Env():
+        with rasterio.open(str(red_green.join("red.tif"))) as src, WarpedVRT(
+            src,
+            transform=affine.Affine.translation(-src.width / 4, src.height / 4) * src.transform,
+            width=2 * src.width,
+            height=2 * src.height
+        ) as vrt:
+            sample = next(vrt.sample([(-20, -50)]))
+            assert not sample.any()
+
+
 @pytest.fixture
 def dsrec(capfd):
     """GDAL's open dataset records as a pytest fixture"""

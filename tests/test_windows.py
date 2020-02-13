@@ -579,3 +579,9 @@ def test_window_hashable():
     c = Window(8, 8, 12, 12)
     assert hash(a) == hash(b)
     assert hash(a) != hash(c)
+
+
+def test_from_bounds_requires_transform():
+    """Test fix for issue 1857"""
+    with pytest.raises(WindowError):
+        from_bounds(-105, 40, -100, 45, height=100, width=100)

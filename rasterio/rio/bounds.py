@@ -33,8 +33,7 @@ logger = logging.getLogger(__name__)
     help="Output in specified coordinates.")
 @options.sequence_opt
 @use_rs_opt
-@geojson_type_collection_opt(True)
-@geojson_type_feature_opt(False)
+@geojson_type_feature_opt(True)
 @geojson_type_bbox_opt(False)
 @click.pass_context
 def bounds(ctx, input, precision, indent, compact, projection, dst_crs,

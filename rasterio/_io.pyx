@@ -713,31 +713,73 @@ cdef class DatasetReaderBase(DatasetBase):
 
     def dataset_mask(self, out=None, out_shape=None, window=None,
                      boundless=False, resampling=Resampling.nearest):
-        """Calculate the dataset's 2D mask. Derived from the individual band masks
-        provided by read_masks().
+        """Get the dataset's 2D valid data mask.
 
         Parameters
         ----------
-        out, out_shape, window, boundless and resampling are passed directly to read_masks()
+        out : numpy ndarray, optional
+            As with Numpy ufuncs, this is an optional reference to an
+            output array with the same dimensions and shape into which
+            data will be placed.
+
+            *Note*: the method's return value may be a view on this
+            array. In other words, `out` is likely to be an
+            incomplete representation of the method's results.
+
+            Cannot be combined with `out_shape`.
+
+        out_shape : tuple, optional
+            A tuple describing the output array's shape.  Allows for decimated
+            reads without constructing an output Numpy array.
+
+            Cannot be combined with `out`.
+
+        window : a pair (tuple) of pairs of ints or Window, optional
+            The optional `window` argument is a 2 item tuple. The first
+            item is a tuple containing the indexes of the rows at which
+            the window starts and stops and the second is a tuple
+            containing the indexes of the columns at which the window
+            starts and stops. For example, ((0, 2), (0, 2)) defines
+            a 2x2 window at the upper left of the raster dataset.
+
+        boundless : bool, optional (default `False`)
+            If `True`, windows that extend beyond the dataset's extent
+            are permitted and partially or completely filled arrays will
+            be returned as appropriate.
+
+        resampling : Resampling
+            By default, pixel values are read raw or interpolated using
+            a nearest neighbor algorithm from the band cache. Other
+            resampling algorithms may be specified. Resampled pixels
+            are not cached.
 
         Returns
         -------
-        ndarray, shape=(self.height, self.width), dtype='uint8'
-        0 = nodata, 255 = valid data
+        Numpy ndarray or a view on a Numpy ndarray
+            The dtype of this array is uint8. 0 = nodata, 255 = valid
+            data.
 
-        The dataset mask is calculate based on the individual band masks according to
-        the following logic, in order of precedence:
+        Notes
+        -----
+        Note: as with Numpy ufuncs, an object is returned even if you
+        use the optional `out` argument and the return value shall be
+        preferentially used by callers.
 
-        1. If a .msk file, dataset-wide alpha or internal mask exists,
-           it will be used as the dataset mask.
-        2. If an 4-band RGBA with a shadow nodata value,
-           band 4 will be used as the dataset mask.
-        3. If a nodata value exists, use the binary OR (|) of the band masks
-        4. If no nodata value exists, return a mask filled with 255
+        The dataset mask is calculated based on the individual band
+        masks according to the following logic, in order of precedence:
 
-        Note that this differs from read_masks and GDAL RFC15
-        in that it applies per-dataset, not per-band
-        (see https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
+        1. If a .msk file, dataset-wide alpha, or internal mask exists
+           it will be used for the dataset mask.
+        2. Else if the dataset is a 4-band  with a shadow nodata value, band 4 will be
+           used as the dataset mask.
+        3. If a nodata value exists, use the binary OR (|) of the band
+           masks 4. If no nodata value exists, return a mask filled with
+           255.
+
+        Note that this differs from read_masks and GDAL RFC15 in that it
+        applies per-dataset, not per-band (see
+        https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
+
         """
         kwargs = {
             'out': out,
@@ -746,21 +788,24 @@ cdef class DatasetReaderBase(DatasetBase):
             'boundless': boundless,
             'resampling': resampling}
 
-        # GDAL found dataset-wide alpha band or mask
-        # All band masks are equal so we can return the first
         if MaskFlags.per_dataset in self.mask_flag_enums[0]:
             return self.read_masks(1, **kwargs)
 
-        # use Alpha mask if available and looks like RGB, even if nodata is shadowing
         elif self.count == 4 and self.colorinterp[0] == ColorInterp.red:
             return self.read_masks(4, **kwargs)
 
-        # Or use the binary OR intersection of all GDALGetMaskBands
-        else:
-            mask = self.read_masks(1, **kwargs)
-            for i in range(1, self.count):
-                mask = mask | self.read_masks(i, **kwargs)
-            return mask
+        elif out is not None:
+            kwargs.pop("out", None)
+            kwargs["out_shape"] = (self.count, out.shape[-2], out.shape[-1])
+            out = np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
+            out *= 255
+            return out
+
+        elif out_shape is not None:
+            kwargs["out_shape"] = (self.count, out_shape[-2], out_shape[-1])
+
+        return 255 * np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
+
 
     def sample(self, xy, indexes=None, masked=False):
         """Get the values of a dataset at certain positions

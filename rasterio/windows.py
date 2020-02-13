@@ -261,9 +261,9 @@ def from_bounds(left, bottom, right, top, transform=None,
     left, bottom, right, top: float
         Left (west), bottom (south), right (east), and top (north)
         bounding coordinates.
-    transform: Affine
+    transform: Affine, required
         Affine transform matrix.
-    height, width: int
+    height, width: int, required
         Number of rows and columns of the window.
     precision: int, optional
         Number of decimal points of precision when computing inverse
@@ -272,8 +272,17 @@ def from_bounds(left, bottom, right, top, transform=None,
     Returns
     -------
     Window
-        A new Window
+        A new Window.
+
+    Raises
+    ------
+    WindowError
+        If a window can't be calculated.
+
     """
+    if not isinstance(transform, Affine):  # TODO: RPCs?
+        raise WindowError("A transform object is required to calculate the window")
+
     row_start, col_start = rowcol(
         transform, left, top, op=float, precision=precision)
 

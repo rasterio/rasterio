@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 MERGE_METHODS = ('first', 'last', 'min', 'max')
 
 
-def merge(datasets, bounds=None, res=None, nodata=None, precision=7, indexes=None,
+def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=None,
           method='first'):
     """Copy valid pixels from input files to an output file.
 

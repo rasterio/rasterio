@@ -7,6 +7,7 @@ from distutils.version import LooseVersion
 import math
 
 import click
+from cligj import format_opt
 import snuggs
 
 import rasterio
@@ -80,6 +81,7 @@ def _chunk_output(width, height, count, itemsize, mem_limit=1):
 @click.argument('command')
 @options.files_inout_arg
 @options.output_opt
+@format_opt
 @click.option('--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
                    'name for use in commands like '
@@ -90,7 +92,7 @@ def _chunk_output(width, height, count, itemsize, mem_limit=1):
 @click.option("--mem-limit", type=int, default=64, help="Limit on memory used to perform calculations, in MB.")
 @options.creation_options
 @click.pass_context
-def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit, creation_options):
+def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, mem_limit, creation_options):
     """A raster data calculator
 
     Evaluates an expression using input datasets and writes the result
@@ -152,6 +154,9 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
             dtype = dtype or first.meta['dtype']
             kwargs['dtype'] = dtype
 
+            if driver:
+                kwargs['driver'] = driver
+
             # Extend snuggs.
             snuggs.func_map['read'] = _read_array
             snuggs.func_map['band'] = lambda d, i: _get_bands(inputs, sources, d, i)
@@ -206,8 +211,8 @@ def calc(ctx, command, files, output, name, dtype, masked, overwrite, mem_limit,
 
     except snuggs.ExpressionError as err:
         click.echo("Expression Error:")
-        click.echo('  %s' % err.text)
-        click.echo(' ' + ' ' * err.offset + "^")
+        click.echo("  {}".format(err.text))
+        click.echo(" {}^".format(" " * err.offset))
         click.echo(err)
         raise click.Abort()
 

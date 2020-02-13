@@ -111,8 +111,13 @@ def file_in_handler(ctx, param, value):
     """Normalize ordinary filesystem and VFS paths"""
     try:
         path = parse_path(value)
+
         if isinstance(path, UnparsedPath):
-            return path.name
+
+            if os.path.exists(path.path) and rasterio.shutil.exists(value):
+                return abspath_forward_slashes(path.path)
+            else:
+                return path.name
 
         elif path.scheme and path.is_remote:
             return path.name

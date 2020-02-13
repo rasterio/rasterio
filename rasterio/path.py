@@ -1,11 +1,14 @@
 """Dataset paths, identifiers, and filenames"""
 
+import os.path
 import re
 import sys
 
 import attr
 
-from rasterio.compat import urlparse
+from rasterio.compat import Path as PathlibPath
+from rasterio.compat import string_types, urlparse
+from rasterio.errors import PathError
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
 # TODO: extend for other cloud plaforms.
@@ -121,25 +124,36 @@ def parse_path(path):
     -----
     When legacy GDAL filenames are encountered, they will be returned
     in a UnparsedPath.
+
     """
-    # Windows drive letters (e.g. "C:\") confuse `urlparse` as they look like
-    # URL schemes
-    if sys.platform == "win32" and re.match("^[a-zA-Z]\\:", path):
-        return UnparsedPath(path)
+    if isinstance(path, Path):
+        return path
 
-    elif path.startswith('/vsi'):
-        return UnparsedPath(path)
+    elif isinstance(path, PathlibPath):
+        return ParsedPath(path, None, None)
 
-    else:
-        parts = urlparse(path)
+    elif isinstance(path, string_types):
 
-        # if the scheme is not one of Rasterio's supported schemes, we
-        # return an UnparsedPath.
-        if parts.scheme and not all(p in SCHEMES for p in parts.scheme.split('+')):
+        if sys.platform == "win32" and re.match("^[a-zA-Z]\\:", path):
+            return UnparsedPath(path)
+
+        elif path.startswith('/vsi'):
             return UnparsedPath(path)
 
         else:
+            parts = urlparse(path)
+
+    else:
+        raise PathError("invalid path '{!r}'".format(path))
+
+    # if the scheme is not one of Rasterio's supported schemes, we
+    # return an UnparsedPath.
+    if parts.scheme:
+
+        if all(p in SCHEMES for p in parts.scheme.split('+')):
             return ParsedPath.from_uri(path)
+
+    return UnparsedPath(path)
 
 
 def vsi_path(path):
