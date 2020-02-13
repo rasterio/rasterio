@@ -329,6 +329,7 @@ def test_s3_open_with_implicit_env(gdalenv):
 def test_s3_open_with_implicit_env_no_boto3(monkeypatch, gdalenv):
     """Read from S3 using default env."""
     with monkeypatch.context() as mpctx:
+        mpctx.setattr("rasterio.env.boto3", None)
         mpctx.setattr("rasterio.session.boto3", None)
         with rasterio.open(L8TIF) as dataset:
             assert dataset.count == 1
