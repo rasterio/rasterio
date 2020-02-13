@@ -2,16 +2,16 @@
 
 import logging
 
-try:
-    import boto3
-except ImportError:
-    log.info("failed to import boto3, continuing.")
-    boto3 = None
-
 from rasterio.path import parse_path, UnparsedPath
 
 
 log = logging.getLogger(__name__)
+
+try:
+    import boto3
+except ImportError:
+    log.debug("Could not import boto3, continuing with reduced functionality.")
+    boto3 = None
 
 
 class Session(object):
@@ -100,7 +100,7 @@ class Session(object):
             return DummySession
 
         elif path.scheme == "s3" or "amazonaws.com" in path.path:
-            if boto3:
+            if boto3 is not None:
                 return AWSSession
             else:
                 log.info("boto3 not available, falling back to a DummySession.")
@@ -108,7 +108,6 @@ class Session(object):
 
         elif path.scheme == "oss" or "aliyuncs.com" in path.path:
             return OSSSession
-
 
         elif path.path.startswith("/vsiswift/"):
             return SwiftSession
@@ -139,6 +138,55 @@ class Session(object):
 
         """
         return Session.cls_from_path(path)(*args, **kwargs)
+
+    @staticmethod
+    def aws_or_dummy(*args, **kwargs):
+        """Create an AWSSession if boto3 is available, else DummySession
+
+        Parameters
+        ----------
+        path : str
+            A dataset path or identifier.
+        args : sequence
+            Positional arguments for the foreign session constructor.
+        kwargs : dict
+            Keyword arguments for the foreign session constructor.
+
+        Returns
+        -------
+        Session
+
+        """
+        if boto3 is not None:
+            return AWSSession(*args, **kwargs)
+        else:
+            return DummySession(*args, **kwargs)
+
+    @staticmethod
+    def from_environ(*args, **kwargs):
+        """Create a session object suited to the environment.
+
+        Parameters
+        ----------
+        path : str
+            A dataset path or identifier.
+        args : sequence
+            Positional arguments for the foreign session constructor.
+        kwargs : dict
+            Keyword arguments for the foreign session constructor.
+
+        Returns
+        -------
+        Session
+
+        """
+        try:
+            session = Session.aws_or_dummy(*args, **kwargs)
+            session.credentials
+        except RuntimeError as exc:
+            log.warn("Credentials in environment have expired. Creating a DummySession.")
+            session = DummySession(*args, **kwargs)
+        return session
 
 
 class DummySession(Session):
@@ -193,7 +241,7 @@ class AWSSession(Session):
             aws_secret_access_key=None, aws_session_token=None,
             region_name=None, profile_name=None, endpoint_url=None,
             requester_pays=False):
-        """Create a new boto3 session
+        """Create a new AWS session
 
         Parameters
         ----------
@@ -254,7 +302,7 @@ class AWSSession(Session):
     def credentials(self):
         """The session credentials as a dict"""
         res = {}
-        if self._creds: # pragma: no branch
+        if self._creds:  # pragma: no branch
             frozen_creds = self._creds.get_frozen_credentials()
             if frozen_creds.access_key:  # pragma: no branch
                 res['aws_access_key_id'] = frozen_creds.access_key
@@ -308,7 +356,7 @@ class OSSSession(Session):
             "oss_secret_access_key": oss_secret_access_key,
             "oss_endpoint": oss_endpoint
         }
-    
+
     @classmethod
     def hascreds(cls, config):
         """Determine if the given configuration has proper credentials
@@ -397,14 +445,15 @@ class GSSession(Session):
 class SwiftSession(Session):
     """Configures access to secured resources stored in OpenStack Swift Object Storage.
     """
-    def __init__(self, session=None, 
-                swift_storage_url=None, swift_auth_token=None, 
+    def __init__(self, session=None,
+                swift_storage_url=None, swift_auth_token=None,
                 swift_auth_v1_url=None, swift_user=None, swift_key=None):
-        """Create new OpenStack Swift Object Storage Session.   
-        Three methods are possible:  
+        """Create new OpenStack Swift Object Storage Session.
+
+        Three methods are possible:
             1. Create session by the swiftclient library.
-            2. The SWIFT_STORAGE_URL and SWIFT_AUTH_TOKEN (this method is recommended by GDAL docs).  
-            3. The SWIFT_AUTH_V1_URL, SWIFT_USER and SWIFT_KEY (This depends on the swiftclient library).  
+            2. The SWIFT_STORAGE_URL and SWIFT_AUTH_TOKEN (this method is recommended by GDAL docs).
+            3. The SWIFT_AUTH_V1_URL, SWIFT_USER and SWIFT_KEY (This depends on the swiftclient library).
 
         Parameters
         ----------
@@ -453,7 +502,7 @@ class SwiftSession(Session):
                 "swift_storage_url": self._session.get_auth()[0],
                 "swift_auth_token": self._session.get_auth()[1]
             }
-            
+
     @classmethod
     def hascreds(cls, config):
         """Determine if the given configuration has proper credentials
@@ -481,4 +530,3 @@ class SwiftSession(Session):
         dict
         """
         return {k.upper(): v for k, v in self.credentials.items()}
-        

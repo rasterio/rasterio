@@ -329,7 +329,6 @@ def test_s3_open_with_implicit_env(gdalenv):
 def test_s3_open_with_implicit_env_no_boto3(monkeypatch, gdalenv):
     """Read from S3 using default env."""
     with monkeypatch.context() as mpctx:
-        mpctx.setattr("rasterio.env.boto3", None)
         mpctx.setattr("rasterio.session.boto3", None)
         with rasterio.open(L8TIF) as dataset:
             assert dataset.count == 1
@@ -843,11 +842,12 @@ def test_swift_session_credentials(gdalenv):
 
 
 def test_swift_session_by_user_key():
-    def mock_init(self, session=None, 
-                swift_storage_url=None, swift_auth_token=None, 
-                swift_auth_v1_url=None, swift_user=None, swift_key=None):
-        self._creds = {'SWIFT_STORAGE_URL':'foo',
-                       'SWIFT_AUTH_TOKEN':'bar'}
+    def mock_init(
+            self, session=None,
+            swift_storage_url=None, swift_auth_token=None,
+            swift_auth_v1_url=None, swift_user=None, swift_key=None):
+        self._creds = {'SWIFT_STORAGE_URL': 'foo',
+                       'SWIFT_AUTH_TOKEN': 'bar'}
 
     with mock.patch('rasterio.session.SwiftSession.__init__', new=mock_init):
         swift_session = SwiftSession(
@@ -864,7 +864,7 @@ def test_dummy_session_without_boto3(monkeypatch, caplog):
     """Without boto3, always revert to dummy session"""
     # Confirm fix of #1708.
     with monkeypatch.context() as mpctx:
-        mpctx.setattr("rasterio.env.boto3", None)
+        mpctx.setattr("rasterio.session.boto3", None)
         mpctx.setenv('AWS_ACCESS_KEY_ID', 'lol')
         mpctx.setenv('AWS_SECRET_ACCESS_KEY', 'wut')
         assert isinstance(rasterio.env.Env().session, DummySession)
