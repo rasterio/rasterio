@@ -211,4 +211,16 @@ def test_session_factory_swift_kwargs():
     sesh = Session.from_path("/vsiswift/lol/wut", swift_storage_url='foo', swift_auth_token='bar')
     assert isinstance(sesh, DummySession)
 
-    
+
+def test_session_aws_or_dummy_aws():
+    """Get an AWSSession when boto3 is available"""
+    boto3 = pytest.importorskip("boto3")
+    assert isinstance(Session.aws_or_dummy(), AWSSession)
+
+
+def test_session_aws_or_dummy_dummy(monkeypatch):
+    """Get a DummySession when boto3 is not available"""
+    boto3 = pytest.importorskip("boto3")
+    with monkeypatch.context() as mpctx:
+        mpctx.setattr("rasterio.session.boto3", None)
+        assert isinstance(Session.aws_or_dummy(), DummySession)
