@@ -6,6 +6,7 @@ Changes
 
 Bug fixes:
 
+- Filter more categories of invalid features in rasterize (#1815).
 - Fall back to use of a DummySession instead of failing when boto3 isn't
   available (#1864).
 - A crashing bug involving boundless reads of VRTs (#1863) has been fixed.

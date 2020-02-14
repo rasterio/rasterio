@@ -354,13 +354,10 @@ def test_is_valid_geom_geomcollection(geojson_geomcollection):
     assert not is_valid_geom(geom)
 
 
-def test_is_valid_geom_invalid_inputs():
+@pytest.mark.parametrize("geom", [None, 1, "foo", "type", ["type"], {"type": "Invalid"}, {"type": "Point"}])
+def test_is_valid_geom_invalid_inputs(geom):
     """Improperly formed GeoJSON objects should fail"""
-
-    assert not is_valid_geom('type')
-    assert not is_valid_geom(['type'])
-    assert not is_valid_geom({'type': 'Invalid'})  # wrong type
-    assert not is_valid_geom({'type': 'Point'})  # Missing coordinates
+    assert not is_valid_geom(geom)
 
 
 def test_rasterize_point(geojson_point):

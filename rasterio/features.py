@@ -309,7 +309,7 @@ def rasterize(
 
         else:
             # invalid or empty geometries are skipped and raise a warning instead
-            warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index), ShapeSkipWarning)
+            warnings.warn('Invalid or empty shape {} at index {} will not be rasterized.'.format(geom, index), ShapeSkipWarning)
 
     if not valid_shapes:
         raise ValueError('No valid geometry objects found for rasterize')
@@ -487,15 +487,12 @@ def is_valid_geom(geom):
 
     geom = getattr(geom, '__geo_interface__', None) or geom
 
-    if 'type' not in geom:
-        return False
-
     try:
-        geom_type = geom['type']
+        geom_type = geom["type"]
         if geom_type not in geom_types.union({'GeometryCollection'}):
             return False
 
-    except TypeError:
+    except (KeyError, TypeError):
         return False
 
     if geom_type in geom_types:
