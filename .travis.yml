@@ -85,7 +85,7 @@ install:
   - "python -m pip list"
 
 script:
-  - "if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.1.0 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart and not switch' ; fi"
+  - "if [[ $TRAVIS_PYTHON_VERSION == 3.6 && $GDALVERSION == 2.4.4 ]]; then python -m pytest --doctest-ignore-import-errors --doctest-glob='*.rst' docs/*.rst -k 'not index and not quickstart and not switch' ; fi"
   - python -m pytest -v -m "not wheel" -rxXs --cov rasterio --cov-report term-missing
 
 after_success:
