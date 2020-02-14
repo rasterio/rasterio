@@ -184,7 +184,7 @@ class Session(object):
             session = Session.aws_or_dummy(*args, **kwargs)
             session.credentials
         except RuntimeError as exc:
-            log.warn("Credentials in environment have expired. Creating a DummySession.")
+            log.warning("Credentials in environment have expired. Creating a DummySession.")
             session = DummySession(*args, **kwargs)
         return session
 
