@@ -626,11 +626,13 @@ cdef class DatasetReaderBase(DatasetBase):
                     # Temporary solution: convert all non-zero pixels to
                     # 255 and log that we have done so.
 
-                    out = np.where(out != 0, 255, 0)
-                    log.warning("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
+                    out = np.where(out != 0, 255, 0).astype("uint8")
 
         if return2d:
             out.shape = out.shape[1:]
+
+        if resampling != Resampling.nearest:
+            out = np.where(out != 0, 255, 0).astype("uint8")
 
         return out
 
@@ -805,7 +807,6 @@ cdef class DatasetReaderBase(DatasetBase):
             kwargs["out_shape"] = (self.count, out_shape[-2], out_shape[-1])
 
         return 255 * np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
-
 
     def sample(self, xy, indexes=None, masked=False):
         """Get the values of a dataset at certain positions
