@@ -6,6 +6,7 @@ import sys
 import textwrap
 
 import affine
+from click.testing import CliRunner
 import numpy as np
 from pytest import fixture
 import pytest
