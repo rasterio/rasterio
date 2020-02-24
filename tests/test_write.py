@@ -365,3 +365,10 @@ def test_require_width(tmpdir, mode):
     with pytest.raises(TypeError):
         with rasterio.open(name, mode, driver="GTiff", height=1, count=1, dtype='uint8'):
             print("TEST FAILED IF THIS IS REACHED.")
+
+
+def test_too_big_for_tiff(tmpdir):
+    """RasterioIOError is raised when TIFF is too big"""
+    name = str(tmpdir.join("test.tif"))
+    with pytest.raises(RasterioIOError):
+        rasterio.open(name, 'w', driver='GTiff', height=100000, width=100000, count=1, dtype='uint8', BIGTIFF=False)

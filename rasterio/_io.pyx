@@ -1193,6 +1193,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._hds = exc_wrap_pointer(
                     GDALCreate(drv, fname, width, height,
                                count, gdal_dtype, options))
+            except CPLE_BaseError as exc:
+                raise RasterioIOError(str(exc))
             finally:
                 if options != NULL:
                     CSLDestroy(options)
