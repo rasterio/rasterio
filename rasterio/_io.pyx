@@ -1,4 +1,6 @@
 """Rasterio input/output."""
+
+
 # cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 from __future__ import absolute_import
@@ -616,19 +618,6 @@ cdef class DatasetReaderBase(DatasetBase):
                         indexes, out, Window(0, 0, window.width, window.height),
                         None, resampling=resampling, masks=True)
 
-                    # TODO: we need to determine why `out` can contain data
-                    # that looks more like the source's band 1 when doing
-                    # this kind of boundless read. It looks like
-                    # hmask = GDALGetMaskBand(band) may be returning the
-                    # a pointer to the band instead of the mask band in 
-                    # this case.
-                    # 
-                    # Temporary solution: convert all non-zero pixels to
-                    # 255 and log that we have done so.
-
-                    out = np.where(out != 0, 255, 0)
-                    log.warning("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
-
         if return2d:
             out.shape = out.shape[1:]
 
@@ -797,15 +786,13 @@ cdef class DatasetReaderBase(DatasetBase):
         elif out is not None:
             kwargs.pop("out", None)
             kwargs["out_shape"] = (self.count, out.shape[-2], out.shape[-1])
-            out = np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
-            out *= 255
+            out = np.logical_or.reduce(self.read_masks(**kwargs)) * np.uint8(255)
             return out
 
         elif out_shape is not None:
             kwargs["out_shape"] = (self.count, out_shape[-2], out_shape[-1])
 
-        return 255 * np.logical_or.reduce(self.read_masks(**kwargs)).astype("uint8")
-
+        return np.logical_or.reduce(self.read_masks(**kwargs)) * np.uint8(255)
 
     def sample(self, xy, indexes=None, masked=False):
         """Get the values of a dataset at certain positions
@@ -1192,6 +1179,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._hds = exc_wrap_pointer(
                     GDALCreate(drv, fname, width, height,
                                count, gdal_dtype, options))
+            except CPLE_BaseError as exc:
+                raise RasterioIOError(str(exc))
             finally:
                 if options != NULL:
                     CSLDestroy(options)
