@@ -7,7 +7,6 @@ Changes
 Bug fixes:
 
 - Raise RasterioIOError when errors occur while creating a dataset (#1796).
-- Ensure the output of read_masks contains only 255 and 0 (#1721).
 - Filter more categories of invalid features in rasterize (#1815).
 - Fall back to use of a DummySession instead of failing when boto3 isn't
   available (#1864).
