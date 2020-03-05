@@ -1746,6 +1746,7 @@ cdef class InMemoryRaster:
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
+        cdef char **options = NULL
 
         if image is not None:
             if image.ndim == 3:
@@ -1773,10 +1774,13 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
+        if dtype == 'int8':
+            options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
         datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
-                       count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
+                       count, <GDALDataType>dtypes.dtype_rev[dtype], options))
 
         if transform is not None:
             self.transform = transform
@@ -1815,6 +1819,9 @@ cdef class InMemoryRaster:
                 CPLFree(gcplist)
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
+
+        if options != NULL:
+            CSLDestroy(options)
 
         self._image = None
         if image is not None:
@@ -2015,6 +2022,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             if hasattr(self._init_dtype, 'type'):
+                if self._init_dtype == 'int8':
+                    options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
                 tp = self._init_dtype.type
                 if tp not in dtypes.dtype_rev:
                     raise ValueError(
@@ -2026,7 +2036,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             self._hds = exc_wrap_pointer(
                 GDALCreate(memdrv, "temp", self.width, self.height,
-                           self._count, gdal_dtype, NULL))
+                           self._count, gdal_dtype, options))
 
             if self._init_nodata is not None:
                 for i in range(self._count):
