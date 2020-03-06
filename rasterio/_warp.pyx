@@ -443,7 +443,7 @@ def _reproject(
 
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
-    CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+    imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
 
     # See http://www.gdal.org/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
