@@ -607,4 +607,5 @@ def test_warp_resampling_not_yet_supported(
         '--resampling', method.name])
 
     assert result.exit_code == 2
-    assert 'Invalid value for "--resampling"' in result.output
+    assert "Invalid value for" in result.output
+    assert "--resampling" in result.output
