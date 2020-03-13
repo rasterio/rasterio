@@ -215,7 +215,8 @@ def test_rasterize_invalid_like_raster(tmpdir, runner, basic_feature):
         input=json.dumps(basic_feature))
 
     assert result.exit_code == 2
-    assert "Invalid value for '--like':" in result.output
+    assert "Invalid value for" in result.output
+    assert "--like" in result.output
 
 
 def test_rasterize_like_raster_src_crs_mismatch(tmpdir, runner, basic_feature,
