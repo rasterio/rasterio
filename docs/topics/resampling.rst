@@ -18,8 +18,8 @@ By reading from a raster source into an output array of a different size or by
 specifying an *out_shape* of a different size you are effectively resampling
 the data.
 
-Here is an example of upsampling by a factor of 2 using the bilinear resampling 
-method. 
+Here is an example of upsampling by a factor of 2 using the bilinear resampling
+method.
 
 .. code-block:: python
 
@@ -29,17 +29,17 @@ method.
     upscale_factor = 2
 
     with rasterio.open("example.tif") as dataset:
-        
+
         # resample data to target shape
         data = dataset.read(
             out_shape=(
-                dataset.count, 
-                int(dataset.width * upscale_factor), 
-                int(dataset.height * upscale_factor)
+                dataset.count,
+                int(dataset.height * upscale_factor),
+                int(dataset.width * upscale_factor)
             ),
             resampling=Resampling.bilinear
         )
-        
+
         # scale image transform
         transform = dataset.transform * dataset.transform.scale(
             (dataset.width / data.shape[-2]),
