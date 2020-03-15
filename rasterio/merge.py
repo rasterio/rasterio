@@ -13,7 +13,7 @@ from rasterio.transform import Affine
 
 logger = logging.getLogger(__name__)
 
-MERGE_METHODS = ('first', 'last', 'min', 'max')
+MERGE_METHODS = ('first', 'last', 'min', 'max', 'median')
 
 
 def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=None,
@@ -192,7 +192,15 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
 
             mask = np.logical_and(old_nodata, ~new_nodata)
             old_data[mask] = new_data[mask]
+            
+    elif method == 'median':
+        def copyto(old_data, new_data, old_nodata, new_nodata):
+            mask = np.logical_and(~old_nodata, ~new_nodata)
+            old_data[mask] = np.median([old_data[mask], new_data[mask]], axis = 0)
 
+            mask = np.logical_and(old_nodata, ~new_nodata)
+            old_data[mask] = new_data[mask]
+            
     elif callable(method):
         copyto = method
 
