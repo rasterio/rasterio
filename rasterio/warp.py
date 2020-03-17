@@ -75,7 +75,7 @@ def transform_geom(
         Example: CRS({'init': 'EPSG:4326'})
     dst_crs: CRS or dict
         Target coordinate reference system.
-    geom: GeoJSON like dict object
+    geom: GeoJSON like dict object or iterable of GeoJSON like objects.
     antimeridian_cutting: bool, optional
         If True, cut geometries at the antimeridian, otherwise geometries
         will not be cut (default).  If False and GDAL is 2.2.0 or newer
@@ -91,8 +91,8 @@ def transform_geom(
 
     Returns
     ---------
-    out: GeoJSON like dict object
-        Transformed geometry in GeoJSON dict format
+    out: GeoJSON like dict object or list of GeoJSON like objects.
+        Transformed geometry(s) in GeoJSON dict format
     """
 
     return _transform_geom(
