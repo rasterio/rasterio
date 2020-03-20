@@ -27,7 +27,7 @@ transform.
         # degrees N, each pixel covering 15".
         rows, cols = src_shape = (512, 512)
         d = 1.0/240 # decimal degrees per pixel
-        # The following is equivalent to 
+        # The following is equivalent to
         # A(d, 0, -cols*d/2, 0, -d, rows*d/2).
         src_transform = A.translation(-cols*d/2, rows*d/2) * A.scale(d, -d)
         src_crs = {'init': 'EPSG:4326'}
@@ -36,13 +36,13 @@ transform.
         # Destination: a 1024 x 1024 dataset in Web Mercator (EPSG:3857)
         # with origin at 0.0, 0.0.
         dst_shape = (1024, 1024)
-        dst_transform = [-237481.5, 425.0, 0.0, 237536.4, 0.0, -425.0]
+        dst_transform = A.translation(-237481.5, 237536.4) * A.scale(425.0, -425.0)
         dst_crs = {'init': 'EPSG:3857'}
         destination = np.zeros(dst_shape, np.uint8)
 
         reproject(
-            source, 
-            destination, 
+            source,
+            destination,
             src_transform=src_transform,
             src_crs=src_crs,
             dst_transform=dst_transform,
@@ -64,7 +64,7 @@ Estimating optimal output shape
 
 Rasterio provides a :func:`rasterio.warp.calculate_default_transform()` function to
 determine the optimal resolution and transform for the destination raster.
-Given a source dataset in a known coordinate reference system, this 
+Given a source dataset in a known coordinate reference system, this
 function will return a ``transform, width, height`` tuple which is calculated
 by libgdal.
 
@@ -120,8 +120,6 @@ See ``rasterio/rio/warp.py`` for more complex examples of reprojection based on
 new bounds, dimensions, and resolution (as well as a command-line interface
 described :ref:`here <warp>`).
 
-
-
 It is also possible to use :func:`~rasterio.warp.reproject()` to create an output dataset zoomed
 out by a factor of 2.  Methods of the :class:`rasterio.Affine` class help us generate
 the output dataset's transform matrix and, thereby, its spatial extent.
@@ -170,4 +168,3 @@ References
 ----------
 
 .. [1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.geometric_transform.html#scipy.ndimage.geometric_transform
-
