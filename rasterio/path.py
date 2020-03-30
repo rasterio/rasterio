@@ -167,6 +167,7 @@ def vsi_path(path):
     Returns
     -------
     str
+
     """
     if isinstance(path, UnparsedPath):
         return path.path

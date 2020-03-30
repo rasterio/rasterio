@@ -1,6 +1,5 @@
 """Rasterio input/output."""
 
-
 # cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 from __future__ import absolute_import
