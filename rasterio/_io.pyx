@@ -31,7 +31,7 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, vsi_path, UnparsedPath
+from rasterio.path import parse_path, UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -1113,7 +1113,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Make and store a GDAL dataset handle.
         filename = path.name
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
         fname = name_b
 
@@ -2011,7 +2011,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")

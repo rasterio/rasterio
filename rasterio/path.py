@@ -1,13 +1,11 @@
 """Dataset paths, identifiers, and filenames"""
 
-import os.path
 import re
 import sys
 
 import attr
 
-from rasterio.compat import Path as PathlibPath
-from rasterio.compat import string_types, urlparse
+from rasterio.compat import pathlib, string_types, urlparse
 from rasterio.errors import PathError
 
 # Supported URI schemes and their mapping to GDAL's VSI suffix.
@@ -33,6 +31,9 @@ REMOTESCHEMES = set([k for k, v in SCHEMES.items() if v in ('curl', 's3', 'oss',
 
 class Path(object):
     """Base class for dataset paths"""
+
+    def as_vsi(self):
+        return vsi_path(self)
 
 
 @attr.s(slots=True)
@@ -129,13 +130,16 @@ def parse_path(path):
     if isinstance(path, Path):
         return path
 
-    elif isinstance(path, PathlibPath):
-        return ParsedPath(path, None, None)
+    elif pathlib and isinstance(path, pathlib.PurePath):
+        return ParsedPath(path.as_posix(), None, None)
 
     elif isinstance(path, string_types):
 
-        if sys.platform == "win32" and re.match("^[a-zA-Z]\\:", path):
-            return UnparsedPath(path)
+        if sys.platform == "win32" and re.match(r"^[a-zA-Z]\:", path):
+            if pathlib:
+                return ParsedPath(pathlib.Path(path).as_posix(), None, None)
+            else:
+                return UnparsedPath(path)
 
         elif path.startswith('/vsi'):
             return UnparsedPath(path)

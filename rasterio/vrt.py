@@ -7,7 +7,7 @@ from rasterio._warp import WarpedVRTReaderBase
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import MaskFlags
 from rasterio.env import env_ctx_if_needed
-from rasterio.path import parse_path, vsi_path
+from rasterio.path import parse_path
 from rasterio.transform import TransformMethodsMixin
 from rasterio.windows import WindowMethodsMixin
 
@@ -208,7 +208,7 @@ def _boundless_vrt_doc(
         sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
         sourcefilename.attrib["shared"] = "0"
-        sourcefilename.text = vsi_path(parse_path(src_dataset.name))
+        sourcefilename.text = parse_path(src_dataset.name).as_vsi()
         sourceband = ET.SubElement(complexsource, 'SourceBand')
         sourceband.text = str(bidx)
         sourceproperties = ET.SubElement(complexsource, 'SourceProperties')
@@ -250,7 +250,7 @@ def _boundless_vrt_doc(
         sourcefilename = ET.SubElement(simplesource, 'SourceFilename')
         sourcefilename.attrib['relativeToVRT'] = "0"
         sourcefilename.attrib["shared"] = "0"
-        sourcefilename.text = vsi_path(parse_path(src_dataset.name))
+        sourcefilename.text = parse_path(src_dataset.name).as_vsi()
 
         sourceband = ET.SubElement(simplesource, 'SourceBand')
         sourceband.text = 'mask,1'

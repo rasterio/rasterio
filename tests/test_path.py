@@ -5,6 +5,7 @@ import sys
 import pytest
 
 import rasterio
+import rasterio.compat
 from rasterio.errors import PathError
 from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
 
@@ -92,6 +93,11 @@ def test_vsi_path_scheme():
     assert vsi_path(ParsedPath('/foo.tif', 'tests/data/files.zip', 'zip')) == '/vsizip/tests/data/files.zip/foo.tif'
 
 
+def test_path_as_vsi_scheme():
+    """Correctly make a vsi path"""
+    assert ParsedPath('/foo.tif', 'tests/data/files.zip', 'zip').as_vsi() == '/vsizip/tests/data/files.zip/foo.tif'
+
+
 def test_vsi_path_file():
     """Correctly make and ordinary file path from a file path"""
     assert vsi_path(ParsedPath('foo.tif', None, 'file')) == 'foo.tif'
@@ -105,6 +111,11 @@ def test_vsi_path_curl():
 def test_vsi_path_unparsed():
     """Correctly make GDAL filename from unparsed path"""
     assert vsi_path(UnparsedPath("foo")) == "foo"
+
+
+def test_path_as_vsi_unparsed():
+    """Correctly make GDAL filename from unparsed path"""
+    assert UnparsedPath("foo").as_vsi() == "foo"
 
 
 def test_vsi_path_error():
@@ -182,3 +193,14 @@ def test_path_error(path):
 def test_parse_path():
     pathlib = pytest.importorskip("pathlib")
     assert isinstance(parse_path(pathlib.Path("/foo/bar.tif")), ParsedPath)
+
+
+def test_parse_path_win():
+    pathlib = pytest.importorskip("pathlib")
+    assert isinstance(parse_path(pathlib.PureWindowsPath(r"C:\foo\bar.tif")), ParsedPath)
+
+
+def test_parse_path_win_no_pathlib(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(rasterio.path, "pathlib", None)
+    assert isinstance(parse_path(r"C:\foo\bar.tif"), UnparsedPath)
