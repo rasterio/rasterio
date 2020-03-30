@@ -201,6 +201,6 @@ def test_parse_path_win():
 
 
 def test_parse_path_win_no_pathlib(monkeypatch):
-    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(rasterio.path.sys, "platform", "win32")
     monkeypatch.setattr(rasterio.path, "pathlib", None)
     assert isinstance(parse_path(r"C:\foo\bar.tif"), UnparsedPath)
