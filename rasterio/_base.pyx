@@ -31,7 +31,7 @@ from rasterio.errors import (
     RasterBlockError, BandOverviewError)
 from rasterio.profiles import Profile
 from rasterio.transform import Affine, guard_transform, tastes_like_gdal
-from rasterio.path import parse_path, vsi_path
+from rasterio.path import parse_path
 from rasterio import windows
 
 include "gdal.pxi"
@@ -60,7 +60,7 @@ def get_dataset_driver(path):
 
     Parameters
     ----------
-    path : rasterio.path.Path
+    path : rasterio.path.Path or str
         A remote or local dataset path.
 
     Returns
@@ -70,7 +70,7 @@ def get_dataset_driver(path):
     cdef GDALDatasetH dataset = NULL
     cdef GDALDriverH driver = NULL
 
-    path = vsi_path(path)
+    path = parse_path(path).as_vsi()
     path = path.encode('utf-8')
 
     try:
@@ -179,7 +179,7 @@ cdef class DatasetBase(object):
 
         Parameters
         ----------
-        path : rasterio.path.Path
+        path : rasterio.path.Path or str
             Path of the local or remote dataset.
         driver : str or list of str
             A single driver name or a list of driver names to consider when
@@ -202,7 +202,7 @@ cdef class DatasetBase(object):
         self._hds = NULL
 
         if path is not None:
-            filename = vsi_path(path)
+            filename = parse_path(path).as_vsi()
 
             # driver may be a string or list of strings. If the
             # former, we put it into a list.
