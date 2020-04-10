@@ -34,6 +34,7 @@ from rasterio.sample import sample_gen
 from rasterio.transform import Affine
 from rasterio.path import parse_path, vsi_path, UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
+from rasterio.shutil import delete
 from rasterio.windows import Window, intersection
 
 from libc.stdio cimport FILE
@@ -47,51 +48,6 @@ from rasterio._shim cimport (
 
 
 log = logging.getLogger(__name__)
-
-
-def _delete_dataset_if_exists(path):
-
-    """Delete a dataset if it already exists.  This operates at a lower
-    level than a:
-
-        if rasterio.shutil.exists(path):
-            rasterio.shutil.delete(path)
-
-    and can take some shortcuts.
-
-    Parameters
-    ----------
-    path : str
-        Dataset path.
-    """
-
-    cdef GDALDatasetH h_dataset = NULL
-    cdef const char *c_path = NULL
-
-    b_path = path.encode('utf-8')
-    c_path = b_path
-
-    with silence_errors():
-        with nogil:
-            h_dataset = GDALOpen(c_path, <GDALAccess>0)
-
-    try:
-        h_dataset = exc_wrap_pointer(h_dataset)
-
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError):
-        log.debug(
-            "Skipped delete for overwrite. Dataset does not exist: %s", path)
-
-    else:
-        h_driver = GDALGetDatasetDriver(h_dataset)
-
-        if h_driver != NULL:
-            with nogil:
-                GDALDeleteDataset(h_driver, c_path)
-
-    finally:
-        if h_dataset != NULL:
-            GDALClose(h_dataset)
 
 
 cdef bint in_dtype_range(value, dtype):
@@ -1136,7 +1092,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if k.lower() in ['affine']:
                 continue
 
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
 
             if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
                 continue
@@ -1150,14 +1106,12 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 "Option: %r", (k, CSLFetchNameValue(options, key_c)))
 
         if mode in ('w', 'w+'):
-
-            _delete_dataset_if_exists(path)
+            delete(path, driver)
 
             driver_b = driver.encode('utf-8')
             drv_name = driver_b
             try:
                 drv = exc_wrap_pointer(GDALGetDriverByName(drv_name))
-
             except Exception as err:
                 raise DriverRegistrationError(str(err))
 
@@ -2084,7 +2038,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         fname = name_b
 
         # Delete existing file, create.
-        _delete_dataset_if_exists(self.name)
+        delete(self.name, self.driver)
 
         driver_b = self.driver.encode('utf-8')
         drv_name = driver_b
@@ -2097,7 +2051,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), v
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
             key_c = key_b
