@@ -15,7 +15,7 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     from collections import UserDict
     from collections.abc import Iterable, Mapping
     from inspect import getfullargspec as getargspec
-    from pathlib import Path
+    import pathlib
 
 else:  # pragma: no cover
     warnings.warn("Python 2 compatibility will be removed after version 1.1", DeprecationWarning)

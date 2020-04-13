@@ -1,6 +1,14 @@
 Changes
 =======
 
+1.1.4 (TBD)
+------------------
+
+Bug fixes:
+
+- Add a new as_vsi() method to the Path class for internal use and improve
+  Windows path handling and tests thereof (#1895).
+
 1.1.3 (2020-02-24)
 ------------------
 
