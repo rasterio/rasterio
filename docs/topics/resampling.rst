@@ -1,7 +1,8 @@
 Resampling
 ==========
 
-For details on changing coordinate reference systems, see `Reprojection`.
+For details on changing coordinate reference systems, see
+:doc:`Reprojection <reproject>`.
 
 Up and downsampling
 -------------------
@@ -55,13 +56,13 @@ Resampling Methods
 When you change the raster cell grid, you must recalculate the pixel values.
 There is no "correct" way to do this as all methods involve some interpolation.
 
-The current resampling methods can be found in the `rasterio.enums`_ source.
+The current resampling methods can be found in the
+:class:`rasterio.enums.Resampling()` class.
 
-Of note, the default ``Resampling.nearest`` method may not be suitable for
-continuous data. In those cases, ``Resampling.bilinear`` and
-``Resampling.cubic`` are better suited.  Some specialized statistical
-resampling method exist, e.g. ``Resampling.average``, which may be useful when
+Of note, the default :attr:`~rasterio.enums.Resampling.nearest` method may not
+be suitable for continuous data. In those cases,
+:attr:`~rasterio.enums.Resampling.bilinear` and
+:attr:`~rasterio.enums.Resampling.cubic` are better suited.
+Some specialized statistical resampling method exist, e.g.
+:attr:`~rasterio.enums.Resampling.average`, which may be useful when
 certain numerical properties of the data are to be retained.
-
-
-.. _rasterio.enums: https://github.com/mapbox/rasterio/blob/master/rasterio/enums.py#L28
