@@ -52,7 +52,7 @@ Downsampling to 1/2 of the resolution can be done with ``upscale_factor = 1/2``.
 Resampling Methods
 ------------------
 
-When you change the raster cell grid, you must recalulate the pixel values.
+When you change the raster cell grid, you must recalculate the pixel values.
 There is no "correct" way to do this as all methods involve some interpolation.
 
 The current resampling methods can be found in the `rasterio.enums`_ source.
