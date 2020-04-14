@@ -42,8 +42,8 @@ method.
 
         # scale image transform
         transform = dataset.transform * dataset.transform.scale(
-            (dataset.width / data.shape[-2]),
-            (dataset.height / data.shape[-1])
+            (dataset.width / data.shape[-1]),
+            (dataset.height / data.shape[-2])
         )
 
 Downsampling to 1/2 of the resolution can be done with ``upscale_factor = 1/2``.
