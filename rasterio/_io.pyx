@@ -1052,10 +1052,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         count : int, optional
             The count of dataset bands. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.
-        dtype : str or numpy dtype
-            The data type for bands. For example: 'uint8' or
-            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
-            ignored in 'r' or 'r+' modes.
         crs : str, dict, or CRS; optional
             The coordinate reference system. Required in 'w' or 'w+' modes,
             it is ignored in 'r' or 'r+' modes.
@@ -1063,6 +1059,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
+        dtype : str or numpy dtype
+            The data type for bands. For example: 'uint8' or
+            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
         nodata : int, float, or nan; optional
             Defines the pixel value to be interpreted as not valid data.
             Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
@@ -1917,10 +1917,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         count : int, optional
             The count of dataset bands. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.
-        dtype : str or numpy dtype
-            The data type for bands. For example: 'uint8' or
-            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
-            ignored in 'r' or 'r+' modes.
         crs : str, dict, or CRS; optional
             The coordinate reference system. Required in 'w' or 'w+' modes,
             it is ignored in 'r' or 'r+' modes.
@@ -1928,6 +1924,10 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
+        dtype : str or numpy dtype
+            The data type for bands. For example: 'uint8' or
+            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
         nodata : int, float, or nan; optional
             Defines the pixel value to be interpreted as not valid data.
             Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
