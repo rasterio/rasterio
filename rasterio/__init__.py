@@ -92,10 +92,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     count : int, optional
         The count of dataset bands. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
-    dtype : str or numpy dtype
-        The data type for bands. For example: 'uint8' or
-        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
-        ignored in 'r' or 'r+' modes.
     crs : str, dict, or CRS; optional
         The coordinate reference system. Required in 'w' or 'w+' modes,
         it is ignored in 'r' or 'r+' modes.
@@ -103,6 +99,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
+    dtype : str or numpy dtype
+        The data type for bands. For example: 'uint8' or
+        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+        ignored in 'r' or 'r+' modes.
     nodata : int, float, or nan; optional
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
