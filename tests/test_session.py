@@ -7,7 +7,15 @@ try:
 except ImportError:
     import mock
 
-from rasterio.session import DummySession, AWSSession, Session, OSSSession, GSSession, SwiftSession
+from rasterio.session import (
+    DummySession,
+    AWSSession,
+    Session,
+    OSSSession,
+    GSSession,
+    SwiftSession,
+    AzureSession,
+)
 
 
 def test_base_session_hascreds_notimpl():
@@ -224,3 +232,36 @@ def test_session_aws_or_dummy_dummy(monkeypatch):
     with monkeypatch.context() as mpctx:
         mpctx.setattr("rasterio.session.boto3", None)
         assert isinstance(Session.aws_or_dummy(), DummySession)
+
+
+def test_azure_session_class():
+    """AzureSession works"""
+    azure_session = AzureSession(azure_storage_account='foo', azure_storage_access_key='bar')
+    assert azure_session._creds
+    assert azure_session.get_credential_options()['AZURE_STORAGE_ACCOUNT'] == 'foo'
+    assert azure_session.get_credential_options()['AZURE_STORAGE_ACCESS_KEY'] == 'bar'
+
+
+def test_azure_session_class_connection_string():
+    """AzureSession works"""
+    azure_session = AzureSession(azure_storage_connection_string='AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY')
+    assert azure_session._creds
+    assert (
+        azure_session.get_credential_options()['AZURE_STORAGE_CONNECTION_STRING']
+        == 'AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY'
+    )
+
+
+def test_session_factory_az_kwargs():
+    """Get an AzureSession for az:// paths with keywords"""
+    sesh = Session.from_path("az://lol/wut", azure_storage_account='foo', azure_storage_access_key='bar')
+    assert isinstance(sesh, AzureSession)
+    assert sesh.get_credential_options()['AZURE_STORAGE_ACCOUNT'] == 'foo'
+    assert sesh.get_credential_options()['AZURE_STORAGE_ACCESS_KEY'] == 'bar'
+
+
+def test_session_factory_az_kwargs_connection_string():
+    """Get an AzureSession for az:// paths with keywords"""
+    sesh = Session.from_path("az://lol/wut", azure_storage_connection_string='AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY')
+    assert isinstance(sesh, AzureSession)
+    assert sesh.get_credential_options()['AZURE_STORAGE_CONNECTION_STRING'] == 'AccountName=myaccount;AccountKey=MY_ACCOUNT_KEY'
