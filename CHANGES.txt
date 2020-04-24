@@ -6,6 +6,8 @@ Changes
 
 Bug fixes:
 
+- Make the strict intersection in rio-clip optional with a --with-complement
+  option (#1907).
 - Add a new as_vsi() method to the Path class for internal use and improve
   Windows path handling and tests thereof (#1895).
 
