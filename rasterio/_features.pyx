@@ -425,7 +425,7 @@ def _bounds(geometry, north_up=True, transform=None):
         else:
             return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
 
-    else:
+    elif 'coordinates' in geometry:
         # Input is a singular geometry object
         if transform is not None:
             xyz = list(_explode(geometry['coordinates']))
@@ -439,6 +439,11 @@ def _bounds(geometry, north_up=True, transform=None):
             else:
                 return min(xyz[0]), max(xyz[1]), max(xyz[0]), min(xyz[1])
 
+    # all valid inputs returned above, so whatever falls through is an error
+    raise ValueError(
+            "geometry must be a GeoJSON-like geometry, GeometryCollection, "
+            "or FeatureCollection"
+        )
 
 # Mapping of OGR integer geometry types to GeoJSON type names.
 GEOMETRY_TYPES = {

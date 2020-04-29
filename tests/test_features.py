@@ -48,10 +48,21 @@ def test_bounds_z():
     assert bounds(g) == (10, 10, 10, 10)
     assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
-
-def test_bounds_invalid_obj():
-    with pytest.raises(KeyError):
-        bounds({'type': 'bogus', 'not_coordinates': []})
+@pytest.mark.parametrize('geometry', [
+    {'type': 'Polygon'},
+    {'type': 'Polygon', 'not_coordinates': []},
+    {'type': 'bogus', 'not_coordinates': []},
+    {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {'type': 'Point', 'coordinates': [1, 1]},
+            {'type': 'LineString', 'not_coordinates': [[-10, -20], [10, 20]]},
+        ]
+    }
+])
+def test_bounds_invalid_obj(geometry):
+    with pytest.raises(ValueError, match="geometry must be a GeoJSON-like geometry, GeometryCollection, or FeatureCollection"):
+        bounds(geometry)
 
 
 def test_bounds_feature_collection(basic_featurecollection):
