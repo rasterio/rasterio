@@ -380,7 +380,7 @@ def _explode(coords):
 
 
 def _bounds(geometry, north_up=True, transform=None):
-    """Bounding box of a GeoJSON geometry.
+    """Bounding box of a GeoJSON geometry, GeometryCollection, or FeatureCollection.
 
     left, bottom, right, top
     *not* xmin, ymin, xmax, ymax
@@ -390,7 +390,9 @@ def _bounds(geometry, north_up=True, transform=None):
     From Fiona 1.4.8 with updates here to handle feature collections.
     TODO: add to Fiona.
     """
+
     if 'features' in geometry:
+        # Input is a FeatureCollection
         xmins = []
         ymins = []
         xmaxs = []
@@ -406,7 +408,25 @@ def _bounds(geometry, north_up=True, transform=None):
         else:
             return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
 
+    elif 'geometries' in geometry:
+        # Input is a geometry collection
+        xmins = []
+        ymins = []
+        xmaxs = []
+        ymaxs = []
+        for geometry in geometry['geometries']:
+            xmin, ymin, xmax, ymax = _bounds(geometry)
+            xmins.append(xmin)
+            ymins.append(ymin)
+            xmaxs.append(xmax)
+            ymaxs.append(ymax)
+        if north_up:
+            return min(xmins), min(ymins), max(xmaxs), max(ymaxs)
+        else:
+            return min(xmins), max(ymaxs), max(xmaxs), min(ymins)
+
     else:
+        # Input is a singular geometry object
         if transform is not None:
             xyz = list(_explode(geometry['coordinates']))
             xyz_px = [transform * point for point in xyz]

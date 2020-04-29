@@ -54,9 +54,23 @@ def test_bounds_invalid_obj():
         bounds({'type': 'bogus', 'not_coordinates': []})
 
 
-def test_feature_collection(basic_featurecollection):
+def test_bounds_feature_collection(basic_featurecollection):
     fc = basic_featurecollection
     assert bounds(fc) == bounds(fc['features'][0]) == (2, 2, 4.25, 4.25)
+
+
+def test_bounds_geometry_collection():
+    gc = {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {'type': 'Point', 'coordinates': [1, 1]},
+            {'type': 'LineString', 'coordinates': [[-10, -20], [10, 20]]},
+            {'type': 'Polygon', 'coordinates': [[[5, 5], [25, 50], [25, 5]]]}
+        ]
+    }
+
+    assert bounds(gc) == (-10, -20, 25, 50)
+    assert bounds(MockGeoInterface(gc)) == (-10, -20, 25, 50)
 
 
 def test_bounds_existing_bbox(basic_featurecollection):
