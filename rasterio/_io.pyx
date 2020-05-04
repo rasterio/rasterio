@@ -1135,7 +1135,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if k.lower() in ['affine']:
                 continue
 
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
 
             if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
                 continue
@@ -2106,7 +2106,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
             key_c = key_b
