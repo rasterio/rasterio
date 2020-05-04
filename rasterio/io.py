@@ -191,7 +191,8 @@ def get_writer_for_driver(driver):
     return cls
 
 
-def get_writer_for_path(path):
+def get_writer_for_path(path, driver=None):
     """Return the writer class appropriate for the existing dataset."""
-    driver = get_dataset_driver(path)
+    if not driver:
+        driver = get_dataset_driver(path)
     return get_writer_for_driver(driver)
