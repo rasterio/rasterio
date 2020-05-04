@@ -50,9 +50,24 @@ projection_projected_opt = click.option(
 @projection_projected_opt
 @options.overwrite_opt
 @options.creation_options
+@click.option(
+    "--with-complement/--without-complement",
+    default=False,
+    help="Include the relative complement of the raster in the given bounds (giving a larger result), else return results only from the intersection of the raster and the bounds (the default).",
+)
 @click.pass_context
-def clip(ctx, files, output, bounds, like, driver, projection,
-         overwrite, creation_options):
+def clip(
+    ctx,
+    files,
+    output,
+    bounds,
+    like,
+    driver,
+    projection,
+    overwrite,
+    creation_options,
+    with_complement,
+):
     """Clips a raster using projected or geographic bounds.
 
     \b
@@ -108,8 +123,11 @@ def clip(ctx, files, output, bounds, like, driver, projection,
                 raise click.UsageError('--bounds or --like required')
 
             bounds_window = src.window(*bounds)
-            bounds_window = bounds_window.intersection(
-                Window(0, 0, src.width, src.height))
+
+            if not with_complement:
+                bounds_window = bounds_window.intersection(
+                    Window(0, 0, src.width, src.height)
+                )
 
             # Get the window with integer height
             # and width that contains the bounds window.
@@ -133,6 +151,11 @@ def clip(ctx, files, output, bounds, like, driver, projection,
                 del out_kwargs['blockysize']
                 logger.warning("Blockysize removed from creation options to accomodate small output height")
 
-            with rasterio.open(output, 'w', **out_kwargs) as out:
-                out.write(src.read(window=out_window,
-                                   out_shape=(src.count, height, width)))
+            with rasterio.open(output, "w", **out_kwargs) as out:
+                out.write(
+                    src.read(
+                        window=out_window,
+                        out_shape=(src.count, height, width),
+                        boundless=True,
+                    )
+                )
