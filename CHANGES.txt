@@ -1,11 +1,17 @@
 Changes
 =======
 
-1.1.4 (TBD)
+1.1.4 (2020-05-04)
 ------------------
 
 Bug fixes:
 
+- Missing support for geometry collections in the rasterio.features module
+  (#1914) has been fixed (#1915).
+- Support for the int8 data type has been extended to the InMemoryRaster class
+  (#1880).
+- rasterio.plot.show_hist caused a Python 3.8 syntax warning. This was fixed by
+  #1874.
 - Make the strict intersection in rio-clip optional with a --with-complement
   option (#1907).
 - Add a new as_vsi() method to the Path class for internal use and improve
