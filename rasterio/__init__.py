@@ -217,8 +217,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # None.
         if mode == 'r':
             s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
+        elif mode == "r+":
+            s = get_writer_for_path(path, driver=driver)(
+                path, mode, driver=driver, sharing=sharing, **kwargs
+            )
         elif mode.startswith("w"):
             s = get_writer_for_driver(driver)(path, mode, driver=driver,
                                               width=width, height=height,
