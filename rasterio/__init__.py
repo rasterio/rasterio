@@ -40,7 +40,6 @@ import rasterio.coords
 import rasterio.enums
 import rasterio.path
 
-
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.2dev"
 __gdal_version__ = gdal_version()
@@ -220,13 +219,17 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         elif mode == 'r+':
             s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
         elif mode.startswith("w"):
-            s = get_writer_for_driver(driver)(path, mode, driver=driver,
-                                              width=width, height=height,
-                                              count=count, crs=crs,
-                                              transform=transform,
-                                              dtype=dtype, nodata=nodata,
-                                              sharing=sharing,
-                                              **kwargs)
+            writer = get_writer_for_driver(driver)
+            if writer is not None:
+                s = writer(path, mode, driver=driver,
+                           width=width, height=height,
+                           count=count, crs=crs,
+                           transform=transform,
+                           dtype=dtype, nodata=nodata,
+                           sharing=sharing,
+                           **kwargs)
+            else:
+                raise ValueError("Writer does not exist for driver: %s" % str(driver))
         else:
             raise ValueError(
                 "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
