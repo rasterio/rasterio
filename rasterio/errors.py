@@ -21,6 +21,10 @@ class EnvError(RasterioError):
     or modified."""
 
 
+class DriverCapabilityError(RasterioError, ValueError):
+    """Raised when a format driver can't a feature such as writing."""
+
+
 class DriverRegistrationError(ValueError):
     """Raised when a format driver is requested but is not registered."""
 

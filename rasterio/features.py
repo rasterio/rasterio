@@ -373,6 +373,14 @@ def bounds(geometry, north_up=True, transform=None):
         return tuple(geometry['bbox'])
 
     geom = geometry.get('geometry') or geometry
+
+    # geometry must be a geometry, GeometryCollection, or FeatureCollection
+    if not ('coordinates' in geom or 'geometries' in geom or 'features' in geom):
+        raise ValueError(
+            "geometry must be a GeoJSON-like geometry, GeometryCollection, "
+            "or FeatureCollection"
+        )
+
     return _bounds(geom, north_up=north_up, transform=transform)
 
 

@@ -1,6 +1,5 @@
 """Rasterio input/output."""
 
-
 # cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 from __future__ import absolute_import
@@ -32,7 +31,7 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, vsi_path, UnparsedPath
+from rasterio.path import parse_path, UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -1114,7 +1113,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Make and store a GDAL dataset handle.
         filename = path.name
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
         fname = name_b
 
@@ -1136,7 +1135,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if k.lower() in ['affine']:
                 continue
 
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
 
             if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
                 continue
@@ -1746,6 +1745,7 @@ cdef class InMemoryRaster:
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
+        cdef char **options = NULL
 
         if image is not None:
             if image.ndim == 3:
@@ -1773,10 +1773,13 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
+        if dtype == 'int8':
+            options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
         datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
-                       count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
+                       count, <GDALDataType>dtypes.dtype_rev[dtype], options))
 
         if transform is not None:
             self.transform = transform
@@ -1815,6 +1818,9 @@ cdef class InMemoryRaster:
                 CPLFree(gcplist)
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
+
+        if options != NULL:
+            CSLDestroy(options)
 
         self._image = None
         if image is not None:
@@ -2005,7 +2011,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")
@@ -2015,6 +2021,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             if hasattr(self._init_dtype, 'type'):
+                if self._init_dtype == 'int8':
+                    options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
                 tp = self._init_dtype.type
                 if tp not in dtypes.dtype_rev:
                     raise ValueError(
@@ -2026,7 +2035,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             self._hds = exc_wrap_pointer(
                 GDALCreate(memdrv, "temp", self.width, self.height,
-                           self._count, gdal_dtype, NULL))
+                           self._count, gdal_dtype, options))
 
             if self._init_nodata is not None:
                 for i in range(self._count):
@@ -2097,7 +2106,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
             key_c = key_b

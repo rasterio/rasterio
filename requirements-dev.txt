@@ -6,7 +6,7 @@ delocate
 hypothesis
 numpydoc
 packaging
-pytest>=3.1.0
+pytest~=4.6.0
 pytest-cov>=2.2.0
 sphinx
 sphinx-rtd-theme

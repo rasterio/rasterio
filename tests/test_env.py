@@ -791,9 +791,13 @@ aws_access_key_id = bar
 """)
     monkeypatch.setenv('AWS_SHARED_CREDENTIALS_FILE', str(credentials_file))
     monkeypatch.delenv('AWS_ACCESS_KEY_ID', raising=False)
-    # Assert that we don't have any AWS credentials by accident.
-    with pytest.raises(Exception):
-        rasterio.open("s3://mapbox/rasterio/RGB.byte.tif")
+
+    # To verify that we're unauthenticated, we make a request for an known existing object that will return 404 Not Found.
+    with pytest.raises(Exception) as exc_info:
+        s3 = boto3.client("s3")
+        s3.head_object(Bucket="landsat-pds", Key="L8/139/045/LC81390452014295LGN00/LC81390452014295LGN00_B1.TIF")
+
+    assert exc_info.value.response["Error"]["Code"] == "403"
 
     with rasterio.Env() as env:
         assert env.drivers()

@@ -25,7 +25,7 @@ from rasterio.dtypes import (
     bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env_with_credentials, Env
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, DriverCapabilityError
 from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
@@ -216,8 +216,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # None.
         if mode == 'r':
             s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
+        elif mode == "r+":
+            s = get_writer_for_path(path, driver=driver)(
+                path, mode, driver=driver, sharing=sharing, **kwargs
+            )
         elif mode.startswith("w"):
             writer = get_writer_for_driver(driver)
             if writer is not None:
@@ -229,9 +231,11 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
                            sharing=sharing,
                            **kwargs)
             else:
-                raise ValueError("Writer does not exist for driver: %s" % str(driver))
+                raise DriverCapabilityError(
+                    "Writer does not exist for driver: %s" % str(driver)
+                )
         else:
-            raise ValueError(
+            raise DriverCapabilityError(
                 "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
         return s
 
