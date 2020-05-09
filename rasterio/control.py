@@ -60,9 +60,10 @@ class GroundControlPoint(object):
                 'properties': self.asdict()}
 
 class RPC(dict):
+    """Dict structure to store Rational Polynomial Coefficients.
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    Provide methods to serialize and deserialize to gdal formatted metadata.
+    """
 
     def to_gdal(self):
         out = {}

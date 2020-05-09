@@ -79,7 +79,11 @@ class TransformMethodsMixin(object):
         tuple
             (row index, col index)
         """
-        return rowcol(self.transform, x, y, op=op, precision=precision)
+        transform = self.transform
+        rpcs = self.rpcs.to_gdal()
+        if transform.is_identity and not self.crs and rpcs:
+            transform = None
+        return rowcol(x, y, transform=transform, rpcs=rpcs, op=op, precision=precision)
 
 
 def tastes_like_gdal(seq):
@@ -159,7 +163,8 @@ def xy(rows, cols, transform=None, rpcs=None, offset='center'):
     ys : list
         y coordinates in coordinate reference system
     """
-    assert not (transform and rpcs), "Only one of transform or rpcs may be passed as input"
+    if transform and rpcs and not (transform or rpcs):
+        raise ValueError("Exactly one of transform or rpcs may be used for coordinate transformations.")
 
     single_col = False
     single_row = False
@@ -183,11 +188,20 @@ def xy(rows, cols, transform=None, rpcs=None, offset='center'):
     else:
         raise ValueError("Invalid offset")
 
+    if offset != 'ul':
+        shifted_cols = list()
+        shifted_rows = list()
+        for col, row in zip(cols, rows):
+                shifted_col, shifted_row = Affine.translation(coff, roff) * (col, row)
+                shifted_cols.append(shifted_col)
+                shifted_rows.append(shifted_row)
+        cols, rows = shifted_cols, shifted_rows
+
     if transform:
         xs = []
         ys = []
-        for col, row in zip(cols, rows):
-            x, y = transform * transform.translation(coff, roff) * (col, row)
+        for col, row in zip(rows, cols):
+            x, y = transform * (col, row)
             xs.append(x)
             ys.append(y)
     elif rpcs:
@@ -233,7 +247,8 @@ def rowcol(xs, ys, zs=None, transform=None, rpcs=None, op=math.floor, precision=
     cols : list of ints
         list of column indices
     """
-    assert not (transform and rpcs), "Only one of transform or rpcs may be passed as input"
+    if transform and rpcs and not (transform or rpcs):
+        raise ValueError("Exactly one of transform or rpcs may be used for coordinate transformations.")
 
     single_x = False
     single_y = False
