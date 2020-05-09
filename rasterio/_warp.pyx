@@ -17,6 +17,7 @@ from rasterio._err import (
     CPLE_BaseError, CPLE_IllegalArgError, CPLE_NotSupportedError,
     CPLE_AppDefinedError, CPLE_OpenFailedError)
 from rasterio import dtypes
+from rasterio.compat import DICT_TYPES
 from rasterio.control import GroundControlPoint
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.env import GDALVersion
@@ -25,7 +26,6 @@ from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
     RasterioDeprecationWarning, WarpOptionsError)
-from rasterio.path import parse_path, vsi_path
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -48,43 +48,17 @@ def recursive_round(val, precision):
     else:
         return [recursive_round(part, precision) for part in val]
 
-
-def _transform_geom(
-        src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
-        precision):
-    """Return a transformed geometry."""
-    cdef char **options = NULL
-    cdef OGRSpatialReferenceH src = NULL
-    cdef OGRSpatialReferenceH dst = NULL
-    cdef OGRCoordinateTransformationH transform = NULL
-    cdef OGRGeometryFactory *factory = NULL
+cdef object _transform_single_geom(
+    object single_geom,
+    OGRGeometryFactory *factory,
+    void *transform,
+    char **options,
+    int precision
+):
     cdef OGRGeometryH src_geom = NULL
     cdef OGRGeometryH dst_geom = NULL
-    cdef int i
-
-    src = _osr_from_crs(src_crs)
-    dst = _osr_from_crs(dst_crs)
-
     try:
-        transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
-    except:
-        _safe_osr_release(src)
-        _safe_osr_release(dst)
-        raise
-
-    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
-        valb = str(antimeridian_offset).encode('utf-8')
-        options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
-        if antimeridian_cutting:
-            options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
-    else:
-        # GDAL cuts on the antimeridian by default and using different
-        # logic in versions >= 2.2.
-        pass
-
-    try:
-        factory = new OGRGeometryFactory()
-        src_geom = OGRGeomBuilder().build(geom)
+        src_geom = OGRGeomBuilder().build(single_geom)
         dst_geom = exc_wrap_pointer(
             factory.transformWithOptions(
                 <const OGRGeometry *>src_geom,
@@ -92,24 +66,61 @@ def _transform_geom(
                 options))
 
         result = GeomBuilder().build(dst_geom)
-
-        if precision >= 0:
-            # TODO: Geometry collections.
-            result['coordinates'] = recursive_round(result['coordinates'],
-                                                    precision)
-
-        return result
-
     finally:
-        del factory
         OGR_G_DestroyGeometry(dst_geom)
         OGR_G_DestroyGeometry(src_geom)
-        OCTDestroyCoordinateTransformation(transform)
-        if options != NULL:
-            CSLDestroy(options)
+
+    if precision >= 0:
+        # TODO: Geometry collections.
+        result['coordinates'] = recursive_round(result['coordinates'],
+                                                precision)
+
+    return result
+
+
+def _transform_geom(
+        src_crs, dst_crs, geom, antimeridian_cutting, antimeridian_offset,
+        int precision):
+    """Return a transformed geometry."""
+    cdef char **options = NULL
+    cdef OGRSpatialReferenceH src = NULL
+    cdef OGRSpatialReferenceH dst = NULL
+    cdef OGRCoordinateTransformationH transform = NULL
+    cdef OGRGeometryFactory *factory = NULL
+
+    src = _osr_from_crs(src_crs)
+    dst = _osr_from_crs(dst_crs)
+
+    try:
+        transform = exc_wrap_pointer(OCTNewCoordinateTransformation(src, dst))
+    finally:
         _safe_osr_release(src)
         _safe_osr_release(dst)
 
+    # GDAL cuts on the antimeridian by default and using different
+    # logic in versions >= 2.2.
+    if GDALVersion().runtime() < GDALVersion.parse('2.2'):
+        valb = str(antimeridian_offset).encode('utf-8')
+        options = CSLSetNameValue(options, "DATELINEOFFSET", <const char *>valb)
+        if antimeridian_cutting:
+            options = CSLSetNameValue(options, "WRAPDATELINE", "YES")
+
+    factory = new OGRGeometryFactory()
+    try:
+        if isinstance(geom, DICT_TYPES):
+            out_geom = _transform_single_geom(geom, factory, transform, options, precision)
+        else:
+            out_geom = [
+                _transform_single_geom(single_geom, factory, transform, options, precision)
+                for single_geom in geom
+            ]
+    finally:
+        del factory
+        OCTDestroyCoordinateTransformation(transform)
+        if options != NULL:
+            CSLDestroy(options)
+
+    return out_geom
 
 cdef GDALWarpOptions * create_warp_options(
         GDALResampleAlg resampling, object src_nodata, object dst_nodata, int src_count,
@@ -443,7 +454,7 @@ def _reproject(
 
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
-    CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+    imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
 
     # See http://www.gdal.org/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
@@ -889,13 +900,16 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         psWOptions.hSrcDS = hds
 
         try:
+
             if self.dst_width and self.dst_height and self.dst_transform:
                 # set up transform args (otherwise handled in
                 # GDALAutoCreateWarpedVRT)
                 try:
+
                     hTransformArg = exc_wrap_pointer(
                         GDALCreateGenImgProjTransformer3(
                             src_crs_wkt, src_gt, dst_crs_wkt, dst_gt))
+
                     if c_tolerance > 0.0:
                         hTransformArg = exc_wrap_pointer(
                             GDALCreateApproxTransformer(
@@ -910,6 +924,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
                     log.debug("Created transformer and options.")
                     psWOptions.pTransformerArg = hTransformArg
+
                 except Exception:
                     GDALDestroyApproxTransformer(hTransformArg)
                     raise
@@ -918,16 +933,20 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
                     hds_warped = GDALCreateWarpedVRT(
                         hds, c_width, c_height, dst_gt, psWOptions)
                     GDALSetProjection(hds_warped, dst_crs_wkt)
+
                 self._hds = exc_wrap_pointer(hds_warped)
+
             else:
                 with nogil:
                     hds_warped = GDALAutoCreateWarpedVRT(
-                        hds, NULL, dst_crs_wkt, c_resampling,
+                        hds, src_crs_wkt, dst_crs_wkt, c_resampling,
                         c_tolerance, psWOptions)
+
                 self._hds = exc_wrap_pointer(hds_warped)
 
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
+
         finally:
             CPLFree(dst_crs_wkt)
             CSLDestroy(c_warp_extras)
@@ -973,12 +992,84 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
-            fill_value=None):
-        """Read a dataset's raw pixels as an N-d array"""
+            fill_value=None, out_dtype=None):
+        """Read a dataset's raw pixels as an N-d array
+
+        This data is read from the dataset's band cache, which means
+        that repeated reads of the same windows may avoid I/O.
+
+        Parameters
+        ----------
+        indexes : list of ints or a single int, optional
+            If `indexes` is a list, the result is a 3D array, but is
+            a 2D array if it is a band index number.
+
+        out : numpy ndarray, optional
+            As with Numpy ufuncs, this is an optional reference to an
+            output array into which data will be placed. If the height
+            and width of `out` differ from that of the specified
+            window (see below), the raster image will be decimated or
+            replicated using the specified resampling method (also see
+            below).
+
+            *Note*: the method's return value may be a view on this
+            array. In other words, `out` is likely to be an
+            incomplete representation of the method's results.
+
+            This parameter cannot be combined with `out_shape`.
+
+        out_dtype : str or numpy dtype
+            The desired output data type. For example: 'uint8' or
+            rasterio.uint16.
+
+        out_shape : tuple, optional
+            A tuple describing the shape of a new output array. See
+            `out` (above) for notes on image decimation and
+            replication.
+
+            Cannot combined with `out`.
+
+        window : a pair (tuple) of pairs of ints or Window, optional
+            The optional `window` argument is a 2 item tuple. The first
+            item is a tuple containing the indexes of the rows at which
+            the window starts and stops and the second is a tuple
+            containing the indexes of the columns at which the window
+            starts and stops. For example, ((0, 2), (0, 2)) defines
+            a 2x2 window at the upper left of the raster dataset.
+
+        masked : bool, optional
+            If `masked` is `True` the return value will be a masked
+            array. Otherwise (the default) the return value will be a
+            regular array. Masks will be exactly the inverse of the
+            GDAL RFC 15 conforming arrays returned by read_masks().
+
+        boundless : bool, optional (default `False`)
+            If `True`, windows that extend beyond the dataset's extent
+            are permitted and partially or completely filled arrays will
+            be returned as appropriate.
+
+        resampling : Resampling
+            By default, pixel values are read raw or interpolated using
+            a nearest neighbor algorithm from the band cache. Other
+            resampling algorithms may be specified. Resampled pixels
+            are not cached.
+
+        fill_value : scalar
+            Fill value applied in the `boundless=True` case only.
+
+        Returns
+        -------
+        Numpy ndarray or a view on a Numpy ndarray
+
+        Note: as with Numpy ufuncs, an object is returned even if you
+        use the optional `out` argument and the return value shall be
+        preferentially used by callers.
+
+        """
         if boundless:
             raise ValueError("WarpedVRT does not permit boundless reads")
         else:
-            return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value)
+            return super(WarpedVRTReaderBase, self).read(indexes=indexes, out=out, window=window, masked=masked, out_shape=out_shape, resampling=resampling, fill_value=fill_value, out_dtype=out_dtype)
 
     def read_masks(self, indexes=None, out=None, out_shape=None, window=None,
                    boundless=False, resampling=Resampling.nearest):

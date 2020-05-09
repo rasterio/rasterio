@@ -257,7 +257,7 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     # so we need the overall min/max to constrain the plot
     rng = np.nanmin(arr), np.nanmax(arr)
 
-    if len(arr.shape) is 2:
+    if len(arr.shape) == 2:
         arr = np.expand_dims(arr.flatten(), 0).T
         colors = ['gold']
     else:

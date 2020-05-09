@@ -27,8 +27,6 @@ def test_info_err(runner):
         main_group, ['info', 'tests'])
     assert result.exit_code != 0
     assert result.exception
-    # Note: text of exception changed after 2.1, don't test on full string
-    assert 'not' in result.output and ' a valid input file' in result.output
 
 
 def test_info(runner):
@@ -237,7 +235,7 @@ def test_bounds_defaults(runner):
         'tests/data/RGB.byte.tif'
     ])
     assert result.exit_code == 0
-    assert 'FeatureCollection' in result.output
+    assert 'Feature' in result.output
 
 
 def test_bounds_err(runner):

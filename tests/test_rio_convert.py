@@ -1,13 +1,12 @@
-import sys
 import os
-import logging
+
+from click.testing import CliRunner
 import numpy as np
+import pytest
 
 import rasterio
 from rasterio.rio.main import main_group
 
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 TEST_BBOX = [-11850000, 4804000, -11840000, 4808000]
 
@@ -16,16 +15,40 @@ def bbox(*args):
     return ' '.join([str(x) for x in args])
 
 
-def test_clip_bounds(runner, tmpdir):
+@pytest.mark.parametrize("bounds", [bbox(*TEST_BBOX)])
+def test_clip_bounds(runner, tmpdir, bounds):
     output = str(tmpdir.join('test.tif'))
     result = runner.invoke(
-        main_group,
-        ['clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX)])
+        main_group, ["clip", "tests/data/shade.tif", output, "--bounds", bounds]
+    )
     assert result.exit_code == 0
     assert os.path.exists(output)
 
     with rasterio.open(output) as out:
         assert out.shape == (419, 173)
+
+
+@pytest.mark.parametrize("bounds", [bbox(*TEST_BBOX)])
+def test_clip_bounds_with_complement(runner, tmpdir, bounds):
+    output = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group,
+        [
+            "clip",
+            "tests/data/shade.tif",
+            output,
+            "--bounds",
+            bounds,
+            "--with-complement",
+        ],
+    )
+    assert result.exit_code == 0
+    assert os.path.exists(output)
+
+    with rasterio.open(output) as out:
+        assert out.shape == (419, 1047)
+        data = out.read()
+        assert (data[420:, :] == 255).all()
 
 
 def test_clip_bounds_geographic(runner, tmpdir):
@@ -105,9 +128,16 @@ def test_clip_overwrite_with_option(runner, tmpdir):
     assert result.exit_code == 0
 
     result = runner.invoke(
-        main_group, [
-        'clip', 'tests/data/shade.tif', output, '--bounds', bbox(*TEST_BBOX),
-        '--overwrite'])
+        main_group,
+        [
+            "clip",
+            "tests/data/shade.tif",
+            output,
+            "--bounds",
+            bbox(*TEST_BBOX),
+            "--overwrite",
+        ],
+    )
     assert result.exit_code == 0
 
 

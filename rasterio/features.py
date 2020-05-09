@@ -76,11 +76,11 @@ def geometry_mask(
 
 @ensure_env
 def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
-    """Yield (polygon, value for each set of adjacent pixels of the same value.
+    """Get shapes and values of connected regions in a dataset or array.
 
     Parameters
     ----------
-    source : array or dataset object opened in 'r' mode or Band or tuple(dataset, bidx)
+    source : array, dataset object, Band, or tuple(dataset, bidx)
         Data type must be one of rasterio.int16, rasterio.int32,
         rasterio.uint8, rasterio.uint16, or rasterio.float32.
     mask : numpy ndarray or rasterio Band object, optional
@@ -93,25 +93,30 @@ def shapes(source, mask=None, connectivity=4, transform=IDENTITY):
     connectivity : int, optional
         Use 4 or 8 pixel connectivity for grouping pixels into features
     transform : Affine transformation, optional
-        If not provided, feature coordinates will be generated based on pixel
-        coordinates
+        If not provided, feature coordinates will be generated based on
+        pixel coordinates
 
     Yields
     -------
-    tuple
+    polygon, value
         A pair of (polygon, value) for each feature found in the image.
-        Polygons are GeoJSON-like dicts and the values are the associated value
-        from the image, in the data type of the image.
-        Note: due to floating point precision issues, values returned from a
-        floating point image may not exactly match the original values.
+        Polygons are GeoJSON-like dicts and the values are the
+        associated value from the image, in the data type of the image.
+        Note: due to floating point precision issues, values returned
+        from a floating point image may not exactly match the original
+        values.
 
     Notes
     -----
-    The amount of memory used by this algorithm is proportional to the number
-    and complexity of polygons produced.  This algorithm is most appropriate
-    for simple thematic data.  Data with high pixel-to-pixel variability, such
-    as imagery, may produce one polygon per pixel and consume large amounts of
-    memory.
+    The amount of memory used by this algorithm is proportional to the
+    number and complexity of polygons produced.  This algorithm is most
+    appropriate for simple thematic data.  Data with high pixel-to-pixel
+    variability, such as imagery, may produce one polygon per pixel and
+    consume large amounts of memory.
+
+    Because the low-level implementation uses either an int32 or float32
+    buffer, uint32 and float64 data cannot be operated on without
+    truncation issues.
 
     """
     if hasattr(source, 'mask') and mask is None:
@@ -304,7 +309,7 @@ def rasterize(
 
         else:
             # invalid or empty geometries are skipped and raise a warning instead
-            warnings.warn('Invalid or empty shape at index {} will not be rasterized.'.format(index), ShapeSkipWarning)
+            warnings.warn('Invalid or empty shape {} at index {} will not be rasterized.'.format(geom, index), ShapeSkipWarning)
 
     if not valid_shapes:
         raise ValueError('No valid geometry objects found for rasterize')
@@ -368,6 +373,14 @@ def bounds(geometry, north_up=True, transform=None):
         return tuple(geometry['bbox'])
 
     geom = geometry.get('geometry') or geometry
+
+    # geometry must be a geometry, GeometryCollection, or FeatureCollection
+    if not ('coordinates' in geom or 'geometries' in geom or 'features' in geom):
+        raise ValueError(
+            "geometry must be a GeoJSON-like geometry, GeometryCollection, "
+            "or FeatureCollection"
+        )
+
     return _bounds(geom, north_up=north_up, transform=transform)
 
 
@@ -482,15 +495,12 @@ def is_valid_geom(geom):
 
     geom = getattr(geom, '__geo_interface__', None) or geom
 
-    if 'type' not in geom:
-        return False
-
     try:
-        geom_type = geom['type']
+        geom_type = geom["type"]
         if geom_type not in geom_types.union({'GeometryCollection'}):
             return False
 
-    except TypeError:
+    except (KeyError, TypeError):
         return False
 
     if geom_type in geom_types:

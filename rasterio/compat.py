@@ -15,6 +15,8 @@ if sys.version_info[0] >= 3:   # pragma: no cover
     from collections import UserDict
     from collections.abc import Iterable, Mapping
     from inspect import getfullargspec as getargspec
+    import pathlib
+
 else:  # pragma: no cover
     warnings.warn("Python 2 compatibility will be removed after version 1.1", DeprecationWarning)
     string_types = basestring,
@@ -26,3 +28,8 @@ else:  # pragma: no cover
     from UserDict import UserDict
     from inspect import getargspec
     from collections import Iterable, Mapping
+
+# Users can pass in objects that subclass a few different objects
+# More specifically, rasterio has a CRS() class that subclasses UserDict()
+# In Python 2 UserDict() is in its own module and does not subclass Mapping()
+DICT_TYPES = (dict, Mapping, UserDict)

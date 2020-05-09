@@ -5,6 +5,8 @@ import sys
 import pytest
 
 import rasterio
+import rasterio.compat
+from rasterio.errors import PathError
 from rasterio.path import parse_path, vsi_path, ParsedPath, UnparsedPath
 
 
@@ -91,6 +93,11 @@ def test_vsi_path_scheme():
     assert vsi_path(ParsedPath('/foo.tif', 'tests/data/files.zip', 'zip')) == '/vsizip/tests/data/files.zip/foo.tif'
 
 
+def test_path_as_vsi_scheme():
+    """Correctly make a vsi path"""
+    assert ParsedPath('/foo.tif', 'tests/data/files.zip', 'zip').as_vsi() == '/vsizip/tests/data/files.zip/foo.tif'
+
+
 def test_vsi_path_file():
     """Correctly make and ordinary file path from a file path"""
     assert vsi_path(ParsedPath('foo.tif', None, 'file')) == 'foo.tif'
@@ -104,6 +111,11 @@ def test_vsi_path_curl():
 def test_vsi_path_unparsed():
     """Correctly make GDAL filename from unparsed path"""
     assert vsi_path(UnparsedPath("foo")) == "foo"
+
+
+def test_path_as_vsi_unparsed():
+    """Correctly make GDAL filename from unparsed path"""
+    assert UnparsedPath("foo").as_vsi() == "foo"
 
 
 def test_vsi_path_error():
@@ -164,3 +176,31 @@ def test_vsi_path_zip_plus_https():
     """A zip+https:// URLs vsi path is correct (see #1151)"""
     url = 'zip+https://example.com/foo.zip!bar.tif'
     assert vsi_path(parse_path(url)) == '/vsizip/vsicurl/https://example.com/foo.zip/bar.tif'
+
+
+@pytest.mark.parametrize("path", ["DRIVER:/vsifoo/bar:var", "SENTINEL2_L1C:S2A_OPER_MTD_SAFL1C_PDMC_20150818T101440_R022_V20150813T102406_20150813T102406.xml:10m:EPSG_32632"])
+def test_driver_prefixed_path(path):
+    parsed = parse_path(path)
+    assert isinstance(parsed, UnparsedPath)
+
+
+@pytest.mark.parametrize("path", [0, -1.0, object()])
+def test_path_error(path):
+    with pytest.raises(PathError):
+        parse_path(path)
+
+
+def test_parse_path():
+    pathlib = pytest.importorskip("pathlib")
+    assert isinstance(parse_path(pathlib.Path("/foo/bar.tif")), ParsedPath)
+
+
+def test_parse_path_win():
+    pathlib = pytest.importorskip("pathlib")
+    assert isinstance(parse_path(pathlib.PureWindowsPath(r"C:\foo\bar.tif")), ParsedPath)
+
+
+def test_parse_path_win_no_pathlib(monkeypatch):
+    monkeypatch.setattr(rasterio.path.sys, "platform", "win32")
+    monkeypatch.setattr(rasterio.path, "pathlib", None)
+    assert isinstance(parse_path(r"C:\foo\bar.tif"), UnparsedPath)

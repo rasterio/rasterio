@@ -1,4 +1,5 @@
 """Rasterio input/output."""
+
 # cython: boundscheck=False, c_string_type=unicode, c_string_encoding=utf8
 
 from __future__ import absolute_import
@@ -30,7 +31,7 @@ from rasterio.errors import (
 )
 from rasterio.sample import sample_gen
 from rasterio.transform import Affine
-from rasterio.path import parse_path, vsi_path, UnparsedPath
+from rasterio.path import parse_path, UnparsedPath
 from rasterio.vrt import _boundless_vrt_doc
 from rasterio.windows import Window, intersection
 
@@ -616,19 +617,6 @@ cdef class DatasetReaderBase(DatasetBase):
                         indexes, out, Window(0, 0, window.width, window.height),
                         None, resampling=resampling, masks=True)
 
-                    # TODO: we need to determine why `out` can contain data
-                    # that looks more like the source's band 1 when doing
-                    # this kind of boundless read. It looks like
-                    # hmask = GDALGetMaskBand(band) may be returning the
-                    # a pointer to the band instead of the mask band in
-                    # this case.
-                    #
-                    # Temporary solution: convert all non-zero pixels to
-                    # 255 and log that we have done so.
-
-                    out = np.where(out != 0, 255, 0)
-                    log.warning("Nonzero values in mask have been converted to 255, see note in rasterio/_io.pyx, read_masks()")
-
         if return2d:
             out.shape = out.shape[1:]
 
@@ -713,31 +701,73 @@ cdef class DatasetReaderBase(DatasetBase):
 
     def dataset_mask(self, out=None, out_shape=None, window=None,
                      boundless=False, resampling=Resampling.nearest):
-        """Calculate the dataset's 2D mask. Derived from the individual band masks
-        provided by read_masks().
+        """Get the dataset's 2D valid data mask.
 
         Parameters
         ----------
-        out, out_shape, window, boundless and resampling are passed directly to read_masks()
+        out : numpy ndarray, optional
+            As with Numpy ufuncs, this is an optional reference to an
+            output array with the same dimensions and shape into which
+            data will be placed.
+
+            *Note*: the method's return value may be a view on this
+            array. In other words, `out` is likely to be an
+            incomplete representation of the method's results.
+
+            Cannot be combined with `out_shape`.
+
+        out_shape : tuple, optional
+            A tuple describing the output array's shape.  Allows for decimated
+            reads without constructing an output Numpy array.
+
+            Cannot be combined with `out`.
+
+        window : a pair (tuple) of pairs of ints or Window, optional
+            The optional `window` argument is a 2 item tuple. The first
+            item is a tuple containing the indexes of the rows at which
+            the window starts and stops and the second is a tuple
+            containing the indexes of the columns at which the window
+            starts and stops. For example, ((0, 2), (0, 2)) defines
+            a 2x2 window at the upper left of the raster dataset.
+
+        boundless : bool, optional (default `False`)
+            If `True`, windows that extend beyond the dataset's extent
+            are permitted and partially or completely filled arrays will
+            be returned as appropriate.
+
+        resampling : Resampling
+            By default, pixel values are read raw or interpolated using
+            a nearest neighbor algorithm from the band cache. Other
+            resampling algorithms may be specified. Resampled pixels
+            are not cached.
 
         Returns
         -------
-        ndarray, shape=(self.height, self.width), dtype='uint8'
-        0 = nodata, 255 = valid data
+        Numpy ndarray or a view on a Numpy ndarray
+            The dtype of this array is uint8. 0 = nodata, 255 = valid
+            data.
 
-        The dataset mask is calculate based on the individual band masks according to
-        the following logic, in order of precedence:
+        Notes
+        -----
+        Note: as with Numpy ufuncs, an object is returned even if you
+        use the optional `out` argument and the return value shall be
+        preferentially used by callers.
 
-        1. If a .msk file, dataset-wide alpha or internal mask exists,
-           it will be used as the dataset mask.
-        2. If an 4-band RGBA with a shadow nodata value,
-           band 4 will be used as the dataset mask.
-        3. If a nodata value exists, use the binary OR (|) of the band masks
-        4. If no nodata value exists, return a mask filled with 255
+        The dataset mask is calculated based on the individual band
+        masks according to the following logic, in order of precedence:
 
-        Note that this differs from read_masks and GDAL RFC15
-        in that it applies per-dataset, not per-band
-        (see https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
+        1. If a .msk file, dataset-wide alpha, or internal mask exists
+           it will be used for the dataset mask.
+        2. Else if the dataset is a 4-band  with a shadow nodata value, band 4 will be
+           used as the dataset mask.
+        3. If a nodata value exists, use the binary OR (|) of the band
+           masks 4. If no nodata value exists, return a mask filled with
+           255.
+
+        Note that this differs from read_masks and GDAL RFC15 in that it
+        applies per-dataset, not per-band (see
+        https://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask)
+
         """
         kwargs = {
             'out': out,
@@ -746,21 +776,22 @@ cdef class DatasetReaderBase(DatasetBase):
             'boundless': boundless,
             'resampling': resampling}
 
-        # GDAL found dataset-wide alpha band or mask
-        # All band masks are equal so we can return the first
         if MaskFlags.per_dataset in self.mask_flag_enums[0]:
             return self.read_masks(1, **kwargs)
 
-        # use Alpha mask if available and looks like RGB, even if nodata is shadowing
         elif self.count == 4 and self.colorinterp[0] == ColorInterp.red:
             return self.read_masks(4, **kwargs)
 
-        # Or use the binary OR intersection of all GDALGetMaskBands
-        else:
-            mask = self.read_masks(1, **kwargs)
-            for i in range(1, self.count):
-                mask = mask | self.read_masks(i, **kwargs)
-            return mask
+        elif out is not None:
+            kwargs.pop("out", None)
+            kwargs["out_shape"] = (self.count, out.shape[-2], out.shape[-1])
+            out = np.logical_or.reduce(self.read_masks(**kwargs)) * np.uint8(255)
+            return out
+
+        elif out_shape is not None:
+            kwargs["out_shape"] = (self.count, out_shape[-2], out_shape[-1])
+
+        return np.logical_or.reduce(self.read_masks(**kwargs)) * np.uint8(255)
 
     def sample(self, xy, indexes=None, masked=False):
         """Get the values of a dataset at certain positions
@@ -1020,10 +1051,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         count : int, optional
             The count of dataset bands. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.
-        dtype : str or numpy dtype
-            The data type for bands. For example: 'uint8' or
-            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
-            ignored in 'r' or 'r+' modes.
         crs : str, dict, or CRS; optional
             The coordinate reference system. Required in 'w' or 'w+' modes,
             it is ignored in 'r' or 'r+' modes.
@@ -1031,6 +1058,10 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
+        dtype : str or numpy dtype
+            The data type for bands. For example: 'uint8' or
+            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
         nodata : int, float, or nan; optional
             Defines the pixel value to be interpreted as not valid data.
             Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
@@ -1082,7 +1113,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
         # Make and store a GDAL dataset handle.
         filename = path.name
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
         fname = name_b
 
@@ -1104,7 +1135,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             if k.lower() in ['affine']:
                 continue
 
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
 
             if k in ['BLOCKXSIZE', 'BLOCKYSIZE'] and not tiled:
                 continue
@@ -1147,6 +1178,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._hds = exc_wrap_pointer(
                     GDALCreate(drv, fname, width, height,
                                count, gdal_dtype, options))
+            except CPLE_BaseError as exc:
+                raise RasterioIOError(str(exc))
             finally:
                 if options != NULL:
                     CSLDestroy(options)
@@ -1716,6 +1749,7 @@ cdef class InMemoryRaster:
         cdef OGRSpatialReferenceH osr = NULL
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
+        cdef char **options = NULL
 
         if image is not None:
             if image.ndim == 3:
@@ -1743,10 +1777,13 @@ cdef class InMemoryRaster:
                 "in a `with rasterio.Env()` or `with rasterio.open()` "
                 "block.")
 
+        if dtype == 'int8':
+            options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
         datasetname = str(uuid4()).encode('utf-8')
         self._hds = exc_wrap_pointer(
             GDALCreate(memdriver, <const char *>datasetname, width, height,
-                       count, <GDALDataType>dtypes.dtype_rev[dtype], NULL))
+                       count, <GDALDataType>dtypes.dtype_rev[dtype], options))
 
         if transform is not None:
             self.transform = transform
@@ -1785,6 +1822,9 @@ cdef class InMemoryRaster:
                 CPLFree(gcplist)
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
+
+        if options != NULL:
+            CSLDestroy(options)
 
         self._image = None
         if image is not None:
@@ -1887,10 +1927,6 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
         count : int, optional
             The count of dataset bands. Required in 'w' or 'w+' modes, it is
             ignored in 'r' or 'r+' modes.
-        dtype : str or numpy dtype
-            The data type for bands. For example: 'uint8' or
-            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
-            ignored in 'r' or 'r+' modes.
         crs : str, dict, or CRS; optional
             The coordinate reference system. Required in 'w' or 'w+' modes,
             it is ignored in 'r' or 'r+' modes.
@@ -1898,6 +1934,10 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             Affine transformation mapping the pixel space to geographic
             space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
             'r+' modes.
+        dtype : str or numpy dtype
+            The data type for bands. For example: 'uint8' or
+            ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+            ignored in 'r' or 'r+' modes.
         nodata : int, float, or nan; optional
             Defines the pixel value to be interpreted as not valid data.
             Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
@@ -1975,7 +2015,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
         # Parse the path to determine if there is scheme-specific
         # configuration to be done.
-        path = vsi_path(path)
+        path = path.as_vsi()
         name_b = path.encode('utf-8')
 
         memdrv = GDALGetDriverByName("MEM")
@@ -1985,6 +2025,9 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # We've mapped numpy scalar types to GDAL types so see
             # if we can crosswalk those.
             if hasattr(self._init_dtype, 'type'):
+                if self._init_dtype == 'int8':
+                    options = CSLSetNameValue(options, 'PIXELTYPE', 'SIGNEDBYTE')
+
                 tp = self._init_dtype.type
                 if tp not in dtypes.dtype_rev:
                     raise ValueError(
@@ -1996,7 +2039,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
             self._hds = exc_wrap_pointer(
                 GDALCreate(memdrv, "temp", self.width, self.height,
-                           self._count, gdal_dtype, NULL))
+                           self._count, gdal_dtype, options))
 
             if self._init_nodata is not None:
                 for i in range(self._count):
@@ -2067,7 +2110,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             # Skip items that are definitely *not* valid driver options.
             if k.lower() in ['affine']:
                 continue
-            k, v = k.upper(), str(v).upper()
+            k, v = k.upper(), str(v)
             key_b = k.encode('utf-8')
             val_b = v.encode('utf-8')
             key_c = key_b

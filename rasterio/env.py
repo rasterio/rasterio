@@ -14,7 +14,7 @@ from rasterio._env import (
 from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
-from rasterio.session import Session, AWSSession, DummySession
+from rasterio.session import Session, DummySession
 
 
 class ThreadEnv(threading.local):
@@ -50,12 +50,6 @@ class ThreadEnv(threading.local):
 local = ThreadEnv()
 
 log = logging.getLogger(__name__)
-
-try:
-    import boto3
-except ImportError:
-    log.info("failed to import boto3, continuing.")
-    boto3 = None
 
 
 class Env(object):
@@ -110,7 +104,7 @@ class Env(object):
         }
 
     def __init__(self, session=None, aws_unsigned=False, profile_name=None,
-                 session_class=AWSSession, **options):
+                 session_class=Session.aws_or_dummy, **options):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -187,12 +181,12 @@ class Env(object):
                     "AWSSession object instead.",
                     RasterioDeprecationWarning
                 )
-                session = AWSSession(session=session)
+                session = Session.aws_or_dummy(session=session)
 
             self.session = session
 
         elif aws_access_key_id or profile_name or aws_unsigned:
-            self.session = AWSSession(
+            self.session = Session.aws_or_dummy(
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key,
                 aws_session_token=aws_session_token,
@@ -200,13 +194,8 @@ class Env(object):
                 profile_name=profile_name,
                 aws_unsigned=aws_unsigned)
 
-        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ and boto3 is not None:
-            try:
-                self.session = AWSSession()
-                self.session.credentials
-            except RuntimeError as exc:
-                log.info("No AWS session created. Credentials in environment have expired.")
-                self.session = DummySession()
+        elif 'AWS_ACCESS_KEY_ID' in os.environ and 'AWS_SECRET_ACCESS_KEY' in os.environ:
+            self.session = Session.from_environ()
 
         else:
             self.session = DummySession()

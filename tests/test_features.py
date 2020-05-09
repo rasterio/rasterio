@@ -48,15 +48,40 @@ def test_bounds_z():
     assert bounds(g) == (10, 10, 10, 10)
     assert bounds(MockGeoInterface(g)) == (10, 10, 10, 10)
 
+@pytest.mark.parametrize('geometry', [
+    {'type': 'Polygon'},
+    {'type': 'Polygon', 'not_coordinates': []},
+    {'type': 'bogus', 'not_coordinates': []},
+    {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {'type': 'Point', 'coordinates': [1, 1]},
+            {'type': 'LineString', 'not_coordinates': [[-10, -20], [10, 20]]},
+        ]
+    }
+])
+def test_bounds_invalid_obj(geometry):
+    with pytest.raises(ValueError, match="geometry must be a GeoJSON-like geometry, GeometryCollection, or FeatureCollection"):
+        bounds(geometry)
 
-def test_bounds_invalid_obj():
-    with pytest.raises(KeyError):
-        bounds({'type': 'bogus', 'not_coordinates': []})
 
-
-def test_feature_collection(basic_featurecollection):
+def test_bounds_feature_collection(basic_featurecollection):
     fc = basic_featurecollection
     assert bounds(fc) == bounds(fc['features'][0]) == (2, 2, 4.25, 4.25)
+
+
+def test_bounds_geometry_collection():
+    gc = {
+        'type': 'GeometryCollection',
+        'geometries': [
+            {'type': 'Point', 'coordinates': [1, 1]},
+            {'type': 'LineString', 'coordinates': [[-10, -20], [10, 20]]},
+            {'type': 'Polygon', 'coordinates': [[[5, 5], [25, 50], [25, 5]]]}
+        ]
+    }
+
+    assert bounds(gc) == (-10, -20, 25, 50)
+    assert bounds(MockGeoInterface(gc)) == (-10, -20, 25, 50)
 
 
 def test_bounds_existing_bbox(basic_featurecollection):
@@ -354,13 +379,10 @@ def test_is_valid_geom_geomcollection(geojson_geomcollection):
     assert not is_valid_geom(geom)
 
 
-def test_is_valid_geom_invalid_inputs():
+@pytest.mark.parametrize("geom", [None, 1, "foo", "type", ["type"], {"type": "Invalid"}, {"type": "Point"}])
+def test_is_valid_geom_invalid_inputs(geom):
     """Improperly formed GeoJSON objects should fail"""
-
-    assert not is_valid_geom('type')
-    assert not is_valid_geom(['type'])
-    assert not is_valid_geom({'type': 'Invalid'})  # wrong type
-    assert not is_valid_geom({'type': 'Point'})  # Missing coordinates
+    assert not is_valid_geom(geom)
 
 
 def test_rasterize_point(geojson_point):

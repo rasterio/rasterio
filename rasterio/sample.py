@@ -2,6 +2,7 @@
 
 import numpy
 
+from rasterio.enums import MaskFlags
 from rasterio.windows import Window
 
 
@@ -31,14 +32,24 @@ def sample_gen(dataset, xy, indexes=None, masked=False):
     index = dataset.index
     read = dataset.read
 
-    if isinstance(indexes, int):
+    if indexes is None:
+        indexes = dataset.indexes
+    elif isinstance(indexes, int):
         indexes = [indexes]
 
     for x, y in xy:
+
         row_off, col_off = index(x, y)
-#        if row_off < 0 or col_off < 0:
-#            yield numpy.ones((dataset.count,), dtype=dataset.dtypes[0]) * dataset.nodata
-#        else:
-        window = Window(col_off, row_off, 1, 1)
-        data = read(indexes, window=window, masked=masked, boundless=True)
-        yield data[:, 0, 0]
+
+        if row_off < 0 or col_off < 0 or row_off >= dataset.height or col_off >= dataset.width:
+            data = numpy.ones((len(indexes),), dtype=dataset.dtypes[0]) * (dataset.nodata or 0)
+            if masked:
+                mask = [False if MaskFlags.all_valid in dataset.mask_flag_enums[i - 1] else True for i in indexes]
+                yield numpy.ma.array(data, mask=mask)
+            else:
+                yield data
+
+        else:
+            window = Window(col_off, row_off, 1, 1)
+            data = read(indexes, window=window, masked=masked)
+            yield data[:, 0, 0]

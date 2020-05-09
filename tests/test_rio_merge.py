@@ -1,10 +1,12 @@
 """Unittests for $ rio merge"""
 
 
-import sys
 import os
+import sys
+import textwrap
 
 import affine
+from click.testing import CliRunner
 import numpy as np
 from pytest import fixture
 import pytest
@@ -15,6 +17,7 @@ from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
 from .conftest import requires_gdal22
+
 
 # Fixture to create test datasets within temporary directory
 @fixture(scope='function')
@@ -437,7 +440,7 @@ def test_merge_rgb(tmpdir, runner):
     assert result.exit_code == 0
 
     with rasterio.open(outputname) as src:
-        assert [src.checksum(i) for i in src.indexes] == [25420, 29131, 37860]
+        assert [src.checksum(i) for i in src.indexes] == [33219, 35315, 45188]
 
 
 def test_merge_tiny_intres(tiffs):
@@ -445,3 +448,52 @@ def test_merge_tiny_intres(tiffs):
     inputs.sort()
     datasets = [rasterio.open(x) for x in inputs]
     merge(datasets, res=2)
+
+
+@pytest.mark.parametrize("precision", [[], ["--precision", "9"]])
+def test_merge_precision(tmpdir, precision):
+    """See https://github.com/mapbox/rasterio/issues/1837"""
+    # TDOD move ascii grids to a fixture?
+
+    expected = """\
+        ncols        8
+        nrows        8
+        xllcorner    0.000000000000
+        yllcorner    0.000000000000
+        cellsize     1.000000000000
+         1 2 3 4 1 2 3 4
+         3 4 5 6 3 4 5 6
+         4 5 6 8 4 5 6 8
+         7 9 5 4 7 9 5 4
+         1 2 3 4 1 2 3 4
+         3 4 5 6 3 4 5 6
+         4 5 6 8 4 5 6 8
+         7 9 5 4 7 9 5 4
+         """
+
+    template = """\
+        ncols 4
+        nrows 4
+        xllcorner {:f}
+        yllcorner {:f}
+        cellsize 1.0
+        1 2 3 4
+        3 4 5 6
+        4 5 6 8
+        7 9 5 4
+        """
+
+    names = ["sw.asc", "se.asc", "nw.asc", "ne.asc"]
+    corners = [(0.0, 0.0), (4.0, 0.0), (0.0, 4.0), (4.0, 4.0)]
+
+    for name, (minx, miny) in zip(names, corners):
+        content = textwrap.dedent(template.format(minx, miny))
+        tmpdir.join(name).write(content)
+
+    inputs = [str(tmpdir.join(name)) for name in names]
+    outputname = str(tmpdir.join("merged.asc"))
+
+    runner = CliRunner()
+    result = runner.invoke(main_group, ["merge", "-f", "AAIGrid"] + precision + inputs + [outputname])
+    assert result.exit_code == 0
+    assert open(outputname).read() == textwrap.dedent(expected)

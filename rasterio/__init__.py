@@ -25,7 +25,7 @@ from rasterio.dtypes import (
     bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
 from rasterio.env import ensure_env_with_credentials, Env
-from rasterio.errors import RasterioIOError
+from rasterio.errors import RasterioIOError, DriverCapabilityError
 from rasterio.compat import string_types
 from rasterio.io import (
     DatasetReader, get_writer_for_path, get_writer_for_driver, MemoryFile)
@@ -39,7 +39,6 @@ import rasterio._err
 import rasterio.coords
 import rasterio.enums
 import rasterio.path
-
 
 __all__ = ['band', 'open', 'pad', 'Env']
 __version__ = "1.2dev"
@@ -92,10 +91,6 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
     count : int, optional
         The count of dataset bands. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
-    dtype : str or numpy dtype
-        The data type for bands. For example: 'uint8' or
-        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
-        ignored in 'r' or 'r+' modes.
     crs : str, dict, or CRS; optional
         The coordinate reference system. Required in 'w' or 'w+' modes,
         it is ignored in 'r' or 'r+' modes.
@@ -103,6 +98,10 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         Affine transformation mapping the pixel space to geographic
         space. Required in 'w' or 'w+' modes, it is ignored in 'r' or
         'r+' modes.
+    dtype : str or numpy dtype
+        The data type for bands. For example: 'uint8' or
+        ``rasterio.uint16``. Required in 'w' or 'w+' modes, it is
+        ignored in 'r' or 'r+' modes.
     nodata : int, float, or nan; optional
         Defines the pixel value to be interpreted as not valid data.
         Required in 'w' or 'w+' modes, it is ignored in 'r' or 'r+'
@@ -217,18 +216,26 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         # None.
         if mode == 'r':
             s = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
-        elif mode == 'r+':
-            s = get_writer_for_path(path)(path, mode, driver=driver, sharing=sharing, **kwargs)
+        elif mode == "r+":
+            s = get_writer_for_path(path, driver=driver)(
+                path, mode, driver=driver, sharing=sharing, **kwargs
+            )
         elif mode.startswith("w"):
-            s = get_writer_for_driver(driver)(path, mode, driver=driver,
-                                              width=width, height=height,
-                                              count=count, crs=crs,
-                                              transform=transform,
-                                              dtype=dtype, nodata=nodata,
-                                              sharing=sharing,
-                                              **kwargs)
+            writer = get_writer_for_driver(driver)
+            if writer is not None:
+                s = writer(path, mode, driver=driver,
+                           width=width, height=height,
+                           count=count, crs=crs,
+                           transform=transform,
+                           dtype=dtype, nodata=nodata,
+                           sharing=sharing,
+                           **kwargs)
+            else:
+                raise DriverCapabilityError(
+                    "Writer does not exist for driver: %s" % str(driver)
+                )
         else:
-            raise ValueError(
+            raise DriverCapabilityError(
                 "mode must be one of 'r', 'r+', or 'w', not %s" % mode)
         return s
 
