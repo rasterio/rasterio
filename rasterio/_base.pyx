@@ -18,7 +18,7 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
-from rasterio.control import GroundControlPoint
+from rasterio.control import GroundControlPoint, RPC
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -146,6 +146,7 @@ cdef class DatasetBase(object):
     descriptions
     files
     gcps
+    rpcs
     indexes
     mask_flag_enums
     meta
@@ -228,6 +229,7 @@ cdef class DatasetBase(object):
         self._scales = ()
         self._offsets = ()
         self._gcps = None
+        self._rpcs = None
         self._read = False
 
         self._set_attrs_from_dataset_handle()
@@ -1256,6 +1258,30 @@ cdef class DatasetBase(object):
         def __set__(self, value):
             gcps, crs = value
             self._set_gcps(gcps, crs)
+
+    def get_rpcs(self):
+        """Get RPCs if exists"""
+        return RPC.from_gdal(self.tags(ns='RPC'))
+
+    def _set_rpcs(self, values):
+        raise DatasetAttributeError("read-only attribute")
+
+    property rpcs:
+        """Rational polynomial coefficients mapping between pixel and geodetic coordinates.
+
+        This property is a dict-like object.
+        
+        rpcs : RPC instance containing coefficients. Empty if dataset does not have any
+        metadata in the "RPC" domain.
+        """
+        def __get__(self):
+            if not self._rpcs:
+                self._rpcs = self.get_rpcs()
+            return self._rpcs
+
+        def __set__(self, value):
+            rpcs = value.to_gdal()
+            self._set_rpcs(rpcs)
 
     property files:
 
