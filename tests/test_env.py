@@ -781,6 +781,7 @@ def test_require_gdal_version_chaining():
     assert message in exc_info.value.args[0]
 
 
+@pytest.mark.network
 def test_rio_env_no_credentials(tmpdir, monkeypatch, runner):
     """Confirm that we can get drivers without any credentials"""
     credentials_file = tmpdir.join('credentials')
