@@ -352,10 +352,8 @@ with open('README.rst') as f:
 
 # Runtime requirements.
 inst_reqs = [
-    'affine', 'attrs', 'click>=4.0,<8', 'cligj>=0.5', 'numpy', 'snuggs>=1.4.1', 'click-plugins']
-
-if sys.version_info < (3, 4):
-    inst_reqs.append('enum34')
+    'affine', 'attrs', 'click>=4.0,<8', 'cligj>=0.5', 'numpy', 'snuggs>=1.4.1', 'click-plugins',
+    'enum34 ; python_version < "3.4"']
 
 extra_reqs = {
     'ipython': ['ipython>=2.0'],
@@ -363,12 +361,8 @@ extra_reqs = {
     'plot': ['matplotlib'],
     'test': [
         'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging',
-        'hypothesis'],
+        'hypothesis', 'futures;python_version<"3.2"', 'mock;python_version<"3.2"'],
     'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']}
-
-# Add futures to 'test' for Python < 3.2.
-if sys.version_info < (3, 2):
-    extra_reqs['test'].extend(['futures', 'mock'])
 
 # Add all extra requirements
 extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
