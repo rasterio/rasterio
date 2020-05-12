@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.1.5 (TBD)
+------------------
+
+- To help users of poetry, the conditional requirements in setup.py have been
+  changed to use PEP 496 environment markers exclusively (#1777).
+
 1.1.4 (2020-05-07)
 ------------------
 
