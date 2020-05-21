@@ -24,9 +24,7 @@ jobs:
     - python: "3.6"
       env: GDALVERSION="2.4.4" PROJVERSION="4.9.3"
     - python: "3.6"
-      env: GDALVERSION="3.0.4" PROJVERSION="6.3.1"
-    - python: "3.6"
-      env: GDALVERSION="3.1.0" PROJVERSION="7.0.1"
+      env: GDALVERSION="3.0.4" PROJVERSION="6.2.1"
 
 addons:
   apt:
