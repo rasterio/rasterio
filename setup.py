@@ -353,7 +353,7 @@ with open('README.rst') as f:
 # Runtime requirements.
 inst_reqs = [
     'affine', 'attrs', 'click>=4.0,<8', 'cligj>=0.5', 'numpy', 'snuggs>=1.4.1', 'click-plugins',
-    'enum34 ; python_version < "3.4"']
+    'enum34 ; python_version < "3.4"', 'funcsigs>=1.0.2']
 
 extra_reqs = {
     'ipython': ['ipython>=2.0'],

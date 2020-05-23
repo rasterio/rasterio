@@ -274,6 +274,20 @@ def test_merge_overlapping(test_data_dir_overlapping, runner):
         assert np.all(data == expected)
 
 
+def test_merge_overlapping_callable(test_data_dir_overlapping, runner):
+    outputname = str(test_data_dir_overlapping.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
+    inputs.sort()
+    datasets = [rasterio.open(x) for x in inputs]
+
+    def mycallable(old_data, new_data, old_nodata, new_nodata, roff, coff):
+        assert old_data.shape[0] == 5
+        assert new_data.shape[0] == 1
+
+    result, _ = merge(datasets, output_count=5, method=mycallable)
+    assert result.shape[0] == 5
+
+
 # Fixture to create test datasets within temporary directory
 @fixture(scope='function')
 def test_data_dir_float(tmpdir):

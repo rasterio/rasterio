@@ -1,6 +1,7 @@
 """Copy valid pixels from input files to an output file."""
 
 
+from funcsigs import signature
 import logging
 import math
 import warnings
@@ -17,7 +18,7 @@ MERGE_METHODS = ('first', 'last', 'min', 'max')
 
 
 def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=None,
-          method='first'):
+          output_count=None, method='first'):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -49,6 +50,9 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
         Number of decimal points of precision when computing inverse transform.
     indexes : list of ints or a single int, optional
         bands to read and merge
+    output_count: int, optional
+        If using callable it may be useful to have additional bands in the output
+        in addition to the indexes specified for read
     method : str or callable
         pre-defined method:
             first: reverse painting
@@ -57,7 +61,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
             max: pixel-wise max of existing and new
         or custom callable with signature:
 
-        def function(old_data, new_data, old_nodata, new_nodata):
+        def function(old_data, new_data, old_nodata, new_nodata, roff=None, coff=None):
 
             Parameters
             ----------
@@ -69,6 +73,10 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
             old_nodata, new_data : array_like
                 boolean masks where old/new data is nodata
                 same shape as old_data
+            roff: int
+                row offset in base array
+            coff: int
+                column offset in base array
 
     Returns
     -------
@@ -94,11 +102,14 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
 
     # Determine output band count
     if indexes is None:
-        output_count = first.count
+        src_count = first.count
     elif isinstance(indexes, int):
-        output_count = 1
+        src_count = indexes
     else:
-        output_count = len(indexes)
+        src_count = len(indexes)
+
+    if not output_count:
+        output_count = src_count
 
     # Extent from option or extent of all inputs
     if bounds:
@@ -226,7 +237,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
         # 4. Read data in source window into temp
         trows, tcols = (
             int(round(dst_window.height)), int(round(dst_window.width)))
-        temp_shape = (output_count, trows, tcols)
+        temp_shape = (src_count, trows, tcols)
         temp = src.read(out_shape=temp_shape, window=src_window,
                         boundless=False, masked=True, indexes=indexes)
 
@@ -242,6 +253,11 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
             region_nodata = region == nodataval
             temp_nodata = temp.mask
 
-        copyto(region, temp, region_nodata, temp_nodata)
+        sig = signature(copyto)
+
+        if len(sig.parameters.keys()) == 6:
+            copyto(region, temp, region_nodata, temp_nodata, roff, coff)
+        else:
+            copyto(region, temp, region_nodata, temp_nodata)
 
     return dest, output_transform

@@ -5,6 +5,7 @@ click~=7.1.0
 click-plugins
 cligj>=0.5
 enum34; python_version < "3.4"
+funcsigs~=1.0.2
 matplotlib
 numpy>=1.10
 snuggs~=1.4.0
