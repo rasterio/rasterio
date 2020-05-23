@@ -1,8 +1,8 @@
+include "gdal.pxi"
+
 cimport numpy as np
 
 from rasterio._base cimport DatasetBase
-
-include "gdal.pxi"
 
 
 cdef class DatasetReaderBase(DatasetBase):
@@ -30,6 +30,10 @@ cdef class InMemoryRaster:
 
     cdef GDALDatasetH handle(self) except NULL
     cdef GDALRasterBandH band(self, int) except NULL
+
+
+cdef class MemoryFileBase:
+    cdef VSILFILE * _vsif
 
 
 ctypedef np.uint8_t DTYPE_UBYTE_t
