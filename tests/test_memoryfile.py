@@ -123,6 +123,21 @@ def test_non_initial_bytes_in_two(rgb_file_bytes):
             assert src.read().shape == (3, 718, 791)
 
 
+def test_non_initial_bytes_in_two_reverse(rgb_file_bytes):
+    """MemoryFile contents can be read from bytes in two steps, tail first, and opened.
+    Demonstrates fix of #1926."""
+    with MemoryFile() as memfile:
+        memfile.seek(600000)
+        assert memfile.write(rgb_file_bytes[600000:]) == len(rgb_file_bytes) - 600000
+        memfile.seek(0)
+        assert memfile.write(rgb_file_bytes[:600000]) == 600000
+        with memfile.open() as src:
+            assert src.driver == "GTiff"
+            assert src.count == 3
+            assert src.dtypes == ("uint8", "uint8", "uint8")
+            assert src.read().shape == (3, 718, 791)
+
+
 def test_no_initial_bytes(rgb_data_and_profile):
     """An empty MemoryFile can be opened and written into."""
     data, profile = rgb_data_and_profile
