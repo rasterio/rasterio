@@ -17,16 +17,14 @@ jobs:
       env: GDALVERSION="1.11.5" PROJVERSION="4.8.0"
     - python: "2.7"
       env: GDALVERSION="2.2.4" PROJVERSION="4.9.3"
-    - python: "2.7"
-      env: GDALVERSION="2.3.3" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="2.2.4" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="2.3.3" PROJVERSION="4.9.3"
     - python: "3.6"
-      env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
+      env: GDALVERSION="2.4.4" PROJVERSION="4.9.3"
     - python: "3.6"
-      env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
+      env: GDALVERSION="3.0.4" PROJVERSION="6.2.1"
 
 addons:
   apt:

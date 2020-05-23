@@ -3,6 +3,7 @@
 
 from rasterio import dtypes
 from rasterio.enums import Resampling
+from rasterio.errors import ResamplingAlgorithmError
 
 cimport numpy as np
 
@@ -43,7 +44,11 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
 
     The striding of `data` is passed to GDAL so that it can navigate
     the layout of ndarray views.
+
     """
+    if resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
     # GDAL handles all the buffering indexing, so a typed memoryview,
     # as in previous versions, isn't needed.
     cdef void *buf = <void *>np.PyArray_DATA(data)
@@ -90,7 +95,11 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
 
     The striding of `data` is passed to GDAL so that it can navigate
     the layout of ndarray views.
+
     """
+    if resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
     cdef int i = 0
     cdef int retval = 3
     cdef int *bandmap = NULL
@@ -148,7 +157,11 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
 
     The striding of `data` is passed to GDAL so that it can navigate
     the layout of ndarray views.
+
     """
+    if resampling > 7:
+        raise ResamplingAlgorithmError("{!r} can be used for warp operations but not for reads and writes".format(Resampling(resampling)))
+
     cdef int i = 0
     cdef int j = 0
     cdef int retval = 3
