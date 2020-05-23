@@ -6,6 +6,9 @@ Changes
 
 - MemoryFile implementation has been improved so that it can support multi-part
   S3 downloads (#1926).
+- Members of the Resampling enum with a value > 7 can only be used in warp
+  operations (#1930). We now raise a ResamplingAlgorithmError if they are used
+  with non-warp read and writes.
 - To help users of poetry, the conditional requirements in setup.py have been
   changed to use PEP 496 environment markers exclusively (#1777).
 
