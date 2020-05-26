@@ -61,7 +61,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
             max: pixel-wise max of existing and new
         or custom callable with signature:
 
-        def function(old_data, new_data, old_nodata, new_nodata, roff=None, coff=None):
+        def function(old_data, new_data, old_nodata, new_nodata, index=None, roff=None, coff=None):
 
             Parameters
             ----------
@@ -73,6 +73,8 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
             old_nodata, new_data : array_like
                 boolean masks where old/new data is nodata
                 same shape as old_data
+            index: int
+                index of the current dataset within the merged dataset collection
             roff: int
                 row offset in base array
             coff: int
@@ -210,7 +212,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
     else:
         raise ValueError(method)
 
-    for src in datasets:
+    for idx, src in enumerate(datasets):
         # Real World (tm) use of boundless reads.
         # This approach uses the maximum amount of memory to solve the
         # problem. Making it more efficient is a TODO.
@@ -255,8 +257,8 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
 
         sig = signature(copyto)
 
-        if len(sig.parameters.keys()) == 6:
-            copyto(region, temp, region_nodata, temp_nodata, roff, coff)
+        if len(sig.parameters.keys()) == 7:
+            copyto(region, temp, region_nodata, temp_nodata, idx, roff, coff)
         else:
             copyto(region, temp, region_nodata, temp_nodata)
 

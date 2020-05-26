@@ -274,18 +274,34 @@ def test_merge_overlapping(test_data_dir_overlapping, runner):
         assert np.all(data == expected)
 
 
-def test_merge_overlapping_callable(test_data_dir_overlapping, runner):
+def test_merge_overlapping_callable_long(test_data_dir_overlapping, runner):
     outputname = str(test_data_dir_overlapping.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
-    inputs.sort()
     datasets = [rasterio.open(x) for x in inputs]
+    test_merge_overlapping_callable_long.index = 0
 
-    def mycallable(old_data, new_data, old_nodata, new_nodata, roff, coff):
+    def mycallable(old_data, new_data, old_nodata, new_nodata, idx, roff, coff):
         assert old_data.shape[0] == 5
         assert new_data.shape[0] == 1
+        assert test_merge_overlapping_callable_long.index == idx
+        test_merge_overlapping_callable_long.index += 1
 
-    result, _ = merge(datasets, output_count=5, method=mycallable)
-    assert result.shape[0] == 5
+    merge(datasets, output_count=5, method=mycallable)
+
+
+def test_merge_overlapping_callable_short(test_data_dir_overlapping, runner):
+    outputname = str(test_data_dir_overlapping.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
+    datasets = [rasterio.open(x) for x in inputs]
+    test_merge_overlapping_callable_short.index = 0
+
+    def mycallable(old_data, new_data, old_nodata, new_nodata):
+        assert old_data.shape[0] == 5
+        assert new_data.shape[0] == 1
+        test_merge_overlapping_callable_short.index += 1
+
+    merge(datasets, output_count=5, method=mycallable)
+    assert test_merge_overlapping_callable_short.index == 2
 
 
 # Fixture to create test datasets within temporary directory
