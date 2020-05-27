@@ -304,6 +304,23 @@ def test_merge_overlapping_callable_short(test_data_dir_overlapping, runner):
     assert test_merge_overlapping_callable_short.index == 2
 
 
+def test_custom_callable_merge(test_data_dir_overlapping, runner):
+    inputs = ['tests/data/world.byte.tif'] * 3
+    datasets = [rasterio.open(x) for x in inputs]
+    meta = datasets[0].meta
+    output_count = 4
+
+    def mycallable(old_data, new_data, old_nodata, new_nodata, idx, roff, coff):
+        old_data[idx] = idx + 1
+        # update additional band that we specified in output_count
+        old_data[3, :, :] += idx
+
+    arr, _ = merge(datasets, output_count=output_count, method=mycallable)
+
+    np.testing.assert_array_equal(np.mean(arr[:3], axis=0), 2)
+    np.testing.assert_array_equal(arr[3, :, :], 3)
+
+
 # Fixture to create test datasets within temporary directory
 @fixture(scope='function')
 def test_data_dir_float(tmpdir):
