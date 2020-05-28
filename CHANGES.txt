@@ -4,6 +4,9 @@ Changes
 1.1.5 (TBD)
 ------------------
 
+- WarpedVRT can properly handle two use cases that weren't ruled out in version
+  1.1.4: simple scaling of datasets and control over the scaling of reprojected
+  output (#1921, #1936).
 - MemoryFile implementation has been improved so that it can support multi-part
   S3 downloads (#1926).
 - Members of the Resampling enum with a value > 7 can only be used in warp
