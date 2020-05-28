@@ -8,7 +8,7 @@ import uuid
 import warnings
 import xml.etree.ElementTree as ET
 
-from affine import identity
+from affine import Affine, identity
 import numpy as np
 
 import rasterio
@@ -729,19 +729,17 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             nodata = dst_nodata
 
         # Deprecate dst_width.
-        if dst_width is not None:
+        if dst_width is not None and width is None:
             warnings.warn(
                 "dst_width will be removed in 1.1, use width",
                 RasterioDeprecationWarning)
-        if width is None:
             width = dst_width
 
         # Deprecate dst_height.
-        if dst_height is not None:
+        if dst_height is not None and height is None:
             warnings.warn(
                 "dst_height will be removed in 1.1, use height",
                 RasterioDeprecationWarning)
-        if height is None:
             height = dst_height
 
         # Deprecate dst_transform.
@@ -811,11 +809,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if not self.src_transform:
             self.src_transform = self.src_dataset.transform
 
-        if self.dst_transform:
-            t = self.src_transform.to_gdal()
-            for i in range(6):
-                src_gt[i] = t[i]
+        t = self.src_transform.to_gdal()
+        for i in range(6):
+            src_gt[i] = t[i]
 
+        if self.dst_transform:
             t = self.dst_transform.to_gdal()
             for i in range(6):
                 dst_gt[i] = t[i]
@@ -886,50 +884,78 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         psWOptions.hSrcDS = hds
 
-        try:
+        # case 4: auto
+        if not self.dst_transform and (not self.dst_width or not self.dst_height):
 
-            if self.dst_width and self.dst_height and self.dst_transform:
-                # set up transform args (otherwise handled in
-                # GDALAutoCreateWarpedVRT)
-                try:
+            with nogil:
+                hds_warped = GDALAutoCreateWarpedVRT(
+                    hds, src_crs_wkt, dst_crs_wkt, c_resampling,
+                    c_tolerance, psWOptions)
 
+        else:
+
+            # case 1: precisely defined.
+            if self.dst_transform and self.dst_width and self.dst_height:
+                pass
+
+            # case 2: scaling
+            elif self.src_crs == self.dst_crs and self.dst_width and self.dst_height and not self.dst_transform:
+
+                self.dst_transform = Affine.scale(self.src_dataset.width / self.dst_width, self.src_dataset.height / self.dst_height) * self.src_transform
+
+                t = self.dst_transform.to_gdal()
+                for i in range(6):
+                    dst_gt[i] = t[i]
+
+            # case 3: scaled analogous
+            elif self.src_crs != self.dst_crs and self.dst_width and self.dst_height and not self.dst_transform:
+
+                # compute approx transform and use that.
+                left, bottom, right, top = self.src_dataset.bounds
+                self.dst_transform, width, height = _calculate_default_transform(self.src_crs, self.dst_crs, self.src_dataset.width, self.src_dataset.height, left=left, bottom=bottom, right=right, top=top)
+                log.debug("Scaling transform: self.dst_transform=%r, width=%r, height=%r, self.dst_width=%r, self.dst_height=%r", self.dst_transform, width, height, self.dst_width, self.dst_height)
+                self.dst_transform = Affine.scale(width / self.dst_width, height / self.dst_height ) * self.dst_transform
+
+                t = self.dst_transform.to_gdal()
+                for i in range(6):
+                    dst_gt[i] = t[i]
+
+            else:
+                raise Exception("don't get here: src_crs={!r}, dst_crs={!r}, dst_width={!r}, dst_height={!r}, dst_transform={!r}".format(self.src_crs, self.dst_crs, self.dst_width, self.dst_height, self.dst_transform))
+
+            try:
+
+                hTransformArg = exc_wrap_pointer(
+                    GDALCreateGenImgProjTransformer3(
+                        src_crs_wkt, src_gt, dst_crs_wkt, dst_gt))
+
+                if c_tolerance > 0.0:
                     hTransformArg = exc_wrap_pointer(
-                        GDALCreateGenImgProjTransformer3(
-                            src_crs_wkt, src_gt, dst_crs_wkt, dst_gt))
+                        GDALCreateApproxTransformer(
+                            GDALGenImgProjTransform,
+                            hTransformArg,
+                            c_tolerance))
 
-                    if c_tolerance > 0.0:
-                        hTransformArg = exc_wrap_pointer(
-                            GDALCreateApproxTransformer(
-                                GDALGenImgProjTransform,
-                                hTransformArg,
-                                c_tolerance))
+                    psWOptions.pfnTransformer = GDALApproxTransform
 
-                        psWOptions.pfnTransformer = GDALApproxTransform
+                    GDALApproxTransformerOwnsSubtransformer(
+                        hTransformArg, 1)
 
-                        GDALApproxTransformerOwnsSubtransformer(
-                            hTransformArg, 1)
+                log.debug("Created transformer and options.")
+                psWOptions.pTransformerArg = hTransformArg
 
-                    log.debug("Created transformer and options.")
-                    psWOptions.pTransformerArg = hTransformArg
+            except Exception:
+                GDALDestroyApproxTransformer(hTransformArg)
+                raise
 
-                except Exception:
-                    GDALDestroyApproxTransformer(hTransformArg)
-                    raise
-
+            else:
                 with nogil:
                     hds_warped = GDALCreateWarpedVRT(
                         hds, c_width, c_height, dst_gt, psWOptions)
                     GDALSetProjection(hds_warped, dst_crs_wkt)
 
-                self._hds = exc_wrap_pointer(hds_warped)
-
-            else:
-                with nogil:
-                    hds_warped = GDALAutoCreateWarpedVRT(
-                        hds, src_crs_wkt, dst_crs_wkt, c_resampling,
-                        c_tolerance, psWOptions)
-
-                self._hds = exc_wrap_pointer(hds_warped)
+        try:
+            self._hds = exc_wrap_pointer(hds_warped)
 
         except CPLE_OpenFailedError as err:
             raise RasterioIOError(err.errmsg)
@@ -1089,7 +1115,7 @@ def _suggested_proxy_vrt_doc(width, height, transform=None, crs=None, gcps=None)
             gcp.attrib['X'] = str(point.x)
             gcp.attrib['Y'] = str(point.y)
             gcp.attrib['Z'] = str(point.z)
-    else:
+    elif transform:
         geotransform = ET.SubElement(vrtdataset, 'GeoTransform')
         geotransform.text = ','.join([str(v) for v in transform.to_gdal()])
 
