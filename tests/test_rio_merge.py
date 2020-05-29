@@ -280,28 +280,14 @@ def test_merge_overlapping_callable_long(test_data_dir_overlapping, runner):
     datasets = [rasterio.open(x) for x in inputs]
     test_merge_overlapping_callable_long.index = 0
 
-    def mycallable(old_data, new_data, old_nodata, new_nodata, idx, roff, coff):
+    def mycallable(old_data, new_data, old_nodata, new_nodata,
+                   index=None, roff=None, coff=None):
         assert old_data.shape[0] == 5
         assert new_data.shape[0] == 1
-        assert test_merge_overlapping_callable_long.index == idx
+        assert test_merge_overlapping_callable_long.index == index
         test_merge_overlapping_callable_long.index += 1
 
     merge(datasets, output_count=5, method=mycallable)
-
-
-def test_merge_overlapping_callable_short(test_data_dir_overlapping, runner):
-    outputname = str(test_data_dir_overlapping.join('merged.tif'))
-    inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
-    datasets = [rasterio.open(x) for x in inputs]
-    test_merge_overlapping_callable_short.index = 0
-
-    def mycallable(old_data, new_data, old_nodata, new_nodata):
-        assert old_data.shape[0] == 5
-        assert new_data.shape[0] == 1
-        test_merge_overlapping_callable_short.index += 1
-
-    merge(datasets, output_count=5, method=mycallable)
-    assert test_merge_overlapping_callable_short.index == 2
 
 
 def test_custom_callable_merge(test_data_dir_overlapping, runner):
@@ -310,11 +296,12 @@ def test_custom_callable_merge(test_data_dir_overlapping, runner):
     meta = datasets[0].meta
     output_count = 4
 
-    def mycallable(old_data, new_data, old_nodata, new_nodata, idx, roff, coff):
+    def mycallable(old_data, new_data, old_nodata, new_nodata,
+                   index=None, roff=None, coff=None):
         # input data are bytes, test output doesn't overflow
-        old_data[idx] = (idx + 1) * 259 # use a number > 255 but divisible by 3 for testing
+        old_data[index] = (index + 1) * 259 # use a number > 255 but divisible by 3 for testing
         # update additional band that we specified in output_count
-        old_data[3, :, :] += idx
+        old_data[3, :, :] += index
 
     arr, _ = merge(datasets, output_count=output_count, method=mycallable, dtype=np.uint64)
 

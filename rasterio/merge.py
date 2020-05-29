@@ -1,7 +1,6 @@
 """Copy valid pixels from input files to an output file."""
 
 
-from funcsigs import signature
 import logging
 import math
 import warnings
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 MERGE_METHODS = ('first', 'last', 'min', 'max')
 
 
-def merge(datasets, bounds=None, res=None, nodata=None, dtype=None,precision=10,
+def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10,
           indexes=None, output_count=None, method='first'):
     """Copy valid pixels from input files to an output file.
 
@@ -188,17 +187,17 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None,precision=10,
         nodataval = 0
 
     if method == 'first':
-        def copyto(old_data, new_data, old_nodata, new_nodata):
+        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = np.logical_and(old_nodata, ~new_nodata)
             old_data[mask] = new_data[mask]
 
     elif method == 'last':
-        def copyto(old_data, new_data, old_nodata, new_nodata):
+        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = ~new_nodata
             old_data[mask] = new_data[mask]
 
     elif method == 'min':
-        def copyto(old_data, new_data, old_nodata, new_nodata):
+        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = np.logical_and(~old_nodata, ~new_nodata)
             old_data[mask] = np.minimum(old_data[mask], new_data[mask])
 
@@ -206,7 +205,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None,precision=10,
             old_data[mask] = new_data[mask]
 
     elif method == 'max':
-        def copyto(old_data, new_data, old_nodata, new_nodata):
+        def copyto(old_data, new_data, old_nodata, new_nodata, **kwargs):
             mask = np.logical_and(~old_nodata, ~new_nodata)
             old_data[mask] = np.maximum(old_data[mask], new_data[mask])
 
@@ -262,11 +261,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None,precision=10,
             region_nodata = region == nodataval
             temp_nodata = temp.mask
 
-        sig = signature(copyto)
-
-        if len(sig.parameters.keys()) == 7:
-            copyto(region, temp, region_nodata, temp_nodata, idx, roff, coff)
-        else:
-            copyto(region, temp, region_nodata, temp_nodata)
+        copyto(region, temp, region_nodata, temp_nodata,
+               index=idx, roff=roff, coff=coff)
 
     return dest, output_transform
