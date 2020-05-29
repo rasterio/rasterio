@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 MERGE_METHODS = ('first', 'last', 'min', 'max')
 
 
-def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=None,
-          output_count=None, method='first'):
+def merge(datasets, bounds=None, res=None, nodata=None, dtype=None,precision=10,
+          indexes=None, output_count=None, method='first'):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -46,6 +46,9 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
     nodata: float, optional
         nodata value to use in output file. If not set, uses the nodata value
         in the first input raster.
+    dtype: numpy dtype or string
+        dtype to use in outputfile. If not set, uses the dtype value in the
+        first input raster.
     precision: float, optional
         Number of decimal points of precision when computing inverse transform.
     indexes : list of ints or a single int, optional
@@ -96,7 +99,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
     first = datasets[0]
     first_res = first.res
     nodataval = first.nodatavals[0]
-    dtype = first.dtypes[0]
+    dt = first.dtypes[0]
 
     if method not in MERGE_METHODS and not callable(method):
         raise ValueError('Unknown method {0}, must be one of {1} or callable'
@@ -150,8 +153,12 @@ def merge(datasets, bounds=None, res=None, nodata=None, precision=10, indexes=No
     logger.debug("Output width: %d, height: %d", output_width, output_height)
     logger.debug("Adjusted bounds: %r", (dst_w, dst_s, dst_e, dst_n))
 
+    if dtype is not None:
+        dt = dtype
+        logger.debug("Set dtype: %s", dt)
+
     # create destination array
-    dest = np.zeros((output_count, output_height, output_width), dtype=dtype)
+    dest = np.zeros((output_count, output_height, output_width), dtype=dt)
 
     if nodata is not None:
         nodataval = nodata

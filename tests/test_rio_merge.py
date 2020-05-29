@@ -311,13 +311,14 @@ def test_custom_callable_merge(test_data_dir_overlapping, runner):
     output_count = 4
 
     def mycallable(old_data, new_data, old_nodata, new_nodata, idx, roff, coff):
-        old_data[idx] = idx + 1
+        # input data are bytes, test output doesn't overflow
+        old_data[idx] = (idx + 1) * 259 # use a number > 255 but divisible by 3 for testing
         # update additional band that we specified in output_count
         old_data[3, :, :] += idx
 
-    arr, _ = merge(datasets, output_count=output_count, method=mycallable)
+    arr, _ = merge(datasets, output_count=output_count, method=mycallable, dtype=np.uint64)
 
-    np.testing.assert_array_equal(np.mean(arr[:3], axis=0), 2)
+    np.testing.assert_array_equal(np.mean(arr[:3], axis=0), 518)
     np.testing.assert_array_equal(arr[3, :, :], 3)
 
 
