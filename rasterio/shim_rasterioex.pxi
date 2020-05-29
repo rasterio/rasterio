@@ -83,8 +83,8 @@ cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
     return exc_wrap_int(retval)
 
 
-cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
-                       float width, float height, object data,
+cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
+                       double width, double height, object data,
                        Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple bands.
 
@@ -145,8 +145,8 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, float x0, float y0,
         CPLFree(bandmap)
 
 
-cdef int io_multi_mask(GDALDatasetH hds, int mode, float x0, float y0,
-                       float width, float height, object data,
+cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,
+                       double width, double height, object data,
                        Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple band masks.
 
