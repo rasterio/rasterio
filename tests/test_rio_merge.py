@@ -16,7 +16,7 @@ from rasterio.merge import merge
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
-from .conftest import requires_gdal22
+from .conftest import requires_gdal22, gdal_version
 
 
 # Fixture to create test datasets within temporary directory
@@ -478,6 +478,10 @@ def test_merge_tiny_res_bounds(tiffs):
         assert data[0, 1, 1] == 0
 
 
+@pytest.mark.xfail(
+    gdal_version.major == 1,
+    reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
+)
 def test_merge_rgb(tmpdir):
     """Get back original image"""
     outputname = str(tmpdir.join('merged.tif'))
@@ -501,6 +505,10 @@ def test_merge_tiny_intres(tiffs):
     merge(datasets, res=2)
 
 
+@pytest.mark.xfail(
+    gdal_version.major == 1,
+    reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
+)
 @pytest.mark.parametrize("precision", [[], ["--precision", "9"]])
 def test_merge_precision(tmpdir, precision):
     """See https://github.com/mapbox/rasterio/issues/1837"""

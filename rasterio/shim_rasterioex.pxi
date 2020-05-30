@@ -33,8 +33,8 @@ cdef extern from "gdal.h" nogil:
     cdef CPLErr GDALDatasetRasterIOEx(GDALDatasetH hDS, GDALRWFlag eRWFlag, int nDSXOff, int nDSYOff, int nDSXSize, int nDSYSize, void *pBuffer, int nBXSize, int nBYSize, GDALDataType eBDataType, int nBandCount, int *panBandCount, GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace, GDALRasterIOExtraArg *psExtraArg)
 
 
-cdef int io_band(GDALRasterBandH band, int mode, float x0, float y0,
-                 float width, float height, object data, int resampling=0) except -1:
+cdef int io_band(GDALRasterBandH band, int mode, double x0, double y0,
+                 double width, double height, object data, int resampling=0) except -1:
     """Read or write a region of data for the band.
 
     Implicit are

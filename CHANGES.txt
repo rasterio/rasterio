@@ -4,6 +4,8 @@ Changes
 1.1.5 (TBD)
 ------------------
 
+- The pixel shift in reads from datasets opened using the OVERVIEW_LEVEL
+  option, reported in the user discussion group and #1932, has been fixed (#).
 - Extend the signature of merge's method function (#1933).
 - MemoryFile implementation has been improved so that it can support multi-part
   S3 downloads (#1926).
