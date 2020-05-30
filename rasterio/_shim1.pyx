@@ -47,8 +47,8 @@ cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
 
 
 cdef int io_band(
-        GDALRasterBandH band, int mode, float x0, float y0,
-        float width, float height, object data, int resampling=0) except -1:
+        GDALRasterBandH band, int mode, double x0, double y0,
+        double width, double height, object data, int resampling=0) except -1:
     """Read or write a region of data for the band.
 
     Implicit are
@@ -83,8 +83,8 @@ cdef int io_band(
 
 
 cdef int io_multi_band(
-        GDALDatasetH hds, int mode, float x0, float y0, float width,
-        float height, object data, Py_ssize_t[:] indexes, int resampling=0) except -1:
+        GDALDatasetH hds, int mode, double x0, double y0, double width,
+        double height, object data, Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple bands.
 
     Implicit are
@@ -130,8 +130,8 @@ cdef int io_multi_band(
 
 
 cdef int io_multi_mask(
-        GDALDatasetH hds, int mode, float x0, float y0, float width,
-        float height, object data, Py_ssize_t[:] indexes, int resampling=0) except -1:
+        GDALDatasetH hds, int mode, double x0, double y0, double width,
+        double height, object data, Py_ssize_t[:] indexes, int resampling=0) except -1:
     """Read or write a region of data for multiple band masks.
 
     Implicit are
