@@ -232,6 +232,13 @@ def _boundless_vrt_doc(
             nodata_elem = ET.SubElement(complexsource, 'NODATA')
             nodata_elem.text = str(src_dataset.nodata)
 
+        if src_dataset.options is not None:
+            openoptions = ET.SubElement(complexsource, 'OpenOptions')
+            for ookey, oovalue in src_dataset.options.items():
+                ooi = ET.SubElement(openoptions, 'OOI')
+                ooi.attrib['key'] = str(ookey)
+                ooi.text = str(oovalue)
+
         # Effectively replaces all values of the source dataset with
         # 255.  Due to GDAL optimizations, the source dataset will not
         # be read, so we get a performance improvement.
