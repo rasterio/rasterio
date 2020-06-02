@@ -16,7 +16,7 @@ from rasterio.merge import merge
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
 
-from .conftest import requires_gdal22
+from .conftest import requires_gdal22, gdal_version
 
 
 # Fixture to create test datasets within temporary directory
@@ -285,6 +285,41 @@ def test_merge_overlapping(test_data_dir_overlapping):
         assert np.all(data == expected)
 
 
+def test_merge_overlapping_callable_long(test_data_dir_overlapping, runner):
+    outputname = str(test_data_dir_overlapping.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
+    datasets = [rasterio.open(x) for x in inputs]
+    test_merge_overlapping_callable_long.index = 0
+
+    def mycallable(old_data, new_data, old_nodata, new_nodata,
+                   index=None, roff=None, coff=None):
+        assert old_data.shape[0] == 5
+        assert new_data.shape[0] == 1
+        assert test_merge_overlapping_callable_long.index == index
+        test_merge_overlapping_callable_long.index += 1
+
+    merge(datasets, output_count=5, method=mycallable)
+
+
+def test_custom_callable_merge(test_data_dir_overlapping, runner):
+    inputs = ['tests/data/world.byte.tif'] * 3
+    datasets = [rasterio.open(x) for x in inputs]
+    meta = datasets[0].meta
+    output_count = 4
+
+    def mycallable(old_data, new_data, old_nodata, new_nodata,
+                   index=None, roff=None, coff=None):
+        # input data are bytes, test output doesn't overflow
+        old_data[index] = (index + 1) * 259 # use a number > 255 but divisible by 3 for testing
+        # update additional band that we specified in output_count
+        old_data[3, :, :] += index
+
+    arr, _ = merge(datasets, output_count=output_count, method=mycallable, dtype=np.uint64)
+
+    np.testing.assert_array_equal(np.mean(arr[:3], axis=0), 518)
+    np.testing.assert_array_equal(arr[3, :, :], 3)
+
+
 # Fixture to create test datasets within temporary directory
 @fixture(scope='function')
 def test_data_dir_float(tmpdir):
@@ -443,6 +478,10 @@ def test_merge_tiny_res_bounds(tiffs):
         assert data[0, 1, 1] == 0
 
 
+@pytest.mark.xfail(
+    gdal_version.major == 1,
+    reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
+)
 def test_merge_rgb(tmpdir):
     """Get back original image"""
     outputname = str(tmpdir.join('merged.tif'))
@@ -466,6 +505,10 @@ def test_merge_tiny_intres(tiffs):
     merge(datasets, res=2)
 
 
+@pytest.mark.xfail(
+    gdal_version.major == 1,
+    reason="GDAL versions < 2 do not support data read/write with float sizes and offsets",
+)
 @pytest.mark.parametrize("precision", [[], ["--precision", "9"]])
 def test_merge_precision(tmpdir, precision):
     """See https://github.com/mapbox/rasterio/issues/1837"""
