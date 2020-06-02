@@ -11,7 +11,7 @@ from affine import Affine
 from rasterio._base import _transform
 from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 from rasterio.enums import Resampling
-from rasterio.env import Env, GDALVersion, ensure_env, require_gdal_version
+from rasterio.env import GDALVersion, ensure_env, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException
 from rasterio.transform import array_bounds
 
@@ -466,9 +466,9 @@ def calculate_default_transform(
     if resolution and dimensions:
         raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
-    with Env(CHECK_WITH_INVERT_PROJ=True):
-        dst_affine, dst_width, dst_height = _calculate_default_transform(
-            src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
+    dst_affine, dst_width, dst_height = _calculate_default_transform(
+        src_crs, dst_crs, width, height, left, bottom, right, top, gcps
+    )
 
     # If resolution is specified, Keep upper-left anchored
     # adjust the transform resolutions
