@@ -453,7 +453,7 @@ def calculate_default_transform(
     if any(x is None for x in (left, bottom, right, top)) and not gcps:
         raise ValueError("Either four bounding values or ground control points"
                          "must be specified")
-    
+
     if (dst_width is None) != (dst_height is None):
         raise ValueError("Either dst_width and dst_height must be specified "
                          "or none of them.")
@@ -467,7 +467,8 @@ def calculate_default_transform(
         raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top, gcps)
+        src_crs, dst_crs, width, height, left, bottom, right, top, gcps
+    )
 
     # If resolution is specified, Keep upper-left anchored
     # adjust the transform resolutions

@@ -1,12 +1,12 @@
-import json
 """rasterio.warp module tests"""
 
+import json
 import sys
 
-import pytest
 from affine import Affine
 import numpy as np
 from numpy.testing import assert_almost_equal
+import pytest
 
 import rasterio
 from rasterio.control import GroundControlPoint
@@ -1199,7 +1199,7 @@ def test_resample_default_invert_proj(method):
 
     with rasterio.open("tests/data/world.rgb.tif") as src:
         source = src.read(1)
-        profile = src.profile.copy()
+        profile = src.profile
 
     dst_crs = "EPSG:32619"
 
@@ -1213,16 +1213,23 @@ def test_resample_default_invert_proj(method):
 
     out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
 
-    out = np.empty(src.shape, dtype=np.uint8)
-    reproject(
-        source,
-        out,
-        src_transform=src.transform,
-        src_crs=src.crs,
-        dst_transform=dst_affine,
-        dst_crs=dst_crs,
-        resampling=method,
-    )
+    # GDAL 1.11 needs to have this config option set on to match the
+    # default results in later versions.
+    if gdal_version.major == 1:
+        options = dict(CHECK_WITH_INVERT_PROJ=True)
+    else:
+        options = {}
+
+    with rasterio.Env(**options):
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=method,
+        )
 
     assert out.mean() > 0
 

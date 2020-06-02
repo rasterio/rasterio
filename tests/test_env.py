@@ -204,7 +204,6 @@ def test_env_defaults(gdalenv):
     assert env.options['foo'] == 'x'
     assert not env.context_options
     with env:
-        assert get_gdal_config('CHECK_WITH_INVERT_PROJ') is True
         assert get_gdal_config('GTIFF_IMPLICIT_JPEG_OVR') is False
         assert get_gdal_config("RASTERIO_ENV") is True
 

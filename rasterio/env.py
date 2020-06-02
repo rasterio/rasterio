@@ -98,7 +98,6 @@ class Env(object):
         dict
         """
         return {
-            'CHECK_WITH_INVERT_PROJ': True,
             'GTIFF_IMPLICIT_JPEG_OVR': False,
             "RASTERIO_ENV": True
         }
