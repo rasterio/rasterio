@@ -4,6 +4,9 @@ Changes
 1.1.5 (TBD)
 ------------------
 
+- WarpedVRT can properly handle two use cases that weren't ruled out in version
+  1.1.4: simple scaling of datasets and control over the scaling of reprojected
+  output (#1921, #1936).
 - The pixel shift in reads from datasets opened using the OVERVIEW_LEVEL
   option, reported in the user discussion group and #1932, has been fixed (#).
 - Extend the signature of merge's method function (#1933).
