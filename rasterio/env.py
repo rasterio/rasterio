@@ -1,7 +1,7 @@
 """Rasterio's GDAL/AWS environment"""
 
 import attr
-from functools import wraps, total_ordering
+from functools import wraps, total_ordering, partial
 import logging
 import os
 import re
@@ -417,7 +417,7 @@ def ensure_env_with_credentials(f):
         if local._env:
             env_ctor = Env
         else:
-            env_ctor = Env.from_defaults
+            env_ctor = partial(Env.from_defaults, CHECK_WITH_INVERT_PROJ=False)
 
         if isinstance(args[0], str):
             session_cls = Session.cls_from_path(args[0])
