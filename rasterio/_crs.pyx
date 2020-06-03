@@ -106,6 +106,34 @@ cdef class _CRS(object):
             units_b = units_c
             return (units_b.decode('utf-8'), to_meters)
 
+    @property
+    def is_latlon(self):
+        """Test if the CRS is in latlon order
+
+        Returns
+        -------
+        bool
+
+        """
+        try:
+            return bool(OSREPSGTreatsAsLatLong(self._osr) == 1)
+        except CPLE_BaseError as exc:
+            raise CRSError("{}".format(exc))
+    
+    @property
+    def is_northingeasting(self):
+        """Test if the CRS should be treated as having northing/easting coordinate ordering
+
+        Returns
+        -------
+        bool
+
+        """
+        try:
+            return bool(OSREPSGTreatsAsNorthingEasting(self._osr) == 1)
+        except CPLE_BaseError as exc:
+            raise CRSError("{}".format(exc))
+
     def __eq__(self, other):
         cdef OGRSpatialReferenceH osr_s = NULL
         cdef OGRSpatialReferenceH osr_o = NULL

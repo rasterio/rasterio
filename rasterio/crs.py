@@ -210,6 +210,66 @@ class CRS(Mapping):
         return self._crs.is_projected
 
     @property
+    def is_latlon(self):
+        """Test if the CRS is in latlon order
+
+        From GDAL docs:
+
+        > This method returns TRUE if EPSG feels this geographic coordinate
+        system should be treated as having lat/long coordinate ordering.
+
+        > Currently this returns TRUE for all geographic coordinate systems with
+        an EPSG code set, and axes set defining it as lat, long.
+
+        > FALSE will be returned for all coordinate systems that are not
+        geographic, or that do not have an EPSG code set.
+
+        > **Note**
+
+        > Important change of behavior since GDAL 3.0.
+        In previous versions, geographic CRS imported with importFromEPSG()
+        would cause this method to return FALSE on them, whereas now it returns
+        TRUE, since importFromEPSG() is now equivalent to importFromEPSGA().
+
+
+        Returns
+        -------
+        bool
+
+        """
+        return self._crs.is_latlon
+
+    @property
+    def is_northingeasting(self):
+        """Test if the CRS should be treated as having northing/easting coordinate ordering
+
+        From GDAL docs:
+
+        > This method returns TRUE if EPSG feels this projected coordinate
+        system should be treated as having northing/easting coordinate ordering.
+
+        > Currently this returns TRUE for all projected coordinate systems with
+        an EPSG code set, and axes set defining it as northing, easting.
+
+        > FALSE will be returned for all coordinate systems that are not
+        projected, or that do not have an EPSG code set.
+
+        > **Note**
+
+        > Important change of behavior since GDAL 3.0.
+        In previous versions, projected CRS with northing, easting axis order
+        imported with importFromEPSG() would cause this method to return FALSE
+        on them, whereas now it returns TRUE, since importFromEPSG() is now 
+        equivalent to importFromEPSGA().
+
+        Returns
+        -------
+        bool
+
+        """
+        return self._crs.is_northingeasting
+
+    @property
     def is_valid(self):
         """Test that the CRS is a geographic or projected CRS
 

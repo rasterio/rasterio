@@ -511,3 +511,17 @@ def test_equals_different_type(other):
 def test_from_user_input_custom_crs_class():
     """Support comparison to foreign objects that provide to_wkt()"""
     assert CRS.from_user_input(CustomCRS()) == CRS.from_epsg(4326)
+
+
+def test_is_latlong():
+    """Test if CRS should be treated as latlon."""
+    assert not CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84").is_latlon
+    assert not CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193").is_latlon
+    assert CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326").is_latlon
+
+
+def test_is_northingeasting():
+    """Test if CRS should be treated as having northing/easting coordinate ordering."""
+    assert not CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84").is_northingeasting
+    assert CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193").is_northingeasting
+    assert not CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326").is_northingeasting
