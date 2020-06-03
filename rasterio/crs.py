@@ -494,7 +494,10 @@ def epsg_treats_as_latlong(input):
     bool
 
     """
-    return _epsg_treats_as_latlong(input)
+    if not isinstance(input, CRS):
+        input = CRS.from_user_input(input)
+
+    return _epsg_treats_as_latlong(input._crs)
 
 
 def epsg_treats_as_northingeasting(input):
@@ -530,4 +533,7 @@ def epsg_treats_as_northingeasting(input):
     bool
 
     """
-    return _epsg_treats_as_northingeasting(input)
+    if not isinstance(input, CRS):
+        input = CRS.from_user_input(input)
+
+    return _epsg_treats_as_northingeasting(input._crs)

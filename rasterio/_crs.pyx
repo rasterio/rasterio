@@ -33,15 +33,15 @@ def _epsg_treats_as_latlong(input_crs):
 
     Parameters
     ----------
-    input_crs : CRS
-        rasterio CRS object
+    input_crs : _CRS
+        rasterio _CRS object
 
     Returns
     -------
     bool
 
     """
-    cdef _CRS crs = input_crs._crs
+    cdef _CRS crs = input_crs
 
     try:
         return bool(OSREPSGTreatsAsLatLong(crs._osr) == 1)
@@ -54,15 +54,15 @@ def _epsg_treats_as_northingeasting(input_crs):
 
     Parameters
     ----------
-    input_crs : CRS
-        rasterio CRS object
+    input_crs : _CRS
+        rasterio _CRS object
 
     Returns
     -------
     bool
 
     """
-    cdef _CRS crs = input_crs._crs
+    cdef _CRS crs = input_crs
 
     try:
         return bool(OSREPSGTreatsAsNorthingEasting(crs._osr) == 1)
