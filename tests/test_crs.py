@@ -547,7 +547,7 @@ def test_is_latlong_gdal2():
 
 
 @requires_gdal3
-def test_is_northingeasting_gdal3(crs_obj, result):
+def test_is_northingeasting_gdal3():
     """Check CRS created from epsg with GDAL 3."""
     assert epsg_treats_as_latlong(CRS.from_epsg(4326))
     assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))
