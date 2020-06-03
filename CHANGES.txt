@@ -1,6 +1,31 @@
 Changes
 =======
 
+1.1.5 (2020-06-02)
+------------------
+
+- Earlier versions of rasterio set the CHECK_WITH_INVERT_PROJ config option to
+  `True` by default. This is very rarely necessary and broke the GRIB format
+  driver (#1248), so we no longer set this option (#1942). Users of rasterio
+  1.1.5 in combination with GDAL 1.11 and PROJ 4.8 may see some small
+  differences, compared to rasterio versions < 1.1.5, in results of warping
+  global datasets.
+- WarpedVRT can properly handle two use cases that weren't ruled out in version
+  1.1.4: simple scaling of datasets and control over the scaling of reprojected
+  output (#1921, #1936).
+- The error in making boundless reads of datasets opened using the
+  OVERVIEW_LEVEL reported in #1929 has been resolved by #1939.
+- The pixel shift in reads from datasets reported in the user discussion group
+  and #1932, has been fixed (#1938).
+- We have extended the signature of merge's method function (#1933).
+- The MemoryFile implementation has been improved so that it can support
+  multi-part S3 downloads (#1926).
+- Members of the Resampling enum with a value > 7 can only be used in warp
+  operations (#1930). We now raise a ResamplingAlgorithmError if they are used
+  with non-warp read and writes.
+- To help users of poetry, the conditional requirements in setup.py have been
+  changed to use PEP 496 environment markers exclusively (#1777).
+
 1.1.4 (2020-05-07)
 ------------------
 

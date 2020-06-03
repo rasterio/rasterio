@@ -1,12 +1,12 @@
-import json
 """rasterio.warp module tests"""
 
+import json
 import sys
 
-import pytest
 from affine import Affine
 import numpy as np
 from numpy.testing import assert_almost_equal
+import pytest
 
 import rasterio
 from rasterio.control import GroundControlPoint
@@ -1069,18 +1069,18 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
     # Expected count of nonzero pixels for each resampling method, based
     # on running rasterio with each of the following configurations
     expected = {
-        Resampling.nearest: 438113,
-        Resampling.bilinear: 439280,
-        Resampling.cubic: 437888,
-        Resampling.cubic_spline: 440475,
-        Resampling.lanczos: 436001,
-        Resampling.average: 439419,
-        Resampling.mode: 437298,
-        Resampling.max: 439464,
-        Resampling.min: 436397,
-        Resampling.med: 437194,
-        Resampling.q1: 436397,
-        Resampling.q3: 438948,
+        Resampling.nearest: [438113],
+        Resampling.bilinear: [439280],
+        Resampling.cubic: [437888],
+        Resampling.cubic_spline: [440475],
+        Resampling.lanczos: [436001],
+        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.mode: [437298],
+        Resampling.max: [439464],
+        Resampling.min: [436397],
+        Resampling.med: [437194],
+        Resampling.q1: [436397],
+        Resampling.q3: [438948],
     }
 
     with rasterio.open(path_rgb_byte_tif) as src:
@@ -1093,11 +1093,11 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
         src_transform=src.transform,
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
-        dst_crs={"init": "epsg:3857"},
+        dst_crs="EPSG:3857",
         resampling=method,
     )
 
-    assert np.count_nonzero(out) == expected[method]
+    assert np.count_nonzero(out) in expected[method]
 
 
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
@@ -1106,18 +1106,18 @@ def test_reproject_resampling_alpha(method):
     # Expected count of nonzero pixels for each resampling method, based
     # on running rasterio with each of the following configurations
     expected = {
-        Resampling.nearest: 438113,
-        Resampling.bilinear: 439280,
-        Resampling.cubic: 437888,
-        Resampling.cubic_spline: 440475,
-        Resampling.lanczos: 436001,
-        Resampling.average: 439419,
-        Resampling.mode: 437298,
-        Resampling.max: 439464,
-        Resampling.min: 436397,
-        Resampling.med: 437194,
-        Resampling.q1: 436397,
-        Resampling.q3: 438948,
+        Resampling.nearest: [438113],
+        Resampling.bilinear: [439280],
+        Resampling.cubic: [437888],
+        Resampling.cubic_spline: [440475],
+        Resampling.lanczos: [436001],
+        Resampling.average: [439419, 439172],  # latter value for GDAL 3.1
+        Resampling.mode: [437298],
+        Resampling.max: [439464],
+        Resampling.min: [436397],
+        Resampling.med: [437194],
+        Resampling.q1: [436397],
+        Resampling.q3: [438948],
     }
 
     with rasterio.open("tests/data/RGBA.byte.tif") as src:
@@ -1130,11 +1130,11 @@ def test_reproject_resampling_alpha(method):
         src_transform=src.transform,
         src_crs=src.crs,
         dst_transform=DST_TRANSFORM,
-        dst_crs={"init": "epsg:3857"},
+        dst_crs="EPSG:3857",
         resampling=method,
     )
 
-    assert np.count_nonzero(out) == expected[method]
+    assert np.count_nonzero(out) in expected[method]
 
 
 @pytest.mark.skipif(
@@ -1146,7 +1146,7 @@ def test_reproject_not_yet_supported_resampling(method):
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "epsg:32619"}
+    dst_crs = "EPSG:32619"
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(GDALVersionError):
         reproject(
@@ -1165,7 +1165,7 @@ def test_reproject_unsupported_resampling():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "epsg:32619"}
+    dst_crs = "EPSG:32619"
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(ValueError):
         reproject(
@@ -1184,7 +1184,7 @@ def test_reproject_unsupported_resampling_guass():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "epsg:32619"}
+    dst_crs = "EPSG:32619"
     out = np.empty(src.shape, dtype=np.uint8)
     with pytest.raises(ValueError):
         reproject(
@@ -1206,9 +1206,9 @@ def test_resample_default_invert_proj(method):
 
     with rasterio.open("tests/data/world.rgb.tif") as src:
         source = src.read(1)
-        profile = src.profile.copy()
+        profile = src.profile
 
-    dst_crs = {"init": "epsg:32619"}
+    dst_crs = "EPSG:32619"
 
     # Calculate the ideal dimensions and transformation in the new crs
     dst_affine, dst_width, dst_height = calculate_default_transform(
@@ -1220,16 +1220,23 @@ def test_resample_default_invert_proj(method):
 
     out = np.empty(shape=(dst_height, dst_width), dtype=np.uint8)
 
-    out = np.empty(src.shape, dtype=np.uint8)
-    reproject(
-        source,
-        out,
-        src_transform=src.transform,
-        src_crs=src.crs,
-        dst_transform=dst_affine,
-        dst_crs=dst_crs,
-        resampling=method,
-    )
+    # GDAL 1.11 needs to have this config option set on to match the
+    # default results in later versions.
+    if gdal_version.major == 1:
+        options = dict(CHECK_WITH_INVERT_PROJ=True)
+    else:
+        options = {}
+
+    with rasterio.Env(**options):
+        reproject(
+            source,
+            out,
+            src_transform=src.transform,
+            src_crs=src.crs,
+            dst_transform=dst_affine,
+            dst_crs=dst_crs,
+            resampling=method,
+        )
 
     assert out.mean() > 0
 
@@ -1240,7 +1247,7 @@ def test_target_aligned_pixels():
         source = src.read(1)
         profile = src.profile.copy()
 
-    dst_crs = {"init": "epsg:3857"}
+    dst_crs = "EPSG:3857"
 
     with rasterio.Env(CHECK_WITH_INVERT_PROJ=False):
         # Calculate the ideal dimensions and transformation in the new crs
@@ -1296,7 +1303,7 @@ def test_resample_no_invert_proj(method):
             source = src.read(1)
             profile = src.profile.copy()
 
-        dst_crs = {"init": "epsg:32619"}
+        dst_crs = "EPSG:32619"
 
         # Calculate the ideal dimensions and transformation in the new crs
         dst_affine, dst_width, dst_height = calculate_default_transform(
@@ -1421,7 +1428,7 @@ def test_reproject_gcps(rgb_byte_profile):
     reproject(
         source,
         out,
-        src_crs="epsg:32618",
+        src_crs="EPSG:32618",
         gcps=src_gcps,
         dst_transform=rgb_byte_profile["transform"],
         dst_crs=rgb_byte_profile["crs"],
@@ -1452,7 +1459,7 @@ def test_issue1056():
     """Warp sucessfully from RGB's upper bands to an array"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
 
-        dst_crs = {"init": "EPSG:3857"}
+        dst_crs = "EPSG:3857"
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
             rasterio.band(src, 2),
@@ -1470,7 +1477,7 @@ def test_reproject_dst_nodata():
     with rasterio.open("tests/data/RGB.byte.tif") as src:
         source = src.read(1)
 
-    dst_crs = {"init": "epsg:3857"}
+    dst_crs = "EPSG:3857"
     out = np.empty(src.shape, dtype=np.float32)
     reproject(
         source,
@@ -1492,7 +1499,7 @@ def test_reproject_dst_nodata():
 def test_issue1401():
     """The warp_mem_limit keyword argument is in effect"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        dst_crs = {"init": "epsg:3857"}
+        dst_crs = "EPSG:3857"
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
             rasterio.band(src, 2),
@@ -1521,7 +1528,7 @@ def test_reproject_dst_alpha(path_rgb_msk_byte_tif):
             src_transform=src.transform,
             src_crs=src.crs,
             dst_transform=DST_TRANSFORM,
-            dst_crs={"init": "epsg:3857"},
+            dst_crs="EPSG:3857",
             dst_alpha=4,
         )
 
@@ -1539,7 +1546,7 @@ def test_issue1350():
     """Warp bands other than 1 or All"""
 
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-        dst_crs = {"init": "epsg:3857"}
+        dst_crs = "EPSG:3857"
 
         reprojected = []
 

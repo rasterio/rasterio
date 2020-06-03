@@ -118,3 +118,7 @@ class DatasetAttributeError(RasterioError, NotImplementedError):
 
 class PathError(RasterioError):
     """Raised when a dataset path is malformed or invalid"""
+
+
+class ResamplingAlgorithmError(RasterioError):
+    """Raised when a resampling algorithm is invalid or inapplicable"""

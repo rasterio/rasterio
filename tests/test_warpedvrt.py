@@ -549,3 +549,19 @@ def dsrec(capfd):
         records = captured.err.strip("\n").split("\n")[1:]
         return records
     return func
+
+
+def test_warped_vrt_resizing():
+    """Confirm fix of #1921"""
+    with rasterio.open("tests/data/RGB.byte.tif") as rgb:
+        with WarpedVRT(rgb, height=10, width=10) as vrt:
+            assert vrt.height == 10
+            assert vrt.width == 10
+
+
+def test_warped_vrt_resizing_repro():
+    """Confirm fix of #1921"""
+    with rasterio.open("tests/data/RGB.byte.tif") as rgb:
+        with WarpedVRT(rgb, crs="EPSG:3857", height=10, width=10) as vrt:
+            assert vrt.height == 10
+            assert vrt.width == 10

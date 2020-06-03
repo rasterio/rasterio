@@ -4,9 +4,11 @@ that it does this correctly.
 """
 
 import numpy as np
+import pytest
 
 import rasterio
 from rasterio.enums import Resampling
+from rasterio.errors import ResamplingAlgorithmError
 from rasterio.windows import Window
 
 from .conftest import requires_gdal2
@@ -86,3 +88,11 @@ def test_float_window():
         out_shape = (401, 401)
         window = Window(300.5, 300.5, 200.5, 200.5)
         s.read(1, window=window, out_shape=out_shape)
+
+
+@requires_gdal2
+def test_resampling_alg_error():
+    """Get an exception instead of a crash when using warp-only algs for read or write, see issue #1930"""
+    with pytest.raises(ResamplingAlgorithmError):
+        with rasterio.open("tests/data/RGB.byte.tif") as src:
+            src.read(1, out_shape=(1, 10, 10), resampling=Resampling.max)
