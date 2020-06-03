@@ -11,7 +11,7 @@ import pytest
 
 import rasterio
 from rasterio._base import _can_create_osr
-from rasterio.crs import CRS
+from rasterio.crs import CRS, epsg_treats_as_latlong, epsg_treats_as_northingeasting
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
@@ -515,13 +515,13 @@ def test_from_user_input_custom_crs_class():
 
 def test_is_latlong():
     """Test if CRS should be treated as latlon."""
-    assert not CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84").is_latlon
-    assert not CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193").is_latlon
-    assert CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326").is_latlon
+    assert not epsg_treats_as_latlong(CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"))
+    assert not epsg_treats_as_latlong(CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"))
+    assert epsg_treats_as_latlong(CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"))
 
 
 def test_is_northingeasting():
     """Test if CRS should be treated as having northing/easting coordinate ordering."""
-    assert not CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84").is_northingeasting
-    assert CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193").is_northingeasting
-    assert not CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326").is_northingeasting
+    assert not epsg_treats_as_northingeasting(CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"))
+    assert epsg_treats_as_northingeasting(CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"))
+    assert not epsg_treats_as_northingeasting(CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"))
