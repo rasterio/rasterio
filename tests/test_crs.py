@@ -540,10 +540,11 @@ def test_is_northingeasting(crs_obj, result):
 
 
 @requires_gdal_lt_3
-def test_is_latlong_gdal2():
+@pytest.mark.parametrize('crs_obj', [CRS.from_epsg(4326), CRS.from_epsg(2193)])
+def test_is_latlong_gdal2(crs_obj):
     """Check CRS created from epsg with GDAL 2 always return False."""
-    assert not epsg_treats_as_latlong(CRS.from_epsg(4326))
-    assert not epsg_treats_as_northingeasting(CRS.from_epsg(2193))
+    assert not epsg_treats_as_latlong(crs_obj)
+    assert not epsg_treats_as_northingeasting(crs_obj)
 
 
 @requires_gdal3
