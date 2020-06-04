@@ -4,6 +4,8 @@ Changes
 1.1.7 (TBD)
 -----------
 
+- Add missing methods needed to determine whether GDAL treats a CRS as lat/long
+  or northing/easting (#1943).
 - Raise RasterioDeprecationWarning when a dataset opened in modes other than
   'r' is given to the WarpedVRT constructor.
 - Base RasterioDeprecationWarning on FutureWarning, following the
