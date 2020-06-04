@@ -15,7 +15,13 @@ from rasterio.crs import CRS, epsg_treats_as_latlong, epsg_treats_as_northingeas
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
-from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3, requires_gdal3
+from .conftest import (
+    gdal_version,
+    requires_gdal21,
+    requires_gdal22,
+    requires_gdal_lt_3,
+    requires_gdal3,
+)
 
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -514,41 +520,62 @@ def test_from_user_input_custom_crs_class():
 
 
 @pytest.mark.parametrize(
-    'crs_obj,result',
+    "crs_obj",
     [
-        (CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"), False),
-        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"), False),
-        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"), True),
-    ]
+        CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"),
+        pytest.param(
+            CRS.from_epsg(4326),
+            marks=pytest.mark.xfail(
+                gdal_version.major < 3, reason="GDAL 2 always returns False"
+            ),
+        ),
+    ],
 )
-def test_is_latlong(crs_obj, result):
-    """Test if CRS should be treated as latlon."""
-    assert epsg_treats_as_latlong(crs_obj) == result
+def test_epsg_treats_as_latlong(crs_obj):
+    """EPSG treats this CRS as lat, lon (see also PR #1943)."""
+    assert epsg_treats_as_latlong(crs_obj)
 
 
 @pytest.mark.parametrize(
-    'crs_obj,result',
+    "crs_obj",
     [
-        (CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"), False),
-        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"), True),
-        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"), False),
+        CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"),
+        CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"),
+        CRS.from_epsg(3857),
+        CRS.from_epsg(32618),
     ]
 )
-def test_is_northingeasting(crs_obj, result):
-    """Test if CRS should be treated as having northing/easting coordinate ordering."""
-    assert epsg_treats_as_northingeasting(crs_obj) == result
-
-
-@requires_gdal_lt_3
-@pytest.mark.parametrize('crs_obj', [CRS.from_epsg(4326), CRS.from_epsg(2193)])
-def test_latlong_northingeasting_gdal2(crs_obj):
-    """Check CRS created from epsg with GDAL 2 always return False."""
+def test_epsg_treats_as_latlong_not(crs_obj):
+    """EPSG does not treat this CRS as lat, lon (see also PR #1943)."""
     assert not epsg_treats_as_latlong(crs_obj)
+
+
+@pytest.mark.parametrize(
+    "crs_obj",
+    [
+        CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"),
+        pytest.param(
+            CRS.from_epsg(2193),
+            marks=pytest.mark.xfail(
+                gdal_version.major < 3, reason="GDAL 2 always returns False"
+            ),
+        ),
+    ],
+)
+def test_epsg_treats_as_northingeasting(crs_obj):
+    """EPSG treats this CRS as northing, easting"""
+    assert epsg_treats_as_northingeasting(crs_obj)
+
+
+@pytest.mark.parametrize(
+    "crs_obj",
+    [
+        CRS.from_epsg(32618),
+        CRS.from_epsg(3857),
+        CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"),
+        CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"),
+    ],
+)
+def test_epsg_treats_as_northingeasting_not(crs_obj):
+    """EPSG does not treat this CRS as northing, easting"""
     assert not epsg_treats_as_northingeasting(crs_obj)
-
-
-@requires_gdal3
-def test_latlong_northingeasting_gdal3():
-    """Check CRS created from epsg with GDAL 3."""
-    assert epsg_treats_as_latlong(CRS.from_epsg(4326))
-    assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))

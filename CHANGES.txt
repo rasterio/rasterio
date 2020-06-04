@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.2.0 (TBD)
+-----------
+
+- epsg_treats_as_latlong() and epsg_treats_as_northingeasting() functions have
+  been added to rasterio.crs (#1943).
+
 1.1.5 (2020-06-02)
 ------------------
 
