@@ -269,6 +269,140 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
     kwargs:  dict, optional
         Additional arguments passed to transformation function.
 
+    ///
+    Evans adding stuff start
+
+    A suitable string list can be prepared with CSLSetNameValue().
+    The following values are currently supported:
+
+        INIT_DEST=[value] or INIT_DEST=NO_DATA: This option forces the
+        	destination image to be initialized to the indicated value (
+        	for all bands) or indicates that it should be initialized
+        	to the NO_DATA value in padfDstNoDataReal/padfDstNoDataImag.
+        	If this value isn’t set the destination image will be
+        	read and overlaid.
+
+        WRITE_FLUSH=YES/NO: This option forces a flush to disk of data
+        after each chunk is processed. In some cases this helps ensure
+        a serial writing of the output data otherwise a block of data
+        may be written to disk each time a block of data is read for
+        the input buffer resulting in a lot of extra seeking around the
+        disk, and reduced IO throughput. The default at this time is NO.
+
+        SKIP_NOSOURCE=YES/NO: Skip all processing for chunks for which there
+        is no corresponding input data. This will disable initializing the
+        destination (INIT_DEST) and all other processing, and so should
+        be used carefully. Mostly useful to short circuit a lot of extra
+        work in mosaicing situations. Starting with GDAL 2.4, gdalwarp
+        will automatically enable this option when it is assumed to be
+        safe to do so.
+
+        UNIFIED_SRC_NODATA=YES/NO: By default nodata masking values
+        considered independently for each band. However, sometimes it is
+        desired to treat all bands as nodata if and only if, all bands
+        match the corresponding nodata values. To get this behavior set
+        this option to YES. Note: UNIFIED_SRC_NODATA=YES is set by default,
+        when called from gdalwarp / GDALWarp()
+
+        CUTLINE: This may contain the WKT geometry for a cutline. It will be
+        converted into a geometry by GDALWarpOperation::Initialize() and
+        assigned to the GDALWarpOptions hCutline field. The coordinates must
+        be expressed in source pixel/line coordinates. Note: this is
+        different from the assumptions made for the -cutline option
+        of the gdalwarp utility !
+
+        CUTLINE_BLEND_DIST: This may be set with a distance in pixels which
+        will be assigned to the dfCutlineBlendDist field in the
+        GDALWarpOptions.
+
+        CUTLINE_ALL_TOUCHED: This defaults to FALSE, but may be set to
+        TRUE to
+        enable ALL_TOUCHEd mode when rasterizing cutline polygons. This is
+        useful to ensure that that all pixels overlapping the cutline
+        polygon will be selected, not just those whose center point falls
+        within the polygon.
+
+        OPTIMIZE_SIZE: This defaults to FALSE, but may be set to TRUE
+        typically when writing to a compressed dataset (GeoTIFF with
+        COMPRESSED creation option set for example) for achieving a
+        smaller file size. This is achieved by writing at once data
+        aligned on full blocks of the target dataset, which avoids partial
+        writes of compressed blocks and lost space when they are rewritten
+        at the end of the file. However sticking to target block size may
+        cause major processing slowdown for some particular reprojections.
+
+        NUM_THREADS: (GDAL >= 1.10) Can be set to a numeric value or
+        ALL_CPUS to set the number of threads to use to parallelize the
+        computation part of the warping. If not set, computation will be
+        done in a single thread.
+
+        STREAMABLE_OUTPUT: (GDAL >= 2.0) This defaults to FALSE, but may
+        be set to TRUE typically when writing to a streamed file. The gdalwarp
+        utility automatically sets this option when writing to /vsistdout/ or
+        a named pipe (on Unix). This option has performance impacts for some
+        reprojections. Note: band interleaved output is not currently
+        supported by the warping algorithm in a streamable compatible way.
+
+        SRC_COORD_PRECISION: (GDAL >= 2.0). Advanced setting. This defaults
+        to 0, to indicate that no rounding of computing source image
+        coordinates corresponding to the target image must be done. If
+        greater than 0 (and typically below 1), this value, expressed in
+        pixel, will be used to round computed source image coordinates. The
+        purpose of this option is to make the results of warping with the
+        approximated transformer more reproducible and not sensitive to
+        changes in warping memory size. To achieve that, SRC_COORD_PRECISION
+        must be at least 10 times greater than the error threshold. The
+        higher the SRC_COORD_PRECISION/error_threshold ratio, the higher the
+        performance will be, since exact reprojections must statistically be
+        done with a frequency of 4*error_threshold/SRC_COORD_PRECISION.
+
+        SRC_ALPHA_MAX: (GDAL >= 2.2). Maximum value for the alpha band of
+        the source dataset. If the value is not set and the alpha band has
+        a NBITS metadata item, it is used to set SRC_ALPHA_MAX = 2^NBITS-1.
+        Otherwise, if the value is not set and the alpha band is of type
+        UInt16 (resp Int16), 65535 (resp 32767) is used. Otherwise, 255
+        is used.
+
+        DST_ALPHA_MAX: (GDAL >= 2.2). Maximum value for the alpha band of the
+        destination dataset. If the value is not set and the alpha band has a
+        NBITS metadata item, it is used to set DST_ALPHA_MAX = 2^NBITS-1.
+        Otherwise, if the value is not set and the alpha band is of type
+        UInt16 (resp Int16), 65535 (resp 32767) is used. Otherwise, 255
+        is used.
+
+    Normally when computing the source raster data to load to generate a
+    particular output area, the warper samples transforms 21 points along
+    each edge of the destination region back onto the source file, and
+    uses this to compute a bounding window on the source image that is
+    sufficient. Depending on the transformation in effect, the source
+    window may be a bit too small, or even missing large areas. Problem
+    situations are those where the transformation is very non-linear or
+    “inside out”. Examples are transforming from WGS84 to Polar
+    Steregraphic for areas around the pole, or transformations where
+    some of the image is untransformable. The following options provide
+    some additional control to deal with errors in computing the source
+    window:
+
+
+        SAMPLE_GRID=YES/NO: Setting this option to YES will force the
+        sampling to include internal points as well as edge points which
+        can be important if the transformation is esoteric inside out, or
+        if large sections of the destination image are not transformable
+        into the source coordinate system.
+
+        SAMPLE_STEPS: Modifies the density of the sampling grid. The default
+        number of steps is 21. Increasing this can increase the computational
+        cost, but improves the accuracy with which the source region is
+        computed.
+
+        SOURCE_EXTRA: This is a number of extra pixels added around the
+        source window for a given request, and by default it is 1 to take
+        care of rounding error. Setting this larger will increase the amount
+        of data that needs to be read, but can avoid missing source data.
+
+        Evans adding stuff end
+        ///
+
     Returns
     ---------
     destination: ndarray or Band
@@ -453,7 +587,7 @@ def calculate_default_transform(
     if any(x is None for x in (left, bottom, right, top)) and not gcps:
         raise ValueError("Either four bounding values or ground control points"
                          "must be specified")
-    
+   
     if (dst_width is None) != (dst_height is None):
         raise ValueError("Either dst_width and dst_height must be specified "
                          "or none of them.")
@@ -493,14 +627,14 @@ def calculate_default_transform(
 
         dst_width = ceil(dst_width * xratio)
         dst_height = ceil(dst_height * yratio)
-    
+   
     if dimensions:
         xratio = dst_width / dimensions[0]
         yratio = dst_height / dimensions[1]
 
         dst_width = dimensions[0]
         dst_height = dimensions[1]
-        
+       
         dst_affine = Affine(dst_affine.a * xratio, dst_affine.b, dst_affine.c,
                             dst_affine.d, dst_affine.e * yratio, dst_affine.f)
 
