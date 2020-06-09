@@ -5,6 +5,7 @@ import click
 from cligj import format_opt
 
 import rasterio
+from rasterio.enums import Resampling
 from rasterio.rio import options
 from rasterio.rio.helpers import resolve_inout
 
@@ -15,6 +16,10 @@ from rasterio.rio.helpers import resolve_inout
 @format_opt
 @options.bounds_opt
 @options.resolution_opt
+@click.option('--resampling',
+              type=click.Choice([r.name for r in Resampling if r.value <= 7]),
+              default='nearest', help="Resampling method.",
+              show_default=True)
 @options.nodata_opt
 @options.bidx_mult_opt
 @options.overwrite_opt
@@ -23,8 +28,8 @@ from rasterio.rio.helpers import resolve_inout
                    "pixels")
 @options.creation_options
 @click.pass_context
-def merge(ctx, files, output, driver, bounds, res, nodata, bidx, overwrite,
-          precision, creation_options):
+def merge(ctx, files, output, driver, bounds, res, resampling,
+          nodata, bidx, overwrite, precision, creation_options):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -49,6 +54,8 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, overwrite,
     output, files = resolve_inout(
         files=files, output=output, overwrite=overwrite)
 
+    resampling = Resampling[resampling]
+
     with ctx.obj["env"]:
         dest, output_transform = merge_tool(
             files,
@@ -57,6 +64,7 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, overwrite,
             nodata=nodata,
             precision=precision,
             indexes=(bidx or None),
+            resampling=resampling,
         )
 
         with rasterio.open(files[0]) as first:

@@ -10,6 +10,7 @@ import numpy as np
 import rasterio
 from rasterio import windows
 from rasterio.compat import string_types
+from rasterio.enums import Resampling
 from rasterio.transform import Affine
 
 
@@ -19,7 +20,8 @@ MERGE_METHODS = ('first', 'last', 'min', 'max')
 
 
 def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10,
-          indexes=None, output_count=None, method='first'):
+          indexes=None, output_count=None, resampling=Resampling.nearest,
+          method='first'):
     """Copy valid pixels from input files to an output file.
 
     All files must have the same number of bands, data type, and
@@ -57,6 +59,9 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
     output_count: int, optional
         If using callable it may be useful to have additional bands in the output
         in addition to the indexes specified for read
+    resampling : Resampling, optional
+        Resampling algorithm used when reading input files.
+        Default: `Resampling.nearest`.
     method : str or callable
         pre-defined method:
             first: reverse painting
@@ -271,6 +276,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
                 boundless=False,
                 masked=True,
                 indexes=indexes,
+                resampling=resampling,
             )
 
         # 5. Copy elements of temp into dest
