@@ -566,7 +566,11 @@ def test_data_dir_resampling(tmpdir):
     return tmpdir
 
 
-@pytest.mark.parametrize("resampling", [resamp for resamp in Resampling if resamp < 7])
+@pytest.mark.parametrize(
+    "resampling",
+    [resamp for resamp in Resampling if resamp < 7] +
+    [pytest.param(Resampling.gauss, marks=pytest.mark.xfail)]
+)
 def test_merge_resampling(test_data_dir_resampling, resampling, runner):
     outputname = str(test_data_dir_resampling.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_resampling.listdir()]
