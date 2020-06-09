@@ -12,6 +12,7 @@ from pytest import fixture
 import pytest
 
 import rasterio
+from rasterio.enums import Resampling
 from rasterio.merge import merge
 from rasterio.rio.main import main_group
 from rasterio.transform import Affine
@@ -540,3 +541,53 @@ def test_merge_precision(tmpdir, precision):
     result = runner.invoke(main_group, ["merge", "-f", "AAIGrid"] + precision + inputs + [outputname])
     assert result.exit_code == 0
     assert open(outputname).read() == textwrap.dedent(expected)
+
+
+@fixture(scope='function')
+def test_data_dir_resampling(tmpdir):
+    kwargs = {
+        "crs": {'init': 'epsg:4326'},
+        "transform": affine.Affine(0.2, 0, 0,
+                                   0, -0.2, 0),
+        "count": 1,
+        "dtype": rasterio.uint8,
+        "driver": "GTiff",
+        "width": 9,
+        "height": 1,
+        "nodata": 1
+    }
+
+    with rasterio.open(str(tmpdir.join('a.tif')), 'w', **kwargs) as dst:
+        data = np.ones((1, 9), dtype=rasterio.uint8)
+        data[:, :3] = 100
+        data[:, 3:6] = 255
+        dst.write(data, indexes=1)
+
+    return tmpdir
+
+
+@pytest.mark.parametrize(
+    "resampling",
+    [resamp for resamp in Resampling if resamp < 7] +
+    [pytest.param(Resampling.gauss, marks=pytest.mark.xfail)]
+)
+def test_merge_resampling(test_data_dir_resampling, resampling, runner):
+    outputname = str(test_data_dir_resampling.join('merged.tif'))
+    inputs = [str(x) for x in test_data_dir_resampling.listdir()]
+    with rasterio.open(inputs[0]) as src:
+        bounds = src.bounds
+        res = src.res[0]
+        expected_raster = src.read(
+            out_shape=tuple(dim * 2 for dim in src.shape),
+            resampling=resampling
+        )
+    result = runner.invoke(
+        main_group, ['merge'] + inputs + [outputname] +
+        ['--res', res / 2, '--resampling', resampling.name] +
+        ['--bounds', ' '.join(map(str, bounds))])
+    assert result.exit_code == 0
+    assert os.path.exists(outputname)
+    with rasterio.open(outputname) as dst:
+        output_raster = dst.read()
+
+    np.testing.assert_array_equal(output_raster, expected_raster)
