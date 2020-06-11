@@ -1,6 +1,12 @@
 Changes
 =======
 
+1.1.6 (TBD)
+-----------
+
+- Custom labels may be used with show_hist() by giving the `label` keyword
+  argument a sequence of label strings, one per band.
+
 1.1.5 (2020-06-02)
 ------------------
 
