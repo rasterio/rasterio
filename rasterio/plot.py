@@ -222,7 +222,7 @@ def reshape_as_raster(arr):
     return im
 
 
-def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs):
+def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, label=None, **kwargs):
     """Easily display a histogram with matplotlib.
 
     Parameters
@@ -240,6 +240,9 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
         Title for the figure.
     ax : matplotlib axes (opt)
         The raster will be added to this axes if passed.
+    label : matplotlib labels (opt)
+        If passed, matplotlib will use this label list.
+        Otherwise, a default label list will be automatically created
     **kwargs : optional keyword arguments
         These will be passed to the matplotlib hist method. See full list at:
         http://matplotlib.org/api/axes_api.html?highlight=imshow#matplotlib.axes.Axes.hist
@@ -273,12 +276,17 @@ def show_hist(source, bins=10, masked=True, title='Histogram', ax=None, **kwargs
     else:
         colors = colors[:arr.shape[-1]]
 
-    # If a rasterio.Band() is given make sure the proper index is displayed
-    # in the legend.
-    if isinstance(source, (tuple, rasterio.Band)):
-        labels = [str(source[1])]
+    # if the user used the label argument, pass them drectly to matplotlib
+    if label:
+        labels = label
+    # else, create default labels
     else:
-        labels = (str(i + 1) for i in range(len(arr)))
+        # If a rasterio.Band() is given make sure the proper index is displayed
+        # in the legend.
+        if isinstance(source, (tuple, rasterio.Band)):
+            labels = [str(source[1])]
+        else:
+            labels = (str(i + 1) for i in range(len(arr)))
 
     if ax:
         show = False
