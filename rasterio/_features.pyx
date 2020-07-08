@@ -647,6 +647,7 @@ cdef class OGRGeomBuilder:
         Assumes that geometry has been validated prior to calling this; this
         only does basic checks for validity.
         """
+        geometry = getattr(geometry, "__geo_interface__", geometry)
         cdef object typename = geometry['type']
         cdef object coordinates
         cdef object geometries
