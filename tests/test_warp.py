@@ -1064,6 +1064,30 @@ def test_transform_geom_array(polygon_3373):
     assert len(result) == 10
 
 
+def test_transform_geom__geo_interface(polygon_3373):
+    class GeoObj:
+        @property
+        def __geo_interface__(self):
+            return polygon_3373
+
+    result = transform_geom("EPSG:3373", "EPSG:4326", GeoObj(), precision=1)
+    assert all(round(x, 1) == x for x in flatten_coords(result["coordinates"]))
+
+
+def test_transform_geom__geo_interface__array(polygon_3373):
+    class GeoObj:
+        @property
+        def __geo_interface__(self):
+            return polygon_3373
+
+    geom = [GeoObj() for _ in range(10)]
+    results = transform_geom("EPSG:3373", "EPSG:4326", geom, precision=1)
+    assert isinstance(results, list)
+    assert len(results) == 10
+    for result in results:
+        assert all(round(x, 1) == x for x in flatten_coords(result["coordinates"]))
+
+
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_reproject_resampling(path_rgb_byte_tif, method):
     # Expected count of nonzero pixels for each resampling method, based

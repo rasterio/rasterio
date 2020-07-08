@@ -107,7 +107,7 @@ def _transform_geom(
 
     factory = new OGRGeometryFactory()
     try:
-        if isinstance(geom, DICT_TYPES):
+        if isinstance(geom, DICT_TYPES) or hasattr(geom, "__geo_interface__"):
             out_geom = _transform_single_geom(geom, factory, transform, options, precision)
         else:
             out_geom = [
