@@ -338,13 +338,13 @@ def _reproject(
         # We need a src_transform and src_dst in this case. These will
         # be copied to the MEM dataset.
         if dtypes.is_ndarray(source):
-
             if not src_crs:
                 raise CRSError("Missing src_crs.")
-
             if src_nodata is None and hasattr(source, 'fill_value'):
                 # source is a masked array
                 src_nodata = source.fill_value
+            # ensure data converted to numpy array
+            source = np.array(source, copy=False)
             # Convert 2D single-band arrays to 3D multi-band.
             if len(source.shape) == 2:
                 source = source.reshape(1, *source.shape)
@@ -381,10 +381,10 @@ def _reproject(
     try:
 
         if dtypes.is_ndarray(destination):
-
             if not dst_crs:
                 raise CRSError("Missing dst_crs.")
-
+            # ensure data converted to numpy array
+            destination = np.array(destination, copy=False)
             if len(destination.shape) == 2:
                 destination = destination.reshape(1, *destination.shape)
 
