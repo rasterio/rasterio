@@ -210,7 +210,9 @@ cdef class DatasetReaderBase(DatasetBase):
             are not cached.
 
         fill_value : scalar
-            Fill value applied in the `boundless=True` case only.
+            Fill value applied in the `boundless=True` case only. Like
+            the fill_value of numpy.ma.MaskedArray, should be value
+            valid for the dataset's data type.
 
         Returns
         -------
