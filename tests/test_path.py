@@ -36,10 +36,24 @@ def test_parsed_path_remote(scheme):
     assert ParsedPath('example.com/foo.tif', None, scheme).is_remote
 
 
+@pytest.mark.parametrize("uri", ["/test.tif", "file:///test.tif"])
+def test_parsed_path_not_remote(uri):
+    """Check for paths that are not remote"""
+    assert False == ParsedPath.from_uri(uri).is_remote
+
+
 @pytest.mark.parametrize('scheme', [None, '', 'zip', 'tar', 'file', 'zip+file'])
 def test_parsed_path_file_local(scheme):
     """A parsed path is remote"""
     assert ParsedPath('foo.tif', None, scheme).is_local
+
+
+@pytest.mark.parametrize(
+    "uri", ["s3://bucket/test.tif", "https://example.com/test.tif"]
+)
+def test_parsed_path_not_local(uri):
+    """Check for paths that are not local"""
+    assert False == ParsedPath.from_uri(uri).is_local
 
 
 def test_parse_path_zip():

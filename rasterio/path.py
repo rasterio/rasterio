@@ -84,7 +84,7 @@ class ParsedPath(Path):
     @property
     def is_remote(self):
         """Test if the path is a remote, network URI"""
-        return self.scheme and self.scheme.split('+')[-1] in REMOTESCHEMES
+        return bool(self.scheme) and self.scheme.split("+")[-1] in REMOTESCHEMES
 
     @property
     def is_local(self):
