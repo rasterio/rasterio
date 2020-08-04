@@ -35,6 +35,8 @@ cdef class InMemoryRaster:
 cdef class MemoryFileBase:
     cdef VSILFILE * _vsif
 
+cdef class VSIFileBase:
+    cdef VSILFILE * _vsif
 
 ctypedef np.uint8_t DTYPE_UBYTE_t
 ctypedef np.uint16_t DTYPE_UINT16_t

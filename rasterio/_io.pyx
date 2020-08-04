@@ -978,6 +978,62 @@ cdef class MemoryFileBase:
         return result
 
 
+cdef class VSIFileBase:
+    """Base for a direct access to the file content."""
+
+    def __init__(self, path):
+        """
+        Direct access to file.
+        
+        Parameters
+        ----------
+        path : str
+           The filepath to open
+
+        """
+        cdef VSILFILE *fp = NULL
+
+        self.path = parse_path(path).as_vsi()
+
+        self._vsif = VSIFOpenL(self.path.encode('utf-8'), "r")
+        if self._vsif == NULL:
+            raise IOError("Failed to openfile.")
+
+        self.closed = False
+
+    def close(self):
+        if self._vsif != NULL:
+            VSIFCloseL(self._vsif)
+        self._vsif = NULL
+        self.closed = True
+
+    def seek(self, offset, whence=0):
+        return VSIFSeekL(self._vsif, offset, whence)
+
+    def tell(self):
+        if self._vsif != NULL:
+            return VSIFTellL(self._vsif)
+        else:
+            return 0
+
+    def read(self, size):
+        """Read size bytes from MemoryFile."""
+        cdef bytes result
+        cdef unsigned char *buffer = NULL
+        cdef vsi_l_offset buffer_len = 0
+
+        buffer = <unsigned char *>CPLMalloc(size)
+
+        try:
+            objects_read = VSIFReadL(buffer, 1, size, self._vsif)
+            result = <bytes>buffer[:objects_read]
+
+        finally:
+            CPLFree(buffer)
+
+        return result
+
+
 cdef class DatasetWriterBase(DatasetReaderBase):
     """Read-write access to raster data and metadata
     """

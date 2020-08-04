@@ -9,7 +9,7 @@ from rasterio._base import (
     get_dataset_driver, driver_can_create, driver_can_create_copy)
 from rasterio._io import (
     DatasetReaderBase, DatasetWriterBase, BufferedDatasetWriterBase,
-    MemoryFileBase)
+    MemoryFileBase, VSIFileBase)
 from rasterio.windows import WindowMethodsMixin
 from rasterio.env import ensure_env, env_ctx_if_needed
 from rasterio.transform import TransformMethodsMixin
@@ -177,6 +177,43 @@ class ZipMemoryFile(MemoryFile):
         if self.closed:
             raise IOError("I/O operation on closed file.")
         return DatasetReader(zippath, driver=driver, sharing=sharing, **kwargs)
+
+
+class VSIFile(VSIFileBase):
+    """A BytesIO-like object."""
+
+    def __init__(self, path):
+        """Create a new file in memory"""
+        super(VSIFile, self).__init__(path=path)
+
+    @ensure_env
+    def open(self, driver=None, sharing=False, **kwargs):
+        """Open a dataset.
+
+        Parameters
+        ----------
+        Other parameters are optional and have the same semantics as the
+        parameters of `rasterio.open()`.
+
+        Returns
+        -------
+        A Rasterio dataset object
+        """
+        if self.closed:
+            raise IOError("I/O operation on closed file.")
+
+        path = UnparsedPath(self.path)
+
+        return DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+
+    def __enter__(self):
+        self._env = env_ctx_if_needed()
+        self._env.__enter__()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._env.__exit__()
+        self.close()
 
 
 def get_writer_for_driver(driver):
