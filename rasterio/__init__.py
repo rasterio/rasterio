@@ -85,9 +85,12 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
         sequentially until a match is found. When multiple drivers are
         available for a format such as JPEG2000, one of them can be
         selected by using this keyword argument.
-    width, height : int, optional
-        The numbers of rows and columns of the raster dataset. Required
-        in 'w' or 'w+' modes, they are ignored in 'r' or 'r+' modes.
+    width : int, optional
+        The number of columns of the raster dataset. Required in 'w' or
+        'w+' modes, it is ignored in 'r' or 'r+' modes.
+    height : int, optional
+        The number of rows of the raster dataset. Required in 'w' or
+        'w+' modes, it is ignored in 'r' or 'r+' modes.
     count : int, optional
         The count of dataset bands. Required in 'w' or 'w+' modes, it is
         ignored in 'r' or 'r+' modes.
