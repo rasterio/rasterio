@@ -137,7 +137,7 @@ def _boundless_vrt_doc(
         The dataset to wrap.
     background : int or float, optional
         The background fill value for the boundless VRT.
-    masked : book
+    masked : bool
         If True, the src_dataset is replaced by its valid data mask.
 
     Returns
