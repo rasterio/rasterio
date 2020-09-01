@@ -14,17 +14,20 @@ env:
 jobs:
   include:
     - python: "2.7"
-      env: GDALVERSION="1.11.5" PROJVERSION="4.8.0"
-    - python: "2.7"
-      env: GDALVERSION="2.2.4" PROJVERSION="4.9.3"
-    - python: "3.6"
-      env: GDALVERSION="2.2.4" PROJVERSION="4.9.3"
-    - python: "3.6"
-      env: GDALVERSION="2.3.3" PROJVERSION="4.9.3"
+      env: GDALVERSION="2.4.4" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="2.4.4" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="3.0.4" PROJVERSION="6.2.1"
+    - python: "3.7"
+      env: GDALVERSION="3.1.2" PROJVERSION="6.2.1"
+    - python: "3.8"
+      env: GDALVERSION="3.1.2" PROJVERSION="6.2.1"
+  allow_failures:
+    - python "3.8"
+      env: GDALVERSION="release/3.1" PROJVERSION="7.1.1"
+    - python "3.8"
+      env: GDALVERSION="master" PROJVERSION="7.1.1"
 
 addons:
   apt:
