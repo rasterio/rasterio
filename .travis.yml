@@ -28,6 +28,8 @@ jobs:
     - python: "3.8"
       env: GDALVERSION="master" PROJVERSION="7.1.1"
   allow_failures:
+    - python: "2.7"
+      env: GDALVERSION="2.4.4" PROJVERSION="4.9.3"
     - python: "3.8"
       env: GDALVERSION="release/3.1" PROJVERSION="7.1.1"
     - python: "3.8"
