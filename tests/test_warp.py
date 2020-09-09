@@ -1123,6 +1123,59 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
 
     assert np.count_nonzero(out) in expected[method]
 
+@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1309625), (False, 437686)])
+def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
+    class DataArray:
+        def __init__(self, data):
+            self.data = data
+
+        def __array__(self, dtype=None):
+            return self.data
+
+        @property
+        def dtype(self):
+            return self.data.dtype
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        if test3d:
+            source = DataArray(src.read())
+        else:
+            source = DataArray(src.read(1))
+    out = DataArray(np.empty(source.data.shape, dtype=np.uint8))
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        src_nodata=src.nodata,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_nodata=99,
+    )
+    assert isinstance(out, DataArray)
+    assert np.count_nonzero(out.data[out.data != 99]) == count_nonzero
+
+
+@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1309625), (False, 437686)])
+def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        if test3d:
+            source = src.read(masked=True)
+        else:
+            source = src.read(1, masked=True)
+    out = np.empty(source.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_nodata=99,
+    )
+    assert np.ma.is_masked(source)
+    assert np.count_nonzero(out[out != 99]) == count_nonzero
+
 
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_reproject_resampling_alpha(method):

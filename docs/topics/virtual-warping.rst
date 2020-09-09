@@ -45,8 +45,8 @@ extract pixels corresponding to its central zoom 9 tile, do the following.
           # for the dataset read window and then scale it by the dimensions
           # of the output array.
           dst_transform = vrt.window_transform(dst_window)
-          scaling = Affine.scale(dst_window.num_cols / 512,
-                                 dst_window.num_rows / 512)
+          scaling = Affine.scale(dst_window.height / 512,
+                                 dst_window.width / 512)
           dst_transform *= scaling
           profile['transform'] = dst_transform
 
