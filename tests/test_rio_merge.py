@@ -556,3 +556,9 @@ def test_merge_precision(tmpdir, precision):
     result = runner.invoke(main_group, ["merge", "-f", "AAIGrid"] + precision + inputs + [outputname])
     assert result.exit_code == 0
     assert open(outputname).read() == textwrap.dedent(expected)
+
+
+def test_merge_filenames(tiffs):
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    merge(inputs, res=2)
