@@ -49,30 +49,35 @@ def merge(ctx, files, output, driver, bounds, res, nodata, bidx, overwrite,
     output, files = resolve_inout(
         files=files, output=output, overwrite=overwrite)
 
-    with ctx.obj['env']:
-        datasets = [rasterio.open(f) for f in files]
-        dest, output_transform = merge_tool(datasets, bounds=bounds, res=res,
-                                            nodata=nodata, precision=precision,
-                                            indexes=(bidx or None))
+    with ctx.obj["env"]:
+        dest, output_transform = merge_tool(
+            files,
+            bounds=bounds,
+            res=res,
+            nodata=nodata,
+            precision=precision,
+            indexes=(bidx or None),
+        )
 
-        profile = datasets[0].profile
-        profile['transform'] = output_transform
-        profile['height'] = dest.shape[1]
-        profile['width'] = dest.shape[2]
-        profile['driver'] = driver
-        profile['count'] = dest.shape[0]
+        with rasterio.open(files[0]) as first:
+            profile = first.profile
+            profile["transform"] = output_transform
+            profile["height"] = dest.shape[1]
+            profile["width"] = dest.shape[2]
+            profile["driver"] = driver
+            profile["count"] = dest.shape[0]
 
-        if nodata is not None:
-            profile['nodata'] = nodata
+            if nodata is not None:
+                profile["nodata"] = nodata
 
-        profile.update(**creation_options)
+            profile.update(**creation_options)
 
-        with rasterio.open(output, 'w', **profile) as dst:
-            dst.write(dest)
+            with rasterio.open(output, "w", **profile) as dst:
+                dst.write(dest)
 
-            # uses the colormap in the first input raster.
-            try:
-                colormap = datasets[0].colormap(1)
-                dst.write_colormap(1, colormap)
-            except ValueError:
-                pass
+                # uses the colormap in the first input raster.
+                try:
+                    colormap = first.colormap(1)
+                    dst.write_colormap(1, colormap)
+                except ValueError:
+                    pass
