@@ -359,11 +359,10 @@ class CRS(Mapping):
             else:
                 return cls.from_dict(**val)
 
-        elif '+' in string and '=' in string:
-            return cls.from_proj4(string)
-
-        else:
+        elif string.strip().endswith("]"):
             return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
+
+        return cls.from_proj4(string)
 
     @classmethod
     def from_proj4(cls, proj):
