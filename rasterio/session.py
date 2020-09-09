@@ -1,6 +1,7 @@
 """Abstraction for sessions in various clouds."""
 
 import logging
+import os
 
 from rasterio.path import parse_path, UnparsedPath
 
@@ -276,9 +277,13 @@ class AWSSession(Session):
                 profile_name=profile_name)
 
         self.requester_pays = requester_pays
-        self.unsigned = aws_unsigned
+        self.unsigned = bool(os.getenv("AWS_NO_SIGN_REQUEST", aws_unsigned))
         self.endpoint_url = endpoint_url
-        self._creds = self._session._session.get_credentials() if self._session else None
+        self._creds = (
+            self._session._session.get_credentials()
+            if not self.unsigned and self._session
+            else None
+        )
 
     @classmethod
     def hascreds(cls, config):
