@@ -4,6 +4,7 @@ Changes
 1.1.6 (TBD)
 -----------
 
+- Fail gracefully when rio-convert lacks an input file (#1985).
 - Allow merge.merge() to open one dataset at a time (#1831).
 - Optimize CRS.__eq__() for CRS described by EPSG codes.
 - Fix bug in ParsedPath.is_remote() reported in #1967.

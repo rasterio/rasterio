@@ -51,7 +51,9 @@ def convert(
     """
     with ctx.obj['env']:
 
-        outputfile, files = resolve_inout(files=files, output=output, overwrite=overwrite)
+        outputfile, files = resolve_inout(
+            files=files, output=output, overwrite=overwrite, num_inputs=1
+        )
         inputfile = files[0]
 
         with rasterio.open(inputfile) as src:

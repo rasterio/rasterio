@@ -1,3 +1,6 @@
+"""Test of CLI helpers"""
+
+import click
 import pytest
 
 from rasterio.errors import FileOverwriteError
@@ -21,6 +24,18 @@ def test_resolve_files_inout__inout_files_output_o():
         files=('a', 'b', 'c'), output='out') == ('out', ['a', 'b', 'c'])
 
 
+def test_resolve_files_insufficient_inputs():
+    with pytest.raises(click.BadParameter) as excinfo:
+        helpers.resolve_inout(files=["a"], num_inputs=1)
+    assert "Insufficient inputs" in str(excinfo.value)
+
+
+def test_resolve_files_too_many_inputs():
+    with pytest.raises(click.BadParameter) as excinfo:
+        helpers.resolve_inout(files=["a", "b", "c"], num_inputs=1)
+    assert "Too many inputs" in str(excinfo.value)
+
+
 def test_fail_overwrite(tmpdir):
     """Unforced overwrite of existing file fails."""
     foo_tif = tmpdir.join('foo.tif')
@@ -28,6 +43,7 @@ def test_fail_overwrite(tmpdir):
     with pytest.raises(FileOverwriteError) as excinfo:
         helpers.resolve_inout(files=[str(x) for x in tmpdir.listdir()])
         assert "file exists and won't be overwritten without use of the " in str(excinfo.value)
+
 
 def test_overwrite(tmpdir):
     """Forced overwrite of existing file succeeds."""

@@ -287,3 +287,20 @@ def test_convert_overwrite_with_option(runner, tmpdir):
         'convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG',
         '--overwrite'])
     assert result.exit_code == 0
+
+
+def test_convert_no_input(runner, tmpdir):
+    """Test fix of issue1985"""
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(main_group, ["convert", "-o", outputname, "-f", "JPEG"])
+    assert result.exit_code == 2
+
+
+def test_convert_no_input_overwrite(runner, tmpdir):
+    """Test fix of issue1985"""
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group, ["convert", "--overwrite", outputname, "-f", "JPEG"]
+    )
+    assert result.exit_code == 2
+    assert "Insufficient inputs" in result.output
