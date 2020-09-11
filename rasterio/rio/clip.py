@@ -12,9 +12,7 @@ from rasterio.coords import disjoint_bounds
 from rasterio.crs import CRS
 from rasterio.windows import Window
 
-
 logger = logging.getLogger(__name__)
-
 
 # Geographic (default), projected, or Mercator switch.
 projection_geographic_opt = click.option(
@@ -144,12 +142,16 @@ def clip(
                 'transform': src.window_transform(out_window)})
             out_kwargs.update(**creation_options)
 
-            if 'blockxsize' in out_kwargs and out_kwargs['blockxsize'] > width:
-                del out_kwargs['blockxsize']
-                logger.warning("Blockxsize removed from creation options to accomodate small output width")
-            if 'blockysize' in out_kwargs and out_kwargs['blockysize'] > height:
-                del out_kwargs['blockysize']
-                logger.warning("Blockysize removed from creation options to accomodate small output height")
+            if "blockxsize" in out_kwargs and int(out_kwargs["blockxsize"]) > width:
+                del out_kwargs["blockxsize"]
+                logger.warning(
+                    "Blockxsize removed from creation options to accomodate small output width"
+                )
+            if "blockysize" in out_kwargs and int(out_kwargs["blockysize"]) > height:
+                del out_kwargs["blockysize"]
+                logger.warning(
+                    "Blockysize removed from creation options to accomodate small output height"
+                )
 
             with rasterio.open(output, "w", **out_kwargs) as out:
                 out.write(
