@@ -13,7 +13,12 @@ from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
-from rasterio.errors import (GDALBehaviorChangeException, CRSError, GDALVersionError)
+from rasterio.errors import (
+    GDALBehaviorChangeException,
+    CRSError,
+    GDALVersionError,
+    TransformError,
+)
 from rasterio.warp import (
     reproject,
     transform_geom,
@@ -101,12 +106,12 @@ WGS84_crs = CRS.from_epsg(4326)
 
 def test_transform_src_crs_none():
     with pytest.raises(CRSError):
-        transform(None, WGS84_crs, [], [])
+        transform(None, WGS84_crs, [1], [1])
 
 
 def test_transform_dst_crs_none():
     with pytest.raises(CRSError):
-        transform(WGS84_crs, None, [], [])
+        transform(WGS84_crs, None, [1], [1])
 
 
 def test_transform_bounds_src_crs_none():
@@ -1681,3 +1686,29 @@ def test_reproject_init_dest_nodata():
         src_nodata=0, init_dest_nodata=False
     )
     assert destination.all()
+
+
+def test_empty_transform_inputs():
+    """Check for fix of #1952"""
+    assert ([], []) == rasterio.warp.transform(
+        "EPSG:3857", "EPSG:4326", [], [], zs=None
+    )
+
+
+def test_empty_transform_inputs_z():
+    """Check for fix of #1952"""
+    assert ([], [], []) == rasterio.warp.transform(
+        "EPSG:3857", "EPSG:4326", [], [], zs=[]
+    )
+
+
+def test_empty_transform_inputs_length():
+    """Get an exception of inputs have different lengths"""
+    with pytest.raises(TransformError):
+        rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1], [1, 2])
+
+
+def test_empty_transform_inputs_length_z():
+    """Get an exception of inputs have different lengths"""
+    with pytest.raises(TransformError):
+        rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1, 2], [1, 2], zs=[0])

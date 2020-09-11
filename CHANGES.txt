@@ -4,6 +4,9 @@ Changes
 1.1.6 (TBD)
 -----------
 
+- Do not pass empty coordinate arrays to warp._transform to avoid crashes with
+  some versions of GDAL as reported in #1952. Instead, directly return empty
+  output arrays.
 - Properly convert block size `--co` option values to int in rio-clip and
   rio-warp to prevent exceptions reported in #1989.
 - Fail gracefully when rio-convert lacks an input file (#1985).
