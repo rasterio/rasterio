@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.1.6 (TBD)
------------
+1.1.6 (2020-09-14)
+------------------
 
 - Clean up VSI files left by MemoryFileBase, resolving #1953.
 - Do not pass empty coordinate arrays to warp._transform to avoid crashes with
