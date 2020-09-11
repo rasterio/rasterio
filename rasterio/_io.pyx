@@ -938,6 +938,7 @@ cdef class MemoryFileBase:
         if self._vsif != NULL:
             VSIFCloseL(self._vsif)
         self._vsif = NULL
+        _delete_dataset_if_exists(self.name)
         VSIRmdir(self._dirname.encode("utf-8"))
         self.closed = True
 
