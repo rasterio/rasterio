@@ -222,19 +222,23 @@ def test_transform_bounds__esri_wkt():
     )
 
 
-def test_transform_bounds_densify():
+@pytest.mark.parametrize(
+    "density,expected",
+    [
+        (0, (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559)),
+        (100, (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559)),
+    ],
+)
+def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_epsg(2163)
-    assert np.allclose(
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=0),
-        (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559),
+    dst_crs = CRS.from_proj4(
+        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"
     )
-
     assert np.allclose(
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=100),
-        (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559),
+        expected,
+        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
     )
 
 
