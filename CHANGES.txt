@@ -4,6 +4,9 @@ Changes
 1.1.6 (2020-09-14)
 ------------------
 
+- Remove background layer from boundless VRT (#1982). It's not needed since
+  fixes in GDAL after 3.1.3. Wheels on PyPI for rasterio 1.1.6 will patch GDAL
+  2.4.4 to fix those GDAL issues.
 - Clean up VSI files left by MemoryFileBase, resolving #1953.
 - Do not pass empty coordinate arrays to warp._transform to avoid crashes with
   some versions of GDAL as reported in #1952. Instead, directly return empty
