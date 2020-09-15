@@ -21,8 +21,10 @@ def test_warning(tmpdir, caplog):
     assert [
         "CPLE_NotSupported in driver GTiff does not support creation option COMPRESSION",
         "CPLE_NotSupported in driver GTiff does not support creation option FOO",
-    ] == [
-        rec.message
-        for rec in caplog.records
-        if rec.levelno == logging.WARNING and rec.name == "rasterio._env"
-    ]
+    ] == sorted(
+        [
+            rec.message
+            for rec in caplog.records
+            if rec.levelno == logging.WARNING and rec.name == "rasterio._env"
+        ]
+    )
