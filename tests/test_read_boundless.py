@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import rasterio
+from rasterio.enums import Resampling
 from rasterio.windows import Window
 
 
@@ -146,3 +147,28 @@ def test_msk_read_masks(path_rgb_msk_byte_tif):
         assert not msk[0:195,0:195].any()
         # We have the valid data expected in the center.
         assert msk.mean() > 90
+
+
+@pytest.mark.xfail(reason="GDAL 3.1 skips overviews because of background layer")
+def test_issue1982(capfd):
+    """See a curl request for overview file"""
+    # Note: the underlying GDAL issue has been fixed after 3.1.3. The
+    # rasterio 1.1.6 wheels published to PyPI will include a patched
+    # 2.4.4 that also fixes the issue.  This test will XPASS in the
+    # rasterio-wheels tests.
+    with rasterio.Env(CPL_CURL_VERBOSE=True), rasterio.open(
+        "https://raw.githubusercontent.com/mapbox/rasterio/master/tests/data/green.tif"
+    ) as src:
+        image = src.read(
+            indexes=[1, 2, 3],
+            window=Window(col_off=-32, row_off=-32, width=64, height=64),
+            resampling=Resampling.cubic,
+            boundless=True,
+            out_shape=(3, 10, 10),
+            fill_value=42,
+        )
+    captured = capfd.readouterr()
+    assert "green.tif" in captured.err
+    assert "green.tif.ovr" in captured.err
+    assert (42 == image[:, :3, :]).all()
+    assert (42 == image[:, :, :3]).all()

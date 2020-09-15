@@ -214,19 +214,22 @@ cdef class _CRS(object):
         """
         cdef OGRSpatialReferenceH osr = NULL
 
-        try:
-            osr = exc_wrap_pointer(OSRClone(self._osr))
-            exc_wrap_ogrerr(OSRMorphFromESRI(osr))
-            if OSRAutoIdentifyEPSG(osr) == 0:
-                epsg_code = OSRGetAuthorityCode(osr, NULL)
-                if epsg_code != NULL:
-                    return int(epsg_code.decode('utf-8'))
+        if self._epsg is None:
+            try:
+                osr = exc_wrap_pointer(OSRClone(self._osr))
+                exc_wrap_ogrerr(OSRMorphFromESRI(osr))
+                if OSRAutoIdentifyEPSG(osr) == 0:
+                    epsg_code = OSRGetAuthorityCode(osr, NULL)
+                    if epsg_code != NULL:
+                        self._epsg = int(epsg_code.decode('utf-8'))
+                    else:
+                        self._epsg = None
                 else:
-                    return None
-            else:
-                return None
-        finally:
-            _safe_osr_release(osr)
+                    self._epsg = None
+            finally:
+                _safe_osr_release(osr)
+
+        return self._epsg
 
     @staticmethod
     def from_epsg(code):
@@ -259,6 +262,7 @@ cdef class _CRS(object):
             raise CRSError("The EPSG code is unknown. {}".format(exc))
         else:
             osr_set_traditional_axis_mapping_strategy(obj._osr)
+            obj._epsg = code
             return obj
 
     @staticmethod

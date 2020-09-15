@@ -591,3 +591,9 @@ def test_merge_resampling(test_data_dir_resampling, resampling, runner):
         output_raster = dst.read()
 
     np.testing.assert_array_equal(output_raster, expected_raster)
+
+
+def test_merge_filenames(tiffs):
+    inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    merge(inputs, res=2)

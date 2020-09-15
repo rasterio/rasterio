@@ -122,3 +122,7 @@ class PathError(RasterioError):
 
 class ResamplingAlgorithmError(RasterioError):
     """Raised when a resampling algorithm is invalid or inapplicable"""
+
+
+class TransformError(RasterioError):
+    """Raised when transform arguments are invalid"""

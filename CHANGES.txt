@@ -7,9 +7,21 @@ Changes
 - epsg_treats_as_latlong() and epsg_treats_as_northingeasting() functions have
   been added to rasterio.crs (#1943).
 
-1.1.6 (TBD)
------------
+1.1.6 (2020-09-14)
+------------------
 
+- Remove background layer from boundless VRT (#1982). It's not needed since
+  fixes in GDAL after 3.1.3. Wheels on PyPI for rasterio 1.1.6 will patch GDAL
+  2.4.4 to fix those GDAL issues.
+- Clean up VSI files left by MemoryFileBase, resolving #1953.
+- Do not pass empty coordinate arrays to warp._transform to avoid crashes with
+  some versions of GDAL as reported in #1952. Instead, directly return empty
+  output arrays.
+- Properly convert block size `--co` option values to int in rio-clip and
+  rio-warp to prevent exceptions reported in #1989.
+- Fail gracefully when rio-convert lacks an input file (#1985).
+- Allow merge.merge() to open one dataset at a time (#1831).
+- Optimize CRS.__eq__() for CRS described by EPSG codes.
 - Fix bug in ParsedPath.is_remote() reported in #1967.
 - The reproject() method accepts objects that provide `__array__` in addition
   to instances of numpy.ndarray (#1957, #1959).

@@ -13,7 +13,12 @@ from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
-from rasterio.errors import (GDALBehaviorChangeException, CRSError, GDALVersionError)
+from rasterio.errors import (
+    GDALBehaviorChangeException,
+    CRSError,
+    GDALVersionError,
+    TransformError,
+)
 from rasterio.warp import (
     reproject,
     transform_geom,
@@ -101,12 +106,12 @@ WGS84_crs = CRS.from_epsg(4326)
 
 def test_transform_src_crs_none():
     with pytest.raises(CRSError):
-        transform(None, WGS84_crs, [], [])
+        transform(None, WGS84_crs, [1], [1])
 
 
 def test_transform_dst_crs_none():
     with pytest.raises(CRSError):
-        transform(WGS84_crs, None, [], [])
+        transform(WGS84_crs, None, [1], [1])
 
 
 def test_transform_bounds_src_crs_none():
@@ -217,19 +222,23 @@ def test_transform_bounds__esri_wkt():
     )
 
 
-def test_transform_bounds_densify():
+@pytest.mark.parametrize(
+    "density,expected",
+    [
+        (0, (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559)),
+        (100, (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559)),
+    ],
+)
+def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_epsg(2163)
-    assert np.allclose(
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=0),
-        (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559),
+    dst_crs = CRS.from_proj4(
+        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"
     )
-
     assert np.allclose(
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=100),
-        (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559),
+        expected,
+        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
     )
 
 
@@ -1712,3 +1721,29 @@ def test_reproject_init_dest_nodata():
         src_nodata=0, init_dest_nodata=False
     )
     assert destination.all()
+
+
+def test_empty_transform_inputs():
+    """Check for fix of #1952"""
+    assert ([], []) == rasterio.warp.transform(
+        "EPSG:3857", "EPSG:4326", [], [], zs=None
+    )
+
+
+def test_empty_transform_inputs_z():
+    """Check for fix of #1952"""
+    assert ([], [], []) == rasterio.warp.transform(
+        "EPSG:3857", "EPSG:4326", [], [], zs=[]
+    )
+
+
+def test_empty_transform_inputs_length():
+    """Get an exception of inputs have different lengths"""
+    with pytest.raises(TransformError):
+        rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1], [1, 2])
+
+
+def test_empty_transform_inputs_length_z():
+    """Get an exception of inputs have different lengths"""
+    with pytest.raises(TransformError):
+        rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1, 2], [1, 2], zs=[0])

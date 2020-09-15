@@ -12,7 +12,7 @@ from rasterio._base import _transform
 from rasterio._warp import _calculate_default_transform, _reproject, _transform_geom
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion, ensure_env, require_gdal_version
-from rasterio.errors import GDALBehaviorChangeException
+from rasterio.errors import GDALBehaviorChangeException, TransformError
 from rasterio.transform import array_bounds
 
 # Gauss (7) is not supported for warp
@@ -49,9 +49,16 @@ def transform(src_crs, dst_crs, xs, ys, zs=None):
     out: tuple of array_like, (xs, ys, [zs])
         Tuple of x, y, and optionally z vectors, transformed into the target
         coordinate reference system.
-    """
 
-    return _transform(src_crs, dst_crs, xs, ys, zs)
+    """
+    if len(xs) != len(ys):
+        raise TransformError("xs and ys arrays must be the same length")
+    elif zs is not None and len(xs) != len(zs):
+        raise TransformError("zs, xs, and ys arrays must be the same length")
+    if len(xs) == 0:
+        return ([], [], []) if zs is not None else ([], [])
+    else:
+        return _transform(src_crs, dst_crs, xs, ys, zs)
 
 
 @ensure_env
