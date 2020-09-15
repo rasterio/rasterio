@@ -1,6 +1,11 @@
 Changes
 =======
 
+1.1.7 (TBD)
+-----------
+
+- Add resampling option to merge and rio-merge (#1996).
+
 1.1.6 (2020-09-14)
 ------------------
 
