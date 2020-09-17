@@ -287,7 +287,6 @@ def test_merge_overlapping(test_data_dir_overlapping):
 
 
 def test_merge_overlapping_callable_long(test_data_dir_overlapping, runner):
-    outputname = str(test_data_dir_overlapping.join('merged.tif'))
     inputs = [str(x) for x in test_data_dir_overlapping.listdir()]
     datasets = [rasterio.open(x) for x in inputs]
     test_merge_overlapping_callable_long.index = 0
@@ -305,13 +304,14 @@ def test_merge_overlapping_callable_long(test_data_dir_overlapping, runner):
 def test_custom_callable_merge(test_data_dir_overlapping, runner):
     inputs = ['tests/data/world.byte.tif'] * 3
     datasets = [rasterio.open(x) for x in inputs]
-    meta = datasets[0].meta
     output_count = 4
 
     def mycallable(old_data, new_data, old_nodata, new_nodata,
                    index=None, roff=None, coff=None):
         # input data are bytes, test output doesn't overflow
-        old_data[index] = (index + 1) * 259 # use a number > 255 but divisible by 3 for testing
+        old_data[index] = (
+            index + 1
+        ) * 259  # use a number > 255 but divisible by 3 for testing
         # update additional band that we specified in output_count
         old_data[3, :, :] += index
 
@@ -588,18 +588,12 @@ def test_data_dir_resampling(tmpdir):
     return tmpdir
 
 
+@pytest.mark.xfail(
+    gdal_version.major == 1, reason="Mode resampling is unreliable for GDAL 1.11"
+)
 @pytest.mark.parametrize(
     "resampling",
-    [resamp for resamp in Resampling if resamp < 6]
-    + [
-        pytest.param(
-            Resampling.mode,
-            marks=pytest.mark.xfail(
-                gdal_version.major == 1,
-                reason="Mode resampling is unreliable for GDAL 1.11",
-            ),
-        )
-    ]
+    [resamp for resamp in Resampling if resamp < 7]
     + [pytest.param(Resampling.gauss, marks=pytest.mark.xfail)],
 )
 def test_merge_resampling(test_data_dir_resampling, resampling, runner):
