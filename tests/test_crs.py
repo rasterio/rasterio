@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from rasterio.env import env_ctx_if_needed, Env
 from rasterio.errors import CRSError
 
-from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3
+from .conftest import requires_gdal21, requires_gdal22, requires_gdal_lt_3, requires_gdal3
 
 
 # Items like "D_North_American_1983" characterize the Esri dialect
@@ -540,3 +540,28 @@ def test_from_string__wkt_with_proj():
         'AUTHORITY["EPSG","3857"]] '
     )
     assert CRS.from_string(wkt).to_epsg() == 3857
+
+
+@requires_gdal3
+def test_esri_auth__from_string():
+    assert CRS.from_string('ESRI:54009').to_string() == 'ESRI:54009'
+
+
+@requires_gdal3
+def test_esri_auth__to_epsg():
+    assert CRS.from_user_input('ESRI:54009').to_epsg() is None
+
+
+@requires_gdal3
+def test_esri_auth__to_authority():
+    assert CRS.from_user_input('ESRI:54009').to_authority() == ('ESRI', '54009')
+
+
+def test_from_authority__to_authority():
+    assert CRS.from_authority("EPSG", 4326).to_authority() == ("EPSG", "4326")
+
+
+def test_to_authority__no_code_available():
+    lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc '
+                              '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert lcc_crs.to_authority() is None
