@@ -999,17 +999,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         """The dataset's coordinate reference system"""
         return self.dst_crs
 
-    def start(self):
-        """Starts the VRT's life cycle."""
-        log.debug("Dataset %r is started.", self)
-
-    def stop(self):
-        """Ends the VRT's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        self._closed = True
-
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,
             fill_value=None, out_dtype=None):

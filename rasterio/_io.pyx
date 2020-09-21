@@ -1230,16 +1230,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             self.name,
             self.mode)
 
-    def start(self):
-        pass
-
-    def stop(self):
-        """Ends the dataset's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
-
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
         crs = CRS.from_user_input(crs)

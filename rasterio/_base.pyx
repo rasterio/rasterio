@@ -309,6 +309,10 @@ cdef class DatasetBase(object):
 
         return [gt[i] for i in range(6)]
 
+    def start(self):
+        """Start the dataset's life cycle"""
+        pass
+
     def stop(self):
         """Ends the dataset's life cycle"""
         if self._hds != NULL:

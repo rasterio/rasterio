@@ -9,16 +9,17 @@ import boto3
 import numpy
 import pytest
 
-from .conftest import requires_gdal21, requires_gdal2
 import rasterio
 from rasterio.crs import CRS
-from rasterio.enums import Resampling, MaskFlags, ColorInterp
+from rasterio.enums import Resampling, MaskFlags
 from rasterio.errors import RasterioDeprecationWarning, WarpOptionsError
+from rasterio.io import MemoryFile
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
+from .conftest import requires_gdal21, requires_gdal2
 
 # Custom markers.
 credentials = pytest.mark.skipif(
@@ -101,6 +102,7 @@ def test_warped_vrt_add_alpha(dsrec, path_rgb_byte_tif):
         records = dsrec(env)
         assert len(records) == 1
         assert "1 N GTiff" in records[0]
+
 
 @requires_gdal21(reason="Nodata deletion requires GDAL 2.1+")
 def test_warped_vrt_msk_add_alpha(path_rgb_msk_byte_tif, caplog):
@@ -565,3 +567,22 @@ def test_warped_vrt_resizing_repro():
         with WarpedVRT(rgb, crs="EPSG:3857", height=10, width=10) as vrt:
             assert vrt.height == 10
             assert vrt.width == 10
+
+
+def test_memfile_src(capfd, dsrec, path_rgb_byte_tif):
+    """Check against the crasher reported in issue2000"""
+    with rasterio.Env() as env:
+
+        with rasterio.open(path_rgb_byte_tif) as src:
+            profile = src.profile
+            bands = src.read()
+
+        with MemoryFile() as memfile:
+
+            with memfile.open(**profile) as dst:
+                dst.write(bands)
+                vrt = WarpedVRT(dst, crs="EPSG:3857")
+
+    assert (0 == vrt.read()).any()
+    assert not vrt.closed
+    vrt.close()
