@@ -994,6 +994,12 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         if dst_alpha and len(self._nodatavals) == 3:
             self._nodatavals[dst_alpha - 1] = None
 
+    def stop(self):
+        if self._hds != NULL:
+            GDALClose(self._hds)
+        self._hds = NULL
+        self._closed = True
+
     @property
     def crs(self):
         """The dataset's coordinate reference system"""
