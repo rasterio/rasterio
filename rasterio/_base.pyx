@@ -309,8 +309,12 @@ cdef class DatasetBase(object):
 
         return [gt[i] for i in range(6)]
 
+    def start(self):
+        """Start the dataset's life cycle"""
+        pass
+
     def stop(self):
-        """Ends the dataset's life cycle"""
+        """Close the GDAL dataset handle"""
         if self._hds != NULL:
             refcount = GDALDereferenceDataset(self._hds)
             if refcount == 0:

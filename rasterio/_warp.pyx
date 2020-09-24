@@ -24,7 +24,7 @@ from rasterio.crs import CRS
 from rasterio.errors import (
     GDALOptionNotImplementedError,
     DriverRegistrationError, CRSError, RasterioIOError,
-    RasterioDeprecationWarning, WarpOptionsError)
+    RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError)
 from rasterio.transform import Affine, from_bounds, guard_transform, tastes_like_gdal
 
 cimport numpy as np
@@ -650,7 +650,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         Parameters
         ----------
         src_dataset : dataset object
-            The warp source.
+            The warp source dataset. Must be opened in "r" mode.
         src_crs : CRS or str, optional
             Overrides the coordinate reference system of `src_dataset`.
         src_transfrom : Affine, optional
@@ -701,7 +701,11 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
         Returns
         -------
         WarpedVRT
+
         """
+        if src_dataset.mode != "r":
+            raise WarpedVRTError("Source dataset must be opened in read-only mode")
+
         self.mode = 'r'
         self.options = {}
         self._count = 0
@@ -998,17 +1002,6 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
     def crs(self):
         """The dataset's coordinate reference system"""
         return self.dst_crs
-
-    def start(self):
-        """Starts the VRT's life cycle."""
-        log.debug("Dataset %r is started.", self)
-
-    def stop(self):
-        """Ends the VRT's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        self._closed = True
 
     def read(self, indexes=None, out=None, window=None, masked=False,
             out_shape=None, boundless=False, resampling=Resampling.nearest,

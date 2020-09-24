@@ -85,7 +85,7 @@ class MemoryFile(MemoryFileBase):
      'width': 791}
 
     """
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext=''):
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
         """Create a new file in memory
 
         Parameters
@@ -141,8 +141,8 @@ class MemoryFile(MemoryFileBase):
         return self
 
     def __exit__(self, *args, **kwargs):
-        self._env.__exit__()
         self.close()
+        self._env.__exit__()
 
 
 class ZipMemoryFile(MemoryFile):
