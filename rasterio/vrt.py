@@ -70,7 +70,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The working data type for warp operation and output.
     warp_extras : dict
         GDAL extra warp options. See
-        http://www.gdal.org/structGDALWarpOptions.html.
+        https://gdal.org/doxygen/structGDALWarpOptions.html.
 
     Attributes
     ----------
@@ -94,7 +94,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The working data type for warp operation and output.
     warp_extras : dict
         GDAL extra warp options. See
-        http://www.gdal.org/structGDALWarpOptions.html.
+        https://gdal.org/doxygen/structGDALWarpOptions.html.
 
     Examples
     --------
