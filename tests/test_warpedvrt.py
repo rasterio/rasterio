@@ -12,7 +12,7 @@ import pytest
 import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import Resampling, MaskFlags
-from rasterio.errors import RasterioDeprecationWarning, WarpOptionsError
+from rasterio.errors import RasterioDeprecationWarning, WarpOptionsError, WarpedVRTError
 from rasterio.io import MemoryFile
 from rasterio import shutil as rio_shutil
 from rasterio.vrt import WarpedVRT
@@ -20,6 +20,8 @@ from rasterio.warp import transform_bounds
 from rasterio.windows import Window
 
 from .conftest import requires_gdal21, requires_gdal2
+
+log = logging.getLogger(__name__)
 
 # Custom markers.
 credentials = pytest.mark.skipif(
@@ -569,20 +571,40 @@ def test_warped_vrt_resizing_repro():
             assert vrt.width == 10
 
 
-def test_memfile_src(capfd, dsrec, path_rgb_byte_tif):
-    """Check against the crasher reported in issue2000"""
-    with rasterio.Env() as env:
+def test_vrt_src_mode(path_rgb_byte_tif):
+    """VRT source dataset must be opened in read mode"""
 
-        with rasterio.open(path_rgb_byte_tif) as src:
-            profile = src.profile
-            bands = src.read()
+    with rasterio.open(path_rgb_byte_tif) as src:
+        profile = src.profile
+        bands = src.read()
 
-        with MemoryFile() as memfile:
+    with MemoryFile() as memfile:
 
-            with memfile.open(**profile) as dst:
-                dst.write(bands)
+        with memfile.open(**profile) as dst:
+            dst.write(bands)
+
+            with pytest.raises(WarpedVRTError):
                 vrt = WarpedVRT(dst, crs="EPSG:3857")
 
-    assert (0 == vrt.read()).any()
-    assert not vrt.closed
+
+def test_vrt_src_kept_alive(path_rgb_byte_tif):
+    """VRT source dataset is kept alive, preventing crashes"""
+
+    with rasterio.open(path_rgb_byte_tif) as dst:
+        vrt = WarpedVRT(dst, crs="EPSG:3857")
+
+    assert (vrt.read() != 0).any()
+    vrt.close()
+
+
+def test_vrt_mem_src_kept_alive(path_rgb_byte_tif):
+    """VRT in-memory source dataset is kept alive, preventing crashes"""
+
+    with open(path_rgb_byte_tif, "rb") as fp:
+        bands = fp.read()
+
+    with MemoryFile(bands) as memfile, memfile.open() as dst:
+        vrt = WarpedVRT(dst, crs="EPSG:3857")
+
+    assert (vrt.read() != 0).any()
     vrt.close()

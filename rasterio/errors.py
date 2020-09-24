@@ -126,3 +126,7 @@ class ResamplingAlgorithmError(RasterioError):
 
 class TransformError(RasterioError):
     """Raised when transform arguments are invalid"""
+
+
+class WarpedVRTError(RasterioError):
+    """Raised when WarpedVRT can't be initialized"""
