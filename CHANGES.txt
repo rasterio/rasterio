@@ -4,6 +4,8 @@ Changes
 1.1.7 (TBD)
 -----------
 
+- Add missing methods needed to determine whether GDAL treats a CRS as lat/long
+  or northing/easting (#1943).
 - Wrap calls to GDALChecksumImage so that errors set by GDAL are propagated to
   Python as a RasterioIOError.
 - Raise RasterioDeprecationWarning when a dataset opened in modes other than

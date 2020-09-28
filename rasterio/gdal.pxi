@@ -115,6 +115,8 @@ cdef extern from "ogr_srs_api.h" nogil:
     int OSRSetFromUserInput(OGRSpatialReferenceH srs, const char *input)
     OGRErr OSRValidate(OGRSpatialReferenceH srs)
     double OSRGetLinearUnits(OGRSpatialReferenceH srs, char **ppszName)
+    int OSREPSGTreatsAsLatLong(OGRSpatialReferenceH srs)
+    int OSREPSGTreatsAsNorthingEasting(OGRSpatialReferenceH srs)
 
 cdef extern from "gdal.h" nogil:
 
