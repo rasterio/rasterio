@@ -4,6 +4,12 @@ Changes
 1.1.7 (TBD)
 -----------
 
+- Raise RasterioDeprecationWarning when a dataset opened in modes other than
+  'r' is given to the WarpedVRT constructor.
+- Base RasterioDeprecationWarning on FutureWarning, following the
+  recommendation of PEP 565.
+- Fix a segmentation fault that occurs when a WarpedVRT closes after the
+  dataset it references has been previously closed (#2001).
 - Add resampling option to merge and rio-merge (#1996).
 
 1.1.6 (2020-09-14)

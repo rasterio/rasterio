@@ -583,7 +583,7 @@ def test_vrt_src_mode(path_rgb_byte_tif):
         with memfile.open(**profile) as dst:
             dst.write(bands)
 
-            with pytest.raises(WarpedVRTError):
+            with pytest.warns(FutureWarning):
                 vrt = WarpedVRT(dst, crs="EPSG:3857")
 
 

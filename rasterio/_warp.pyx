@@ -704,7 +704,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
 
         """
         if src_dataset.mode != "r":
-            raise WarpedVRTError("Source dataset must be opened in read-only mode")
+            warnings.warn("Source dataset should be opened in read-only mode. Use of datasets opened in modes other than 'r' will be disallowed in a future version.", RasterioDeprecationWarning, stacklevel=2)
 
         self.mode = 'r'
         self.options = {}
