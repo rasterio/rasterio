@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.1.7 (TBD)
------------
+1.1.7 (2020-09-29)
+------------------
 
 - Add missing methods needed to determine whether GDAL treats a CRS as lat/long
   or northing/easting (#1943).
