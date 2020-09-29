@@ -117,6 +117,49 @@ def driver_can_create_copy(drivername):
     """Return True if the driver has CREATE_COPY capability"""
     return driver_supports_mode(drivername, 'DCAP_CREATECOPY')
 
+
+def _raster_driver_extensions():
+    """
+    Logic based on: https://github.com/mapbox/rasterio/issues/265#issuecomment-367044836
+    """
+    cdef int iii = 0
+    cdef int driver_count = GDALGetDriverCount()
+    cdef GDALDriverH driver = NULL
+    cdef char* c_extensions = NULL
+    cdef char* c_drivername = NULL
+    driver_extensions = {}
+    for iii in range(driver_count):
+        driver = GDALGetDriver(iii)
+        c_drivername = get_driver_name(driver)
+        if (
+            GDALGetMetadataItem(driver, "DCAP_RASTER", NULL) == NULL
+            or (
+                GDALGetMetadataItem(driver, "DCAP_CREATE", NULL) == NULL
+                and GDALGetMetadataItem(driver, "DCAP_CREATECOPY", NULL) == NULL
+            )
+        ):
+            continue
+        c_extensions = GDALGetMetadataItem(driver, "DMD_EXTENSIONS", NULL)
+        if c_extensions == NULL or c_drivername == NULL:
+            continue
+
+        try:
+            extensions = c_extensions
+            extensions = extensions.decode("utf-8")
+        except AttributeError:
+            pass
+
+        try:
+            drivername = c_drivername
+            drivername = drivername.decode("utf-8")
+        except AttributeError:
+            pass
+
+        for extension in extensions.split():
+            driver_extensions[extension] = drivername
+    return driver_extensions
+
+
 cdef _band_dtype(GDALRasterBandH band):
     """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
     cdef const char * ptype

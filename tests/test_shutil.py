@@ -13,14 +13,19 @@ from rasterio._err import CPLE_NotSupportedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
 
 
-@pytest.mark.parametrize("driver", (None, 'GTiff'))
-def test_delete(driver, path_rgb_byte_tif, tmpdir):
+@pytest.mark.parametrize("driver, extension", [
+    (None, "tif"),
+    ("GTiff", 'tif'),
+    (None, 'png'),
+    ("PNG", 'png'),
+])
+def test_delete(driver, extension, path_rgb_byte_tif, tmpdir):
 
     """Delete a file with ``rasterio.shutil.delete()``.  Also specifies
     driver.
     """
 
-    path = str(tmpdir.join('test_delete.tif'))
+    path = str(tmpdir.join('test_delete.{}'.format(extension)))
     rasterio.shutil.copy(path_rgb_byte_tif, path)
     assert os.path.exists(path)
     rasterio.shutil.delete(path, driver=driver)

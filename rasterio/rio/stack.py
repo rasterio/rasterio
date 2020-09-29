@@ -4,7 +4,6 @@
 import logging
 
 import click
-from cligj import format_opt
 
 import rasterio
 from rasterio.compat import Iterable, zip_longest
@@ -15,7 +14,7 @@ from rasterio.rio.helpers import resolve_inout
 @click.command(short_help="Stack a number of bands into a multiband dataset.")
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @options.bidx_magic_opt
 @options.rgb_opt
 @options.overwrite_opt
@@ -88,9 +87,10 @@ def stack(ctx, files, output, driver, bidx, photometric, overwrite,
                 kwargs = first.meta
                 kwargs.update(**creation_options)
 
-            kwargs.update(
-                driver=driver,
-                count=output_count)
+            if driver:
+                kwargs["driver"] = driver
+
+            kwargs.update(count=output_count)
 
             if photometric:
                 kwargs['photometric'] = photometric

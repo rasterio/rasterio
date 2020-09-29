@@ -163,6 +163,23 @@ def test_format_short(tmpdir, runner):
         assert src.driver == 'JPEG'
 
 
+@pytest.mark.parametrize("extension, driver", [
+    ('TIF', 'GTiff'),
+    ('tiff', 'GTiff'),
+    ('png', 'PNG'),
+    ('jpg', 'JPEG'),
+    ('jpeg', 'JPEG'),
+])
+def test_autodetect_format(tmpdir, runner, extension, driver):
+    outputname = str(tmpdir.join("test.{}".format(extension)))
+    result = runner.invoke(
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.driver == driver
+
+
 def test_output_opt(tmpdir, runner):
     outputname = str(tmpdir.join('test.jpg'))
     result = runner.invoke(

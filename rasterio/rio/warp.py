@@ -4,7 +4,6 @@ import logging
 from math import ceil
 
 import click
-from cligj import format_opt
 
 import rasterio
 from rasterio.crs import CRS
@@ -29,7 +28,7 @@ MAX_OUTPUT_HEIGHT = 100000
 @click.command(short_help='Warp a raster dataset.')
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @click.option(
     '--like',
     type=click.Path(exists=True),
@@ -151,7 +150,9 @@ def warp(ctx, files, output, driver, like, dst_crs, dimensions, src_bounds,
         with rasterio.open(files[0]) as src:
             l, b, r, t = src.bounds
             out_kwargs = src.profile
-            out_kwargs.update(driver=driver)
+            out_kwargs.pop("driver", None)
+            if driver:
+                out_kwargs["driver"] = driver
 
             # Sort out the bounds options.
             if src_bounds and dst_bounds:

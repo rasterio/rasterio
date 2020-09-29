@@ -12,6 +12,7 @@ except ImportError:  # pragma: no cover
 
 from rasterio._io cimport DatasetReaderBase
 from rasterio._err cimport exc_wrap_int, exc_wrap_pointer
+from rasterio.drivers import driver_from_extension
 from rasterio.env import ensure_env_with_credentials
 from rasterio._err import CPLE_OpenFailedError
 from rasterio.errors import DriverRegistrationError, RasterioIOError
@@ -53,7 +54,7 @@ def exists(path):
 
 
 @ensure_env_with_credentials
-def copy(src, dst, driver='GTiff', strict=True, **creation_options):
+def copy(src, dst, driver=None, strict=True, **creation_options):
 
     """Copy a raster from a path or open dataset handle to a new destination
     with driver specific creation options.
@@ -95,17 +96,21 @@ def copy(src, dst, driver='GTiff', strict=True, **creation_options):
         log.debug("Option %r:%r", kb, vb)
 
     c_strictness = strict
-    driverb = driver.encode('utf-8')
-    drv = GDALGetDriverByName(driverb)
-
-    if drv == NULL:
-        raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
 
     # Convert src and dst Paths to strings.
     if isinstance(src, Path):
         src = str(src)
     if isinstance(dst, Path):
         dst = str(dst)
+
+    if driver is None:
+        driver = driver_from_extension(dst)
+
+    driverb = driver.encode('utf-8')
+    drv = GDALGetDriverByName(driverb)
+
+    if drv == NULL:
+        raise DriverRegistrationError("Unrecognized driver: {}".format(driver))
 
     # Open a new GDAL dataset if src is a string.
     if isinstance(src, str):

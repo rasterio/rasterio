@@ -2,7 +2,6 @@
 
 
 import click
-from cligj import format_opt
 
 import rasterio
 from rasterio.enums import Resampling
@@ -13,7 +12,7 @@ from rasterio.rio.helpers import resolve_inout
 @click.command(short_help="Merge a stack of raster datasets.")
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @options.bounds_opt
 @options.resolution_opt
 @click.option('--resampling',
@@ -72,9 +71,10 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
             profile["transform"] = output_transform
             profile["height"] = dest.shape[1]
             profile["width"] = dest.shape[2]
-            profile["driver"] = driver
             profile["count"] = dest.shape[0]
-
+            profile.pop("driver", None)
+            if driver:
+                profile["driver"] = driver
             if nodata is not None:
                 profile["nodata"] = nodata
 

@@ -7,7 +7,6 @@ from distutils.version import LooseVersion
 import math
 
 import click
-from cligj import format_opt
 import snuggs
 
 import rasterio
@@ -81,7 +80,7 @@ def _chunk_output(width, height, count, itemsize, mem_limit=1):
 @click.argument('command')
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @click.option('--name', multiple=True,
               help='Specify an input file with a unique short (alphas only) '
                    'name for use in commands like '
@@ -153,7 +152,7 @@ def calc(ctx, command, files, output, driver, name, dtype, masked, overwrite, me
             kwargs.update(**creation_options)
             dtype = dtype or first.meta['dtype']
             kwargs['dtype'] = dtype
-
+            kwargs.pop("driver", None)
             if driver:
                 kwargs['driver'] = driver
 
