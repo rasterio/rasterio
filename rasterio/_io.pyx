@@ -65,28 +65,28 @@ def _delete_dataset_if_exists(path):
     """
 
     cdef GDALDatasetH h_dataset = NULL
-    cdef const char *c_path = NULL
-
-    b_path = path.encode('utf-8')
-    c_path = b_path
-
-    with silence_errors():
-        with nogil:
-            h_dataset = GDALOpen(c_path, <GDALAccess>0)
+    cdef GDALDriverH h_driver = NULL
+    cdef const char *path_c = NULL
 
     try:
-        h_dataset = exc_wrap_pointer(h_dataset)
+        h_dataset = open_dataset(path, 0x40, None, None, None)
 
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError):
+    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError) as exc:
         log.debug(
-            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+            "Skipped delete for overwrite. Dataset does not exist: %r", path)
 
     else:
         h_driver = GDALGetDatasetDriver(h_dataset)
+        GDALClose(h_dataset)
+        h_dataset = NULL
 
         if h_driver != NULL:
+            path_b = path.encode("utf-8")
+            path_c = path_b
             with nogil:
-                GDALDeleteDataset(h_driver, c_path)
+                err = GDALDeleteDataset(h_driver, path_c)
+            exc_wrap_int(err)
+
 
     finally:
         if h_dataset != NULL:
@@ -839,7 +839,7 @@ def silence_errors():
 cdef class MemoryFileBase:
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext=''):
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
         """A file in an in-memory filesystem.
 
         Parameters
@@ -1229,16 +1229,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             self.closed and 'closed' or 'open',
             self.name,
             self.mode)
-
-    def start(self):
-        pass
-
-    def stop(self):
-        """Ends the dataset's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
 
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
@@ -1900,7 +1890,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `False`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -2086,8 +2076,10 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             if temp != NULL:
                 GDALClose(temp)
             if self._hds != NULL:
-                GDALClose(self._hds)
-                self._hds = NULL
+                refcount = GDALDereferenceDataset(self._hds)
+                if refcount == 0:
+                    GDALClose(self._hds)
+            self._hds = NULL
 
 
 def virtual_file_to_buffer(filename):

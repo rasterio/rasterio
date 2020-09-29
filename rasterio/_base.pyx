@@ -14,7 +14,7 @@ from libc.string cimport strncmp
 from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
-from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
@@ -309,8 +309,12 @@ cdef class DatasetBase(object):
 
         return [gt[i] for i in range(6)]
 
+    def start(self):
+        """Start the dataset's life cycle"""
+        pass
+
     def stop(self):
-        """Ends the dataset's life cycle"""
+        """Close the GDAL dataset handle"""
         if self._hds != NULL:
             refcount = GDALDereferenceDataset(self._hds)
             if refcount == 0:
@@ -1212,7 +1216,11 @@ cdef class DatasetBase(object):
             yoff = window.row_off
             height = window.height
 
-        return GDALChecksumImage(band, xoff, yoff, width, height)
+        try:
+            return exc_wrap(GDALChecksumImage(band, xoff, yoff, width, height))
+        except CPLE_BaseError as err:
+            raise RasterioIOError(str(err))
+
 
     def get_gcps(self):
         """Get GCPs and their associated CRS."""

@@ -155,6 +155,18 @@ class CRS(Mapping):
         """
         return self._crs.to_epsg()
 
+    def to_authority(self):
+        """The authority name and code of the CRS
+
+        .. versionadded:: 1.1.7
+
+        Returns
+        -------
+        (str, str) or None
+
+        """
+        return self._crs.to_authority()
+
     def to_dict(self):
         """Convert CRS to a PROJ4 dict
 
@@ -284,9 +296,9 @@ class CRS(Mapping):
         str
 
         """
-        epsg_code = self.to_epsg()
-        if epsg_code:
-            return 'EPSG:{}'.format(epsg_code)
+        auth = self.to_authority()
+        if auth:
+            return ":".join(auth)
         else:
             return self.to_wkt() or self.to_proj4()
 
@@ -322,6 +334,25 @@ class CRS(Mapping):
         return obj
 
     @classmethod
+    def from_authority(cls, auth_name, code):
+        """Make a CRS from an authority name and authority code
+
+        .. versionadded:: 1.1.7
+
+        Parameters
+        ----------
+        auth_name: str
+            The name of the authority.
+        code : int or str
+            The code used by the authority.
+
+        Returns
+        -------
+        CRS
+        """
+        return cls.from_string("{auth_name}:{code}".format(auth_name=auth_name, code=code))
+
+    @classmethod
     def from_string(cls, string, morph_from_esri_dialect=False):
         """Make a CRS from an EPSG, PROJ, or WKT string
 
@@ -338,11 +369,16 @@ class CRS(Mapping):
         CRS
 
         """
+        try:
+            string = string.strip()
+        except AttributeError:
+            pass
+
         if not string:
             raise CRSError("CRS is empty or invalid: {!r}".format(string))
 
-        elif string.strip().upper().startswith('EPSG:'):
-            auth, val = string.strip().split(':')
+        elif string.upper().startswith('EPSG:'):
+            auth, val = string.split(':')
             if not val:
                 raise CRSError("Invalid CRS: {!r}".format(string))
             return cls.from_epsg(val)
@@ -358,11 +394,14 @@ class CRS(Mapping):
                 raise CRSError("CRS is empty JSON")
             else:
                 return cls.from_dict(**val)
-
-        elif string.strip().endswith("]"):
+        elif string.endswith("]"):
             return cls.from_wkt(string, morph_from_esri_dialect=morph_from_esri_dialect)
+        elif "=" in string:
+            return cls.from_proj4(string)
 
-        return cls.from_proj4(string)
+        obj = cls()
+        obj._crs = _CRS.from_user_input(string, morph_from_esri_dialect=morph_from_esri_dialect)
+        return obj
 
     @classmethod
     def from_proj4(cls, proj):
@@ -454,9 +493,7 @@ class CRS(Mapping):
         elif isinstance(value, dict):
             return cls(**value)
         elif isinstance(value, string_types):
-            obj = cls()
-            obj._crs = _CRS.from_user_input(value, morph_from_esri_dialect=morph_from_esri_dialect)
-            return obj
+            return cls.from_string(value, morph_from_esri_dialect=morph_from_esri_dialect)
         else:
             raise CRSError("CRS is invalid: {!r}".format(value))
 

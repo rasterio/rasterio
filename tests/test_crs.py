@@ -23,7 +23,6 @@ from .conftest import (
     requires_gdal3,
 )
 
-
 # Items like "D_North_American_1983" characterize the Esri dialect
 # of WKT SRS.
 ESRI_PROJECTION_STRING = (
@@ -608,3 +607,69 @@ def test_from_string__wkt_with_proj():
         'AUTHORITY["EPSG","3857"]] '
     )
     assert CRS.from_string(wkt).to_epsg() == 3857
+
+
+@requires_gdal3
+def test_esri_auth__from_string():
+    assert CRS.from_string('ESRI:54009').to_string() == 'ESRI:54009'
+
+
+@requires_gdal3
+def test_esri_auth__to_epsg():
+    assert CRS.from_user_input('ESRI:54009').to_epsg() is None
+
+
+@requires_gdal3
+def test_esri_auth__to_authority():
+    assert CRS.from_user_input('ESRI:54009').to_authority() == ('ESRI', '54009')
+
+
+def test_from_authority__to_authority():
+    assert CRS.from_authority("EPSG", 4326).to_authority() == ("EPSG", "4326")
+
+
+def test_to_authority__no_code_available():
+    lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc '
+                              '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert lcc_crs.to_authority() is None
+
+
+@pytest.mark.parametrize(
+    'crs_obj,result',
+    [
+        (CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"), False),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"), False),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"), True),
+    ]
+)
+def test_is_latlong(crs_obj, result):
+    """Test if CRS should be treated as latlon."""
+    assert epsg_treats_as_latlong(crs_obj) == result
+
+
+@pytest.mark.parametrize(
+    'crs_obj,result',
+    [
+        (CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"), False),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"), True),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"), False),
+    ]
+)
+def test_is_northingeasting(crs_obj, result):
+    """Test if CRS should be treated as having northing/easting coordinate ordering."""
+    assert epsg_treats_as_northingeasting(crs_obj) == result
+
+
+@requires_gdal_lt_3
+@pytest.mark.parametrize('crs_obj', [CRS.from_epsg(4326), CRS.from_epsg(2193)])
+def test_latlong_northingeasting_gdal2(crs_obj):
+    """Check CRS created from epsg with GDAL 2 always return False."""
+    assert not epsg_treats_as_latlong(crs_obj)
+    assert not epsg_treats_as_northingeasting(crs_obj)
+
+
+@requires_gdal3
+def test_latlong_northingeasting_gdal3():
+    """Check CRS created from epsg with GDAL 3."""
+    assert epsg_treats_as_latlong(CRS.from_epsg(4326))
+    assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))
