@@ -43,7 +43,10 @@ a GIL-releasing raster processing function.
                         output_view[~i, j, k] = <unsigned char>val
         return output
 
-Here is the program in examples/thread_pool_executor.py. 
+Here is the program in examples/thread_pool_executor.py. It is set up in such
+a way that at most 1 thread is reading and at most 1 thread is writing at the
+same time. Processing is not protected by a lock and can be done by multiple
+threads simultaneously.
 
 .. code-block:: python
 
@@ -113,28 +116,29 @@ spread over multiple cores using the ``ThreadPoolExecutor`` from Python 3's
 
    $ time python examples/thread_pool_executor.py tests/data/RGB.byte.tif /tmp/test.tif -j 1
 
-   real    TODO
-   user    TODO
-   sys     TODO
+   real    0m4.277s
+   user    0m4.356s
+   sys     0m0.184s
 
-we get an almost 3x speed up with four concurrent jobs.
+we get over 3x speed up with four concurrent jobs.
 
 .. code-block:: console
 
    $ time python examples/thread_pool_executor.py tests/data/RGB.byte.tif /tmp/test.tif -j 4
 
-   real    TODO
-   user    TODO
-   sys     TODO
+   real    0m1.251s
+   user    0m4.402s
+   sys     0m0.168s
 
 If the function that you'd like to map over raster windows doesn't release the 
 GIL, you unfortunately cannot simply replace ``ThreadPoolExecutor`` with 
 ``ProcessPoolExecutor``, the DatasetReader/Writer cannot be shared by multiple
 processes, which means that each process needs to open the file seperately,
-or you can do all the reading and writing from the main thread, as shown in this 
-next example. This is much less efficient memory wise, however.
+or you can do all the reading and writing from the main thread, as shown in 
+this next example. This is much less efficient memory wise, however.
 
 .. code-block:: python
+
     arrays = [src.read(window=window) for window in windows]
 
     with concurrent.futures.ProcessPoolExecutor(
@@ -145,7 +149,7 @@ next example. This is much less efficient memory wise, however.
             dst.write(result, window=window)
 
 .. note::
-    If you wish to do multiprocessing accross very large images that do not fit in memory,
-    of you wish to do multiprocessing across multiple machines. You might want to have a 
-    look at `dask <https://dask.org/>`__ and in particular this 
-    `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
+    If you wish to do multiprocessing accross very large images that do not 
+    fit in memory, or if you wish to do multiprocessing across multiple 
+    machines. You might want to have a look at `dask <https://dask.org/>`__ 
+    and in particular this `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
