@@ -1,4 +1,4 @@
-"""Rasterio shims for GDAL 3.x"""
+"""Rasterio shims for GDAL 2.1"""
 
 # cython: boundscheck=False
 
@@ -7,25 +7,16 @@ include "directives.pxi"
 # The baseline GDAL API.
 include "gdal.pxi"
 
-# Shim API for GDAL >= 3.0
+# Shim API for GDAL >= 2.0
 include "shim_rasterioex.pxi"
 
+import os
 
-# Declarations and implementations specific for GDAL >= 3.x
+# Declarations and implementations specific for GDAL >= 2.1
 cdef extern from "gdal.h" nogil:
 
     cdef CPLErr GDALDeleteRasterNoDataValue(GDALRasterBandH hBand)
     GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
-
-
-cdef extern from "ogr_srs_api.h" nogil:
-
-    ctypedef enum OSRAxisMappingStrategy:
-        OAMS_TRADITIONAL_GIS_ORDER
-
-    const char* OSRGetName(OGRSpatialReferenceH hSRS)
-    void OSRSetAxisMappingStrategy(OGRSpatialReferenceH hSRS, OSRAxisMappingStrategy)
-    void OSRSetPROJSearchPaths(const char *const *papszPaths)
 
 
 cdef extern from "cpl_vsi.h" nogil:
@@ -39,7 +30,6 @@ cdef GDALDatasetH open_dataset(
         object filename, int flags, object allowed_drivers,
         object open_options, object siblings) except NULL:
     """Open a dataset and return a handle"""
-
 
     cdef char **drivers = NULL
     cdef char **options = NULL
@@ -90,20 +80,14 @@ cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
 
 
 cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
-    return OSRGetName(hSrs)
-
+    return ''
 
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
-    OSRSetAxisMappingStrategy(hSrs, OAMS_TRADITIONAL_GIS_ORDER)
+    pass
 
 
 cdef void set_proj_search_path(object path):
-    cdef char **paths = NULL
-    cdef const char *path_c = NULL
-    path_b = path.encode("utf-8")
-    path_c = path_b
-    paths = CSLAddString(paths, path_c)
-    OSRSetPROJSearchPaths(paths)
+    os.environ["PROJ_LIB"] = path
 
 
 cdef void vsi_curl_clear_cache():

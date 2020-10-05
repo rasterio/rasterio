@@ -9,11 +9,21 @@ import threading
 import warnings
 
 from rasterio._env import (
-        GDALEnv, get_gdal_config, set_gdal_config,
-        GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
+    GDALEnv,
+    get_gdal_config,
+    set_gdal_config,
+    GDALDataFinder,
+    PROJDataFinder,
+    set_proj_data_search_path,
+    clear_vsi_curl_cache,
+)
 from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
-    EnvError, GDALVersionError, RasterioDeprecationWarning)
+    EnvError,
+    GDALVersionError,
+    RasterioDeprecationWarning,
+    RasterioIOError,
+)
 from rasterio.session import Session, DummySession
 
 
@@ -430,6 +440,26 @@ def ensure_env_with_credentials(f):
             session = DummySession()
 
         with env_ctor(session=session):
+
+            # We'll try to rely on system certs, but if curl finds
+            # none we will try certifi.
+            try:
+                return f(*args, **kwds)
+            except RasterioIOError as exc:
+                if str(exc).startswith("CURL error: error setting certificate"):
+                    try:
+                        import certifi
+                    except ImportError:
+                        raise CertificateError(
+                            "Set CURL_CA_BUNDLE to locate certificate or install certifi"
+                        )
+                    os.environ.setdefault("CURL_CA_BUNDLE", certifi.where())
+                else:
+                    raise
+
+            # The VSI cache will be contaminated by the previous
+            # failure and must be cleared before we re-try.
+            clear_vsi_curl_cache()
             return f(*args, **kwds)
 
     return wrapper

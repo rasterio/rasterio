@@ -18,6 +18,7 @@ cdef extern from "gdal.h" nogil:
     cdef CPLErr GDALDeleteRasterNoDataValue(GDALRasterBandH hBand)
     GDALDatasetH GDALOpenEx(const char *filename, int flags, const char **allowed_drivers, const char **options, const char **siblings) # except -1
 
+
 from rasterio._err cimport exc_wrap_pointer
 
 
@@ -83,3 +84,7 @@ cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
 
 cdef void set_proj_search_path(object path):
     os.environ["PROJ_LIB"] = path
+
+
+cdef void vsi_curl_clear_cache():
+    pass

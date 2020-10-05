@@ -134,3 +134,7 @@ class TransformError(RasterioError):
 
 class WarpedVRTError(RasterioError):
     """Raised when WarpedVRT can't be initialized"""
+
+
+class CertificateError(RasterioError):
+    """Raised when certificates aren't found"""

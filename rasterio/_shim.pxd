@@ -8,3 +8,4 @@ cdef int io_multi_mask(GDALDatasetH hds, int mode, double xoff, double yoff, dou
 cdef const char* osr_get_name(OGRSpatialReferenceH hSrs)
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs)
 cdef void set_proj_search_path(object path)
+cdef void vsi_curl_clear_cache()
