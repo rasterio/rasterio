@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover
             pass
 
 from rasterio._base import gdal_version
-from rasterio.drivers import is_blacklisted
+from rasterio.drivers import driver_from_extension, is_blacklisted
 from rasterio.dtypes import (
     bool_, ubyte, sbyte, uint8, int8, uint16, int16, uint32, int32, float32, float64,
     complex_, check_dtype)
@@ -224,6 +224,8 @@ def open(fp, mode='r', driver=None, width=None, height=None, count=None,
                 path, mode, driver=driver, sharing=sharing, **kwargs
             )
         elif mode.startswith("w"):
+            if not driver:
+                driver = driver_from_extension(path)
             writer = get_writer_for_driver(driver)
             if writer is not None:
                 s = writer(path, mode, driver=driver,

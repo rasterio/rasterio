@@ -38,7 +38,7 @@ files_inout_arg = click.argument(
 @click.command(short_help='Rasterize features.')
 @files_inout_arg
 @options.output_opt
-@cligj.format_opt
+@options.format_opt
 @options.like_file_opt
 @options.bounds_opt
 @options.dimensions_opt
@@ -257,6 +257,8 @@ def rasterize(
                                         bounds[3]),
                     'driver': driver
                 }
+                if driver:
+                    kwargs["driver"] = driver
 
             kwargs.update(**creation_options)
 

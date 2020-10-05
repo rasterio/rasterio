@@ -3,7 +3,6 @@
 import logging
 
 import click
-from cligj import format_opt
 
 from .helpers import resolve_inout
 from . import options
@@ -43,7 +42,7 @@ projection_projected_opt = click.option(
     '--like',
     type=click.Path(exists=True),
     help='Raster dataset to use as a template for bounds')
-@format_opt
+@options.format_opt
 @projection_geographic_opt
 @projection_projected_opt
 @options.overwrite_opt
@@ -135,8 +134,10 @@ def clip(
             width = int(out_window.width)
 
             out_kwargs = src.profile
+            out_kwargs.pop("driver", None)
+            if driver:
+                out_kwargs["driver"] = driver
             out_kwargs.update({
-                'driver': driver,
                 'height': height,
                 'width': width,
                 'transform': src.window_transform(out_window)})

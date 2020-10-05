@@ -353,7 +353,7 @@ def test_wplus_transform(tmpdir):
 
 
 def test_write_no_driver__issue_1203(tmpdir):
-    name = str(tmpdir.join("test.tif"))
+    name = str(tmpdir.join("test.invalid"))
     with pytest.raises(ValueError), rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8'):
         print("TEST FAILED IF THIS IS REACHED.")
 
@@ -372,3 +372,16 @@ def test_too_big_for_tiff(tmpdir):
     name = str(tmpdir.join("test.tif"))
     with pytest.raises(RasterioIOError):
         rasterio.open(name, 'w', driver='GTiff', height=100000, width=100000, count=1, dtype='uint8', BIGTIFF=False)
+
+
+@pytest.mark.parametrize("extension, driver", [
+    ('tif', 'GTiff'),
+    ('tiff', 'GTiff'),
+    ('png', 'PNG'),
+    ('jpg', 'JPEG'),
+    ('jpeg', 'JPEG'),
+])
+def test_write__autodetect_driver(tmpdir, extension, driver):
+    name = str(tmpdir.join("test.{}".format(extension)))
+    with rasterio.open(name, 'w', height=1, width=1, count=1, dtype='uint8') as rds:
+        assert rds.driver == driver
