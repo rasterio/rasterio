@@ -57,6 +57,11 @@ code_map = {
 
 log = logging.getLogger(__name__)
 
+try:
+    import certifi
+    os.environ.setdefault("CURL_CA_BUNDLE", certifi.where())
+except ImportError:
+    pass
 
 cdef bint is_64bit = sys.maxsize > 2 ** 32
 

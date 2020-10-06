@@ -4,6 +4,9 @@ Changes
 1.2.0 (TBD)
 -----------
 
+- If the certifi package can be imported, its certificate store location will
+  be passed to GDAL during import of rasterio._env unless CURL_CA_BUNDLE is
+  already set (#2009).
 - epsg_treats_as_latlong() and epsg_treats_as_northingeasting() functions have
   been added to rasterio.crs (#1943).
 

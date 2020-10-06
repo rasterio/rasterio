@@ -352,17 +352,32 @@ with open('README.rst') as f:
 
 # Runtime requirements.
 inst_reqs = [
-    'affine', 'attrs', 'click>=4.0,<8', 'cligj>=0.5', 'numpy', 'snuggs>=1.4.1', 'click-plugins',
-    'enum34 ; python_version < "3.4"']
+    "affine",
+    "attrs",
+    "certifi",
+    "click>=4.0,<8",
+    "cligj>=0.5",
+    "numpy",
+    "snuggs>=1.4.1",
+    "click-plugins",
+    'enum34 ; python_version < "3.4"',
+]
 
 extra_reqs = {
-    'ipython': ['ipython>=2.0'],
-    's3': ['boto3>=1.2.4'],
-    'plot': ['matplotlib'],
-    'test': [
-        'pytest>=2.8.2', 'pytest-cov>=2.2.0', 'boto3>=1.2.4', 'packaging',
-        'hypothesis', 'futures;python_version<"3.2"', 'mock;python_version<"3.2"'],
-    'docs': ['ghp-import', 'numpydoc', 'sphinx', 'sphinx-rtd-theme']}
+    "docs": ["ghp-import", "numpydoc", "sphinx", "sphinx-rtd-theme"],
+    "ipython": ["ipython>=2.0"],
+    "plot": ["matplotlib"],
+    "s3": ["boto3>=1.2.4"],
+    "test": [
+        "pytest>=2.8.2",
+        "pytest-cov>=2.2.0",
+        "boto3>=1.2.4",
+        "packaging",
+        "hypothesis",
+        'futures;python_version<"3.2"',
+        'mock;python_version<"3.2"',
+    ],
+}
 
 # Add all extra requirements
 extra_reqs['all'] = list(set(itertools.chain(*extra_reqs.values())))
