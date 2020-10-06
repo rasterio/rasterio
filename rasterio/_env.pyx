@@ -17,6 +17,8 @@ import os.path
 import sys
 import threading
 
+import certifi
+
 from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
@@ -57,6 +59,8 @@ code_map = {
 
 log = logging.getLogger(__name__)
 
+os.environ.setdefault("CURL_CA_BUNDLE", certifi.where())
+os.environ.setdefault("PROJ_CURL_CA_BUNDLE", certifi.where())
 
 cdef bint is_64bit = sys.maxsize > 2 ** 32
 
