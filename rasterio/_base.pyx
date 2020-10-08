@@ -18,7 +18,8 @@ from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
-from rasterio.control import GroundControlPoint, RPC
+from rasterio.control import GroundControlPoint
+form rasterio.rpc import RPC
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS

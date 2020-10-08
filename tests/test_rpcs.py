@@ -1,6 +1,6 @@
 import rasterio
 from rasterio.compat import text_type
-from rasterio.control import RPC
+from rasterio.rpc import RPC
 
 TEST_RPCS = {
     'ERR_BIAS': 0.5,
