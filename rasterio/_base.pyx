@@ -19,7 +19,7 @@ from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
-form rasterio.rpc import RPC
+from rasterio.rpc import RPC
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
