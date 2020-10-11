@@ -2,7 +2,6 @@
 
 """Rasterio input/output."""
 
-include "directives.pxi"
 include "gdal.pxi"
 
 from collections import Counter

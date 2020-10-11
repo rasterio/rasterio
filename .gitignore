@@ -80,7 +80,6 @@ rasterio/_io.c
 rasterio/_crs.c
 rasterio/_env.c
 rasterio/_shim.c
-rasterio/_shim.pyx
 rasterio/shutil.c
 tests/data/white-gemini-iv.zip
 .hypothesis/

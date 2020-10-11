@@ -182,12 +182,19 @@ class sdist_multi_gdal(sdist):
         sdist.run(self)
 
 
+compile_time_env = {
+    "CTE_GDAL_MAJOR_VERSION": gdal_major_version,
+    "CTE_GDAL_MINOR_VERSION": gdal_minor_version,
+}
+
 ext_options = {
     'include_dirs': include_dirs,
     'library_dirs': library_dirs,
     'libraries': libraries,
     'extra_link_args': extra_link_args,
-    'define_macros': []}
+    'define_macros': [],
+    'cython_compile_time_env': compile_time_env
+}
 
 if not os.name == "nt":
     # These options fail on Windows if using Visual Studio
@@ -254,16 +261,6 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             "ERROR: Cython.Build.cythonize not found. "
             "Cython is required to build from a repo.")
 
-    # Copy the GDAL version-specific shim module to _shim.pyx.
-    if gdal_major_version == 3 and gdal_minor_version >= 0:
-        shutil.copy('rasterio/_shim30.pyx', 'rasterio/_shim.pyx')
-    elif gdal_major_version == 2 and gdal_minor_version >= 1:
-        shutil.copy('rasterio/_shim21.pyx', 'rasterio/_shim.pyx')
-    elif gdal_major_version == 2 and gdal_minor_version == 0:
-        shutil.copy('rasterio/_shim20.pyx', 'rasterio/_shim.pyx')
-    elif gdal_major_version == 1:
-        shutil.copy('rasterio/_shim1.pyx', 'rasterio/_shim.pyx')
-
     ext_modules = cythonize([
         Extension(
             'rasterio._base', ['rasterio/_base.pyx'], **ext_options),
@@ -289,42 +286,37 @@ if os.path.exists("MANIFEST.in") and "clean" not in sys.argv:
             'rasterio.shutil', ['rasterio/shutil.pyx'], **ext_options),
         Extension(
             'rasterio._transform', ['rasterio/_transform.pyx'], **ext_options)],
-        quiet=True, **cythonize_options)
+        quiet=True, compile_time_env=compile_time_env, **cythonize_options)
 
 # If there's no manifest template, as in an sdist, we just specify .c files.
 else:
 
     ext_modules = [
-        Extension("rasterio._base", ["rasterio/_base.c"], **ext_options),
-        Extension("rasterio._io", ["rasterio/_io.c"], **ext_options),
-        Extension("rasterio._features", ["rasterio/_features.c"], **ext_options),
-        Extension("rasterio._env", ["rasterio/_env.c"], **ext_options),
-        Extension("rasterio._warp", ["rasterio/_warp.cpp"], **cpp_ext_options),
-        Extension("rasterio._fill", sdist_fill, **cpp_ext_options),
-        Extension("rasterio._err", ["rasterio/_err.c"], **ext_options),
-        Extension("rasterio._example", ["rasterio/_example.c"], **ext_options),
-        Extension("rasterio._crs", ["rasterio/_crs.c"], **ext_options),
-        Extension("rasterio.shutil", ["rasterio/shutil.c"], **ext_options),
-        Extension("rasterio._transform", ["rasterio/_transform.c"], **ext_options),
+        Extension(
+            'rasterio._base', ['rasterio/_base.c'], **ext_options),
+        Extension(
+            'rasterio._io', ['rasterio/_io.c'], **ext_options),
+        Extension(
+            'rasterio._features', ['rasterio/_features.c'], **ext_options),
+        Extension(
+            'rasterio._env', ['rasterio/_env.c'], **ext_options),
+        Extension(
+            'rasterio._warp', ['rasterio/_warp.cpp'], **cpp_ext_options),
+        Extension(
+            'rasterio._fill', sdist_fill, **cpp_ext_options),
+        Extension(
+            'rasterio._err', ['rasterio/_err.c'], **ext_options),
+        Extension(
+            'rasterio._example', ['rasterio/_example.c'], **ext_options),
+        Extension(
+            'rasterio._crs', ['rasterio/_crs.c'], **ext_options),
+        Extension(
+            'rasterio.shutil', ['rasterio/shutil.c'], **ext_options),
+        Extension(
+            'rasterio._transform', ['rasterio/_transform.c'], **ext_options),
+         Extension('rasterio._shim', ['rasterio/_shim.c'], **ext_options),
     ]
 
-    # Copy the GDAL version-specific shim module to _shim.pyx.
-    if gdal_major_version == 3 and gdal_minor_version >= 0:
-        ext_modules.append(
-            Extension("rasterio._shim", ["rasterio/_shim30.c"], **ext_options)
-        )
-    elif gdal_major_version == 2 and gdal_minor_version >= 1:
-        ext_modules.append(
-            Extension("rasterio._shim", ["rasterio/_shim21.c"], **ext_options)
-        )
-    elif gdal_major_version == 2 and gdal_minor_version == 0:
-        ext_modules.append(
-            Extension("rasterio._shim", ["rasterio/_shim20.c"], **ext_options)
-        )
-    elif gdal_major_version == 1:
-        ext_modules.append(
-            Extension("rasterio._shim", ["rasterio/_shim1.c"], **ext_options)
-        )
 
 with open("README.rst", encoding="utf-8") as f:
     readme = f.read()
