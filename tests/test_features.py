@@ -490,6 +490,30 @@ def test_rasterize_geomcollection_no_hole():
     )
 
 
+def test_rasterize_multipolygon_no_hole():
+    """
+    Make sure that bug reported in
+    https://github.com/mapbox/rasterio/issues/1253
+    does not recur.  MultiPolygons are flattened to individual parts,
+    and should result in no holes where parts overlap.
+    """
+
+    poly1 = (((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)),)
+    poly2 = (((2, 2), (2, 7), (7, 7), (7, 2), (2, 2)),)
+
+    polys = [{'type': 'Polygon', 'coordinates': poly1},
+             {'type': 'Polygon', 'coordinates': poly2}]
+
+    multipoly = {'type': 'MultiPolygon', 'coordinates': [poly1, poly2]}
+
+    expected = rasterize(polys, out_shape=DEFAULT_SHAPE)
+
+    assert np.array_equal(
+        rasterize([multipoly], out_shape=DEFAULT_SHAPE),
+        expected
+    )
+
+
 @pytest.mark.parametrize("input", [
     [{'type'}], [{'type': 'Invalid'}], [{'type': 'Point'}], [{'type': 'Point', 'coordinates': []}], [{'type': 'GeometryCollection', 'geometries': []}]])
 def test_rasterize_invalid_geom(input):
