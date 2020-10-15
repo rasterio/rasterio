@@ -1,6 +1,15 @@
 Changes
 =======
 
+1.1.8dev
+--------
+
+- Multipolyons passed to rasterize are flattened to avoid holes in output
+  (#2014).
+- If the certifi package can be imported, its certificate store location will
+  be passed to GDAL during import of rasterio._env unless CURL_CA_BUNDLE is
+  already set (#2009).
+
 1.1.7 (2020-09-29)
 ------------------
 
