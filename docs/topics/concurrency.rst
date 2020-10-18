@@ -7,9 +7,25 @@ function, which means that Python threads can read and write concurrently.
 
 The Numpy library also often releases the GIL, e.g., in applying
 universal functions to arrays, and this makes it possible to distribute
-processing of an array across cores of a processor. The Cython function
-below, included in Rasterio's ``_example`` module, simulates such
-a GIL-releasing raster processing function.
+processing of an array across cores of a processor.
+
+This means that it is possible to parallelize tasks that need to be performed
+for a set of windows/pixels in the raster. Reading, writing and processing can
+always be done concurrently. But it depends on the hardware and where the
+bottlenecks are, how much of a speedup can be obtained. In the case that the
+processing function releases the GIL, multiple threads processing
+simultaneously can lead to further speedups.
+
+.. note::
+    If you wish to do multiprocessing that is not trivially parallelizable
+    accross very large images that do not fit in memory, or if you wish to
+    do multiprocessing across multiple machines. You might want to have a
+    look at `dask <https://dask.org/>`__ and in particular this
+    `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
+
+The Cython function below, included in Rasterio's ``_example`` module,
+simulates a GIL-releasing CPU-intensive raster processing function. You can
+also easily create GIL-releasing functions by using `numba <https://numba.pydata.org/>`__
 
 .. code-block:: python
 
@@ -90,13 +106,16 @@ threads simultaneously.
                 # without causing race conditions. To safely read/write
                 # from multiple threads, we use a lock to protect the
                 # DatasetReader/Writer
-                read_lock = multiprocessing.Lock()
-                write_lock = multiprocessing.Lock()
+                read_lock = threading.Lock()
+                write_lock = threading.Lock()
 
                 def process(window):
                     with read_lock:
                         src_array = src.read(window=window)
+
+                    # The computation can be performed concurrently
                     result = compute(src_array)
+
                     with write_lock:
                         dst.write(result, window=window)
 
@@ -109,7 +128,7 @@ threads simultaneously.
 
 The code above simulates a CPU-intensive calculation that runs faster when
 spread over multiple cores using the ``ThreadPoolExecutor`` from Python 3's
-``concurrent.futures`` module. Compared to the case of one concurrent job 
+``concurrent.futures`` module. Compared to the case of one concurrent job
 (``-j 1``),
 
 .. code-block:: console
@@ -130,11 +149,11 @@ we get over 3x speed up with four concurrent jobs.
    user    0m4.402s
    sys     0m0.168s
 
-If the function that you'd like to map over raster windows doesn't release the 
-GIL, you unfortunately cannot simply replace ``ThreadPoolExecutor`` with 
+If the function that you'd like to map over raster windows doesn't release the
+GIL, you unfortunately cannot simply replace ``ThreadPoolExecutor`` with
 ``ProcessPoolExecutor``, the DatasetReader/Writer cannot be shared by multiple
 processes, which means that each process needs to open the file seperately,
-or you can do all the reading and writing from the main thread, as shown in 
+or you can do all the reading and writing from the main thread, as shown in
 this next example. This is much less efficient memory wise, however.
 
 .. code-block:: python
@@ -147,9 +166,3 @@ this next example. This is much less efficient memory wise, however.
         futures = executor.map(compute, arrays)
         for window, result in zip(windows, futures):
             dst.write(result, window=window)
-
-.. note::
-    If you wish to do multiprocessing accross very large images that do not 
-    fit in memory, or if you wish to do multiprocessing across multiple 
-    machines. You might want to have a look at `dask <https://dask.org/>`__ 
-    and in particular this `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.

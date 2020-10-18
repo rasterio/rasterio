@@ -38,13 +38,16 @@ def main(infile, outfile, num_workers=4):
             # without causing race conditions. To safely read/write
             # from multiple threads, we use a lock to protect the
             # DatasetReader/Writer
-            read_lock = multiprocessing.Lock()
-            write_lock = multiprocessing.Lock()
+            read_lock = threading.Lock()
+            write_lock = threading.Lock()
 
             def process(window):
                 with read_lock:
                     src_array = src.read(window=window)
+
+                # The computation can be performed concurrently
                 result = compute(src_array)
+
                 with write_lock:
                     dst.write(result, window=window)
 
