@@ -18,7 +18,7 @@ Consider Rasterio's RGB.byte.tif test dataset. It has 718 rows and 791
 columns of pixels. Each pixel has 3 8-bit (uint8) channels or bands. It has a
 trapezoid of image data within a rectangular background of 0,0,0 value pixels.
 
-.. image:: https://www.dropbox.com/s/sg7qejccih5m4ah/RGB.byte.jpg?dl=1
+.. image:: ../img/RGB.byte.jpg
 
 Metadata in the dataset declares that values of 0 will be interpreted as
 invalid data or *nodata* pixels. In, e.g., merging the image with adjacent
