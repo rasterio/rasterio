@@ -135,7 +135,7 @@ cdef GDALWarpOptions * create_warp_options(
     # get the defaults.
     cdef char **warp_extras = psWOptions.papszWarpOptions
 
-    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
     # is fine.
 
@@ -444,7 +444,7 @@ def _reproject(
     cdef char **imgProjOptions = NULL
     imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
 
-    # See http://www.gdal.org/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
+    # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
     # copying all the function's keyword arguments to the image to
     # image transformer options mapping; unsupported options should be
@@ -486,7 +486,7 @@ def _reproject(
     if init_dest_nodata:
         warp_extras = CSLSetNameValue(warp_extras, "INIT_DEST", "NO_DATA")
 
-    # See http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
+    # See https://gdal.org/doxygen/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08
     # for a list of supported options. Copying unsupported options
     # is fine.
     for key, val in kwargs.items():
@@ -696,7 +696,7 @@ cdef class WarpedVRTReaderBase(DatasetReaderBase):
             The working data type for warp operation and output.
         warp_extras : dict
             GDAL extra warp options. See
-            http://www.gdal.org/structGDALWarpOptions.html.
+            https://gdal.org/doxygen/structGDALWarpOptions.html.
 
         Returns
         -------

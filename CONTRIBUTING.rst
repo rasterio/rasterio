@@ -97,7 +97,7 @@ Cython language is a superset of Python. Cython files end with ``.pyx`` and
 
 Rasterio supports Python 2 and Python 3 in the same code base, which is
 aided by an internal compatibility module named ``compat.py``. It functions
-similarly to the more widely known `six <https://pythonhosted.org/six/>`__ but
+similarly to the more widely known `six <https://six.readthedocs.io/>`__ but
 we only use a small portion of the features so it eliminates a dependency.
 
 We strongly prefer code adhering to `PEP8

@@ -79,7 +79,7 @@ Reading MemoryFiles
 
 Like ``BytesIO``, ``MemoryFile`` implements the Python file protocol and
 provides ``read()``, ``seek()``, and ``tell()`` methods. Instances are thus suitable
-as arguments for methods like `requests.post() <http://docs.python-requests.org/en/master/api/#requests.post>`__.
+as arguments for methods like `requests.post() <https://requests.readthedocs.io/en/latest/api/#requests.post>`__.
 
 .. code-block:: python
 

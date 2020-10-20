@@ -296,7 +296,7 @@ metadata namespace is represented as a dict.
    {'INTERLEAVE': 'PIXEL'}
 
 The semantics of the tags in GDAL's default and ``IMAGE_STRUCTURE`` namespaces
-are described in http://www.gdal.org/gdal_datamodel.html. Rasterio uses 
+are described in https://gdal.org/user/raster_data_model.html. Rasterio uses 
 several namespaces of its own: ``rio_creation_kwds`` and ``rio_overviews``,
 each with their own semantics.
 
