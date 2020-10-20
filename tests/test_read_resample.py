@@ -82,15 +82,6 @@ def test_resample_alg_effect_2():
 
 
 @requires_gdal2
-def test_float_window():
-    """floating point windows work"""
-    with rasterio.open('tests/data/RGB.byte.tif') as s:
-        out_shape = (401, 401)
-        window = Window(300.5, 300.5, 200.5, 200.5)
-        s.read(1, window=window, out_shape=out_shape)
-
-
-@requires_gdal2
 def test_resampling_alg_error():
     """Get an exception instead of a crash when using warp-only algs for read or write, see issue #1930"""
     with pytest.raises(ResamplingAlgorithmError):
