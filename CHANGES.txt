@@ -1,14 +1,17 @@
 Changes
 =======
 
-1.2.0 (TBD)
------------
+1.2dev
+------
 
+1.1.8 (2020-10-20)
+------------------
+
+- Multipolyons passed to rasterize are flattened to avoid holes in output
+  (#2014).
 - If the certifi package can be imported, its certificate store location will
   be passed to GDAL during import of rasterio._env unless CURL_CA_BUNDLE is
   already set (#2009).
-- epsg_treats_as_latlong() and epsg_treats_as_northingeasting() functions have
-  been added to rasterio.crs (#1943).
 
 1.1.7 (2020-09-29)
 ------------------
