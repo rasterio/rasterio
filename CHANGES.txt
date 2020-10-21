@@ -1,8 +1,8 @@
 Changes
 =======
 
-1.1.8dev
---------
+1.1.8 (2020-10-20)
+------------------
 
 - Multipolyons passed to rasterize are flattened to avoid holes in output
   (#2014).
