@@ -10,6 +10,7 @@ With -j 4, the program returns in about 1/4 the time as with -j 1.
 
 import concurrent.futures
 import multiprocessing
+import threading
 
 import rasterio
 from rasterio._example import compute
@@ -22,40 +23,40 @@ def main(infile, outfile, num_workers=4):
     reversed.
     """
 
-    with rasterio.Env():
+    with rasterio.open(infile) as src:
 
-        with rasterio.open(infile) as src:
+        # Create a destination dataset based on source params. The
+        # destination will be tiled, and we'll process the tiles
+        # concurrently.
+        profile = src.profile
+        profile.update(blockxsize=128, blockysize=128, tiled=True)
 
-            # Create a destination dataset based on source params. The
-            # destination will be tiled, and we'll process the tiles
-            # concurrently.
-            profile = src.profile
-            profile.update(blockxsize=128, blockysize=128, tiled=True)
+        with rasterio.open(outfile, "w", **src.profile) as dst:
+            windows = [window for ij, window in dst.block_windows()]
 
-            with rasterio.open(outfile, "w", **profile) as dst:
+            # We cannot write to the same file from multiple threads
+            # without causing race conditions. To safely read/write
+            # from multiple threads, we use a lock to protect the
+            # DatasetReader/Writer
+            read_lock = threading.Lock()
+            write_lock = threading.Lock()
 
-                # Materialize a list of destination block windows
-                # that we will use in several statements below.
-                windows = [window for ij, window in dst.block_windows()]
+            def process(window):
+                with read_lock:
+                    src_array = src.read(window=window)
 
-                # This generator comprehension gives us raster data
-                # arrays for each window. Later we will zip a mapping
-                # of it with the windows list to get (window, result)
-                # pairs.
-                data_gen = (src.read(window=window) for window in windows)
+                # The computation can be performed concurrently
+                result = compute(src_array)
 
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=num_workers
-                ) as executor:
+                with write_lock:
+                    dst.write(result, window=window)
 
-                    # We map the compute() function over the raster
-                    # data generator, zip the resulting iterator with
-                    # the windows list, and as pairs come back we
-                    # write data to the destination dataset.
-                    for window, result in zip(
-                        windows, executor.map(compute, data_gen)
-                    ):
-                        dst.write(result, window=window)
+            # We map the process() function over the list of
+            # windows.
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=num_workers
+            ) as executor:
+                executor.map(process, windows)
 
 
 if __name__ == "__main__":
