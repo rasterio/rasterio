@@ -103,7 +103,7 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     cdef int i = 0
     cdef int retval = 3
     cdef int *bandmap = NULL
-    cdef void *buf = NULL  # <void *>np.PyArray_DATA(data)
+    cdef void *buf = <void *>np.PyArray_DATA(data)
     cdef int bufxsize = data.shape[2]
     cdef int bufysize = data.shape[1]
     cdef GDALDataType buftype = dtypes.dtype_rev[data.dtype.name]
@@ -128,39 +128,21 @@ cdef int io_multi_band(GDALDatasetH hds, int mode, double x0, double y0,
     extras.pfnProgress = NULL
     extras.pProgressData = NULL
 
-    cdef int j = 0
+    bandmap = <int *>CPLMalloc(count*sizeof(int))
     for i in range(count):
-        j = <int>indexes[i]
-        band = GDALGetRasterBand(hds, j)
-        if band == NULL:
-            raise ValueError("Null band")
-        buf = <void *>np.PyArray_DATA(data[i])
-        if buf == NULL:
-            raise ValueError("NULL data")
+        bandmap[i] = <int>indexes[i]
+
+    try:
         with nogil:
-            retval = GDALRasterIOEx(
-                band, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf, bufxsize,
-                bufysize, <GDALDataType>1, bufpixelspace, buflinespace, &extras)
+            retval = GDALDatasetRasterIOEx(
+                hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
+                bufxsize, bufysize, buftype, count, bandmap,
+                bufpixelspace, buflinespace, bufbandspace, &extras)
 
-            if retval:
-                break
+        return exc_wrap_int(retval)
 
-    return exc_wrap_int(retval)
-#    bandmap = <int *>CPLMalloc(count*sizeof(int))
-#    for i in range(count):
-#        bandmap[i] = <int>indexes[i]
-#
-#    try:
-#        with nogil:
-#            retval = GDALDatasetRasterIOEx(
-#                hds, <GDALRWFlag>mode, xoff, yoff, xsize, ysize, buf,
-#                bufxsize, bufysize, buftype, count, bandmap,
-#                bufpixelspace, buflinespace, bufbandspace, &extras)
-#
-#        return exc_wrap_int(retval)
-#
-#    finally:
-#        CPLFree(bandmap)
+    finally:
+        CPLFree(bandmap)
 
 
 cdef int io_multi_mask(GDALDatasetH hds, int mode, double x0, double y0,

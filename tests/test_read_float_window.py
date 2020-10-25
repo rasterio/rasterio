@@ -21,7 +21,7 @@ def test_float_window(path_rgb_byte_tif):
     "resampling",
     [
         pytest.param(
-            Resampling.nearest, marks=pytest.mark.xfail(reason="Possible GDAL issue")
+            Resampling.nearest, marks=pytest.mark.xfail(reason="GDAL issue #3101 affects versions before 3.2.0")
         ),
         Resampling.bilinear,
         Resampling.average,
