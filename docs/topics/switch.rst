@@ -77,11 +77,11 @@ shown below.
    # The GDAL environment has no registered format drivers or error
    # handlers at this point.
 
-   with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=512):
+   with rasterio.Env(CPL_DEBUG=True, GDAL_CACHEMAX=128000000):
        # This ensures that all drivers are registered in the global
        # context. Within this block *only* GDAL's debugging messages
-       # are turned on and the raster block cache size is set to 512MB.
-   
+       # are turned on and the raster block cache size is set to 128 MB.
+
        with rasterio.open('example.tif') as src:
            # Perform GDAL operations in this context.
            # ...
