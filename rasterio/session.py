@@ -343,16 +343,16 @@ class AWSSession(Session):
 class OSSSession(Session):
     """Configures access to secured resources stored in Alibaba Cloud OSS.
     """
-    def __init__(self, oss_access_key_id, oss_secret_access_key, oss_endpoint='oss-us-east-1.aliyuncs.com'):
+    def __init__(self, oss_access_key_id=None, oss_secret_access_key=None, oss_endpoint=None):
         """Create new Alibaba Cloud OSS session
 
         Parameters
         ----------
-        oss_access_key_id: string
+        oss_access_key_id: string, optional (default: None)
             An access key id
-        oss_secret_access_key: string
+        oss_secret_access_key: string, optional (default: None)
             An secret access key
-        oss_endpoint: string, default 'oss-us-east-1.aliyuncs.com'
+        oss_endpoint: string, optional (default: None)
             the region attached to the bucket
         """
 
