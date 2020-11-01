@@ -10,7 +10,7 @@ class RPC(object):
 
     Attributes
     ----------
-    err_bias, err_rand: float
+    err_bias, err_rand: float, optional
         The RMS bias and random error in meters per horizontal axis of all points in image.
     lat_off, long_off, height_off: float
         Geodetic latitude, longitude, and height offset.
@@ -24,8 +24,8 @@ class RPC(object):
         The twenty coefficients describing a numerator or denominator polynomial corresponding to line (row) or sample (col).
     """
 
-    err_bias = attr.ib()
-    err_rand = attr.ib()
+    err_bias = attr.ib(default="")
+    err_rand = attr.ib(default="")
     height_off = attr.ib()
     height_scale = attr.ib()
     lat_off = attr.ib()
