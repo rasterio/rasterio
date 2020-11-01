@@ -1311,7 +1311,7 @@ cdef class DatasetBase(object):
             gcps, crs = value
             self._set_gcps(gcps, crs)
 
-    def get_rpcs(self):
+    def _get_rpcs(self):
         """Get RPCs if exists"""
         return RPC.from_gdal(self.tags(ns='RPC'))
 
@@ -1328,7 +1328,7 @@ cdef class DatasetBase(object):
         """
         def __get__(self):
             if not self._rpcs:
-                self._rpcs = self.get_rpcs()
+                self._rpcs = self._get_rpcs()
             return self._rpcs
 
         def __set__(self, value):
