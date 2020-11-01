@@ -1,61 +1,95 @@
-from rasterio.compat import Iterable, UserDict, text_type
-class RPC(UserDict):
-    """Rational Polynomial Coefficients used to map (x, y, z) <-> (row, col).
+import attr
+from collections import OrderedDict
+from collections.abc import Iterable
+
+@attr.s(slots=True)
+class RPC(object):
+    """Rational Polynomial Coefficients used to map (x, y, z) <-> (row, col) coordinates.
     
-    RPCs are stored in a dict-like structure with methods to serialize and deserialize
-    to/from GDAL metadata strings.
+    This class contains a mapping between various RPC attributes and values. 
+
+    Attributes
+    ----------
+    err_bias, err_rand: float
+        The RMS bias and random error in meters per horizontal axis of all points in image.
+    lat_off, long_off, height_off: float
+        Geodetic latitude, longitude, and height offset.
+    lat_scale, long_scale, height_scale: float
+        Geodetic latitude, longitude, and height scaling.
+    line_off, samp_off: float
+        Line (row) and sample (column) offset.
+    line_scale, samp_scale: float
+        Line (row) and sample (column) offset.
+    line_num_coeff, line_den_coeff, samp_num_coeff, samp_den_coeff: list
+        The twenty coefficients describing a numerator or denominator polynomial corresponding to line (row) or sample (col).
     """
-    GDAL_RPC_KEYS = (
-        "ERR_BIAS",
-        "ERR_RAND",
-        "HEIGHT_OFF",
-        "HEIGHT_SCALE",
-        "LAT_OFF",
-        "LAT_SCALE",
-        "LINE_DEN_COEFF",
-        "LINE_NUM_COEFF",
-        "LINE_OFF",
-        "LINE_SCALE",
-        "LONG_OFF",
-        "LONG_SCALE",
-        "SAMP_DEN_COEFF",
-        "SAMP_NUM_COEFF",
-        "SAMP_OFF",
-        "SAMP_SCALE"
-    )
 
-    def __init__(self, data={}, **kwargs):
-        UserDict.__init__(self)
-        initdata = {}
-        initdata.update(data)
-        initdata.update(**kwargs)
-        initdata = dict(filter(lambda item: item[0] in self.GDAL_RPC_KEYS, initdata.items()))
-        self.data.update(initdata)
+    err_bias = attr.ib()
+    err_rand = attr.ib()
+    height_off = attr.ib()
+    height_scale = attr.ib()
+    lat_off = attr.ib()
+    lat_scale = attr.ib()
+    line_den_coeff = attr.ib()
+    line_num_coeff = attr.ib()
+    line_off = attr.ib()
+    line_scale = attr.ib()
+    long_off = attr.ib()
+    long_scale = attr.ib()
+    samp_den_coeff = attr.ib()
+    samp_num_coeff = attr.ib()
+    samp_off = attr.ib()
+    samp_scale = attr.ib()
 
-    def __getitem__(self, key):
-        """Normal dict item getter."""
-        return self.data[key]
-
-    def __setitem__(self, key, val):
-        """Normal dict item setter."""
-        self.data[key] = val
-
+    def to_dict(self):
+        """Return a dictionary representation of RPC"""
+        return attr.asdict(self)
 
     def to_gdal(self):
-        """Serialize dict values to string."""
-        out = {}
+        """Serialize RPC attribute name and values in a form expected by GDAL.
+        
+        Returns
+        -------
+        dict
 
-        for key, val in self.items():
-            if isinstance(val, Iterable):
-                out[key] = ' '.join(map(text_type, val))
-            else:
-                out[key] = text_type(val)
+        Notes
+        -----
+        The `err_bias` and `err_rand` are optional, and are not written to datasets by GDAL.
+        """
 
+        out = {
+            "HEIGHT_OFF": str(self.height_off),
+            "HEIGHT_SCALE": str(self.height_scale),
+            "LAT_OFF": str(self.lat_off),
+            "LAT_SCALE": str(self.lat_scale),
+            "LINE_DEN_COEFF": " ".join(map(str, self.line_den_coeff)),
+            "LINE_NUM_COEFF": " ".join(map(str, self.line_num_coeff)),
+            "LINE_OFF": str(self.line_off),
+            "LINE_SCALE": str(self.line_scale),
+            "LONG_OFF": str(self.long_off),
+            "LONG_SCALE": str(self.long_scale),
+            "SAMP_DEN_COEFF": " ".join(map(str, self.samp_den_coeff)),
+            "SAMP_NUM_COEFF": " ".join(map(str, self.samp_num_coeff)),
+            "SAMP_OFF": str(self.samp_off),
+            "SAMP_SCALE": str(self.samp_scale)
+        }
+        
+        if self.err_bias:
+            out.update(ERR_BIAS=str(self.err_bias))
+        if self.err_rand:
+            out.update(ERR_RAND=str(self.err_rand))
+        
         return out
 
     @classmethod
     def from_gdal(cls, rpcs):
-        """Deserialize dict values to float or list."""
+        """Deserialize dict values to float or list.
+
+
+        Returns
+        -------
+        RPC
+        """
         out = {}
 
         for key, val in rpcs.items():
@@ -65,4 +99,21 @@ class RPC(UserDict):
             else:
                 out[key] = float(vals[0])
 
-        return cls(out)
+        return cls(
+            err_bias=out.get("ERR_BIAS", ""),
+            err_rand=out.get("ERR_RAND", ""),
+            height_off=out["HEIGHT_OFF"],
+            height_scale=out["HEIGHT_SCALE"],
+            lat_off=out["LAT_OFF"],
+            lat_scale=out["LAT_SCALE"],
+            line_den_coeff=out["LINE_DEN_COEFF"],
+            line_num_coeff=out["LINE_NUM_COEFF"],
+            line_off=out["LINE_OFF"],
+            line_scale=out["LINE_SCALE"],
+            long_off=out["LONG_OFF"],
+            long_scale=out["LONG_SCALE"],
+            samp_den_coeff=out["SAMP_DEN_COEFF"],
+            samp_num_coeff=out["SAMP_NUM_COEFF"],
+            samp_off=out["SAMP_OFF"],
+            samp_scale=out["SAMP_SCALE"],
+        )
