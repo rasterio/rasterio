@@ -24,8 +24,6 @@ class RPC(object):
         The twenty coefficients describing a numerator or denominator polynomial corresponding to line (row) or sample (col).
     """
 
-    err_bias = attr.ib(default="")
-    err_rand = attr.ib(default="")
     height_off = attr.ib()
     height_scale = attr.ib()
     lat_off = attr.ib()
@@ -40,6 +38,8 @@ class RPC(object):
     samp_num_coeff = attr.ib()
     samp_off = attr.ib()
     samp_scale = attr.ib()
+    err_bias = attr.ib(default=None)
+    err_rand = attr.ib(default=None)
 
     def to_dict(self):
         """Return a dictionary representation of RPC"""
@@ -100,8 +100,8 @@ class RPC(object):
                 out[key] = float(vals[0])
 
         return cls(
-            err_bias=out.get("ERR_BIAS", ""),
-            err_rand=out.get("ERR_RAND", ""),
+            err_bias=out.get("ERR_BIAS"),
+            err_rand=out.get("ERR_RAND"),
             height_off=out["HEIGHT_OFF"],
             height_scale=out["HEIGHT_SCALE"],
             lat_off=out["LAT_OFF"],
