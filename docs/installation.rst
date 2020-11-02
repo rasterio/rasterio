@@ -23,7 +23,7 @@ Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
 for OS X versions 10.7+ starting with Rasterio version 0.17. To install, 
 run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
-a source distribution, run ``pip install rasterio --no-use-wheel`` instead.
+a source distribution, run ``pip install rasterio --no-binary`` instead.
 
 The included GDAL library is fairly minimal, providing only the format drivers
 that ship with GDAL and are enabled by default. To get access to more formats,
