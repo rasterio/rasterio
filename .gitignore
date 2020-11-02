@@ -65,6 +65,7 @@ target/
 .idea/
 venv/
 venv2/
+.vscode/
 
 # rasterio
 gdal-config.txt
