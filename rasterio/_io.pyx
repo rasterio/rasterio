@@ -987,7 +987,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=False, **kwargs):
+                 gcps=None, rpcs=None, sharing=False, **kwargs):
         """Create a new dataset writer or updater
 
         Parameters
@@ -1192,7 +1192,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if transform is not None:
             self._transform = transform.to_gdal()
         self._gcps = None
+        self._rpcs = None
         self._init_gcps = gcps
+        self._init_rpcs = rpcs
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -1207,6 +1209,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._set_crs(self._crs)
             if self._init_gcps:
                 self._set_gcps(self._init_gcps, self.crs)
+            if self._init_rpcs:
+                self._set_rpcs(self._init_rpcs)
 
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)
@@ -1654,6 +1658,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Invalidate cached value.
         self._gcps = None
 
+    def _set_rpcs(self, rpcs):
+        if hasattr(rpcs, 'to_gdal'):
+            rpcs = rpcs.to_gdal()
+        self.update_tags(ns='RPC', **rpcs)
+        self._rpcs = None
 
 cdef class InMemoryRaster:
     """
@@ -1848,7 +1857,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=False, **kwargs):
+                 gcps=None, rpcs=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -1950,6 +1959,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             self._transform = transform.to_gdal()
         self._gcps = None
         self._init_gcps = gcps
+        self._rpcs = None
+        self._init_rpcs = rpcs
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -1998,6 +2009,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self._set_crs(self._crs)
             if self._init_gcps:
                 self._set_gcps(self._init_gcps, self._crs)
+            if self._init_rpcs:
+                self._set_rpcs(self._init_rpcs)
 
         elif self.mode == 'r+':
             try:
