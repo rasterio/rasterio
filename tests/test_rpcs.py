@@ -213,3 +213,10 @@ def test_read_vrt_rpcs(tmpdir):
         rpcs = src.rpcs
         assert rpcs
     
+def test_rpcs_attribute_none_if_no_rpcs(tmpdir):
+    tiffname = str(tmpdir.join('test.tif'))
+    with rasterio.open(tiffname, 'w', driver='GTiff', dtype='uint8', count=1,
+                       width=10, height=10):
+        pass
+    with rasterio.open(tiffname) as src:
+        src.rpcs
