@@ -219,4 +219,4 @@ def test_rpcs_attribute_none_if_no_rpcs(tmpdir):
                        width=10, height=10):
         pass
     with rasterio.open(tiffname) as src:
-        src.rpcs
+        assert src.rpcs is None
