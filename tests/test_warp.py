@@ -6,6 +6,7 @@ import sys
 from affine import Affine
 import numpy as np
 from numpy.testing import assert_almost_equal
+from numpy.testing._private.utils import tempdir
 import pytest
 
 import rasterio
@@ -1747,3 +1748,58 @@ def test_empty_transform_inputs_length_z():
     """Get an exception of inputs have different lengths"""
     with pytest.raises(TransformError):
         rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1, 2], [1, 2], zs=[0])
+
+def test_warp_gcps_compute_dst_transform_automatically_array():
+    """Ensure we don't raise an exception when gcps passed without dst_transform, for a source array"""
+    source = np.ones((3, 800, 800), dtype=np.uint8) * 255
+    out = np.zeros((3, 512, 512))
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0),
+    ]
+    reproject(
+        source,
+        out,
+        src_crs="EPSG:32618",
+        gcps=src_gcps,
+        dst_crs="EPSG:32618",
+        resampling=Resampling.nearest
+    )
+
+    assert not out.all()
+    assert not out[:, 0, 0].any()
+    assert not out[:, 0, -1].any()
+    assert not out[:, -1, -1].any()
+    assert not out[:, -1, 0].any()
+
+def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
+    """Ensure we don't raise an exception when gcps passed without dst_transform, for a source dataset"""
+    tiffname = str(tmpdir.join('test.tif'))
+    arr = np.ones((3, 800, 800), dtype=np.uint8) * 255
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0),
+    ]
+    out = np.zeros((3, 512, 512))
+
+    with rasterio.open(tiffname, mode='w', height=800, width=800, count=3, dtype=np.uint8) as source:
+        source.gcps = (src_gcps, CRS.from_epsg(32618))
+    
+    with rasterio.open(tiffname) as source:
+        
+        reproject(
+            rasterio.band(source, source.indexes),
+            out,
+            dst_crs="EPSG:32618",
+            resampling=Resampling.nearest
+        )
+    
+    assert not out.all()
+    assert not out[:, 0, 0].any()
+    assert not out[:, 0, -1].any()
+    assert not out[:, -1, -1].any()
+    assert not out[:, -1, 0].any()
