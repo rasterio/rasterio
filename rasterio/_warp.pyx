@@ -614,6 +614,11 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
         imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_SRS", wkt)
+        for key, val in kwargs.items():
+            key = key.upper().encode('utf-8')
+            val = str(val).upper().encode('utf-8')
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, <const char *>key, <const char *>val)
         hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
         if rpcs:
             if hasattr(rpcs, 'to_gdal'):
