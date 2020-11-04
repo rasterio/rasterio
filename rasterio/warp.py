@@ -179,7 +179,7 @@ def transform_bounds(
 
 @ensure_env
 @require_gdal_version('2.0', param='resampling', values=GDAL2_RESAMPLING)
-def reproject(source, destination=None, src_transform=None, gcps=None,
+def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None,
               src_crs=None, src_nodata=None, dst_transform=None, dst_crs=None,
               dst_nodata=None, dst_resolution=None, src_alpha=0, dst_alpha=0,
               resampling=Resampling.nearest, num_threads=1,
@@ -285,9 +285,9 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
     """
 
     # Only one type of georeferencing is permitted.
-    if src_transform and gcps:
-        raise ValueError("src_transform and gcps parameters may not"
-                         "be used together.")
+    if src_transform and (gcps or rpcs):
+        raise ValueError("src_transform, gcps, and rpcs are mutually "
+                         "exclusive parameters and may not be used together.")
 
     # Guard against invalid or unsupported resampling algorithms.
     try:
@@ -337,7 +337,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
         dst_transform, dst_width, dst_height = calculate_default_transform(
             src_crs=src_crs, dst_crs=dst_crs, width=src_width, height=src_height,
             left=left, bottom=bottom, right=right, top=top,
-            gcps=gcps, dst_width=dst_width, dst_height=dst_height,
+            gcps=gcps, rpcs=rpcs, dst_width=dst_width, dst_height=dst_height,
             resolution=dst_resolution)
 
         if destination is None:
@@ -346,7 +346,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None,
 
     # Call the function in our extension module.
     _reproject(
-        source, destination, src_transform=src_transform, gcps=gcps,
+        source, destination, src_transform=src_transform, gcps=gcps, rpcs=rpcs,
         src_crs=src_crs, src_nodata=src_nodata, dst_transform=dst_transform,
         dst_crs=dst_crs, dst_nodata=dst_nodata, dst_alpha=dst_alpha,
         src_alpha=src_alpha, resampling=resampling,
@@ -401,7 +401,7 @@ def aligned_target(transform, width, height, resolution):
 @ensure_env
 def calculate_default_transform(
         src_crs, dst_crs, width, height, left=None, bottom=None, right=None,
-        top=None, gcps=None, resolution=None, dst_width=None, dst_height=None):
+        top=None, gcps=None, rpcs=None, resolution=None, dst_width=None, dst_height=None):
     """Output dimensions and transform for a reprojection.
 
     Source and destination coordinate reference systems and output
@@ -457,9 +457,9 @@ def calculate_default_transform(
         raise ValueError("Bounding values and ground control points may not"
                          "be used together.")
 
-    if any(x is None for x in (left, bottom, right, top)) and not gcps:
-        raise ValueError("Either four bounding values or ground control points"
-                         "must be specified")
+    if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
+        raise ValueError("Either four bounding values, ground control points,"
+                         " or rational polynomial coefficients must be specified")
 
     if (dst_width is None) != (dst_height is None):
         raise ValueError("Either dst_width and dst_height must be specified "
@@ -474,7 +474,7 @@ def calculate_default_transform(
         raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top, gcps
+        src_crs, dst_crs, width, height, left, bottom, right, top, gcps, rpcs
     )
 
     # If resolution is specified, Keep upper-left anchored
