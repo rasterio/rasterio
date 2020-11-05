@@ -473,6 +473,7 @@ def _reproject(
         val = str(val).upper().encode('utf-8')
         imgProjOptions = CSLSetNameValue(
             imgProjOptions, <const char *>key, <const char *>val)
+        log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
 
     try:
         hTransformArg = exc_wrap_pointer(
@@ -622,6 +623,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             val = str(val).upper().encode('utf-8')
             imgProjOptions = CSLSetNameValue(
                 imgProjOptions, <const char *>key, <const char *>val)
+            log.debug("Set _calculate_default_transform Transformer option {0!r}={1!r}".format(key, val))
         hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
         if rpcs:
             if hasattr(rpcs, 'to_gdal'):
