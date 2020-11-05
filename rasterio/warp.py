@@ -215,7 +215,11 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
         defined together with gcps.
     gcps: sequence of GroundControlPoint, optional
         Ground control points for the source. An error will be raised
-        if this parameter is defined together with src_transform.
+        if this parameter is defined together with src_transform or rpcs.
+    rpcs: RPC or dict, optional
+        Rational polynomial coefficients for the source. An error will
+        be raised if this parameter is defined together with src_transform
+        or gcps.
     src_crs: CRS or dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
@@ -285,7 +289,7 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
     """
 
     # Only one type of georeferencing is permitted.
-    if src_transform and (gcps or rpcs):
+    if (src_transform and gcps) or (src_transform and rpcs) or (gcps and rpcs):
         raise ValueError("src_transform, gcps, and rpcs are mutually "
                          "exclusive parameters and may not be used together.")
 
@@ -430,6 +434,9 @@ def calculate_default_transform(
     gcps: sequence of GroundControlPoint, optional
         Instead of a bounding box for the source, a sequence of ground
         control points may be provided.
+    rpcs: RPC or dict, optional
+        Instead of a bounding box for the source, rational polynomial
+        coefficients may be provided.
     resolution: tuple (x resolution, y resolution) or float, optional
         Target resolution, in units of target coordinate reference
         system.
@@ -457,6 +464,9 @@ def calculate_default_transform(
     """
     if any(x is not None for x in (left, bottom, right, top)) and gcps:
         raise ValueError("Bounding values and ground control points may not"
+                         "be used together.")
+    if any(x is not None for x in (left, bottom, right, top)) and rpcs:
+        raise ValueError("Bounding values and rational polynomial coefficients may not"
                          "be used together.")
 
     if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):

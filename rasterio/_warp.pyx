@@ -251,6 +251,9 @@ def _reproject(
     gcps: sequence of `GroundControlPoint` instances, optional
         Ground control points for the source. May be used in place of
         src_transform.
+    rpcs: RPC or dict, optional
+        Rational polynomial coefficients for the source. May be used
+        in place of src_transform.
     src_crs: dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
