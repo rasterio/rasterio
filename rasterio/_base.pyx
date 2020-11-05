@@ -1315,7 +1315,7 @@ cdef class DatasetBase(object):
         """Get RPCs if exists"""
         md = self.tags(ns='RPC')
         if md:
-            return RPC.from_gdal(self.tags(ns='RPC'))
+            return RPC.from_gdal(md)
 
     def _set_rpcs(self, values):
         raise DatasetAttributeError("read-only attribute")
