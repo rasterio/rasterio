@@ -401,7 +401,7 @@ def aligned_target(transform, width, height, resolution):
 @ensure_env
 def calculate_default_transform(
         src_crs, dst_crs, width, height, left=None, bottom=None, right=None,
-        top=None, gcps=None, rpcs=None, resolution=None, dst_width=None, dst_height=None):
+        top=None, gcps=None, rpcs=None, resolution=None, dst_width=None, dst_height=None, **kwargs):
     """Output dimensions and transform for a reprojection.
 
     Source and destination coordinate reference systems and output
@@ -436,6 +436,8 @@ def calculate_default_transform(
     dst_width, dst_height: int, optional
         Output file size in pixels and lines. Cannot be used together
         with resolution.
+    kwargs:  dict, optional
+        Additional arguments passed to transformation function.
 
     Returns
     -------
@@ -474,7 +476,7 @@ def calculate_default_transform(
         raise ValueError("Resolution cannot be used with dst_width and dst_height.")
 
     dst_affine, dst_width, dst_height = _calculate_default_transform(
-        src_crs, dst_crs, width, height, left, bottom, right, top, gcps, rpcs
+        src_crs, dst_crs, width, height, left, bottom, right, top, gcps, rpcs, **kwargs
     )
 
     # If resolution is specified, Keep upper-left anchored
