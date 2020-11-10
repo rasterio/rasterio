@@ -333,3 +333,13 @@ def test_write_plus_mode_blockxsize_requires_width():
     with MemoryFile() as memfile:
         with pytest.raises(TypeError):
             memfile.open(driver='GTiff', dtype='uint8', count=3, height=32, crs='epsg:3226', transform=Affine.identity() * Affine.scale(0.5, -0.5), blockxsize=128)
+
+def test_write_rpcs_to_memfile():
+    """Ensure we can write rpcs to a new MemoryFile"""
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        profile = src.profile.copy()
+        with MemoryFile() as memfile:
+            with memfile.open(**profile) as dst:
+                assert dst.rpcs is None
+                dst.rpcs = src.rpcs
+                assert dst.rpcs
