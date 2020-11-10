@@ -311,21 +311,31 @@ def reproject(source, destination=None, src_transform=None, gcps=None, rpcs=None
 
     # calculate the destination transform if not provided
     if dst_transform is None and (destination is None or isinstance(destination, np.ndarray)):
+        src_bounds = tuple([None] * 4)
         if isinstance(source, np.ndarray):
             if source.ndim == 3:
                 src_count, src_height, src_width = source.shape
             else:
                 src_count = 1
                 src_height, src_width = source.shape
-            src_bounds = array_bounds(src_height, src_width, src_transform)
+            
+            # try to compute src_bounds if we don't have gcps
+            if not (gcps or rpcs):
+                src_bounds = array_bounds(src_height, src_width, src_transform)
         else:
             src_rdr, src_bidx, _, src_shape = source
-            src_bounds = src_rdr.bounds
+
+            # dataset.bounds will return raster extents in pixel coordinates
+            # if dataset does not have geotransform, which is not useful here.
+            if not (src_rdr.transform.is_identity and src_rdr.crs is None):
+                src_bounds = src_rdr.bounds
+
             src_crs = src_rdr.crs
             if isinstance(src_bidx, int):
                 src_bidx = [src_bidx]
             src_count = len(src_bidx)
             src_height, src_width = src_shape
+            gcps = src_rdr.gcps[0] if src_rdr.gcps[0] else None
 
         dst_height = None
         dst_width = None
@@ -472,6 +482,10 @@ def calculate_default_transform(
     if any(x is None for x in (left, bottom, right, top)) and not (gcps or rpcs):
         raise ValueError("Either four bounding values, ground control points,"
                          " or rational polynomial coefficients must be specified")
+    
+    if gcps and rpcs:
+        raise ValueError("ground control points and rational polynomial",
+                         " coefficients may not be used together.")
 
     if (dst_width is None) != (dst_height is None):
         raise ValueError("Either dst_width and dst_height must be specified "
