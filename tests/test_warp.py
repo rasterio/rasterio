@@ -6,7 +6,6 @@ import sys
 from affine import Affine
 import numpy as np
 from numpy.testing import assert_almost_equal
-from numpy.testing._private.utils import tempdir
 import pytest
 
 import rasterio

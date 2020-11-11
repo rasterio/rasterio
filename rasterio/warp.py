@@ -13,7 +13,7 @@ from rasterio._warp import _calculate_default_transform, _reproject, _transform_
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion, ensure_env, require_gdal_version
 from rasterio.errors import GDALBehaviorChangeException, TransformError
-from rasterio.transform import array_bounds, from_gcps
+from rasterio.transform import array_bounds
 
 # Gauss (7) is not supported for warp
 SUPPORTED_RESAMPLING = [r for r in Resampling if r.value < 7]
