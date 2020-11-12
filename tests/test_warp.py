@@ -1546,7 +1546,6 @@ def test_transform_geom_gdal22():
 def test_issue1056():
     """Warp sucessfully from RGB's upper bands to an array"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-
         dst_crs = "EPSG:3857"
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
@@ -1866,7 +1865,6 @@ def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
         source.gcps = (src_gcps, CRS.from_epsg(32618))
     
     with rasterio.open(tiffname) as source:
-        
         reproject(
             rasterio.band(source, source.indexes),
             out,
