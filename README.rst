@@ -4,8 +4,8 @@ Rasterio
 
 Rasterio reads and writes geospatial raster data.
 
-.. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
-   :target: https://travis-ci.org/mapbox/rasterio
+.. image:: https://travis-ci.com/mapbox/rasterio.png?branch=master
+   :target: https://travis-ci.com/mapbox/rasterio
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
@@ -21,9 +21,8 @@ channels.
 
 **GDAL Compatibility:** 
 
-* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.1
-* Rasterio ~= 1.0.25 requires GDAL >= 1.11, < 3.1
-* Rasterio ~= 1.0.0, < 1.0.25 requires GDAL >= 1.11, < 3.0
+* Rasterio ~= 1.2.0 requires GDAL >= 3.0
+* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.3
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 
