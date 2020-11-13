@@ -624,7 +624,11 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
         imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
         for key, val in kwargs.items():
             key = key.upper().encode('utf-8')
-            val = str(val).upper().encode('utf-8')
+            if key == b"RPC_DEM":
+                # don't .upper() since might be a path
+                val = str(val).encode('utf-8')
+            else:
+                val = str(val).upper().encode('utf-8')
             imgProjOptions = CSLSetNameValue(
                 imgProjOptions, <const char *>key, <const char *>val)
             log.debug("Set _calculate_default_transform Transformer option {0!r}={1!r}".format(key, val))
@@ -634,11 +638,7 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
                 rpcs = rpcs.to_gdal()
             for key, val in rpcs.items():
                 key = key.upper().encode('utf-8')
-                if key == b"RPC_DEM":
-                    # don't .upper() since might be a path
-                    val = str(val).encode('utf-8')
-                else:
-                    val = str(val).upper().encode('utf-8')
+                val = str(val).encode('utf-8')
                 papszMD = CSLSetNameValue(
                     papszMD, <const char *>key, <const char *>val)
             exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
