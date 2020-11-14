@@ -201,7 +201,8 @@ reference system with a newly computed geotransform.
             rpcs=source.rpcs,
             src_crs=src_crs,
             dst_crs=dst_crs,
-            resampling=Resampling.nearest
+            resampling=Resampling.nearest,
+            **kwargs
         )
 
         assert destination.any()
