@@ -217,6 +217,8 @@ package layout.
 
 To run the entire suite and the code coverage report:
 
+Note: rasterio must be installed in editable mode in order to run tests.
+
 .. code-block:: console
 
     $ py.test --cov rasterio --cov-report term-missing
