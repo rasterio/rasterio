@@ -84,7 +84,7 @@ which can be used to compute pixel coordinates from x, y, and z coordinates. The
 an application of the Rigorous Projection Model which uses four sets of 20 term cubic polynomials
 and several normalizing parameters to establish a relationship between image and world coordinates.
 RPCs are defined with image coordinates in pixel units and world coordinates in decimal
-degrees of longitude and latitude and height above the WGS84 ellipsoid. 
+degrees of longitude and latitude and height above the WGS84 ellipsoid (EPSG:4326). 
 
 RPCs are usually provided by the dataset provider and are only well behaved over the
 extent of the image. Additionally, accurate height values are required for the best

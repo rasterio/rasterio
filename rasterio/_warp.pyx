@@ -214,6 +214,7 @@ def _reproject(
         source, destination,
         src_transform=None,
         gcps=None,
+        rpcs=None,
         src_crs=None,
         src_nodata=None,
         dst_transform=None,
@@ -250,6 +251,9 @@ def _reproject(
     gcps: sequence of `GroundControlPoint` instances, optional
         Ground control points for the source. May be used in place of
         src_transform.
+    rpcs: RPC or dict, optional
+        Rational polynomial coefficients for the source. May be used
+        in place of src_transform.
     src_crs: dict, optional
         Source coordinate reference system, in rasterio dict format.
         Required if source and destination are ndarrays.
@@ -365,6 +369,7 @@ def _reproject(
             src_mem = InMemoryRaster(image=source,
                                          transform=format_transform(src_transform),
                                          gcps=gcps,
+                                         rpcs=rpcs,
                                          crs=src_crs)
             src_dataset = src_mem.handle()
 
@@ -455,6 +460,8 @@ def _reproject(
     # Set up GDALCreateGenImgProjTransformer2 keyword arguments.
     cdef char **imgProjOptions = NULL
     imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+    if rpcs:
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
 
     # See https://gdal.org/doxygen/gdal__alg_8h.html#a94cd172f78dbc41d6f407d662914f2e3
     # for a list of supported options. I (Sean) don't see harm in
@@ -463,9 +470,14 @@ def _reproject(
     # okay.
     for key, val in kwargs.items():
         key = key.upper().encode('utf-8')
-        val = str(val).upper().encode('utf-8')
+        if key == b"RPC_DEM":
+            # don't .upper() since might be a path
+            val = str(val).encode('utf-8')
+        else:
+            val = str(val).upper().encode('utf-8')
         imgProjOptions = CSLSetNameValue(
             imgProjOptions, <const char *>key, <const char *>val)
+        log.debug("Set _reproject Transformer option {0!r}={1!r}".format(key, val))
 
     try:
         hTransformArg = exc_wrap_pointer(
@@ -564,7 +576,7 @@ def _reproject(
 
 def _calculate_default_transform(src_crs, dst_crs, width, height,
                                  left=None, bottom=None, right=None, top=None,
-                                 gcps=None, **kwargs):
+                                 gcps=None, rpcs=None, **kwargs):
     """Wraps GDAL's algorithm."""
     cdef void *hTransformArg = NULL
     cdef int npixels = 0
@@ -574,6 +586,8 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     cdef OGRSpatialReferenceH osr = NULL
     cdef char *wkt = NULL
     cdef GDALDatasetH hds = NULL
+    cdef char **imgProjOptions = NULL
+    cdef char **papszMD = NULL
 
     extent[:] = [0.0, 0.0, 0.0, 0.0]
     geotransform[:] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -605,11 +619,34 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
     vrt_doc = _suggested_proxy_vrt_doc(width, height, transform=transform, crs=src_crs, gcps=gcps).decode('ascii')
 
     try:
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "GCPS_OK", "TRUE")
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "MAX_GCP_ORDER", "0")
+        imgProjOptions = CSLSetNameValue(imgProjOptions, "DST_SRS", wkt)
+        for key, val in kwargs.items():
+            key = key.upper().encode('utf-8')
+            if key == b"RPC_DEM":
+                # don't .upper() since might be a path
+                val = str(val).encode('utf-8')
+            else:
+                val = str(val).upper().encode('utf-8')
+            imgProjOptions = CSLSetNameValue(
+                imgProjOptions, <const char *>key, <const char *>val)
+            log.debug("Set _calculate_default_transform Transformer option {0!r}={1!r}".format(key, val))
         hds = open_dataset(vrt_doc, 0x00 | 0x02 | 0x04, ['VRT'], {}, None)
+        if rpcs:
+            if hasattr(rpcs, 'to_gdal'):
+                rpcs = rpcs.to_gdal()
+            for key, val in rpcs.items():
+                key = key.upper().encode('utf-8')
+                val = str(val).encode('utf-8')
+                papszMD = CSLSetNameValue(
+                    papszMD, <const char *>key, <const char *>val)
+            exc_wrap_int(GDALSetMetadata(hds, papszMD, "RPC"))
+            imgProjOptions = CSLSetNameValue(imgProjOptions, "SRC_METHOD", "RPC")
 
         hTransformArg = exc_wrap_pointer(
-            GDALCreateGenImgProjTransformer(
-                hds, NULL, NULL, wkt, 1, 1000.0,0))
+            GDALCreateGenImgProjTransformer2(hds, NULL, imgProjOptions)
+        )
         exc_wrap_int(
             GDALSuggestedWarpOutput2(
                 hds, GDALGenImgProjTransform, hTransformArg,
@@ -636,6 +673,10 @@ def _calculate_default_transform(src_crs, dst_crs, width, height,
             GDALDestroyGenImgProjTransformer(hTransformArg)
         if hds != NULL:
             GDALClose(hds)
+        if imgProjOptions != NULL:
+            CPLFree(imgProjOptions)
+        if papszMD != NULL:
+            CSLDestroy(papszMD)
 
     # Convert those modified arguments to Python values.
     dst_affine = Affine.from_gdal(*[geotransform[i] for i in range(6)])

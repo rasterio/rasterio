@@ -2,6 +2,7 @@
 
 import json
 import sys
+import logging
 
 from affine import Affine
 import numpy as np
@@ -33,6 +34,7 @@ from rasterio import windows
 
 from .conftest import requires_gdal22, requires_gdal3, requires_gdal_lt_3
 
+log = logging.getLogger(__name__)
 
 gdal_version = GDALVersion.runtime()
 
@@ -1544,7 +1546,6 @@ def test_transform_geom_gdal22():
 def test_issue1056():
     """Warp sucessfully from RGB's upper bands to an array"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-
         dst_crs = "EPSG:3857"
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
@@ -1748,6 +1749,81 @@ def test_empty_transform_inputs_length_z():
     with pytest.raises(TransformError):
         rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1, 2], [1, 2], zs=[0])
 
+
+def test_reproject_rpcs(caplog):
+    """Reproject using rational polynomial coefficients for the source"""
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        out = np.zeros(
+            (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+        )
+        src_rpcs = src.rpcs
+        reproject(
+            rasterio.band(src, src.indexes),
+            out,
+            src_crs="EPSG:4326",
+            rpcs=src_rpcs,
+            dst_crs="EPSG:3857",
+            resampling=Resampling.nearest,
+        )
+
+        assert not out.all()
+        assert not out[:, 0, 0].any()
+        assert not out[:, 0, -1].any()
+        assert not out[:, -1, -1].any()
+        assert not out[:, -1, 0].any()
+
+
+def test_reproject_rpcs_with_transformer_options(caplog):
+    """Reproject using rational polynomial coefficients and additional transformer options"""
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        with rasterio.MemoryFile(dirname='foo', filename='dem.tif') as mem:
+            crs = 'COMPD_CS["WGS 84 + EGM96 height",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]],VERT_CS["EGM96 height",VERT_DATUM["EGM96 geoid",2005,AUTHORITY["EPSG","5171"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Gravity-related height",UP],AUTHORITY["EPSG","5773"]]]'
+            transform = Affine(0.001953396267361111, 0.0, -124.00013888888888, 0.0, -0.001953396267361111, 50.000138888888884)
+            with mem.open(
+                driver="GTiff",
+                width=1024, 
+                height=1024, 
+                count=1,
+                transform=transform,
+                dtype='int16', 
+                crs=crs
+            ) as dem:
+                # we flush dem dataset before letting GDAL read from vsimem
+                dem.write_band(1, 500 * np.ones((1024, 1024), dtype='int16'))
+            
+            out = np.zeros(
+                (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+            )
+            out2 = out.copy()
+            src_rpcs = src.rpcs
+            caplog.set_level(logging.DEBUG)
+            reproject(
+                rasterio.band(src, src.indexes),
+                out,
+                src_crs="EPSG:4326",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:3857",
+                resampling=Resampling.nearest,
+                RPC_DEM=dem.name,
+
+            )   
+            caplog.set_level(logging.INFO)
+            reproject(
+                rasterio.band(src, src.indexes),
+                out2,
+                src_crs="EPSG:4326",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:3857",
+                resampling=Resampling.nearest,
+
+            ) 
+            
+            assert not out.all()
+            assert not out2.all()
+            assert "RPC_DEM" in caplog.text
+            assert not np.array_equal(out, out2)
+
+
 def test_warp_gcps_compute_dst_transform_automatically_array():
     """Ensure we don't raise an exception when gcps passed without dst_transform, for a source array"""
     source = np.ones((3, 800, 800), dtype=np.uint8) * 255
@@ -1789,7 +1865,6 @@ def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
         source.gcps = (src_gcps, CRS.from_epsg(32618))
     
     with rasterio.open(tiffname) as source:
-        
         reproject(
             rasterio.band(source, source.indexes),
             out,

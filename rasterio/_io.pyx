@@ -1686,7 +1686,7 @@ cdef class InMemoryRaster:
     IO with GDAL.  Other memory based operations should use numpy arrays.
     """
     def __cinit__(self, image=None, dtype='uint8', count=1, width=None,
-                  height=None, transform=None, gcps=None, crs=None):
+                  height=None, transform=None, gcps=None, rpcs=None, crs=None):
         """
         Create in-memory raster dataset, and fill its bands with the
         arrays in image.
@@ -1705,6 +1705,7 @@ cdef class InMemoryRaster:
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
         cdef char **options = NULL
+        cdef char **papszMD = NULL
 
         if image is not None:
             if image.ndim == 3:
@@ -1777,6 +1778,18 @@ cdef class InMemoryRaster:
                 CPLFree(gcplist)
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
+        elif rpcs:
+            try:
+                if hasattr(rpcs, 'to_gdal'):
+                    rpcs = rpcs.to_gdal()
+                for key, val in rpcs.items():
+                    key = key.upper().encode('utf-8')
+                    val = str(val).encode('utf-8')
+                    papszMD = CSLSetNameValue(
+                        papszMD, <const char *>key, <const char *>val)
+                exc_wrap_int(GDALSetMetadata(self._hds, papszMD, "RPC"))
+            finally:
+                CSLDestroy(papszMD)
 
         if options != NULL:
             CSLDestroy(options)
