@@ -109,8 +109,20 @@ setup.py as follows.
 
 .. code-block:: console
 
-    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
-    $ python setup.py install
+    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library> install
+
+With pip
+
+.. code-block:: console
+
+    $ pip install --no-use-pep517 --global-option -I<path to gdal include files> -lgdal_i -L<path to gdal library> .
+
+Note: :code:`--no-use-pep517` is required as pip currently hasn't implemented a
+way for optional arguments to be passed to the build backend when using PEP 517. 
+See  `here <https://github.com/pypa/pip/issues/5771>`__. for more details.
+
+Alternatively environment variables (e.g. INCLUDE and LINK) used by MSVC compiler can be used to point 
+to include directories and library files.
 
 We have had success compiling code using the same version of Microsoft's
 Visual Studio used to compile the targeted version of Python (more info on
