@@ -7,6 +7,12 @@ import warnings
 
 import numpy as np
 
+try:
+    from pathlib import Path
+except ImportError:  # pragma: no cover
+    class Path:
+        pass
+
 import rasterio
 from rasterio import windows
 from rasterio.enums import Resampling
@@ -38,7 +44,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
 
     Parameters
     ----------
-    datasets : list of dataset objects opened in 'r' mode or filenames
+    datasets : list of dataset objects opened in 'r' mode, filenames or pathlib.Path objects
         source datasets to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
@@ -109,7 +115,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
                          .format(method, MERGE_METHODS))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], string_types):
+    if isinstance(datasets[0], string_types) or isinstance(datasets[0], Path):
         dataset_opener = rasterio.open
     else:
 
