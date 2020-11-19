@@ -1,11 +1,7 @@
-import logging
-
 import rasterio
 from rasterio.errors import NodataShadowWarning, NotGeoreferencedWarning
 from affine import Affine
 import pytest
-
-log = logging.getLogger(__name__)
 
 
 def gen_rpcs():
