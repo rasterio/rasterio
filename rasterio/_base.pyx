@@ -332,6 +332,20 @@ cdef class DatasetBase(object):
             return CRS.from_wkt(wkt)
         else:
             return None
+    
+    def _has_gcps_or_rpcs(self):
+        """Check if we have gcps or rpcs"""
+        cdef int num_gcps
+
+        num_gcps = GDALGetGCPCount(self.handle())
+        if num_gcps:
+            return True
+
+        rpcs = self.tags(ns="RPC")
+        if rpcs:
+            return True
+        
+        return False
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
@@ -348,9 +362,10 @@ cdef class DatasetBase(object):
         if self._hds == NULL:
             raise ValueError("Null dataset")
         err = GDALGetGeoTransform(self._hds, gt)
-        if err == GDALError.failure:
+        if err == GDALError.failure and not self._has_gcps_or_rpcs():
             warnings.warn(
-                "Dataset has no geotransform set. The identity matrix may be returned.",
+                ("Dataset has no geotransform, gcps, or rpcs. "
+                "The identity matrix be returned."),
                 NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
