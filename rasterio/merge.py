@@ -1,17 +1,12 @@
 """Copy valid pixels from input files to an output file."""
 
 from contextlib import contextmanager
+from pathlib import Path
 import logging
 import math
 import warnings
 
 import numpy as np
-
-try:
-    from pathlib import Path
-except ImportError:  # pragma: no cover
-    class Path:
-        pass
 
 import rasterio
 from rasterio import windows

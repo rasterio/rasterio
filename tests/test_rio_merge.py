@@ -599,6 +599,8 @@ def test_merge_filenames(tiffs):
     inputs.sort()
     merge(inputs, res=2)
 
+
+def test_merge_pathlib_path(tiffs):
     inputs = [Path(x) for x in tiffs.listdir()]
     inputs.sort()
     merge(inputs, res=2)
