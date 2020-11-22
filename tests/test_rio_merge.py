@@ -12,6 +12,7 @@ from pytest import fixture
 import pytest
 
 import rasterio
+from rasterio import Path
 from rasterio.enums import Resampling
 from rasterio.merge import merge
 from rasterio.rio.main import main_group
@@ -595,6 +596,12 @@ def test_merge_resampling(test_data_dir_resampling, resampling, runner):
 
 def test_merge_filenames(tiffs):
     inputs = [str(x) for x in tiffs.listdir()]
+    inputs.sort()
+    merge(inputs, res=2)
+
+
+def test_merge_pathlib_path(tiffs):
+    inputs = [Path(x) for x in tiffs.listdir()]
     inputs.sort()
     merge(inputs, res=2)
 

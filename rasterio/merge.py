@@ -1,6 +1,7 @@
 """Copy valid pixels from input files to an output file."""
 
 from contextlib import contextmanager
+from pathlib import Path
 import logging
 import math
 import warnings
@@ -38,7 +39,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
 
     Parameters
     ----------
-    datasets : list of dataset objects opened in 'r' mode or filenames
+    datasets : list of dataset objects opened in 'r' mode, filenames or pathlib.Path objects
         source datasets to be merged.
     bounds: tuple, optional
         Bounds of the output image (left, bottom, right, top).
@@ -109,7 +110,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
                          .format(method, MERGE_METHODS))
 
     # Create a dataset_opener object to use in several places in this function.
-    if isinstance(datasets[0], string_types):
+    if isinstance(datasets[0], string_types) or isinstance(datasets[0], Path):
         dataset_opener = rasterio.open
     else:
 
