@@ -1,8 +1,10 @@
 """Tests of overview counting and creation."""
+import math
 
+import numpy as np
 import pytest
 
-from .conftest import requires_gdal2
+from .conftest import requires_gdal2, requires_gdal33
 
 import rasterio
 from rasterio.enums import Resampling
@@ -104,3 +106,23 @@ def test_build_overviews_new_file(tmpdir, path_rgb_byte_tif):
     with rasterio.open(dst_file, overview_level=1) as src:
         data = src.read()
         assert data.any()
+
+
+@requires_gdal33
+def test_ignore_overviews(data):
+    """Force ignore existing overviews when performing decimated read"""
+    inputfile = str(data.join('RGB.byte.tif'))
+    with rasterio.open(inputfile, 'r+') as src:
+        overview_shape = (3, math.ceil(src.height/2), math.ceil(src.width/2))
+        src.build_overviews([2], resampling=Resampling.nearest)
+        decimated_ovr = src.read(out_shape=overview_shape)
+
+    with rasterio.open(inputfile, OVERVIEW_LEVEL=-1) as src:
+        assert src.overviews(1) == []
+        assert src.overviews(2) == []
+        assert src.overviews(3) == []
+        decimated_avg = src.read(out_shape=overview_shape,
+                                 resampling=Resampling.average)
+
+    assert not np.array_equal(decimated_avg, decimated_ovr)
+
