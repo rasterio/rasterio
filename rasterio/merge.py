@@ -270,7 +270,7 @@ def merge(datasets, bounds=None, res=None, nodata=None, dtype=None, precision=10
             )
 
             # 4. Read data in source window into temp
-            trows, tcols = (int(round(dst_window.height)), int(round(dst_window.width)))
+            trows, tcols = (int(dst_window.height), int(dst_window.width))
             temp_shape = (src_count, trows, tcols)
             temp = src.read(
                 out_shape=temp_shape,
