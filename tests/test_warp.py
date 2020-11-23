@@ -1917,7 +1917,9 @@ def test_reproject_rpcs_exact_transformer(caplog):
             
 
 def test_reproject_rpcs_approx_transformer(caplog):
-
+    """Reproject using rational polynomial coefficients without a DEM, for which it's
+       ok to use an approximate transformer.
+    """
     with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
         out = np.zeros(
                 (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
