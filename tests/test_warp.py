@@ -1878,8 +1878,10 @@ def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
     assert not out[:, -1, -1].any()
     assert not out[:, -1, 0].any()
 
-def test_reproject_rpcs_transformer_type(caplog):
-    """Reproject using rational polynomial coefficients and additional transformer options"""
+def test_reproject_rpcs_exact_transformer(caplog):
+    """Reproject using rational polynomial coefficients and DEM, requiring that
+       we don't try to make an approximate transformer.
+    """
     with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
         with rasterio.MemoryFile(dirname='foo', filename='dem.tif') as mem:
             crs = 'COMPD_CS["WGS 84 + EGM96 height",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]],VERT_CS["EGM96 height",VERT_DATUM["EGM96 geoid",2005,AUTHORITY["EPSG","5171"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Gravity-related height",UP],AUTHORITY["EPSG","5773"]]]'
@@ -1899,7 +1901,6 @@ def test_reproject_rpcs_transformer_type(caplog):
             out = np.zeros(
                 (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
             )
-            out2 = out.copy()
             src_rpcs = src.rpcs
             caplog.set_level(logging.DEBUG)
             reproject(
@@ -1910,19 +1911,26 @@ def test_reproject_rpcs_transformer_type(caplog):
                 dst_crs="EPSG:3857",
                 resampling=Resampling.nearest,
                 RPC_DEM=dem.name,
-
             )   
 
             assert "Created exact transformer" in caplog.text
             
-            reproject(
-                rasterio.band(src, src.indexes),
-                out2,
-                src_crs="EPSG:4326",
-                rpcs=src_rpcs,
-                dst_crs="EPSG:3857",
-                resampling=Resampling.nearest,
 
-            ) 
+def test_reproject_rpcs_approx_transformer(caplog):
 
-            assert "Created approximate transformer" in caplog.text
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        out = np.zeros(
+                (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+            )
+        src_rpcs = src.rpcs
+        caplog.set_level(logging.DEBUG)
+        reproject(
+            rasterio.band(src, src.indexes),
+            out,
+            src_crs="EPSG:4326",
+            rpcs=src_rpcs,
+            dst_crs="EPSG:3857",
+            resampling=Resampling.nearest,
+        ) 
+
+        assert "Created approximate transformer" in caplog.text
