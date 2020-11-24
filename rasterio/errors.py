@@ -55,6 +55,10 @@ class NotGeoreferencedWarning(UserWarning):
     """Warn that a dataset isn't georeferenced."""
 
 
+class RPCTransformWarning(UserWarning):
+    """Error raised when GDALRPCTransform fails."""
+
+
 class ShapeSkipWarning(UserWarning):
     """Warn that an invalid or empty shape in a collection has been skipped"""
 
@@ -88,8 +92,12 @@ class WindowEvaluationError(ValueError):
     """Raised when window evaluation fails"""
 
 
-class RasterioDeprecationWarning(UserWarning):
-    """Rasterio module deprecations"""
+class RasterioDeprecationWarning(FutureWarning):
+    """Rasterio module deprecations
+
+    Following https://www.python.org/dev/peps/pep-0565/#additional-use-case-for-futurewarning
+    we base this on FutureWarning while continuing to support Python < 3.7.
+    """
 
 
 class RasterBlockError(RasterioError):
@@ -122,3 +130,11 @@ class PathError(RasterioError):
 
 class ResamplingAlgorithmError(RasterioError):
     """Raised when a resampling algorithm is invalid or inapplicable"""
+
+
+class TransformError(RasterioError):
+    """Raised when transform arguments are invalid"""
+
+
+class WarpedVRTError(RasterioError):
+    """Raised when WarpedVRT can't be initialized"""

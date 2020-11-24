@@ -65,28 +65,28 @@ def _delete_dataset_if_exists(path):
     """
 
     cdef GDALDatasetH h_dataset = NULL
-    cdef const char *c_path = NULL
-
-    b_path = path.encode('utf-8')
-    c_path = b_path
-
-    with silence_errors():
-        with nogil:
-            h_dataset = GDALOpen(c_path, <GDALAccess>0)
+    cdef GDALDriverH h_driver = NULL
+    cdef const char *path_c = NULL
 
     try:
-        h_dataset = exc_wrap_pointer(h_dataset)
+        h_dataset = open_dataset(path, 0x40, None, None, None)
 
-    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError):
+    except (CPLE_OpenFailedError, CPLE_AWSObjectNotFoundError) as exc:
         log.debug(
-            "Skipped delete for overwrite. Dataset does not exist: %s", path)
+            "Skipped delete for overwrite. Dataset does not exist: %r", path)
 
     else:
         h_driver = GDALGetDatasetDriver(h_dataset)
+        GDALClose(h_dataset)
+        h_dataset = NULL
 
         if h_driver != NULL:
+            path_b = path.encode("utf-8")
+            path_c = path_b
             with nogil:
-                GDALDeleteDataset(h_driver, c_path)
+                err = GDALDeleteDataset(h_driver, path_c)
+            exc_wrap_int(err)
+
 
     finally:
         if h_dataset != NULL:
@@ -210,7 +210,9 @@ cdef class DatasetReaderBase(DatasetBase):
             are not cached.
 
         fill_value : scalar
-            Fill value applied in the `boundless=True` case only.
+            Fill value applied in the `boundless=True` case only. Like
+            the fill_value of numpy.ma.MaskedArray, should be value
+            valid for the dataset's data type.
 
         Returns
         -------
@@ -837,7 +839,7 @@ def silence_errors():
 cdef class MemoryFileBase:
     """Base for a BytesIO-like class backed by an in-memory file."""
 
-    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext=''):
+    def __init__(self, file_or_bytes=None, dirname=None, filename=None, ext='.tif'):
         """A file in an in-memory filesystem.
 
         Parameters
@@ -936,6 +938,7 @@ cdef class MemoryFileBase:
         if self._vsif != NULL:
             VSIFCloseL(self._vsif)
         self._vsif = NULL
+        _delete_dataset_if_exists(self.name)
         VSIRmdir(self._dirname.encode("utf-8"))
         self.closed = True
 
@@ -984,7 +987,7 @@ cdef class DatasetWriterBase(DatasetReaderBase):
 
     def __init__(self, path, mode, driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=False, **kwargs):
+                 gcps=None, rpcs=None, sharing=False, **kwargs):
         """Create a new dataset writer or updater
 
         Parameters
@@ -1189,7 +1192,9 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         if transform is not None:
             self._transform = transform.to_gdal()
         self._gcps = None
+        self._rpcs = None
         self._init_gcps = gcps
+        self._init_rpcs = rpcs
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -1204,6 +1209,8 @@ cdef class DatasetWriterBase(DatasetReaderBase):
                 self._set_crs(self._crs)
             if self._init_gcps:
                 self._set_gcps(self._init_gcps, self.crs)
+            if self._init_rpcs:
+                self._set_rpcs(self._init_rpcs)
 
         drv = GDALGetDatasetDriver(self._hds)
         drv_name = GDALGetDriverShortName(drv)
@@ -1226,16 +1233,6 @@ cdef class DatasetWriterBase(DatasetReaderBase):
             self.closed and 'closed' or 'open',
             self.name,
             self.mode)
-
-    def start(self):
-        pass
-
-    def stop(self):
-        """Ends the dataset's life cycle"""
-        if self._hds != NULL:
-            GDALClose(self._hds)
-        self._hds = NULL
-        log.debug("Dataset %r has been stopped.", self)
 
     def _set_crs(self, crs):
         """Writes a coordinate reference system to the dataset."""
@@ -1661,6 +1658,11 @@ cdef class DatasetWriterBase(DatasetReaderBase):
         # Invalidate cached value.
         self._gcps = None
 
+    def _set_rpcs(self, rpcs):
+        if hasattr(rpcs, 'to_gdal'):
+            rpcs = rpcs.to_gdal()
+        self.update_tags(ns='RPC', **rpcs)
+        self._rpcs = None
 
 cdef class InMemoryRaster:
     """
@@ -1691,7 +1693,7 @@ cdef class InMemoryRaster:
         self.transform = None
 
     def __init__(self, image=None, dtype='uint8', count=1, width=None,
-                  height=None, transform=None, gcps=None, crs=None):
+                  height=None, transform=None, gcps=None, rpcs=None, crs=None):
         """
         Create in-memory raster dataset, and fill its bands with the
         arrays in image.
@@ -1710,6 +1712,7 @@ cdef class InMemoryRaster:
         cdef GDALDriverH mdriver = NULL
         cdef GDAL_GCP *gcplist = NULL
         cdef char **options = NULL
+        cdef char **papszMD = NULL
 
         if image is not None:
             if image.ndim == 3:
@@ -1782,6 +1785,18 @@ cdef class InMemoryRaster:
                 CPLFree(gcplist)
                 CPLFree(srcwkt)
                 _safe_osr_release(osr)
+        elif rpcs:
+            try:
+                if hasattr(rpcs, 'to_gdal'):
+                    rpcs = rpcs.to_gdal()
+                for key, val in rpcs.items():
+                    key = key.upper().encode('utf-8')
+                    val = str(val).encode('utf-8')
+                    papszMD = CSLSetNameValue(
+                        papszMD, <const char *>key, <const char *>val)
+                exc_wrap_int(GDALSetMetadata(self._hds, papszMD, "RPC"))
+            finally:
+                CSLDestroy(papszMD)
 
         if options != NULL:
             CSLDestroy(options)
@@ -1863,7 +1878,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
 
     def __init__(self, path, mode='r', driver=None, width=None, height=None,
                  count=None, crs=None, transform=None, dtype=None, nodata=None,
-                 gcps=None, sharing=False, **kwargs):
+                 gcps=None, rpcs=None, sharing=False, **kwargs):
         """Construct a new dataset
 
         Parameters
@@ -1905,7 +1920,7 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             modes.
         sharing : bool
             A flag that allows sharing of dataset handles. Default is
-            `False`. Should be set to `False` in a multithreaded:w program.
+            `False`. Should be set to `False` in a multithreaded program.
         kwargs : optional
             These are passed to format drivers as directives for creating or
             interpreting datasets. For example: in 'w' or 'w+' modes
@@ -1965,6 +1980,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             self._transform = transform.to_gdal()
         self._gcps = None
         self._init_gcps = gcps
+        self._rpcs = None
+        self._init_rpcs = rpcs
         self._closed = True
         self._dtypes = []
         self._nodatavals = []
@@ -2013,6 +2030,8 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
                 self._set_crs(self._crs)
             if self._init_gcps:
                 self._set_gcps(self._init_gcps, self._crs)
+            if self._init_rpcs:
+                self._set_rpcs(self._init_rpcs)
 
         elif self.mode == 'r+':
             try:
@@ -2091,8 +2110,10 @@ cdef class BufferedDatasetWriterBase(DatasetWriterBase):
             if temp != NULL:
                 GDALClose(temp)
             if self._hds != NULL:
-                GDALClose(self._hds)
-                self._hds = NULL
+                refcount = GDALDereferenceDataset(self._hds)
+                if refcount == 0:
+                    GDALClose(self._hds)
+            self._hds = NULL
 
 
 def virtual_file_to_buffer(filename):

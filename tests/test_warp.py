@@ -2,6 +2,7 @@
 
 import json
 import sys
+import logging
 
 from affine import Affine
 import numpy as np
@@ -13,7 +14,12 @@ from rasterio.control import GroundControlPoint
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.env import GDALVersion
-from rasterio.errors import (GDALBehaviorChangeException, CRSError, GDALVersionError)
+from rasterio.errors import (
+    GDALBehaviorChangeException,
+    CRSError,
+    GDALVersionError,
+    TransformError,
+)
 from rasterio.warp import (
     reproject,
     transform_geom,
@@ -28,6 +34,7 @@ from rasterio import windows
 
 from .conftest import requires_gdal22, requires_gdal3, requires_gdal_lt_3
 
+log = logging.getLogger(__name__)
 
 gdal_version = GDALVersion.runtime()
 
@@ -101,12 +108,12 @@ WGS84_crs = CRS.from_epsg(4326)
 
 def test_transform_src_crs_none():
     with pytest.raises(CRSError):
-        transform(None, WGS84_crs, [], [])
+        transform(None, WGS84_crs, [1], [1])
 
 
 def test_transform_dst_crs_none():
     with pytest.raises(CRSError):
-        transform(WGS84_crs, None, [], [])
+        transform(WGS84_crs, None, [1], [1])
 
 
 def test_transform_bounds_src_crs_none():
@@ -217,19 +224,23 @@ def test_transform_bounds__esri_wkt():
     )
 
 
-def test_transform_bounds_densify():
+@pytest.mark.parametrize(
+    "density,expected",
+    [
+        (0, (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559)),
+        (100, (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559)),
+    ],
+)
+def test_transform_bounds_densify(density, expected):
     # This transform is non-linear along the edges, so densification produces
     # a different result than otherwise
     src_crs = CRS.from_epsg(4326)
-    dst_crs = CRS.from_epsg(2163)
-    assert np.allclose(
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=0),
-        (-1684649.41338, -350356.81377, 1684649.41338, 2234551.18559),
+    dst_crs = CRS.from_proj4(
+        "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"
     )
-
     assert np.allclose(
-        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=100),
-        (-1684649.41338, -555777.79210, 1684649.41338, 2234551.18559),
+        expected,
+        transform_bounds(src_crs, dst_crs, -120, 40, -80, 64, densify_pts=density),
     )
 
 
@@ -1123,6 +1134,59 @@ def test_reproject_resampling(path_rgb_byte_tif, method):
 
     assert np.count_nonzero(out) in expected[method]
 
+@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1309625), (False, 437686)])
+def test_reproject_array_interface(test3d, count_nonzero, path_rgb_byte_tif):
+    class DataArray:
+        def __init__(self, data):
+            self.data = data
+
+        def __array__(self, dtype=None):
+            return self.data
+
+        @property
+        def dtype(self):
+            return self.data.dtype
+
+    with rasterio.open(path_rgb_byte_tif) as src:
+        if test3d:
+            source = DataArray(src.read())
+        else:
+            source = DataArray(src.read(1))
+    out = DataArray(np.empty(source.data.shape, dtype=np.uint8))
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        src_nodata=src.nodata,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_nodata=99,
+    )
+    assert isinstance(out, DataArray)
+    assert np.count_nonzero(out.data[out.data != 99]) == count_nonzero
+
+
+@pytest.mark.parametrize("test3d,count_nonzero", [(True, 1309625), (False, 437686)])
+def test_reproject_masked(test3d, count_nonzero, path_rgb_byte_tif):
+    with rasterio.open(path_rgb_byte_tif) as src:
+        if test3d:
+            source = src.read(masked=True)
+        else:
+            source = src.read(1, masked=True)
+    out = np.empty(source.shape, dtype=np.uint8)
+    reproject(
+        source,
+        out,
+        src_transform=src.transform,
+        src_crs=src.crs,
+        dst_transform=DST_TRANSFORM,
+        dst_crs="EPSG:3857",
+        dst_nodata=99,
+    )
+    assert np.ma.is_masked(source)
+    assert np.count_nonzero(out[out != 99]) == count_nonzero
+
 
 @pytest.mark.parametrize("method", SUPPORTED_RESAMPLING)
 def test_reproject_resampling_alpha(method):
@@ -1482,7 +1546,6 @@ def test_transform_geom_gdal22():
 def test_issue1056():
     """Warp sucessfully from RGB's upper bands to an array"""
     with rasterio.open("tests/data/RGB.byte.tif") as src:
-
         dst_crs = "EPSG:3857"
         out = np.zeros(src.shape, dtype=np.uint8)
         reproject(
@@ -1659,3 +1722,217 @@ def test_reproject_init_dest_nodata():
         src_nodata=0, init_dest_nodata=False
     )
     assert destination.all()
+
+
+def test_empty_transform_inputs():
+    """Check for fix of #1952"""
+    assert ([], []) == rasterio.warp.transform(
+        "EPSG:3857", "EPSG:4326", [], [], zs=None
+    )
+
+
+def test_empty_transform_inputs_z():
+    """Check for fix of #1952"""
+    assert ([], [], []) == rasterio.warp.transform(
+        "EPSG:3857", "EPSG:4326", [], [], zs=[]
+    )
+
+
+def test_empty_transform_inputs_length():
+    """Get an exception of inputs have different lengths"""
+    with pytest.raises(TransformError):
+        rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1], [1, 2])
+
+
+def test_empty_transform_inputs_length_z():
+    """Get an exception of inputs have different lengths"""
+    with pytest.raises(TransformError):
+        rasterio.warp.transform("EPSG:3857", "EPSG:4326", [1, 2], [1, 2], zs=[0])
+
+
+def test_reproject_rpcs(caplog):
+    """Reproject using rational polynomial coefficients for the source"""
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        out = np.zeros(
+            (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+        )
+        src_rpcs = src.rpcs
+        reproject(
+            rasterio.band(src, src.indexes),
+            out,
+            src_crs="EPSG:4326",
+            rpcs=src_rpcs,
+            dst_crs="EPSG:3857",
+            resampling=Resampling.nearest,
+        )
+
+        assert not out.all()
+        assert not out[:, 0, 0].any()
+        assert not out[:, 0, -1].any()
+        assert not out[:, -1, -1].any()
+        assert not out[:, -1, 0].any()
+
+
+def test_reproject_rpcs_with_transformer_options(caplog):
+    """Reproject using rational polynomial coefficients and additional transformer options"""
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        with rasterio.MemoryFile(dirname='foo', filename='dem.tif') as mem:
+            crs = 'COMPD_CS["WGS 84 + EGM96 height",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]],VERT_CS["EGM96 height",VERT_DATUM["EGM96 geoid",2005,AUTHORITY["EPSG","5171"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Gravity-related height",UP],AUTHORITY["EPSG","5773"]]]'
+            transform = Affine(0.001953396267361111, 0.0, -124.00013888888888, 0.0, -0.001953396267361111, 50.000138888888884)
+            with mem.open(
+                driver="GTiff",
+                width=1024, 
+                height=1024, 
+                count=1,
+                transform=transform,
+                dtype='int16', 
+                crs=crs
+            ) as dem:
+                # we flush dem dataset before letting GDAL read from vsimem
+                dem.write_band(1, 500 * np.ones((1024, 1024), dtype='int16'))
+            
+            out = np.zeros(
+                (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+            )
+            out2 = out.copy()
+            src_rpcs = src.rpcs
+            caplog.set_level(logging.DEBUG)
+            reproject(
+                rasterio.band(src, src.indexes),
+                out,
+                src_crs="EPSG:4326",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:3857",
+                resampling=Resampling.nearest,
+                RPC_DEM=dem.name,
+
+            )   
+            caplog.set_level(logging.INFO)
+            reproject(
+                rasterio.band(src, src.indexes),
+                out2,
+                src_crs="EPSG:4326",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:3857",
+                resampling=Resampling.nearest,
+
+            ) 
+            
+            assert not out.all()
+            assert not out2.all()
+            assert "RPC_DEM" in caplog.text
+            assert not np.array_equal(out, out2)
+
+
+def test_warp_gcps_compute_dst_transform_automatically_array():
+    """Ensure we don't raise an exception when gcps passed without dst_transform, for a source array"""
+    source = np.ones((3, 800, 800), dtype=np.uint8) * 255
+    out = np.zeros((3, 512, 512))
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0),
+    ]
+    reproject(
+        source,
+        out,
+        src_crs="EPSG:32618",
+        gcps=src_gcps,
+        dst_crs="EPSG:32618",
+        resampling=Resampling.nearest
+    )
+
+    assert not out.all()
+    assert not out[:, 0, 0].any()
+    assert not out[:, 0, -1].any()
+    assert not out[:, -1, -1].any()
+    assert not out[:, -1, 0].any()
+
+def test_warp_gcps_compute_dst_transform_automatically_reader(tmpdir):
+    """Ensure we don't raise an exception when gcps passed without dst_transform, for a source dataset"""
+    tiffname = str(tmpdir.join('test.tif'))
+    arr = np.ones((3, 800, 800), dtype=np.uint8) * 255
+    src_gcps = [
+        GroundControlPoint(row=0, col=0, x=156113, y=2818720, z=0),
+        GroundControlPoint(row=0, col=800, x=338353, y=2785790, z=0),
+        GroundControlPoint(row=800, col=800, x=297939, y=2618518, z=0),
+        GroundControlPoint(row=800, col=0, x=115698, y=2651448, z=0),
+    ]
+    out = np.zeros((3, 512, 512))
+
+    with rasterio.open(tiffname, mode='w', height=800, width=800, count=3, dtype=np.uint8) as source:
+        source.gcps = (src_gcps, CRS.from_epsg(32618))
+    
+    with rasterio.open(tiffname) as source:
+        reproject(
+            rasterio.band(source, source.indexes),
+            out,
+            dst_crs="EPSG:32618",
+            resampling=Resampling.nearest
+        )
+    
+    assert not out.all()
+    assert not out[:, 0, 0].any()
+    assert not out[:, 0, -1].any()
+    assert not out[:, -1, -1].any()
+    assert not out[:, -1, 0].any()
+
+def test_reproject_rpcs_exact_transformer(caplog):
+    """Reproject using rational polynomial coefficients and DEM, requiring that
+       we don't try to make an approximate transformer.
+    """
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        with rasterio.MemoryFile(dirname='foo', filename='dem.tif') as mem:
+            crs = 'COMPD_CS["WGS 84 + EGM96 height",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]],VERT_CS["EGM96 height",VERT_DATUM["EGM96 geoid",2005,AUTHORITY["EPSG","5171"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Gravity-related height",UP],AUTHORITY["EPSG","5773"]]]'
+            transform = Affine(0.001953396267361111, 0.0, -124.00013888888888, 0.0, -0.001953396267361111, 50.000138888888884)
+            with mem.open(
+                driver="GTiff",
+                width=1024, 
+                height=1024, 
+                count=1,
+                transform=transform,
+                dtype='int16', 
+                crs=crs
+            ) as dem:
+                # we flush dem dataset before letting GDAL read from vsimem
+                dem.write_band(1, 500 * np.ones((1024, 1024), dtype='int16'))
+            
+            out = np.zeros(
+                (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+            )
+            src_rpcs = src.rpcs
+            caplog.set_level(logging.DEBUG)
+            reproject(
+                rasterio.band(src, src.indexes),
+                out,
+                src_crs="EPSG:4326",
+                rpcs=src_rpcs,
+                dst_crs="EPSG:3857",
+                resampling=Resampling.nearest,
+                RPC_DEM=dem.name,
+            )   
+
+            assert "Created exact transformer" in caplog.text
+            
+
+def test_reproject_rpcs_approx_transformer(caplog):
+    """Reproject using rational polynomial coefficients without a DEM, for which it's
+       ok to use an approximate transformer.
+    """
+    with rasterio.open('tests/data/RGB.byte.rpc.vrt') as src:
+        out = np.zeros(
+                (3, src.profile["width"], src.profile["height"]), dtype=np.uint8
+            )
+        src_rpcs = src.rpcs
+        caplog.set_level(logging.DEBUG)
+        reproject(
+            rasterio.band(src, src.indexes),
+            out,
+            src_crs="EPSG:4326",
+            rpcs=src_rpcs,
+            dst_crs="EPSG:3857",
+            resampling=Resampling.nearest,
+        ) 
+
+        assert "Created approximate transformer" in caplog.text

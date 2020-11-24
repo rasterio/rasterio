@@ -14,11 +14,12 @@ from libc.string cimport strncmp
 from rasterio._err import (
     GDALError, CPLE_BaseError, CPLE_IllegalArgError, CPLE_OpenFailedError,
     CPLE_NotSupportedError)
-from rasterio._err cimport exc_wrap_pointer, exc_wrap_int
+from rasterio._err cimport exc_wrap_pointer, exc_wrap_int, exc_wrap
 from rasterio._shim cimport open_dataset, osr_get_name, osr_set_traditional_axis_mapping_strategy
 
 from rasterio.compat import string_types
 from rasterio.control import GroundControlPoint
+from rasterio.rpc import RPC
 from rasterio import dtypes
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -117,6 +118,49 @@ def driver_can_create_copy(drivername):
     """Return True if the driver has CREATE_COPY capability"""
     return driver_supports_mode(drivername, 'DCAP_CREATECOPY')
 
+
+def _raster_driver_extensions():
+    """
+    Logic based on: https://github.com/mapbox/rasterio/issues/265#issuecomment-367044836
+    """
+    cdef int iii = 0
+    cdef int driver_count = GDALGetDriverCount()
+    cdef GDALDriverH driver = NULL
+    cdef char* c_extensions = NULL
+    cdef char* c_drivername = NULL
+    driver_extensions = {}
+    for iii in range(driver_count):
+        driver = GDALGetDriver(iii)
+        c_drivername = get_driver_name(driver)
+        if (
+            GDALGetMetadataItem(driver, "DCAP_RASTER", NULL) == NULL
+            or (
+                GDALGetMetadataItem(driver, "DCAP_CREATE", NULL) == NULL
+                and GDALGetMetadataItem(driver, "DCAP_CREATECOPY", NULL) == NULL
+            )
+        ):
+            continue
+        c_extensions = GDALGetMetadataItem(driver, "DMD_EXTENSIONS", NULL)
+        if c_extensions == NULL or c_drivername == NULL:
+            continue
+
+        try:
+            extensions = c_extensions
+            extensions = extensions.decode("utf-8")
+        except AttributeError:
+            pass
+
+        try:
+            drivername = c_drivername
+            drivername = drivername.decode("utf-8")
+        except AttributeError:
+            pass
+
+        for extension in extensions.split():
+            driver_extensions[extension] = drivername
+    return driver_extensions
+
+
 cdef _band_dtype(GDALRasterBandH band):
     """Resolve dtype of a given band, deals with signed/unsigned byte ambiguity"""
     cdef const char * ptype
@@ -146,6 +190,7 @@ cdef class DatasetBase(object):
     descriptions
     files
     gcps
+    rpcs
     indexes
     mask_flag_enums
     meta
@@ -228,6 +273,7 @@ cdef class DatasetBase(object):
         self._scales = ()
         self._offsets = ()
         self._gcps = None
+        self._rpcs = None
         self._read = False
 
         self._set_attrs_from_dataset_handle()
@@ -286,6 +332,20 @@ cdef class DatasetBase(object):
             return CRS.from_wkt(wkt)
         else:
             return None
+    
+    def _has_gcps_or_rpcs(self):
+        """Check if we have gcps or rpcs"""
+        cdef int num_gcps
+
+        num_gcps = GDALGetGCPCount(self.handle())
+        if num_gcps:
+            return True
+
+        rpcs = self.tags(ns="RPC")
+        if rpcs:
+            return True
+        
+        return False
 
     def read_crs(self):
         """Return the GDAL dataset's stored CRS"""
@@ -302,15 +362,20 @@ cdef class DatasetBase(object):
         if self._hds == NULL:
             raise ValueError("Null dataset")
         err = GDALGetGeoTransform(self._hds, gt)
-        if err == GDALError.failure:
+        if err == GDALError.failure and not self._has_gcps_or_rpcs():
             warnings.warn(
-                "Dataset has no geotransform set. The identity matrix may be returned.",
+                ("Dataset has no geotransform, gcps, or rpcs. "
+                "The identity matrix be returned."),
                 NotGeoreferencedWarning)
 
         return [gt[i] for i in range(6)]
 
+    def start(self):
+        """Start the dataset's life cycle"""
+        pass
+
     def stop(self):
-        """Ends the dataset's life cycle"""
+        """Close the GDAL dataset handle"""
         if self._hds != NULL:
             refcount = GDALDereferenceDataset(self._hds)
             if refcount == 0:
@@ -1212,7 +1277,11 @@ cdef class DatasetBase(object):
             yoff = window.row_off
             height = window.height
 
-        return GDALChecksumImage(band, xoff, yoff, width, height)
+        try:
+            return exc_wrap(GDALChecksumImage(band, xoff, yoff, width, height))
+        except CPLE_BaseError as err:
+            raise RasterioIOError(str(err))
+
 
     def get_gcps(self):
         """Get GCPs and their associated CRS."""
@@ -1256,6 +1325,32 @@ cdef class DatasetBase(object):
         def __set__(self, value):
             gcps, crs = value
             self._set_gcps(gcps, crs)
+
+    def _get_rpcs(self):
+        """Get RPCs if exists"""
+        md = self.tags(ns='RPC')
+        if md:
+            return RPC.from_gdal(md)
+
+    def _set_rpcs(self, values):
+        raise DatasetAttributeError("read-only attribute")
+
+    property rpcs:
+        """Rational polynomial coefficients mapping between pixel and geodetic coordinates.
+
+        This property is a dict-like object.
+        
+        rpcs : RPC instance containing coefficients. Empty if dataset does not have any
+        metadata in the "RPC" domain.
+        """
+        def __get__(self):
+            if not self._rpcs:
+                self._rpcs = self._get_rpcs()
+            return self._rpcs
+
+        def __set__(self, value):
+            rpcs = value.to_gdal()
+            self._set_rpcs(rpcs)
 
     property files:
 

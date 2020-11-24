@@ -23,7 +23,7 @@ Binary wheels with the GDAL, GEOS, and PROJ4 libraries included are available
 for OS X versions 10.7+ starting with Rasterio version 0.17. To install, 
 run ``pip install rasterio``. These binary wheels are preferred by newer
 versions of pip. If you don't want these wheels and want to install from
-a source distribution, run ``pip install rasterio --no-use-wheel`` instead.
+a source distribution, run ``pip install rasterio --no-binary`` instead.
 
 The included GDAL library is fairly minimal, providing only the format drivers
 that ship with GDAL and are enabled by default. To get access to more formats,
@@ -109,8 +109,20 @@ setup.py as follows.
 
 .. code-block:: console
 
-    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
-    $ python setup.py install
+    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library> install
+
+With pip
+
+.. code-block:: console
+
+    $ pip install --no-use-pep517 --global-option -I<path to gdal include files> -lgdal_i -L<path to gdal library> .
+
+Note: :code:`--no-use-pep517` is required as pip currently hasn't implemented a
+way for optional arguments to be passed to the build backend when using PEP 517. 
+See  `here <https://github.com/pypa/pip/issues/5771>`__. for more details.
+
+Alternatively environment variables (e.g. INCLUDE and LINK) used by MSVC compiler can be used to point 
+to include directories and library files.
 
 We have had success compiling code using the same version of Microsoft's
 Visual Studio used to compile the targeted version of Python (more info on

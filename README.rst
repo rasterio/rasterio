@@ -4,8 +4,8 @@ Rasterio
 
 Rasterio reads and writes geospatial raster data.
 
-.. image:: https://travis-ci.org/mapbox/rasterio.png?branch=master
-   :target: https://travis-ci.org/mapbox/rasterio
+.. image:: https://travis-ci.com/mapbox/rasterio.png?branch=master
+   :target: https://travis-ci.com/mapbox/rasterio
 
 .. image:: https://coveralls.io/repos/github/mapbox/rasterio/badge.svg?branch=master
    :target: https://coveralls.io/github/mapbox/rasterio?branch=master
@@ -21,9 +21,8 @@ channels.
 
 **GDAL Compatibility:** 
 
-* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.1
-* Rasterio ~= 1.0.25 requires GDAL >= 1.11, < 3.1
-* Rasterio ~= 1.0.0, < 1.0.25 requires GDAL >= 1.11, < 3.0
+* Rasterio ~= 1.2.0 requires GDAL >= 3.0
+* Rasterio ~= 1.1.0 requires GDAL >= 1.11, < 3.3
 
 Read the documentation for more details: https://rasterio.readthedocs.io/.
 
@@ -300,12 +299,25 @@ cannot rely on gdal-config, which is only present on UNIX systems, to discover
 the locations of header files and libraries that rasterio needs to compile its
 C extensions. On Windows, these paths need to be provided by the user. You
 will need to find the include files and the library files for gdal and use
-setup.py as follows.
+setup.py as follows. You will also need to specify the installed gdal version
+through the GDAL_VERSION environment variable.
 
 .. code-block:: console
 
-    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library>
-    $ python setup.py install
+    $ python setup.py build_ext -I<path to gdal include files> -lgdal_i -L<path to gdal library> install
+
+With pip
+
+.. code-block:: console
+
+    $ pip install --no-use-pep517 --global-option -I<path to gdal include files> -lgdal_i -L<path to gdal library> .
+
+Note: :code:`--no-use-pep517` is required as pip currently hasn't implemented a
+way for optional arguments to be passed to the build backend when using PEP 517. 
+See  `here <https://github.com/pypa/pip/issues/5771>`__. for more details.
+
+Alternatively environment variables (e.g. INCLUDE and LINK) used by MSVC compiler can be used to point 
+to include directories and library files.
 
 We have had success compiling code using the same version of Microsoft's
 Visual Studio used to compile the targeted version of Python (more info on

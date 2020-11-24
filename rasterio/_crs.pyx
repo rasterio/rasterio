@@ -212,21 +212,43 @@ cdef class _CRS(object):
         int
 
         """
-        cdef OGRSpatialReferenceH osr = NULL
+        if self._epsg is not None:
+            return self._epsg
 
+        auth = self.to_authority()
+        if auth is None:
+            return None
+        name, code = auth
+        if name.upper() == "EPSG":
+            self._epsg = int(code)
+        return self._epsg
+
+    def to_authority(self):
+        """The authority name and code of the CRS
+
+        Returns
+        -------
+        (str, str) or None
+
+        """
+        cdef OGRSpatialReferenceH osr = NULL
+        code = None
+        name = None
         try:
             osr = exc_wrap_pointer(OSRClone(self._osr))
             exc_wrap_ogrerr(OSRMorphFromESRI(osr))
             if OSRAutoIdentifyEPSG(osr) == 0:
-                epsg_code = OSRGetAuthorityCode(osr, NULL)
-                if epsg_code != NULL:
-                    return int(epsg_code.decode('utf-8'))
-                else:
-                    return None
-            else:
-                return None
+                c_code = OSRGetAuthorityCode(osr, NULL)
+                c_name = OSRGetAuthorityName(osr, NULL)
+                if c_code != NULL and c_name != NULL:
+                    code = c_code.decode('utf-8')
+                    name = c_name.decode('utf-8')
         finally:
             _safe_osr_release(osr)
+
+        if None not in (name, code):
+            return (name, code)
+        return None
 
     @staticmethod
     def from_epsg(code):
@@ -259,6 +281,7 @@ cdef class _CRS(object):
             raise CRSError("The EPSG code is unknown. {}".format(exc))
         else:
             osr_set_traditional_axis_mapping_strategy(obj._osr)
+            obj._epsg = code
             return obj
 
     @staticmethod

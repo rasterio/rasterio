@@ -70,7 +70,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The working data type for warp operation and output.
     warp_extras : dict
         GDAL extra warp options. See
-        http://www.gdal.org/structGDALWarpOptions.html.
+        https://gdal.org/doxygen/structGDALWarpOptions.html.
 
     Attributes
     ----------
@@ -94,7 +94,7 @@ class WarpedVRT(WarpedVRTReaderBase, WindowMethodsMixin,
         The working data type for warp operation and output.
     warp_extras : dict
         GDAL extra warp options. See
-        http://www.gdal.org/structGDALWarpOptions.html.
+        https://gdal.org/doxygen/structGDALWarpOptions.html.
 
     Examples
     --------
@@ -137,7 +137,7 @@ def _boundless_vrt_doc(
         The dataset to wrap.
     background : int or float, optional
         The background fill value for the boundless VRT.
-    masked : book
+    masked : bool
         If True, the src_dataset is replaced by its valid data mask.
 
     Returns
@@ -164,9 +164,9 @@ def _boundless_vrt_doc(
         vrtrasterband.attrib['dataType'] = _gdal_typename(dtype)
         vrtrasterband.attrib['band'] = str(bidx)
 
-        if nodata is not None:
+        if background is not None or nodata is not None:
             nodatavalue = ET.SubElement(vrtrasterband, 'NoDataValue')
-            nodatavalue.text = str(nodata)
+            nodatavalue.text = str(background or nodata)
 
             if hidenodata:
                 hidenodatavalue = ET.SubElement(vrtrasterband, 'HideNoDataValue')
@@ -174,35 +174,6 @@ def _boundless_vrt_doc(
 
         colorinterp = ET.SubElement(vrtrasterband, 'ColorInterp')
         colorinterp.text = ci.name.capitalize()
-
-        if background is not None:
-            complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
-            sourcefilename = ET.SubElement(complexsource, 'SourceFilename')
-            sourcefilename.attrib['relativeToVRT'] = '1'
-            sourcefilename.attrib["shared"] = "0"
-            sourcefilename.text = "dummy.tif"
-            sourceband = ET.SubElement(complexsource, 'SourceBand')
-            sourceband.text = str(bidx)
-            sourceproperties = ET.SubElement(complexsource, 'SourceProperties')
-            sourceproperties.attrib['RasterXSize'] = str(width)
-            sourceproperties.attrib['RasterYSize'] = str(height)
-            sourceproperties.attrib['dataType'] = _gdal_typename(dtype)
-            sourceproperties.attrib['BlockYSize'] = str(block_shape[0])
-            sourceproperties.attrib['BlockXSize'] = str(block_shape[1])
-            srcrect = ET.SubElement(complexsource, 'SrcRect')
-            srcrect.attrib['xOff'] = '0'
-            srcrect.attrib['yOff'] = '0'
-            srcrect.attrib['xSize'] = '1'
-            srcrect.attrib['ySize'] = '1'
-            dstrect = ET.SubElement(complexsource, 'DstRect')
-            dstrect.attrib['xOff'] = '0'
-            dstrect.attrib['yOff'] = '0'
-            dstrect.attrib['xSize'] = '1'
-            dstrect.attrib['ySize'] = '1'
-            scaleratio = ET.SubElement(complexsource, 'ScaleRatio')
-            scaleratio.text = '0'
-            scaleoffset = ET.SubElement(complexsource, 'ScaleOffset')
-            scaleoffset.text = str(background)
 
         complexsource = ET.SubElement(vrtrasterband, 'ComplexSource')
         sourcefilename = ET.SubElement(complexsource, 'SourceFilename')

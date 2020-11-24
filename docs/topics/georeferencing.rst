@@ -65,3 +65,32 @@ a pixel's image coordinates are ``x, y`` and its world coordinates are
 
 The ``Affine`` class has some useful properties and methods
 described at https://github.com/sgillies/affine.
+
+Some datasets may not have an affine transformation matrix, but are still georeferenced.
+
+Ground Control Points
+----------------------
+
+A ground control point (GCP) is the mapping of a dataset's row and pixel coordinate to a
+single world x, y, and optionally z coordinate. Typically a dataset will have multiple
+GCPs distributed across the image. Rasterio can calculate an affine transformation matrix
+from a collection of GCPs using the ``rasterio.transform.from_gcps`` method.
+
+Rational Polynomial Coefficients
+---------------------------------
+
+A dataset may also be georeferenced with a set of rational polynomial coefficients (RPCs)
+which can be used to compute pixel coordinates from x, y, and z coordinates. The RPCs are
+an application of the Rigorous Projection Model which uses four sets of 20 term cubic polynomials
+and several normalizing parameters to establish a relationship between image and world coordinates.
+RPCs are defined with image coordinates in pixel units and world coordinates in decimal
+degrees of longitude and latitude and height above the WGS84 ellipsoid (EPSG:4326). 
+
+RPCs are usually provided by the dataset provider and are only well behaved over the
+extent of the image. Additionally, accurate height values are required for the best
+results. Datasets with low terrain variation may use an average height over the extent of
+the image, while datasets with higher terrain variation should use a digital elevation
+model to sample height values.The coordinate transformation from world to pixel
+coordinates is exact while the reverse is not, and must be computed iteratively. For more
+details on coordinate transformations using RPCs see
+https://gdal.org/api/gdal_alg.html#_CPPv424GDALCreateRPCTransformerP11GDALRPCInfoidPPc

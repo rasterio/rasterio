@@ -7,9 +7,25 @@ function, which means that Python threads can read and write concurrently.
 
 The Numpy library also often releases the GIL, e.g., in applying
 universal functions to arrays, and this makes it possible to distribute
-processing of an array across cores of a processor. The Cython function
-below, included in Rasterio's ``_example`` module, simulates such
-a GIL-releasing raster processing function.
+processing of an array across cores of a processor.
+
+This means that it is possible to parallelize tasks that need to be performed
+for a set of windows/pixels in the raster. Reading, writing and processing can
+always be done concurrently. But it depends on the hardware and where the
+bottlenecks are, how much of a speedup can be obtained. In the case that the
+processing function releases the GIL, multiple threads processing
+simultaneously can lead to further speedups.
+
+.. note::
+    If you wish to do multiprocessing that is not trivially parallelizable
+    accross very large images that do not fit in memory, or if you wish to
+    do multiprocessing across multiple machines. You might want to have a
+    look at `dask <https://dask.org/>`__ and in particular this
+    `example <https://examples.dask.org/applications/satellite-imagery-geotiff.html>`__.
+
+The Cython function below, included in Rasterio's ``_example`` module,
+simulates a GIL-releasing CPU-intensive raster processing function. You can
+also easily create GIL-releasing functions by using `numba <https://numba.pydata.org/>`__
 
 .. code-block:: python
 
@@ -43,7 +59,10 @@ a GIL-releasing raster processing function.
                         output_view[~i, j, k] = <unsigned char>val
         return output
 
-Here is the program in examples/thread_pool_executor.py.
+Here is the program in examples/thread_pool_executor.py. It is set up in such
+a way that at most 1 thread is reading and at most 1 thread is writing at the
+same time. Processing is not protected by a lock and can be done by multiple
+threads simultaneously.
 
 .. code-block:: python
 
@@ -58,6 +77,8 @@ Here is the program in examples/thread_pool_executor.py.
     """
 
     import concurrent.futures
+    import multiprocessing
+    import threading
 
     import rasterio
     from rasterio._example import compute
@@ -70,66 +91,78 @@ Here is the program in examples/thread_pool_executor.py.
         reversed.
         """
 
-        with rasterio.Env():
+        with rasterio.open(infile) as src:
 
-            with rasterio.open(infile) as src:
+            # Create a destination dataset based on source params. The
+            # destination will be tiled, and we'll process the tiles
+            # concurrently.
+            profile = src.profile
+            profile.update(blockxsize=128, blockysize=128, tiled=True)
 
-                # Create a destination dataset based on source params. The
-                # destination will be tiled, and we'll process the tiles
-                # concurrently.
-                profile = src.profile
-                profile.update(blockxsize=128, blockysize=128, tiled=True)
+            with rasterio.open(outfile, "w", **src.profile) as dst:
+                windows = [window for ij, window in dst.block_windows()]
 
-                with rasterio.open(outfile, "w", **profile) as dst:
+                # We cannot write to the same file from multiple threads
+                # without causing race conditions. To safely read/write
+                # from multiple threads, we use a lock to protect the
+                # DatasetReader/Writer
+                read_lock = threading.Lock()
+                write_lock = threading.Lock()
 
-                    # Materialize a list of destination block windows
-                    # that we will use in several statements below.
-                    windows = [window for ij, window in dst.block_windows()]
+                def process(window):
+                    with read_lock:
+                        src_array = src.read(window=window)
 
-                    # This generator comprehension gives us raster data
-                    # arrays for each window. Later we will zip a mapping
-                    # of it with the windows list to get (window, result)
-                    # pairs.
-                    data_gen = (src.read(window=window) for window in windows)
+                    # The computation can be performed concurrently
+                    result = compute(src_array)
 
-                    with concurrent.futures.ThreadPoolExecutor(
-                        max_workers=num_workers
-                    ) as executor:
+                    with write_lock:
+                        dst.write(result, window=window)
 
-                        # We map the compute() function over the raster
-                        # data generator, zip the resulting iterator with
-                        # the windows list, and as pairs come back we
-                        # write data to the destination dataset.
-                        for window, result in zip(
-                            windows, executor.map(compute, data_gen)
-                        ):
-                            dst.write(result, window=window)
+                # We map the process() function over the list of
+                # windows.
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=num_workers
+                ) as executor:
+                    executor.map(process, windows)
 
 The code above simulates a CPU-intensive calculation that runs faster when
 spread over multiple cores using the ``ThreadPoolExecutor`` from Python 3's
-``concurrent.futures`` module. Compared to the case of one concurrent job 
+``concurrent.futures`` module. Compared to the case of one concurrent job
 (``-j 1``),
 
 .. code-block:: console
 
    $ time python examples/thread_pool_executor.py tests/data/RGB.byte.tif /tmp/test.tif -j 1
 
-   real    0m3.555s
-   user    0m3.422s
-   sys     0m0.095s
+   real    0m4.277s
+   user    0m4.356s
+   sys     0m0.184s
 
-we get an almost 3x speed up with four concurrent jobs.
+we get over 3x speed up with four concurrent jobs.
 
 .. code-block:: console
 
    $ time python examples/thread_pool_executor.py tests/data/RGB.byte.tif /tmp/test.tif -j 4
 
-   real    0m1.247s
-   user    0m3.505s
-   sys     0m0.088s
+   real    0m1.251s
+   user    0m4.402s
+   sys     0m0.168s
 
-.. note::
+If the function that you'd like to map over raster windows doesn't release the
+GIL, you unfortunately cannot simply replace ``ThreadPoolExecutor`` with
+``ProcessPoolExecutor``, the DatasetReader/Writer cannot be shared by multiple
+processes, which means that each process needs to open the file seperately,
+or you can do all the reading and writing from the main thread, as shown in
+this next example. This is much less efficient memory wise, however.
 
-   If the function that you'd like to map over raster windows doesn't release
-   the GIL, you can replace ``ThreadPoolExecutor`` with ``ProcessPoolExecutor``
-   and get the same results with similar performance.
+.. code-block:: python
+
+    arrays = [src.read(window=window) for window in windows]
+
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=num_workers
+    ) as executor:
+        futures = executor.map(compute, arrays)
+        for window, result in zip(windows, futures):
+            dst.write(result, window=window)

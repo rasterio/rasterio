@@ -2,7 +2,6 @@
 
 
 import click
-from cligj import format_opt
 
 import rasterio
 from rasterio.enums import Resampling
@@ -13,7 +12,7 @@ from rasterio.rio.helpers import resolve_inout
 @click.command(short_help="Merge a stack of raster datasets.")
 @options.files_inout_arg
 @options.output_opt
-@format_opt
+@options.format_opt
 @options.bounds_opt
 @options.resolution_opt
 @click.option('--resampling',
@@ -54,33 +53,39 @@ def merge(ctx, files, output, driver, bounds, res, resampling,
     output, files = resolve_inout(
         files=files, output=output, overwrite=overwrite)
 
-    resampling = Resampling[resampling]  # get integer code for method
+    resampling = Resampling[resampling]
 
-    with ctx.obj['env']:
-        datasets = [rasterio.open(f) for f in files]
-        dest, output_transform = merge_tool(datasets, bounds=bounds, res=res,
-                                            nodata=nodata, precision=precision,
-                                            indexes=(bidx or None),
-                                            resampling=resampling)
+    with ctx.obj["env"]:
+        dest, output_transform = merge_tool(
+            files,
+            bounds=bounds,
+            res=res,
+            nodata=nodata,
+            precision=precision,
+            indexes=(bidx or None),
+            resampling=resampling,
+        )
 
-        profile = datasets[0].profile
-        profile['transform'] = output_transform
-        profile['height'] = dest.shape[1]
-        profile['width'] = dest.shape[2]
-        profile['driver'] = driver
-        profile['count'] = dest.shape[0]
+        with rasterio.open(files[0]) as first:
+            profile = first.profile
+            profile["transform"] = output_transform
+            profile["height"] = dest.shape[1]
+            profile["width"] = dest.shape[2]
+            profile["count"] = dest.shape[0]
+            profile.pop("driver", None)
+            if driver:
+                profile["driver"] = driver
+            if nodata is not None:
+                profile["nodata"] = nodata
 
-        if nodata is not None:
-            profile['nodata'] = nodata
+            profile.update(**creation_options)
 
-        profile.update(**creation_options)
+            with rasterio.open(output, "w", **profile) as dst:
+                dst.write(dest)
 
-        with rasterio.open(output, 'w', **profile) as dst:
-            dst.write(dest)
-
-            # uses the colormap in the first input raster.
-            try:
-                colormap = datasets[0].colormap(1)
-                dst.write_colormap(1, colormap)
-            except ValueError:
-                pass
+                # uses the colormap in the first input raster.
+                try:
+                    colormap = first.colormap(1)
+                    dst.write_colormap(1, colormap)
+                except ValueError:
+                    pass

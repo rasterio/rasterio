@@ -23,7 +23,6 @@ from .conftest import (
     requires_gdal3,
 )
 
-
 # Items like "D_North_American_1983" characterize the Esri dialect
 # of WKT SRS.
 ESRI_PROJECTION_STRING = (
@@ -579,3 +578,98 @@ def test_epsg_treats_as_northingeasting(crs_obj):
 def test_epsg_treats_as_northingeasting_not(crs_obj):
     """EPSG does not treat this CRS as northing, easting"""
     assert not epsg_treats_as_northingeasting(crs_obj)
+
+
+def test_from_string__wkt_with_proj():
+    wkt = (
+        'PROJCS["WGS 84 / Pseudo-Mercator",'
+        'GEOGCS["WGS 84",'
+        '    DATUM["WGS_1984",'
+        '        SPHEROID["WGS 84",6378137,298.257223563,'
+        '            AUTHORITY["EPSG","7030"]],'
+        '        AUTHORITY["EPSG","6326"]],'
+        '    PRIMEM["Greenwich",0,'
+        '        AUTHORITY["EPSG","8901"]],'
+        '    UNIT["degree",0.0174532925199433,'
+        '        AUTHORITY["EPSG","9122"]],'
+        '    AUTHORITY["EPSG","4326"]],'
+        'PROJECTION["Mercator_1SP"],'
+        'PARAMETER["central_meridian",0],'
+        'PARAMETER["scale_factor",1],'
+        'PARAMETER["false_easting",0],'
+        'PARAMETER["false_northing",0],'
+        'UNIT["metre",1,'
+        '    AUTHORITY["EPSG","9001"]],'
+        'AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH],'
+        'EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0 '
+        '+lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs"],'
+        'AUTHORITY["EPSG","3857"]] '
+    )
+    assert CRS.from_string(wkt).to_epsg() == 3857
+
+
+@requires_gdal3
+def test_esri_auth__from_string():
+    assert CRS.from_string('ESRI:54009').to_string() == 'ESRI:54009'
+
+
+@requires_gdal3
+def test_esri_auth__to_epsg():
+    assert CRS.from_user_input('ESRI:54009').to_epsg() is None
+
+
+@requires_gdal3
+def test_esri_auth__to_authority():
+    assert CRS.from_user_input('ESRI:54009').to_authority() == ('ESRI', '54009')
+
+
+def test_from_authority__to_authority():
+    assert CRS.from_authority("EPSG", 4326).to_authority() == ("EPSG", "4326")
+
+
+def test_to_authority__no_code_available():
+    lcc_crs = CRS.from_string('+lon_0=-95 +ellps=GRS80 +y_0=0 +no_defs=True +proj=lcc '
+                              '+x_0=0 +units=m +lat_2=77 +lat_1=49 +lat_0=0')
+    assert lcc_crs.to_authority() is None
+
+
+@pytest.mark.parametrize(
+    'crs_obj,result',
+    [
+        (CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"), False),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"), False),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"), True),
+    ]
+)
+def test_is_latlong(crs_obj, result):
+    """Test if CRS should be treated as latlon."""
+    assert epsg_treats_as_latlong(crs_obj) == result
+
+
+@pytest.mark.parametrize(
+    'crs_obj,result',
+    [
+        (CRS.from_user_input("http://www.opengis.net/def/crs/OGC/1.3/CRS84"), False),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/2193"), True),
+        (CRS.from_user_input("http://www.opengis.net/def/crs/EPSG/0/4326"), False),
+    ]
+)
+def test_is_northingeasting(crs_obj, result):
+    """Test if CRS should be treated as having northing/easting coordinate ordering."""
+    assert epsg_treats_as_northingeasting(crs_obj) == result
+
+
+@requires_gdal_lt_3
+@pytest.mark.parametrize('crs_obj', [CRS.from_epsg(4326), CRS.from_epsg(2193)])
+def test_latlong_northingeasting_gdal2(crs_obj):
+    """Check CRS created from epsg with GDAL 2 always return False."""
+    assert not epsg_treats_as_latlong(crs_obj)
+    assert not epsg_treats_as_northingeasting(crs_obj)
+
+
+@requires_gdal3
+def test_latlong_northingeasting_gdal3():
+    """Check CRS created from epsg with GDAL 3."""
+    assert epsg_treats_as_latlong(CRS.from_epsg(4326))
+    assert epsg_treats_as_northingeasting(CRS.from_epsg(2193))

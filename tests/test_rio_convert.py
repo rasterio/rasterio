@@ -163,6 +163,23 @@ def test_format_short(tmpdir, runner):
         assert src.driver == 'JPEG'
 
 
+@pytest.mark.parametrize("extension, driver", [
+    ('TIF', 'GTiff'),
+    ('tiff', 'GTiff'),
+    ('png', 'PNG'),
+    ('jpg', 'JPEG'),
+    ('jpeg', 'JPEG'),
+])
+def test_autodetect_format(tmpdir, runner, extension, driver):
+    outputname = str(tmpdir.join("test.{}".format(extension)))
+    result = runner.invoke(
+        main_group,
+        ['convert', 'tests/data/RGB.byte.tif', outputname])
+    assert result.exit_code == 0
+    with rasterio.open(outputname) as src:
+        assert src.driver == driver
+
+
 def test_output_opt(tmpdir, runner):
     outputname = str(tmpdir.join('test.jpg'))
     result = runner.invoke(
@@ -278,3 +295,20 @@ def test_convert_overwrite_with_option(runner, tmpdir):
         'convert', 'tests/data/RGB.byte.tif', '-o', outputname, '-f', 'JPEG',
         '--overwrite'])
     assert result.exit_code == 0
+
+
+def test_convert_no_input(runner, tmpdir):
+    """Test fix of issue1985"""
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(main_group, ["convert", "-o", outputname, "-f", "JPEG"])
+    assert result.exit_code == 2
+
+
+def test_convert_no_input_overwrite(runner, tmpdir):
+    """Test fix of issue1985"""
+    outputname = str(tmpdir.join("test.tif"))
+    result = runner.invoke(
+        main_group, ["convert", "--overwrite", outputname, "-f", "JPEG"]
+    )
+    assert result.exit_code == 2
+    assert "Insufficient inputs" in result.output

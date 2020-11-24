@@ -1,6 +1,7 @@
 """Abstraction for sessions in various clouds."""
 
 import logging
+import os
 
 from rasterio.path import parse_path, UnparsedPath
 
@@ -276,9 +277,13 @@ class AWSSession(Session):
                 profile_name=profile_name)
 
         self.requester_pays = requester_pays
-        self.unsigned = aws_unsigned
+        self.unsigned = bool(os.getenv("AWS_NO_SIGN_REQUEST", aws_unsigned))
         self.endpoint_url = endpoint_url
-        self._creds = self._session._session.get_credentials() if self._session else None
+        self._creds = (
+            self._session._session.get_credentials()
+            if not self.unsigned and self._session
+            else None
+        )
 
     @classmethod
     def hascreds(cls, config):
@@ -338,16 +343,16 @@ class AWSSession(Session):
 class OSSSession(Session):
     """Configures access to secured resources stored in Alibaba Cloud OSS.
     """
-    def __init__(self, oss_access_key_id, oss_secret_access_key, oss_endpoint='oss-us-east-1.aliyuncs.com'):
+    def __init__(self, oss_access_key_id=None, oss_secret_access_key=None, oss_endpoint=None):
         """Create new Alibaba Cloud OSS session
 
         Parameters
         ----------
-        oss_access_key_id: string
+        oss_access_key_id: string, optional (default: None)
             An access key id
-        oss_secret_access_key: string
+        oss_secret_access_key: string, optional (default: None)
             An secret access key
-        oss_endpoint: string, default 'oss-us-east-1.aliyuncs.com'
+        oss_endpoint: string, optional (default: None)
             the region attached to the bucket
         """
 
