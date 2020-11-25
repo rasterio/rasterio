@@ -913,6 +913,7 @@ def http_server(tmpdir):
     p.join()
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Directory requires python 3.7")
 @pytest.mark.xfail(reason="GDAL has cached the first failed request")
 def test_vsi_curl_failure_cache(tmpdir, http_server):
     """First failed request was cached"""
@@ -926,6 +927,7 @@ def test_vsi_curl_failure_cache(tmpdir, http_server):
         assert (src.read(1) == 204).all()
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Directory requires python 3.7")
 @requires_gdal3(reason="Cache clearing requires GDAL 3+")
 def test_vsi_curl_cache_clear(tmpdir, http_server):
     """Clearing cache wipes out previous failure"""

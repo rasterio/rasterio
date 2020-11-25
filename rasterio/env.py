@@ -103,8 +103,15 @@ class Env(object):
             "RASTERIO_ENV": True
         }
 
-    def __init__(self, session=None, aws_unsigned=False, profile_name=None,
-                 session_class=Session.aws_or_dummy, clear_vsicurl_cache=False, **options):
+    def __init__(
+        self,
+        session=None,
+        aws_unsigned=False,
+        profile_name=None,
+        session_class=Session.aws_or_dummy,
+        clear_vsicurl_cache=False,
+        **options
+    ):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
