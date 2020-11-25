@@ -82,6 +82,7 @@ cdef extern from "cpl_vsi.h" nogil:
     size_t VSIFWriteL(void *buffer, size_t nSize, size_t nCount, VSILFILE *fp)
     int VSIStatL(const char *pszFilename, VSIStatBufL *psStatBuf)
 
+
 cdef extern from "ogr_srs_api.h" nogil:
 
     ctypedef int OGRErr

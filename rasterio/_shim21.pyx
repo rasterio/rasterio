@@ -77,9 +77,14 @@ cdef int delete_nodata_value(GDALRasterBandH hBand) except 3:
 cdef const char* osr_get_name(OGRSpatialReferenceH hSrs):
     return ''
 
+
 cdef void osr_set_traditional_axis_mapping_strategy(OGRSpatialReferenceH hSrs):
     pass
 
 
 cdef void set_proj_search_path(object path):
     os.environ["PROJ_LIB"] = path
+
+
+cdef void vsi_curl_clear_cache():
+    pass

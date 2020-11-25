@@ -2,6 +2,7 @@
 # Collected here to make them easier to skip/xfail.
 
 import os
+import shutil
 import sys
 
 import boto3
@@ -21,7 +22,7 @@ from rasterio.errors import EnvError, RasterioIOError, GDALVersionError
 from rasterio.rio.main import main_group
 from rasterio.session import AWSSession, DummySession, OSSSession, SwiftSession
 
-from .conftest import requires_gdal21
+from .conftest import requires_gdal21, requires_gdal3
 
 
 # Custom markers.
@@ -894,3 +895,46 @@ def test_open_file_expired_aws_credentials(monkeypatch, caplog, path_rgb_byte_ti
         with rasterio.env.Env():
             with rasterio.open(path_rgb_byte_tif) as dataset:
                 assert not dataset.closed
+
+
+@pytest.fixture
+def http_server(tmpdir):
+    import functools
+    import multiprocessing
+    import http.server
+    from . import rangehttpserver
+    PORT = 8000
+    Handler = functools.partial(rangehttpserver.RangeRequestHandler, directory=str(tmpdir))
+    httpd = http.server.HTTPServer(("", PORT), Handler)
+    p = multiprocessing.Process(target=httpd.serve_forever)
+    p.start()
+    yield
+    p.terminate()
+    p.join()
+
+
+@pytest.mark.xfail(reason="GDAL has cached the first failed request")
+def test_vsi_curl_failure_cache(tmpdir, http_server):
+    """First failed request was cached"""
+    with pytest.raises(RasterioIOError):
+        rasterio.open("/vsicurl/http://localhost:8000/red.tif")
+
+    shutil.copy("tests/data/red.tif", str(tmpdir))
+
+    with rasterio.open("/vsicurl/http://localhost:8000/red.tif") as src:
+        assert src.count == 3
+        assert (src.read(1) == 204).all()
+
+
+@requires_gdal3(reason="Cache clearing requires GDAL 3+")
+def test_vsi_curl_cache_clear(tmpdir, http_server):
+    """Clearing cache wipes out previous failure"""
+    with pytest.raises(RasterioIOError):
+        rasterio.open("/vsicurl/http://localhost:8000/red.tif")
+
+    shutil.copy("tests/data/red.tif", str(tmpdir))
+
+    with rasterio.Env(clear_vsicurl_cache=True):
+        with rasterio.open("/vsicurl/http://localhost:8000/red.tif") as src:
+            assert src.count == 3
+            assert (src.read(1) == 204).all()

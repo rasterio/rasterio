@@ -10,7 +10,8 @@ import warnings
 
 from rasterio._env import (
         GDALEnv, get_gdal_config, set_gdal_config,
-        GDALDataFinder, PROJDataFinder, set_proj_data_search_path)
+        GDALDataFinder, PROJDataFinder, set_proj_data_search_path,
+        vsicurl_clear_cache)
 from rasterio.compat import string_types, getargspec
 from rasterio.errors import (
     EnvError, GDALVersionError, RasterioDeprecationWarning)
@@ -103,7 +104,7 @@ class Env(object):
         }
 
     def __init__(self, session=None, aws_unsigned=False, profile_name=None,
-                 session_class=Session.aws_or_dummy, **options):
+                 session_class=Session.aws_or_dummy, clear_vsicurl_cache=False, **options):
         """Create a new GDAL/AWS environment.
 
         Note: this class is a context manager. GDAL isn't configured
@@ -119,6 +120,8 @@ class Env(object):
             A shared credentials profile name, as per boto3.
         session_class : Session, optional
             A sub-class of Session.
+        clear_vsicurl_cache : bool, optional
+            If True, GDAL's vsicurl cache will be cleared on enter.
         **options : optional
             A mapping of GDAL configuration options, e.g.,
             `CPL_DEBUG=True, CHECK_WITH_INVERT_PROJ=False`.
@@ -199,6 +202,7 @@ class Env(object):
         else:
             self.session = DummySession()
 
+        self._clear_vsicurl_cache = clear_vsicurl_cache
         self.options = options.copy()
         self.context_options = {}
 
@@ -275,6 +279,8 @@ class Env(object):
             self.context_options = getenv()
             setenv(**self.options)
 
+        if self._clear_vsicurl_cache:
+            vsicurl_clear_cache()
         self.credentialize()
 
         log.debug("Entered env context: %r", self)

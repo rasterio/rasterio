@@ -28,6 +28,11 @@ cdef extern from "ogr_srs_api.h" nogil:
     void OSRSetPROJSearchPaths(const char *const *papszPaths)
 
 
+cdef extern from "cpl_vsi.h" nogil:
+
+    void VSICurlClearCache()
+
+
 from rasterio._err cimport exc_wrap_pointer
 
 
@@ -100,3 +105,7 @@ cdef void set_proj_search_path(object path):
     path_c = path_b
     paths = CSLAddString(paths, path_c)
     OSRSetPROJSearchPaths(paths)
+
+
+cdef void vsi_curl_clear_cache():
+    VSICurlClearCache()

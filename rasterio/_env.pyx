@@ -20,7 +20,7 @@ import threading
 from rasterio._base cimport _safe_osr_release
 from rasterio._err import CPLE_BaseError
 from rasterio._err cimport exc_wrap_ogrerr, exc_wrap_int
-from rasterio._shim cimport set_proj_search_path
+from rasterio._shim cimport set_proj_search_path, vsi_curl_clear_cache
 
 from libc.stdio cimport stderr
 
@@ -417,3 +417,8 @@ cdef class GDALEnv(ConfigEnv):
 def set_proj_data_search_path(path):
     """Set PROJ data search path"""
     set_proj_search_path(path)
+
+
+def vsicurl_clear_cache():
+    """Clear GDAL's vsicurl cache"""
+    vsi_curl_clear_cache()
